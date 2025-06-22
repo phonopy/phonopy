@@ -35,15 +35,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+import os
 import pathlib
 import warnings
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from math import pi, sqrt
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 import yaml
+from numpy.typing import NDArray
 
 from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -125,10 +127,10 @@ def convert_crystal_structure(
 
 
 def write_crystal_structure(
-    filename: Optional[str],
+    filename: str | os.PathLike | None,
     cell: PhonopyAtoms,
-    interface_mode: Optional[str] = None,
-    optional_structure_info: Optional[tuple] = None,
+    interface_mode: str | None = None,
+    optional_structure_info: tuple | None = None,
 ):
     """Write crystal structure to file in each calculator format.
 
@@ -270,10 +272,10 @@ def write_supercells_with_displacements(
     interface_mode: str,
     supercell: PhonopyAtoms,
     cells_with_disps: Sequence[PhonopyAtoms],
-    optional_structure_info: Optional[tuple] = None,
-    displacement_ids: Optional[Union[Sequence, np.ndarray]] = None,
+    optional_structure_info: tuple,
+    displacement_ids: Sequence | NDArray | None = None,
     zfill_width: int = 3,
-    additional_info: Optional[dict] = None,
+    additional_info: dict | None = None,
 ):
     """Write supercell with displacements to files in each calculator format.
 
@@ -434,8 +436,8 @@ def read_crystal_structure(
     filename=None,
     interface_mode=None,
     chemical_symbols=None,
-    phonopy_yaml_cls: Optional[type[PhonopyYaml]] = None,
-):
+    phonopy_yaml_cls: type[PhonopyYaml] | None = None,
+) -> tuple[PhonopyAtoms, tuple]:
     """Return crystal structure from file in each calculator format.
 
     Parameters
@@ -990,7 +992,7 @@ def get_force_constant_conversion_factor(unit, interface_mode):
 
 
 def _read_phonopy_yaml(
-    filename: str, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
+    filename: str, phonopy_yaml_cls: type[PhonopyYaml] | None
 ) -> tuple[PhonopyAtoms, tuple]:
     cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
@@ -1012,7 +1014,7 @@ def _read_phonopy_yaml(
 
 
 def _get_cell_filename(
-    filename, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
+    filename, phonopy_yaml_cls: type[PhonopyYaml] | None
 ) -> Optional[str]:
     cell_filename = None
 

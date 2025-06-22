@@ -40,10 +40,11 @@ import io
 import pathlib
 import sys
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 import yaml
+from numpy.typing import NDArray
 
 try:
     from yaml import CLoader as Loader
@@ -351,11 +352,11 @@ def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
 
 
 def write_force_constants_to_hdf5(
-    force_constants: np.ndarray,
+    force_constants: NDArray,
     filename: str = "force_constants.hdf5",
-    p2s_map: Optional[np.ndarray] = None,
-    physical_unit: Optional[str] = None,
-    compression: Optional[Union[str, int]] = None,
+    p2s_map: NDArray | None = None,
+    physical_unit: str | None = None,
+    compression: str | int | None = None,
 ):
     """Write force constants in hdf5 format.
 

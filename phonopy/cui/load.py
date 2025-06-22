@@ -321,7 +321,7 @@ def load(
 
     fc = load_helper.select_and_extract_force_constants(
         phonon,
-        fc=_fc,
+        force_constants=_fc,
         force_constants_filename=force_constants_filename,
         is_compact_fc=is_compact_fc,
         log_level=log_level,

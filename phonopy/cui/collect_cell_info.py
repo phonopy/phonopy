@@ -35,10 +35,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
-from typing import Optional
+from dataclasses import dataclass
 
 import numpy as np
+from numpy.typing import NDArray
 
+from phonopy.exception import CellNotFoundError
 from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
     get_default_cell_filename,
@@ -46,6 +48,36 @@ from phonopy.interface.calculator import (
 )
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
+from phonopy.structure.atoms import PhonopyAtoms
+
+
+@dataclass
+class CellInfoResult:
+    """Dataclass to hold the result of collect_cell_info.
+
+    "unitcell": PhonopyAtoms
+        Unit cell.
+    "supercell_matrix": ndarray
+    "primitive_matrix": ndarray
+    "optional_structure_info": list
+        See read_crystal_structure.
+    "interface_mode": str
+        Force calculator or crystal structure format name.
+    "phonopy_yaml": None or instance of the class given by phonopy_yaml_cls
+        Not None when crystal structure was read phonopy.yaml like file.
+    "error_message" : str
+        Unless error exists, this entry should not be in this dict.
+        Otherwise, some error exists. The error message is storedin the
+        string.
+
+    """
+
+    unitcell: PhonopyAtoms
+    optional_structure_info: tuple
+    supercell_matrix: NDArray | None = None
+    primitive_matrix: NDArray | str | None = None
+    interface_mode: str | None = None
+    phonopy_yaml: PhonopyYaml | None = None
 
 
 def collect_cell_info(
@@ -55,9 +87,9 @@ def collect_cell_info(
     cell_filename=None,
     chemical_symbols=None,
     enforce_primitive_matrix_auto=False,
-    phonopy_yaml_cls: Optional[type[PhonopyYaml]] = None,
+    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
     load_phonopy_yaml: bool = False,
-) -> dict:
+) -> CellInfoResult:
     """Collect crystal structure information from input file and parameters.
 
     This function returns crystal structure information obtained from an input
@@ -108,25 +140,75 @@ def collect_cell_info(
     load_phonopy_yaml : bool
         True means phonopy-load mode.
 
-    Returns
-    -------
-    dict :
-        "unitcell": PhonopyAtoms
-            Unit cell.
-        "supercell_matrix": ndarray
-        "primitive_matrix": ndarray
-        "optional_structure_info": list
-            See read_crystal_structure.
-        "interface_mode": str
-            Force calculator or crystal structure format name.
-        "phonopy_yaml": None or instance of the class given by phonopy_yaml_cls
-            Not None when crystal structure was read phonopy.yaml like file.
-        "error_message" : str
-            Unless error exists, this entry should not be in this dict.
-            Otherwise, some error exists. The error message is storedin the
-            string.
-
     """
+    _interface_mode, _cell_filename = _decide_interface_mode_and_filename(
+        supercell_matrix,
+        interface_mode,
+        cell_filename,
+        phonopy_yaml_cls,
+        load_phonopy_yaml,
+    )
+
+    unitcell, optional_structure_info = read_crystal_structure(
+        filename=_cell_filename,
+        interface_mode=_interface_mode,
+        chemical_symbols=chemical_symbols,
+        phonopy_yaml_cls=phonopy_yaml_cls,
+    )
+
+    if unitcell is None:
+        err_msg = _get_error_message(
+            optional_structure_info,
+            load_phonopy_yaml,
+            cell_filename,
+            phonopy_yaml_cls,
+        )
+        raise CellNotFoundError(err_msg)
+
+    interface_mode_out, supercell_matrix_out, primitive_matrix_out = (
+        _collect_cells_info(
+            _interface_mode,
+            optional_structure_info,
+            interface_mode,
+            supercell_matrix,
+            primitive_matrix,
+        )
+    )
+
+    err_msg = _validate_cell(
+        unitcell,
+        supercell_matrix_out,
+        _interface_mode,
+        optional_structure_info,
+        phonopy_yaml_cls,
+        _cell_filename,
+        interface_mode_out,
+    )
+
+    if err_msg:
+        raise CellNotFoundError(err_msg)
+
+    if enforce_primitive_matrix_auto:
+        primitive_matrix_out = "auto"
+
+    phpy_yaml = (
+        optional_structure_info[1] if _interface_mode == "phonopy_yaml" else None
+    )
+
+    return CellInfoResult(
+        unitcell=unitcell,
+        supercell_matrix=supercell_matrix_out,
+        primitive_matrix=primitive_matrix_out,
+        optional_structure_info=optional_structure_info,
+        interface_mode=interface_mode_out,
+        phonopy_yaml=phpy_yaml,
+    )
+
+
+def _decide_interface_mode_and_filename(
+    supercell_matrix, interface_mode, cell_filename, phonopy_yaml_cls, load_phonopy_yaml
+):
+    """Decide interface mode and filename for crystal structure input."""
     # In some cases, interface mode falls back to phonopy_yaml mode.
     if load_phonopy_yaml:
         fallback_reason = "load_phonopy_yaml mode"
@@ -157,36 +239,19 @@ def collect_cell_info(
     else:
         _interface_mode = interface_mode.lower()
 
-    unitcell, optional_structure_info = read_crystal_structure(
-        filename=_cell_filename,
-        interface_mode=_interface_mode,
-        chemical_symbols=chemical_symbols,
-        phonopy_yaml_cls=phonopy_yaml_cls,
-    )
+    return _interface_mode, _cell_filename
 
-    # Error check
-    if unitcell is None:
-        err_msg = _get_error_message(
-            optional_structure_info,
-            fallback_reason,
-            cell_filename,  # original cell_filename can be needed for error message.
-            phonopy_yaml_cls,
-        )
-        return {"error_message": err_msg}
 
-    # Retrieve more information on cells
-    (
-        interface_mode_out,
-        supercell_matrix_out,
-        primitive_matrix_out,
-    ) = _collect_cells_info(
-        _interface_mode,
-        optional_structure_info,
-        interface_mode,
-        supercell_matrix,
-        primitive_matrix,
-    )
-
+def _validate_cell(
+    unitcell,
+    supercell_matrix_out,
+    _interface_mode,
+    optional_structure_info,
+    phonopy_yaml_cls,
+    _cell_filename,
+    interface_mode_out,
+):
+    """Validate the crystal cell parameters and return error messages if any."""
     err_msg = []
     unitcell_filename = optional_structure_info[0]
     if supercell_matrix_out is None:
@@ -225,24 +290,9 @@ def collect_cell_info(
         err_msg = [
             'Crystal structure was read from "%s".' % unitcell_filename
         ] + err_msg
-        return {"error_message": "\n".join(err_msg)}
+        return "\n".join(err_msg)
 
-    if enforce_primitive_matrix_auto:
-        primitive_matrix_out = "auto"
-
-    if _interface_mode == "phonopy_yaml":
-        phpy_yaml: PhonopyYaml = optional_structure_info[1]
-    else:
-        phpy_yaml = None
-
-    return {
-        "unitcell": unitcell,
-        "supercell_matrix": supercell_matrix_out,
-        "primitive_matrix": primitive_matrix_out,
-        "optional_structure_info": optional_structure_info,
-        "interface_mode": interface_mode_out,
-        "phonopy_yaml": phpy_yaml,
-    }
+    return None
 
 
 def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):

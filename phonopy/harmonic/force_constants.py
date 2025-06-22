@@ -37,9 +37,9 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -62,7 +62,7 @@ class FDFCSolver:
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        primitive: Optional[Primitive],
+        primitive: Primitive | None,
         symmetry: Symmetry,
         dataset: dict,
         is_compact_fc: bool = False,
@@ -94,8 +94,8 @@ class FDFCSolver:
         supercell: PhonopyAtoms,
         symmetry: Symmetry,
         dataset,
-        atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
-        primitive: Optional[Primitive] = None,
+        atom_list: Sequence[int] | NDArray | None = None,
+        primitive: Primitive | None = None,
     ) -> np.ndarray:
         """Force constants are computed.
 
@@ -160,7 +160,7 @@ class FDFCSolver:
 
 def compact_fc_to_full_fc(
     primitive: Primitive, compact_fc: np.ndarray, log_level: int = 0
-):
+) -> NDArray:
     """Transform compact fc to full fc."""
     fc = np.zeros(
         (compact_fc.shape[1], compact_fc.shape[1], 3, 3), dtype="double", order="C"
@@ -175,7 +175,7 @@ def compact_fc_to_full_fc(
 
 def full_fc_to_compact_fc(
     primitive: Primitive, full_fc: np.ndarray, log_level: int = 0
-):
+) -> NDArray:
     """Transform full fc to compact fc."""
     p2s_map = primitive.p2s_map
     fc = np.zeros((len(p2s_map), full_fc.shape[1], 3, 3), dtype="double", order="C")
@@ -207,7 +207,8 @@ def rearrange_force_constants_array(
 
     """
     assert full_fc.shape[0] == full_fc.shape[1]
-    indices: list = isclose(a, b, with_arbitrary_order=True, return_order=True)
+    indices = isclose(a, b, with_arbitrary_order=True, return_order=True)
+    assert not isinstance(indices, bool)
     re_fc = np.zeros_like(full_fc)
     for i, j in enumerate(indices):
         re_fc[i] = full_fc[j][indices]
@@ -581,7 +582,10 @@ def set_permutation_symmetry(force_constants):
 
 
 def show_drift_force_constants(
-    force_constants, primitive=None, name="force constants", values_only=False
+    force_constants,
+    primitive: Primitive | None = None,
+    name="force constants",
+    values_only=False,
 ):
     """Show force constants drift."""
     if force_constants.shape[0] == force_constants.shape[1]:
@@ -600,6 +604,7 @@ def show_drift_force_constants(
                 maxval2 = val2
                 jk2 = [j, k]
     else:
+        assert primitive is not None
         s2p_map = primitive.s2p_map
         p2s_map = primitive.p2s_map
         p2p_map = primitive.p2p_map
