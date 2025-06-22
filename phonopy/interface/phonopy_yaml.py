@@ -196,7 +196,7 @@ class PhonopyYamlLoaderBase(ABC):
 
     def _get_dataset(
         self, supercell: PhonopyAtoms, key_prefix: str = ""
-    ) -> Optional[dict]:
+    ) -> dict | None:
         dataset = None
         if f"{key_prefix}displacements" in self._yaml:
             if supercell is not None:
