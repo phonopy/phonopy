@@ -311,7 +311,7 @@ def load(
             phonon.nac_params = ret_nac_params
 
     dataset = load_helper.select_and_load_dataset(
-        phonon,
+        len(phonon.supercell),
         _dataset,
         force_sets_filename=force_sets_filename,
         log_level=log_level,

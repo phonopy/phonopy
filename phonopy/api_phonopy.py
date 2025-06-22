@@ -612,7 +612,7 @@ class Phonopy:
         self._supercells_with_displacements = None
 
     @property
-    def force_constants(self) -> np.ndarray:
+    def force_constants(self) -> NDArray | None:
         """Getter and setter of supercell force constants.
 
         Force constants matrix.
@@ -636,19 +636,22 @@ class Phonopy:
         return self._force_constants
 
     @force_constants.setter
-    def force_constants(self, force_constants):
-        if type(force_constants) is np.ndarray:
-            fc_shape = force_constants.shape
-            if fc_shape[0] != fc_shape[1]:
-                if len(self._primitive) != fc_shape[0]:
-                    msg = (
-                        "Force constants shape disagrees with crystal "
-                        "structure setting. This may be due to "
-                        "PRIMITIVE_AXIS."
-                    )
-                    raise RuntimeError(msg)
+    def force_constants(self, force_constants: ArrayLike | None):
+        if force_constants is None:
+            self._force_constants = None
+            return
 
-        self._force_constants = force_constants
+        self._force_constants = np.array(force_constants, dtype="double", order="C")
+        fc_shape = self._force_constants.shape
+        if fc_shape[0] != fc_shape[1]:
+            if len(self._primitive) != fc_shape[0]:
+                msg = (
+                    "Force constants shape disagrees with crystal "
+                    "structure setting. This may be due to "
+                    "PRIMITIVE_AXIS."
+                )
+                raise RuntimeError(msg)
+
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 

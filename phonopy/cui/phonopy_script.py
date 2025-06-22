@@ -52,7 +52,6 @@ from phonopy.cui.load_helper import (
     get_nac_params,
     prepare_pypolymlp_and_dataset,
     produce_force_constants,
-    read_force_constants_from_hdf5,
     select_and_extract_force_constants,
     select_and_load_dataset,
 )
@@ -64,17 +63,11 @@ from phonopy.file_IO import (
     get_born_parameters,
     get_supported_file_extensions_for_compression,
     is_file_phonopy_yaml,
-    parse_FORCE_CONSTANTS,
-    parse_FORCE_SETS,
     parse_QPOINTS,
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
 )
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
-from phonopy.harmonic.force_constants import (
-    compact_fc_to_full_fc,
-    full_fc_to_compact_fc,
-)
 from phonopy.interface.calculator import (
     get_calculator_physical_units,
     get_default_displacement_distance,
@@ -634,197 +627,72 @@ def _create_FORCE_SETS_from_settings(
 def _produce_force_constants(
     phonon: Phonopy,
     settings: PhonopySettings,
-    phpy_yaml: dict,
-    unitcell_filename: str,
+    dataset_in_phonopy_yaml: dict | None,
+    phonopy_yaml_filename: str | os.PathLike | None,
+    confs: dict,
     log_level: int,
 ):
-    """Run force constants calculation (non-phonopy-yaml mode)."""
-    num_satom = len(phonon.supercell)
-    is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-
-    if settings.read_force_constants:
-        _read_force_constants_from_file(
-            settings, phonon, unitcell_filename, is_full_fc, log_level
-        )
-    else:
-
-        def read_force_sets_from_phonopy_yaml(phpy_yaml):
-            if phpy_yaml.dataset is not None and (
-                "forces" in phpy_yaml.dataset
-                or (
-                    "first_atoms" in phpy_yaml.dataset
-                    and "forces" in phpy_yaml.dataset["first_atoms"][0]
-                )
-            ):
-                return phpy_yaml.dataset
-            else:
-                return None
-
-        force_sets = None
-
-        if phpy_yaml is not None:
-            force_sets = read_force_sets_from_phonopy_yaml(phpy_yaml)
-            if log_level:
-                if force_sets is None:
-                    print(f'Force sets were not found in "{unitcell_filename}".')
-                else:
-                    print(
-                        'Forces and displacements were read from "%s".'
-                        % unitcell_filename
-                    )
-
-        if force_sets is None:
-            file_exists("FORCE_SETS", log_level=log_level)
-            force_sets = parse_FORCE_SETS(natom=num_satom)
-            if log_level:
-                print('Forces and displacements were read from "%s".' % "FORCE_SETS")
-
-        if log_level and force_sets is not None and "displacements" in force_sets:
-            print("%d snapshots were found." % len(force_sets["displacements"]))
-
-        if "natom" in force_sets:
-            natom = force_sets["natom"]
-        else:
-            natom = force_sets["forces"].shape[1]
-        if natom != num_satom:
-            error_text = "Number of atoms in supercell is not consistent with "
-            error_text += "the data in FORCE_SETS.\n"
-            error_text += (
-                "Please carefully check DIM, FORCE_SETS, and %s"
-            ) % unitcell_filename
-            print_error_message(error_text)
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(
-            settings, load_phonopy_yaml=False
-        )
-
-        phonon.dataset = force_sets
-        if log_level:
-            if fc_calculator is not None:
-                print(
-                    "Force constants solver of "
-                    f"{fc_calculator_names[fc_calculator]} is used."
-                )
-            else:
-                print("Computing force constants...")
-
-        try:
-            if is_full_fc:
-                # Need to calculate full force constant tensors
-                phonon.produce_force_constants(
-                    fc_calculator=fc_calculator,
-                    fc_calculator_options=fc_calculator_options,
-                )
-            else:
-                # Only force constants between atoms in primitive cell and
-                # supercell
-                phonon.produce_force_constants(
-                    calculate_full_force_constants=False,
-                    fc_calculator=fc_calculator,
-                    fc_calculator_options=fc_calculator_options,
-                )
-        except (RuntimeError, ValueError, ForceCalculatorRequiredError) as e:
-            print_error_message(str(e))
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-
-def _read_force_constants_from_file(
-    settings: PhonopySettings,
-    phonon: Phonopy,
-    unitcell_filename: str,
-    is_full_fc: bool,
-    log_level: bool | int,
-):
-    num_satom = len(phonon.supercell)
-    p2s_map = phonon.primitive.p2s_map
-    if settings.is_hdf5 or settings.readfc_format == "hdf5":
-        try:
-            import h5py  # noqa F401
-        except ImportError:
-            print_error_message("You need to install python-h5py.")
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        file_exists("force_constants.hdf5", log_level=log_level)
-        fc = read_force_constants_from_hdf5(
-            filename="force_constants.hdf5",
-            p2s_map=p2s_map,
-            calculator=phonon.calculator,
-        )
-        fc_filename = "force_constants.hdf5"
-    else:
-        file_exists("FORCE_CONSTANTS", log_level=log_level)
-        fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=p2s_map)
-        fc_filename = "FORCE_CONSTANTS"
-
-    if log_level:
-        print('Force constants are read from "%s".' % fc_filename)
-
-    if fc.shape[1] != num_satom:
-        error_text = "\n".join(
-            [
-                f"Number of atoms in supercell ({num_satom}) is not consistent with "
-                "the matrix shape of ",
-                f"force constants {fc.shape[:2]} read from ",
-            ]
-        )
-        if settings.is_hdf5 or settings.readfc_format == "hdf5":
-            error_text += "force_constants.hdf5.\n"
-        else:
-            error_text += "FORCE_CONSTANTS.\n"
-        error_text += (
-            "Please carefully check DIM, FORCE_CONSTANTS, and %s."
-        ) % unitcell_filename
-        print_error_message(error_text)
-        if log_level:
-            print_error()
-        sys.exit(1)
-
-    # Compact fc is expanded to full fc when full fc is required.
-    if is_full_fc and fc.shape[0] != fc.shape[1]:
-        fc = compact_fc_to_full_fc(phonon.primitive, fc, log_level=log_level)
-    elif not is_full_fc and fc.shape[0] == fc.shape[1]:
-        fc = full_fc_to_compact_fc(phonon.primitive, fc, log_level=log_level)
-
-    if log_level:
-        print(f"Array shape of force constants: {fc.shape}")
-
-    phonon.force_constants = fc
-
-
-def _store_force_constants(
-    phonon: Phonopy,
-    settings: PhonopySettings,
-    phpy_yaml: PhonopyYaml,
-    unitcell_filename: str,
-    log_level: int,
-) -> bool:
     """Calculate or read force constants.
 
     Return True if force constants are created.
 
     """
-    is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-    (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
-
-    fc = select_and_extract_force_constants(
-        phonon,
-        phonopy_yaml_filename=unitcell_filename,
-        fc=phpy_yaml.force_constants,
-        is_compact_fc=(not is_full_fc),
+    # Read dataset
+    phonon.dataset = select_and_load_dataset(
+        len(phonon.supercell),
+        dataset_in_phonopy_yaml,
+        phonopy_yaml_filename=phonopy_yaml_filename,
         log_level=log_level,
     )
-    if fc is not None:
-        phonon.force_constants = fc
 
-    if phonon.force_constants is None and forces_in_dataset(phonon.dataset):
+    # polynomial MLPs
+    if dataset_in_phonopy_yaml and settings.use_pypolymlp:
+        prepare_dataset = (
+            settings.create_displacements or settings.random_displacements is not None
+        )
+        if phonon.dataset is not None:
+            phonon.mlp_dataset = phonon.dataset
+            phonon.dataset = None
         try:
+            prepare_pypolymlp_and_dataset(
+                phonon,
+                mlp_params=settings.mlp_params,
+                displacement_distance=settings.displacement_distance,
+                number_of_snapshots=settings.random_displacements,
+                random_seed=settings.random_seed,
+                rd_number_estimation_factor=settings.rd_number_estimation_factor,
+                prepare_dataset=prepare_dataset,
+                log_level=log_level,
+            )
+        except RuntimeError as e:
+            print_error_message(str(e))
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+        if phonon.dataset is not None:
+            mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
+            if log_level:
+                print(
+                    "Dataset generated using MMLPs was written in "
+                    f'"{mlp_eval_filename}".'
+                )
+            phonon.save(mlp_eval_filename)
+
+        # pypolymlp dataset is stored in "polymlp.yaml" and stop here.
+        if not prepare_dataset:
+            if log_level:
+                print(
+                    "Generate displacements (--rd or -d) for proceeding to phonon "
+                    "calculations."
+                )
+
+            _finalize_phonopy(log_level, settings, confs, phonon)
+
+    if forces_in_dataset(phonon.dataset):
+        try:
+            is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
+            (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
             produce_force_constants(
                 phonon,
                 fc_calculator=fc_calculator,
@@ -1734,7 +1602,7 @@ def _start_phonopy(**argparse_control):
 
 
 def _read_phonopy_settings(
-    args, argparse_control, log_level
+    args, load_phonopy_yaml: bool, log_level: int
 ) -> tuple[PhonopySettings, dict, Optional[str]]:
     """Read phonopy settings.
 
@@ -1751,7 +1619,6 @@ def _read_phonopy_settings(
             unspecified in command line tool, this is None.
 
     """
-    load_phonopy_yaml = argparse_control.get("load_phonopy_yaml", False)
     conf_filename = None
 
     if load_phonopy_yaml:
@@ -1760,12 +1627,10 @@ def _read_phonopy_settings(
             phonopy_conf_parser = PhonopyConfParser(
                 filename=args.conf_filename,
                 args=args,
-                load_phonopy_yaml=load_phonopy_yaml,
+                load_phonopy_yaml=True,
             )
         else:
-            phonopy_conf_parser = PhonopyConfParser(
-                args=args, load_phonopy_yaml=load_phonopy_yaml
-            )
+            phonopy_conf_parser = PhonopyConfParser(args=args, load_phonopy_yaml=True)
         if len(args.filename) > 0:
             file_exists(args.filename[0], log_level=log_level)
             cell_filename = args.filename[0]
@@ -1775,16 +1640,20 @@ def _read_phonopy_settings(
         if len(args.filename) > 0:
             file_exists(args.filename[0], log_level=log_level)
             if is_file_phonopy_yaml(args.filename[0]):
-                phonopy_conf_parser = PhonopyConfParser(args=args)
+                phonopy_conf_parser = PhonopyConfParser(
+                    args=args, load_phonopy_yaml=False
+                )
                 cell_filename = args.filename[0]
             else:
                 conf_filename = args.filename[0]
                 phonopy_conf_parser = PhonopyConfParser(
-                    filename=args.filename[0], args=args
+                    filename=args.filename[0],
+                    args=args,
+                    load_phonopy_yaml=False,
                 )
                 cell_filename = phonopy_conf_parser.settings.cell_filename
         else:
-            phonopy_conf_parser = PhonopyConfParser(args=args)
+            phonopy_conf_parser = PhonopyConfParser(args=args, load_phonopy_yaml=False)
             cell_filename = phonopy_conf_parser.settings.cell_filename
 
     confs = phonopy_conf_parser.confs.copy()
@@ -2037,11 +1906,20 @@ def _init_phonopy(
 def main(**argparse_control):
     """Start phonopy.
 
-    phonopy command:
+    The argparse_control parameter is used to modify the behavior of this
+    function between the traditional phonopy command and the phonopy-load
+    command. The latter is considered more suitable for current use cases, while
+    the former may still be necessary for compatibility to reproduce old
+    results.
+
+    In addition, the argparse_control parameter (argparse_control['args']) is
+    implicitly used for running CUI tests via pytest. See test_phonopy_cui.py.
+
+    For the phonopy command:
         argparse_control = {
             "load_phonopy_yaml": False,
         }
-    phonopy-load command:
+    For the phonopy-load command:
         argparse_control = {
             "load_phonopy_yaml": True,
         }
@@ -2069,7 +1947,7 @@ def main(**argparse_control):
     }
 
     settings, confs, cell_filename = _read_phonopy_settings(
-        args, argparse_control, log_level
+        args, load_phonopy_yaml, log_level
     )
 
     # phonopy --symmetry
@@ -2187,7 +2065,6 @@ def main(**argparse_control):
     ##################################
     # Non-analytical term correction #
     ##################################
-
     if settings.is_nac or (
         (settings.create_displacements or settings.random_displacements)
         and file_exists("BORN", is_any=True)
@@ -2234,80 +2111,28 @@ def main(**argparse_control):
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
         )
 
-    ################
-    # Load dataset #
-    ################
-    if load_phonopy_yaml:
-        phonon.dataset = select_and_load_dataset(
+    ########################
+    # Read force constants #
+    ########################
+    if settings.read_force_constants:
+        phonon.force_constants = select_and_extract_force_constants(
             phonon,
-            cell_info["phonopy_yaml"].dataset,
             phonopy_yaml_filename=unitcell_filename,
+            fc=cell_info["phonopy_yaml"].force_constants,
+            is_compact_fc=not (settings.fc_spg_symmetry or settings.is_full_fc),
             log_level=log_level,
         )
 
-    ###################
-    # polynomial MLPs #
-    ###################
-    if load_phonopy_yaml and settings.use_pypolymlp:
-        prepare_dataset = (
-            settings.create_displacements or settings.random_displacements is not None
-        )
-        if phonon.dataset is not None:
-            phonon.mlp_dataset = phonon.dataset
-            phonon.dataset = None
-        try:
-            prepare_pypolymlp_and_dataset(
-                phonon,
-                mlp_params=settings.mlp_params,
-                displacement_distance=settings.displacement_distance,
-                number_of_snapshots=settings.random_displacements,
-                random_seed=settings.random_seed,
-                rd_number_estimation_factor=settings.rd_number_estimation_factor,
-                prepare_dataset=prepare_dataset,
-                log_level=log_level,
-            )
-        except RuntimeError as e:
-            print_error_message(str(e))
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        if phonon.dataset is not None:
-            mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
-            if log_level:
-                print(
-                    "Dataset generated using MMLPs was written in "
-                    f'"{mlp_eval_filename}".'
-                )
-            phonon.save(mlp_eval_filename)
-
-        # pypolymlp dataset is stored in "polymlp.yaml" and stop here.
-        if not prepare_dataset:
-            if log_level:
-                print(
-                    "Generate displacements (--rd or -d) for proceeding to phonon "
-                    "calculations."
-                )
-
-            _finalize_phonopy(log_level, settings, confs, phonon)
-
-    ###################
-    # Force constants #
-    ###################
-    if load_phonopy_yaml:
-        _store_force_constants(
-            phonon,
-            settings,
-            cell_info["phonopy_yaml"],
-            unitcell_filename,
-            log_level,
-        )
-    else:
+    ###########################
+    # Produce force constants #
+    ###########################
+    if phonon.force_constants is None:
         _produce_force_constants(
             phonon,
             settings,
-            cell_info["phonopy_yaml"],
+            cell_info["phonopy_yaml"].dataset,
             unitcell_filename,
+            confs,
             log_level,
         )
 
