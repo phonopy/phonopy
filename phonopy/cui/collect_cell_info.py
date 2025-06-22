@@ -53,24 +53,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 
 @dataclass
 class CellInfoResult:
-    """Dataclass to hold the result of collect_cell_info.
-
-    "unitcell": PhonopyAtoms
-        Unit cell.
-    "supercell_matrix": ndarray
-    "primitive_matrix": ndarray
-    "optional_structure_info": list
-        See read_crystal_structure.
-    "interface_mode": str
-        Force calculator or crystal structure format name.
-    "phonopy_yaml": None or instance of the class given by phonopy_yaml_cls
-        Not None when crystal structure was read phonopy.yaml like file.
-    "error_message" : str
-        Unless error exists, this entry should not be in this dict.
-        Otherwise, some error exists. The error message is storedin the
-        string.
-
-    """
+    """Dataclass to hold the result of collect_cell_info."""
 
     unitcell: PhonopyAtoms
     optional_structure_info: tuple
