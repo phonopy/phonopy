@@ -184,7 +184,7 @@ def get_nac_params(
 
 
 def read_force_constants_from_hdf5(
-    filename="force_constants.hdf5", p2s_map=None, calculator=None
+    filename: str | os.PathLike = "force_constants.hdf5", p2s_map=None, calculator=None
 ):
     """Convert force constants physical unit.
 

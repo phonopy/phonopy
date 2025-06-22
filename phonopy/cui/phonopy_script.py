@@ -913,7 +913,7 @@ def _create_random_displacements_at_finite_temperature(
 def store_nac_params(
     phonon: Phonopy,
     settings: PhonopySettings,
-    phpy_yaml: PhonopyYaml,
+    phpy_yaml: PhonopyYaml | None,
     unitcell_filename: str,
     log_level: int,
     nac_factor: float | None = None,

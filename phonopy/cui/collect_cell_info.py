@@ -38,7 +38,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike
 
 from phonopy.exception import CellNotFoundError
 from phonopy.file_IO import is_file_phonopy_yaml
@@ -57,8 +57,8 @@ class CellInfoResult:
 
     unitcell: PhonopyAtoms
     optional_structure_info: tuple
-    supercell_matrix: NDArray | None = None
-    primitive_matrix: NDArray | str | None = None
+    supercell_matrix: ArrayLike | None = None
+    primitive_matrix: ArrayLike | str | None = None
     interface_mode: str | None = None
     phonopy_yaml: PhonopyYaml | None = None
 
