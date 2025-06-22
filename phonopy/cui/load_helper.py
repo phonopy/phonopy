@@ -36,11 +36,13 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 from dataclasses import asdict
 from typing import Literal, Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy import Phonopy
 from phonopy.exception import ForcesetsNotFoundError
@@ -207,24 +209,23 @@ def read_force_constants_from_hdf5(
 
 
 def select_and_load_dataset(
-    phonon: Phonopy,
-    dataset: Optional[dict],
-    phonopy_yaml_filename: Optional[str] = None,
-    force_sets_filename: Optional[str] = None,
+    nsatom: int,
+    dataset: dict | None = None,
+    phonopy_yaml_filename: str | os.PathLike | None = None,
+    force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
 ) -> Optional[dict]:
     """Set displacement-force dataset."""
-    natom = len(phonon.supercell)
     _dataset = None
     _force_sets_filename = None
     if forces_in_dataset(dataset):
         _dataset = dataset
         _force_sets_filename = phonopy_yaml_filename
     elif force_sets_filename is not None:
-        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
+        _dataset = parse_FORCE_SETS(natom=nsatom, filename=force_sets_filename)
         _force_sets_filename = force_sets_filename
     elif pathlib.Path("FORCE_SETS").exists():
-        _dataset = parse_FORCE_SETS(natom=natom)
+        _dataset = parse_FORCE_SETS(natom=nsatom)
         _force_sets_filename = "FORCE_SETS"
     else:
         _dataset = dataset
@@ -240,43 +241,35 @@ def select_and_load_dataset(
 
 def select_and_extract_force_constants(
     phonon: Phonopy,
-    phonopy_yaml_filename: Optional[str] = None,
-    fc: Optional[np.ndarray] = None,  # From phonopy_yaml
-    force_constants_filename: Optional[str] = None,
+    phonopy_yaml_filename: str | os.PathLike | None = None,
+    fc: NDArray | None = None,  # From phonopy_yaml
+    force_constants_filename: str | os.PathLike | None = None,
     is_compact_fc: bool = True,
     log_level: int = 0,
-) -> Optional[np.ndarray]:
-    """Set force constants."""
+) -> NDArray | None:
+    """Extract force constants.
+
+    1. From fc (ndarray) in phonopy_yaml.
+    2. From FORCE_CONSTANTS file or force_constants.hdf5 file.
+    3.
+    4. Maybe already in phonopy.force_constants.
+
+    """
     _fc = None
     _force_constants_filename = None
-    if fc is not None:
+    if fc is not None:  # 1
         _fc = fc
         _force_constants_filename = phonopy_yaml_filename
-    elif force_constants_filename is not None:
-        _fc = _read_force_constants_file(
-            phonon,
-            force_constants_filename,
-            is_compact_fc=is_compact_fc,
-            log_level=log_level,
-        )
+    elif force_constants_filename is not None:  # 2
+        _fc = _read_force_constants_file(phonon, force_constants_filename)
         _force_constants_filename = force_constants_filename
     elif phonon.force_constants is None:
         # unless provided these from phonopy_yaml.
         if pathlib.Path("FORCE_CONSTANTS").exists():
-            _fc = _read_force_constants_file(
-                phonon,
-                "FORCE_CONSTANTS",
-                is_compact_fc=is_compact_fc,
-                log_level=log_level,
-            )
+            _fc = _read_force_constants_file(phonon, "FORCE_CONSTANTS")
             _force_constants_filename = "FORCE_CONSTANTS"
         elif pathlib.Path("force_constants.hdf5").exists():
-            _fc = _read_force_constants_file(
-                phonon,
-                "force_constants.hdf5",
-                is_compact_fc=is_compact_fc,
-                log_level=log_level,
-            )
+            _fc = _read_force_constants_file(phonon, "force_constants.hdf5")
             _force_constants_filename = "force_constants.hdf5"
 
     if _fc is not None:
@@ -457,9 +450,7 @@ def _prepare_dataset_by_pypolymlp(
     phonon.evaluate_mlp()
 
 
-def _read_force_constants_file(
-    phonon: Phonopy, force_constants_filename, is_compact_fc=True, log_level=0
-):
+def _read_force_constants_file(phonon: Phonopy, force_constants_filename):
     dot_split = force_constants_filename.split(".")
     p2s_map = phonon.primitive.p2s_map
     if len(dot_split) > 1 and dot_split[-1] == "hdf5":

@@ -577,6 +577,14 @@ def get_parser(load_phonopy_yaml=False):
             default=None,
             help="Non-analytical term correction",
         )
+        parser.add_argument(
+            "--noreadfc",
+            dest="read_force_constants",
+            action="store_false",
+            default=None,
+            help="Do not read force constants from file",
+        )
+
     parser.add_argument(
         "--nosym",
         dest="is_nosym",
@@ -722,13 +730,14 @@ def get_parser(load_phonopy_yaml=False):
         metavar="TEMPERATURE",
         help="(Deprecated) A temperature used to generate random displacements.",
     )
-    parser.add_argument(
-        "--readfc",
-        dest="read_force_constants",
-        action="store_true",
-        default=None,
-        help="Read FORCE_CONSTANTS",
-    )
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "--readfc",
+            dest="read_force_constants",
+            action="store_true",
+            default=None,
+            help="Read force constants from file",
+        )
     parser.add_argument(
         "--readfc-format",
         dest="readfc_format",

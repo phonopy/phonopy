@@ -1061,7 +1061,10 @@ class PhonopySettings(Settings):
         self.projection_direction = None
         self.qpoints_format = "yaml"
         self.random_displacement_temperature = None
-        self.read_force_constants = False
+        if load_phonopy_yaml:
+            self.read_force_constants = True
+        else:
+            self.read_force_constants = False
         self.readfc_format = "text"
         self.run_mode = None
         self.show_irreps = False
@@ -1198,6 +1201,8 @@ class PhonopyConfParser(ConfParser):
         if "read_force_constants" in arg_list:
             if args.read_force_constants:
                 self._confs["read_force_constants"] = ".true."
+            elif args.read_force_constants is False:
+                self._confs["read_force_constants"] = ".false."
 
         if "write_force_constants" in arg_list:
             if args.write_force_constants:
