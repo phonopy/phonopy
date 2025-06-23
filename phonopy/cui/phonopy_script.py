@@ -702,8 +702,8 @@ def _produce_force_constants(
             (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
             # Set "symfc" for type-II dataset when phonopy-load is called without
             # specifying fc-calculator.
-            if load_phonopy_yaml:
-                if settings.fc_calculator is None and "displacements" in phonon.dataset:
+            if load_phonopy_yaml and "displacements" in phonon.dataset:
+                if settings.fc_symmetry and settings.fc_calculator is None:
                     fc_calculator = "symfc"
             produce_force_constants(
                 phonon,
