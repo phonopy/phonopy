@@ -72,6 +72,7 @@ from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.pypolymlp import PypolymlpParams
+from phonopy.interface.symfc import symmetrize_by_projector
 from phonopy.phonon.animation import write_animation
 from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import ProjectedDos, TotalDos, get_dos_frequency_range
@@ -1067,7 +1068,9 @@ class Phonopy:
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
-    def symmetrize_force_constants(self, level=1, show_drift=True) -> None:
+    def symmetrize_force_constants(
+        self, level: int = 1, show_drift: bool = True, use_symfc_projector: bool = False
+    ) -> None:
         """Symmetrize force constants.
 
         This applies translational and permutation symmetries successfully,
@@ -1085,14 +1088,27 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants have not been produced yet.")
 
-        if self._force_constants.shape[0] == self._force_constants.shape[1]:
-            symmetrize_force_constants(self._force_constants, level=level)
-        else:
-            symmetrize_compact_force_constants(
-                self._force_constants, self._primitive, level=level
+        if use_symfc_projector:
+            self._force_constants = symmetrize_by_projector(
+                self._supercell,
+                self._force_constants,
+                2,
+                primitive=self._primitive,
+                log_level=self._log_level,
             )
+            if self._log_level:
+                print("Max drift after symmetrization by symfc projector: ", end="")
+        else:
+            if self._force_constants.shape[0] == self._force_constants.shape[1]:
+                symmetrize_force_constants(self._force_constants, level=level)
+            else:
+                symmetrize_compact_force_constants(
+                    self._force_constants, self._primitive, level=level
+                )
+            if self._log_level:
+                print("Max drift after symmetrization by translation: ", end="")
+
         if show_drift and self._log_level:
-            sys.stdout.write("Max drift after symmetrization by translation: ")
             show_drift_force_constants(
                 self._force_constants, primitive=self._primitive, values_only=True
             )

@@ -631,6 +631,7 @@ def _produce_force_constants(
     phonopy_yaml: PhonopyYaml | None,
     phonopy_yaml_filename: str | os.PathLike | None,
     confs: dict,
+    load_phonopy_yaml: bool,
     log_level: int,
 ):
     """Calculate or read force constants.
@@ -699,6 +700,11 @@ def _produce_force_constants(
         try:
             is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
             (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
+            # Set "symfc" for type-II dataset when phonopy-load is called without
+            # specifying fc-calculator.
+            if load_phonopy_yaml:
+                if settings.fc_calculator is None and "displacements" in phonon.dataset:
+                    fc_calculator = "symfc"
             produce_force_constants(
                 phonon,
                 fc_calculator=fc_calculator,
@@ -792,13 +798,11 @@ def _post_process_force_constants(
                     '"FORCE_CONSTANTS_SPG".'
                 )
 
-    # Imporse translational invariance and index permulation symmetry to
-    # force constants
-    fc_calculator, _ = _get_fc_calculator_params(
-        settings, load_phonopy_yaml=load_phonopy_yaml
-    )
+    # Impose symmetry to force constants
+    # For phonopy-load, symfc projector is used otherwise traditional symmetrization.
+    fc_calculator, _ = _get_fc_calculator_params(settings)
     if settings.fc_symmetry and fc_calculator == "traditional":
-        phonon.symmetrize_force_constants()
+        phonon.symmetrize_force_constants(use_symfc_projector=load_phonopy_yaml)
 
     # Write FORCE_CONSTANTS
     if settings.write_force_constants:
@@ -1690,20 +1694,14 @@ def _auto_primitive_axes(primitive_matrix):
     return isinstance(primitive_matrix, str) and primitive_matrix == "auto"
 
 
-def _get_fc_calculator_params(settings, load_phonopy_yaml=True):
+def _get_fc_calculator_params(settings):
     """Return fc_calculator and fc_calculator_params from settings."""
     fc_calculator = None
     if settings.fc_calculator is not None:
         if settings.fc_calculator.lower() in fc_calculator_names:
             fc_calculator = settings.fc_calculator.lower()
     else:
-        if settings.fc_symmetry:
-            if load_phonopy_yaml:
-                fc_calculator = "symfc"
-            else:
-                fc_calculator = "traditional"
-        else:
-            fc_calculator = "traditional"
+        fc_calculator = "traditional"
 
     fc_calculator_options = None
     if settings.fc_calculator_options is not None:
@@ -2130,6 +2128,7 @@ def main(**argparse_control):
             cell_info.phonopy_yaml,
             unitcell_filename,
             confs,
+            load_phonopy_yaml,
             log_level,
         )
 
