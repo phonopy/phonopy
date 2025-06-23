@@ -61,7 +61,6 @@ from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.exception import CellNotFoundError, ForceCalculatorRequiredError
 from phonopy.file_IO import (
-    get_born_parameters,
     get_supported_file_extensions_for_compression,
     is_file_phonopy_yaml,
     parse_QPOINTS,
@@ -917,7 +916,6 @@ def store_nac_params(
     unitcell_filename: str,
     log_level: int,
     nac_factor: float | None = None,
-    load_phonopy_yaml: bool = False,
 ):
     """Calculate or read NAC params."""
     if nac_factor is None:
@@ -926,40 +924,17 @@ def store_nac_params(
     else:
         _nac_factor = nac_factor
 
-    def read_BORN(phonon):
-        with open("BORN") as f:
-            return get_born_parameters(f, phonon.primitive, phonon.primitive_symmetry)
-
-    nac_params = None
-
-    if load_phonopy_yaml:
-        nac_params = get_nac_params(
-            primitive=phonon.primitive,
-            nac_params=phpy_yaml.nac_params,
-            log_level=log_level,
-        )
-        if phpy_yaml.nac_params is not None and log_level:
-            print('NAC parameters were read from "%s".' % unitcell_filename)
+    if phpy_yaml is None:
+        phpy_yaml_nac_params = None
     else:
-        if phpy_yaml:
-            nac_params = phpy_yaml.nac_params
-            if log_level:
-                if nac_params is None:
-                    print('NAC parameters were not found in "%s".' % unitcell_filename)
-                else:
-                    print('NAC parameters were read from "%s".' % unitcell_filename)
-
-        if nac_params is None and file_exists("BORN", log_level=log_level):
-            nac_params = read_BORN(phonon)
-            if nac_params is not None and log_level:
-                print('NAC parameters were read from "%s".' % "BORN")
-
-            if not nac_params:
-                error_text = "BORN file could not be read correctly."
-                print_error_message(error_text)
-                if log_level:
-                    print_error()
-                sys.exit(1)
+        phpy_yaml_nac_params = phpy_yaml.nac_params
+    nac_params = get_nac_params(
+        primitive=phonon.primitive,
+        nac_params=phpy_yaml_nac_params,
+        log_level=log_level,
+    )
+    if phpy_yaml_nac_params is not None and log_level:
+        print(f'NAC parameters were read from "{unitcell_filename}".')
 
     if nac_params is not None:
         if "factor" not in nac_params or nac_params["factor"] is None:
@@ -2088,7 +2063,6 @@ def main(**argparse_control):
             cell_info.phonopy_yaml,
             unitcell_filename,
             log_level,
-            load_phonopy_yaml=load_phonopy_yaml,
         )
 
     ################################################################
