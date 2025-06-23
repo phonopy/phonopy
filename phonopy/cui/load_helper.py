@@ -127,11 +127,11 @@ def get_cell_settings(
 
 
 def get_nac_params(
-    primitive: Optional[Primitive] = None,
-    nac_params: Optional[dict] = None,
-    born_filename: Optional[str] = None,
+    primitive: Primitive | None = None,
+    nac_params: dict | None = None,
+    born_filename: str | None = None,
     is_nac: bool = True,
-    nac_factor: Optional[float] = None,
+    nac_factor: float | None = None,
     log_level: int = 0,
 ) -> dict:
     """Look for and return NAC parameters.

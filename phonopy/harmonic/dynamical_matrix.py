@@ -383,6 +383,14 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         """Return log level."""
         return self._log_level
 
+    def show_nac_message(self):
+        """Show NAC message.
+
+        This must be implemented in derived classes.
+
+        """
+        raise NotImplementedError()
+
     def _set_nac_params(self, nac_params):
         raise NotImplementedError()
 
