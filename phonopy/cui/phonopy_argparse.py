@@ -185,7 +185,7 @@ def get_parser(load_phonopy_yaml=False):
         "--classical",
         dest="classical",
         action="store_true",
-        default=False,
+        default=None,
         help=("Compute thermodynamic properties using classical statistics."),
     )
     parser.add_argument(

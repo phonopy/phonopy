@@ -96,7 +96,6 @@ class Settings:
             self.is_nac = True
         else:
             self.is_nac = False
-        self.is_plusminus_displacement = "auto"
         self.is_symmetry = True
         self.is_tetrahedron_method = True
         self.is_time_reversal_symmetry = True
@@ -205,6 +204,8 @@ class ConfParser:
         if "classical" in arg_list:
             if args.classical:
                 self._confs["classical"] = ".true."
+            elif args.classical is False:
+                self._confs["classical"] = ".false."
 
         if "cutoff_frequency" in arg_list:
             if args.cutoff_frequency:
@@ -272,14 +273,20 @@ class ConfParser:
         if "is_band_const_interval" in arg_list:
             if args.is_band_const_interval:
                 self._confs["band_const_interval"] = ".true."
+            elif args.is_band_const_interval is False:
+                self._confs["band_const_interval"] = ".false."
 
         if "is_displacement" in arg_list:
             if args.is_displacement:
                 self._confs["create_displacements"] = ".true."
+            elif args.is_displacement is False:
+                self._confs["create_displacements"] = ".false."
 
         if "is_eigenvectors" in arg_list:
             if args.is_eigenvectors:
                 self._confs["eigenvectors"] = ".true."
+            elif args.is_eigenvectors is False:
+                self._confs["eigenvectors"] = ".false."
 
         if "is_nac" in arg_list:
             if args.is_nac:
@@ -290,15 +297,22 @@ class ConfParser:
         if "is_nodiag" in arg_list:
             if args.is_nodiag:
                 self._confs["diag"] = ".false."
+            elif args.is_nodiag is False:
+                self._confs["diag"] = ".true."
 
         if "is_nomeshsym" in arg_list:
             if args.is_nomeshsym:
                 self._confs["mesh_symmetry"] = ".false."
+            elif args.is_nomeshsym is False:
+                self._confs["mesh_symmetry"] = ".true."
 
         if "is_nosym" in arg_list:
             if args.is_nosym:
                 self._confs["symmetry"] = ".false."
+            elif args.is_nosym is False:
+                self._confs["symmetry"] = ".true."
 
+        # Default is "auto".
         if "is_plusminus_displacements" in arg_list:
             if args.is_plusminus_displacements:
                 self._confs["pm"] = ".true."
@@ -306,6 +320,8 @@ class ConfParser:
         if "is_trigonal_displacements" in arg_list:
             if args.is_trigonal_displacements:
                 self._confs["trigonal"] = ".true."
+            elif args.is_trigonal_displacements is False:
+                self._confs["trigonal"] = ".false."
 
         if "masses" in arg_list:
             if args.masses is not None:
@@ -398,6 +414,8 @@ class ConfParser:
         if "save_params" in arg_list:
             if args.save_params:
                 self._confs["save_params"] = ".true."
+            elif args.save_params is False:
+                self._confs["save_params"] = ".false."
 
         if "supercell_dimension" in arg_list:
             dim = args.supercell_dimension
