@@ -35,7 +35,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
-from dataclasses import dataclass
+import dataclasses
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -51,7 +52,7 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-@dataclass
+@dataclasses.dataclass
 class CellInfoResult:
     """Dataclass to hold the result of collect_cell_info."""
 
@@ -60,19 +61,29 @@ class CellInfoResult:
     supercell_matrix: ArrayLike | None = None
     primitive_matrix: ArrayLike | str | None = None
     interface_mode: str | None = None
+
+
+@dataclasses.dataclass
+class PhonopyCellInfoResult(CellInfoResult):
+    """Phono3py cell info result.
+
+    This is a subclass of CellInfoResult.
+
+    """
+
     phonopy_yaml: PhonopyYaml | None = None
 
 
 def collect_cell_info(
-    supercell_matrix=None,
-    primitive_matrix=None,
-    interface_mode=None,
-    cell_filename=None,
-    chemical_symbols=None,
-    enforce_primitive_matrix_auto=False,
+    supercell_matrix: ArrayLike | None = None,
+    primitive_matrix: ArrayLike | None = None,
+    interface_mode: str | None = None,
+    cell_filename: str | None = None,
+    chemical_symbols: Sequence[str] | None = None,
+    enforce_primitive_matrix_auto: bool = False,
     phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
     load_phonopy_yaml: bool = False,
-) -> CellInfoResult:
+) -> PhonopyCellInfoResult:
     """Collect crystal structure information from input file and parameters.
 
     This function returns crystal structure information obtained from an input
@@ -112,7 +123,7 @@ def collect_cell_info(
         Force calculator or crystal structure format name.
     cell_filename : str or None
         Input cell filename.
-    chemical_symbols : list of str
+    chemical_symbols : list of str or None
         List of chemical symbols or unit cell.
     enforce_primitive_matrix_auto : bool
         Enforce primitive_matrix='auto' when True. Default is False.
@@ -178,7 +189,7 @@ def collect_cell_info(
         optional_structure_info[1] if _interface_mode == "phonopy_yaml" else None
     )
 
-    return CellInfoResult(
+    return PhonopyCellInfoResult(
         unitcell=unitcell,
         supercell_matrix=supercell_matrix_out,
         primitive_matrix=primitive_matrix_out,

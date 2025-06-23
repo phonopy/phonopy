@@ -40,7 +40,7 @@ from typing import Optional, Union
 
 import numpy as np
 import spglib
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
@@ -1601,9 +1601,9 @@ def determinant(m):
 
 
 def get_primitive_matrix(
-    pmat: Optional[Union[str, np.ndarray, Sequence]] = None,
+    pmat: str | ArrayLike | None = None,
     symprec: float = 1e-5,
-) -> Optional[Union[str, np.ndarray]]:
+) -> str | NDArray | None:
     """Find primitive matrix from primitive cell.
 
     None is equivalent to "P" but None is returned.

@@ -38,10 +38,9 @@ from __future__ import annotations
 
 import io
 import os
-from collections.abc import Sequence
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike
 
 import phonopy.cui.load_helper as load_helper
 from phonopy.api_phonopy import Phonopy
@@ -58,8 +57,8 @@ def load(
     | os.PathLike
     | io.IOBase
     | None = None,  # phonopy.yaml-like must be the first argument.
-    supercell_matrix: NDArray | Sequence | None = None,
-    primitive_matrix: NDArray | Sequence | None = None,
+    supercell_matrix: ArrayLike | None = None,
+    primitive_matrix: ArrayLike | str | None = None,
     is_nac: bool = True,
     calculator: str | None = None,
     unitcell: PhonopyAtoms | None = None,

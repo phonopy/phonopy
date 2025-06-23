@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import io
+import os
 import pathlib
 import sys
 from collections.abc import Sequence
@@ -44,7 +45,7 @@ from typing import Optional
 
 import numpy as np
 import yaml
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 try:
     from yaml import CLoader as Loader
@@ -430,8 +431,10 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):
 
 
 def read_force_constants_hdf5(
-    filename="force_constants.hdf5", p2s_map=None, return_physical_unit=False
-):
+    filename: str | os.PathLike = "force_constants.hdf5",
+    p2s_map: ArrayLike | None = None,
+    return_physical_unit: bool = False,
+) -> NDArray | tuple[NDArray, str | None]:
     """Parse force_constants.hdf5.
 
     Parameters

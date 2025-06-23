@@ -42,7 +42,7 @@ from dataclasses import asdict
 from typing import Literal, Optional, Union
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy import Phonopy
 from phonopy.exception import ForcesetsNotFoundError
@@ -70,16 +70,16 @@ from phonopy.structure.dataset import forces_in_dataset
 
 
 def get_cell_settings(
-    supercell_matrix=None,
-    primitive_matrix=None,
-    unitcell=None,
-    supercell=None,
-    unitcell_filename=None,
-    supercell_filename=None,
-    calculator=None,
-    symprec=1e-5,
-    log_level=0,
-):
+    supercell_matrix: ArrayLike | None = None,
+    primitive_matrix: ArrayLike | str | None = None,
+    unitcell: PhonopyAtoms | None = None,
+    supercell: PhonopyAtoms | None = None,
+    unitcell_filename: str | os.PathLike | None = None,
+    supercell_filename: str | os.PathLike | None = None,
+    calculator: str | None = None,
+    symprec: float = 1e-5,
+    log_level: int = 0,
+) -> tuple[PhonopyAtoms, ArrayLike | None, str | NDArray | None]:
     """Return crystal structures."""
     optional_structure_info = None
     if primitive_matrix is None or (
@@ -133,7 +133,7 @@ def get_nac_params(
     is_nac: bool = True,
     nac_factor: float | None = None,
     log_level: int = 0,
-) -> dict:
+) -> dict | None:
     """Look for and return NAC parameters.
 
     Parameters
@@ -184,8 +184,10 @@ def get_nac_params(
 
 
 def read_force_constants_from_hdf5(
-    filename: str | os.PathLike = "force_constants.hdf5", p2s_map=None, calculator=None
-):
+    filename: str | os.PathLike = "force_constants.hdf5",
+    p2s_map: ArrayLike | None = None,
+    calculator: str | None = None,
+) -> NDArray:
     """Convert force constants physical unit.
 
     Each calculator interface has own default force constants physical unit.

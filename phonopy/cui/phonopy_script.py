@@ -47,7 +47,7 @@ import spglib
 from numpy.typing import NDArray
 
 from phonopy import Phonopy, __version__
-from phonopy.cui.collect_cell_info import CellInfoResult, collect_cell_info
+from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, collect_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
     get_nac_params,
@@ -1714,10 +1714,10 @@ def _get_fc_calculator_params(settings, load_phonopy_yaml=True):
 
 def _get_cell_info(
     settings: PhonopySettings,
-    cell_filename: str,
+    cell_filename: str | None,
     log_level: int = 0,
     load_phonopy_yaml: bool = False,
-) -> CellInfoResult:
+) -> PhonopyCellInfoResult:
     """Return calculator interface and crystal structure information."""
     try:
         cell_info = collect_cell_info(
@@ -1794,7 +1794,7 @@ def set_magnetic_moments(
             sys.exit(1)
 
 
-def _show_symmetry_info_then_exit(cell_info: CellInfoResult, symprec: float):
+def _show_symmetry_info_then_exit(cell_info: PhonopyCellInfoResult, symprec: float):
     """Show crystal structure information in yaml style."""
     phonon = Phonopy(
         cell_info.unitcell,
@@ -1808,7 +1808,9 @@ def _show_symmetry_info_then_exit(cell_info: CellInfoResult, symprec: float):
     sys.exit(0)
 
 
-def _check_supercell_in_yaml(cell_info: CellInfoResult, ph: Phonopy, log_level: int):
+def _check_supercell_in_yaml(
+    cell_info: PhonopyCellInfoResult, ph: Phonopy, log_level: int
+):
     """Check supercell size consistency."""
     if (
         cell_info.phonopy_yaml is not None
@@ -1825,7 +1827,10 @@ def _check_supercell_in_yaml(cell_info: CellInfoResult, ph: Phonopy, log_level: 
 
 
 def _init_phonopy(
-    settings: PhonopySettings, cell_info: CellInfoResult, symprec: float, log_level: int
+    settings: PhonopySettings,
+    cell_info: PhonopyCellInfoResult,
+    symprec: float,
+    log_level: int,
 ):
     """Prepare phonopy object."""
     if (

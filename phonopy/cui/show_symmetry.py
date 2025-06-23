@@ -38,7 +38,7 @@ import numpy as np
 import spglib
 
 from phonopy import Phonopy
-from phonopy.cui.collect_cell_info import CellInfoResult
+from phonopy.cui.collect_cell_info import PhonopyCellInfoResult
 from phonopy.interface.calculator import (
     get_default_cell_filename,
     write_crystal_structure,
@@ -50,7 +50,7 @@ from phonopy.structure.cells import determinant, guess_primitive_matrix
 from phonopy.structure.symmetry import Symmetry
 
 
-def check_symmetry(phonon: Phonopy, cell_info: CellInfoResult):
+def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
     """Check symmetry of input cell.
 
     This function first standardizes the input crystal structure based on
@@ -108,7 +108,7 @@ def check_symmetry(phonon: Phonopy, cell_info: CellInfoResult):
 
 
 def _show_symmetry_yaml(
-    phonon: Phonopy, cell_info: CellInfoResult, base_fname: str, ph: Phonopy
+    phonon: Phonopy, cell_info: PhonopyCellInfoResult, base_fname: str, ph: Phonopy
 ):
     print(
         _get_symmetry_yaml(phonon.primitive, phonon.primitive_symmetry, phonon.version)
