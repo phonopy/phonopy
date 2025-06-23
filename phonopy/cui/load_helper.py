@@ -129,7 +129,7 @@ def get_cell_settings(
 def get_nac_params(
     primitive: Primitive | None = None,
     nac_params: dict | None = None,
-    born_filename: str | None = None,
+    born_filename: str | os.PathLike | None = None,
     is_nac: bool = True,
     nac_factor: float | None = None,
     log_level: int = 0,

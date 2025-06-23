@@ -743,7 +743,7 @@ class PhonopyYamlDumperBase(ABC):
                     lines.append("    - [ %21.15f, %21.15f, %21.15f ]" % tuple(v))
         return lines
 
-    def _init_dumper_settings(self, dumper_settings):
+    def _init_dumper_settings(self, dumper_settings: dict | None):
         self._dumper_settings = self._default_dumper_settings.copy()
         if isinstance(dumper_settings, dict):
             self._dumper_settings.update(dumper_settings)
