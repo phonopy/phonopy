@@ -41,7 +41,7 @@ import numpy as np
 from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.random_displacements import bose_einstein_dist
-from phonopy.phonon.thermal_displacement import ThermalDisplacements
+from phonopy.phonon.thermal_displacement import ThermalDisplacementMatrices
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 
@@ -180,6 +180,15 @@ class DynamicStructureFactor:
             self.frequencies.shape, dtype="double", order="C"
         )
 
+        td = ThermalDisplacementMatrices(
+            self._mesh_phonon,
+            freq_min=self._fmin,
+            freq_max=self._fmax,
+        )
+        td.temperatures = [self._T]
+        td.run()
+        self._thermal_displacement_matrices = td.thermal_displacement_matrices[0]
+
     def __iter__(self):
         """Define iterator of calculation over q-points."""
         return self
@@ -209,8 +218,8 @@ class DynamicStructureFactor:
         if Q_length < 1e-8:
             debye_waller = np.zeros(len(self._primitive), dtype="double")
         else:
-            _, disps = self._get_thermal_displacements(Q_cart)
-            debye_waller = np.exp(-0.5 * (2 * np.pi * Q_length) ** 2 * disps[0])
+            disps = self._get_thermal_displacements(Q_cart)
+            debye_waller = np.exp(-0.5 * (2 * np.pi * Q_length) ** 2 * disps)
         S = np.zeros(len(freqs), dtype="double")
         for i, f in enumerate(freqs):
             if self._fmin < f:
@@ -233,15 +242,14 @@ class DynamicStructureFactor:
         self._eigvecs = qpoints_phonon.eigenvectors
 
     def _get_thermal_displacements(self, proj_dir):
-        td = ThermalDisplacements(
-            self._mesh_phonon,
-            projection_direction=proj_dir,
-            freq_min=self._fmin,
-            freq_max=self._fmax,
-        )
-        td.temperatures = [self._T]
-        td.run()
-        return td.temperatures, td.thermal_displacements
+        thermal_displacements = np.zeros(self._thermal_displacement_matrices.shape[0], dtype=float)
+        unit_dir = proj_dir / np.linalg.norm(proj_dir)
+        unit_mat = np.outer(unit_dir, unit_dir)
+
+        for i, thermal_mat in enumerate(self._thermal_displacement_matrices):
+            thermal_displacements[i] = np.sum(np.multiply(unit_mat, thermal_mat))
+
+        return thermal_displacements
 
     def _phonon_structure_factor(self, Q_cart, G_vector, DW, freq, eigvec):
         """Return F(Q, q nu).
