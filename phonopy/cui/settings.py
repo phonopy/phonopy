@@ -96,6 +96,7 @@ class Settings:
             self.is_nac = True
         else:
             self.is_nac = False
+        self.is_plusminus_displacement = "auto"
         self.is_symmetry = True
         self.is_tetrahedron_method = True
         self.is_time_reversal_symmetry = True
@@ -1060,7 +1061,6 @@ class PhonopySettings(Settings):
         self.is_legacy_plot = False
         self.is_little_cogroup = False
         self.is_moment = False
-        self.is_plusminus_displacement = "auto"
         self.is_thermal_displacements = False
         self.is_thermal_displacement_matrices = False
         self.is_thermal_distances = False

@@ -1074,7 +1074,7 @@ class Phonopy:
         """Symmetrize force constants.
 
         This applies translational and permutation symmetries successfully,
-        but not simultaneously.
+        but not simultaneously, or symfc projector if use_symfc_projector is True.
 
         Parameters
         ----------
@@ -1083,6 +1083,9 @@ class Phonopy:
             repeated by this number. Default is 1.
         show_drift : bool, optioanl
             Drift forces are displayed when True. Default is True.
+        use_symfc_projector : bool, optional
+            If True, the force constants are symmetrized by symfc projector
+            instead of traditional approach.
 
         """
         if self._force_constants is None:
@@ -1096,8 +1099,6 @@ class Phonopy:
                 primitive=self._primitive,
                 log_level=self._log_level,
             )
-            if self._log_level:
-                print("Max drift after symmetrization by symfc projector: ", end="")
         else:
             if self._force_constants.shape[0] == self._force_constants.shape[1]:
                 symmetrize_force_constants(self._force_constants, level=level)
@@ -1105,10 +1106,12 @@ class Phonopy:
                 symmetrize_compact_force_constants(
                     self._force_constants, self._primitive, level=level
                 )
-            if self._log_level:
-                print("Max drift after symmetrization by translation: ", end="")
 
         if show_drift and self._log_level:
+            if use_symfc_projector:
+                print("Max drift after symmetrization by symfc projector: ", end="")
+            else:
+                print("Max drift after traditional symmetrization: ", end="")
             show_drift_force_constants(
                 self._force_constants, primitive=self._primitive, values_only=True
             )
