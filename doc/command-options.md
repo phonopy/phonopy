@@ -219,8 +219,8 @@ correpond to that of `vasprun.xml` files.
 
 ```{note}
 - Site-projected wave function information (the same information as `PROCAR`)
-  significantly increases the size of `vasprun.xml`. So parsing this xml file incurs
-  huge memory costs. It is recommended to switch off to calculate it.
+  significantly increases the size of `vasprun.xml`. So parsing xml files generated this way
+  incurs huge memory costs. It is recommended to switch off to calculate it.
 - If there are many displacements, shell expansions are useful, e.g., 
   `disp-*/vasprun.xml`, or `disp-{001..128}/vasprun.xml` (for zsh, and recent bash).
 ```
