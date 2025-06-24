@@ -697,7 +697,7 @@ def _produce_force_constants(
     if forces_in_dataset(phonon.dataset):
         try:
             is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-            (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
+            fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
             # Set "symfc" for type-II dataset when phonopy-load is called without
             # specifying fc-calculator.
             if load_phonopy_yaml and "displacements" in phonon.dataset:
@@ -707,7 +707,7 @@ def _produce_force_constants(
                 phonon,
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
-                symmetrize_fc=False,
+                symmetrize_fc=False,  # treated in _post_process_force_constants
                 is_compact_fc=(not is_full_fc),
                 log_level=log_level,
             )
@@ -799,8 +799,11 @@ def _post_process_force_constants(
     # Impose symmetry to force constants
     # For phonopy-load, symfc projector is used otherwise traditional symmetrization.
     fc_calculator, _ = _get_fc_calculator_params(settings)
-    if settings.fc_symmetry and fc_calculator == "traditional":
-        phonon.symmetrize_force_constants(use_symfc_projector=load_phonopy_yaml)
+    if settings.fc_symmetry:
+        if fc_calculator == "traditional":
+            phonon.symmetrize_force_constants(use_symfc_projector=False)
+        elif fc_calculator is None:
+            phonon.symmetrize_force_constants(use_symfc_projector=load_phonopy_yaml)
 
     # Write FORCE_CONSTANTS
     if settings.write_force_constants:
@@ -1692,14 +1695,12 @@ def _auto_primitive_axes(primitive_matrix):
     return isinstance(primitive_matrix, str) and primitive_matrix == "auto"
 
 
-def _get_fc_calculator_params(settings):
+def _get_fc_calculator_params(settings) -> tuple[str | None, str | None]:
     """Return fc_calculator and fc_calculator_params from settings."""
     fc_calculator = None
     if settings.fc_calculator is not None:
         if settings.fc_calculator.lower() in fc_calculator_names:
             fc_calculator = settings.fc_calculator.lower()
-    else:
-        fc_calculator = "traditional"
 
     fc_calculator_options = None
     if settings.fc_calculator_options is not None:

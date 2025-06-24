@@ -34,9 +34,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional
+from typing import Literal, Optional
 
 import numpy as np
+
+from phonopy.structure.symmetry import Symmetry
 
 directions_axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
@@ -79,11 +81,11 @@ def directions_to_displacement_dataset(displacement_directions, distance, superc
 
 
 def get_least_displacements(
-    symmetry,
-    is_plusminus="auto",
-    is_diagonal=True,
-    is_trigonal=False,
-    log_level=0,
+    symmetry: Symmetry,
+    is_plusminus: Literal["auto"] | bool = "auto",
+    is_diagonal: bool = True,
+    is_trigonal: bool = False,
+    log_level: int = 0,
 ):
     """Return a set of displacements.
 

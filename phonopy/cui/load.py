@@ -347,6 +347,7 @@ def load(
             fc_calculator_options=fc_calculator_options,
             symmetrize_fc=symmetrize_fc,
             is_compact_fc=is_compact_fc,
+            use_symfc_projector=True,
             log_level=log_level,
         )
 

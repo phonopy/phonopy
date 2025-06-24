@@ -38,7 +38,7 @@ import warnings
 
 import numpy as np
 
-from phonopy.phonon.mesh import Mesh
+from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
@@ -147,7 +147,9 @@ class Dos:
 class TotalDos(Dos):
     """Class to calculate total DOS."""
 
-    def __init__(self, mesh_object: Mesh, sigma=None, use_tetrahedron_method=False):
+    def __init__(
+        self, mesh_object: Mesh | IterMesh, sigma=None, use_tetrahedron_method=False
+    ):
         """Init method."""
         super().__init__(
             mesh_object,
