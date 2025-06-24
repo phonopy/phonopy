@@ -242,7 +242,9 @@ class DynamicStructureFactor:
         self._eigvecs = qpoints_phonon.eigenvectors
 
     def _get_thermal_displacements(self, proj_dir):
-        thermal_displacements = np.zeros(self._thermal_displacement_matrices.shape[0], dtype=float)
+        thermal_displacements = np.zeros(
+            self._thermal_displacement_matrices.shape[0], dtype=float
+        )
         unit_dir = proj_dir / np.linalg.norm(proj_dir)
         unit_mat = np.outer(unit_dir, unit_dir)
 
