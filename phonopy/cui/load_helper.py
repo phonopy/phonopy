@@ -39,7 +39,7 @@ from __future__ import annotations
 import os
 import pathlib
 from dataclasses import asdict
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -285,10 +285,10 @@ def select_and_extract_force_constants(
 
 def prepare_pypolymlp_and_dataset(
     phonon: Phonopy,
-    mlp_params: Optional[dict] = None,
-    displacement_distance: Optional[float] = None,
-    number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
-    random_seed: Optional[int] = None,
+    mlp_params: dict | None = None,
+    displacement_distance: float | None = None,
+    number_of_snapshots: int | Literal["auto"] | None = None,
+    random_seed: int | None = None,
     rd_number_estimation_factor: float | None = None,
     prepare_dataset: bool = False,
     log_level: int = 0,
@@ -308,10 +308,11 @@ def prepare_pypolymlp_and_dataset(
 
 def produce_force_constants(
     phonon: Phonopy,
-    fc_calculator: Optional[str] = None,
-    fc_calculator_options: Optional[str] = None,
+    fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
+    fc_calculator_options: str | None = None,
     symmetrize_fc: bool = True,
     is_compact_fc: bool = True,
+    use_symfc_projector: bool = False,
     log_level: int = 0,
 ):
     """Produce force constants."""
@@ -322,9 +323,14 @@ def produce_force_constants(
             fc_calculator_options=fc_calculator_options,
         )
         if symmetrize_fc:
-            phonon.symmetrize_force_constants(show_drift=(log_level > 0))
-            if log_level:
-                print("Force constants were symmetrized.")
+            if fc_calculator is None:
+                phonon.symmetrize_force_constants(
+                    show_drift=True, use_symfc_projector=use_symfc_projector
+                )
+            elif fc_calculator == "traditional":
+                phonon.symmetrize_force_constants(
+                    show_drift=True, use_symfc_projector=False
+                )
     except ForcesetsNotFoundError:
         if log_level:
             print("Displacement-force datast was not found. ")
@@ -340,7 +346,7 @@ def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray)
 
 def _run_pypolymlp(
     phonon: Phonopy,
-    mlp_params: Union[str, dict, PypolymlpParams],
+    mlp_params: str | dict | PypolymlpParams | None,
     log_level: int = 0,
 ):
     """Run pypolymlp to compute forces."""

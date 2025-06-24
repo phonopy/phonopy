@@ -216,7 +216,7 @@ def rearrange_force_constants_array(
 
 
 def cutoff_force_constants(
-    force_constants: np.ndarray,
+    force_constants: NDArray,
     supercell: PhonopyAtoms,
     primitive: Primitive,
     cutoff_radius: float,
@@ -487,9 +487,9 @@ def get_rotated_displacement(displacements, site_sym_cart):
 
 
 def set_tensor_symmetry_PJ(
-    force_constants: np.ndarray,
-    lattice: np.ndarray,
-    positions: np.ndarray,
+    force_constants: NDArray,
+    lattice: NDArray,
+    positions: NDArray,
     symmetry: Symmetry,
 ):
     """Full force constants are symmetrized using crystal symmetry.
