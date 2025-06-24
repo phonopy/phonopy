@@ -1074,7 +1074,7 @@ class Phonopy:
         """Symmetrize force constants.
 
         This applies translational and permutation symmetries successfully,
-        but not simultaneously.
+        but not simultaneously, or symfc projector if use_symfc_projector is True.
 
         Parameters
         ----------
@@ -1083,6 +1083,9 @@ class Phonopy:
             repeated by this number. Default is 1.
         show_drift : bool, optioanl
             Drift forces are displayed when True. Default is True.
+        use_symfc_projector : bool, optional
+            If True, the force constants are symmetrized by symfc projector
+            instead of traditional approach.
 
         """
         if self._force_constants is None:
