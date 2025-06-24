@@ -1099,8 +1099,6 @@ class Phonopy:
                 primitive=self._primitive,
                 log_level=self._log_level,
             )
-            if self._log_level:
-                print("Max drift after symmetrization by symfc projector: ", end="")
         else:
             if self._force_constants.shape[0] == self._force_constants.shape[1]:
                 symmetrize_force_constants(self._force_constants, level=level)
@@ -1108,10 +1106,12 @@ class Phonopy:
                 symmetrize_compact_force_constants(
                     self._force_constants, self._primitive, level=level
                 )
-            if self._log_level:
-                print("Max drift after symmetrization by translation: ", end="")
 
         if show_drift and self._log_level:
+            if use_symfc_projector:
+                print("Max drift after symmetrization by symfc projector: ", end="")
+            else:
+                print("Max drift after traditional symmetrization: ", end="")
             show_drift_force_constants(
                 self._force_constants, primitive=self._primitive, values_only=True
             )
