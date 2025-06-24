@@ -272,7 +272,7 @@ phonon.plot_band_structure_and_dos(pdos_indices=[[0], [1]]).show()
 ```
 
 `path_connections` and `labels` are optional unless nice looking
-plotting is needed. To obtain eigenvectors, the corresponding 
+plotting is needed. To obtain eigenvectors, the corresponding
 keyword argument must be set:
 
 ```python
