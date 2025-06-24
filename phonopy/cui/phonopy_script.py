@@ -40,14 +40,12 @@ import datetime
 import os
 import pathlib
 import sys
-from collections.abc import Sequence
 
 import numpy as np
 import spglib
-from numpy.typing import NDArray
 
 from phonopy import Phonopy, __version__
-from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, collect_cell_info
+from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, get_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
     get_nac_params,
@@ -59,7 +57,11 @@ from phonopy.cui.load_helper import (
 from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
 from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
 from phonopy.cui.show_symmetry import check_symmetry
-from phonopy.exception import CellNotFoundError, ForceCalculatorRequiredError
+from phonopy.exception import (
+    CellNotFoundError,
+    ForceCalculatorRequiredError,
+    MagmomValueError,
+)
 from phonopy.file_IO import (
     get_supported_file_extensions_for_compression,
     is_file_phonopy_yaml,
@@ -80,13 +82,9 @@ from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_
 from phonopy.phonon.dos import get_pdos_indices
 from phonopy.physical_units import get_physical_units
 from phonopy.sscha.core import MLPSSCHA
-from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
-from phonopy.structure.cells import (
-    get_primitive_matrix,
-    guess_primitive_matrix,
-    print_cell,
-)
+from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.structure.cells import isclose as cells_isclose
+from phonopy.structure.cells import print_cell
 from phonopy.structure.dataset import forces_in_dataset
 
 
@@ -1710,88 +1708,6 @@ def _get_fc_calculator_params(settings):
     return fc_calculator, fc_calculator_options
 
 
-def _get_cell_info(
-    settings: PhonopySettings,
-    cell_filename: str | None,
-    log_level: int = 0,
-    load_phonopy_yaml: bool = False,
-) -> PhonopyCellInfoResult:
-    """Return calculator interface and crystal structure information."""
-    try:
-        cell_info = collect_cell_info(
-            supercell_matrix=settings.supercell_matrix,
-            primitive_matrix=settings.primitive_matrix,
-            interface_mode=settings.calculator,
-            cell_filename=cell_filename,
-            chemical_symbols=settings.chemical_symbols,
-            enforce_primitive_matrix_auto=_is_band_auto(settings),
-            phonopy_yaml_cls=PhonopyYaml,
-            load_phonopy_yaml=load_phonopy_yaml,
-        )
-    except CellNotFoundError as e:
-        print_error_message(str(e))
-        if log_level:
-            print_error()
-        sys.exit(1)
-
-    # Show primitive matrix overwrite message
-    phpy_yaml = cell_info.phonopy_yaml
-    if phpy_yaml is not None:
-        assert phpy_yaml.unitcell is not None
-        yaml_filename = cell_info.optional_structure_info[0]
-        pmat_in_settings = _get_primitive_matrix(
-            cell_info.primitive_matrix, phpy_yaml.unitcell
-        )
-        pmat_in_phpy_yaml = _get_primitive_matrix(
-            phpy_yaml.primitive_matrix, phpy_yaml.unitcell
-        )
-        if log_level and not np.allclose(
-            pmat_in_phpy_yaml, pmat_in_settings, atol=1e-5
-        ):
-            if phpy_yaml.primitive_matrix is None:
-                print(f'Primitive matrix is not specified in "{yaml_filename}".')
-            else:
-                print(f'Primitive matrix in "{yaml_filename}" is')
-                for v in pmat_in_phpy_yaml:
-                    print(f"  {v}")
-            print("But it is overwritten by")
-            for v in pmat_in_settings:
-                print(f"  {v}")
-            print("")
-
-    set_magnetic_moments(cell_info.unitcell, settings.magnetic_moments, log_level)
-
-    return cell_info
-
-
-def _get_primitive_matrix(
-    pmat: str | NDArray | None, unitcell: PhonopyAtoms, symprec: float = 1e-5
-) -> np.ndarray:
-    _pmat = get_primitive_matrix(pmat)
-    if isinstance(_pmat, str) and _pmat == "auto":
-        _pmat = guess_primitive_matrix(unitcell, symprec=symprec)
-    if _pmat is None:
-        _pmat = np.eye(3, dtype="double")
-    return _pmat
-
-
-def set_magnetic_moments(
-    unitcell: PhonopyAtoms, magnetic_moments: Sequence | None, log_level: int
-):
-    """Set magnetic moments to unitcell."""
-    # Set magnetic moments
-    magmoms = magnetic_moments
-    if magmoms is not None:
-        if len(magmoms) in (len(unitcell), len(unitcell) * 3):
-            unitcell.magnetic_moments = magmoms
-        else:
-            error_text = "Invalid MAGMOM setting"
-            print_error_message(error_text)
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-
 def _show_symmetry_info_then_exit(cell_info: PhonopyCellInfoResult, symprec: float):
     """Show crystal structure information in yaml style."""
     phonon = Phonopy(
@@ -1980,12 +1896,19 @@ def main(**argparse_control):
     #################################################################
     # Parse crystal structure and optionally phonopy.yaml-like file #
     #################################################################
-    cell_info = _get_cell_info(
-        settings,
-        cell_filename,
-        log_level=log_level,
-        load_phonopy_yaml=load_phonopy_yaml,
-    )
+    try:
+        cell_info = get_cell_info(
+            settings,
+            cell_filename,
+            log_level=log_level,
+            load_phonopy_yaml=load_phonopy_yaml,
+            enforce_primitive_matrix_auto=_is_band_auto(settings),
+        )
+    except (CellNotFoundError, MagmomValueError) as e:
+        print_error_message(str(e))
+        if log_level:
+            print_error()
+        sys.exit(1)
 
     unitcell_filename = cell_info.optional_structure_info[0]
 

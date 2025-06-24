@@ -268,7 +268,7 @@ def write_crystal_structure(
 
 
 def write_supercells_with_displacements(
-    interface_mode: str,
+    interface_mode: str | None,
     supercell: PhonopyAtoms,
     cells_with_disps: Sequence[PhonopyAtoms],
     optional_structure_info: tuple,

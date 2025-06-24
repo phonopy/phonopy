@@ -51,3 +51,9 @@ class CellNotFoundError(RuntimeError):
     """Exception when unit cell not found."""
 
     pass
+
+
+class MagmomValueError(ValueError):
+    """Exception when magnetic moment value is not valid."""
+
+    pass

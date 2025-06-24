@@ -36,7 +36,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 import numpy as np
 import spglib
@@ -1603,7 +1603,7 @@ def determinant(m):
 def get_primitive_matrix(
     pmat: str | ArrayLike | None = None,
     symprec: float = 1e-5,
-) -> str | NDArray | None:
+) -> Literal["auto"] | NDArray | None:
     """Find primitive matrix from primitive cell.
 
     None is equivalent to "P" but None is returned.

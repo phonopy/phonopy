@@ -36,12 +36,14 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 from collections.abc import Sequence
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
-from phonopy.exception import CellNotFoundError
+from phonopy.cui.settings import PhonopySettings
+from phonopy.exception import CellNotFoundError, MagmomValueError
 from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
     get_default_cell_filename,
@@ -50,6 +52,7 @@ from phonopy.interface.calculator import (
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import get_primitive_matrix, guess_primitive_matrix
 
 
 @dataclasses.dataclass
@@ -74,11 +77,66 @@ class PhonopyCellInfoResult(CellInfoResult):
     phonopy_yaml: PhonopyYaml | None = None
 
 
+def get_cell_info(
+    settings: PhonopySettings,
+    cell_filename: str | os.PathLike | None,
+    log_level: int = 0,
+    load_phonopy_yaml: bool = False,
+    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
+    enforce_primitive_matrix_auto: bool = False,
+) -> PhonopyCellInfoResult:
+    """Return calculator interface and crystal structure information.
+
+    CellNotFoundError and MagmomValueError can be raised by collect_cell_info and
+    set_magnetic_moments functions, respectively.
+
+    """
+    cell_info = collect_cell_info(
+        supercell_matrix=settings.supercell_matrix,
+        primitive_matrix=settings.primitive_matrix,
+        interface_mode=settings.calculator,
+        cell_filename=cell_filename,
+        chemical_symbols=settings.chemical_symbols,
+        enforce_primitive_matrix_auto=enforce_primitive_matrix_auto,
+        phonopy_yaml_cls=phonopy_yaml_cls,
+        load_phonopy_yaml=load_phonopy_yaml,
+    )
+
+    # Show primitive matrix overwrite message
+    phpy_yaml = cell_info.phonopy_yaml
+    if phpy_yaml is not None:
+        assert phpy_yaml.unitcell is not None
+        yaml_filename = cell_info.optional_structure_info[0]
+        pmat_in_settings = _get_primitive_matrix(
+            cell_info.primitive_matrix, phpy_yaml.unitcell
+        )
+        pmat_in_phpy_yaml = _get_primitive_matrix(
+            phpy_yaml.primitive_matrix, phpy_yaml.unitcell
+        )
+        if log_level and not np.allclose(
+            pmat_in_phpy_yaml, pmat_in_settings, atol=1e-5
+        ):
+            if phpy_yaml.primitive_matrix is None:
+                print(f'Primitive matrix is not specified in "{yaml_filename}".')
+            else:
+                print(f'Primitive matrix in "{yaml_filename}" is')
+                for v in pmat_in_phpy_yaml:
+                    print(f"  {v}")
+            print("But it is overwritten by")
+            for v in pmat_in_settings:
+                print(f"  {v}")
+            print("")
+
+    set_magnetic_moments(cell_info.unitcell, settings.magnetic_moments, log_level)
+
+    return cell_info
+
+
 def collect_cell_info(
     supercell_matrix: ArrayLike | None = None,
     primitive_matrix: ArrayLike | None = None,
     interface_mode: str | None = None,
-    cell_filename: str | None = None,
+    cell_filename: str | os.PathLike | None = None,
     chemical_symbols: Sequence[str] | None = None,
     enforce_primitive_matrix_auto: bool = False,
     phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
@@ -197,6 +255,19 @@ def collect_cell_info(
         interface_mode=interface_mode_out,
         phonopy_yaml=phpy_yaml,
     )
+
+
+def set_magnetic_moments(
+    unitcell: PhonopyAtoms, magnetic_moments: Sequence | None, log_level: int
+):
+    """Set magnetic moments to unitcell."""
+    # Set magnetic moments
+    magmoms = magnetic_moments
+    if magmoms is not None:
+        if len(magmoms) in (len(unitcell), len(unitcell) * 3):
+            unitcell.magnetic_moments = magmoms
+        else:
+            raise MagmomValueError("Invalid MAGMOM setting")
 
 
 def _decide_interface_mode_and_filename(
@@ -469,3 +540,14 @@ def _get_error_message(
         msg_list.append(f'But parsing "{final_cell_filename}" failed.')
 
     return "\n".join(msg_list)
+
+
+def _get_primitive_matrix(
+    pmat: str | ArrayLike | None, unitcell: PhonopyAtoms, symprec: float = 1e-5
+) -> NDArray:
+    _pmat = get_primitive_matrix(pmat)
+    if isinstance(_pmat, str) and _pmat == "auto":
+        _pmat = guess_primitive_matrix(unitcell, symprec=symprec)
+    if _pmat is None:
+        _pmat = np.eye(3, dtype="double")
+    return _pmat
