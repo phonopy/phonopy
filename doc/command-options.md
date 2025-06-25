@@ -233,7 +233,7 @@ correpond to that of `vasprun.xml` files.
 eV/Angstrom are read. The unit conversion factor is determined with this unit.
 
 ```bash
-% phonopy --abinit -f disp-001/supercell.out disp-002/supercell.out ...
+% phonopy -f disp-001/supercell.out disp-002/supercell.out ...
 ```
 
 (qe_force_sets_option)=
@@ -242,14 +242,13 @@ eV/Angstrom are read. The unit conversion factor is determined with this unit.
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and QE-PW output files.
 
 ```bash
-% phonopy --qe -f disp-001/supercell.out disp-002/supercell.out ...
+% phonopy -f disp-001/supercell.out disp-002/supercell.out ...
 ```
 
 Here `*.out` files are the saved texts of standard outputs of PWscf
 calculations.
 
 (wien2k_force_sets_option)=
-
 #### WIEN2k interface
 This is experimental support to generage `FORCE_SETS`. Insted of this, you can
 use the external tool called `scf2forces` to generate `FORCE_SETS`. `scf2forces`
@@ -262,7 +261,7 @@ the order of `case.scf`'s have to be same. **For WIEN2k struct file, only
 negative atom index with the P lattice format is supported.**
 
 ```bash
-% phonopy --wien2k -f case_001/case_001.scf case_002/case_002.scf ...
+% phonopy -f case_001/case_001.scf case_002/case_002.scf ...
 ```
 
 For more information, {ref}`wien2k_interface`.
@@ -273,7 +272,7 @@ For more information, {ref}`wien2k_interface`.
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and Elk output files.
 
 ```bash
-% phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT ...
+% phonopy -f disp-001/INFO.OUT disp-002/INFO.OUT ...
 ```
 
 (crystal_force_sets_option)=
@@ -281,7 +280,7 @@ For more information, {ref}`wien2k_interface`.
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and CRYSTAL output files.
 
 ```bash
-% phonopy --crystal -f supercell-001.o supercell-002.o ...
+% phonopy -f supercell-001.o supercell-002.o ...
 ```
 
 (turbomole_force_sets_option)=
@@ -291,7 +290,7 @@ For more information, {ref}`wien2k_interface`.
 files.
 
 ```bash
-% phonopy --turbomole -f supercell-001 supercell-002 ...
+% phonopy -f supercell-001 supercell-002 ...
 ```
 
 (fleur_force_sets_option)=
@@ -301,7 +300,7 @@ files.
 output files.
 
 ```bash
-% phonopy --fleur -f disp-001/FORCES disp-002/FORCES ...
+% phonopy -f disp-001/FORCES disp-002/FORCES ...
 ```
 
 (cp2k_force_sets_option)=
@@ -311,7 +310,7 @@ output files.
 with:
 
 ```bash
-% phonopy --cp2k -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz ...
+% phonopy -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz ...
 ```
 
 Please note: the files containing the forces can be prefixed with the

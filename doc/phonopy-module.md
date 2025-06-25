@@ -122,7 +122,12 @@ supercells with displacements are given as a list of `PhonopyAtoms`. See
 {ref}`phonopy_read_write_structure` to write
 those into files in a crystal structure format.
 
-The frequency unit conversion factor to THz has to be set by using the `factor`
+#### Calculators
+If not using the default calculator (`"vasp"`), the `calculator` keyword argument
+must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
+
+Additionally,
+the frequency unit conversion factor to THz has to be set by using the `factor`
 keyword in `Phonopy` class. The factors are `VaspToTHz` for VASP, `Wien2kToTHz`
 for Wien2k, `AbinitToTHz` for Abinit, `PwscfToTHz` for Pwscf, `ElkToTHz` for
 Elk, `SiestaToTHz` for Siesta, `CrystalToTHz` for CRYSTAL, `FleurToTHz` for
