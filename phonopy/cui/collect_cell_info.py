@@ -42,7 +42,7 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from phonopy.cui.settings import PhonopySettings
+from phonopy.cui.settings import Settings
 from phonopy.exception import CellNotFoundError, MagmomValueError
 from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
@@ -78,7 +78,7 @@ class PhonopyCellInfoResult(CellInfoResult):
 
 
 def get_cell_info(
-    settings: PhonopySettings,
+    settings: Settings,
     cell_filename: str | os.PathLike | None,
     log_level: int = 0,
     load_phonopy_yaml: bool = False,
