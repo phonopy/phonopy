@@ -126,24 +126,23 @@ those into files in a crystal structure format.
 If not using the default calculator (`"vasp"`), the `calculator` keyword argument
 must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
 
-Additionally,
-the frequency unit conversion factor to THz has to be set by using the `factor`
-keyword in `Phonopy` class. The factors are `VaspToTHz` for VASP, `Wien2kToTHz`
-for Wien2k, `AbinitToTHz` for Abinit, `PwscfToTHz` for Pwscf, `ElkToTHz` for
-Elk, `SiestaToTHz` for Siesta, `CrystalToTHz` for CRYSTAL, `FleurToTHz` for
-Fleur, `VaspToTHz`, and `DftbpToTHz` for DFTB+ is the default value. For
-example:
+Additionally, the frequency unit conversion factor to THz has to be set by using the
+`factor` keyword in `Phonopy` class. The factors are accessed by referencing the
+calculator name. VASP and DFTB+ use the default value, so this step is optional
+for these calculators. 
+
+Here is an example for Abinit:
 
 ```python
 from phonopy.interface.calculator import get_calculator_physical_units
 
-AbinitToTHz = get_calculator_physical_units(interface_mode='abinit')['factor']
+factor = get_calculator_physical_units(interface_mode='abinit')['factor']
 phonon = Phonopy(unitcell,
                  supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
                  primitive_matrix=[[0, 0.5, 0.5],
                                    [0.5, 0, 0.5],
                                    [0.5, 0.5, 0]],
-                 factor=AbinitToTHz)
+                 factor=factor)
 ```
 
 Some more information on physical unit conversion is found at
