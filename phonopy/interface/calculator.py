@@ -653,7 +653,7 @@ def get_default_physical_units(interface_mode=None) -> dict:
 
 
 def get_calculator_physical_units(interface_mode=None) -> dict:
-    """Return physical units of eachi calculator.
+    """Return physical units of each calculator.
 
     Physical units: energy,  distance,  atomic mass, force,        force constants
     vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
