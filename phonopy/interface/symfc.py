@@ -135,17 +135,12 @@ class SymfcFCSolver:
     def run(self, orders: Sequence[int]):
         """Run symfc."""
         if self._log_level:
-            import symfc
-
             print(
                 "--------------------------------"
                 " Symfc start "
                 "-------------------------------"
             )
-            print(f"Symfc version {symfc.__version__}")
-            print("Symfc is a force constants calculator. See the following paper:")
-            print("A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024).")
-            print("Symfc is developed at https://github.com/symfc/symfc.")
+            self.show_credit()
             print(f"Computing {orders} order force constants.", flush=True)
             if self._options:
                 print("Parameters:")
@@ -166,6 +161,13 @@ class SymfcFCSolver:
             )
 
     @property
+    def version(self) -> str:
+        """Return symfc version."""
+        import symfc
+
+        return symfc.__version__
+
+    @property
     def p2s_map(self) -> NDArray | None:
         """Return indices of translationally independent atoms."""
         return self._symfc.p2s_map
@@ -174,6 +176,11 @@ class SymfcFCSolver:
     def basis_set(self) -> dict:
         """Return basis set."""
         return self._symfc.basis_set
+
+    def show_credit(self):
+        """Show credit."""
+        print(f"Symfc version {self.version} (https://github.com/symfc/symfc)")
+        print("Citation: A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024)")
 
     def estimate_basis_size(
         self,
@@ -445,6 +452,7 @@ def symmetrize_by_projector(
     order: int,
     primitive: Primitive | None = None,
     log_level: int = 0,
+    show_credit: bool = False,
 ) -> NDArray:
     """Symmetrize force constants by projector method.
 
@@ -461,9 +469,13 @@ def symmetrize_by_projector(
         are consistent with the primitive cell.
     log_level : int, optional
         Log level for symfc. Default is 0, which means no log.
+    show_credit : bool, optional
+        Whether to show credit information of symfc. Default is False.
 
     """
     symfc = SymfcFCSolver(supercell, log_level=log_level)
+    if show_credit and log_level:
+        symfc.show_credit()
     symfc.compute_basis_set(orders=[order])
     basis_set = symfc.basis_set[order]
     if fc.shape[0] == fc.shape[1]:
