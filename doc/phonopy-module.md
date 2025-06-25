@@ -129,7 +129,7 @@ must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="q
 Additionally, the frequency unit conversion factor to THz has to be set by using the
 `factor` keyword in `Phonopy` class. The factors are accessed by referencing the
 calculator name. VASP and DFTB+ use the default value, so this step is optional
-for these calculators. 
+for these calculators.
 
 Here is an example for Abinit:
 
