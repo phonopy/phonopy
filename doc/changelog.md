@@ -2,6 +2,16 @@
 
 # Change Log
 
+## Jun-15-2025: Version 2.40.0
+
+- `--rd-auto-factor` command option (`RD_NUMBER_ESTIMATION_FACTOR` tag) was
+  added.
+
+## Jun-11-2025: Version 2.39.0
+
+- Collection of small updates.
+- Questaal interface was added.
+
 ## Arp-30-2025: Version 2.38.2
 
 - `phonopy.interface.calculator.get_default_physical_units` is deprecated and

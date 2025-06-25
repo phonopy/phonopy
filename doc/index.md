@@ -37,7 +37,7 @@ The following features of phonopy are highlighted:
 <cp2k_interface>`, {ref}`FHI-aims <FHI_aims_interface>`, {ref}`CASTEP
 <castep_interface>`, {ref}`Fleur <Fleur_interface>`, {ref}`ABACUS
 <abacus_interface>`, {ref}`LAMMPS <lammps_interface>`, {ref}`LAMMPS (external)
-<external_tools_phonolammps>`
+<external_tools_phonolammps>`, {ref}`Questaal/LMTO (QLM) <qlm_interface>`
 - {ref}`Phonopy API for Python <phonopy_module>`
 
 ```{toctree}

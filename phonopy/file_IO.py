@@ -37,13 +37,15 @@
 from __future__ import annotations
 
 import io
+import os
 import pathlib
 import sys
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 import yaml
+from numpy.typing import ArrayLike, NDArray
 
 try:
     from yaml import CLoader as Loader
@@ -351,11 +353,11 @@ def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
 
 
 def write_force_constants_to_hdf5(
-    force_constants: np.ndarray,
+    force_constants: NDArray,
     filename: str = "force_constants.hdf5",
-    p2s_map: Optional[np.ndarray] = None,
-    physical_unit: Optional[str] = None,
-    compression: Optional[Union[str, int]] = None,
+    p2s_map: NDArray | None = None,
+    physical_unit: str | None = None,
+    compression: str | int | None = None,
 ):
     """Write force constants in hdf5 format.
 
@@ -429,8 +431,10 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):
 
 
 def read_force_constants_hdf5(
-    filename="force_constants.hdf5", p2s_map=None, return_physical_unit=False
-):
+    filename: str | os.PathLike = "force_constants.hdf5",
+    p2s_map: ArrayLike | None = None,
+    return_physical_unit: bool = False,
+) -> NDArray | tuple[NDArray, str | None]:
     """Parse force_constants.hdf5.
 
     Parameters

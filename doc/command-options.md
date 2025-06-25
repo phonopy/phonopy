@@ -7,6 +7,7 @@ by those with dashes `-`. Those tag names are unchanged.
 Some of command-line options are equivalent to respective setting tags:
 
 - `--alm` (`FC_CALCULATOR = ALM`) [{ref}`fc_calculator_alm_tag`]
+- `--amax` (`DISPLACEMENT_DISTANCE_MAX`) [{ref}`displacement_distance_max_tag`]
 - `--amplitude` (`DISPLACEMENT_DISTANCE`) [{ref}`displacement_distance_tag`]
 - `--anime` (`ANIME`) [{ref}`anime_tag`]
 - `--band` (`BAND`) [{ref}`band_tag`]
@@ -62,6 +63,7 @@ Some of command-line options are equivalent to respective setting tags:
 - `--qpoints` (`QPOINTS`) [{ref}`qpoints_tag`]
 - `--qpoints-format` (`QPOINTS_FORMAT`) [{ref}`qpoints_format_tag`]
 - `--rd` (`RANDOM_DISPLACEMENTS`) [{ref}`random_displacements_tag`]
+- `--rd-auto-factor` (`RD_NUMBER_ESTIMATION_FACTOR`) [{ref}`rd_number_estimation_factor_tag`]
 - `--rd-temperature` (`RANDOM_DISPLACEMENT_TEMPERATURE`)
   [{ref}`random_displacement_temperature_tag`]
 - `--readfc` (`READ_FORCE_CONSTANTS = .TRUE.`) [{ref}`read_force_constants_tag`]
@@ -96,10 +98,11 @@ use of setting tags and command-line options, i.e.,
 ## Choice of force calculator
 
 Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
-SIESTA, CRYSTAL, TURBOMOLE, Fleur and CP2K are prepared. These interfaces are
-invoked with `--vasp`, `--wienk2`, `--qe`, `--abinit`, `--elk`, `--siesta`,
-`--crystal`, `--turbomole`, `--fleur` and `--cp2k` options, respectively. When
-no interface is specified, `--vasp` is selected as the default interface.
+SIESTA, CRYSTAL, TURBOMOLE, Fleur, CP2K and Questaal are prepared. These
+interfaces are invoked with `--vasp`, `--wienk2`, `--qe`, `--abinit`, `--elk`,
+`--siesta`, `--crystal`, `--turbomole`, `--fleur`, `--cp2k` and `--qlm`
+options, respectively. When no interface is specified, `--vasp` is selected as
+the default interface.
 
 The details about these interfaces are found at {ref}`calculator_interfaces`.
 
@@ -154,6 +157,12 @@ files.
 
 This option invokes the WIEN2k mode.
 
+(qlm_mode)=
+
+### `--qlm`
+
+This option invokes the Questaal/LMTO mode.
+
 **Only the WIEN2k struct with the P lattice is supported**. See more information
 {ref}`wien2k_interface`.
 
@@ -197,12 +206,27 @@ The default file names for the calculators are as follows:
   - `fleur.in`
 * - CP2K
   - `unitcell.inp`
+* - Questaal/LMTO
+  - `site.lm`
 ```
 
 ## Create `FORCE_SETS`
 
+`FORCE_SETS` is a file containing the displacement-force dataset from which
+supercell force constants will be calculated. The command option `-f` or `--fz`
+is used to collect displacements in `phonopy_disp.yaml` and forces from force
+calculator results if the corresponding interface exists in phonopy.
+
+When combined with the `--sp` or `--save-params` option, this enables writing
+the displacement-force dataset to phonopy_params.yaml. If the force calculator
+interface supports reading supercell potential energy (e.g., electronic total
+energy in the case of VASP), supercell energies are also stored in
+`phonopy_params.yaml`. These supercell energies can be used to develop machine
+learning potentials such as pypolymlp. See {ref}`save_params_option`.
+
 (f_force_sets_option)=
 ### `-f` or `--forces`
+
 
 (vasp_force_sets_option)=
 #### VASP interface
@@ -316,6 +340,15 @@ with:
 Please note: the files containing the forces can be prefixed with the
 `PROJECT_NAME` as specified in the original CP2K input file.
 
+#### Questaal/LMTO interface
+
+`FORCE_SETS` file is created from `phonopy_disp.yaml` and force files,
+with:
+
+```bash
+% phonopy --qlm -f supercell-001/force.lm supercell-002/force.lm ...
+```
+
 (fz_force_sets_option)=
 ### `--fz`
 
@@ -382,6 +415,10 @@ parameters for non-analytical term correction are written in
 When using with `-f`, displacement-force dataset are stored in
 `phonopy_params.yaml` instead of `FORCE_SETS`. When `BORN` file is found in the
 current directory, the parameters are also stored in `phonopy_params.yaml`.
+
+```bash
+% phonopy --sp -f disp-001/vasprun.xml disp-002/vasprun.xml ...
+```
 
 ## Graph plotting
 

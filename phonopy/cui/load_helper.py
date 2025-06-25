@@ -36,11 +36,13 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 from dataclasses import asdict
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy import Phonopy
 from phonopy.exception import ForcesetsNotFoundError
@@ -68,16 +70,16 @@ from phonopy.structure.dataset import forces_in_dataset
 
 
 def get_cell_settings(
-    supercell_matrix=None,
-    primitive_matrix=None,
-    unitcell=None,
-    supercell=None,
-    unitcell_filename=None,
-    supercell_filename=None,
-    calculator=None,
-    symprec=1e-5,
-    log_level=0,
-):
+    supercell_matrix: ArrayLike | None = None,
+    primitive_matrix: ArrayLike | str | None = None,
+    unitcell: PhonopyAtoms | None = None,
+    supercell: PhonopyAtoms | None = None,
+    unitcell_filename: str | os.PathLike | None = None,
+    supercell_filename: str | os.PathLike | None = None,
+    calculator: str | None = None,
+    symprec: float = 1e-5,
+    log_level: int = 0,
+) -> tuple[PhonopyAtoms, ArrayLike | None, str | NDArray | None]:
     """Return crystal structures."""
     optional_structure_info = None
     if primitive_matrix is None or (
@@ -125,13 +127,13 @@ def get_cell_settings(
 
 
 def get_nac_params(
-    primitive: Optional[Primitive] = None,
-    nac_params: Optional[dict] = None,
-    born_filename: Optional[str] = None,
+    primitive: Primitive | None = None,
+    nac_params: dict | None = None,
+    born_filename: str | os.PathLike | None = None,
     is_nac: bool = True,
-    nac_factor: Optional[float] = None,
+    nac_factor: float | None = None,
     log_level: int = 0,
-) -> dict:
+) -> dict | None:
     """Look for and return NAC parameters.
 
     Parameters
@@ -182,8 +184,10 @@ def get_nac_params(
 
 
 def read_force_constants_from_hdf5(
-    filename="force_constants.hdf5", p2s_map=None, calculator=None
-):
+    filename: str | os.PathLike = "force_constants.hdf5",
+    p2s_map: ArrayLike | None = None,
+    calculator: str | None = None,
+) -> NDArray:
     """Convert force constants physical unit.
 
     Each calculator interface has own default force constants physical unit.
@@ -207,24 +211,23 @@ def read_force_constants_from_hdf5(
 
 
 def select_and_load_dataset(
-    phonon: Phonopy,
-    dataset: Optional[dict],
-    phonopy_yaml_filename: Optional[str] = None,
-    force_sets_filename: Optional[str] = None,
+    nsatom: int,
+    dataset: dict | None = None,
+    phonopy_yaml_filename: str | os.PathLike | None = None,
+    force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
 ) -> Optional[dict]:
     """Set displacement-force dataset."""
-    natom = len(phonon.supercell)
     _dataset = None
     _force_sets_filename = None
     if forces_in_dataset(dataset):
         _dataset = dataset
         _force_sets_filename = phonopy_yaml_filename
     elif force_sets_filename is not None:
-        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
+        _dataset = parse_FORCE_SETS(natom=nsatom, filename=force_sets_filename)
         _force_sets_filename = force_sets_filename
     elif pathlib.Path("FORCE_SETS").exists():
-        _dataset = parse_FORCE_SETS(natom=natom)
+        _dataset = parse_FORCE_SETS(natom=nsatom)
         _force_sets_filename = "FORCE_SETS"
     else:
         _dataset = dataset
@@ -240,43 +243,33 @@ def select_and_load_dataset(
 
 def select_and_extract_force_constants(
     phonon: Phonopy,
-    phonopy_yaml_filename: Optional[str] = None,
-    fc: Optional[np.ndarray] = None,  # From phonopy_yaml
-    force_constants_filename: Optional[str] = None,
+    phonopy_yaml_filename: str | os.PathLike | None = None,
+    force_constants: NDArray | None = None,
+    force_constants_filename: str | os.PathLike | None = None,
     is_compact_fc: bool = True,
     log_level: int = 0,
-) -> Optional[np.ndarray]:
-    """Set force constants."""
+) -> NDArray | None:
+    """Extract force constants.
+
+    1. From fc (ndarray) in phonopy_yaml.
+    2. From FORCE_CONSTANTS file or force_constants.hdf5 file.
+
+    """
     _fc = None
     _force_constants_filename = None
-    if fc is not None:
-        _fc = fc
+    if force_constants is not None:  # 1
+        _fc = force_constants
         _force_constants_filename = phonopy_yaml_filename
-    elif force_constants_filename is not None:
-        _fc = _read_force_constants_file(
-            phonon,
-            force_constants_filename,
-            is_compact_fc=is_compact_fc,
-            log_level=log_level,
-        )
+    elif force_constants_filename is not None:  # 2
+        _fc = _read_force_constants_file(phonon, force_constants_filename)
         _force_constants_filename = force_constants_filename
     elif phonon.force_constants is None:
         # unless provided these from phonopy_yaml.
         if pathlib.Path("FORCE_CONSTANTS").exists():
-            _fc = _read_force_constants_file(
-                phonon,
-                "FORCE_CONSTANTS",
-                is_compact_fc=is_compact_fc,
-                log_level=log_level,
-            )
+            _fc = _read_force_constants_file(phonon, "FORCE_CONSTANTS")
             _force_constants_filename = "FORCE_CONSTANTS"
         elif pathlib.Path("force_constants.hdf5").exists():
-            _fc = _read_force_constants_file(
-                phonon,
-                "force_constants.hdf5",
-                is_compact_fc=is_compact_fc,
-                log_level=log_level,
-            )
+            _fc = _read_force_constants_file(phonon, "force_constants.hdf5")
             _force_constants_filename = "force_constants.hdf5"
 
     if _fc is not None:
@@ -292,10 +285,11 @@ def select_and_extract_force_constants(
 
 def prepare_pypolymlp_and_dataset(
     phonon: Phonopy,
-    mlp_params: Optional[dict] = None,
-    displacement_distance: Optional[float] = None,
-    number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
-    random_seed: Optional[int] = None,
+    mlp_params: dict | None = None,
+    displacement_distance: float | None = None,
+    number_of_snapshots: int | Literal["auto"] | None = None,
+    random_seed: int | None = None,
+    rd_number_estimation_factor: float | None = None,
     prepare_dataset: bool = False,
     log_level: int = 0,
 ):
@@ -307,16 +301,18 @@ def prepare_pypolymlp_and_dataset(
             displacement_distance=displacement_distance,
             number_of_snapshots=number_of_snapshots,
             random_seed=random_seed,
+            rd_number_estimation_factor=rd_number_estimation_factor,
             log_level=log_level,
         )
 
 
 def produce_force_constants(
     phonon: Phonopy,
-    fc_calculator: Optional[str] = None,
-    fc_calculator_options: Optional[str] = None,
+    fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
+    fc_calculator_options: str | None = None,
     symmetrize_fc: bool = True,
     is_compact_fc: bool = True,
+    use_symfc_projector: bool = False,
     log_level: int = 0,
 ):
     """Produce force constants."""
@@ -327,9 +323,14 @@ def produce_force_constants(
             fc_calculator_options=fc_calculator_options,
         )
         if symmetrize_fc:
-            phonon.symmetrize_force_constants(show_drift=(log_level > 0))
-            if log_level:
-                print("Force constants were symmetrized.")
+            if fc_calculator is None:
+                phonon.symmetrize_force_constants(
+                    show_drift=True, use_symfc_projector=use_symfc_projector
+                )
+            elif fc_calculator == "traditional":
+                phonon.symmetrize_force_constants(
+                    show_drift=True, use_symfc_projector=False
+                )
     except ForcesetsNotFoundError:
         if log_level:
             print("Displacement-force datast was not found. ")
@@ -345,7 +346,7 @@ def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray)
 
 def _run_pypolymlp(
     phonon: Phonopy,
-    mlp_params: Union[str, dict, PypolymlpParams],
+    mlp_params: str | dict | PypolymlpParams | None,
     log_level: int = 0,
 ):
     """Run pypolymlp to compute forces."""
@@ -404,9 +405,10 @@ def _run_pypolymlp(
 
 def _prepare_dataset_by_pypolymlp(
     phonon: Phonopy,
-    displacement_distance: Optional[float] = None,
-    number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
-    random_seed: Optional[int] = None,
+    displacement_distance: float | None = None,
+    number_of_snapshots: int | Literal["auto"] | None = None,
+    rd_number_estimation_factor: float | None = None,
+    random_seed: int | None = None,
     log_level: int = 0,
 ):
     """Generate displacements and evaluate forces by pypolymlp."""
@@ -434,6 +436,7 @@ def _prepare_dataset_by_pypolymlp(
         is_plusminus=True,
         number_of_snapshots=number_of_snapshots,
         random_seed=random_seed,
+        number_estimation_factor=rd_number_estimation_factor,
     )
     if log_level and number_of_snapshots == "auto":
         print(
@@ -453,9 +456,7 @@ def _prepare_dataset_by_pypolymlp(
     phonon.evaluate_mlp()
 
 
-def _read_force_constants_file(
-    phonon: Phonopy, force_constants_filename, is_compact_fc=True, log_level=0
-):
+def _read_force_constants_file(phonon: Phonopy, force_constants_filename) -> NDArray:
     dot_split = force_constants_filename.split(".")
     p2s_map = phonon.primitive.p2s_map
     if len(dot_split) > 1 and dot_split[-1] == "hdf5":

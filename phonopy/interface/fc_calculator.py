@@ -180,12 +180,12 @@ class FCSolver:
         self,
         fc_solver_name: Literal["traditional", "symfc", "alm"],
         supercell: PhonopyAtoms,
-        symmetry: Optional[Symmetry] = None,
-        dataset: Optional[dict] = None,
+        symmetry: Symmetry | None = None,
+        dataset: dict | None = None,
         is_compact_fc: bool = False,
-        primitive: Optional[Primitive] = None,
-        orders: Optional[Sequence[int]] = None,
-        options: Optional[str] = None,
+        primitive: Primitive | None = None,
+        orders: Sequence[int] | None = None,
+        options: str | None = None,
         log_level: int = 0,
     ):
         """Init method.

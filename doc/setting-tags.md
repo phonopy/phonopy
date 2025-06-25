@@ -259,10 +259,33 @@ RANDOM_DISPLACEMENTS = 20
 DISPLACEMENT_DISTANCE = 0.03
 ```
 
+When `AUTO` is specified, the number of supercells to be generated is estimated
+using symfc. The default estimated number is four times the minimum number
+required to solve the normal equation under symmetry considerations. When
+`DISPLACEMENT_DISTANCE_MAX` is also specified, the default number becomes eight
+times the minimum required number. These factors (4 or 8) can be changed by
+`RD_NUMBER_ESTIMATION_FACTOR`.
+
+(displacement_distance_max_tag)=
+### `DISPLACEMENT_DISTANCE_MAX`
+
+This is used along with `RANDOM_DISPLACEMENTS` but not with
+`RANDOM_DISPLACEMENT_TEMPERATURE`. The random displacements are generated with
+variation not only in direction, but also in distance, with distances randomly
+sampled uniformly between the values of `DISPLACEMENT_DISTANCE` and
+`DISPLACEMENT_DISTANCE_MAX`.
+
+(rd_number_estimation_factor_tag)=
+### `RD_NUMBER_ESTIMATION_FACTOR`
+
+The default factor to generate supercells with symfc using
+`RANDOM_DISPLACEMENTS=AUTO` is changed to this value. See the default factor in
+{ref}`random_displacements_tag`.
+
 (random_displacement_temperature_tag)=
 ### `RANDOM_DISPLACEMENT_TEMPERATURE`
 
-**New in v2.17** This invokes generation of random displacements at a
+This invokes generation of random displacements at a
 temperature specified by this tag. Collective displacements are randomly sampled
 from harmonic oscillator distribution functions of phonon modes. See more
 details at {ref}`random_displacements_at_temperatures`.
