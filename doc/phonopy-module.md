@@ -149,6 +149,41 @@ Some more information on physical unit conversion is found at
 {ref}`frequency_conversion_factor_tag`, {ref}`physical_unit_conversion`, and
 {ref}`calculator_interfaces`.
 
+#### Pre-processing Example
+
+```python
+import numpy as np
+from phonopy import Phonopy
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.interface.calculator import (
+    read_crystal_structure,
+    write_crystal_structure,
+    get_calculator_physical_units,
+)
+
+calc = "qe"  # Quantum Espresso
+unitcell, optional_structure_info = read_crystal_structure("pw.in",
+    interface_mode=calc)
+
+# not needed if using VASP
+factor = get_calculator_physical_units(interface_mode=calc)["factor"]
+phonon = Phonopy(unitcell, supercell_matrix=np.eye(3), factor=factor,
+    calculator=calc)
+
+phonon.generate_displacements(distance=0.03)
+supercells = phonon.supercells_with_displacements
+
+for i, supercell in enumerate(supercells):
+    write_crystal_structure(
+        f"supercell-{i}.in",
+        supercell,
+        interface_mode=calc,
+        optional_structure_info=optional_structure_info,
+    )
+
+phonon.save("phonopy_disp.yaml")
+```
+
 ### Post process
 
 Forces on atoms are supposed to be obtained by running force calculator (e.g.
