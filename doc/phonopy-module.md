@@ -122,23 +122,27 @@ supercells with displacements are given as a list of `PhonopyAtoms`. See
 {ref}`phonopy_read_write_structure` to write
 those into files in a crystal structure format.
 
-The frequency unit conversion factor to THz has to be set by using the `factor`
-keyword in `Phonopy` class. The factors are `VaspToTHz` for VASP, `Wien2kToTHz`
-for Wien2k, `AbinitToTHz` for Abinit, `PwscfToTHz` for Pwscf, `ElkToTHz` for
-Elk, `SiestaToTHz` for Siesta, `CrystalToTHz` for CRYSTAL, `FleurToTHz` for
-Fleur, `VaspToTHz`, `DftbpToTHz` for DFTB+ and `QlmToTHz` for Questaal/LMTO
-is the default value. For example:
+#### Calculators
+If not using the default calculator (`"vasp"`), the `calculator` keyword argument
+must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
+
+Additionally, the frequency unit conversion factor to THz has to be set by using the
+`factor` keyword in `Phonopy` class. The factors are accessed by referencing the
+calculator name. VASP and DFTB+ use the default value, so this step is optional
+for these calculators.
+
+Here is an example for Abinit:
 
 ```python
 from phonopy.interface.calculator import get_calculator_physical_units
 
-AbinitToTHz = get_calculator_physical_units(interface_mode='abinit')['factor']
+factor = get_calculator_physical_units(interface_mode='abinit')['factor']
 phonon = Phonopy(unitcell,
                  supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
                  primitive_matrix=[[0, 0.5, 0.5],
                                    [0.5, 0, 0.5],
                                    [0.5, 0.5, 0]],
-                 factor=AbinitToTHz)
+                 factor=factor)
 ```
 
 Some more information on physical unit conversion is found at
@@ -271,9 +275,9 @@ phonon.run_projected_dos()
 phonon.plot_band_structure_and_dos(pdos_indices=[[0], [1]]).show()
 ```
 
-`path_connections` and `labels` are unnecessary to set unless nice looking
-plotting is needed. To obtain eigenvectors, it is necessary to inform to store
-eigenvectors by:
+`path_connections` and `labels` are optional unless nice looking
+plotting is needed. To obtain eigenvectors, the corresponding
+keyword argument must be set:
 
 ```python
 phonon.run_band_structure(bands, with_eigenvectors=True)
@@ -319,7 +323,7 @@ eigenvectors = mesh_dict['eigenvectors']
 group_velocities = mesh_dict['group_velocities']
 ```
 
-To obtain eigenvectors, it is necessary to inform to store eigenvectors by:
+To obtain eigenvectors, the corresponding keyword argument must be set:
 
 ```python
 phonon.run_mesh([20, 20, 20], with_eigenvectors=True)

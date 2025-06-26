@@ -51,10 +51,10 @@ from phonopy.structure.dataset import get_displacements_and_forces
 
 
 def create_FORCE_SETS(
-    interface_mode: str,
+    interface_mode: str | None,
     force_filenames: list[str],
-    phpy_yaml: Optional[PhonopyYaml] = None,
-    symmetry_tolerance: Optional[float] = None,
+    phpy_yaml: PhonopyYaml | None = None,
+    symmetry_tolerance: float | None = None,
     wien2k_P1_mode: bool = False,
     force_sets_zero_mode: bool = False,
     disp_filename: str = "disp.yaml",

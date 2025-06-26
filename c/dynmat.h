@@ -46,14 +46,8 @@ int64_t dym_dynamical_matrices_with_dd_openmp_over_qpoints(
     const double dielectric[3][3], const double (*reciprocal_lattice)[3],
     const double *q_direction, const double nac_factor,
     const double (*dd_q0)[2], const double (*G_list)[3],
-    const int64_t num_G_points, const double lambda,
-    const int64_t use_Wang_NAC);
-int64_t dym_get_dynamical_matrix_at_q(
-    double (*dynamical_matrix)[2], const int64_t num_patom,
-    const int64_t num_satom, const double *fc, const double q[3],
-    const double (*svecs)[3], const int64_t (*multi)[2], const double *mass,
-    const int64_t *s2p_map, const int64_t *p2s_map,
-    const double (*charge_sum)[3][3], const int64_t use_openmp);
+    const int64_t num_G_points, const double lambda, const int64_t use_Wang_NAC,
+    const int64_t hermitianize);
 void dym_get_recip_dipole_dipole(
     double (*dd)[2],           /* [natom, 3, natom, 3, (real,imag)] */
     const double (*dd_q0)[2],  /* [natom, 3, 3, (real,imag)] */

@@ -35,10 +35,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
-from typing import Optional
+import dataclasses
+import os
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
+from phonopy.cui.settings import Settings
+from phonopy.exception import CellNotFoundError, MagmomValueError
 from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
     get_default_cell_filename,
@@ -46,18 +51,97 @@ from phonopy.interface.calculator import (
 )
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import get_primitive_matrix, guess_primitive_matrix
+
+
+@dataclasses.dataclass
+class CellInfoResult:
+    """Dataclass to hold the result of collect_cell_info."""
+
+    unitcell: PhonopyAtoms
+    optional_structure_info: tuple
+    supercell_matrix: ArrayLike | None = None
+    primitive_matrix: ArrayLike | str | None = None
+    interface_mode: str | None = None
+
+
+@dataclasses.dataclass
+class PhonopyCellInfoResult(CellInfoResult):
+    """Phono3py cell info result.
+
+    This is a subclass of CellInfoResult.
+
+    """
+
+    phonopy_yaml: PhonopyYaml | None = None
+
+
+def get_cell_info(
+    settings: Settings,
+    cell_filename: str | os.PathLike | None,
+    log_level: int = 0,
+    load_phonopy_yaml: bool = False,
+    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
+    enforce_primitive_matrix_auto: bool = False,
+) -> PhonopyCellInfoResult:
+    """Return calculator interface and crystal structure information.
+
+    CellNotFoundError and MagmomValueError can be raised by collect_cell_info and
+    set_magnetic_moments functions, respectively.
+
+    """
+    cell_info = collect_cell_info(
+        supercell_matrix=settings.supercell_matrix,
+        primitive_matrix=settings.primitive_matrix,
+        interface_mode=settings.calculator,
+        cell_filename=cell_filename,
+        chemical_symbols=settings.chemical_symbols,
+        enforce_primitive_matrix_auto=enforce_primitive_matrix_auto,
+        phonopy_yaml_cls=phonopy_yaml_cls,
+        load_phonopy_yaml=load_phonopy_yaml,
+    )
+
+    # Show primitive matrix overwrite message
+    phpy_yaml = cell_info.phonopy_yaml
+    if phpy_yaml is not None:
+        assert phpy_yaml.unitcell is not None
+        yaml_filename = cell_info.optional_structure_info[0]
+        pmat_in_settings = _get_primitive_matrix(
+            cell_info.primitive_matrix, phpy_yaml.unitcell
+        )
+        pmat_in_phpy_yaml = _get_primitive_matrix(
+            phpy_yaml.primitive_matrix, phpy_yaml.unitcell
+        )
+        if log_level and not np.allclose(
+            pmat_in_phpy_yaml, pmat_in_settings, atol=1e-5
+        ):
+            if phpy_yaml.primitive_matrix is None:
+                print(f'Primitive matrix is not specified in "{yaml_filename}".')
+            else:
+                print(f'Primitive matrix in "{yaml_filename}" is')
+                for v in pmat_in_phpy_yaml:
+                    print(f"  {v}")
+            print("But it is overwritten by")
+            for v in pmat_in_settings:
+                print(f"  {v}")
+            print("")
+
+    set_magnetic_moments(cell_info.unitcell, settings.magnetic_moments, log_level)
+
+    return cell_info
 
 
 def collect_cell_info(
-    supercell_matrix=None,
-    primitive_matrix=None,
-    interface_mode=None,
-    cell_filename=None,
-    chemical_symbols=None,
-    enforce_primitive_matrix_auto=False,
-    phonopy_yaml_cls: Optional[type[PhonopyYaml]] = None,
+    supercell_matrix: ArrayLike | None = None,
+    primitive_matrix: ArrayLike | None = None,
+    interface_mode: str | None = None,
+    cell_filename: str | os.PathLike | None = None,
+    chemical_symbols: Sequence[str] | None = None,
+    enforce_primitive_matrix_auto: bool = False,
+    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
     load_phonopy_yaml: bool = False,
-) -> dict:
+) -> PhonopyCellInfoResult:
     """Collect crystal structure information from input file and parameters.
 
     This function returns crystal structure information obtained from an input
@@ -97,7 +181,7 @@ def collect_cell_info(
         Force calculator or crystal structure format name.
     cell_filename : str or None
         Input cell filename.
-    chemical_symbols : list of str
+    chemical_symbols : list of str or None
         List of chemical symbols or unit cell.
     enforce_primitive_matrix_auto : bool
         Enforce primitive_matrix='auto' when True. Default is False.
@@ -108,25 +192,88 @@ def collect_cell_info(
     load_phonopy_yaml : bool
         True means phonopy-load mode.
 
-    Returns
-    -------
-    dict :
-        "unitcell": PhonopyAtoms
-            Unit cell.
-        "supercell_matrix": ndarray
-        "primitive_matrix": ndarray
-        "optional_structure_info": list
-            See read_crystal_structure.
-        "interface_mode": str
-            Force calculator or crystal structure format name.
-        "phonopy_yaml": None or instance of the class given by phonopy_yaml_cls
-            Not None when crystal structure was read phonopy.yaml like file.
-        "error_message" : str
-            Unless error exists, this entry should not be in this dict.
-            Otherwise, some error exists. The error message is storedin the
-            string.
-
     """
+    _interface_mode, _cell_filename = _decide_interface_mode_and_filename(
+        supercell_matrix,
+        interface_mode,
+        cell_filename,
+        phonopy_yaml_cls,
+        load_phonopy_yaml,
+    )
+
+    unitcell, optional_structure_info = read_crystal_structure(
+        filename=_cell_filename,
+        interface_mode=_interface_mode,
+        chemical_symbols=chemical_symbols,
+        phonopy_yaml_cls=phonopy_yaml_cls,
+    )
+
+    if unitcell is None:
+        err_msg = _get_error_message(
+            optional_structure_info,
+            load_phonopy_yaml,
+            cell_filename,
+            phonopy_yaml_cls,
+        )
+        raise CellNotFoundError(err_msg)
+
+    interface_mode_out, supercell_matrix_out, primitive_matrix_out = (
+        _collect_cells_info(
+            _interface_mode,
+            optional_structure_info,
+            interface_mode,
+            supercell_matrix,
+            primitive_matrix,
+        )
+    )
+
+    err_msg = _validate_cell(
+        unitcell,
+        supercell_matrix_out,
+        _interface_mode,
+        optional_structure_info,
+        phonopy_yaml_cls,
+        _cell_filename,
+        interface_mode_out,
+    )
+
+    if err_msg:
+        raise CellNotFoundError(err_msg)
+
+    if enforce_primitive_matrix_auto:
+        primitive_matrix_out = "auto"
+
+    phpy_yaml = (
+        optional_structure_info[1] if _interface_mode == "phonopy_yaml" else None
+    )
+
+    return PhonopyCellInfoResult(
+        unitcell=unitcell,
+        supercell_matrix=supercell_matrix_out,
+        primitive_matrix=primitive_matrix_out,
+        optional_structure_info=optional_structure_info,
+        interface_mode=interface_mode_out,
+        phonopy_yaml=phpy_yaml,
+    )
+
+
+def set_magnetic_moments(
+    unitcell: PhonopyAtoms, magnetic_moments: Sequence | None, log_level: int
+):
+    """Set magnetic moments to unitcell."""
+    # Set magnetic moments
+    magmoms = magnetic_moments
+    if magmoms is not None:
+        if len(magmoms) in (len(unitcell), len(unitcell) * 3):
+            unitcell.magnetic_moments = magmoms
+        else:
+            raise MagmomValueError("Invalid MAGMOM setting")
+
+
+def _decide_interface_mode_and_filename(
+    supercell_matrix, interface_mode, cell_filename, phonopy_yaml_cls, load_phonopy_yaml
+):
+    """Decide interface mode and filename for crystal structure input."""
     # In some cases, interface mode falls back to phonopy_yaml mode.
     if load_phonopy_yaml:
         fallback_reason = "load_phonopy_yaml mode"
@@ -157,36 +304,19 @@ def collect_cell_info(
     else:
         _interface_mode = interface_mode.lower()
 
-    unitcell, optional_structure_info = read_crystal_structure(
-        filename=_cell_filename,
-        interface_mode=_interface_mode,
-        chemical_symbols=chemical_symbols,
-        phonopy_yaml_cls=phonopy_yaml_cls,
-    )
+    return _interface_mode, _cell_filename
 
-    # Error check
-    if unitcell is None:
-        err_msg = _get_error_message(
-            optional_structure_info,
-            fallback_reason,
-            cell_filename,  # original cell_filename can be needed for error message.
-            phonopy_yaml_cls,
-        )
-        return {"error_message": err_msg}
 
-    # Retrieve more information on cells
-    (
-        interface_mode_out,
-        supercell_matrix_out,
-        primitive_matrix_out,
-    ) = _collect_cells_info(
-        _interface_mode,
-        optional_structure_info,
-        interface_mode,
-        supercell_matrix,
-        primitive_matrix,
-    )
-
+def _validate_cell(
+    unitcell,
+    supercell_matrix_out,
+    _interface_mode,
+    optional_structure_info,
+    phonopy_yaml_cls,
+    _cell_filename,
+    interface_mode_out,
+):
+    """Validate the crystal cell parameters and return error messages if any."""
     err_msg = []
     unitcell_filename = optional_structure_info[0]
     if supercell_matrix_out is None:
@@ -225,24 +355,9 @@ def collect_cell_info(
         err_msg = [
             'Crystal structure was read from "%s".' % unitcell_filename
         ] + err_msg
-        return {"error_message": "\n".join(err_msg)}
+        return "\n".join(err_msg)
 
-    if enforce_primitive_matrix_auto:
-        primitive_matrix_out = "auto"
-
-    if _interface_mode == "phonopy_yaml":
-        phpy_yaml: PhonopyYaml = optional_structure_info[1]
-    else:
-        phpy_yaml = None
-
-    return {
-        "unitcell": unitcell,
-        "supercell_matrix": supercell_matrix_out,
-        "primitive_matrix": primitive_matrix_out,
-        "optional_structure_info": optional_structure_info,
-        "interface_mode": interface_mode_out,
-        "phonopy_yaml": phpy_yaml,
-    }
+    return None
 
 
 def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
@@ -425,3 +540,14 @@ def _get_error_message(
         msg_list.append(f'But parsing "{final_cell_filename}" failed.')
 
     return "\n".join(msg_list)
+
+
+def _get_primitive_matrix(
+    pmat: str | ArrayLike | None, unitcell: PhonopyAtoms, symprec: float = 1e-5
+) -> NDArray:
+    _pmat = get_primitive_matrix(pmat)
+    if isinstance(_pmat, str) and _pmat == "auto":
+        _pmat = guess_primitive_matrix(unitcell, symprec=symprec)
+    if _pmat is None:
+        _pmat = np.eye(3, dtype="double")
+    return _pmat
