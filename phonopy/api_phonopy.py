@@ -183,7 +183,9 @@ class Phonopy:
         nac_params : None
             Deprecated.
         factor : float, optional
-            Phonon frequency unit conversion factor.
+            Phonon frequency unit conversion factor. The input here is ignored if
+            the `calculator` keyword argument is provided, as the corresponding
+            factor will be automatically selected
         group_velocity_delta_q : float, optional
             Delta-q distance to calculate group velocity.
         symprec : float, optional
@@ -275,13 +277,18 @@ class Phonopy:
         self._force_constants_decimals = force_constants_decimals
 
         self._symprec = symprec
-        if factor is None:
-            self._factor = get_physical_units().DefaultToTHz
-        else:
-            self._factor = factor
         self._is_symmetry = is_symmetry
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
+
+        if self._calculator is not None:
+            self._factor = get_calculator_physical_units(interface_mode = \
+                self._calculator)['factor']
+        else:
+            if factor is None:
+                self._factor = get_physical_units().DefaultToTHz    
+            else:
+                self._factor = factor
 
         self._use_SNF_supercell = use_SNF_supercell
         self._log_level = log_level

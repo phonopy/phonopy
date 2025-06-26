@@ -126,26 +126,9 @@ those into files in a crystal structure format.
 If not using the default calculator (`"vasp"`), the `calculator` keyword argument
 must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
 
-Additionally, the frequency unit conversion factor to THz has to be set by using the
-`factor` keyword in `Phonopy` class. The factors are accessed by referencing the
-calculator name. VASP and DFTB+ use the default value, so this step is optional
-for these calculators.
-
-Here is an example for Abinit:
-
-```python
-from phonopy.interface.calculator import get_calculator_physical_units
-
-factor = get_calculator_physical_units(interface_mode='abinit')['factor']
-phonon = Phonopy(unitcell,
-                 supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
-                 primitive_matrix=[[0, 0.5, 0.5],
-                                   [0.5, 0, 0.5],
-                                   [0.5, 0.5, 0]],
-                 factor=factor)
-```
-
-Some more information on physical unit conversion is found at
+The range of supported calculators use different units internally. Specifying the
+calculator type takes care of conversion to a consitent set of units for use in 
+Phonopy. Some more information on physical unit conversion is found at
 {ref}`frequency_conversion_factor_tag`, {ref}`physical_unit_conversion`, and
 {ref}`calculator_interfaces`.
 
@@ -165,10 +148,7 @@ calc = "qe"  # Quantum Espresso
 unitcell, optional_structure_info = read_crystal_structure("pw.in",
     interface_mode=calc)
 
-# not needed if using VASP
-factor = get_calculator_physical_units(interface_mode=calc)["factor"]
-phonon = Phonopy(unitcell, supercell_matrix=np.eye(3), factor=factor,
-    calculator=calc)
+phonon = Phonopy(unitcell, supercell_matrix=np.eye(3), calculator=calc)
 
 phonon.generate_displacements(distance=0.03)
 supercells = phonon.supercells_with_displacements
