@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Command options &#8212; Phonopy v.2.40.0</title>
+    <title>Command options &#8212; Phonopy v.2.41.0</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=636b5edc"></script>
+    <script src="_static/documentation_options.js?v=9fb16b30"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.40.0</p>
+    <p class="title logo__title">Phonopy v.2.41.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -636,7 +636,7 @@ learning potentials such as pypolymlp. See <a class="reference internal" href="#
 when creating supercells with displacements, and <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>’s, which are the
 VASP output files. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> in the current directory is automatically
 read. The order of displacements written in <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> file has to
-correpond to that of <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> files .</p>
+correpond to that of <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> files.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>disp-002/vasprun.xml<span class="w"> </span>...
 </pre></div>
 </div>
@@ -644,11 +644,10 @@ correpond to that of <code class="docutils literal notranslate"><span class="pre
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>Site-projected wave function information (the same information as <code class="docutils literal notranslate"><span class="pre">PROCAR</span></code>)
-significantly increases the size of <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>. So parsing xml file uses
-huge memory space. It is recommended</p></li>
-<li><p>to switch off to calculate it. If there are many displacements, shell
-expansions are useful, e.g., <code class="docutils literal notranslate"><span class="pre">disp-*/vasprun.xml</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">disp-{001..128}/vasprun.xml</span></code> (for zsh, and recent bash).</p></li>
+significantly increases the size of <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>. So parsing xml files generated this way
+incurs huge memory costs. It is recommended to switch off to calculate it.</p></li>
+<li><p>If there are many displacements, shell expansions are useful, e.g.,
+<code class="docutils literal notranslate"><span class="pre">disp-*/vasprun.xml</span></code>, or <code class="docutils literal notranslate"><span class="pre">disp-{001..128}/vasprun.xml</span></code> (for zsh, and recent bash).</p></li>
 </ul>
 </div>
 </section>
@@ -688,7 +687,7 @@ negative atom index with the P lattice format is supported.</strong></p>
 <section id="elk-interface">
 <span id="elk-force-sets-option"></span><h4>Elk interface<a class="headerlink" href="#elk-interface" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and Elk output files.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="o">...</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>disp-001/INFO.OUT<span class="w"> </span>disp-002/INFO.OUT<span class="w"> </span>...
 </pre></div>
 </div>
 </section>

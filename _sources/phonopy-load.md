@@ -65,7 +65,9 @@ command:
 
 - When force constants are calculated from displacements and forces dataset,
   force constants are automatically symmetrized. From phonopy v2.30.0, `symfc`
-  is used for the symmetrization. The behavior of the symmetrization before
-  v2.30.0, `--fc-calculator traditional` has to be specified. `--no-sym-fc`
-  option can be used to calculate force constants in the traditional force
-  constants calculator without symmetrization.
+  is used for the symmetrization. From phonopy v2.41.0, symfc-projector is used
+  to symmetrize force constants calculated by finite difference approach. The
+  old behavior of the symmetrization can be performed by `--fc-calculator
+  traditional` option. `--no-sym-fc` option can be used to calculate force
+  constants in the traditional force constants calculator without
+  symmetrization.

@@ -30,7 +30,7 @@ The following features of phonopy are highlighted:
   capacity at constant pressure (Cp)
 - {ref}`Interfaces to calculators <calculator_interfaces>`: {ref}`VASP
 <vasp_interface>`, {ref}`VASP DFPT <vasp_dfpt_interface>`, {ref}`ABINIT
-<abinit_interface>`, {ref}`Quantu ESPRESSO <qe_interface>`, {ref}`SIESTA
+<abinit_interface>`, {ref}`Quantum ESPRESSO <qe_interface>`, {ref}`SIESTA
 <siesta_interface>`, {ref}`Elk <elk_interface>`, {ref}`WIEN2k
 <wien2k_interface>`, {ref}`CRYSTAL <crystal_interface>`, {ref}`DFTB+
 <dftbp_interface>`, {ref}`TURBOMOLE <turbomole_interface>`, {ref}`CP2K
