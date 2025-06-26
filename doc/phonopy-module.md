@@ -226,10 +226,14 @@ file by `phonopy.save`.
 phonon.save()
 ```
 
-The default file name is `phonopy_params.yaml`. Force sets, displacements, Born
-effective charges, and dielectric constant are written in the default behaviour.
-If force constants are needed to be written in the yaml file, the argument
-`settings` is set as follows:
+Force sets, displacements, Born effective charges, and dielectric constant 
+are written in the default behaviour. 
+
+The default file name is `phonopy_params.yaml`, but this can be changed with the
+`filename` keword argument, which may be necessary if using certain CUI commands
+that expect a particular filename
+
+The force constants can be written as follows:
 
 ```python
 phonon.save(settings={'force_constants': True})
