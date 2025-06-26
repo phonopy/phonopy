@@ -35,15 +35,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+import os
 import pathlib
 import warnings
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from math import pi, sqrt
-from typing import Optional, Union
 
 import numpy as np
 import yaml
+from numpy.typing import NDArray
 
 from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -125,10 +126,10 @@ def convert_crystal_structure(
 
 
 def write_crystal_structure(
-    filename: Optional[str],
+    filename: str | os.PathLike | None,
     cell: PhonopyAtoms,
-    interface_mode: Optional[str] = None,
-    optional_structure_info: Optional[tuple] = None,
+    interface_mode: str | None = None,
+    optional_structure_info: tuple | None = None,
 ):
     """Write crystal structure to file in each calculator format.
 
@@ -267,13 +268,13 @@ def write_crystal_structure(
 
 
 def write_supercells_with_displacements(
-    interface_mode: str,
+    interface_mode: str | None,
     supercell: PhonopyAtoms,
     cells_with_disps: Sequence[PhonopyAtoms],
-    optional_structure_info: Optional[tuple] = None,
-    displacement_ids: Optional[Union[Sequence, np.ndarray]] = None,
+    optional_structure_info: tuple,
+    displacement_ids: Sequence | NDArray | None = None,
     zfill_width: int = 3,
-    additional_info: Optional[dict] = None,
+    additional_info: dict | None = None,
 ):
     """Write supercell with displacements to files in each calculator format.
 
@@ -431,11 +432,11 @@ def write_magnetic_moments(cell: PhonopyAtoms, sort_by_elements=False):
 
 
 def read_crystal_structure(
-    filename=None,
-    interface_mode=None,
-    chemical_symbols=None,
-    phonopy_yaml_cls: Optional[type[PhonopyYaml]] = None,
-):
+    filename: str | os.PathLike | None = None,
+    interface_mode: str | None = None,
+    chemical_symbols: Sequence[str] | None = None,
+    phonopy_yaml_cls: type[PhonopyYaml] | None = None,
+) -> tuple[PhonopyAtoms, tuple]:
     """Return crystal structure from file in each calculator format.
 
     Parameters
@@ -570,7 +571,7 @@ def read_crystal_structure(
         raise RuntimeError("No calculator interface was found.")
 
 
-def get_default_cell_filename(interface_mode):
+def get_default_cell_filename(interface_mode: str | None) -> str | None:
     """Return default filename of unit cell structure of each calculator."""
     if interface_mode is None or interface_mode == "vasp":
         return "POSCAR"
@@ -608,7 +609,7 @@ def get_default_cell_filename(interface_mode):
         return None
 
 
-def get_default_supercell_filename(interface_mode):
+def get_default_supercell_filename(interface_mode: str | None) -> str | None:
     """Return default filename of supercell structure of each calculator."""
     if interface_mode == "phonopy_yaml":
         return "phonopy_disp.yaml"
@@ -645,7 +646,7 @@ def get_default_supercell_filename(interface_mode):
         return None
 
 
-def get_default_displacement_distance(interface_mode):
+def get_default_displacement_distance(interface_mode: str | None) -> float:
     """Return default displacement distance of each calculator."""
     if interface_mode in (
         "wien2k",
@@ -664,7 +665,7 @@ def get_default_displacement_distance(interface_mode):
     return displacement_distance
 
 
-def get_default_physical_units(interface_mode=None) -> dict:
+def get_default_physical_units(interface_mode: str | None = None) -> dict:
     """Replace get_calculator_get_physical_units()."""
     warnings.warn(
         (
@@ -677,8 +678,8 @@ def get_default_physical_units(interface_mode=None) -> dict:
     return get_calculator_physical_units(interface_mode=interface_mode)
 
 
-def get_calculator_physical_units(interface_mode=None) -> dict:
-    """Return physical units of eachi calculator.
+def get_calculator_physical_units(interface_mode: str | None = None) -> dict:
+    """Return physical units of each calculator.
 
     Physical units: energy,  distance,  atomic mass, force,        force constants
     vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
@@ -882,7 +883,7 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
 
 
 def get_calc_dataset(
-    interface_mode: str,
+    interface_mode: str | None,
     num_atoms: int,
     force_filenames: str,
     verbose: bool = True,
@@ -965,7 +966,9 @@ def get_calc_dataset_wien2k(
     return {"forces": force_sets}
 
 
-def get_force_constant_conversion_factor(unit, interface_mode):
+def get_force_constant_conversion_factor(
+    unit: str, interface_mode: str | None
+) -> float:
     """Return unit conversion factor of force constants."""
     _unit = unit.replace("Angstrom", "angstrom")  # for backward compatibility
     interface_default_units = get_calculator_physical_units(interface_mode)
@@ -990,8 +993,8 @@ def get_force_constant_conversion_factor(unit, interface_mode):
 
 
 def _read_phonopy_yaml(
-    filename: str, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
-) -> tuple[PhonopyAtoms, tuple]:
+    filename: str, phonopy_yaml_cls: type[PhonopyYaml] | None
+) -> tuple[PhonopyAtoms | None, tuple]:
     cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
         return None, (None, None)
@@ -1012,8 +1015,8 @@ def _read_phonopy_yaml(
 
 
 def _get_cell_filename(
-    filename, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
-) -> Optional[str]:
+    filename: str, phonopy_yaml_cls: type[PhonopyYaml] | None
+) -> str | None:
     cell_filename = None
 
     default_filenames = []

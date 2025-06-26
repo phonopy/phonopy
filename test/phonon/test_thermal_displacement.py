@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from phonopy import Phonopy
+
 temps = [
     0.000000,
     100.000000,
@@ -120,3 +122,32 @@ def test_ThermalDisplacementMatrices(ph_sno2):
     tdm = ph_sno2.thermal_displacement_matrices
     mat = tdm.thermal_displacement_matrices
     np.testing.assert_allclose(tdm_ref, mat.reshape(-1, 3), atol=1e-5)
+
+
+def test_compare_TD_and_TDM(ph_nacl: Phonopy, ph_sno2: Phonopy):
+    """Test for comparing ThermalDisplacements and ThermalDisplacementMatrices."""
+    for ph in (ph_nacl, ph_sno2):
+        ph.init_mesh(
+            [5, 5, 5],
+            with_eigenvectors=True,
+            is_mesh_symmetry=False,
+            use_iter_mesh=True,
+        )
+        temperatures = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900]
+        ph.run_thermal_displacements(temperatures=temperatures, freq_min=1e-2)
+        td = ph.thermal_displacements
+        ph.run_thermal_displacement_matrices(temperatures=temperatures, freq_min=1e-2)
+        tdm = ph.thermal_displacement_matrices
+
+        assert td is not None
+        assert tdm is not None
+        assert td.thermal_displacements is not None
+        assert tdm.thermal_displacement_matrices is not None
+        td_from_tdm = np.zeros(
+            td.thermal_displacements.shape, dtype=td.thermal_displacements.dtype
+        )
+        for i, tdm_t in enumerate(tdm.thermal_displacement_matrices):
+            for j, tdm_t_n in enumerate(tdm_t):
+                td_from_tdm[i, j * 3 : (j + 1) * 3] = np.diag(tdm_t_n)
+
+        np.testing.assert_allclose(td.thermal_displacements, td_from_tdm, atol=1e-8)

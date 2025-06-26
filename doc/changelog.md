@@ -2,6 +2,15 @@
 
 # Change Log
 
+## Jun-26-2025: Version 2.41.0
+
+- Major refactoring of command-user interface. Most of routines behind the
+  `phonopy` and `phonopy-load` commands were unified.
+- For `phonopy-load`, symfc-projector is used to symmetrize force constants
+  calculated by finite difference approach as the default behavior. The previous
+  behavior of the symmetrization can be recovered by `--fc-calculator
+  traditional` option.
+
 ## Jun-15-2025: Version 2.40.0
 
 - `--rd-auto-factor` command option (`RD_NUMBER_ESTIMATION_FACTOR` tag) was

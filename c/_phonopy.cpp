@@ -106,8 +106,8 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
     nb::ndarray<> py_q_direction, nb::ndarray<> py_born,
     nb::ndarray<> py_dielectric, nb::ndarray<> py_reciprocal_lattice,
     double nac_factor, nb::ndarray<> py_dd_q0, nb::ndarray<> py_G_list,
-    double lambda, int64_t is_nac, int64_t is_nac_q_zero,
-    int64_t use_Wang_NAC) {
+    double lambda, int64_t is_nac, int64_t is_nac_q_zero, int64_t use_Wang_NAC,
+    int64_t hermitianize) {
     double (*dm)[2];
     double *fc;
     double *q_direction;
@@ -167,7 +167,7 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
         dm, qpoints, n_qpoints, fc, svecs, multi, positions, num_patom,
         num_satom, masses, p2s_map, s2p_map, born, dielectric,
         reciprocal_lattice, q_direction, nac_factor, dd_q0, G_list, n_Gpoints,
-        lambda, use_Wang_NAC);
+        lambda, use_Wang_NAC, hermitianize);
 }
 
 void py_get_recip_dipole_dipole(

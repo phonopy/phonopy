@@ -38,6 +38,7 @@ import numpy as np
 import spglib
 
 from phonopy import Phonopy
+from phonopy.cui.collect_cell_info import PhonopyCellInfoResult
 from phonopy.interface.calculator import (
     get_default_cell_filename,
     write_crystal_structure,
@@ -49,7 +50,7 @@ from phonopy.structure.cells import determinant, guess_primitive_matrix
 from phonopy.structure.symmetry import Symmetry
 
 
-def check_symmetry(phonon: Phonopy, cell_info: dict):
+def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
     """Check symmetry of input cell.
 
     This function first standardizes the input crystal structure based on
@@ -62,7 +63,7 @@ def check_symmetry(phonon: Phonopy, cell_info: dict):
     """
     base_fname = get_default_cell_filename(phonon.calculator)
     symprec = phonon.primitive_symmetry.tolerance
-    (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(
+    (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(  # type: ignore
         phonon.primitive.totuple(), symprec
     )
     _, _, _, perm = sort_positions_by_symbols(bravais_numbers)
@@ -74,19 +75,21 @@ def check_symmetry(phonon: Phonopy, cell_info: dict):
     trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
     ph = Phonopy(
         bravais,
-        supercell_matrix=cell_info["supercell_matrix"],
+        supercell_matrix=cell_info.supercell_matrix,
         primitive_matrix=trans_mat,
         calculator=phonon.calculator,
     )
 
     if (
-        cell_info["phonopy_yaml"] is None
-        or cell_info["phonopy_yaml"].supercell_matrix is None
-    ) and determinant(cell_info["supercell_matrix"]) > 1:
-        print(f'Input crystal structure: "{cell_info["optional_structure_info"][0]}"')
-        phyml = PhonopyYaml().set_phonon_info(ph)
-        phyml.frequency_unit_conversion_factor = None
-        phyml.symmetry = None
+        cell_info.phonopy_yaml is None
+        or cell_info.phonopy_yaml.supercell_matrix is None
+    ) and determinant(cell_info.supercell_matrix) > 1:
+        print(f'Input crystal structure: "{cell_info.optional_structure_info[0]}"')
+        phyml = PhonopyYaml()
+        phyml.supercell = ph.supercell
+        phyml.supercell_matrix = ph.supercell_matrix
+        phyml.primitive = ph.primitive
+        phyml.primitive_matrix = ph.primitive_matrix
         with open("phonopy_supercell.yaml", "w") as w:
             print(phyml, file=w)
 
@@ -104,13 +107,15 @@ def check_symmetry(phonon: Phonopy, cell_info: dict):
         _show_symmetry_yaml(phonon, cell_info, base_fname, ph)
 
 
-def _show_symmetry_yaml(phonon: Phonopy, cell_info: dict, base_fname: str, ph: Phonopy):
+def _show_symmetry_yaml(
+    phonon: Phonopy, cell_info: PhonopyCellInfoResult, base_fname: str, ph: Phonopy
+):
     print(
         _get_symmetry_yaml(phonon.primitive, phonon.primitive_symmetry, phonon.version)
     )
-    print(f"# Input crystal structure: \"{cell_info['optional_structure_info'][0]}'")
-    if cell_info["phonopy_yaml"] is None:
-        optional_structure_info = cell_info["optional_structure_info"]
+    print(f'# Input crystal structure: "{cell_info.optional_structure_info[0]}"')
+    if cell_info.phonopy_yaml is None:
+        optional_structure_info = cell_info.optional_structure_info
         filename = "B" + base_fname
         print(f'# Symmetrized conventional unit cell is written into "{filename}" and')
         write_crystal_structure(
@@ -131,11 +136,9 @@ def _show_symmetry_yaml(phonon: Phonopy, cell_info: dict, base_fname: str, ph: P
 
 
 def _write_symcells_yaml(ph: Phonopy):
-    phyml = PhonopyYaml().set_phonon_info(ph)
-    phyml.supercell_matrix = None
-    phyml.supercell = None
-    phyml.frequency_unit_conversion_factor = None
-    phyml.symmetry = None
+    phyml = PhonopyYaml()
+    phyml.primitive = ph.primitive
+    phyml.unitcell = ph.unitcell
     with open("phonopy_symcells.yaml", "w") as w:
         print(phyml, file=w)
 

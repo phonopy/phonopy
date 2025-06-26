@@ -37,7 +37,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Optional
+from typing import Literal
 
 import numpy as np
 
@@ -53,11 +53,11 @@ class MLPSSCHA:
         self,
         ph: Phonopy,
         mlp: PhonopyMLP,
-        temperature: Optional[float] = None,
-        number_of_snapshots: Optional[int] = None,
-        max_iterations: Optional[int] = None,
-        distance: Optional[float] = None,
-        fc_calculator: Optional[str] = None,
+        temperature: float | None = None,
+        number_of_snapshots: int | Literal["auto"] | None = None,
+        max_iterations: int | None = None,
+        distance: float | None = None,
+        fc_calculator: str | None = None,
         log_level: int = 0,
     ):
         """Init method.
