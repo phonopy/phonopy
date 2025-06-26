@@ -235,7 +235,7 @@ learning potentials such as pypolymlp. See {ref}`save_params_option`.
 when creating supercells with displacements, and `vasprun.xml`'s, which are the
 VASP output files. `phonopy_disp.yaml` in the current directory is automatically
 read. The order of displacements written in `phonopy_disp.yaml` file has to
-correpond to that of `vasprun.xml` files .
+correpond to that of `vasprun.xml` files.
 
 ```bash
 % phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml ...
@@ -243,11 +243,10 @@ correpond to that of `vasprun.xml` files .
 
 ```{note}
 - Site-projected wave function information (the same information as `PROCAR`)
-  significantly increases the size of `vasprun.xml`. So parsing xml file uses
-  huge memory space. It is recommended
-- to switch off to calculate it. If there are many displacements, shell
-  expansions are useful, e.g., `disp-*/vasprun.xml`, or
-  `disp-{001..128}/vasprun.xml` (for zsh, and recent bash).
+  significantly increases the size of `vasprun.xml`. So parsing xml files generated this way
+  incurs huge memory costs. It is recommended to switch off to calculate it.
+- If there are many displacements, shell expansions are useful, e.g.,
+  `disp-*/vasprun.xml`, or `disp-{001..128}/vasprun.xml` (for zsh, and recent bash).
 ```
 
 (abinit_force_sets_option)=
@@ -274,7 +273,6 @@ Here `*.out` files are the saved texts of standard outputs of PWscf
 calculations.
 
 (wien2k_force_sets_option)=
-
 #### WIEN2k interface
 This is experimental support to generage `FORCE_SETS`. Insted of this, you can
 use the external tool called `scf2forces` to generate `FORCE_SETS`. `scf2forces`
@@ -297,12 +295,11 @@ For more information, {ref}`wien2k_interface`.
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and Elk output files.
 
-```
+```bash
 % phonopy -f disp-001/INFO.OUT disp-002/INFO.OUT ...
 ```
 
 (crystal_force_sets_option)=
-
 #### CRYSTAL interface
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and CRYSTAL output files.
 

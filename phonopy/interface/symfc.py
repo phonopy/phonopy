@@ -37,12 +37,17 @@
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Sequence
 from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
+)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
@@ -96,7 +101,10 @@ class SymfcFCSolver:
         self._log_level = log_level
         self._orders = orders
         self._is_compact_fc = is_compact_fc
-        self._symfc = None
+
+        import symfc
+
+        self._symfc: symfc.Symfc
 
         self._initialize(
             displacements=displacements,
@@ -120,24 +128,19 @@ class SymfcFCSolver:
             Force constants with order as key.
 
         """
-        if self._orders is None:
-            raise RuntimeError("Run SymfcCalculator.run() first.")
+        if self._orders is None or not self._symfc:
+            raise RuntimeError("Run SymfcFCSolver.run() first.")
         return self._symfc.force_constants
 
     def run(self, orders: Sequence[int]):
         """Run symfc."""
         if self._log_level:
-            import symfc
-
             print(
                 "--------------------------------"
                 " Symfc start "
                 "-------------------------------"
             )
-            print(f"Symfc version {symfc.__version__}")
-            print("Symfc is a force constants calculator. See the following paper:")
-            print("A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024).")
-            print("Symfc is developed at https://github.com/symfc/symfc.")
+            self.show_credit()
             print(f"Computing {orders} order force constants.", flush=True)
             if self._options:
                 print("Parameters:")
@@ -158,7 +161,14 @@ class SymfcFCSolver:
             )
 
     @property
-    def p2s_map(self) -> NDArray:
+    def version(self) -> str:
+        """Return symfc version."""
+        import symfc
+
+        return symfc.__version__
+
+    @property
+    def p2s_map(self) -> NDArray | None:
         """Return indices of translationally independent atoms."""
         return self._symfc.p2s_map
 
@@ -166,6 +176,11 @@ class SymfcFCSolver:
     def basis_set(self) -> dict:
         """Return basis set."""
         return self._symfc.basis_set
+
+    def show_credit(self):
+        """Show credit."""
+        print(f"Symfc version {self.version} (https://github.com/symfc/symfc)")
+        print("Citation: A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024)")
 
     def estimate_basis_size(
         self,
@@ -213,7 +228,7 @@ class SymfcFCSolver:
         self._symfc.compute_basis_set(max_order=max_order, orders=orders)
         return self._symfc.basis_set
 
-    def get_nonzero_atomic_indices_fc3(self) -> NDArray[bool] | None:
+    def get_nonzero_atomic_indices_fc3(self) -> NDArray[np.bool] | None:
         """Get nonzero atomic indices for fc3.
 
         Returns
@@ -429,3 +444,95 @@ def update_symfc_cutoff_by_memsize(
         cutoff = None
     options["cutoff"] = cutoff
     del options["memsize"]
+
+
+def symmetrize_by_projector(
+    supercell: PhonopyAtoms,
+    fc: NDArray,
+    order: int,
+    primitive: Primitive | None = None,
+    log_level: int = 0,
+    show_credit: bool = False,
+) -> NDArray:
+    """Symmetrize force constants by projector method.
+
+    Parameters
+    ----------
+    supercell : PhonopyAtoms
+        Supercell.
+    fc : np.ndarray
+        Force constants to be symmetrized.
+    order : int
+        Order of force constants.
+    primitive : Primitive, optional
+        Primitive cell. If provided, it is used to check if the force constants
+        are consistent with the primitive cell.
+    log_level : int, optional
+        Log level for symfc. Default is 0, which means no log.
+    show_credit : bool, optional
+        Whether to show credit information of symfc. Default is False.
+
+    """
+    symfc = SymfcFCSolver(supercell, log_level=log_level)
+    if show_credit and log_level:
+        symfc.show_credit()
+    symfc.compute_basis_set(orders=[order])
+    basis_set = symfc.basis_set[order]
+    if fc.shape[0] == fc.shape[1]:
+        compmat = basis_set.compression_matrix.tocsc()
+    else:
+        if primitive is None:
+            raise ValueError("Primitive cell must be provided for compact fc.")
+        assert symfc.p2s_map is not None
+        if (
+            len(primitive.p2s_map) != len(symfc.p2s_map)
+            or (primitive.p2s_map != symfc.p2s_map).any()
+        ):
+            warnings.warn(
+                "p2s_map of primitive cell does not match with p2s_map of symfc.",
+                UserWarning,
+                stacklevel=2,
+            )
+            return _convert_compact_fc(
+                primitive,
+                fc,
+                supercell,
+                order,
+                log_level=log_level,
+            )
+        compmat = basis_set.compact_compression_matrix.tocsc()
+
+    fc_sym = fc.ravel() @ compmat
+    fc_sym = fc_sym @ basis_set.basis_set
+    fc_sym = fc_sym @ basis_set.basis_set.T
+    fc_sym = fc_sym @ compmat.T
+    if fc.shape[0] != fc.shape[1]:
+        n_lp = len(basis_set.translation_permutations)
+        fc_sym *= n_lp
+    return fc_sym.reshape(fc.shape)
+
+
+def _convert_compact_fc(
+    primitive: Primitive,
+    compact_fc: NDArray,
+    supercell: PhonopyAtoms,
+    order: int,
+    log_level: int = 0,
+) -> NDArray:
+    full_fc = compact_fc_to_full_fc(
+        primitive,
+        compact_fc,
+        log_level=log_level,
+    )
+    full_fc = symmetrize_by_projector(
+        supercell=supercell,
+        fc=full_fc,
+        order=order,
+        primitive=primitive,
+        log_level=log_level,
+    )
+    return full_fc_to_compact_fc(
+        primitive,
+        full_fc,
+        log_level=log_level,
+    )

@@ -279,7 +279,7 @@ sampled uniformly between the values of `DISPLACEMENT_DISTANCE` and
 ### `RD_NUMBER_ESTIMATION_FACTOR`
 
 The default factor to generate supercells with symfc using
-`RANDOM_DISPLACEMENTs=AUTO` is changed to this value. See the default factor in
+`RANDOM_DISPLACEMENTS=AUTO` is changed to this value. See the default factor in
 {ref}`random_displacements_tag`.
 
 (random_displacement_temperature_tag)=
@@ -445,7 +445,7 @@ N_{\mathbf{a}^*} = \max[1, \mathrm{nint}(l|\mathbf{a}^*|)], \; N_{\mathbf{b}^*}
 \mathrm{nint}(l|\mathbf{c}^*|)],
 ```
 
-where {math}`l` is the value to be specified. With this, `GAMMA_CENTER` becomes
+where {math}`l` is the value to be specified. With this, `GAMMA_CENTER` is
 simply ignored, but `MP_SHIFT` works on top of the {math}`\Gamma` centred
 sampling mesh.
 

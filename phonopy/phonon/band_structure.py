@@ -40,10 +40,11 @@ import gzip
 import lzma
 import sys
 import warnings
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 import yaml
+from numpy.typing import ArrayLike
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.group_velocity import GroupVelocity
@@ -250,13 +251,13 @@ class BandStructure:
 
     def __init__(
         self,
-        paths: list,
+        paths: Sequence[ArrayLike],
         dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
         with_eigenvectors: bool = False,
         is_band_connection: bool = False,
         group_velocity: GroupVelocity | None = None,
-        path_connections: list | bool | None = None,
-        labels: list[str] | None = None,
+        path_connections: Sequence[bool] | None = None,
+        labels: Sequence[str] | None = None,
         is_legacy_plot: bool = False,
         factor: float | None = None,
     ):
@@ -308,7 +309,7 @@ class BandStructure:
         self._paths = [np.array(path) for path in paths]
         self._is_legacy_plot = is_legacy_plot
         self._labels = None
-        self._path_connections = None
+        self._path_connections: Sequence[bool]
         if self._is_legacy_plot:
             if labels is not None and len(labels) == len(self._paths) + 1:
                 self._labels = labels
@@ -428,12 +429,12 @@ class BandStructure:
         return self._factor
 
     @property
-    def labels(self) -> Optional[list]:
+    def labels(self) -> Sequence[str] | None:
         """Return special point symbols."""
         return self._labels
 
     @property
-    def path_connections(self):
+    def path_connections(self) -> Sequence[bool]:
         """Return band segment connections."""
         return self._path_connections
 
