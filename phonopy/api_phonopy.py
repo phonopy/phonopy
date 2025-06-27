@@ -3142,7 +3142,6 @@ class Phonopy:
             self._unitcell,
             supercell_matrix=smat,
             primitive_matrix=self._primitive_matrix,
-            factor=self._factor,
             frequency_scale_factor=self._frequency_scale_factor,
             dynamical_matrix_decimals=self._dynamical_matrix_decimals,
             force_constants_decimals=self._force_constants_decimals,
