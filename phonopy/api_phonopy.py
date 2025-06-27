@@ -282,16 +282,17 @@ class Phonopy:
         if factor is not None:
             warnings.warn(
                 (
-                "Phonopy class instantiation with factor is deprecated. "
-                "The frequency conversion factor now automatically "
-                "corresponds to the `calculator` keyword argument."
+                    "Phonopy class instantiation with factor is deprecated. "
+                    "The frequency conversion factor now automatically "
+                    "corresponds to the `calculator` keyword argument."
                 ),
                 DeprecationWarning,
                 stacklevel=2,
             )
         if self._calculator is not None:
-            self._factor = get_calculator_physical_units(interface_mode = \
-                self._calculator)['factor']
+            self._factor = get_calculator_physical_units(
+                interface_mode=self._calculator
+            )["factor"]
         else:
             self._factor = get_physical_units().DefaultToTHz
 

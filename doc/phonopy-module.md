@@ -127,7 +127,7 @@ If not using the default calculator (`"vasp"`), the `calculator` keyword argumen
 must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
 
 The range of supported calculators use different units internally. Specifying the
-calculator type takes care of conversion to a consitent set of units for use in 
+calculator type takes care of conversion to a consitent set of units for use in
 Phonopy. Some more information on physical unit conversion is found at
 {ref}`frequency_conversion_factor_tag`, {ref}`physical_unit_conversion`, and
 {ref}`calculator_interfaces`.
@@ -241,8 +241,8 @@ file by `phonopy.save`.
 phonon.save()
 ```
 
-Force sets, displacements, Born effective charges, and dielectric constant 
-are written in the default behaviour. 
+Force sets, displacements, Born effective charges, and dielectric constant
+are written in the default behaviour.
 
 The default file name is `phonopy_params.yaml`, but this can be changed with the
 `filename` keword argument, which may be necessary if using certain CUI commands

@@ -1767,7 +1767,7 @@ def _init_phonopy(
         if settings.frequency_conversion_factor is not None:
             freq_factor = settings.frequency_conversion_factor
         else:
-            freq_factor = None # set by Phonopy __init__ based on calc
+            freq_factor = None  # set by Phonopy __init__ based on calc
 
         phonon = Phonopy(
             cell_info.unitcell,
