@@ -55,7 +55,7 @@ from phonopy.cui.load_helper import (
     select_and_load_dataset,
 )
 from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
-from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
+from phonopy.cui.settings import PhonopyConfParser, PhonopySettings, Settings
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.exception import (
     CellNotFoundError,
@@ -916,7 +916,7 @@ def _create_random_displacements_at_finite_temperature(
 
 def store_nac_params(
     phonon: Phonopy,
-    settings: PhonopySettings,
+    settings: Settings,
     phpy_yaml: PhonopyYaml | None,
     unitcell_filename: str,
     log_level: int,
