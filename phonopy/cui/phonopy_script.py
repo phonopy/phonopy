@@ -1763,12 +1763,11 @@ def _init_phonopy(
             log_level=log_level,
         )
     else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
-        # Overwrite frequency unit conversion factor
+        # Read from settings for now so users see the Deprecation warning
         if settings.frequency_conversion_factor is not None:
             freq_factor = settings.frequency_conversion_factor
         else:
-            units = get_calculator_physical_units(cell_info.interface_mode)
-            freq_factor = units["factor"]
+            freq_factor = None # set by Phonopy __init__ based on calc
 
         phonon = Phonopy(
             cell_info.unitcell,
