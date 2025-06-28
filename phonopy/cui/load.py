@@ -286,6 +286,7 @@ def load(
         store_dense_svecs=store_dense_svecs,
         use_SNF_supercell=use_SNF_supercell,
         calculator=_calculator,
+        set_factor_by_calculator=True,
         log_level=log_level,
     )
 

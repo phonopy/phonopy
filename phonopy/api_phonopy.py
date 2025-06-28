@@ -166,6 +166,7 @@ class Phonopy:
         use_SNF_supercell: bool = False,
         hermitianize_dynamical_matrix: bool = True,
         calculator: str | None = None,
+        set_factor_by_calculator: bool = False,
         log_level: int = 0,
     ):
         """Init method.
@@ -201,6 +202,8 @@ class Phonopy:
             i.e., D <- (D+D^H)/2.
         calculator : str, optional
             Calculator name such as 'vasp', 'qe', etc. Default is None.
+        set_factor_by_calculator : bool, optional
+            Whether to set factor by calculator. Default is False.
         log_level : int, optional
             Log level. Default is 0.
         store_dense_svecs : bool, optional
@@ -279,22 +282,30 @@ class Phonopy:
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
 
+        # Only used in Phonopy._copy()
+        self._set_factor_by_calculator = set_factor_by_calculator
+        self._factor = factor
+
         if factor is not None:
             warnings.warn(
                 (
                     "Phonopy class instantiation with factor is deprecated. "
                     "The frequency conversion factor now automatically "
-                    "corresponds to the `calculator` keyword argument."
+                    "corresponds to the calculator keyword argument if "
+                    "set_factor_by_calculator is True."
                 ),
                 DeprecationWarning,
                 stacklevel=2,
             )
-        if self._calculator is not None:
-            self._factor = get_calculator_physical_units(
+
+        if self._calculator is not None and set_factor_by_calculator:
+            self._unit_conversion_factor = get_calculator_physical_units(
                 interface_mode=self._calculator
             )["factor"]
+        elif factor is None:
+            self._unit_conversion_factor = get_physical_units().DefaultToTHz
         else:
-            self._factor = get_physical_units().DefaultToTHz
+            self._unit_conversion_factor = factor
 
         self._use_SNF_supercell = use_SNF_supercell
         self._log_level = log_level
@@ -440,7 +451,7 @@ class Phonopy:
             that assumes that input phonon frequencies have THz unit.
 
         """
-        return self._factor
+        return self._unit_conversion_factor
 
     @property
     def calculator(self) -> str | None:
@@ -1280,7 +1291,7 @@ class Phonopy:
             else:
                 frequencies.append(np.sqrt(eig))
 
-        return np.array(frequencies) * self._factor
+        return np.array(frequencies) * self._unit_conversion_factor
 
     def get_frequencies_with_eigenvectors(
         self, q: ArrayLike
@@ -1324,7 +1335,7 @@ class Phonopy:
             else:
                 frequencies.append(np.sqrt(eig))
 
-        return np.array(frequencies) * self._factor, eigenvectors
+        return np.array(frequencies) * self._unit_conversion_factor, eigenvectors
 
     # Band structure
     def run_band_structure(
@@ -1387,7 +1398,7 @@ class Phonopy:
             path_connections=path_connections,
             labels=labels,
             is_legacy_plot=is_legacy_plot,
-            factor=self._factor,
+            factor=self._unit_conversion_factor,
         )
 
     def get_band_structure_dict(self) -> dict:
@@ -1651,7 +1662,7 @@ class Phonopy:
                 with_eigenvectors=with_eigenvectors,
                 is_gamma_center=is_gamma_center,
                 rotations=self._primitive_symmetry.pointgroup_operations,
-                factor=self._factor,
+                factor=self._unit_conversion_factor,
             )
         else:
             self._mesh = Mesh(
@@ -1664,7 +1675,7 @@ class Phonopy:
                 is_gamma_center=_is_gamma_center,
                 group_velocity=group_velocity,
                 rotations=self._primitive_symmetry.pointgroup_operations,
-                factor=self._factor,
+                factor=self._unit_conversion_factor,
             )
 
     def run_mesh(
@@ -1872,7 +1883,7 @@ class Phonopy:
             with_eigenvectors=with_eigenvectors,
             group_velocity=group_velocity,
             with_dynamical_matrices=with_dynamical_matrices,
-            factor=self._factor,
+            factor=self._unit_conversion_factor,
         )
 
     def get_qpoints_dict(self) -> dict:
@@ -2617,7 +2628,7 @@ class Phonopy:
             amplitude=amplitude,
             num_div=num_div,
             shift=shift,
-            factor=self._factor,
+            factor=self._unit_conversion_factor,
             filename=filename,
         )
 
@@ -2667,7 +2678,7 @@ class Phonopy:
             delta_q=delta_q,
             derivative_order=derivative_order,
             nac_q_direction=nac_q_direction,
-            factor=self._factor,
+            factor=self._unit_conversion_factor,
         )
         self._modulation.run()
 
@@ -2733,7 +2744,7 @@ class Phonopy:
             q,
             is_little_cogroup=is_little_cogroup,
             nac_q_direction=nac_q_direction,
-            factor=self._factor,
+            factor=self._unit_conversion_factor,
             symprec=self._symprec,
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level,
@@ -2921,7 +2932,7 @@ class Phonopy:
             dist_func=dist_func,
             cutoff_frequency=cutoff_frequency,
             max_distance=max_distance,
-            factor=self._factor,
+            factor=self._unit_conversion_factor,
             use_openmp=phonoc.use_openmp(),
         )
 
@@ -3143,6 +3154,7 @@ class Phonopy:
             self._unitcell,
             supercell_matrix=smat,
             primitive_matrix=self._primitive_matrix,
+            factor=self._factor,
             frequency_scale_factor=self._frequency_scale_factor,
             dynamical_matrix_decimals=self._dynamical_matrix_decimals,
             force_constants_decimals=self._force_constants_decimals,
@@ -3152,6 +3164,7 @@ class Phonopy:
             store_dense_svecs=self._store_dense_svecs,
             use_SNF_supercell=self._use_SNF_supercell,
             calculator=self._calculator,
+            set_factor_by_calculator=self._set_factor_by_calculator,
             log_level=_log_level,
         )
 
@@ -3250,7 +3263,7 @@ class Phonopy:
             self._dynamical_matrix,
             q_length=self._gv_delta_q,
             symmetry=self._primitive_symmetry,
-            frequency_factor_to_THz=self._factor,
+            frequency_factor_to_THz=self._unit_conversion_factor,
         )
 
     def _search_symmetry(self) -> None:

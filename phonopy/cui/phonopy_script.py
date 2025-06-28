@@ -1763,17 +1763,11 @@ def _init_phonopy(
             log_level=log_level,
         )
     else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
-        # Read from settings for now so users see the Deprecation warning
-        if settings.frequency_conversion_factor is not None:
-            freq_factor = settings.frequency_conversion_factor
-        else:
-            freq_factor = None  # set by Phonopy __init__ based on calc
-
         phonon = Phonopy(
             cell_info.unitcell,
             cell_info.supercell_matrix,
             primitive_matrix=cell_info.primitive_matrix,
-            factor=freq_factor,
+            factor=settings.frequency_conversion_factor,
             frequency_scale_factor=settings.frequency_scale_factor,
             dynamical_matrix_decimals=settings.dm_decimals,
             force_constants_decimals=settings.fc_decimals,
@@ -1782,6 +1776,7 @@ def _init_phonopy(
             is_symmetry=settings.is_symmetry,
             store_dense_svecs=settings.store_dense_svecs,
             calculator=cell_info.interface_mode,
+            set_factor_by_calculator=(settings.frequency_conversion_factor is None),
             log_level=log_level,
         )
 
