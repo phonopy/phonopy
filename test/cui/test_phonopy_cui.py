@@ -11,6 +11,7 @@ from typing import Optional, Union
 
 import numpy as np
 import pytest
+import yaml
 
 import phonopy
 from phonopy.cui.phonopy_script import main
@@ -24,6 +25,7 @@ cwd = pathlib.Path(__file__).parent
 class MockArgs:
     """Mock args of ArgumentParser."""
 
+    band_paths: str | None = None
     filename: Optional[Sequence[Union[os.PathLike, str]]] = None
     conf_filename: Optional[os.PathLike] = None
     log_level: Optional[int] = None
@@ -31,6 +33,7 @@ class MockArgs:
     cell_filename: Optional[str] = None
     conf_filename: Optional[str] = None
     create_force_sets: Optional[list[str]] = None
+    frequency_conversion_factor: float | None = None
     is_check_symmetry: Optional[bool] = None
     is_graph_plot: Optional[bool] = None
     is_graph_save: Optional[bool] = None
@@ -139,7 +142,7 @@ def test_create_force_sets():
 
 @pytest.mark.parametrize("load_phonopy_yaml", [False, True])
 def test_phonopy_load(load_phonopy_yaml: bool):
-    """Test phonopy-load command."""
+    """Test phonopy/phonopy-load command."""
     pytest.importorskip("symfc")
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -158,6 +161,85 @@ def test_phonopy_load(load_phonopy_yaml: bool):
 
             # Clean files created by phonopy-load script.
             for created_filename in ("phonopy.yaml",):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize("load_phonopy_yaml", [False, True])
+def test_unit_conversion_factor(load_phonopy_yaml: bool):
+    """Test unit_conversion_factor using phonopy/phonopy-load command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            # Check sys.exit(0)
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / "phonopy_params_NaCl-fd.yaml.xz",
+                band_paths="0 0 0 0 0 1/2",
+                frequency_conversion_factor=100,
+                load_phonopy_yaml=load_phonopy_yaml,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            if load_phonopy_yaml:
+                ref_freq = 47.3113552091
+            else:
+                ref_freq = 29.5294946098
+            with open("band.yaml") as f:
+                band = yaml.safe_load(f)
+                assert band["phonon"][0]["band"][5]["frequency"] == pytest.approx(
+                    ref_freq
+                )
+
+            # Clean files created by phonopy-load script.
+            for created_filename in ("phonopy.yaml", "band.yaml"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize("load_phonopy_yaml", [False, True])
+def test_unit_conversion_factor_QE(load_phonopy_yaml: bool):
+    """Test unit_conversion_factor for QE using phonopy/phonopy-load command."""
+    pytest.importorskip("symfc")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            # Check sys.exit(0)
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / "phonopy_params_NaCl-QE.yaml.xz",
+                band_paths="0 0 0 0 0 1/2",
+                load_phonopy_yaml=load_phonopy_yaml,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            if load_phonopy_yaml:
+                ref_freq = 7.3823649712
+            else:
+                ref_freq = 4.5259552147
+            with open("band.yaml") as f:
+                band = yaml.safe_load(f)
+                assert band["phonon"][0]["band"][5]["frequency"] == pytest.approx(
+                    ref_freq
+                )
+
+            # Clean files created by phonopy-load script.
+            for created_filename in ("phonopy.yaml", "band.yaml"):
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists()
                 file_path.unlink()
@@ -250,6 +332,7 @@ def test_config_option():
 
 
 def _get_phonopy_args(
+    band_paths: str | None = None,
     cell_filename: str | os.PathLike | None = None,
     create_force_sets: list[str | os.PathLike] | None = None,
     supercell_dimension: str | None = None,
@@ -258,6 +341,7 @@ def _get_phonopy_args(
     load_phonopy_yaml: bool = False,
     is_check_symmetry: bool = False,
     filename: str | os.PathLike | None = None,
+    frequency_conversion_factor: float | None = None,
     conf_filename: str | os.PathLike | None = None,
     use_pypolymlp: bool = False,
 ):
@@ -266,15 +350,17 @@ def _get_phonopy_args(
     else:
         _filename = [filename]
     mockargs = MockArgs(
-        filename=_filename,
-        log_level=1,
+        band_paths=band_paths,
         cell_filename=cell_filename,
-        create_force_sets=create_force_sets,
-        supercell_dimension=supercell_dimension,
-        is_displacement=is_displacement,
-        magmoms=magmoms,
-        is_check_symmetry=is_check_symmetry,
         conf_filename=conf_filename,
+        create_force_sets=create_force_sets,
+        filename=_filename,
+        frequency_conversion_factor=frequency_conversion_factor,
+        is_displacement=is_displacement,
+        is_check_symmetry=is_check_symmetry,
+        log_level=1,
+        magmoms=magmoms,
+        supercell_dimension=supercell_dimension,
         use_pypolymlp=use_pypolymlp,
     )
 
