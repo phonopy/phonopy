@@ -30,9 +30,15 @@ def test_symfc_cutoff(ph_nacl: Phonopy, cutoff: Optional[dict]):
     )
     basis_set_fc3 = symfc_solver.basis_set[3]
     if cutoff is None:
-        assert basis_set_fc3.basis_set.shape == (786, 758)
+        assert basis_set_fc3.blocked_basis_set.recover_full_eigenvectors().shape == (
+            786,
+            758,
+        )
     else:
-        assert basis_set_fc3.basis_set.shape == (80, 67)
+        assert basis_set_fc3.blocked_basis_set.recover_full_eigenvectors().shape == (
+            80,
+            67,
+        )
         nonzero_elems = symfc_solver.get_nonzero_atomic_indices_fc3()
         assert nonzero_elems is not None
         assert nonzero_elems.size == len(ph.supercell) ** 3

@@ -225,7 +225,9 @@ class SymfcFCSolver:
             Basis sets. Keys are orders.
 
         """
-        self._symfc.compute_basis_set(max_order=max_order, orders=orders)
+        self._symfc.compute_basis_set(
+            max_order=max_order, orders=orders, return_blocks=True
+        )
         return self._symfc.basis_set
 
     def get_nonzero_atomic_indices_fc3(self) -> NDArray[np.bool] | None:
@@ -503,9 +505,11 @@ def symmetrize_by_projector(
         compmat = basis_set.compact_compression_matrix.tocsc()
 
     fc_sym = fc.ravel() @ compmat
-    fc_sym = fc_sym @ basis_set.basis_set
-    fc_sym = fc_sym @ basis_set.basis_set.T
-    fc_sym = fc_sym @ compmat.T
+    # fc_sym = fc_sym @ basis_set.blocked_basis_set
+    # fc_sym = fc_sym @ basis_set.basis_set.T
+    fc_sym = basis_set.blocked_basis_set.transpose_dot(fc_sym.T)
+    fc_sym = basis_set.blocked_basis_set.dot(fc_sym.T)
+    fc_sym = fc_sym.T @ compmat.T
     if fc.shape[0] != fc.shape[1]:
         n_lp = len(basis_set.translation_permutations)
         fc_sym *= n_lp
