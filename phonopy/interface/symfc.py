@@ -225,9 +225,7 @@ class SymfcFCSolver:
             Basis sets. Keys are orders.
 
         """
-        self._symfc.compute_basis_set(
-            max_order=max_order, orders=orders, return_blocks=True
-        )
+        self._symfc.compute_basis_set(max_order=max_order, orders=orders)
         return self._symfc.basis_set
 
     def get_nonzero_atomic_indices_fc3(self) -> NDArray[np.bool] | None:
