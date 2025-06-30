@@ -1,5 +1,4 @@
 (random_displacements)=
-
 # Random displacements
 
 Phonopy supports generating two types of random displacements.
@@ -145,7 +144,6 @@ necessary, e.g., symfc(https://github.com/symfc/symfc) or ALM
 ```
 
 (random_displacements_at_temperatures)=
-
 ## Random sampling of harmonic oscillator probability densities of phonon modes
 
 Random displacements corresponding to a specific temperature are generated with
@@ -224,7 +222,7 @@ In the below, a step-by-step example is presented.
    displacement-force dataset stored in `FORCE_SETS` to symmetry adapted force
    constants. Run also phonon calculation. This is done for example,
 
-   ```
+   ```bash
    phonopy-load -v --symfc --mesh 10 10 10 -p
    ```
 
@@ -242,4 +240,4 @@ In the below, a step-by-step example is presented.
    solution corresponds to a stochastic self-consistent harmonic approximation
    ({ref}`reference_sscha`) approach.
 
-It is also possible to perform the same calculation as above using the phonopy API.
+It is also possible to perform the same calculation as above using the phonopy API. ({ref}`phonopy_module`)
