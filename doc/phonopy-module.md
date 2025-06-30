@@ -126,7 +126,7 @@ If not using the default calculator (`"vasp"`), the `calculator` keyword argumen
 must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
 
 The range of supported calculators use different units internally. If not using VASP,
-set `set_factor_by_calculator` to `True` for correct unit conversion. Some more 
+set `set_factor_by_calculator` to `True` for correct unit conversion. Some more
 information on physical unit conversion is found at
 {ref}`frequency_conversion_factor_tag`, {ref}`physical_unit_conversion`, and
 {ref}`calculator_interfaces`.
