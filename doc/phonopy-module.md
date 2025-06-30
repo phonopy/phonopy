@@ -1,5 +1,4 @@
 (phonopy_module)=
-
 # Phonopy API for Python
 
 ## Three unit cells
@@ -126,9 +125,9 @@ those into files in a crystal structure format.
 If not using the default calculator (`"vasp"`), the `calculator` keyword argument
 must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
 
-The range of supported calculators use different units internally. Specifying the
-calculator type takes care of conversion to a consitent set of units for use in
-Phonopy. Some more information on physical unit conversion is found at
+The range of supported calculators use different units internally. If not using VASP,
+set `set_factor_by_calculator` to `True` for correct unit conversion. Some more 
+information on physical unit conversion is found at
 {ref}`frequency_conversion_factor_tag`, {ref}`physical_unit_conversion`, and
 {ref}`calculator_interfaces`.
 
@@ -148,7 +147,8 @@ calc = "qe"  # Quantum Espresso
 unitcell, optional_structure_info = read_crystal_structure("pw.in",
     interface_mode=calc)
 
-phonon = Phonopy(unitcell, supercell_matrix=np.eye(3), calculator=calc)
+phonon = Phonopy(unitcell, supercell_matrix=np.eye(3), calculator=calc,
+    set_factor_by_calculator=True)
 
 phonon.generate_displacements(distance=0.03)
 supercells = phonon.supercells_with_displacements
@@ -231,7 +231,6 @@ details at {ref}`file_force_constants`.
 ## Phonon calculation
 
 (phonopy_save_parameters)=
-
 ### Save parameters (`phonopy.save`)
 
 Basic information and parameters needed for phonon calculation are saved into a
@@ -253,7 +252,6 @@ The force constants can be written as follows:
 ```python
 phonon.save(settings={'force_constants': True})
 ```
-
 
 ### Band structure
 
@@ -502,14 +500,12 @@ At least three arguments have to be given at the initialization, which are
 - `symbols` or `numbers`
 
 (phonopy_Atoms_variables)=
-
 ### Variables
 
 The following variables are implemented in the `PhonopyAtoms` class in
 `phonopy/structure/atoms.py`.
 
 (phonopy_Atoms_cell)=
-
 #### `cell`
 
 Basis vectors are given in the matrix form in Cartesian coordinates.
