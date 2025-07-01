@@ -30,12 +30,12 @@ def test_symfc_cutoff(ph_nacl: Phonopy, cutoff: Optional[dict]):
     )
     basis_set_fc3 = symfc_solver.basis_set[3]
     if cutoff is None:
-        assert basis_set_fc3.blocked_basis_set.recover_full_eigenvectors().shape == (
+        assert basis_set_fc3.basis_set.shape == (
             786,
             758,
         )
     else:
-        assert basis_set_fc3.blocked_basis_set.recover_full_eigenvectors().shape == (
+        assert basis_set_fc3.basis_set.shape == (
             80,
             67,
         )
