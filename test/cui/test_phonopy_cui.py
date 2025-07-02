@@ -184,8 +184,9 @@ def test_unit_conversion_factor(load_phonopy_yaml: bool):
                 frequency_conversion_factor=100,
                 load_phonopy_yaml=load_phonopy_yaml,
             )
-            with pytest.raises(SystemExit) as excinfo:
-                main(**argparse_control)
+            with pytest.warns(DeprecationWarning):
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
             assert excinfo.value.code == 0
 
             if load_phonopy_yaml:

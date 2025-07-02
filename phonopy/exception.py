@@ -47,6 +47,18 @@ class ForceCalculatorRequiredError(RuntimeError):
     pass
 
 
+class ForceConstantsCalculatorNotFoundError(RuntimeError):
+    """Exception when force constants calculator is not found."""
+
+    pass
+
+
+class PypolymlpFileNotFoundError(RuntimeError):
+    """Exception when pypolymlp file is not found."""
+
+    pass
+
+
 class CellNotFoundError(RuntimeError):
     """Exception when unit cell not found."""
 

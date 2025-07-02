@@ -61,6 +61,7 @@ from phonopy.exception import (
     CellNotFoundError,
     ForceCalculatorRequiredError,
     MagmomValueError,
+    PypolymlpFileNotFoundError,
 )
 from phonopy.file_IO import (
     get_supported_file_extensions_for_compression,
@@ -75,7 +76,10 @@ from phonopy.interface.calculator import (
     get_default_displacement_distance,
     write_supercells_with_displacements,
 )
-from phonopy.interface.fc_calculator import fc_calculator_names
+from phonopy.interface.fc_calculator import (
+    check_and_cast_fc_calculator_name,
+    fc_calculator_names,
+)
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
@@ -651,7 +655,7 @@ def _produce_force_constants(
     )
 
     # polynomial MLPs
-    if phonopy_yaml_dataset and settings.use_pypolymlp:
+    if settings.use_pypolymlp:
         prepare_dataset = (
             settings.create_displacements or settings.random_displacements is not None
         )
@@ -669,7 +673,7 @@ def _produce_force_constants(
                 prepare_dataset=prepare_dataset,
                 log_level=log_level,
             )
-        except RuntimeError as e:
+        except PypolymlpFileNotFoundError as e:
             print_error_message(str(e))
             if log_level:
                 print_error()
@@ -688,8 +692,8 @@ def _produce_force_constants(
         if not prepare_dataset:
             if log_level:
                 print(
-                    "Generate displacements (--rd or -d) for proceeding to phonon "
-                    "calculations."
+                    "Use --rd or -d option for running phonon "
+                    "calculations with pypolymlp."
                 )
 
             _finalize_phonopy(log_level, settings, confs, phonon)
@@ -698,8 +702,10 @@ def _produce_force_constants(
         try:
             is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
             fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
+            fc_calculator = check_and_cast_fc_calculator_name(fc_calculator)
             # Set "symfc" for type-II dataset when phonopy-load is called without
             # specifying fc-calculator.
+            assert phonon.dataset is not None
             if load_phonopy_yaml and "displacements" in phonon.dataset:
                 if settings.fc_symmetry and settings.fc_calculator is None:
                     fc_calculator = "symfc"
