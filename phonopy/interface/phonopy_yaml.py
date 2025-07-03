@@ -84,7 +84,7 @@ class PhonopyYamlData:
 
 
 def phonopy_yaml_property_factory(name) -> property:
-    """Property factor for PhonopyYaml class."""
+    """Property factory for PhonopyYaml class."""
 
     def getter(instance):
         return instance._data.__dict__[name]

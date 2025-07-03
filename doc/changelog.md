@@ -2,6 +2,15 @@
 
 # Change Log
 
+## Jul-3-2025: Version 2.41.1
+
+- Updated version dependency for symfc
+- Deprecated `factor` parameter in `Phonopy` class initialization
+- Added `set_factor_by_calculator` boolean parameter to `Phonopy` class
+  instantiation, which automatically handles unit conversion factor to THz,
+  corresponding to the `factor` parameter, when True and used with the
+  `calculator` parameter.
+
 ## Jun-26-2025: Version 2.41.0
 
 - Major refactoring of command-user interface. Most of routines behind the

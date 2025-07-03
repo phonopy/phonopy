@@ -227,7 +227,6 @@ learning potentials such as pypolymlp. See {ref}`save_params_option`.
 (f_force_sets_option)=
 ### `-f` or `--forces`
 
-
 (vasp_force_sets_option)=
 #### VASP interface
 
@@ -244,7 +243,7 @@ correpond to that of `vasprun.xml` files.
 ```{note}
 - Site-projected wave function information (the same information as `PROCAR`)
   significantly increases the size of `vasprun.xml`. So parsing xml files generated this way
-  incurs huge memory costs. It is recommended to switch off to calculate it.
+  incurs huge memory costs. Therefore, this is not recommended.
 - If there are many displacements, shell expansions are useful, e.g.,
   `disp-*/vasprun.xml`, or `disp-{001..128}/vasprun.xml` (for zsh, and recent bash).
 ```

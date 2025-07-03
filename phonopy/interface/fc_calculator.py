@@ -37,11 +37,14 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal, Optional
+from typing import Literal, Optional, cast
 
 import numpy as np
 
-from phonopy.exception import ForceCalculatorRequiredError
+from phonopy.exception import (
+    ForceCalculatorRequiredError,
+    ForceConstantsCalculatorNotFoundError,
+)
 from phonopy.harmonic.force_constants import FDFCSolver
 from phonopy.interface.alm import ALMFCSolver
 from phonopy.interface.symfc import SymfcFCSolver, parse_symfc_options
@@ -55,6 +58,20 @@ fc_calculator_names = {
     "symfc": "symfc",
     "traditional": "phonopy-traditional",
 }
+
+
+def check_and_cast_fc_calculator_name(
+    fc_calculator: str | None,
+) -> Literal["traditional", "symfc", "alm"] | None:
+    """Check if the force constants calculator name is valid."""
+    if fc_calculator is None:
+        return None
+    if fc_calculator not in fc_calculator_names:
+        raise ForceConstantsCalculatorNotFoundError(
+            f"{fc_calculator} is not a valid force constants calculator."
+        )
+    else:
+        return cast(Literal["traditional", "symfc", "alm"], fc_calculator)
 
 
 def get_fc_solver(
