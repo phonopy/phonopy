@@ -45,7 +45,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from phonopy import Phonopy
-from phonopy.exception import ForcesetsNotFoundError
+from phonopy.exception import ForcesetsNotFoundError, PypolymlpFileNotFoundError
 from phonopy.file_IO import (
     parse_BORN,
     parse_FORCE_CONSTANTS,
@@ -364,7 +364,6 @@ def _run_pypolymlp(
                 if v is not None:
                     print(f"  {k}: {v}")
 
-    mlp_loaded = False
     for mlp_filename in ["polymlp.yaml", "phonopy.pmlp"]:
         _mlp_filename_list = list(pathlib.Path().glob(f"{mlp_filename}*"))
         if _mlp_filename_list:
@@ -382,13 +381,12 @@ def _run_pypolymlp(
                 print(f'Load MLPs from "{_mlp_filename}".')
 
             phonon.load_mlp(_mlp_filename)
-            mlp_loaded = True
             if log_level and mlp_filename == "phonopy.pmlp":
                 print(f'Loading MLPs from "{_mlp_filename}" is obsolete.')
             break
 
     mlp_filename = "polymlp.yaml"
-    if not mlp_loaded:
+    if phonon.mlp is None:
         if forces_in_dataset(phonon.mlp_dataset):
             if log_level:
                 print("Developing MLPs by pypolymlp...", flush=True)
@@ -397,7 +395,7 @@ def _run_pypolymlp(
             if log_level:
                 print(f'MLPs were written into "{mlp_filename}"', flush=True)
         else:
-            raise RuntimeError(f'"{mlp_filename}" is not found.')
+            raise PypolymlpFileNotFoundError(f'"{mlp_filename}" is not found.')
 
     if log_level:
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
@@ -438,6 +436,8 @@ def _prepare_dataset_by_pypolymlp(
         random_seed=random_seed,
         number_estimation_factor=rd_number_estimation_factor,
     )
+    assert phonon.supercells_with_displacements is not None
+
     if log_level and number_of_snapshots == "auto":
         print(
             "  Number of generated supercells with random displacements: "
@@ -449,9 +449,6 @@ def _prepare_dataset_by_pypolymlp(
             f"Evaluate forces in {len(phonon.displacements)} supercells by pypolymlp",
             flush=True,
         )
-
-    if phonon.supercells_with_displacements is None:
-        raise RuntimeError("Displacements are not set. Run generate_displacements.")
 
     phonon.evaluate_mlp()
 

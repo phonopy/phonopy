@@ -124,7 +124,7 @@ If specific one is expected, it is installed by (e.g. `openblas`)
 If you need a compiler,
 
 ```
-% conda install -c conda-forge c-compliler cxx-compiler cmake
+% conda install -c conda-forge c-compiler cxx-compiler cmake
 ```
 
 (install_setup_py)=

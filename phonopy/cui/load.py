@@ -185,8 +185,7 @@ def load(
         fc-calculator. For alm, each parameter is splitted by comma ',', and
         each set of key and value pair is written in 'key = value'.
     factor : float, optional
-        Phonon frequency unit conversion factor. Unless specified, default unit
-        conversion factor for each calculator is used.
+        Deprecated. Conversion factor is selected based off of `calculator`
     produce_fc : bool, optional
         Setting False, force constants are not calculated from dataset of
         displacements and forces even if the dataset exists. Default is True.
@@ -277,25 +276,21 @@ def load(
     if log_level and _calculator is not None:
         print('Set "%s" mode.' % _calculator)
 
-    # units keywords: factor, nac_factor, distance_to_A
-    units = get_calculator_physical_units(_calculator)
-    if factor is None:
-        _factor = units["factor"]
-    else:
-        _factor = factor
     phonon = Phonopy(
         cell,
         smat,
         primitive_matrix=pmat,
-        factor=_factor,
+        factor=factor,
         symprec=symprec,
         is_symmetry=is_symmetry,
         store_dense_svecs=store_dense_svecs,
         use_SNF_supercell=use_SNF_supercell,
         calculator=_calculator,
+        set_factor_by_calculator=True,
         log_level=log_level,
     )
 
+    units = get_calculator_physical_units(_calculator)
     # NAC params
     if born_filename is not None or _nac_params is not None or is_nac:
         ret_nac_params = load_helper.get_nac_params(
