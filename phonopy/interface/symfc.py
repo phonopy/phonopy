@@ -343,8 +343,8 @@ def parse_symfc_options(options: Optional[Union[str, dict]], order: int) -> dict
 def estimate_symfc_memory_usage(
     supercell: PhonopyAtoms,
     symmetry: Symmetry,
-    cutoff: float,
     order: int,
+    cutoff: float | None = None,
     batch_size: int = 100,
 ):
     """Estimate memory usage to run symfc for fc with cutoff.
@@ -383,7 +383,10 @@ def estimate_symfc_cutoff_from_memsize(
     )
     for i, cutoff in enumerate(dists[1:]):
         memsize, memsize2 = estimate_symfc_memory_usage(
-            supercell, symmetry, float(cutoff), order
+            supercell,
+            symmetry,
+            order,
+            cutoff=float(cutoff),
         )
         if max_memsize and memsize + memsize2 > max_memsize:
             return float(dists[i])
