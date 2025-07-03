@@ -349,6 +349,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#calculators">Calculators</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-processing-example">Pre-processing Example</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-process">Post process</a></li>
@@ -511,25 +512,44 @@ those into files in a crystal structure format.</p>
 <h4>Calculators<a class="headerlink" href="#calculators" title="Link to this heading">#</a></h4>
 <p>If not using the default calculator (<code class="docutils literal notranslate"><span class="pre">&quot;vasp&quot;</span></code>), the <code class="docutils literal notranslate"><span class="pre">calculator</span></code> keyword argument
 must also be set in your instance of <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">Phonopy(...,</span> <span class="pre">calculator=&quot;qe&quot;)</span></code>).</p>
-<p>Additionally, the frequency unit conversion factor to THz has to be set by using the
-<code class="docutils literal notranslate"><span class="pre">factor</span></code> keyword in <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class. The factors are accessed by referencing the
-calculator name. VASP and DFTB+ use the default value, so this step is optional
-for these calculators.</p>
-<p>Here is an example for Abinit:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_calculator_physical_units</span>
-
-<span class="n">factor</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;abinit&#39;</span><span class="p">)[</span><span class="s1">&#39;factor&#39;</span><span class="p">]</span>
-<span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span>
-                 <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
-                 <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                   <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                   <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-                 <span class="n">factor</span><span class="o">=</span><span class="n">factor</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Some more information on physical unit conversion is found at
+<p>The range of supported calculators use different units internally. If not using VASP,
+set <code class="docutils literal notranslate"><span class="pre">set_factor_by_calculator</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code> for correct unit conversion. Some more
+information on physical unit conversion is found at
 <a class="reference internal" href="setting-tags.html#frequency-conversion-factor-tag"><span class="std std-ref">FREQUENCY_CONVERSION_FACTOR</span></a>, <a class="reference internal" href="formulation.html#physical-unit-conversion"><span class="std std-ref">Physical unit conversion</span></a>, and
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
+</section>
+<section id="pre-processing-example">
+<h4>Pre-processing Example<a class="headerlink" href="#pre-processing-example" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">read_crystal_structure</span><span class="p">,</span>
+    <span class="n">write_crystal_structure</span><span class="p">,</span>
+    <span class="n">get_calculator_physical_units</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">calc</span> <span class="o">=</span> <span class="s2">&quot;qe&quot;</span>  <span class="c1"># Quantum Espresso</span>
+<span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">&quot;pw.in&quot;</span><span class="p">,</span>
+    <span class="n">interface_mode</span><span class="o">=</span><span class="n">calc</span><span class="p">)</span>
+
+<span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
+    <span class="n">set_factor_by_calculator</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">phonon</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
+<span class="n">supercells</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">supercells_with_displacements</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">supercell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">supercells</span><span class="p">):</span>
+    <span class="n">write_crystal_structure</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;supercell-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.in&quot;</span><span class="p">,</span>
+        <span class="n">supercell</span><span class="p">,</span>
+        <span class="n">interface_mode</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
+        <span class="n">optional_structure_info</span><span class="o">=</span><span class="n">optional_structure_info</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="post-process">
@@ -594,10 +614,12 @@ file by <code class="docutils literal notranslate"><span class="pre">phonopy.sav
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The default file name is <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>. Force sets, displacements, Born
-effective charges, and dielectric constant are written in the default behaviour.
-If force constants are needed to be written in the yaml file, the argument
-<code class="docutils literal notranslate"><span class="pre">settings</span></code> is set as follows:</p>
+<p>Force sets, displacements, Born effective charges, and dielectric constant
+are written in the default behaviour.</p>
+<p>The default file name is <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>, but this can be changed with the
+<code class="docutils literal notranslate"><span class="pre">filename</span></code> keword argument, which may be necessary if using certain CUI commands
+that expect a particular filename</p>
+<p>The force constants can be written as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;force_constants&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
@@ -1142,6 +1164,7 @@ VASP code by the unit cell.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#calculators">Calculators</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-processing-example">Pre-processing Example</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-process">Post process</a></li>

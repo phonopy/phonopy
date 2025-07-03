@@ -564,7 +564,7 @@ with some force calculator with VASP, QE, etc.</p></li>
 <li><p>Run the force constants calculation, e.g., with symfc. Symfc fits the
 displacement-force dataset stored in <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> to symmetry adapted force
 constants. Run also phonon calculation. This is done for example,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">symfc</span> <span class="o">--</span><span class="n">mesh</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="o">-</span><span class="n">p</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-load<span class="w"> </span>-v<span class="w"> </span>--symfc<span class="w"> </span>--mesh<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">10</span><span class="w"> </span>-p
 </pre></div>
 </div>
 <p>or</p>
@@ -580,7 +580,7 @@ solution corresponds to a stochastic self-consistent harmonic approximation
 (<a class="reference internal" href="reference.html#reference-sscha"><span class="std std-ref">SSCHA</span></a>) approach.</p>
 </li>
 </ol>
-<p>It is also possible to perform the same calculation as above using the phonopy API.</p>
+<p>It is also possible to perform the same calculation as above using the phonopy API. (<a class="reference internal" href="phonopy-module.html#phonopy-module"><span class="std std-ref">Phonopy API for Python</span></a>)</p>
 </section>
 </section>
 </section>
