@@ -169,6 +169,8 @@ class QpointsPhonon:
         import h5py
 
         with h5py.File(filename, "w") as w:
+            w.create_dataset("reciprocal_lattice", data=np.linalg.inv(self._lattice.T))
+            w.create_dataset("masses", data=self._masses)
             w.create_dataset("qpoint", data=self._qpoints)
             w.create_dataset("frequency", data=self._frequencies)
             if self._with_eigenvectors:
