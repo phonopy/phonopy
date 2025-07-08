@@ -43,7 +43,6 @@ from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
-
 from phonopy.harmonic.force_constants import (
     compact_fc_to_full_fc,
     full_fc_to_compact_fc,
@@ -454,6 +453,7 @@ def symmetrize_by_projector(
     fc: NDArray,
     order: int,
     primitive: Primitive | None = None,
+    options: dict | None = None,
     log_level: int = 0,
     show_credit: bool = False,
 ) -> NDArray:
@@ -470,13 +470,15 @@ def symmetrize_by_projector(
     primitive : Primitive, optional
         Primitive cell. If provided, it is used to check if the force constants
         are consistent with the primitive cell.
+    options : dict, optional
+        Options for symfc.
     log_level : int, optional
         Log level for symfc. Default is 0, which means no log.
     show_credit : bool, optional
         Whether to show credit information of symfc. Default is False.
 
     """
-    symfc = SymfcFCSolver(supercell, log_level=log_level)
+    symfc = SymfcFCSolver(supercell, options=options, log_level=log_level)
     if show_credit and log_level:
         symfc.show_credit()
     symfc.compute_basis_set(orders=[order])
