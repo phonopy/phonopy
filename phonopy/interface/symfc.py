@@ -43,6 +43,7 @@ from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
+
 from phonopy.harmonic.force_constants import (
     compact_fc_to_full_fc,
     full_fc_to_compact_fc,
