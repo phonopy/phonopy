@@ -228,7 +228,7 @@ class DynamicStructureFactor:
                     G_vector,
                     debye_waller,
                     f,
-                    eigvecs[:, i],
+                    eigvecs[:, i].conj(),
                 )
                 n = bose_einstein_dist(f, self._T)
                 S[i] = abs(F) ** 2 * (n + 1)
