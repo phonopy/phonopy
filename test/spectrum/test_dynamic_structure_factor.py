@@ -1,7 +1,13 @@
 """Tests for dynamic structure factor."""
 
-import numpy as np
+from __future__ import annotations
 
+from collections.abc import Callable
+
+import numpy as np
+from numpy.typing import ArrayLike
+
+from phonopy.api_phonopy import Phonopy
 from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
 
 # D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)
@@ -89,7 +95,29 @@ f_params = {
     ],
 }  # neutral
 
-data_AFF = """13.224708 710.969308 311.677433   2.873317  36.549683  21.483221
+data_AFF_Si = """1617.345756 1873.066252 503.856264  11.001319   8.079923   0.055787
+932.668536   4.059507 124.346263  12.115047   0.020839   7.462799
+442.713078   8.428824  53.809376  13.270402   2.033486   4.808897
+277.504172   0.742826  29.008863  14.488787   3.570989   2.622653
+  7.700914 190.329529  17.434621  15.811378   0.956863   4.567044
+128.242061  27.189284  11.021400  17.307531   3.613591   1.213426
+ 42.672187  88.737326   6.948860  19.094662   4.045577   0.061621
+  5.078139 112.962641   3.919888  21.394182   3.381237   0.000000
+ 17.263664  94.427377   1.063912  24.636357   0.316365   2.361231
+109.690680   1.039754   4.324087  22.750438   1.942733   0.087975"""
+
+data_b_Si = """1207.369580 1398.268247 376.135235   8.212628   6.031767   0.041645
+710.488237   3.092451  94.724496   9.229001   0.015875   5.685011
+344.213037   6.553479  41.837230  10.317846   1.581052   3.738956
+220.257270   0.589587  23.024565  11.499866   2.834322   2.081621
+  6.240743 154.241134  14.128841  12.813381   0.775432   3.701087
+106.128611  22.500894   9.120923  14.323103   2.990480   1.004189
+ 36.068376  75.004623   5.873477  16.139634   3.419496   0.052085
+  4.384648  97.536024   3.384573  18.472509   2.919482   0.000000
+ 15.229216  83.299522   0.938535  21.733070   0.279083   2.082970
+ 98.876152   0.937243   3.897770  20.507447   1.751197   0.079302 """
+
+data_AFF_NaCl = """13.224708 710.969308 311.677433   2.873317  36.549683  21.483221
  13.145117 168.331089  83.948759  11.537634  27.187230  21.646819
   4.999420  75.939632  40.711985  22.059842  16.300749  21.908902
   1.389114  44.997343  25.647179   9.988515  28.129482  22.174846
@@ -100,7 +128,7 @@ data_AFF = """13.224708 710.969308 311.677433   2.873317  36.549683  21.483221
   0.466439  29.112946   7.255176  19.464002  24.860848  14.174948
  25.956886  23.258523   0.301924   8.709088  35.161032   5.947678"""
 
-data_b = """40.928422 2200.339853 963.242578   5.345042  67.990960  39.950117
+data_b_NaCl = """40.928422 2200.339853 963.242578   5.345042  67.990960  39.950117
  40.938414 524.240900 260.035243  21.856090  51.501594  40.951936
  15.679344 238.164364 126.202848  42.560396  31.449289  42.148068
   4.376745 141.775245  79.243867  19.614922  55.239203  43.331623
@@ -112,21 +140,34 @@ data_b = """40.928422 2200.339853 963.242578   5.345042  67.990960  39.950117
  65.710583  58.879603   0.494887  14.275135  89.011137   9.748886 """
 
 
-def _get_func_AFF(f_params):
+def _get_func_AFF(f_params: dict):
     """Return atomic_form_factor function."""
 
-    def func(symbol, Q):
+    def func(symbol: str, Q: float) -> float:
         return atomic_form_factor_WK1995(Q, f_params[symbol])
 
     return func
 
 
-def test_IXS_G_to_L(ph_nacl):
+def test_IXS_G_to_L_Si(ph_si: Phonopy):
     """Test of dynamic structure factor calculation."""
-    _test_IXS_G_to_L(ph_nacl)
+    _test_IXS_G_to_L(ph_si, data_b_Si, data_AFF_Si, {"Si": 4.1491}, verbose=True)
 
 
-def _test_IXS_G_to_L(phonon, verbose=True):
+def test_IXS_G_to_L_NaCl(ph_nacl: Phonopy):
+    """Test of dynamic structure factor calculation with NaCl."""
+    _test_IXS_G_to_L(
+        ph_nacl, data_b_NaCl, data_AFF_NaCl, {"Na": 3.63, "Cl": 9.5770}, verbose=False
+    )
+
+
+def _test_IXS_G_to_L(
+    phonon: Phonopy,
+    data_b: str,
+    data_AFF: str,
+    scattering_lengths: dict,
+    verbose: bool = True,
+):
     mesh = [5, 5, 5]
     phonon.run_mesh(mesh, is_mesh_symmetry=False, with_eigenvectors=True)
 
@@ -167,7 +208,7 @@ def _test_IXS_G_to_L(phonon, verbose=True):
         phonon,
         G_points_cubic,
         directions,
-        scattering_lengths={"Na": 3.63, "Cl": 9.5770},
+        scattering_lengths=scattering_lengths,
         n_points=n_points,
     )
     Q, S = phonon.get_dynamic_structure_factor()
@@ -187,7 +228,7 @@ def _test_IXS_G_to_L(phonon, verbose=True):
         )
 
 
-def plot_f_Q(f_params):
+def plot_f_Q(f_params: dict):
     """Plot f_Q."""
     import matplotlib.pyplot as plt
 
@@ -220,12 +261,12 @@ def show(phonon):
 
 
 def _run(
-    phonon,
-    G_points_cubic,
-    directions,
-    func_AFF=None,
-    scattering_lengths=None,
-    n_points=51,
+    phonon: Phonopy,
+    G_points_cubic: tuple[list],
+    directions: ArrayLike,
+    func_AFF: Callable | None = None,
+    scattering_lengths: dict | None = None,
+    n_points: int = 51,
 ):
     P = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
     G_to_L = np.array(
@@ -262,5 +303,6 @@ def _run(
             else:
                 raise SyntaxError
             dsf = phonon.dynamic_structure_factor
+            assert dsf is not None
             for _, _ in enumerate(dsf):
                 pass

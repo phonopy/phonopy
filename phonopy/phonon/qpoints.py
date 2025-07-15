@@ -34,10 +34,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
+from __future__ import annotations
+
+import os
 from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
@@ -78,11 +81,11 @@ class QpointsPhonon:
         self,
         qpoints,
         dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        nac_q_direction=None,
-        with_eigenvectors=False,
-        group_velocity=None,
-        with_dynamical_matrices=False,
-        factor=None,
+        nac_q_direction: ArrayLike | None = None,
+        with_eigenvectors: bool = False,
+        group_velocity: GroupVelocity | None = None,
+        with_dynamical_matrices: bool = False,
+        factor: float | None = None,
     ):
         """Init method."""
         primitive: Primitive = dynamical_matrix.primitive
@@ -103,68 +106,40 @@ class QpointsPhonon:
         else:
             self._factor = factor
 
-        self._group_velocities = None
-        self._eigenvectors = None
-        self._eigenvalues = None
-        self._frequencies = None
-        self._dynamical_matrices = None
+        self._group_velocities: NDArray | None = None
+        self._eigenvectors: NDArray | None = None
+        self._eigenvalues: NDArray
+        self._frequencies: NDArray
+        self._dynamical_matrices: NDArray | None = None
 
         self._run()
 
     @property
-    def frequencies(self):
+    def frequencies(self) -> NDArray:
         """Return frequencies."""
         return self._frequencies
 
-    def get_frequencies(self):
-        """Return frequencies."""
-        warnings.warn(
-            "QpointsPhonon.get_frequencies() is deprecated. Use frequencies instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.frequencies
-
     @property
-    def eigenvalues(self):
+    def eigenvalues(self) -> NDArray:
         """Return eigenvalues."""
         return self._eigenvalues
 
     @property
-    def eigenvectors(self):
+    def eigenvectors(self) -> NDArray | None:
         """Return eigenvectors."""
         return self._eigenvectors
 
-    def get_eigenvectors(self):
-        """Return eigenvectors."""
-        warnings.warn(
-            "QpointsPhonon.get_eigenvectors() is deprecated. Use eigenvectors instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.eigenvectors
-
     @property
-    def group_velocities(self):
+    def group_velocities(self) -> NDArray | None:
         """Return group velocities."""
         return self._group_velocities
-
-    def get_group_velocities(self):
-        """Return group velocities."""
-        warnings.warn(
-            "QpointsPhonon.get_group_velocities() is deprecated. "
-            "Use group_velocities instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.group_velocities
 
     @property
     def dynamical_matrices(self):
         """Return DynamicalMatrix class instance."""
         return self._dynamical_matrices
 
-    def write_hdf5(self, filename="qpoints.hdf5"):
+    def write_hdf5(self, filename: str | os.PathLike = "qpoints.hdf5"):
         """Write results in hdf5."""
         import h5py
 
@@ -180,7 +155,7 @@ class QpointsPhonon:
             if self._with_dynamical_matrices:
                 w.create_dataset("dynamical_matrix", data=self._dynamical_matrices)
 
-    def write_yaml(self, filename="qpoints.yaml"):
+    def write_yaml(self, filename: str | os.PathLike = "qpoints.yaml"):
         """Write results in yaml."""
         w = open(filename, "w")
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
@@ -268,10 +243,10 @@ class QpointsPhonon:
             if self._with_dynamical_matrices:
                 dynamical_matrices.append(dm)
             if self._with_eigenvectors:
-                eigvals, eigvecs = np.linalg.eigh(dm)
+                eigvals, eigvecs = np.linalg.eigh(dm)  # type: ignore
                 eigenvectors[i] = eigvecs
             else:
-                eigvals = np.linalg.eigvalsh(dm)
+                eigvals = np.linalg.eigvalsh(dm)  # type: ignore
             eigvals = eigvals.real
             self._eigenvalues[i] = eigvals
             self._frequencies[i] = (
