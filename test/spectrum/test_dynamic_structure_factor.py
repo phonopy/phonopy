@@ -151,13 +151,22 @@ def _get_func_AFF(f_params: dict):
 
 def test_IXS_G_to_L_Si(ph_si: Phonopy):
     """Test of dynamic structure factor calculation."""
-    _test_IXS_G_to_L(ph_si, data_b_Si, data_AFF_Si, {"Si": 4.1491}, verbose=True)
+    degeneracies = [[[0, 1], [2], [3], [4, 5]]] * 10
+    _test_IXS_G_to_L(
+        ph_si, data_b_Si, data_AFF_Si, {"Si": 4.1491}, degeneracies, verbose=True
+    )
 
 
 def test_IXS_G_to_L_NaCl(ph_nacl: Phonopy):
     """Test of dynamic structure factor calculation with NaCl."""
+    degeneracies = [[[0, 1], [2], [3, 4], [5]]] * 6 + [[[0, 1], [2, 3], [4], [5]]] * 4
     _test_IXS_G_to_L(
-        ph_nacl, data_b_NaCl, data_AFF_NaCl, {"Na": 3.63, "Cl": 9.5770}, verbose=False
+        ph_nacl,
+        data_b_NaCl,
+        data_AFF_NaCl,
+        {"Na": 3.63, "Cl": 9.5770},
+        degeneracies,
+        verbose=False,
     )
 
 
@@ -166,6 +175,7 @@ def _test_IXS_G_to_L(
     data_b: str,
     data_AFF: str,
     scattering_lengths: dict,
+    degeneracies: list,
     verbose: bool = True,
 ):
     mesh = [5, 5, 5]
@@ -192,16 +202,15 @@ def _test_IXS_G_to_L(
     if verbose:
         for S_at_Q in S:
             print(("%10.6f " * 6) % tuple(S_at_Q))
+        for qpt in Q:
+            print(qpt)
 
     # Treatment of degeneracy
-    for i in ([0, 1], [2], [3, 4], [5]):
-        np.testing.assert_allclose(
-            S[:6, i].sum(axis=1), data_cmp[:6, i].sum(axis=1), atol=1e-5
-        )
-    for i in ([0, 1], [2, 3], [4], [5]):
-        np.testing.assert_allclose(
-            S[6:, i].sum(axis=1), data_cmp[6:, i].sum(axis=1), atol=1e-5
-        )
+    for j, deg_set in enumerate(degeneracies):
+        for deg in deg_set:
+            np.testing.assert_allclose(
+                S[j, deg].sum(), data_cmp[j, deg].sum(), atol=1e-5
+            )
 
     # Scattering lengths
     _run(
@@ -216,16 +225,15 @@ def _test_IXS_G_to_L(
     if verbose:
         for S_at_Q in S:
             print(("%10.6f " * 6) % tuple(S_at_Q))
+        for qpt in Q:
+            print(qpt)
 
     # Treatment of degeneracy
-    for i in ([0, 1], [2], [3, 4], [5]):
-        np.testing.assert_allclose(
-            S[:6, i].sum(axis=1), data_cmp[:6, i].sum(axis=1), atol=1e-5
-        )
-    for i in ([0, 1], [2, 3], [4], [5]):
-        np.testing.assert_allclose(
-            S[6:, i].sum(axis=1), data_cmp[6:, i].sum(axis=1), atol=1e-5
-        )
+    for j, deg_set in enumerate(degeneracies):
+        for deg in deg_set:
+            np.testing.assert_allclose(
+                S[j, deg].sum(), data_cmp[j, deg].sum(), atol=1e-5
+            )
 
 
 def plot_f_Q(f_params: dict):
