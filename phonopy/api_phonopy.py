@@ -3282,9 +3282,11 @@ class Phonopy:
         if len(self._symmetry.pointgroup_operations) != len(
             self._primitive_symmetry.pointgroup_operations
         ):
-            print(
+            warnings.warn(
                 "Warning: Point group symmetries of supercell and primitive"
-                "cell are different."
+                "cell are different.",
+                UserWarning,
+                stacklevel=2,
             )
 
     def _build_supercell(self) -> None:
