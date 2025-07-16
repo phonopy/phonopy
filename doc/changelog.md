@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Jul-16-2025: Version 2.41.2
+
+- Fixed critical bug in dynamic structure factor calculation for
+  non-centrosymmetric crystals.
+
 ## Jul-3-2025: Version 2.41.1
 
 - Updated version dependency for symfc
