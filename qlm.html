@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Questaal &amp; phonopy calculation &#8212; Phonopy v.2.41.1</title>
+    <title>Questaal &amp; phonopy calculation &#8212; Phonopy v.2.41.2</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=244de92d"></script>
+    <script src="_static/documentation_options.js?v=3339694b"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.41.1</p>
+    <p class="title logo__title">Phonopy v.2.41.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -342,7 +342,6 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-lm-tokens">Supported LM tokens</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run">How to run</a></li>
 </ul>
             </nav>
@@ -359,29 +358,16 @@ document.write(`
 <span id="qlm-interface"></span><h1>Questaal &amp; phonopy calculation<a class="headerlink" href="#questaal-phonopy-calculation" title="Link to this heading">#</a></h1>
 <p>This is a tutorial for the interface between phonopy and Questaal
 <a class="reference external" href="https://www.questaal.org/">https://www.questaal.org/</a>.</p>
-<section id="supported-lm-tokens">
-<h2>Supported LM tokens<a class="headerlink" href="#supported-lm-tokens" title="Link to this heading">#</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">XPOS</span><span class="p">,</span> <span class="n">ATOM</span><span class="p">,</span> <span class="n">ALAT</span><span class="p">,</span> <span class="n">PLAT</span>
-</pre></div>
-</div>
-<p>The interface uses LM suite site files. Such files have only a small amount of
-information within them relating to the calculation. At present, the interface
-requires the use of fractional co-ordinates. Since phonopy is capable of
-handling cartesian co-ordinates such an extension will be realised soon.</p>
-</section>
+<p>The interface uses the site files. Such files have only a small amount of
+information within them relating to the calculation. Extention to support
+ctrl files is planned.</p>
 <section id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Link to this heading">#</a></h2>
 <p>The following is a walkthrough for a phonopy calculation with LM:</p>
 <ol class="arabic">
-<li><p>Create a site file with the LM suite supercell maker, <code class="docutils literal notranslate"><span class="pre">lmscell</span></code>. For
-instance, use this command,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;m 1 0 0 0 1 0 0 0 1&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>lmscell<span class="w"> </span>--wsitex<span class="w"> </span>ctrl.lm
-</pre></div>
-</div>
-<p>This will write <code class="docutils literal notranslate"><span class="pre">site.lm</span></code> to disk in the current directory. Note that this
-site file will be written in fractional co-ordinates. At present, the LM
-interface supports only fractional co-ordinates.</p>
-</li>
+<li><p>Setup an <code class="docutils literal notranslate"><span class="pre">lmf</span></code> calculation with external site file instead of a <code class="docutils literal notranslate"><span class="pre">site</span></code>
+section in the ctrl file. Both relative and cartesian coordinates are
+supported. Remember to set <code class="docutils literal notranslate"><span class="pre">forces=1</span></code> in section <code class="docutils literal notranslate"><span class="pre">ham</span></code> of the ctrl file.</p></li>
 <li><p>Read the LM site file and create supercells with a command of the form,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy<span class="w"> </span>--qlm<span class="w"> </span>-d<span class="w"> </span>--dim<span class="o">=</span><span class="s1">&#39;2 2 2&#39;</span><span class="w"> </span>-c<span class="w"> </span>site.lm
 </pre></div>
@@ -389,9 +375,9 @@ interface supports only fractional co-ordinates.</p>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">supercell.lm</span></code> and
 <code class="docutils literal notranslate"><span class="pre">supercell-{id}.lm</span></code> correspond to the perfect supercell and supercells
 with displacements, respectively. These supercell files are LM site files
-ready to be used in <code class="docutils literal notranslate"><span class="pre">ctrl.lm</span></code>. A file named <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is also
-created in the current directory. This file contains information pertaining
-to displacements.</p>
+ready to be used in <code class="docutils literal notranslate"><span class="pre">ctrl.lm</span></code>. The original <code class="docutils literal notranslate"><span class="pre">alat</span></code> present in site.lm is
+preserved. A file named <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is also created in the current
+directory. This file contains information pertaining to displacements.</p>
 </li>
 <li><p>Next, run the calculations for the generated displacements and be sure to
 use the <code class="docutils literal notranslate"><span class="pre">--wforce=force</span></code> flag. This will write a file containing forces.
@@ -463,7 +449,6 @@ the first step</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-lm-tokens">Supported LM tokens</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run">How to run</a></li>
 </ul>
   </nav></div>
