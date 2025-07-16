@@ -581,30 +581,31 @@ def set_permutation_symmetry(force_constants):
             force_constants[i, j] = (force_constants[i, j] + fc_copy[j, i].T) / 2
 
 
-def show_drift_force_constants(
-    force_constants,
+def get_drift_force_constants(
+    force_constants: NDArray,
     primitive: Primitive | None = None,
-    name="force constants",
-    values_only=False,
-):
-    """Show force constants drift."""
+) -> tuple[float, float, list[int], list[int]]:
+    """Get max drift of force constants."""
     if force_constants.shape[0] == force_constants.shape[1]:
         num_atom = force_constants.shape[0]
         maxval1 = 0
         maxval2 = 0
-        jk1 = [0, 0]
-        jk2 = [0, 0]
+        xy1 = [0, 0]
+        xy2 = [0, 0]
         for i, j, k in list(np.ndindex((num_atom, 3, 3))):
             val1 = force_constants[:, i, j, k].sum()
             val2 = force_constants[i, :, j, k].sum()
             if abs(val1) > abs(maxval1):
                 maxval1 = val1
-                jk1 = [j, k]
+                xy1 = [j, k]
             if abs(val2) > abs(maxval2):
                 maxval2 = val2
-                jk2 = [j, k]
+                xy2 = [j, k]
     else:
-        assert primitive is not None
+        if primitive is None:
+            raise RuntimeError(
+                "Primitive cell is necessary to get drift force constants."
+            )
         s2p_map = primitive.s2p_map
         p2s_map = primitive.p2s_map
         p2p_map = primitive.p2p_map
@@ -617,11 +618,11 @@ def show_drift_force_constants(
             phonoc.transpose_compact_fc(
                 force_constants, permutations, s2pp_map, p2s_map, nsym_list
             )
-            maxval1, jk1 = _get_drift_per_index(force_constants)
+            maxval1, xy1 = _get_drift_per_index(force_constants)
             phonoc.transpose_compact_fc(
                 force_constants, permutations, s2pp_map, p2s_map, nsym_list
             )
-            maxval2, jk2 = _get_drift_per_index(force_constants)
+            maxval2, xy2 = _get_drift_per_index(force_constants)
 
         except ImportError as exc:
             text = (
@@ -630,18 +631,27 @@ def show_drift_force_constants(
             )
             raise RuntimeError(text) from exc
 
+    return maxval1, maxval2, xy1, xy2
+
+
+def show_drift_force_constants(
+    force_constants: NDArray,
+    primitive: Primitive | None = None,
+    name: str = "force constants",
+    values_only: bool = False,
+    digit: int = 8,
+):
+    """Show force constants drift."""
+    maxval1, maxval2, xy1, xy2 = get_drift_force_constants(
+        force_constants, primitive=primitive
+    )
+
     if values_only:
         text = ""
     else:
         text = "Max drift of %s: " % name
-    text += "%f (%s%s) %f (%s%s)" % (
-        maxval1,
-        "xyz"[jk1[0]],
-        "xyz"[jk1[1]],
-        maxval2,
-        "xyz"[jk2[0]],
-        "xyz"[jk2[1]],
-    )
+    text += f"{maxval1:.{digit}f} ({'xyz'[xy1[0]]}{'xyz'[xy1[1]]}) "
+    text += f"{maxval2:.{digit}f} ({'xyz'[xy2[0]]}{'xyz'[xy2[1]]}) "
     print(text)
 
 
