@@ -255,10 +255,9 @@ def write_crystal_structure(
         lammps.write_lammps(filename, cell)
 
     elif interface_mode == "qlm":
-        import phonopy.interface.qlm as qlm
+        import phonopy.interface.qlm as write_qlm
 
-        qlm.write_qlm(filename, cell)
-
+        write_qlm(filename, cell)
     elif interface_mode == "pwmat":
         import phonopy.interface.pwmat as pwmat
 
@@ -407,8 +406,8 @@ def write_supercells_with_displacements(
     elif interface_mode == "qlm":
         import phonopy.interface.qlm as qlm
 
-        qlm.write_supercells_with_displacements(*args, **kwargs)
-
+        qlm_args = args + optional_structure_info
+        qlm.write_supercells_with_displacements(*qlm_args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -564,8 +563,8 @@ def read_crystal_structure(
     elif interface_mode == "qlm":
         from phonopy.interface.qlm import read_qlm
 
-        unitcell = read_qlm(cell_filename)
-        return unitcell, (cell_filename,)
+        struct_info = read_qlm(cell_filename)
+        return struct_info
 
     else:
         raise RuntimeError("No calculator interface was found.")

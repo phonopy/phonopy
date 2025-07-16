@@ -42,7 +42,7 @@ import os
 import sys
 import textwrap
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any, Literal, Optional, Union
 
 import numpy as np
@@ -1680,13 +1680,13 @@ class Phonopy:
 
     def run_mesh(
         self,
-        mesh=100.0,
-        shift=None,
-        is_time_reversal=True,
-        is_mesh_symmetry=True,
-        with_eigenvectors=False,
-        with_group_velocities=False,
-        is_gamma_center=False,
+        mesh: float | ArrayLike = 100.0,
+        shift: ArrayLike | None = None,
+        is_time_reversal: bool = True,
+        is_mesh_symmetry: bool = True,
+        with_eigenvectors: bool = False,
+        with_group_velocities: bool = False,
+        is_gamma_center: bool = False,
     ) -> None:
         """Run mesh sampling phonon calculation.
 
@@ -2800,12 +2800,12 @@ class Phonopy:
 
     def init_dynamic_structure_factor(
         self,
-        Qpoints,
-        T,
-        atomic_form_factor_func=None,
-        scattering_lengths=None,
-        freq_min=None,
-        freq_max=None,
+        Qpoints: ArrayLike,
+        T: float,
+        atomic_form_factor_func: Callable | None = None,
+        scattering_lengths: dict | None = None,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
     ) -> None:
         """Initialize dynamic structure factor calculation.
 
@@ -3282,9 +3282,11 @@ class Phonopy:
         if len(self._symmetry.pointgroup_operations) != len(
             self._primitive_symmetry.pointgroup_operations
         ):
-            print(
+            warnings.warn(
                 "Warning: Point group symmetries of supercell and primitive"
-                "cell are different."
+                "cell are different.",
+                UserWarning,
+                stacklevel=2,
             )
 
     def _build_supercell(self) -> None:
