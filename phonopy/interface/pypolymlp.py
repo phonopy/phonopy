@@ -37,11 +37,11 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.structure.atoms import PhonopyAtoms
@@ -89,12 +89,12 @@ class PypolymlpParams:
     model_type: int = 3
     max_p: int = 2
     gtinv_order: int = 3
-    gtinv_maxl: Sequence[int] = (8, 8)
-    gaussian_params1: Sequence[float, float, int] = (1.0, 1.0, 1)
-    gaussian_params2: Sequence[float, float, int] = (0.0, 7.0, 10)
-    atom_energies: Optional[dict[str, float]] = None
-    ntrain: Optional[int] = None
-    ntest: Optional[int] = None
+    gtinv_maxl: tuple[int, int] = (8, 8)
+    gaussian_params1: tuple[float, float, int] = (1.0, 1.0, 1)
+    gaussian_params2: tuple[float, float, int] = (0.0, 7.0, 10)
+    atom_energies: dict[str, float] | None = None
+    ntrain: int | None = None
+    ntest: int | None = None
 
 
 @dataclass
@@ -110,16 +110,16 @@ class PypolymlpData:
 
     """
 
-    displacements: np.ndarray
-    forces: np.ndarray
-    supercell_energies: np.ndarray
+    displacements: NDArray[np.double]
+    forces: NDArray[np.double]
+    supercell_energies: NDArray[np.double]
 
 
 def develop_pypolymlp(
     supercell: PhonopyAtoms,
     train_data: PypolymlpData,
     test_data: PypolymlpData,
-    params: Optional[PypolymlpParams] = None,
+    params: PypolymlpParams | None = None,
     verbose: bool = False,
 ) -> Pypolymlp:  # type: ignore
     """Develop polynomial MLPs of pypolymlp.
@@ -185,7 +185,7 @@ def develop_pypolymlp(
 def evalulate_pypolymlp(
     polymlp: Pypolymlp,  # type: ignore
     supercells_with_displacements: list[PhonopyAtoms],
-) -> list[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     """Run force calculation using pypolymlp.
 
     Parameters
@@ -221,7 +221,7 @@ def evalulate_pypolymlp(
     return energies, forces, stresses
 
 
-def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpParams:
+def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
     """Parse MLP parameters string and return PypolymlpParams.
 
     Supported MLP parameters
@@ -291,7 +291,7 @@ def save_pypolymlp(mlp: Pypolymlp, filename: str):  # type: ignore
     mlp.save_mlp(filename=filename)
 
 
-def load_pypolymlp(filename: Optional[Union[str, bytes, os.PathLike]]) -> Pypolymlp:  # type: ignore
+def load_pypolymlp(filename: str | bytes | os.PathLike | None) -> Pypolymlp:  # type: ignore
     """Load MLP data from file."""
     mlp = Pypolymlp()
     myio = get_io_module_to_decompress(filename)
@@ -303,7 +303,7 @@ def load_pypolymlp(filename: Optional[Union[str, bytes, os.PathLike]]) -> Pypoly
 def develop_mlp_by_pypolymlp(
     mlp_dataset: dict,
     supercell: PhonopyAtoms,
-    params: Optional[Union[PypolymlpParams, dict, str]] = None,
+    params: PypolymlpParams | dict | str | None = None,
     test_size: float = 0.1,
     log_level: int = 0,
 ) -> Pypolymlp:  # type: ignore
@@ -352,3 +352,69 @@ def develop_mlp_by_pypolymlp(
         verbose=log_level - 1 > 0,
     )
     return mlp
+
+
+def relax_atomic_positions(
+    unitcell: PhonopyAtoms,
+    polymlp: Pypolymlp,  # type: ignore
+    verbose: bool = False,
+) -> PhonopyAtoms | None:
+    """Relax structure using pypolymlp.
+
+    Parameters
+    ----------
+    unitcell : PhonopyAtoms
+        Unit cell structure to be relaxed.
+    polymlp : Pypolymlp
+        Pypolymlp object with parameters and coefficients.
+    verbose : bool, optional
+        Verbosity. Default is False.
+
+    Returns
+    -------
+    relaxed_cell : PhonopyAtoms or None
+        Relaxed atomic positions. Return None if no relaxation is performed due
+        to symmetry constraints.
+
+    """
+    try:
+        from pypolymlp.api.pypolymlp_calc import PypolymlpCalc
+        from pypolymlp.utils.phonopy_utils import structure_to_phonopy_cell
+    except ImportError as exc:
+        raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
+
+    polymlp = PypolymlpCalc(
+        params=polymlp.parameters, coeffs=polymlp.coeffs, verbose=verbose
+    )
+    polymlp.load_phonopy_structures([unitcell])
+    polymlp.init_geometry_optimization(
+        with_sym=True,
+        relax_cell=False,
+        relax_positions=True,
+    )
+    _, _, success = polymlp.run_geometry_optimization()
+    if success is None:
+        relaxed_cell = None
+    elif success is False:
+        raise RuntimeError("Geometry optimization by pypolymlp failed.")
+    else:
+        relaxed_cell = structure_to_phonopy_cell(polymlp.first_structure)
+
+    return relaxed_cell
+
+
+def get_change_in_positions(
+    relaxed_cell: PhonopyAtoms, original_cell: PhonopyAtoms, verbose: bool = False
+) -> NDArray:
+    """Show change by relaxation."""
+    diffs = relaxed_cell.scaled_positions - original_cell.scaled_positions
+    diffs -= np.rint(diffs)
+    disps = np.linalg.norm(diffs @ original_cell.cell, axis=1)
+    if verbose:
+        print("Change in positions:")
+        for i, (symbol, d, disp) in enumerate(zip(original_cell.symbols, diffs, disps)):
+            print(
+                f"{i + 1:2d} {symbol:<2}: {d[0]:11.8f} {d[1]:11.8f} {d[2]:11.8f} "
+                f"(|d|={disp:.8f})"
+            )
+    return diffs

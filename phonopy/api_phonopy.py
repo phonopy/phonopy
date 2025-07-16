@@ -1200,7 +1200,7 @@ class Phonopy:
 
         self._mlp.save(filename=filename)
 
-    def load_mlp(self, filename: Optional[Union[str, bytes, os.PathLike]] = None):
+    def load_mlp(self, filename: str | bytes | os.PathLike | None = None):
         """Load machine learning potential."""
         self._mlp = PhonopyMLP(log_level=self._log_level)
         self._mlp.load(filename=filename)
