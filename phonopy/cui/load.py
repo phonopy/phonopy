@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import io
 import os
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -53,7 +54,6 @@ from phonopy.structure.dataset import forces_in_dataset
 
 def load(
     phonopy_yaml: str
-    | bytes
     | os.PathLike
     | io.IOBase
     | None = None,  # phonopy.yaml-like must be the first argument.
@@ -69,7 +69,7 @@ def load(
     born_filename: os.PathLike | str | None = None,
     force_sets_filename: os.PathLike | str | None = None,
     force_constants_filename: os.PathLike | str | None = None,
-    fc_calculator: str | None = None,
+    fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
     fc_calculator_options: str | None = None,
     factor: float | None = None,
     produce_fc: bool = True,
@@ -129,7 +129,7 @@ def load(
 
     Parameters
     ----------
-    phonopy_yaml : str, bytes, os.PathLike, io.IOBase, optional
+    phonopy_yaml : str, os.PathLike, io.IOBase, optional
         Filename of "phonopy.yaml"-like file for str or bytes, otherwise file
         pointer-like. If this is given, the data in the file are parsed. Default
         is None.
@@ -269,12 +269,13 @@ def load(
             _calculator = phpy_yaml.calculator
         else:
             _calculator = calculator
-    else:
+
+    if cell is None:
         msg = "Cell information could not found. Phonopy instance loading failed."
         raise RuntimeError(msg)
 
     if log_level and _calculator is not None:
-        print('Set "%s" mode.' % _calculator)
+        print(f'Set "{_calculator}" mode.')
 
     phonon = Phonopy(
         cell,
@@ -307,6 +308,7 @@ def load(
     dataset = load_helper.select_and_load_dataset(
         len(phonon.supercell),
         _dataset,
+        phonopy_yaml_filename=phonopy_yaml,
         force_sets_filename=force_sets_filename,
         log_level=log_level,
     )

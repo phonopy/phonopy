@@ -74,7 +74,7 @@ def write_FORCE_SETS(dataset, filename="FORCE_SETS"):
         w.write("\n")
 
 
-def get_FORCE_SETS_lines(dataset, forces=None):
+def get_FORCE_SETS_lines(dataset: dict, forces: NDArray | None = None) -> list:
     """Generate FORCE_SETS string.
 
     See the format of dataset in the docstring of
@@ -89,9 +89,11 @@ def get_FORCE_SETS_lines(dataset, forces=None):
         if forces is not None:
             dataset["forces"] = forces
         return _get_FORCE_SETS_lines_type2(dataset)
+    else:
+        raise RuntimeError("Unknown dataset format.")
 
 
-def _get_FORCE_SETS_lines_type1(dataset, forces=None):
+def _get_FORCE_SETS_lines_type1(dataset: dict, forces: NDArray | None = None) -> list:
     num_atom = dataset["natom"]
     displacements = dataset["first_atoms"]
     if forces is None:
@@ -112,7 +114,7 @@ def _get_FORCE_SETS_lines_type1(dataset, forces=None):
     return lines
 
 
-def _get_FORCE_SETS_lines_type2(dataset):
+def _get_FORCE_SETS_lines_type2(dataset: dict) -> list:
     lines = []
     for displacements, forces in zip(dataset["displacements"], dataset["forces"]):
         for d, f in zip(displacements, forces):
@@ -121,7 +123,11 @@ def _get_FORCE_SETS_lines_type2(dataset):
     return lines
 
 
-def parse_FORCE_SETS(natom=None, filename="FORCE_SETS", to_type2=False):
+def parse_FORCE_SETS(
+    natom: int | None = None,
+    filename: str | os.PathLike = "FORCE_SETS",
+    to_type2: bool = False,
+):
     """Parse FORCE_SETS from file.
 
     to_type2 : bool
@@ -141,12 +147,14 @@ def parse_FORCE_SETS(natom=None, filename="FORCE_SETS", to_type2=False):
         )
 
 
-def parse_FORCE_SETS_from_strings(strings, natom=None, to_type2=False):
+def parse_FORCE_SETS_from_strings(
+    strings: str, natom: int | None = None, to_type2: bool = False
+):
     """Parse FORCE_SETS from strings."""
     return _get_dataset(io.StringIO(strings), natom=natom, to_type2=to_type2)
 
 
-def _get_dataset(f, natom=None, to_type2=False):
+def _get_dataset(f: io.TextIOBase, natom: int | None = None, to_type2: bool = False):
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
     if len(first_line_ary) == 1:
@@ -166,7 +174,7 @@ def _get_dataset(f, natom=None, to_type2=False):
         return get_dataset_type2(f, natom)
 
 
-def _get_dataset_type1(f):
+def _get_dataset_type1(f: io.TextIOBase) -> dict:
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
@@ -193,7 +201,7 @@ def _get_dataset_type1(f):
     return dataset
 
 
-def get_dataset_type2(f, natom):
+def get_dataset_type2(f: io.TextIOBase, natom: int | None = None) -> dict:
     """Parse type2 FORCE_SETS text and return dataset."""
     data = np.loadtxt(f, dtype="double")
     if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
@@ -213,7 +221,7 @@ def get_dataset_type2(f, natom):
     return dataset
 
 
-def _get_line_ignore_blank(f):
+def _get_line_ignore_blank(f: io.TextIOBase) -> str:
     line = f.readline().strip()
     if line == "":
         line = _get_line_ignore_blank(f)
@@ -678,12 +686,17 @@ def get_BORN_lines(
     return lines
 
 
-def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
+def parse_BORN(
+    primitive: PhonopyAtoms,
+    symprec: float = 1e-5,
+    is_symmetry: bool = True,
+    filename: str | os.PathLike = "BORN",
+):
     """Parse BORN file.
 
     Parameters
     ----------
-    primitive : Primitive
+    primitive : PhonopyAtoms
         Primitive cell.
     symprec : float, optional
         Symmetry tolerance. Default is 1e-5.
@@ -698,7 +711,10 @@ def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
 
 
 def parse_BORN_from_strings(
-    strings, primitive, symprec=1e-5, is_symmetry=True
+    strings: str,
+    primitive: PhonopyAtoms,
+    symprec: float = 1e-5,
+    is_symmetry: bool = True,
 ) -> Optional[dict]:
     """Parse BORN file text.
 
@@ -709,13 +725,15 @@ def parse_BORN_from_strings(
     return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 
-def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry) -> Optional[dict]:
+def _parse_BORN_from_file_object(
+    f: io.TextIOBase, primitive: PhonopyAtoms, symprec: float, is_symmetry: bool
+) -> Optional[dict]:
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
 
 
 def get_born_parameters(
-    f: io.IOBase, primitive: PhonopyAtoms, prim_symmetry: Symmetry
+    f: io.TextIOBase, primitive: PhonopyAtoms, prim_symmetry: Symmetry
 ) -> Optional[dict]:
     """Parse BORN file text.
 
@@ -796,7 +814,7 @@ def get_born_parameters(
     return non_anal
 
 
-def _expand_borns(borns, primitive: PhonopyAtoms, prim_symmetry: Symmetry):
+def _expand_borns(borns: NDArray, primitive: PhonopyAtoms, prim_symmetry: Symmetry):
     # Expand Born effective charges to all atoms in the primitive cell
     rotations = prim_symmetry.symmetry_operations["rotations"]
     map_operations = prim_symmetry.get_map_operations()
