@@ -328,10 +328,8 @@ def load(
     if use_pypolymlp and dataset is not None:
         phonon.mlp_dataset = dataset
         phonon.dataset = None
-        load_helper.prepare_pypolymlp_and_dataset(
-            phonon,
-            mlp_params=mlp_params,
-            log_level=log_level,
+        load_helper.prepare_pypolymlp(
+            phonon, mlp_params=mlp_params, log_level=log_level
         )
     if (
         phonon.force_constants is None

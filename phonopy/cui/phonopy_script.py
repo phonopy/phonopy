@@ -49,7 +49,8 @@ from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, get_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
     get_nac_params,
-    prepare_pypolymlp_and_dataset,
+    prepare_dataset_by_pypolymlp,
+    prepare_pypolymlp,
     produce_force_constants,
     select_and_extract_force_constants,
     select_and_load_dataset,
@@ -59,7 +60,7 @@ from phonopy.cui.settings import PhonopyConfParser, PhonopySettings, Settings
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.exception import (
     CellNotFoundError,
-    ForceCalculatorRequiredError,
+    ForceConstantsCalculatorNotFoundError,
     MagmomValueError,
     PypolymlpFileNotFoundError,
 )
@@ -630,8 +631,6 @@ def _create_FORCE_SETS_from_settings(
 def _produce_force_constants(
     phonon: Phonopy,
     settings: PhonopySettings,
-    phonopy_yaml: PhonopyYaml | None,
-    phonopy_yaml_filename: str | os.PathLike | None,
     confs: dict,
     load_phonopy_yaml: bool,
     log_level: int,
@@ -641,55 +640,17 @@ def _produce_force_constants(
     Return True if force constants are created.
 
     """
-    # Read dataset
-    if phonopy_yaml is None:
-        phonopy_yaml_dataset = None
-    else:
-        phonopy_yaml_dataset = phonopy_yaml.dataset
-
-    phonon.dataset = select_and_load_dataset(
-        len(phonon.supercell),
-        phonopy_yaml_dataset,
-        phonopy_yaml_filename=phonopy_yaml_filename,
-        log_level=log_level,
-    )
-
-    # polynomial MLPs
     if settings.use_pypolymlp:
-        prepare_dataset = (
-            settings.create_displacements or settings.random_displacements is not None
-        )
-        if phonon.dataset is not None:
-            phonon.mlp_dataset = phonon.dataset
-            phonon.dataset = None
-        try:
-            prepare_pypolymlp_and_dataset(
+        if settings.create_displacements or settings.random_displacements is not None:
+            prepare_dataset_by_pypolymlp(
                 phonon,
-                mlp_params=settings.mlp_params,
                 displacement_distance=settings.displacement_distance,
                 number_of_snapshots=settings.random_displacements,
-                random_seed=settings.random_seed,
                 rd_number_estimation_factor=settings.rd_number_estimation_factor,
-                prepare_dataset=prepare_dataset,
+                random_seed=settings.random_seed,
                 log_level=log_level,
             )
-        except PypolymlpFileNotFoundError as e:
-            print_error_message(str(e))
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        if phonon.dataset is not None:
-            mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
-            if log_level:
-                print(
-                    "Dataset generated using MMLPs was written in "
-                    f'"{mlp_eval_filename}".'
-                )
-            phonon.save(mlp_eval_filename)
-
-        # pypolymlp dataset is stored in "polymlp.yaml" and stop here.
-        if not prepare_dataset:
+        else:
             if log_level:
                 print(
                     "Use --rd or -d option for running phonon "
@@ -698,30 +659,41 @@ def _produce_force_constants(
 
             _finalize_phonopy(log_level, settings, confs, phonon)
 
+        if phonon.dataset is not None:
+            mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
+            if log_level:
+                print(
+                    "Dataset generated using MLPs was written in "
+                    f'"{mlp_eval_filename}".'
+                )
+            phonon.save(mlp_eval_filename)
+
     if forces_in_dataset(phonon.dataset):
+        is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
+        fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
+
         try:
-            is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-            fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
             fc_calculator = check_and_cast_fc_calculator_name(fc_calculator)
-            # Set "symfc" for type-II dataset when phonopy-load is called without
-            # specifying fc-calculator.
-            assert phonon.dataset is not None
-            if load_phonopy_yaml and "displacements" in phonon.dataset:
-                if settings.fc_symmetry and settings.fc_calculator is None:
-                    fc_calculator = "symfc"
-            produce_force_constants(
-                phonon,
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-                symmetrize_fc=False,  # treated in _post_process_force_constants
-                is_compact_fc=(not is_full_fc),
-                log_level=log_level,
-            )
-        except (RuntimeError, ValueError, ForceCalculatorRequiredError) as e:
+        except ForceConstantsCalculatorNotFoundError as e:
             print_error_message(str(e))
             if log_level:
                 print_error()
             sys.exit(1)
+
+        # Set "symfc" for type-II dataset when phonopy-load is called without
+        # specifying fc-calculator.
+        assert phonon.dataset is not None
+        if load_phonopy_yaml and "displacements" in phonon.dataset:
+            if settings.fc_symmetry and settings.fc_calculator is None:
+                fc_calculator = "symfc"
+        produce_force_constants(
+            phonon,
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options,
+            symmetrize_fc=False,  # treated in _post_process_force_constants
+            is_compact_fc=(not is_full_fc),
+            log_level=log_level,
+        )
 
 
 def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
@@ -2042,6 +2014,39 @@ def main(**argparse_control):
             log_level=log_level,
         )
 
+    ###############
+    # Set dataset #
+    ###############
+    if cell_info.phonopy_yaml is None:
+        phonopy_yaml_dataset = None
+    else:
+        phonopy_yaml_dataset = cell_info.phonopy_yaml.dataset
+
+    phonon.dataset = select_and_load_dataset(
+        len(phonon.supercell),
+        phonopy_yaml_dataset,
+        phonopy_yaml_filename=unitcell_filename,
+        log_level=log_level,
+    )
+
+    ###########################
+    # Prepare polynomial MLPs #
+    ###########################
+    if settings.use_pypolymlp:
+        if phonon.dataset is not None:
+            phonon.mlp_dataset = phonon.dataset
+            phonon.dataset = None
+
+        try:
+            prepare_pypolymlp(
+                phonon, mlp_params=settings.mlp_params, log_level=log_level
+            )
+        except PypolymlpFileNotFoundError as e:
+            print_error_message(str(e))
+            if log_level:
+                print_error()
+            sys.exit(1)
+
     ###########################
     # Produce force constants #
     ###########################
@@ -2049,8 +2054,6 @@ def main(**argparse_control):
         _produce_force_constants(
             phonon,
             settings,
-            cell_info.phonopy_yaml,
-            unitcell_filename,
             confs,
             load_phonopy_yaml,
             log_level,

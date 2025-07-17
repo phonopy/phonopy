@@ -41,6 +41,7 @@ import os
 import pathlib
 import sys
 from collections.abc import Sequence
+from types import ModuleType
 from typing import Optional
 
 import numpy as np
@@ -949,7 +950,7 @@ def _parse_QHA_data(filename):
         return np.array(data)
 
 
-def get_io_module_to_decompress(filename):
+def get_io_module_to_decompress(filename) -> ModuleType:
     """Return io-module to decompress file.
 
     Filename extensions of lzma, xz, gzip, bz2 are supported.

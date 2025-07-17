@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -86,10 +86,10 @@ class PypolymlpParams:
     """
 
     cutoff: float = 8.0
-    model_type: int = 3
-    max_p: int = 2
+    model_type: Literal[1, 2, 3, 4] = 3
+    max_p: Literal[1, 2, 3] = 2
     gtinv_order: int = 3
-    gtinv_maxl: tuple[int, int] = (8, 8)
+    gtinv_maxl: tuple[int, ...] = (8, 8)
     gaussian_params1: tuple[float, float, int] = (1.0, 1.0, 1)
     gaussian_params2: tuple[float, float, int] = (0.0, 7.0, 10)
     atom_energies: dict[str, float] | None = None
@@ -160,14 +160,14 @@ def develop_pypolymlp(
         elements_energies = {s: _params.atom_energies[s] for s in supercell.symbols}
     polymlp = Pypolymlp()
     polymlp.set_params(
-        elements=list(elements_energies.keys()),
+        elements=tuple(elements_energies.keys()),
         cutoff=_params.cutoff,
         model_type=_params.model_type,
         max_p=_params.max_p,
         gtinv_order=_params.gtinv_order,
         gtinv_maxl=_params.gtinv_maxl,
         gaussian_params2=_params.gaussian_params2,
-        atomic_energy=list(elements_energies.values()),
+        atomic_energy=tuple(elements_energies.values()),
     )
     polymlp.set_datasets_displacements(
         train_data.displacements.transpose(0, 2, 1),
@@ -293,7 +293,7 @@ def save_pypolymlp(mlp: Pypolymlp, filename: str):  # type: ignore
 
 def load_pypolymlp(filename: str | bytes | os.PathLike | None) -> Pypolymlp:  # type: ignore
     """Load MLP data from file."""
-    mlp = Pypolymlp()
+    mlp = Pypolymlp()  # type: ignore
     myio = get_io_module_to_decompress(filename)
     with myio.open(filename, "rt") as fp:
         mlp.load_mlp(fp)
@@ -411,10 +411,10 @@ def get_change_in_positions(
     diffs -= np.rint(diffs)
     disps = np.linalg.norm(diffs @ original_cell.cell, axis=1)
     if verbose:
-        print("Change in positions:")
+        print("Change in fractional position and in distance:")
         for i, (symbol, d, disp) in enumerate(zip(original_cell.symbols, diffs, disps)):
             print(
-                f"{i + 1:2d} {symbol:<2}: {d[0]:11.8f} {d[1]:11.8f} {d[2]:11.8f} "
+                f"{i + 1:3d} {symbol:<2}: {d[0]:11.8f} {d[1]:11.8f} {d[2]:11.8f} "
                 f"(|d|={disp:.8f})"
             )
     return diffs
