@@ -43,6 +43,7 @@ from typing import Any, Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.exception import PypolymlpRelaxationError
 from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -396,7 +397,9 @@ def relax_atomic_positions(
     if success is None:
         relaxed_cell = None
     elif success is False:
-        raise RuntimeError("Geometry optimization by pypolymlp failed.")
+        raise PypolymlpRelaxationError(
+            "Relaxation of atomic positions by pypolymlp failed."
+        )
     else:
         relaxed_cell = structure_to_phonopy_cell(polymlp.first_structure)
 
