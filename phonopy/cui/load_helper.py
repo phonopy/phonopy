@@ -36,10 +36,11 @@
 
 from __future__ import annotations
 
+import io
 import os
 import pathlib
 from dataclasses import asdict
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -165,12 +166,20 @@ def get_nac_params(
 
     """
     if born_filename is not None:
+        if primitive is None:
+            raise ValueError(
+                "Primitive cell has to be specified when born_filename is given."
+            )
         _nac_params = parse_BORN(primitive, filename=born_filename)
         if log_level:
             print('NAC parameters were read from "%s".' % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
     elif is_nac and pathlib.Path("BORN").exists():
+        if primitive is None:
+            raise ValueError(
+                "Primitive cell has to be specified when born_filename is given."
+            )
         _nac_params = parse_BORN(primitive, filename="BORN")
         if log_level:
             print('NAC params were read from "BORN".')
@@ -213,16 +222,17 @@ def read_force_constants_from_hdf5(
 def select_and_load_dataset(
     nsatom: int,
     dataset: dict | None = None,
-    phonopy_yaml_filename: str | os.PathLike | None = None,
+    phonopy_yaml_filename: str | os.PathLike | io.IOBase | None = None,
     force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
-) -> Optional[dict]:
+) -> dict | None:
     """Set displacement-force dataset."""
     _dataset = None
     _force_sets_filename = None
     if forces_in_dataset(dataset):
         _dataset = dataset
-        _force_sets_filename = phonopy_yaml_filename
+        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
+            _force_sets_filename = phonopy_yaml_filename
     elif force_sets_filename is not None:
         _dataset = parse_FORCE_SETS(natom=nsatom, filename=force_sets_filename)
         _force_sets_filename = force_sets_filename

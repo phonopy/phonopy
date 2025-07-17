@@ -39,3 +39,5 @@ from phonopy.api_phonopy import Phonopy  # noqa F401
 from phonopy.api_qha import PhonopyQHA  # noqa F401
 from phonopy.cui.load import load  # noqa F401
 from phonopy.version import __version__  # noqa F401
+
+__all__ = ["PhonopyGruneisen", "Phonopy", "PhonopyQHA", "load", "__version__"]

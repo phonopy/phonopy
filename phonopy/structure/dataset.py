@@ -84,6 +84,8 @@ def get_displacements_and_forces(
         else:
             forces = None
         return disp_dataset["displacements"], forces
+    else:
+        raise RuntimeError("Unknown dataset format.")
 
 
 def forces_in_dataset(dataset):

@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import os
 import warnings
 from typing import Optional, Union
 
@@ -605,7 +606,11 @@ class ThermalProperties(ThermalPropertiesBase):
                 np.array(cv, dtype="double"),
             )
 
-    def write_yaml(self, filename="thermal_properties.yaml", volume=None):
+    def write_yaml(
+        self,
+        filename: str | os.PathLike = "thermal_properties.yaml",
+        volume: float | None = None,
+    ):
         """Write thermal properties in yaml file."""
         lines = self._get_tp_yaml_lines(volume=volume)
         if self._is_projection:
@@ -656,7 +661,7 @@ class ThermalProperties(ThermalPropertiesBase):
             np.array(cv, dtype="double"),
         )
 
-    def _get_tp_yaml_lines(self, volume=None):
+    def _get_tp_yaml_lines(self, volume: float | None = None):
         lines = []
         lines.append("# Thermal properties / unit cell (natom)")
         lines.append("")
