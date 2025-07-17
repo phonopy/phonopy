@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jul-16-2025: Version 2.41.3
+
+- Fixed issue where the `--pa` option (`PRIMITIVE_AXIS` tag) was not working.
+
 ## Jul-16-2025: Version 2.41.2
 
 - Fixed critical bug in dynamic structure factor calculation for
