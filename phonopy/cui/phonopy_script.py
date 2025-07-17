@@ -63,6 +63,7 @@ from phonopy.exception import (
     ForceConstantsCalculatorNotFoundError,
     MagmomValueError,
     PypolymlpFileNotFoundError,
+    PypolymlpRelaxationError,
 )
 from phonopy.file_IO import (
     get_supported_file_extensions_for_compression,
@@ -82,6 +83,7 @@ from phonopy.interface.fc_calculator import (
     fc_calculator_names,
 )
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.pypolymlp import get_change_in_positions, relax_atomic_positions
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import get_pdos_indices
@@ -2046,6 +2048,36 @@ def main(**argparse_control):
             if log_level:
                 print_error()
             sys.exit(1)
+
+    ################################################
+    # Relax atomic positions using polynomial MLPs #
+    ################################################
+    if settings.use_pypolymlp and settings.relax_atomic_positions:
+        assert phonon.mlp is not None
+        if log_level:
+            print("Relaxing atomic positions using polynomial MLPs...")
+
+        try:
+            relaxed_unitcell = relax_atomic_positions(
+                phonon.unitcell,
+                phonon.mlp.mlp,
+                verbose=log_level > 1,
+            )
+        except PypolymlpRelaxationError as e:
+            print_error_message(str(e))
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+        if log_level:
+            if relaxed_unitcell is None:
+                print("No relaxation was performed due to symmetry constraints.")
+            else:
+                get_change_in_positions(
+                    relaxed_unitcell, phonon.unitcell, verbose=log_level > 0
+                )
+                print("Note: This unit cell is not used in phonon calculations.")
+            print("-" * 76)
 
     ###########################
     # Produce force constants #

@@ -69,3 +69,9 @@ class MagmomValueError(ValueError):
     """Exception when magnetic moment value is not valid."""
 
     pass
+
+
+class PypolymlpRelaxationError(RuntimeError):
+    """Exception when relaxation of atomic positions by pypolymlp fails."""
+
+    pass
