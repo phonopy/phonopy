@@ -36,10 +36,11 @@
 
 from __future__ import annotations
 
+import io
 import os
 import pathlib
 from dataclasses import asdict
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -165,12 +166,20 @@ def get_nac_params(
 
     """
     if born_filename is not None:
+        if primitive is None:
+            raise ValueError(
+                "Primitive cell has to be specified when born_filename is given."
+            )
         _nac_params = parse_BORN(primitive, filename=born_filename)
         if log_level:
             print('NAC parameters were read from "%s".' % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
     elif is_nac and pathlib.Path("BORN").exists():
+        if primitive is None:
+            raise ValueError(
+                "Primitive cell has to be specified when born_filename is given."
+            )
         _nac_params = parse_BORN(primitive, filename="BORN")
         if log_level:
             print('NAC params were read from "BORN".')
@@ -213,16 +222,17 @@ def read_force_constants_from_hdf5(
 def select_and_load_dataset(
     nsatom: int,
     dataset: dict | None = None,
-    phonopy_yaml_filename: str | os.PathLike | None = None,
+    phonopy_yaml_filename: str | os.PathLike | io.IOBase | None = None,
     force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
-) -> Optional[dict]:
+) -> dict | None:
     """Set displacement-force dataset."""
     _dataset = None
     _force_sets_filename = None
     if forces_in_dataset(dataset):
         _dataset = dataset
-        _force_sets_filename = phonopy_yaml_filename
+        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
+            _force_sets_filename = phonopy_yaml_filename
     elif force_sets_filename is not None:
         _dataset = parse_FORCE_SETS(natom=nsatom, filename=force_sets_filename)
         _force_sets_filename = force_sets_filename
@@ -283,29 +293,6 @@ def select_and_extract_force_constants(
     return _fc
 
 
-def prepare_pypolymlp_and_dataset(
-    phonon: Phonopy,
-    mlp_params: dict | None = None,
-    displacement_distance: float | None = None,
-    number_of_snapshots: int | Literal["auto"] | None = None,
-    random_seed: int | None = None,
-    rd_number_estimation_factor: float | None = None,
-    prepare_dataset: bool = False,
-    log_level: int = 0,
-):
-    """Prepare pypolymlp and dataset."""
-    _run_pypolymlp(phonon, mlp_params, log_level=log_level)
-    if prepare_dataset:
-        _prepare_dataset_by_pypolymlp(
-            phonon,
-            displacement_distance=displacement_distance,
-            number_of_snapshots=number_of_snapshots,
-            random_seed=random_seed,
-            rd_number_estimation_factor=rd_number_estimation_factor,
-            log_level=log_level,
-        )
-
-
 def produce_force_constants(
     phonon: Phonopy,
     fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
@@ -333,7 +320,7 @@ def produce_force_constants(
                 )
     except ForcesetsNotFoundError:
         if log_level:
-            print("Displacement-force datast was not found. ")
+            print("Displacement-force dataset was not found. ")
 
 
 def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray):
@@ -344,9 +331,9 @@ def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray)
         raise ValueError(msg)
 
 
-def _run_pypolymlp(
+def prepare_pypolymlp(
     phonon: Phonopy,
-    mlp_params: str | dict | PypolymlpParams | None,
+    mlp_params: str | dict | PypolymlpParams | None = None,
     log_level: int = 0,
 ):
     """Run pypolymlp to compute forces."""
@@ -401,7 +388,7 @@ def _run_pypolymlp(
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
 
 
-def _prepare_dataset_by_pypolymlp(
+def prepare_dataset_by_pypolymlp(
     phonon: Phonopy,
     displacement_distance: float | None = None,
     number_of_snapshots: int | Literal["auto"] | None = None,
