@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import os
 import warnings
 
 import numpy as np
@@ -159,7 +160,7 @@ class TotalDos(Dos):
             use_tetrahedron_method=use_tetrahedron_method,
         )
         self._dos = None
-        self._freq_Debye = None
+        self._freq_Debye: float | None = None
         self._Debye_fit_coef = None
         self._openmp_thm = True
 
@@ -201,7 +202,7 @@ class TotalDos(Dos):
         )
         return self._frequency_points, self._dos
 
-    def get_Debye_frequency(self):
+    def get_Debye_frequency(self) -> float | None:
         """Return a kind of Debye frequency."""
         return self._freq_Debye
 
@@ -257,7 +258,7 @@ class TotalDos(Dos):
             flip_xy=flip_xy,
         )
 
-    def write(self, filename="total_dos.dat"):
+    def write(self, filename: str | os.PathLike = "total_dos.dat"):
         """Write total DOS to total_dos.dat."""
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma

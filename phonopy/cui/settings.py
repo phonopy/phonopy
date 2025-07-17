@@ -108,6 +108,7 @@ class Settings:
         self.nac_method = None
         self.nac_q_direction = None
         self.num_frequency_points = None
+        self.relax_atomic_positions = False
         self.primitive_matrix = None
         self.qpoints = None
         self.random_displacements: Literal["auto"] | int | None = None
@@ -411,6 +412,14 @@ class ConfParser:
         if "read_qpoints" in arg_list:
             if args.read_qpoints:
                 self._confs["read_qpoints"] = ".true."
+            elif args.read_qpoints is False:
+                self._confs["read_qpoints"] = ".false."
+
+        if "relax_atomic_positions" in arg_list:
+            if args.relax_atomic_positions:
+                self._confs["relax_atomic_positions"] = ".true."
+            elif args.relax_atomic_positions is False:
+                self._confs["relax_atomic_positions"] = ".false."
 
         if "save_params" in arg_list:
             if args.save_params:
@@ -746,6 +755,12 @@ class ConfParser:
                 elif confs["read_qpoints"].lower() == ".true.":
                     self._set_parameter("read_qpoints", True)
 
+            if conf_key == "relax_atomic_positions":
+                if confs["relax_atomic_positions"].lower() == ".true.":
+                    self._set_parameter("relax_atomic_positions", True)
+                elif confs["relax_atomic_positions"].lower() == ".false.":
+                    self._set_parameter("relax_atomic_positions", False)
+
             # Select yaml summary contents
             if conf_key == "save_params":
                 if confs["save_params"].lower() == ".true.":
@@ -968,7 +983,7 @@ class ConfParser:
 
         # Primitive cell shape
         if "primitive_axes" in params:
-            settings.primitive_axes = params["primitive_axes"]
+            settings.primitive_matrix = params["primitive_axes"]
 
         # Q-points mode
         if "qpoints" in params:
@@ -980,13 +995,16 @@ class ConfParser:
 
         if "random_seed" in params:
             settings.random_seed = params["random_seed"]
-        if "read_qpoints" in params:
-            if params["read_qpoints"]:
-                settings.read_qpoints = params["read_qpoints"]
 
         # Random displacements number estimation factor
         if "rd_number_estimation_factor" in params:
             settings.rd_number_estimation_factor = params["rd_number_estimation_factor"]
+
+        if "read_qpoints" in params:
+            settings.read_qpoints = params["read_qpoints"]
+
+        if "relax_atomic_positions" in params:
+            settings.relax_atomic_positions = params["relax_atomic_positions"]
 
         # Smearing width
         if "sigma" in params:
