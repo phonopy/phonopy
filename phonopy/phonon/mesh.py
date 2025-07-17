@@ -34,7 +34,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
+from __future__ import annotations
 
 import numpy as np
 
@@ -125,101 +125,35 @@ class MeshBase:
         """Return mesh numbers."""
         return self._mesh
 
-    def get_mesh_numbers(self):
-        """Return mesh numbers."""
-        warnings.warn(
-            "MeshBase.get_mesh_numbers() is deprecated. Use mesh_numbers attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.mesh_numbers
-
     @property
     def qpoints(self):
         """Return (irreducible) q-points."""
         return self._qpoints
-
-    def get_qpoints(self):
-        """Return (irreducible) q-points."""
-        warnings.warn(
-            "MeshBase.get_qpoints() is deprecated. Use qpoints attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.qpoints
 
     @property
     def weights(self):
         """Return (irreducible) weights of q-points."""
         return self._weights
 
-    def get_weights(self):
-        """Return (irreducible) weights of q-points."""
-        warnings.warn(
-            "MeshBase.get_weights()) is deprecated. Use weights attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.weights
-
     @property
     def grid_address(self):
         """Return mesh grid addresses."""
         return self._gp.grid_address
-
-    def get_grid_address(self):
-        """Return mesh grid addresses."""
-        warnings.warn(
-            "MeshBase.get_grid_address()) is deprecated. Use grid_address attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.grid_address
 
     @property
     def ir_grid_points(self):
         """Return irreducible grid indices."""
         return self._gp.ir_grid_points
 
-    def get_ir_grid_points(self):
-        """Return irreducible grid indices."""
-        warnings.warn(
-            "MeshBase.get_ir_grid_points() is deprecated. "
-            "Use ir_grid_points attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.ir_grid_points
-
     @property
     def grid_mapping_table(self):
         """Return grid index mapping table."""
         return self._gp.grid_mapping_table
 
-    def get_grid_mapping_table(self):
-        """Return grid index mapping table."""
-        warnings.warn(
-            "MeshBase.get_grid_mapping_table() is deprecated. "
-            "Use grid_mapping_table attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.grid_mapping_table
-
     @property
     def dynamical_matrix(self):
         """Return dynamical matrix class instance."""
         return self._dynamical_matrix
-
-    def get_dynamical_matrix(self):
-        """Return dynamical matrix class instance."""
-        warnings.warn(
-            "MeshBase.get_dynamical_matrix() is deprecated. "
-            "Use dynamical_matrix attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.dynamical_matrix
 
     @property
     def with_eigenvectors(self):
@@ -321,15 +255,6 @@ class Mesh(MeshBase):
             self.run()
         return self._frequencies
 
-    def get_frequencies(self):
-        """Return phonon frequencies."""
-        warnings.warn(
-            "Mesh.get_frequencies() is deprecated. Use frequencies attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.frequencies
-
     @property
     def eigenvectors(self):
         """Return eigenvectors.
@@ -347,31 +272,12 @@ class Mesh(MeshBase):
             self.run()
         return self._eigenvectors
 
-    def get_eigenvectors(self):
-        """Return eigenvectors."""
-        warnings.warn(
-            "Mesh.get_eigenvectors() is deprecated. Use eigenvectors attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.eigenvectors
-
     @property
     def group_velocities(self):
         """Return group velocities."""
         if self._frequencies is None:
             self.run()
         return self._group_velocities
-
-    def get_group_velocities(self):
-        """Return group velocities."""
-        warnings.warn(
-            "Mesh.get_group_velocities() is deprecated. "
-            "Use group_velocities attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.group_velocities
 
     def write_hdf5(self, filename="mesh.hdf5"):
         """Write results to hdf5 file."""

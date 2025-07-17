@@ -34,6 +34,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import warnings
 from typing import Union
 
@@ -47,7 +49,7 @@ from phonopy.physical_units import get_physical_units
 class ThermalMotion:
     """Base class of thermal displacement calculation classes."""
 
-    def __init__(self, iter_mesh: Union[IterMesh, Mesh], freq_min=None, freq_max=None):
+    def __init__(self, iter_mesh: IterMesh | Mesh, freq_min=None, freq_max=None):
         """Init method."""
         self._iter_mesh = iter_mesh
         if freq_min is None:
@@ -183,7 +185,7 @@ class ThermalDisplacements(ThermalMotion):
 
     def __init__(
         self,
-        iter_mesh: Union[IterMesh, Mesh],
+        iter_mesh: IterMesh | Mesh,
         projection_direction=None,
         freq_min=None,
         freq_max=None,
