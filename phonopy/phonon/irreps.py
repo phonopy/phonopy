@@ -137,8 +137,6 @@ class IrReps:
         else:
             self._rotation_symbols = None
 
-        return True
-
     def _get_degenerate_sets(self):
         deg_sets = get_degenerate_sets(self._freqs, cutoff=self._degeneracy_tolerance)
         self._ddm.run(self._q)

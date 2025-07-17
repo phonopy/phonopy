@@ -293,29 +293,6 @@ def select_and_extract_force_constants(
     return _fc
 
 
-def prepare_pypolymlp_and_dataset(
-    phonon: Phonopy,
-    mlp_params: dict | None = None,
-    displacement_distance: float | None = None,
-    number_of_snapshots: int | Literal["auto"] | None = None,
-    random_seed: int | None = None,
-    rd_number_estimation_factor: float | None = None,
-    prepare_dataset: bool = False,
-    log_level: int = 0,
-):
-    """Prepare pypolymlp and dataset."""
-    _run_pypolymlp(phonon, mlp_params, log_level=log_level)
-    if prepare_dataset:
-        _prepare_dataset_by_pypolymlp(
-            phonon,
-            displacement_distance=displacement_distance,
-            number_of_snapshots=number_of_snapshots,
-            random_seed=random_seed,
-            rd_number_estimation_factor=rd_number_estimation_factor,
-            log_level=log_level,
-        )
-
-
 def produce_force_constants(
     phonon: Phonopy,
     fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
@@ -343,7 +320,7 @@ def produce_force_constants(
                 )
     except ForcesetsNotFoundError:
         if log_level:
-            print("Displacement-force datast was not found. ")
+            print("Displacement-force dataset was not found. ")
 
 
 def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray):
@@ -354,9 +331,9 @@ def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray)
         raise ValueError(msg)
 
 
-def _run_pypolymlp(
+def prepare_pypolymlp(
     phonon: Phonopy,
-    mlp_params: str | dict | PypolymlpParams | None,
+    mlp_params: str | dict | PypolymlpParams | None = None,
     log_level: int = 0,
 ):
     """Run pypolymlp to compute forces."""
@@ -411,7 +388,7 @@ def _run_pypolymlp(
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
 
 
-def _prepare_dataset_by_pypolymlp(
+def prepare_dataset_by_pypolymlp(
     phonon: Phonopy,
     displacement_distance: float | None = None,
     number_of_snapshots: int | Literal["auto"] | None = None,
