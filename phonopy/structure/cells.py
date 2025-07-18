@@ -36,7 +36,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 import spglib
@@ -791,7 +791,7 @@ def get_supercell(
 
 def get_primitive(
     supercell: PhonopyAtoms,
-    primitive_matrix: Optional[Union[str, np.ndarray, Sequence]] = None,
+    primitive_matrix: str | np.ndarray | Sequence | None = None,
     symprec=1e-5,
     store_dense_svecs=True,
     positions_to_reorder=None,
@@ -1648,7 +1648,7 @@ def get_primitive_matrix(
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring) -> Optional[np.ndarray]:
+def get_primitive_matrix_by_centring(centring) -> np.ndarray | None:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
         return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
@@ -1704,7 +1704,7 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDA
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat: Optional[Union[Sequence, np.ndarray]]) -> np.ndarray:
+def shape_supercell_matrix(smat: ArrayLike | None) -> np.ndarray:
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="intc", order="C")
@@ -1718,7 +1718,9 @@ def shape_supercell_matrix(smat: Optional[Union[Sequence, np.ndarray]]) -> np.nd
     return _smat
 
 
-def estimate_supercell_matrix(spglib_dataset, max_num_atoms=120, max_iter=100):
+def estimate_supercell_matrix(
+    spglib_dataset, max_num_atoms=120, max_iter=100
+) -> list[int]:
     """Estimate supercell matrix from conventional cell.
 
     Diagonal supercell matrix is estimated from basis vector lengths
