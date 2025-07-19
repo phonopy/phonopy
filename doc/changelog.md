@@ -2,7 +2,11 @@
 
 # Change Log
 
-## Jul-16-2025: Version 2.41.3
+## Jul-19-2025: Version 2.41.4
+
+- Fixed issue where irreps were not shown.
+
+## Jul-17-2025: Version 2.41.3
 
 - Fixed issue where the `--pa` option (`PRIMITIVE_AXIS` tag) was not working.
 
