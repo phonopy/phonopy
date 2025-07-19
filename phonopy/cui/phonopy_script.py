@@ -1516,14 +1516,14 @@ def _run_calculation(
     # Ir-representation
     #
     elif run_mode == "irreps":
-        if phonon.set_irreps(
+        phonon.set_irreps(
             settings.irreps_q_point,
             is_little_cogroup=settings.is_little_cogroup,
             nac_q_direction=settings.nac_q_direction,
             degeneracy_tolerance=settings.irreps_tolerance,
-        ):
-            phonon.show_irreps(settings.show_irreps)
-            phonon.write_yaml_irreps(settings.show_irreps)
+        )
+        phonon.show_irreps(settings.show_irreps)
+        phonon.write_yaml_irreps(settings.show_irreps)
 
 
 def _start_phonopy(**argparse_control):

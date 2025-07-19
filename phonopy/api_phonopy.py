@@ -2851,8 +2851,7 @@ class Phonopy:
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level,
         )
-
-        return self._irreps.run()
+        self._irreps.run()
 
     def show_irreps(self, show_irreps: bool = False) -> None:
         """Show Ir-reps."""
