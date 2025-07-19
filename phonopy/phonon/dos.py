@@ -37,9 +37,9 @@
 from __future__ import annotations
 
 import os
-import warnings
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
@@ -99,7 +99,7 @@ class Dos:
         self.set_smearing_function("Normal")
 
     @property
-    def frequency_points(self):
+    def frequency_points(self) -> NDArray | None:
         """Return frequency points."""
         return self._frequency_points
 
@@ -184,23 +184,6 @@ class TotalDos(Dos):
     def dos(self):
         """Return total DOS."""
         return self._dos
-
-    def get_dos(self):
-        """Return frequency points and total DOS.
-
-        Returns
-        -------
-        tuple
-            (frequency_points, total_dos)
-
-        """
-        warnings.warn(
-            "TotalDos.get_dos() is deprecated. "
-            "Use frequency_points and dos attributes instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._frequency_points, self._dos
 
     def get_Debye_frequency(self) -> float | None:
         """Return a kind of Debye frequency."""
@@ -342,17 +325,6 @@ class ProjectedDos(Dos):
         self._openmp_thm = True
 
     @property
-    def partial_dos(self):
-        """Return partial DOS."""
-        warnings.warn(
-            "PartialDos.partial_dos attribute is deprecated. "
-            "Use projected_dos attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._projected_dos
-
-    @property
     def projected_dos(self):
         """Return projected DOS."""
         return self._projected_dos
@@ -360,30 +332,14 @@ class ProjectedDos(Dos):
     def run(self):
         """Calculate projected DOS."""
         if self._tetrahedron_mesh is None:
+            if self._frequency_points is None:
+                raise RuntimeError("Run projected DOS calculation first.")
             self._run_smearing_method()
         else:
             if self._openmp_thm:
                 self._run_tetrahedron_method_dos()
             else:
                 self._run_tetrahedron_method()
-
-    def get_partial_dos(self):
-        """Return partial DOS.
-
-        Returns
-        -------
-        tuple
-            frequency_points: Sampling frequencies
-            projected_dos: [atom_index, frequency_points_index]
-
-        """
-        warnings.warn(
-            "ProjectedDos.get_partial_dos() is deprecated. "
-            "Use frequency_points and projected_dos attributes instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._frequency_points, self._projected_dos
 
     def plot(
         self,
@@ -424,8 +380,11 @@ class ProjectedDos(Dos):
             flip_xy=flip_xy,
         )
 
-    def write(self, filename="projected_dos.dat"):
+    def write(self, filename: str | os.PathLike = "projected_dos.dat"):
         """Write projected DOS to projected_dos.dat."""
+        if self._frequency_points is None or self._projected_dos is None:
+            raise RuntimeError("Run projected DOS calculation first.")
+
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma
         else:
@@ -439,6 +398,7 @@ class ProjectedDos(Dos):
         )
 
     def _run_smearing_method(self):
+        assert self._frequency_points is not None
         num_pdos = self._eigvecs2.shape[1]
         num_freqs = len(self._frequency_points)
         self._projected_dos = np.zeros((num_pdos, num_freqs), dtype="double")
@@ -477,32 +437,6 @@ class ProjectedDos(Dos):
         self._projected_dos = pdos.T
 
 
-class PartialDos(ProjectedDos):
-    """Class to calculate partial DOS."""
-
-    def __init__(
-        self,
-        mesh_object: Mesh,
-        sigma=None,
-        use_tetrahedron_method=False,
-        direction=None,
-        xyz_projection=False,
-    ):
-        """Init method."""
-        warnings.warn(
-            "PartialDos class is deprecated. Use ProjectedDOS instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(
-            mesh_object,
-            sigma=sigma,
-            use_tetrahedron_method=use_tetrahedron_method,
-            direction=direction,
-            xyz_projection=xyz_projection,
-        )
-
-
 def get_pdos_indices(symmetry):
     """Return atomic indieces grouped by symmetry."""
     mapping = symmetry.get_map_atoms()
@@ -521,22 +455,11 @@ def write_total_dos(
             fp.write("%20.10f%20.10f\n" % (freq, dos))
 
 
-def write_partial_dos(
-    frequency_points, partial_dos, comment=None, filename="partial_dos.dat"
-):
-    """Write partial_dos.dat."""
-    warnings.warn(
-        "write_partial_dos() is deprecated. Use write_projected_dos() instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    write_projected_dos(
-        frequency_points, partial_dos, comment=comment, filename=filename
-    )
-
-
 def write_projected_dos(
-    frequency_points, projected_dos, comment=None, filename="projected_dos.dat"
+    frequency_points: NDArray,
+    projected_dos: NDArray,
+    comment: str | None = None,
+    filename: str | os.PathLike = "projected_dos.dat",
 ):
     """Write projected_dos.dat."""
     with open(filename, "w") as fp:
@@ -596,40 +519,6 @@ def plot_total_dos(
         ax.set_ylabel(ylabel)
 
     ax.grid(draw_grid)
-
-
-def plot_partial_dos(
-    ax,
-    frequency_points,
-    partial_dos,
-    indices=None,
-    legend=None,
-    legend_prop=None,
-    legend_frameon=True,
-    xlabel=None,
-    ylabel=None,
-    draw_grid=True,
-    flip_xy=False,
-):
-    """Plot partial DOS."""
-    warnings.warn(
-        "plot_partial_dos() is deprecated. Use plot_projected_dos() instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    plot_projected_dos(
-        ax,
-        frequency_points,
-        partial_dos,
-        indices=indices,
-        legend=legend,
-        legend_prop=legend_prop,
-        legend_frameon=legend_frameon,
-        xlabel=xlabel,
-        ylabel=ylabel,
-        draw_grid=draw_grid,
-        flip_xy=flip_xy,
-    )
 
 
 def plot_projected_dos(

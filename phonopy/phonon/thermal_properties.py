@@ -38,17 +38,17 @@ from __future__ import annotations
 
 import os
 import warnings
-from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.phonon.mesh import Mesh
 from phonopy.physical_units import get_physical_units
 
 
 def mode_cv(
-    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
-) -> Union[float, np.ndarray]:  # freqs (eV)
+    temp: float, freqs: float | NDArray, classical: bool = False
+) -> float | NDArray:  # freqs (eV)
     """Return mode heat capacity.
 
     Parameters
@@ -76,8 +76,8 @@ def mode_cv(
 
 
 def mode_F(
-    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
-) -> Union[float, np.ndarray]:
+    temp: float, freqs: float | NDArray, classical: bool = False
+) -> float | NDArray:
     """Return mode Helmholtz free energy.
 
     Parameters
@@ -112,8 +112,8 @@ def mode_F(
 
 
 def mode_S(
-    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
-) -> Union[float, np.ndarray]:
+    temp: float, freqs: float | NDArray, classical: bool = False
+) -> float | NDArray:
     """Return mode entropy.
 
     Parameters
@@ -144,8 +144,8 @@ def mode_S(
 
 
 def mode_ZPE(
-    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
-) -> Union[float, np.ndarray]:
+    temp: float, freqs: float | NDArray, classical: bool = False
+) -> float | NDArray:
     """Return half of phonon frequency as mode zero point energy.
 
     Parameters
@@ -171,8 +171,8 @@ def mode_ZPE(
 
 
 def mode_zero(
-    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
-) -> Union[float, np.ndarray]:
+    temp: float, freqs: float | NDArray, classical: bool = False
+) -> float | NDArray:
     """Return zero.
 
     Parameters
@@ -370,7 +370,7 @@ class ThermalProperties(ThermalPropertiesBase):
             )
 
     @property
-    def temperatures(self):
+    def temperatures(self) -> NDArray | None:
         """Setter and getter of temperatures in K."""
         return self._temperatures
 
@@ -501,11 +501,11 @@ class ThermalProperties(ThermalPropertiesBase):
     def plot(
         self,
         ax,
-        xlabel: Optional[str] = None,
-        ylabel: Optional[str] = None,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
         with_grid: bool = True,
         divide_by_Z: bool = False,
-        legend_style: Optional[str] = "normal",
+        legend_style: str | None = "normal",
     ):
         """Plot thermal properties using matplotlib.
 
