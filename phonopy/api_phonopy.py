@@ -1778,6 +1778,7 @@ class Phonopy:
     def plot_band_structure_and_dos(self, pdos_indices=None):
         """Plot band structure and DOS."""
         import matplotlib.pyplot as plt
+        from matplotlib.axes import Axes
 
         if self._total_dos is None and pdos_indices is None:
             msg = "run_total_dos has to be done."
@@ -1840,7 +1841,7 @@ class Phonopy:
                     draw_grid=False,
                     flip_xy=True,
                 )
-            last_axs = cast(plt.Axes, axs[-1])
+            last_axs = cast(Axes, axs[-1])
             xlim = last_axs.get_xlim()
             ylim = last_axs.get_ylim()
             aspect = (xlim[1] - xlim[0]) / (ylim[1] - ylim[0]) * 3
@@ -2135,6 +2136,10 @@ class Phonopy:
             msg = "run_mesh has to be done before PDOS calculation."
             raise RuntimeError(msg)
 
+        if isinstance(self._mesh, IterMesh):
+            msg = "IterMesh does not support projected DOS calculation."
+            raise RuntimeError(msg)
+
         if not self._mesh.with_eigenvectors:
             msg = "run_mesh has to be called with with_eigenvectors=True."
             raise RuntimeError(msg)
@@ -2159,7 +2164,7 @@ class Phonopy:
 
     def auto_projected_dos(
         self,
-        mesh: float | ArrayLike | None = 100.0,
+        mesh: float | ArrayLike = 100.0,
         is_time_reversal: bool = True,
         is_gamma_center: bool = False,
         plot: bool = False,
@@ -2449,7 +2454,10 @@ class Phonopy:
         """
         import matplotlib.pyplot as plt
 
-        if self._thermal_properties is None:
+        if (
+            self._thermal_properties is None
+            or self._thermal_properties.temperatures is None
+        ):
             msg = "run_thermal_properties has to be done."
             raise RuntimeError(msg)
 
@@ -2472,7 +2480,7 @@ class Phonopy:
         )
 
         temps = self._thermal_properties.temperatures
-        ax.set_xlim((0, temps[-1]))
+        ax.set_xlim(left=0, right=temps[-1])
 
         return plt
 
@@ -2843,8 +2851,7 @@ class Phonopy:
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level,
         )
-
-        return self._irreps.run()
+        self._irreps.run()
 
     def show_irreps(self, show_irreps: bool = False) -> None:
         """Show Ir-reps."""
@@ -2969,7 +2976,6 @@ class Phonopy:
             msg = "run_mesh has to be called with with_eigenvectors=True."
             raise RuntimeError(msg)
 
-        assert self._mesh.ir_grid_points is not None
         if np.prod(self._mesh.mesh_numbers) != len(self._mesh.ir_grid_points):
             msg = "run_mesh has to be done with is_mesh_symmetry=False."
             raise RuntimeError(msg)
@@ -3045,7 +3051,7 @@ class Phonopy:
             by d -> d / |d| * max_distance if |d| > max_distance.
 
         """
-        import phonopy._phonopy as phonoc  # type: ignore[import]
+        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
         if self._force_constants is None:
             msg = "Force constants have not yet been set."
@@ -3208,7 +3214,7 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants are not prepared.")
 
-        import phonopy._phonopy as phonoc  # type: ignore[import]
+        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
         fc_shape = self._force_constants.shape
         ph_copy = self._copy()
@@ -3321,7 +3327,7 @@ class Phonopy:
             self._force_constants = self._force_constants.round(decimals=decimals)
 
     def _set_dynamical_matrix(self):
-        import phonopy._phonopy as phonoc  # type: ignore[import]
+        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
         self._dynamical_matrix = None
 
@@ -3531,7 +3537,7 @@ class Phonopy:
     ):
         assert self._dataset is not None
         if "first_atoms" in self._dataset:  # type-1
-            for disp, v in zip(self._dataset["first_atoms"], values):
+            for disp, v in zip(self._dataset["first_atoms"], values):  # type: ignore
                 if target == "forces":
                     disp[target] = np.array(v, dtype="double", order="C")
                 elif target == "supercell_energies":
