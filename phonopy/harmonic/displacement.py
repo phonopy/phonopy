@@ -36,7 +36,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 
@@ -252,9 +252,9 @@ def get_random_displacements_dataset(
     number_of_snapshots: int,
     num_atoms: int,
     distance: float,
-    random_seed: Optional[int] = None,
+    random_seed: int | None = None,
     is_plusminus: bool = False,
-    max_distance: Optional[float] = None,
+    max_distance: float | None = None,
 ) -> np.ndarray:
     """Return random displacements at constant displacement distance.
 
