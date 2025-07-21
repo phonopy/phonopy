@@ -37,7 +37,8 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Optional, Union
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
@@ -54,7 +55,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 class PhonopyMLP:
     """PhonopyMLP class."""
 
-    def __init__(self, mlp: Optional[Any] = None, log_level: int = 0):
+    def __init__(self, mlp: Any | None = None, log_level: int = 0):
         self._mlp = mlp
         self._log_level = log_level
 
@@ -63,7 +64,7 @@ class PhonopyMLP:
         """Return MLP instance."""
         return self._mlp
 
-    def save(self, filename: Optional[str] = None):
+    def save(self, filename: str | os.PathLike | None = None):
         """Save MLP."""
         if filename is None:
             _filename = "polymlp.yaml"
@@ -71,9 +72,7 @@ class PhonopyMLP:
             _filename = filename
         save_pypolymlp(self._mlp, _filename)
 
-    def load(
-        self, filename: Optional[Union[str, bytes, os.PathLike]] = None
-    ) -> PhonopyMLP:
+    def load(self, filename: str | os.PathLike | None = None) -> PhonopyMLP:
         """Load MLP."""
         if filename is None:
             _filename = "polymlp.yaml"
@@ -83,7 +82,7 @@ class PhonopyMLP:
         return self
 
     def evaluate(
-        self, supercells_with_displacements: list[PhonopyAtoms]
+        self, supercells_with_displacements: Sequence[PhonopyAtoms | None]
     ) -> list[np.ndarray, np.ndarray, np.ndarray]:
         """Evaluate MLP."""
         return evalulate_pypolymlp(self._mlp, supercells_with_displacements)
@@ -92,7 +91,7 @@ class PhonopyMLP:
         self,
         mlp_dataset: dict,
         supercell: PhonopyAtoms,
-        params: Optional[Union[PypolymlpParams, dict, str]] = None,
+        params: PypolymlpParams | dict | str | None = None,
         test_size: float = 0.1,
     ):
         """Develop MLP."""
