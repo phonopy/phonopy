@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jul-21-2025: Version 2.42.0
+
+- Maintenance release.
+
 ## Jul-19-2025: Version 2.41.4
 
 - Fixed issue where irreps were not shown.
