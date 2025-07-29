@@ -263,37 +263,37 @@ class GridPoints:
             self._set_grid_points()
 
     @property
-    def mesh_numbers(self):
+    def mesh_numbers(self) -> NDArray:
         """Return mesh numbers."""
         return self._mesh
 
     @property
-    def reciprocal_lattice(self):
+    def reciprocal_lattice(self) -> NDArray:
         """Return reciprocal lattice in column vectors."""
         return self._rec_lat
 
     @property
-    def grid_address(self):
+    def grid_address(self) -> NDArray:
         """Return all grid point addresses."""
         return self._grid_address
 
     @property
-    def ir_grid_points(self):
+    def ir_grid_points(self) -> NDArray:
         """Return ir-grid point indices."""
         return self._ir_grid_points
 
     @property
-    def qpoints(self):
+    def qpoints(self) -> NDArray:
         """Return irreducible q-points."""
         return self._ir_qpoints
 
     @property
-    def weights(self):
+    def weights(self) -> NDArray:
         """Return weights of ir-grid points."""
         return self._ir_weights
 
     @property
-    def grid_mapping_table(self):
+    def grid_mapping_table(self) -> NDArray:
         """Return grid index mapping table."""
         return self._grid_mapping_table
 
