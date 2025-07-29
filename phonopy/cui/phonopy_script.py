@@ -48,9 +48,9 @@ from phonopy import Phonopy, __version__
 from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, get_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
+    develop_or_load_pypolymlp,
     get_nac_params,
     prepare_dataset_by_pypolymlp,
-    prepare_pypolymlp,
     produce_force_constants,
     select_and_extract_force_constants,
     select_and_load_dataset,
@@ -62,6 +62,7 @@ from phonopy.exception import (
     CellNotFoundError,
     ForceConstantsCalculatorNotFoundError,
     MagmomValueError,
+    PypolymlpDevelopmentError,
     PypolymlpFileNotFoundError,
     PypolymlpRelaxationError,
 )
@@ -87,6 +88,7 @@ from phonopy.interface.pypolymlp import get_change_in_positions, relax_atomic_po
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import get_pdos_indices
+from phonopy.phonon.mesh import Mesh
 from phonopy.physical_units import get_physical_units
 from phonopy.sscha.core import MLPSSCHA
 from phonopy.structure.atoms import atom_data, symbol_map
@@ -518,6 +520,7 @@ def _print_settings(
         print("  Supercell: %s" % np.diag(supercell_matrix))
     if is_primitive_axes_auto or _is_band_auto(settings):
         print("  Primitive matrix (Auto):")
+        assert primitive_matrix is not None
         for v in primitive_matrix:
             print("    %s" % v)
     elif primitive_matrix is not None:
@@ -859,6 +862,7 @@ def _create_random_displacements_at_finite_temperature(
     )
 
     if log_level:
+        assert phonon.random_displacements is not None
         rd_comm_points = phonon.random_displacements.qpoints
         rd_integrated_modes = phonon.random_displacements.integrated_modes
         rd_frequencies = phonon.random_displacements.frequencies
@@ -1021,6 +1025,7 @@ def _run_calculation(
             else:
                 bands = get_band_qpoints(band_paths, npoints=npoints)
             path_connections = []
+            assert band_paths is not None
             for paths in band_paths:
                 path_connections += [
                     True,
@@ -1110,8 +1115,11 @@ def _run_calculation(
                 with_group_velocities=settings.is_group_velocity,
                 is_gamma_center=is_gamma_center,
             )
+            assert isinstance(phonon.mesh, Mesh)
+            assert phonon.mesh is not None
+            assert phonon.mesh_numbers is not None
             if log_level:
-                print("Mesh numbers: %s" % phonon.mesh_numbers)
+                print(f"Mesh numbers: {phonon.mesh_numbers}")
                 weights = phonon.mesh.weights
                 if q_symmetry:
                     print(
@@ -1155,6 +1163,7 @@ def _run_calculation(
             phonon.write_yaml_thermal_properties()
 
             if log_level:
+                assert phonon.thermal_properties is not None
                 cutoff_freq = phonon.thermal_properties.cutoff_frequency
                 cutoff_freq /= get_physical_units().THzToEv
                 print("Cutoff frequency: %.5f" % cutoff_freq)
@@ -1372,7 +1381,9 @@ def _run_calculation(
                     is_projection=True,
                 )
                 text = " %3d |%10.5f | " % (settings.moment_order, total_moment)
-                for m in phonon.get_moment():
+                moments = phonon.get_moment()
+                assert isinstance(moments, np.ndarray)
+                for m in moments:
                     text += "%10.5f " % m
                 print(text)
             else:
@@ -1391,7 +1402,9 @@ def _run_calculation(
                         is_projection=True,
                     )
                     text = " %3d |%10.5f | " % (i, total_moment)
-                    for m in phonon.get_moment():
+                    moments = phonon.get_moment()
+                    assert isinstance(moments, np.ndarray)
+                    for m in moments:
                         text += "%10.5f " % m
                     print(text)
 
@@ -1423,6 +1436,7 @@ def _run_calculation(
         anime_type = settings.anime_type
         if anime_type == "v_sim":
             q_point = settings.anime_qpoint
+            assert q_point is not None
             amplitude = settings.anime_amplitude
             fname_out = phonon.write_animation(
                 q_point=q_point, anime_type="v_sim", amplitude=amplitude
@@ -1456,6 +1470,7 @@ def _run_calculation(
     #
     elif run_mode == "modulation":
         mod_setting = settings.modulation
+        assert mod_setting is not None
         phonon_modes = mod_setting["modulations"]
         dimension = mod_setting["dimension"]
         if "delta_q" in mod_setting:
@@ -1516,8 +1531,10 @@ def _run_calculation(
     # Ir-representation
     #
     elif run_mode == "irreps":
+        irreps_q_point = settings.irreps_q_point
+        assert irreps_q_point is not None
         phonon.set_irreps(
-            settings.irreps_q_point,
+            irreps_q_point,
             is_little_cogroup=settings.is_little_cogroup,
             nac_q_direction=settings.nac_q_direction,
             degeneracy_tolerance=settings.irreps_tolerance,
@@ -1549,7 +1566,7 @@ def _start_phonopy(**argparse_control):
     if log_level:
         _print_phonopy()
 
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore[import]
 
         max_threads = phonoc.omp_max_threads()
         if max_threads > 0:
@@ -1559,9 +1576,9 @@ def _start_phonopy(**argparse_control):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
         try:  # spglib.get_version() is deprecated.
-            print(f"Spglib version {spglib.spg_get_version()}")
+            print(f"Spglib version {spglib.spg_get_version()}")  # type: ignore
         except AttributeError:
-            print("Spglib version %d.%d.%d" % spglib.get_version())
+            print("Spglib version %d.%d.%d" % spglib.get_version())  # type: ignore
 
         print("")
 
@@ -1646,9 +1663,12 @@ def _is_pdos_auto(settings):
     return settings.pdos_indices == "auto"
 
 
-def _get_pdos_indices_and_legend(settings, phonon: Phonopy):
+def _get_pdos_indices_and_legend(
+    settings: PhonopySettings, phonon: Phonopy
+) -> tuple[list, list]:
     """Return pdos_indices and legend from settings."""
     pdos_indices = settings.pdos_indices
+    assert pdos_indices is not None
     if settings.xyz_projection:
         legend = []
         if _is_pdos_auto(settings):
@@ -1933,8 +1953,8 @@ def main(**argparse_control):
         if phonon.unitcell.magnetic_moments is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
         elif phonon.symmetry.dataset is not None:
-            uni_number = phonon.symmetry.dataset.uni_number
-            msg_type = phonon.symmetry.dataset.msg_type
+            uni_number = phonon.symmetry.dataset.uni_number  # type: ignore
+            msg_type = phonon.symmetry.dataset.msg_type  # type: ignore
             print(f"Magnetic space group UNI number: {uni_number}")
             print(f"Type-{msg_type} magnetic space group")
         print(
@@ -2040,10 +2060,10 @@ def main(**argparse_control):
             phonon.dataset = None
 
         try:
-            prepare_pypolymlp(
+            develop_or_load_pypolymlp(
                 phonon, mlp_params=settings.mlp_params, log_level=log_level
             )
-        except PypolymlpFileNotFoundError as e:
+        except (PypolymlpDevelopmentError, PypolymlpFileNotFoundError) as e:
             print_error_message(str(e))
             if log_level:
                 print_error()

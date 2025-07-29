@@ -1035,7 +1035,7 @@ def test_pt26_Pbar62m():
     """Test of pt26_Pbar62m."""
     data = _load_data(chars_Pbar62m)
     phonon = _get_phonon("P-62m", [1, 1, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.set_irreps([0, 0, 0], degeneracy_tolerance=1e-4)
     chars = phonon.irreps.characters
     _show_chars(chars)
     np.testing.assert_allclose(chars, data, atol=1e-5)

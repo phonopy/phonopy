@@ -1194,7 +1194,7 @@ class Phonopy:
             test_size=test_size,
         )
 
-    def save_mlp(self, filename: str | None = None):
+    def save_mlp(self, filename: str | os.PathLike | None = None):
         """Save machine learning potential."""
         if self._mlp is None:
             raise RuntimeError("MLP is not developed yet.")
@@ -2821,7 +2821,7 @@ class Phonopy:
         q: ArrayLike,
         is_little_cogroup: bool = False,
         nac_q_direction: ArrayLike | None = None,
-        degeneracy_tolerance: float = 1e-4,
+        degeneracy_tolerance: float | None = None,
     ):
         """Identify ir-reps of phonon modes.
 
