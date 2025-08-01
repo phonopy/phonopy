@@ -40,6 +40,7 @@ import datetime
 import os
 import pathlib
 import sys
+from typing import Literal
 
 import numpy as np
 import spglib
@@ -675,22 +676,11 @@ def _produce_force_constants(
 
     if forces_in_dataset(phonon.dataset):
         is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-        fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
-
-        try:
-            fc_calculator = check_and_cast_fc_calculator_name(fc_calculator)
-        except ForceConstantsCalculatorNotFoundError as e:
-            print_error_message(str(e))
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        # Set "symfc" for type-II dataset when phonopy-load is called without
-        # specifying fc-calculator.
-        assert phonon.dataset is not None
-        if load_phonopy_yaml and "displacements" in phonon.dataset:
-            if settings.fc_symmetry and settings.fc_calculator is None:
-                fc_calculator = "symfc"
+        fc_calculator, fc_calculator_options = (
+            _get_fc_calculator_and_options_from_settings(
+                settings, load_phonopy_yaml, phonon.dataset, log_level=log_level
+            )
+        )
         produce_force_constants(
             phonon,
             fc_calculator=fc_calculator,
@@ -699,6 +689,32 @@ def _produce_force_constants(
             is_compact_fc=(not is_full_fc),
             log_level=log_level,
         )
+
+
+def _get_fc_calculator_and_options_from_settings(
+    settings: Settings,
+    load_phonopy_yaml: bool,
+    dataset: dict | None,
+    log_level: int = 0,
+) -> tuple[Literal["traditional", "symfc", "alm"] | None, str | None]:
+    fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
+
+    try:
+        fc_calculator = check_and_cast_fc_calculator_name(fc_calculator)
+    except ForceConstantsCalculatorNotFoundError as e:
+        print_error_message(str(e))
+        if log_level:
+            print_error()
+        sys.exit(1)
+
+    # Set "symfc" for type-II dataset when phonopy-load is called without
+    # specifying fc-calculator.
+    assert dataset is not None
+    if load_phonopy_yaml and "displacements" in dataset:
+        if settings.fc_symmetry and settings.fc_calculator is None:
+            fc_calculator = "symfc"
+
+    return fc_calculator, fc_calculator_options
 
 
 def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
@@ -781,7 +797,9 @@ def _post_process_force_constants(
 
     # Impose symmetry to force constants
     # For phonopy-load, symfc projector is used otherwise traditional symmetrization.
-    fc_calculator, _ = _get_fc_calculator_params(settings)
+    fc_calculator, _ = _get_fc_calculator_and_options_from_settings(
+        settings, load_phonopy_yaml, phonon.dataset, log_level=log_level
+    )
     if settings.fc_symmetry:
         if fc_calculator == "traditional":
             phonon.symmetrize_force_constants(use_symfc_projector=False)
