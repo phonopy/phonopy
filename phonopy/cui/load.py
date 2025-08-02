@@ -328,7 +328,7 @@ def load(
     if use_pypolymlp and dataset is not None:
         phonon.mlp_dataset = dataset
         phonon.dataset = None
-        load_helper.prepare_pypolymlp(
+        load_helper.develop_or_load_pypolymlp(
             phonon, mlp_params=mlp_params, log_level=log_level
         )
     if (

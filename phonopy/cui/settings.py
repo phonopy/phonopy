@@ -96,7 +96,7 @@ class Settings:
             self.is_nac = True
         else:
             self.is_nac = False
-        self.is_plusminus_displacement = "auto"
+        self.is_plusminus_displacement: Literal["auto"] | bool = "auto"
         self.is_symmetry = True
         self.is_tetrahedron_method = True
         self.is_time_reversal_symmetry = True
@@ -110,7 +110,7 @@ class Settings:
         self.num_frequency_points = None
         self.relax_atomic_positions = False
         self.primitive_matrix = None
-        self.qpoints = None
+        self.qpoints: list | None = None
         self.random_displacements: Literal["auto"] | int | None = None
         self.random_seed = None
         self.rd_number_estimation_factor = None
@@ -1054,7 +1054,7 @@ class PhonopySettings(Settings):
         self.anime_band_index = None
         self.anime_amplitude = None
         self.anime_division = None
-        self.anime_qpoint = None
+        self.anime_qpoint: list | None = None
         self.anime_shift = None
         self.anime_type = "v_sim"
         self.band_format = "yaml"
@@ -1068,8 +1068,8 @@ class PhonopySettings(Settings):
         self.fits_Debye_model = False
         self.max_frequency = None
         self.min_frequency = None
-        self.irreps_q_point = None
-        self.irreps_tolerance = None
+        self.irreps_q_point: list | None = None
+        self.irreps_tolerance: float | None = None
         self.is_band_connection = False
         self.is_dos_mode = False
         self.is_full_fc = False
@@ -1091,9 +1091,9 @@ class PhonopySettings(Settings):
         self.lapack_solver = False
         self.mesh_shift = None
         self.mesh_format = "yaml"
-        self.modulation = None
+        self.modulation: dict | None = None
         self.moment_order = None
-        self.pdos_indices = None
+        self.pdos_indices: list | None = None
         self.pretend_real = False
         self.projection_direction = None
         self.qpoints_format = "yaml"
@@ -1880,7 +1880,7 @@ class PhonopyConfParser(ConfParser):
             settings.run_mode = "irreps"
             settings.irreps_q_point = params["irreps_qpoint"][:3]
             if len(params["irreps_qpoint"]) == 4:
-                settings.irreps_tolerance = params["irreps_qpoint"][3]
+                settings.irreps_tolerance = float(params["irreps_qpoint"][3])
         if "show_irreps" in params:
             settings.show_irreps = params["show_irreps"]
         if "little_cogroup" in params:
