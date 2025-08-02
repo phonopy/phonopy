@@ -33,9 +33,9 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Literal
 
 import numpy as np
@@ -306,10 +306,10 @@ class Primitive(PhonopyAtoms):
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        primitive_matrix: Sequence,
+        primitive_matrix: ArrayLike,
         symprec: float = 1e-5,
         store_dense_svecs: bool = True,
-        positions_to_reorder=None,
+        positions_to_reorder: ArrayLike | None = None,
     ):
         """Init method.
 
@@ -476,6 +476,7 @@ class Primitive(PhonopyAtoms):
             symprec=self._symprec,
             positions_to_reorder=positions_to_reorder,
         )
+
         mapped_symbols = [supercell.symbols[i] for i in mapping_table]
         if supercell.symbols != mapped_symbols:
             msg = [
@@ -779,7 +780,7 @@ class TrimmedCell(PhonopyAtoms):
 
 def get_supercell(
     unitcell: PhonopyAtoms,
-    supercell_matrix: NDArray | Sequence,
+    supercell_matrix: ArrayLike,
     is_old_style: bool = True,
     symprec: float = 1e-5,
 ) -> Supercell:
@@ -791,7 +792,7 @@ def get_supercell(
 
 def get_primitive(
     supercell: PhonopyAtoms,
-    primitive_matrix: str | np.ndarray | Sequence | None = None,
+    primitive_matrix: str | ArrayLike | None = None,
     symprec=1e-5,
     store_dense_svecs=True,
     positions_to_reorder=None,

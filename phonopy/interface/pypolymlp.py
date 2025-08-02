@@ -43,7 +43,7 @@ from typing import Any, Literal
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.exception import PypolymlpRelaxationError
+from phonopy.exception import PypolymlpDevelopmentError, PypolymlpRelaxationError
 from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -179,7 +179,16 @@ def develop_pypolymlp(
         test_data.supercell_energies,
         phonopy_cell_to_structure(supercell),
     )
-    polymlp.run(verbose=verbose)
+    try:
+        polymlp.run(verbose=verbose)
+    except RuntimeError as e:
+        if "singular" in str(e):
+            raise PypolymlpDevelopmentError(
+                "Pypolymlp development failed due to singularity of "
+                "(X.T @ X + alpha * I)"
+            ) from e
+        else:
+            raise RuntimeError(str(e)) from e
     return polymlp
 
 

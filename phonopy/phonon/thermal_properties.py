@@ -267,7 +267,7 @@ class ThermalPropertiesBase:
             self._num_integrated_modes = int(self._num_integrated_modes)
 
     @property
-    def cutoff_frequency(self):
+    def cutoff_frequency(self) -> float:
         """Return cutoff frequency in eV."""
         return self._cutoff_frequency
 
@@ -442,7 +442,7 @@ class ThermalProperties(ThermalPropertiesBase):
         return self.zero_point_energy
 
     @property
-    def number_of_integrated_modes(self):
+    def number_of_integrated_modes(self) -> int:
         """Return number of phonon modes integrated on mesh sampling grid."""
         return self._num_integrated_modes
 
@@ -457,7 +457,7 @@ class ThermalProperties(ThermalPropertiesBase):
         return self.number_of_integrated_modes
 
     @property
-    def number_of_modes(self):
+    def number_of_modes(self) -> int:
         """Return total number of phonon modes on mesh sampling grid."""
         return self._num_modes
 

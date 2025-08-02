@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
@@ -121,42 +122,42 @@ class MeshBase:
         self._q_count = 0
 
     @property
-    def mesh_numbers(self):
+    def mesh_numbers(self) -> NDArray:
         """Return mesh numbers."""
         return self._mesh
 
     @property
-    def qpoints(self):
+    def qpoints(self) -> NDArray:
         """Return (irreducible) q-points."""
         return self._qpoints
 
     @property
-    def weights(self):
+    def weights(self) -> NDArray:
         """Return (irreducible) weights of q-points."""
         return self._weights
 
     @property
-    def grid_address(self):
+    def grid_address(self) -> NDArray:
         """Return mesh grid addresses."""
         return self._gp.grid_address
 
     @property
-    def ir_grid_points(self):
+    def ir_grid_points(self) -> NDArray:
         """Return irreducible grid indices."""
         return self._gp.ir_grid_points
 
     @property
-    def grid_mapping_table(self):
+    def grid_mapping_table(self) -> NDArray:
         """Return grid index mapping table."""
         return self._gp.grid_mapping_table
 
     @property
-    def dynamical_matrix(self):
+    def dynamical_matrix(self) -> DynamicalMatrix:
         """Return dynamical matrix class instance."""
         return self._dynamical_matrix
 
     @property
-    def with_eigenvectors(self):
+    def with_eigenvectors(self) -> bool:
         """Whether eigenvectors are calculated or not."""
         return self._with_eigenvectors
 
