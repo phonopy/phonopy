@@ -34,12 +34,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import itertools
 import sys
 import warnings
 from typing import Optional, Type, Union
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.structure.atoms import PhonopyAtoms
@@ -90,9 +93,10 @@ class DynamicalMatrix:
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        force_constants,
-        decimals=None,
-        use_openmp=False,
+        force_constants: ArrayLike,
+        decimals: int | None = None,
+        hermitianize: bool = True,
+        use_openmp: bool = False,
     ):
         """Init method.
 
@@ -104,12 +108,14 @@ class DynamicalMatrix:
             Primitive cell.
         force_constants : array_like
             Supercell force constants. Full and compact shapes of arrays are
-            supported.
-            shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
-            shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
+            supported. shape=(supercell atoms, supercell atoms, 3, 3) for full
+            FC. shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
             dtype='double'
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
+        hermitianize : bool, optional, default=True
+            Hermitianize dynamical matrix if True, i.e., applying DM = (DM +
+            DM^H) / 2.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
 
@@ -117,6 +123,7 @@ class DynamicalMatrix:
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
+        self._hermitianize = hermitianize
         self._use_openmp = use_openmp
         self._dynamical_matrix = None
         self._force_constants = None
@@ -140,79 +147,35 @@ class DynamicalMatrix:
 
     def is_nac(self) -> bool:
         """Return bool if NAC is considered or not."""
-        return self._nac
-
-    def get_dimension(self):
-        """Return number of bands."""
         warnings.warn(
-            "DynamicalMatrix.get_dimension() is deprecated.",
+            "is_nac() is deprecated. Use isinstance(dm, DynamicalMatrixNAC) instead.",
             DeprecationWarning,
             stacklevel=2,
         )
-        return len(self._pcell) * 3
+        return self._nac
 
     @property
     def decimals(self):
         """Return number of decimals of dynamical matrix values."""
         return self._decimals
 
-    def get_decimals(self):
-        """Return number of decimals of dynamical matrix values."""
-        warnings.warn(
-            "DynamicalMatrix.get_decimals() is deprecated."
-            "Use DynamicalMatrix.decimals attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.decimals
-
     @property
     def supercell(self):
         """Return supercell."""
         return self._scell
-
-    def get_supercell(self):
-        """Return supercell."""
-        warnings.warn(
-            "DynamicalMatrix.get_supercell() is deprecated."
-            "Use DynamicalMatrix.supercell attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.supercell
 
     @property
     def primitive(self) -> Primitive:
         """Return primitive cell."""
         return self._pcell
 
-    def get_primitive(self):
-        """Return primitive cell."""
-        warnings.warn(
-            "DynamicalMatrix.get_primitive() is deprecated."
-            "Use DynamicalMatrix.primitive attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.primitive
-
     @property
     def force_constants(self):
         """Return supercell force constants."""
         return self._force_constants
 
-    def get_force_constants(self):
-        """Return supercell force constants."""
-        warnings.warn(
-            "DynamicalMatrix.get_force_constants() is deprecated."
-            "Use DynamicalMatrix.force_constants attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.force_constants
-
     @property
-    def dynamical_matrix(self) -> Optional[np.ndarray]:
+    def dynamical_matrix(self) -> NDArray | None:
         """Return dynamcial matrix calculated at q.
 
         Returns
@@ -232,17 +195,6 @@ class DynamicalMatrix:
         else:
             return dm.round(decimals=self._decimals)
 
-    def get_dynamical_matrix(self):
-        """Return dynamcial matrix calculated at q."""
-        warnings.warn(
-            "DynamicalMatrix.get_get_dynamical_matrix() is "
-            "deprecated."
-            "Use DynamicalMatrix.dynamical_matrix attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.dynamical_matrix
-
     @property
     def use_openmp(self) -> bool:
         """Return activate OpenMP or not."""
@@ -257,16 +209,6 @@ class DynamicalMatrix:
 
         """
         self._run(q, lang=lang)
-
-    def set_dynamical_matrix(self, q):
-        """Run dynamical matrix calculation at a q-point."""
-        warnings.warn(
-            "DynamicalMatrix.set_dynamical_matrix() is deprecated."
-            "Use DynamicalMatrix.run().",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.run(q)
 
     def _run(self, q, lang="C"):
         if lang == "C":
@@ -287,7 +229,9 @@ class DynamicalMatrix:
             self._force_constants = np.array(fc, dtype="double", order="C")
 
     def _run_c_dynamical_matrix(self, q):
-        self._dynamical_matrix = run_dynamical_matrix_solver_c(self, q, is_nac=False)
+        self._dynamical_matrix = run_dynamical_matrix_solver_c(
+            self, q, is_nac=False, hermitianize=self._hermitianize
+        )
 
     def _run_py_dynamical_matrix(self, q):
         """Python implementation of building dynamical matrix.
@@ -343,10 +287,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        force_constants,
-        decimals=None,
-        log_level=0,
-        use_openmp=False,
+        force_constants: ArrayLike,
+        decimals: int | None = None,
+        hermitianize: bool = True,
+        log_level: int = 0,
+        use_openmp: bool = False,
     ):
         """Init method.
 
@@ -375,6 +320,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             primitive,
             force_constants,
             decimals=decimals,
+            hermitianize=hermitianize,
             use_openmp=use_openmp,
         )
         self._log_level = log_level
@@ -409,60 +355,20 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         """Return Born effective charge."""
         return self._born
 
-    def get_born_effective_charges(self):
-        """Return Born effective charge."""
-        warnings.warn(
-            "DynamicalMatrixNAC.get_born_effective_charges() is deprecated."
-            "Use DynamicalMatrixNAC.born attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.born
-
     @property
     def nac_factor(self):
         """Return NAC unit conversion factor."""
         return self._unit_conversion * 4.0 * np.pi / self._pcell.volume
-
-    def get_nac_factor(self):
-        """Return NAC unit conversion factor."""
-        warnings.warn(
-            "DynamicalMatrixNAC.get_nac_factor() is deprecated."
-            "Use DynamicalMatrixNAC.nac_factor attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.nac_factor
 
     @property
     def dielectric_constant(self):
         """Return dielectric constant."""
         return self._dielectric
 
-    def get_dielectric_constant(self):
-        """Return dielectric constant."""
-        warnings.warn(
-            "DynamicalMatrixNAC.get_dielectric_constant() is deprecated."
-            "Use DynamicalMatrixNAC.dielectric_constant attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.dielectric_constant
-
     @property
     def nac_method(self):
         """Return NAC method name."""
         return self._method
-
-    def get_nac_method(self):
-        """Return NAC method name."""
-        warnings.warn(
-            "DynamicalMatrixNAC.get_nac_method() is deprecated."
-            "Use DynamicalMatrixNAC.nac_method attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.nac_method
 
     @property
     def nac_params(self):
@@ -478,20 +384,18 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         """Set NAC parameters."""
         self._set_nac_params(nac_params)
 
-    def set_nac_params(self, nac_params):
-        """Set NAC parameters."""
-        warnings.warn(
-            "DynamicalMatrixNAC.set_nac_params() is deprecated."
-            "Use DynamicalMatrixNAC.nac_params attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.nac_params = nac_params
-
     @property
     def log_level(self):
         """Return log level."""
         return self._log_level
+
+    def show_nac_message(self):
+        """Show NAC message.
+
+        This must be implemented in derived classes.
+
+        """
+        raise NotImplementedError()
 
     def _set_nac_params(self, nac_params):
         raise NotImplementedError()
@@ -501,16 +405,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._born = np.array(nac_params["born"], dtype="double", order="C")
         self._unit_conversion = nac_params["factor"]
         self._dielectric = np.array(nac_params["dielectric"], dtype="double", order="C")
-
-    def set_dynamical_matrix(self, q, q_direction=None):
-        """Run dynamical matrix calculation at q-point."""
-        warnings.warn(
-            "DynamicalMatrixNAC.set_dynamical_matrix() is deprecated."
-            "Use DynamicalMatrixNAC.run().",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.run(q, q_direction=q_direction)
 
     def _compute_dynamical_matrix(self, q_red, q_direction):
         raise NotImplementedError()
@@ -525,13 +419,14 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        force_constants,
-        nac_params=None,
-        num_G_points=None,  # For Gonze NAC
-        with_full_terms=False,
-        decimals=None,
-        log_level=0,
-        use_openmp=False,
+        force_constants: ArrayLike,
+        nac_params: dict | None = None,
+        num_G_points: int | None = None,  # For Gonze NAC
+        with_full_terms: bool = False,
+        decimals: int | None = None,
+        hermitianize: bool = True,
+        log_level: int = 0,
+        use_openmp: bool = False,
     ):
         """Init method.
 
@@ -563,6 +458,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             primitive,
             force_constants,
             decimals=decimals,
+            hermitianize=hermitianize,
             log_level=log_level,
             use_openmp=use_openmp,
         )
@@ -611,16 +507,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
     def short_range_force_constants(self, short_range_force_constants):
         """Set short-range force constants."""
         self._Gonze_force_constants = short_range_force_constants
-
-    def get_Gonze_nac_dataset(self):
-        """Return Gonze-Lee NAC dataset."""
-        warnings.warn(
-            "DynamicalMatrixGL.get_Gonze_nac_dataset() is deprecated."
-            "Use DynamicalMatrixGL.Gonze_nac_dataset attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.Gonze_nac_dataset
 
     def _set_nac_params(self, nac_params):
         """Set and prepare NAC parameters.
@@ -705,16 +591,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             "Lambda: %4.2f" % (self._G_cutoff, len(self._G_list), self._Lambda)
         )
 
-    def show_Gonze_nac_message(self):
-        """Show message on Gonze-Lee NAC method."""
-        warnings.warn(
-            "DynamicalMatrixGL.show_Gonze_nac_message() is deprecated."
-            "Use DynamicalMatrixGL.show_nac_message instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.show_nac_message()
-
     def _compute_dynamical_matrix(self, q_red, q_direction):
         if self._with_full_terms:
             if self._Gonze_force_constants is None:
@@ -731,7 +607,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._dynamical_matrix += dm_dd
         else:
             self._dynamical_matrix = run_dynamical_matrix_solver_c(
-                self, q_red, q_direction
+                self, q_red, q_direction, hermitianize=self._hermitianize
             )
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
@@ -981,11 +857,12 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        force_constants,
-        nac_params=None,
-        decimals=None,
-        log_level=0,
-        use_openmp=False,
+        force_constants: ArrayLike,
+        nac_params: dict | None = None,
+        decimals: int | None = None,
+        hermitianize: bool = True,
+        log_level: int = 0,
+        use_openmp: bool = False,
     ):
         """Init method.
 
@@ -1014,6 +891,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             primitive,
             force_constants,
             decimals=decimals,
+            hermitianize=hermitianize,
             log_level=log_level,
             use_openmp=use_openmp,
         )
@@ -1040,7 +918,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             import phonopy._phonopy as phonoc  # noqa F401
 
             self._dynamical_matrix = run_dynamical_matrix_solver_c(
-                self, q_red, q_direction
+                self, q_red, q_direction, hermitianize=self._hermitianize
             )
             # self._run_c_Wang_dynamical_matrix(q_red, q_cart, constant)
         except ImportError:
@@ -1088,14 +966,15 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
 
 def get_dynamical_matrix(
-    fc2,
+    fc2: NDArray,
     supercell: PhonopyAtoms,
     primitive: Primitive,
-    nac_params=None,
-    frequency_scale_factor=None,
-    decimals=None,
-    log_level=0,
-    use_openmp=False,
+    nac_params: dict | None = None,
+    frequency_scale_factor: float | None = None,
+    decimals: int | None = None,
+    hermitianize: bool = True,
+    log_level: int = 0,
+    use_openmp: bool = False,
 ):
     """Return dynamical matrix.
 
@@ -1114,6 +993,7 @@ def get_dynamical_matrix(
             primitive,
             _fc2,
             decimals=decimals,
+            hermitianize=hermitianize,
             use_openmp=use_openmp,
         )
     else:
@@ -1132,6 +1012,7 @@ def get_dynamical_matrix(
             primitive,
             _fc2,
             decimals=decimals,
+            hermitianize=hermitianize,
             log_level=log_level,
             use_openmp=use_openmp,
         )
@@ -1141,9 +1022,10 @@ def get_dynamical_matrix(
 
 def run_dynamical_matrix_solver_c(
     dm: Union[DynamicalMatrix, DynamicalMatrixWang, DynamicalMatrixGL],
-    qpoints,
-    nac_q_direction: Optional[np.ndarray] = None,
-    is_nac: Optional[bool] = None,
+    qpoints: ArrayLike,
+    nac_q_direction: ArrayLike | None = None,
+    is_nac: bool | None = None,
+    hermitianize: bool = True,
 ):
     """Bulid and solve dynamical matrices on grid in C-API.
 
@@ -1184,7 +1066,7 @@ def run_dynamical_matrix_solver_c(
     _qpoints = _qpoints.reshape(-1, 3)
 
     if is_nac is None:
-        _is_nac = dm.is_nac()
+        _is_nac = isinstance(dm, DynamicalMatrixNAC)
     else:
         _is_nac = is_nac
 
@@ -1261,6 +1143,7 @@ def run_dynamical_matrix_solver_c(
         _is_nac * 1,
         is_nac_q_zero * 1,
         use_Wang_NAC * 1,  # use_Wang_NAC
+        hermitianize * 1,
     )
 
     if qpoints_ndim == 1:
@@ -1280,7 +1163,7 @@ def _extract_params(dm: Union[DynamicalMatrix, DynamicalMatrixNAC]):
     masses = dm.primitive.masses
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
     positions = dm.primitive.positions
-    if dm.is_nac():
+    if isinstance(dm, DynamicalMatrixNAC):
         born = dm.born
         nac_factor = float(dm.nac_factor)
         dielectric = dm.dielectric_constant

@@ -35,12 +35,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
-import warnings
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Literal
 
 import numpy as np
 import spglib
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
@@ -100,14 +100,14 @@ class Supercell(PhonopyAtoms):
 
         """
         self._is_old_style = is_old_style
-        self._s2u_map = None
-        self._u2s_map = None
-        self._u2u_map = None
-        self._supercell_matrix = np.array(supercell_matrix, dtype="intc")
+        self._s2u_map: NDArray
+        self._u2s_map: NDArray
+        self._u2u_map: dict[int, int]
+        self._supercell_matrix = np.array(supercell_matrix, dtype="intc", order="C")
         self._create_supercell(unitcell, symprec)
 
     @property
-    def supercell_matrix(self):
+    def supercell_matrix(self) -> NDArray:
         """Return supercell_matrix.
 
         Returns
@@ -119,18 +119,8 @@ class Supercell(PhonopyAtoms):
         """
         return self._supercell_matrix
 
-    def get_supercell_matrix(self):
-        """Return supercell_matrix."""
-        warnings.warn(
-            "Supercell.get_supercell_matrix() is deprecated."
-            "Use Supercell.supercell_matrix attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.supercell_matrix
-
     @property
-    def s2u_map(self):
+    def s2u_map(self) -> NDArray:
         """Return atomic index mapping table from supercell to unit cell.
 
         Each array index and the stored value correspond to the supercell atom
@@ -144,18 +134,8 @@ class Supercell(PhonopyAtoms):
         """
         return self._s2u_map
 
-    def get_supercell_to_unitcell_map(self):
-        """Return atomic index mapping table from supercell to unit cell."""
-        warnings.warn(
-            "Supercell.get_supercell_to_unitcell_map() is deprecated."
-            "Use Supercell.s2u_map attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.s2u_map
-
     @property
-    def u2s_map(self):
+    def u2s_map(self) -> NDArray:
         """Return atomic index mapping table from unit cell to supercell.
 
         Each array index and the stored value correspond to the unit cell atom
@@ -169,18 +149,8 @@ class Supercell(PhonopyAtoms):
         """
         return self._u2s_map
 
-    def get_unitcell_to_supercell_map(self):
-        """Return atomic index mapping table from unit cell to supercell."""
-        warnings.warn(
-            "Supercell.get_unitcell_to_supercell_map() is deprecated."
-            "Use Supercell.u2s_map attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.u2s_map
-
     @property
-    def u2u_map(self):
+    def u2u_map(self) -> dict[int, int]:
         """Return atomic index mapping table from unit cell to unit cell.
 
         Returns
@@ -192,22 +162,12 @@ class Supercell(PhonopyAtoms):
         """
         return self._u2u_map
 
-    def get_unitcell_to_unitcell_map(self):
-        """Return atomic index mapping table from unit cell to unit cell."""
-        warnings.warn(
-            "Supercell.get_unitcell_to_unitcell_map() is deprecated."
-            "Use Supercell.u2s_map attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.u2u_map
-
     def _create_supercell(self, unitcell: PhonopyAtoms, symprec):
         mat = self._supercell_matrix
         if self._is_old_style:
             P = None
             multi = self._get_surrounding_frame(mat)
-            # trim_fram is to trim overlapping atoms.
+            # trim_frame is to trim overlapping atoms.
             trim_frame = np.array(
                 [
                     mat[0] / float(multi[0]),
@@ -219,7 +179,6 @@ class Supercell(PhonopyAtoms):
             # In the new style, it is unnecessary to trim atoms,
             if (np.diag(np.diagonal(mat)) != mat).any():
                 snf = SNF3x3(mat)
-                snf.run()
                 P = snf.P
                 multi = np.diagonal(snf.D)
             else:
@@ -236,12 +195,15 @@ class Supercell(PhonopyAtoms):
         N = num_satom // num_uatom
 
         if N != determinant(self._supercell_matrix):
-            print("Supercell creation failed.")
-            print(
-                "Probably some atoms are overwrapped. The mapping table is given below."
+            msg = "\n".join(
+                [
+                    "Supercell creation failed.",
+                    "Probably some atoms are overwrapped. "
+                    "The mapping table is given below.",
+                    str(mapping_table),
+                ]
             )
-            print(mapping_table)
-            super().__init__()
+            raise RuntimeError(msg)
         else:
             super().__init__(
                 symbols=supercell.symbols,
@@ -344,9 +306,9 @@ class Primitive(PhonopyAtoms):
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        primitive_matrix,
-        symprec=1e-5,
-        store_dense_svecs=True,
+        primitive_matrix: Sequence,
+        symprec: float = 1e-5,
+        store_dense_svecs: bool = True,
         positions_to_reorder=None,
     ):
         """Init method.
@@ -376,16 +338,16 @@ class Primitive(PhonopyAtoms):
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
         self._symprec = symprec
         self._store_dense_svecs = store_dense_svecs
-        self._p2s_map = None
-        self._s2p_map = None
-        self._p2p_map = None
-        self._smallest_vectors = None
-        self._multiplicity = None
-        self._atomic_permutations = None
+        self._p2s_map: NDArray
+        self._s2p_map: NDArray
+        self._p2p_map: dict[int, int]
+        self._smallest_vectors: NDArray
+        self._multiplicity: NDArray
+        self._atomic_permutations: NDArray
         self._run(supercell, positions_to_reorder=positions_to_reorder)
 
     @property
-    def primitive_matrix(self):
+    def primitive_matrix(self) -> NDArray:
         """Return primitive_matrix.
 
         Returns
@@ -398,18 +360,8 @@ class Primitive(PhonopyAtoms):
         """
         return self._primitive_matrix
 
-    def get_primitive_matrix(self):
-        """Return primitive_matrix."""
-        warnings.warn(
-            "Primitive.get_primitive_matrix() is deprecated."
-            "Use Primitive.primitive_matrix attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.primitive_matrix
-
     @property
-    def p2s_map(self):
+    def p2s_map(self) -> NDArray:
         """Return mapping table of atoms from primitive cell to supercell.
 
         Returns
@@ -422,18 +374,8 @@ class Primitive(PhonopyAtoms):
         """
         return self._p2s_map
 
-    def get_primitive_to_supercell_map(self):
-        """Return mapping table of atoms from primitive cell to supercell."""
-        warnings.warn(
-            "Primitive.get_primitive_to_supercell_map() is deprecated."
-            "Use Primitive.p2s_map attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.p2s_map
-
     @property
-    def s2p_map(self):
+    def s2p_map(self) -> NDArray:
         """Return mapping table of atoms from supercell to primitive cells.
 
         Returns
@@ -446,18 +388,8 @@ class Primitive(PhonopyAtoms):
         """
         return self._s2p_map
 
-    def get_supercell_to_primitive_map(self):
-        """Return mapping table of atoms from supercell to primitive cells."""
-        warnings.warn(
-            "Primitive.get_supercell_to_primitive_map() is deprecated."
-            "Use Primitive.s2p_map attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.s2p_map
-
     @property
-    def p2p_map(self):
+    def p2p_map(self) -> dict[int, int]:
         """Return mapping table of indices in supercell and primitive cell.
 
         Returns
@@ -470,17 +402,7 @@ class Primitive(PhonopyAtoms):
         """
         return self._p2p_map
 
-    def get_primitive_to_primitive_map(self):
-        """Return mapping table of indices in supercell and primitive cell."""
-        warnings.warn(
-            "Primitive.get_primitive_to_primitive_map() is deprecated."
-            "Use Primitive.p2p_map attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.p2p_map
-
-    def get_smallest_vectors(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_smallest_vectors(self) -> tuple[NDArray, NDArray]:
         """Return shortest vectors and multiplicities.
 
         See also the docstring of `ShortestPairs`. The older less densen format
@@ -509,7 +431,7 @@ class Primitive(PhonopyAtoms):
         return self._smallest_vectors, self._multiplicity
 
     @property
-    def atomic_permutations(self):
+    def atomic_permutations(self) -> NDArray:
         """Return atomic index permutations by pure translations.
 
         Returns
@@ -528,18 +450,8 @@ class Primitive(PhonopyAtoms):
         """
         return self._atomic_permutations
 
-    def get_atomic_permutations(self):
-        """Return atomic index permutations by pure translations."""
-        warnings.warn(
-            "Primitive.get_atomic_permutations() is deprecated."
-            "Use Primitive.atomic_permutations attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.atomic_permutations
-
     @property
-    def store_dense_svecs(self):
+    def store_dense_svecs(self) -> bool:
         """Return whether shortest vectors are stored in dense array or not."""
         return self._store_dense_svecs
 
@@ -866,7 +778,10 @@ class TrimmedCell(PhonopyAtoms):
 
 
 def get_supercell(
-    unitcell, supercell_matrix, is_old_style=True, symprec=1e-5
+    unitcell: PhonopyAtoms,
+    supercell_matrix: NDArray | Sequence,
+    is_old_style: bool = True,
+    symprec: float = 1e-5,
 ) -> Supercell:
     """Create supercell."""
     return Supercell(
@@ -876,11 +791,11 @@ def get_supercell(
 
 def get_primitive(
     supercell: PhonopyAtoms,
-    primitive_matrix: Optional[Union[str, np.ndarray, Sequence]] = None,
+    primitive_matrix: str | np.ndarray | Sequence | None = None,
     symprec=1e-5,
     store_dense_svecs=True,
     positions_to_reorder=None,
-):
+) -> Primitive:
     """Create primitive cell."""
     return Primitive(
         supercell,
@@ -937,7 +852,7 @@ def isclose(
     atol: float = 1e-8,
     with_arbitrary_order: bool = False,
     return_order: bool = False,
-) -> Union[bool, list]:
+) -> bool | list:
     """Check equivalence of two cells.
 
     Cell-b is compared with respect to cell-a.
@@ -1392,7 +1307,7 @@ def compute_all_sg_permutations(
     translations,  # scaled
     lattice,  # column vectors
     symprec,
-):
+) -> NDArray:
     """Compute permutations for space group operations.
 
     See 'compute_permutation_for_rotation' for more info.
@@ -1686,9 +1601,9 @@ def determinant(m):
 
 
 def get_primitive_matrix(
-    pmat: Optional[Union[str, np.ndarray, Sequence]] = None,
+    pmat: str | ArrayLike | None = None,
     symprec: float = 1e-5,
-) -> Optional[Union[str, np.ndarray]]:
+) -> Literal["auto"] | NDArray | None:
     """Find primitive matrix from primitive cell.
 
     None is equivalent to "P" but None is returned.
@@ -1733,7 +1648,7 @@ def get_primitive_matrix(
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring) -> Optional[np.ndarray]:
+def get_primitive_matrix_by_centring(centring) -> np.ndarray | None:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
         return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
@@ -1774,7 +1689,7 @@ def get_primitive_matrix_by_centring(centring) -> Optional[np.ndarray]:
         return None
 
 
-def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
+def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDArray:
     """Guess primitive matrix from crystal symmetry."""
     if unitcell.magnetic_moments is not None:
         msg = "Can not be used with the unit cell having magnetic moments."
@@ -1789,7 +1704,7 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat: Optional[Union[Sequence, np.ndarray]]) -> np.ndarray:
+def shape_supercell_matrix(smat: ArrayLike | None) -> np.ndarray:
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="intc", order="C")
@@ -1803,7 +1718,9 @@ def shape_supercell_matrix(smat: Optional[Union[Sequence, np.ndarray]]) -> np.nd
     return _smat
 
 
-def estimate_supercell_matrix(spglib_dataset, max_num_atoms=120, max_iter=100):
+def estimate_supercell_matrix(
+    spglib_dataset, max_num_atoms=120, max_iter=100
+) -> list[int]:
     """Estimate supercell matrix from conventional cell.
 
     Diagonal supercell matrix is estimated from basis vector lengths

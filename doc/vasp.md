@@ -11,7 +11,7 @@ In the pre-process, supercell structures with (or without)
 displacements are created from a unit cell fully considering crystal
 symmetry.
 
-To obtain supercells (:math:`2\times 2\times 3`) with displacements,
+To obtain supercells ({math}`2\times 2\times 3`) with displacements,
 run phonopy,
 
 ```bash

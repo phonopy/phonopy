@@ -36,10 +36,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Optional, Union
-
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import (
@@ -52,10 +50,8 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 
 
-def bose_einstein_dist(
-    x: Union[np.ndarray, float], t: float
-) -> Union[np.ndarray, float]:
-    """Return Bose-Einsetein distribution.
+def bose_einstein_dist(x: NDArray | float, t: float) -> NDArray | float:
+    """Return Bose-Einstein distribution.
 
     Parameters
     ----------
@@ -130,11 +126,11 @@ class RandomDisplacements:
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        force_constants: Union[np.ndarray, Sequence],
-        dist_func: Optional[str] = None,
-        cutoff_frequency: Optional[float] = None,
-        max_distance: Optional[float] = None,
-        factor: Optional[float] = None,
+        force_constants: ArrayLike,
+        dist_func: str | None = None,
+        cutoff_frequency: float | None = None,
+        max_distance: float | None = None,
+        factor: float | None = None,
         use_openmp: bool = False,
     ):
         """Init method.
@@ -248,8 +244,8 @@ class RandomDisplacements:
         self,
         T: float,
         number_of_snapshots: int = 1,
-        random_seed: Optional[int] = None,
-        randn: Optional[tuple] = None,
+        random_seed: int | None = None,
+        randn: tuple | None = None,
     ):
         """Calculate random displacements.
 
@@ -364,8 +360,11 @@ class RandomDisplacements:
         return self._comm_points[self._ii + self._ij] / float(N)
 
     @property
-    def integrated_modes(self):
+    def integrated_modes(self) -> NDArray:
         """Return commensurate q-points where phonons are computed.."""
+        if self._conditions_ii is None:
+            raise RuntimeError("Run random displacements first.")
+
         if self._conditions_ij is None:
             return self._conditions_ii
         else:
@@ -543,7 +542,7 @@ class RandomDisplacements:
         self,
         T: float,
         number_of_snapshots: int,
-        randn: Optional[np.ndarray] = None,
+        randn: NDArray | None = None,
     ):
         """Solve ij terms.
 

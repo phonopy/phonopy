@@ -392,7 +392,7 @@ def write_cp2k(fhandle, project_name, atoms, tree):
             "*": [
                 "{sym} {x} {y} {z}".format(sym=sym, x=coord[0], y=coord[1], z=coord[2])
                 for sym, coord in zip(
-                    atoms.get_chemical_symbols(), atoms.get_scaled_positions()
+                    atoms.symbols, atoms.scaled_positions
                 )
             ],
         }
@@ -402,14 +402,14 @@ def write_cp2k(fhandle, project_name, atoms, tree):
             "*": [
                 "{sym} {x} {y} {z}".format(sym=sym, x=coord[0], y=coord[1], z=coord[2])
                 for sym, coord in zip(
-                    atoms.get_chemical_symbols(), atoms.get_positions()
+                    atoms.symbols, atoms.positions
                 )
             ],
         }
 
-    subsys["+cell"]["a"] = list(atoms.get_cell()[0])
-    subsys["+cell"]["b"] = list(atoms.get_cell()[1])
-    subsys["+cell"]["c"] = list(atoms.get_cell()[2])
+    subsys["+cell"]["a"] = list(atoms.cell[0])
+    subsys["+cell"]["b"] = list(atoms.cell[1])
+    subsys["+cell"]["c"] = list(atoms.cell[2])
     subsys["+cell"]["periodic"] = "XYZ"  # anything else does not make much sense
 
     subsys["+coord"] = cp2k_coord  # overwriting the coordinates

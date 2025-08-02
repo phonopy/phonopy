@@ -40,10 +40,11 @@ import gzip
 import lzma
 import sys
 import warnings
-from typing import Optional, Union
+from typing import Optional, Sequence
 
 import numpy as np
 import yaml
+from numpy.typing import ArrayLike
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.group_velocity import GroupVelocity
@@ -250,15 +251,15 @@ class BandStructure:
 
     def __init__(
         self,
-        paths: list,
-        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
+        paths: Sequence[ArrayLike],
+        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
         with_eigenvectors: bool = False,
         is_band_connection: bool = False,
-        group_velocity: Optional[GroupVelocity] = None,
-        path_connections: Optional[Union[list, bool]] = None,
-        labels: Optional[list[str]] = None,
+        group_velocity: GroupVelocity | None = None,
+        path_connections: Sequence[bool] | None = None,
+        labels: Sequence[str] | None = None,
         is_legacy_plot: bool = False,
-        factor: Optional[float] = None,
+        factor: float | None = None,
     ):
         """Init method.
 
@@ -293,6 +294,7 @@ class BandStructure:
         """
         self._dynamical_matrix = dynamical_matrix
         self._cell = dynamical_matrix.primitive
+        self._rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
         self._supercell = dynamical_matrix.supercell
         if factor is None:
             self._factor = get_physical_units().DefaultToTHz
@@ -307,7 +309,7 @@ class BandStructure:
         self._paths = [np.array(path) for path in paths]
         self._is_legacy_plot = is_legacy_plot
         self._labels = None
-        self._path_connections = None
+        self._path_connections: Sequence[bool]
         if self._is_legacy_plot:
             if labels is not None and len(labels) == len(self._paths) + 1:
                 self._labels = labels
@@ -427,12 +429,12 @@ class BandStructure:
         return self._factor
 
     @property
-    def labels(self) -> Optional[list]:
+    def labels(self) -> Sequence[str] | None:
         """Return special point symbols."""
         return self._labels
 
     @property
-    def path_connections(self):
+    def path_connections(self) -> Sequence[bool]:
         """Return band segment connections."""
         return self._path_connections
 
@@ -483,6 +485,15 @@ class BandStructure:
         import h5py
 
         with h5py.File(filename, "w") as w:
+            w.create_dataset("reciprocal_lattice", data=self._rec_lattice.T)
+            w.create_dataset("lattice", data=self._cell.cell)
+            w.create_dataset("natom", data=len(self._cell))
+            w.create_dataset("coordinates", data=self._cell.scaled_positions)
+            w.create_dataset("symbols", data=self._cell.symbols)
+            w.create_dataset("numbers", data=self._cell.numbers)
+            w.create_dataset("masses", data=self._cell.masses)
+            if self._cell.magnetic_moments is not None:
+                w.create_dataset("magnetic_moments", data=self._cell.magnetic_moments)
             w.create_dataset("path", data=self._paths)
             w.create_dataset("distance", data=self._distances)
             w.create_dataset("frequency", data=self._frequencies)
@@ -570,7 +581,6 @@ class BandStructure:
 
     def _write_yaml(self, w, comment, is_binary=False):
         natom = len(self._cell)
-        rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
         nq_paths = []
         for qpoints in self._paths:
             nq_paths.append(len(qpoints))
@@ -595,7 +605,7 @@ class BandStructure:
                     else:
                         i += 2
         text.append("reciprocal_lattice:")
-        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*")):
+        for vec, axis in zip(self._rec_lattice.T, ("a*", "b*", "c*")):
             text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" % (tuple(vec) + (axis,)))
         text.append("natom: %-7d" % (natom))
         text.append(str(self._cell))

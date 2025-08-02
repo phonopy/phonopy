@@ -2,6 +2,51 @@
 
 # Change Log
 
+## Jul-21-2025: Version 2.42.0
+
+- Maintenance release.
+
+## Jul-19-2025: Version 2.41.4
+
+- Fixed issue where irreps were not shown.
+
+## Jul-17-2025: Version 2.41.3
+
+- Fixed issue where the `--pa` option (`PRIMITIVE_AXIS` tag) was not working.
+
+## Jul-16-2025: Version 2.41.2
+
+- Fixed critical bug in dynamic structure factor calculation for
+  non-centrosymmetric crystals.
+
+## Jul-3-2025: Version 2.41.1
+
+- Updated version dependency for symfc
+- Deprecated `factor` parameter in `Phonopy` class initialization
+- Added `set_factor_by_calculator` boolean parameter to `Phonopy` class
+  instantiation, which automatically handles unit conversion factor to THz,
+  corresponding to the `factor` parameter, when True and used with the
+  `calculator` parameter.
+
+## Jun-26-2025: Version 2.41.0
+
+- Major refactoring of command-user interface. Most of routines behind the
+  `phonopy` and `phonopy-load` commands were unified.
+- For `phonopy-load`, symfc-projector is used to symmetrize force constants
+  calculated by finite difference approach as the default behavior. The previous
+  behavior of the symmetrization can be recovered by `--fc-calculator
+  traditional` option.
+
+## Jun-15-2025: Version 2.40.0
+
+- `--rd-auto-factor` command option (`RD_NUMBER_ESTIMATION_FACTOR` tag) was
+  added.
+
+## Jun-11-2025: Version 2.39.0
+
+- Collection of small updates.
+- Questaal interface was added.
+
 ## Arp-30-2025: Version 2.38.2
 
 - `phonopy.interface.calculator.get_default_physical_units` is deprecated and

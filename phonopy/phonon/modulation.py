@@ -34,6 +34,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 from typing import Union
 
 import numpy as np
@@ -279,10 +281,10 @@ class Modulation:
                     )
 
     def _write_cell_yaml(self, cell, w):
-        lattice = cell.get_cell()
-        positions = cell.get_scaled_positions()
-        masses = cell.get_masses()
-        symbols = cell.get_chemical_symbols()
+        lattice = cell.cell
+        positions = cell.scaled_positions
+        masses = cell.masses
+        symbols = cell.symbols
         w.write("  atom_info:\n")
         for m, s in zip(masses, symbols):
             w.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))

@@ -112,10 +112,10 @@ class Animation:
         self._eigenvalues, self._eigenvectors = np.linalg.eigh(dynmat)
         self._qpoint = _qpoint
         primitive = dynamical_matrix.get_primitive()
-        self._positions = primitive.get_scaled_positions()
-        self._symbols = primitive.get_chemical_symbols()
-        self._masses = primitive.get_masses()
-        self._lattice = primitive.get_cell()
+        self._positions = primitive.scaled_positions
+        self._symbols = primitive.symbols
+        self._masses = primitive.masses
+        self._lattice = primitive.cell
         if shift is not None:
             self._positions = (self._positions + shift) % 1
 

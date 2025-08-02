@@ -36,14 +36,13 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import numpy as np
+from numpy.typing import NDArray
 
 
 def get_displacements_and_forces(
     disp_dataset: dict,
-) -> tuple[np.ndarray, Optional[np.ndarray]]:
+) -> tuple[NDArray, NDArray | None]:
     """Return displacements and forces of all atoms from displacement dataset.
 
     This is used to extract displacements and forces from displacement dataset.
@@ -85,6 +84,8 @@ def get_displacements_and_forces(
         else:
             forces = None
         return disp_dataset["displacements"], forces
+    else:
+        raise RuntimeError("Unknown dataset format.")
 
 
 def forces_in_dataset(dataset):

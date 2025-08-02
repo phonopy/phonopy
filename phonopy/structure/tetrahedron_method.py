@@ -46,7 +46,7 @@ def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
     ---------
     microzone_lattice : ndarray or list of list
         column vectors of parallel piped microzone lattice, i.e.,
-        microzone_lattice = np.linalg.inv(cell.get_cell()) / mesh
+        microzone_lattice = np.linalg.inv(cell.cell) / mesh
 
     """
     try:
@@ -727,7 +727,7 @@ def _create_tetrahedra(shortest_main_diagonal):
         pairs = ((0, 1), (0, 2), (1, 5), (2, 6), (5, 7), (6, 7))
         six_tetras = np.sort([[3, 4] + list(x) for x in pairs])
     else:
-        RuntimeError("Unexpected condition encountered.")
+        raise RuntimeError("Unexpected condition encountered.")
 
     return six_tetras
 

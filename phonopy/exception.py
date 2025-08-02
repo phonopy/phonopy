@@ -45,3 +45,33 @@ class ForceCalculatorRequiredError(RuntimeError):
     """Exception when force calculator is required to compute force constants."""
 
     pass
+
+
+class ForceConstantsCalculatorNotFoundError(RuntimeError):
+    """Exception when force constants calculator is not found."""
+
+    pass
+
+
+class PypolymlpFileNotFoundError(RuntimeError):
+    """Exception when pypolymlp file is not found."""
+
+    pass
+
+
+class CellNotFoundError(RuntimeError):
+    """Exception when unit cell not found."""
+
+    pass
+
+
+class MagmomValueError(ValueError):
+    """Exception when magnetic moment value is not valid."""
+
+    pass
+
+
+class PypolymlpRelaxationError(RuntimeError):
+    """Exception when relaxation of atomic positions by pypolymlp fails."""
+
+    pass

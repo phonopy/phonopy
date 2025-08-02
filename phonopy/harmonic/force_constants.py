@@ -37,9 +37,9 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -62,7 +62,7 @@ class FDFCSolver:
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        primitive: Optional[Primitive],
+        primitive: Primitive | None,
         symmetry: Symmetry,
         dataset: dict,
         is_compact_fc: bool = False,
@@ -94,8 +94,8 @@ class FDFCSolver:
         supercell: PhonopyAtoms,
         symmetry: Symmetry,
         dataset,
-        atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
-        primitive: Optional[Primitive] = None,
+        atom_list: Sequence[int] | NDArray | None = None,
+        primitive: Primitive | None = None,
     ) -> np.ndarray:
         """Force constants are computed.
 
@@ -160,7 +160,7 @@ class FDFCSolver:
 
 def compact_fc_to_full_fc(
     primitive: Primitive, compact_fc: np.ndarray, log_level: int = 0
-):
+) -> NDArray:
     """Transform compact fc to full fc."""
     fc = np.zeros(
         (compact_fc.shape[1], compact_fc.shape[1], 3, 3), dtype="double", order="C"
@@ -175,7 +175,7 @@ def compact_fc_to_full_fc(
 
 def full_fc_to_compact_fc(
     primitive: Primitive, full_fc: np.ndarray, log_level: int = 0
-):
+) -> NDArray:
     """Transform full fc to compact fc."""
     p2s_map = primitive.p2s_map
     fc = np.zeros((len(p2s_map), full_fc.shape[1], 3, 3), dtype="double", order="C")
@@ -207,7 +207,8 @@ def rearrange_force_constants_array(
 
     """
     assert full_fc.shape[0] == full_fc.shape[1]
-    indices: list = isclose(a, b, with_arbitrary_order=True, return_order=True)
+    indices = isclose(a, b, with_arbitrary_order=True, return_order=True)
+    assert not isinstance(indices, bool)
     re_fc = np.zeros_like(full_fc)
     for i, j in enumerate(indices):
         re_fc[i] = full_fc[j][indices]
@@ -215,7 +216,7 @@ def rearrange_force_constants_array(
 
 
 def cutoff_force_constants(
-    force_constants: np.ndarray,
+    force_constants: NDArray,
     supercell: PhonopyAtoms,
     primitive: Primitive,
     cutoff_radius: float,
@@ -486,9 +487,9 @@ def get_rotated_displacement(displacements, site_sym_cart):
 
 
 def set_tensor_symmetry_PJ(
-    force_constants: np.ndarray,
-    lattice: np.ndarray,
-    positions: np.ndarray,
+    force_constants: NDArray,
+    lattice: NDArray,
+    positions: NDArray,
     symmetry: Symmetry,
 ):
     """Full force constants are symmetrized using crystal symmetry.
@@ -580,26 +581,31 @@ def set_permutation_symmetry(force_constants):
             force_constants[i, j] = (force_constants[i, j] + fc_copy[j, i].T) / 2
 
 
-def show_drift_force_constants(
-    force_constants, primitive=None, name="force constants", values_only=False
-):
-    """Show force constants drift."""
+def get_drift_force_constants(
+    force_constants: NDArray,
+    primitive: Primitive | None = None,
+) -> tuple[float, float, list[int], list[int]]:
+    """Get max drift of force constants."""
     if force_constants.shape[0] == force_constants.shape[1]:
         num_atom = force_constants.shape[0]
         maxval1 = 0
         maxval2 = 0
-        jk1 = [0, 0]
-        jk2 = [0, 0]
+        xy1 = [0, 0]
+        xy2 = [0, 0]
         for i, j, k in list(np.ndindex((num_atom, 3, 3))):
             val1 = force_constants[:, i, j, k].sum()
             val2 = force_constants[i, :, j, k].sum()
             if abs(val1) > abs(maxval1):
                 maxval1 = val1
-                jk1 = [j, k]
+                xy1 = [j, k]
             if abs(val2) > abs(maxval2):
                 maxval2 = val2
-                jk2 = [j, k]
+                xy2 = [j, k]
     else:
+        if primitive is None:
+            raise RuntimeError(
+                "Primitive cell is necessary to get drift force constants."
+            )
         s2p_map = primitive.s2p_map
         p2s_map = primitive.p2s_map
         p2p_map = primitive.p2p_map
@@ -612,11 +618,11 @@ def show_drift_force_constants(
             phonoc.transpose_compact_fc(
                 force_constants, permutations, s2pp_map, p2s_map, nsym_list
             )
-            maxval1, jk1 = _get_drift_per_index(force_constants)
+            maxval1, xy1 = _get_drift_per_index(force_constants)
             phonoc.transpose_compact_fc(
                 force_constants, permutations, s2pp_map, p2s_map, nsym_list
             )
-            maxval2, jk2 = _get_drift_per_index(force_constants)
+            maxval2, xy2 = _get_drift_per_index(force_constants)
 
         except ImportError as exc:
             text = (
@@ -625,18 +631,27 @@ def show_drift_force_constants(
             )
             raise RuntimeError(text) from exc
 
+    return maxval1, maxval2, xy1, xy2
+
+
+def show_drift_force_constants(
+    force_constants: NDArray,
+    primitive: Primitive | None = None,
+    name: str = "force constants",
+    values_only: bool = False,
+    digit: int = 8,
+):
+    """Show force constants drift."""
+    maxval1, maxval2, xy1, xy2 = get_drift_force_constants(
+        force_constants, primitive=primitive
+    )
+
     if values_only:
         text = ""
     else:
         text = "Max drift of %s: " % name
-    text += "%f (%s%s) %f (%s%s)" % (
-        maxval1,
-        "xyz"[jk1[0]],
-        "xyz"[jk1[1]],
-        maxval2,
-        "xyz"[jk2[0]],
-        "xyz"[jk2[1]],
-    )
+    text += f"{maxval1:.{digit}f} ({'xyz'[xy1[0]]}{'xyz'[xy1[1]]}) "
+    text += f"{maxval2:.{digit}f} ({'xyz'[xy2[0]]}{'xyz'[xy2[1]]}) "
     print(text)
 
 

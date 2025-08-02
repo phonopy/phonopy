@@ -38,10 +38,10 @@ from __future__ import annotations
 
 import io
 import os
-from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Literal
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 import phonopy.cui.load_helper as load_helper
 from phonopy.api_phonopy import Phonopy
@@ -53,30 +53,31 @@ from phonopy.structure.dataset import forces_in_dataset
 
 
 def load(
-    phonopy_yaml: Optional[
-        Union[str, bytes, os.PathLike, io.IOBase]
-    ] = None,  # phonopy.yaml-like must be the first argument.
-    supercell_matrix: Optional[Union[np.ndarray, Sequence]] = None,
-    primitive_matrix: Optional[Union[np.ndarray, Sequence]] = None,
+    phonopy_yaml: str
+    | os.PathLike
+    | io.IOBase
+    | None = None,  # phonopy.yaml-like must be the first argument.
+    supercell_matrix: ArrayLike | None = None,
+    primitive_matrix: ArrayLike | str | None = None,
     is_nac: bool = True,
-    calculator: Optional[str] = None,
-    unitcell: Optional[PhonopyAtoms] = None,
-    supercell: Optional[PhonopyAtoms] = None,
-    nac_params: Optional[dict] = None,
-    unitcell_filename: Optional[str] = None,
-    supercell_filename: Optional[str] = None,
-    born_filename: Optional[str] = None,
-    force_sets_filename: Optional[str] = None,
-    force_constants_filename: Optional[str] = None,
-    fc_calculator: Optional[str] = None,
-    fc_calculator_options: Optional[str] = None,
-    factor: Optional[float] = None,
+    calculator: str | None = None,
+    unitcell: PhonopyAtoms | None = None,
+    supercell: PhonopyAtoms | None = None,
+    nac_params: dict | None = None,
+    unitcell_filename: os.PathLike | str | None = None,
+    supercell_filename: os.PathLike | str | None = None,
+    born_filename: os.PathLike | str | None = None,
+    force_sets_filename: os.PathLike | str | None = None,
+    force_constants_filename: os.PathLike | str | None = None,
+    fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
+    fc_calculator_options: str | None = None,
+    factor: float | None = None,
     produce_fc: bool = True,
     is_symmetry: bool = True,
     symmetrize_fc: bool = True,
     is_compact_fc: bool = True,
     use_pypolymlp: bool = False,
-    mlp_params: Optional[dict] = None,
+    mlp_params: dict | None = None,
     store_dense_svecs: bool = True,
     use_SNF_supercell: bool = False,
     symprec: float = 1e-5,
@@ -128,7 +129,7 @@ def load(
 
     Parameters
     ----------
-    phonopy_yaml : str, bytes, os.PathLike, io.IOBase, optional
+    phonopy_yaml : str, os.PathLike, io.IOBase, optional
         Filename of "phonopy.yaml"-like file for str or bytes, otherwise file
         pointer-like. If this is given, the data in the file are parsed. Default
         is None.
@@ -184,8 +185,7 @@ def load(
         fc-calculator. For alm, each parameter is splitted by comma ',', and
         each set of key and value pair is written in 'key = value'.
     factor : float, optional
-        Phonon frequency unit conversion factor. Unless specified, default unit
-        conversion factor for each calculator is used.
+        Deprecated. Conversion factor is selected based off of `calculator`
     produce_fc : bool, optional
         Setting False, force constants are not calculated from dataset of
         displacements and forces even if the dataset exists. Default is True.
@@ -269,32 +269,29 @@ def load(
             _calculator = phpy_yaml.calculator
         else:
             _calculator = calculator
-    else:
+
+    if cell is None:
         msg = "Cell information could not found. Phonopy instance loading failed."
         raise RuntimeError(msg)
 
     if log_level and _calculator is not None:
-        print('Set "%s" mode.' % _calculator)
+        print(f'Set "{_calculator}" mode.')
 
-    # units keywords: factor, nac_factor, distance_to_A
-    units = get_calculator_physical_units(_calculator)
-    if factor is None:
-        _factor = units["factor"]
-    else:
-        _factor = factor
     phonon = Phonopy(
         cell,
         smat,
         primitive_matrix=pmat,
-        factor=_factor,
+        factor=factor,
         symprec=symprec,
         is_symmetry=is_symmetry,
         store_dense_svecs=store_dense_svecs,
         use_SNF_supercell=use_SNF_supercell,
         calculator=_calculator,
+        set_factor_by_calculator=True,
         log_level=log_level,
     )
 
+    units = get_calculator_physical_units(_calculator)
     # NAC params
     if born_filename is not None or _nac_params is not None or is_nac:
         ret_nac_params = load_helper.get_nac_params(
@@ -309,8 +306,9 @@ def load(
             phonon.nac_params = ret_nac_params
 
     dataset = load_helper.select_and_load_dataset(
-        phonon,
+        len(phonon.supercell),
         _dataset,
+        phonopy_yaml_filename=phonopy_yaml,
         force_sets_filename=force_sets_filename,
         log_level=log_level,
     )
@@ -319,7 +317,7 @@ def load(
 
     fc = load_helper.select_and_extract_force_constants(
         phonon,
-        fc=_fc,
+        force_constants=_fc,
         force_constants_filename=force_constants_filename,
         is_compact_fc=is_compact_fc,
         log_level=log_level,
@@ -330,10 +328,8 @@ def load(
     if use_pypolymlp and dataset is not None:
         phonon.mlp_dataset = dataset
         phonon.dataset = None
-        load_helper.prepare_pypolymlp_and_dataset(
-            phonon,
-            mlp_params=mlp_params,
-            log_level=log_level,
+        load_helper.prepare_pypolymlp(
+            phonon, mlp_params=mlp_params, log_level=log_level
         )
     if (
         phonon.force_constants is None
@@ -346,6 +342,7 @@ def load(
             fc_calculator_options=fc_calculator_options,
             symmetrize_fc=symmetrize_fc,
             is_compact_fc=is_compact_fc,
+            use_symfc_projector=True,
             log_level=log_level,
         )
 

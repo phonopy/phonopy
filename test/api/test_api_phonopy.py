@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+import phonopy
 from phonopy import Phonopy
 from phonopy.interface.pypolymlp import PypolymlpParams
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -279,3 +280,51 @@ def test_load_mlp_pypolymlp(ph_kcl: Phonopy):
     pytest.importorskip("pypolymlp", minversion="0.9.2")
     ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml")
     ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml.xz")
+
+
+def test_Phonopy_calculator():
+    """Test phonopy_load with phonopy_params.yaml."""
+    ph_orig = phonopy.load(
+        cwd / ".." / "phonopy_params_NaCl-fd.yaml.xz", produce_fc=False, log_level=2
+    )
+    ph = Phonopy(
+        unitcell=ph_orig.unitcell,
+        supercell_matrix=ph_orig.supercell_matrix,
+        primitive_matrix=ph_orig.primitive_matrix,
+    )
+    assert ph.calculator is None
+    assert ph.unit_conversion_factor == pytest.approx(15.6333023)
+
+    with pytest.warns(DeprecationWarning):
+        ph = Phonopy(
+            unitcell=ph_orig.unitcell,
+            supercell_matrix=ph_orig.supercell_matrix,
+            primitive_matrix=ph_orig.primitive_matrix,
+            factor=100,
+        )
+        assert ph.unit_conversion_factor == pytest.approx(100)
+
+
+def test_Phonopy_calculator_QE():
+    """Test phonopy_load with phonopy_params.yaml for QE."""
+    ph_orig = phonopy.load(
+        cwd / ".." / "phonopy_params_NaCl-QE.yaml.xz", produce_fc=False, log_level=2
+    )
+    ph = Phonopy(
+        unitcell=ph_orig.unitcell,
+        supercell_matrix=ph_orig.supercell_matrix,
+        primitive_matrix=ph_orig.primitive_matrix,
+        calculator="qe",
+        set_factor_by_calculator=False,
+    )
+    assert ph.calculator == "qe"
+    assert ph.unit_conversion_factor == pytest.approx(15.6333023)
+
+    ph = Phonopy(
+        unitcell=ph_orig.unitcell,
+        supercell_matrix=ph_orig.supercell_matrix,
+        primitive_matrix=ph_orig.primitive_matrix,
+        calculator="qe",
+        set_factor_by_calculator=True,
+    )
+    assert ph.unit_conversion_factor == pytest.approx(108.9707718)

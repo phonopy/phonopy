@@ -35,15 +35,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+import os
 import pathlib
 import warnings
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from math import pi, sqrt
-from typing import Optional, Union
 
 import numpy as np
 import yaml
+from numpy.typing import NDArray
 
 from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -64,6 +65,7 @@ calculator_info = {
     "elk": {"option": {"name": "--elk", "help": "Invoke elk mode"}},
     "fleur": {"option": {"name": "--fleur", "help": "Invoke Fleur mode"}},
     "lammps": {"option": {"name": "--lammps", "help": "Invoke Lammps mode"}},
+    "qlm": {"option": {"name": "--qlm", "help": "Invoke Questaal/LMTO mode"}},
     "qe": {"option": {"name": "--qe", "help": "Invoke Quantum espresso (QE) mode"}},
     "siesta": {"option": {"name": "--siesta", "help": "Invoke Siesta mode"}},
     "turbomole": {"option": {"name": "--turbomole", "help": "Invoke TURBOMOLE mode"}},
@@ -101,21 +103,33 @@ def get_interface_mode(args_dict):
     return None
 
 
-def convert_crystal_structure(filename_in, interface_in, filename_out, interface_out):
-    """Convert crystal structures between different calculator interfaces."""
+def convert_crystal_structure(
+    filename_in, interface_in, filename_out, interface_out, optional_structure_info=None
+):
+    """Convert crystal structures between different calculator interfaces.
+
+    optional_structure_info: Some interfaces may take additional information,
+    such as the pseudopotential files for Quantum Espresso ("qe").
+    Pass this info explicitly. The type of data depends on the calculator used.
+    """
     cell, _ = read_crystal_structure(filename=filename_in, interface_mode=interface_in)
     units_in = get_calculator_physical_units(interface_in)
     units_out = get_calculator_physical_units(interface_out)
     factor = units_in["distance_to_A"] / units_out["distance_to_A"]
     cell.cell = cell.cell * factor
-    write_crystal_structure(filename_out, cell, interface_mode=interface_out)
+    write_crystal_structure(
+        filename_out,
+        cell,
+        interface_mode=interface_out,
+        optional_structure_info=optional_structure_info,
+    )
 
 
 def write_crystal_structure(
-    filename: Optional[str],
+    filename: str | os.PathLike | None,
     cell: PhonopyAtoms,
-    interface_mode: Optional[str] = None,
-    optional_structure_info: Optional[tuple] = None,
+    interface_mode: str | None = None,
+    optional_structure_info: tuple | None = None,
 ):
     """Write crystal structure to file in each calculator format.
 
@@ -127,7 +141,7 @@ def write_crystal_structure(
         Calculator interface such as 'vasp', 'qe', ... Default is None,
         that is equivalent to 'vasp'.
     optional_structure_info : tuple, optional
-        Information returned by the method ``read_crystal_structure``.
+        Information returned by the method `read_crystal_structure`.
         See the docstring. Default is None.
 
     """
@@ -142,33 +156,60 @@ def write_crystal_structure(
     elif interface_mode == "qe":
         import phonopy.interface.qe as qe
 
-        pp_filenames = optional_structure_info[1]
+        if optional_structure_info is not None:
+            pp_filenames = optional_structure_info[1]
+        else:
+            warnings.warn(
+                "Optional structure information (pp_filenames) is missing\n\
+                    You will need to manually add pp filenames to the qe input file.",
+                stacklevel=2,
+            )
+            pp_filenames = None
         qe.write_pwscf(filename, cell, pp_filenames)
 
     elif interface_mode == "wien2k":
         import phonopy.interface.wien2k as wien2k
 
-        _, npts, r0s, rmts = optional_structure_info
+        if optional_structure_info is not None:
+            _, npts, r0s, rmts = optional_structure_info
+        else:
+            raise RuntimeError(
+                "Optional structure information (_, npts, r0s, rmts) is missing."
+            )
         wien2k.write_wein2k(filename, cell, npts, r0s, rmts)
     elif interface_mode == "elk":
         import phonopy.interface.elk as elk
 
-        sp_filenames = optional_structure_info[1]
+        if optional_structure_info is not None:
+            sp_filenames = optional_structure_info[1]
+        else:
+            sp_filenames = None
         elk.write_elk(filename, cell, sp_filenames)
     elif interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
 
-        atypes = optional_structure_info[1]
+        if optional_structure_info is not None:
+            atypes = optional_structure_info[1]
+        else:
+            raise RuntimeError("Optional structure information (atypes) is missing.")
         siesta.write_siesta(filename, cell, atypes)
     elif interface_mode == "cp2k":
         import phonopy.interface.cp2k as cp2k
 
-        _, tree = optional_structure_info
+        if optional_structure_info is not None:
+            _, tree = optional_structure_info
+        else:
+            raise RuntimeError("Optional structure information (tree) is missing.")
         cp2k.write_cp2k_by_filename(filename, cell, tree)
     elif interface_mode == "crystal":
         import phonopy.interface.crystal as crystal
 
-        conv_numbers = optional_structure_info[1]
+        if optional_structure_info is not None:
+            conv_numbers = optional_structure_info[1]
+        else:
+            raise RuntimeError(
+                "Optional structure information (conv_numbers) is missing."
+            )
         crystal.write_crystal(filename, cell, conv_numbers)
     elif interface_mode == "dftbp":
         import phonopy.interface.dftbp as dftbp
@@ -189,19 +230,34 @@ def write_crystal_structure(
     elif interface_mode == "fleur":
         import phonopy.interface.fleur as fleur
 
-        speci, restlines = optional_structure_info
+        if optional_structure_info is not None:
+            speci, restlines = optional_structure_info
+        else:
+            raise RuntimeError(
+                "Optional structure information (speci, restlines) is missing."
+            )
         fleur.write_fleur(filename, cell, speci, 1, restlines)
     elif interface_mode == "abacus":
         import phonopy.interface.abacus as abacus
 
-        pps = optional_structure_info[1]
-        orbitals = optional_structure_info[2]
-        abfs = optional_structure_info[3]
+        if optional_structure_info is not None:
+            pps = optional_structure_info[1]
+            orbitals = optional_structure_info[2]
+            abfs = optional_structure_info[3]
+        else:
+            raise RuntimeError(
+                "Optional structure information (pps, orbitals, abfs) is missing."
+            )
         abacus.write_abacus(filename, cell, pps, orbitals, abfs)
     elif interface_mode == "lammps":
         import phonopy.interface.lammps as lammps
 
         lammps.write_lammps(filename, cell)
+
+    elif interface_mode == "qlm":
+        import phonopy.interface.qlm as write_qlm
+
+        write_qlm(filename, cell)
     elif interface_mode == "pwmat":
         import phonopy.interface.pwmat as pwmat
 
@@ -211,13 +267,13 @@ def write_crystal_structure(
 
 
 def write_supercells_with_displacements(
-    interface_mode: str,
+    interface_mode: str | None,
     supercell: PhonopyAtoms,
     cells_with_disps: Sequence[PhonopyAtoms],
-    optional_structure_info: Optional[tuple] = None,
-    displacement_ids: Optional[Union[Sequence, np.ndarray]] = None,
+    optional_structure_info: tuple,
+    displacement_ids: Sequence | NDArray | None = None,
     zfill_width: int = 3,
-    additional_info: Optional[dict] = None,
+    additional_info: dict | None = None,
 ):
     """Write supercell with displacements to files in each calculator format.
 
@@ -346,6 +402,12 @@ def write_supercells_with_displacements(
         import phonopy.interface.lammps as lammps
 
         lammps.write_supercells_with_displacements(*args, **kwargs)
+
+    elif interface_mode == "qlm":
+        import phonopy.interface.qlm as qlm
+
+        qlm_args = args + optional_structure_info
+        qlm.write_supercells_with_displacements(*qlm_args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -369,11 +431,11 @@ def write_magnetic_moments(cell: PhonopyAtoms, sort_by_elements=False):
 
 
 def read_crystal_structure(
-    filename=None,
-    interface_mode=None,
-    chemical_symbols=None,
-    phonopy_yaml_cls: Optional[type[PhonopyYaml]] = None,
-):
+    filename: str | os.PathLike | None = None,
+    interface_mode: str | None = None,
+    chemical_symbols: Sequence[str] | None = None,
+    phonopy_yaml_cls: type[PhonopyYaml] | None = None,
+) -> tuple[PhonopyAtoms, tuple]:
     """Return crystal structure from file in each calculator format.
 
     Parameters
@@ -497,11 +559,18 @@ def read_crystal_structure(
 
         unitcell = read_lammps(cell_filename)
         return unitcell, (cell_filename,)
+
+    elif interface_mode == "qlm":
+        from phonopy.interface.qlm import read_qlm
+
+        struct_info = read_qlm(cell_filename)
+        return struct_info
+
     else:
         raise RuntimeError("No calculator interface was found.")
 
 
-def get_default_cell_filename(interface_mode):
+def get_default_cell_filename(interface_mode: str | None) -> str | None:
     """Return default filename of unit cell structure of each calculator."""
     if interface_mode is None or interface_mode == "vasp":
         return "POSCAR"
@@ -531,13 +600,15 @@ def get_default_cell_filename(interface_mode):
         return "STRU"
     elif interface_mode == "lammps":
         return "unitcell"
+    elif interface_mode == "qlm":
+        return "site"
     elif interface_mode == "pwmat":
         return "atom.config"
     else:
         return None
 
 
-def get_default_supercell_filename(interface_mode):
+def get_default_supercell_filename(interface_mode: str | None) -> str | None:
     """Return default filename of supercell structure of each calculator."""
     if interface_mode == "phonopy_yaml":
         return "phonopy_disp.yaml"
@@ -566,13 +637,15 @@ def get_default_supercell_filename(interface_mode):
         return "sSTRU"
     elif interface_mode == "lammps":
         return "supercell"
+    elif interface_mode == "qlm":
+        return "supercell"
     elif interface_mode == "pwmat":
         return "supercell.config"
     else:
         return None
 
 
-def get_default_displacement_distance(interface_mode):
+def get_default_displacement_distance(interface_mode: str | None) -> float:
     """Return default displacement distance of each calculator."""
     if interface_mode in (
         "wien2k",
@@ -583,6 +656,7 @@ def get_default_displacement_distance(interface_mode):
         "turbomole",
         "fleur",
         "abacus",
+        "qlm",
     ):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k, pwmat
@@ -590,7 +664,7 @@ def get_default_displacement_distance(interface_mode):
     return displacement_distance
 
 
-def get_default_physical_units(interface_mode=None) -> dict:
+def get_default_physical_units(interface_mode: str | None = None) -> dict:
     """Replace get_calculator_get_physical_units()."""
     warnings.warn(
         (
@@ -603,8 +677,8 @@ def get_default_physical_units(interface_mode=None) -> dict:
     return get_calculator_physical_units(interface_mode=interface_mode)
 
 
-def get_calculator_physical_units(interface_mode=None) -> dict:
-    """Return physical units of eachi calculator.
+def get_calculator_physical_units(interface_mode: str | None = None) -> dict:
+    """Return physical units of each calculator.
 
     Physical units: energy,  distance,  atomic mass, force,        force constants
     vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
@@ -622,6 +696,7 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
     fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
     abacus        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
     lammps        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    qlm           : Ry,      au,        AMU,         Ry/au,        Ry/au^2
     pwmat         : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
 
     units['force_constants_unit'] is used in
@@ -788,12 +863,26 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
         units["force_constants_unit"] = "hartree/au^2"
         units["length_unit"] = "au"
         units["force_unit"] = "hartree/au"
+    elif interface_mode == "qlm":
+        QlmToTHz = (
+            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 108.97077
+        units["factor"] = QlmToTHz
+        units["nac_factor"] = 2.0
+        units["distance_to_A"] = physical_units.Bohr
+        units["force_to_eVperA"] = physical_units.Rydberg / physical_units.Bohr
+        units["force_constants_unit"] = "Ry/au^2"
+        units["length_unit"] = "au"
+        units["force_unit"] = "Ry/au"
 
     return units
 
 
 def get_calc_dataset(
-    interface_mode: str,
+    interface_mode: str | None,
     num_atoms: int,
     force_filenames: str,
     verbose: bool = True,
@@ -839,6 +928,8 @@ def get_calc_dataset(
         from phonopy.interface.abacus import parse_set_of_forces
     elif interface_mode == "lammps":
         from phonopy.interface.lammps import parse_set_of_forces
+    elif interface_mode == "qlm":
+        from phonopy.interface.qlm import parse_set_of_forces
     elif interface_mode == "pwmat":
         from phonopy.interface.pwmat import parse_set_of_forces
     else:
@@ -874,7 +965,9 @@ def get_calc_dataset_wien2k(
     return {"forces": force_sets}
 
 
-def get_force_constant_conversion_factor(unit, interface_mode):
+def get_force_constant_conversion_factor(
+    unit: str, interface_mode: str | None
+) -> float:
     """Return unit conversion factor of force constants."""
     _unit = unit.replace("Angstrom", "angstrom")  # for backward compatibility
     interface_default_units = get_calculator_physical_units(interface_mode)
@@ -899,8 +992,8 @@ def get_force_constant_conversion_factor(unit, interface_mode):
 
 
 def _read_phonopy_yaml(
-    filename: str, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
-) -> tuple[PhonopyAtoms, tuple]:
+    filename: str, phonopy_yaml_cls: type[PhonopyYaml] | None
+) -> tuple[PhonopyAtoms | None, tuple]:
     cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
         return None, (None, None)
@@ -921,8 +1014,8 @@ def _read_phonopy_yaml(
 
 
 def _get_cell_filename(
-    filename, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
-) -> Optional[str]:
+    filename: str, phonopy_yaml_cls: type[PhonopyYaml] | None
+) -> str | None:
     cell_filename = None
 
     default_filenames = []

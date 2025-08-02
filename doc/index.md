@@ -30,14 +30,14 @@ The following features of phonopy are highlighted:
   capacity at constant pressure (Cp)
 - {ref}`Interfaces to calculators <calculator_interfaces>`: {ref}`VASP
 <vasp_interface>`, {ref}`VASP DFPT <vasp_dfpt_interface>`, {ref}`ABINIT
-<abinit_interface>`, {ref}`Quantu ESPRESSO <qe_interface>`, {ref}`SIESTA
+<abinit_interface>`, {ref}`Quantum ESPRESSO <qe_interface>`, {ref}`SIESTA
 <siesta_interface>`, {ref}`Elk <elk_interface>`, {ref}`WIEN2k
 <wien2k_interface>`, {ref}`CRYSTAL <crystal_interface>`, {ref}`DFTB+
 <dftbp_interface>`, {ref}`TURBOMOLE <turbomole_interface>`, {ref}`CP2K
 <cp2k_interface>`, {ref}`FHI-aims <FHI_aims_interface>`, {ref}`CASTEP
 <castep_interface>`, {ref}`Fleur <Fleur_interface>`, {ref}`ABACUS
 <abacus_interface>`, {ref}`LAMMPS <lammps_interface>`, {ref}`LAMMPS (external)
-<external_tools_phonolammps>`
+<external_tools_phonolammps>`, {ref}`Questaal/LMTO (QLM) <qlm_interface>`
 - {ref}`Phonopy API for Python <phonopy_module>`
 
 ```{toctree}

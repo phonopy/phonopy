@@ -66,7 +66,7 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
+def get_parser(load_phonopy_yaml=False):
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
@@ -185,7 +185,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         "--classical",
         dest="classical",
         action="store_true",
-        default=False,
+        default=None,
         help=("Compute thermodynamic properties using classical statistics."),
     )
     parser.add_argument(
@@ -315,7 +315,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Enforce space group symmetry to force constants",
     )
-    if not fc_symmetry:
+    if not load_phonopy_yaml:
         parser.add_argument(
             "--fc-symmetry",
             "--sym-fc",
@@ -532,7 +532,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         type=int,
         help="Order of moment of phonon states distribution",
     )
-    if not is_nac:
+    if not load_phonopy_yaml:
         parser.add_argument(
             "--nac",
             dest="is_nac",
@@ -546,7 +546,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Non-analytical term correction method: Gonze (default) or Wang",
     )
-    if fc_symmetry:
+    if load_phonopy_yaml:
         parser.add_argument(
             "--no-fc-symmetry",
             "--no-sym-fc",
@@ -569,7 +569,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Symmetry is not imposed for mesh sampling.",
     )
-    if is_nac:
+    if load_phonopy_yaml:
         parser.add_argument(
             "--nonac",
             dest="is_nac",
@@ -577,6 +577,14 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
             default=None,
             help="Non-analytical term correction",
         )
+        parser.add_argument(
+            "--noreadfc",
+            dest="read_force_constants",
+            action="store_false",
+            default=None,
+            help="Do not read force constants from file",
+        )
+
     parser.add_argument(
         "--nosym",
         dest="is_nosym",
@@ -700,6 +708,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         help='Number of supercells with random displacements or "auto".',
     )
     parser.add_argument(
+        "--rd-auto-factor",
+        dest="rd_number_estimation_factor",
+        type=float,
+        default=None,
+        help="Factor to estimate number of supercells with random displacements",
+    )
+    parser.add_argument(
         "--rd-temperature",
         dest="rd_temperature",
         type=float,
@@ -707,21 +722,14 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         metavar="TEMPERATURE",
         help="A temperature used to generate random displacements.",
     )
-    parser.add_argument(
-        "--temperature",
-        dest="temperature",
-        type=float,
-        default=None,
-        metavar="TEMPERATURE",
-        help="(Deprecated) A temperature used to generate random displacements.",
-    )
-    parser.add_argument(
-        "--readfc",
-        dest="read_force_constants",
-        action="store_true",
-        default=None,
-        help="Read FORCE_CONSTANTS",
-    )
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "--readfc",
+            dest="read_force_constants",
+            action="store_true",
+            default=None,
+            help="Read force constants from file",
+        )
     parser.add_argument(
         "--readfc-format",
         dest="readfc_format",
@@ -734,6 +742,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         action="store_true",
         default=None,
         help="Read QPOITNS",
+    )
+    parser.add_argument(
+        "--relax-atomic-positions",
+        dest="relax_atomic_positions",
+        action="store_true",
+        default=None,
+        help="Relax atomic positions using polynomial MLPs",
     )
     parser.add_argument(
         "-s",
@@ -768,7 +783,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Number of iterations in SSCHA calculation",
     )
-    if not fc_symmetry:
+    if not load_phonopy_yaml:
         parser.add_argument(
             "--symfc",
             dest="use_symfc",
@@ -815,6 +830,14 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         type=float,
         default=None,
         help="Write cif with aniso_U for which temperature is specified",
+    )
+    parser.add_argument(
+        "--temperature",
+        dest="temperature",
+        type=float,
+        default=None,
+        metavar="TEMPERATURE",
+        help="(Deprecated) A temperature used to generate random displacements.",
     )
     parser.add_argument(
         "--tmax",

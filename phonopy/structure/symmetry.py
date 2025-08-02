@@ -39,6 +39,8 @@ import warnings
 from collections.abc import Sequence
 from typing import Optional
 
+from numpy.typing import NDArray
+
 try:
     from spglib import SpglibDataset
 except ImportError:
@@ -87,11 +89,12 @@ class Symmetry:
         self._international_table = None
         self._dataset = None
         self._wyckoff_letters = None
-        self._map_atoms = None
-        self._atomic_permutations = None
-        self._pointgroup_operations = None
+        self._map_atoms: NDArray
+        self._atomic_permutations: NDArray
+        self._pointgroup_operations: NDArray
+        self._reciprocal_operations: NDArray
         self._pointgroup = None
-        self._independent_atoms = None
+        self._independent_atoms: NDArray
         self._map_operations = None
 
         magmom = cell.magnetic_moments
@@ -202,11 +205,11 @@ class Symmetry:
         )
         return self.dataset
 
-    def get_independent_atoms(self):
+    def get_independent_atoms(self) -> NDArray:
         """Return symmetrically unique atoms."""
         return self._independent_atoms
 
-    def get_map_atoms(self):
+    def get_map_atoms(self) -> NDArray:
         """Return equivalent_atoms of spglib dataset.
 
         Returns
@@ -282,7 +285,7 @@ class Symmetry:
         return self.reciprocal_operations
 
     @property
-    def atomic_permutations(self):
+    def atomic_permutations(self) -> NDArray:
         """Return atomic index permutations by space group operations.
 
         shape=(operations, positions)
@@ -429,7 +432,9 @@ class Symmetry:
         self._wyckoff_letters = ["a"] * len(self._cell)
 
 
-def get_pointgroup_operations(rotations, is_time_reversal=True):
+def get_pointgroup_operations(
+    rotations, is_time_reversal=True
+) -> tuple[NDArray, NDArray]:
     """Return direct and reciprocal point group operations."""
     ptg_ops = collect_unique_rotations(rotations)
     reciprocal_rotations = [rot.T for rot in ptg_ops]

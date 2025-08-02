@@ -1,5 +1,4 @@
 (phonopy_module)=
-
 # Phonopy API for Python
 
 ## Three unit cells
@@ -122,28 +121,48 @@ supercells with displacements are given as a list of `PhonopyAtoms`. See
 {ref}`phonopy_read_write_structure` to write
 those into files in a crystal structure format.
 
-The frequency unit conversion factor to THz has to be set by using the `factor`
-keyword in `Phonopy` class. The factors are `VaspToTHz` for VASP, `Wien2kToTHz`
-for Wien2k, `AbinitToTHz` for Abinit, `PwscfToTHz` for Pwscf, `ElkToTHz` for
-Elk, `SiestaToTHz` for Siesta, `CrystalToTHz` for CRYSTAL, `FleurToTHz` for
-Fleur, `VaspToTHz`, and `DftbpToTHz` for DFTB+ is the default value. For
-example:
+#### Calculators
+If not using the default calculator (`"vasp"`), the `calculator` keyword argument
+must also be set in your instance of `Phonopy` (e.g. `Phonopy(..., calculator="qe")`).
 
-```python
-from phonopy.interface.calculator import get_calculator_physical_units
-
-AbinitToTHz = get_calculator_physical_units(interface_mode='abinit')['factor']
-phonon = Phonopy(unitcell,
-                 supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
-                 primitive_matrix=[[0, 0.5, 0.5],
-                                   [0.5, 0, 0.5],
-                                   [0.5, 0.5, 0]],
-                 factor=AbinitToTHz)
-```
-
-Some more information on physical unit conversion is found at
+The range of supported calculators use different units internally. If not using VASP,
+set `set_factor_by_calculator` to `True` for correct unit conversion. Some more
+information on physical unit conversion is found at
 {ref}`frequency_conversion_factor_tag`, {ref}`physical_unit_conversion`, and
 {ref}`calculator_interfaces`.
+
+#### Pre-processing Example
+
+```python
+import numpy as np
+from phonopy import Phonopy
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.interface.calculator import (
+    read_crystal_structure,
+    write_crystal_structure,
+    get_calculator_physical_units,
+)
+
+calc = "qe"  # Quantum Espresso
+unitcell, optional_structure_info = read_crystal_structure("pw.in",
+    interface_mode=calc)
+
+phonon = Phonopy(unitcell, supercell_matrix=np.eye(3), calculator=calc,
+    set_factor_by_calculator=True)
+
+phonon.generate_displacements(distance=0.03)
+supercells = phonon.supercells_with_displacements
+
+for i, supercell in enumerate(supercells):
+    write_crystal_structure(
+        f"supercell-{i}.in",
+        supercell,
+        interface_mode=calc,
+        optional_structure_info=optional_structure_info,
+    )
+
+phonon.save("phonopy_disp.yaml")
+```
 
 ### Post process
 
@@ -212,7 +231,6 @@ details at {ref}`file_force_constants`.
 ## Phonon calculation
 
 (phonopy_save_parameters)=
-
 ### Save parameters (`phonopy.save`)
 
 Basic information and parameters needed for phonon calculation are saved into a
@@ -222,15 +240,18 @@ file by `phonopy.save`.
 phonon.save()
 ```
 
-The default file name is `phonopy_params.yaml`. Force sets, displacements, Born
-effective charges, and dielectric constant are written in the default behaviour.
-If force constants are needed to be written in the yaml file, the argument
-`settings` is set as follows:
+Force sets, displacements, Born effective charges, and dielectric constant
+are written in the default behaviour.
+
+The default file name is `phonopy_params.yaml`, but this can be changed with the
+`filename` keword argument, which may be necessary if using certain CUI commands
+that expect a particular filename
+
+The force constants can be written as follows:
 
 ```python
 phonon.save(settings={'force_constants': True})
 ```
-
 
 ### Band structure
 
@@ -271,9 +292,9 @@ phonon.run_projected_dos()
 phonon.plot_band_structure_and_dos(pdos_indices=[[0], [1]]).show()
 ```
 
-`path_connections` and `labels` are unnecessary to set unless nice looking
-plotting is needed. To obtain eigenvectors, it is necessary to inform to store
-eigenvectors by:
+`path_connections` and `labels` are optional unless nice looking
+plotting is needed. To obtain eigenvectors, the corresponding
+keyword argument must be set:
 
 ```python
 phonon.run_band_structure(bands, with_eigenvectors=True)
@@ -319,7 +340,7 @@ eigenvectors = mesh_dict['eigenvectors']
 group_velocities = mesh_dict['group_velocities']
 ```
 
-To obtain eigenvectors, it is necessary to inform to store eigenvectors by:
+To obtain eigenvectors, the corresponding keyword argument must be set:
 
 ```python
 phonon.run_mesh([20, 20, 20], with_eigenvectors=True)
@@ -479,14 +500,12 @@ At least three arguments have to be given at the initialization, which are
 - `symbols` or `numbers`
 
 (phonopy_Atoms_variables)=
-
 ### Variables
 
 The following variables are implemented in the `PhonopyAtoms` class in
 `phonopy/structure/atoms.py`.
 
 (phonopy_Atoms_cell)=
-
 #### `cell`
 
 Basis vectors are given in the matrix form in Cartesian coordinates.
