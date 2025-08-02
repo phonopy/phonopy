@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Aug-2-2025: Version 2.43.0
+
+- Maintenance release.
+
 ## Jul-21-2025: Version 2.42.0
 
 - Maintenance release.
