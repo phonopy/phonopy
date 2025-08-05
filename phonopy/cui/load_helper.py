@@ -246,6 +246,8 @@ def select_and_load_dataset(
         _force_sets_filename = "FORCE_SETS"
     else:
         _dataset = dataset
+        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
+            _force_sets_filename = phonopy_yaml_filename
 
     if log_level:
         if forces_in_dataset(_dataset):
