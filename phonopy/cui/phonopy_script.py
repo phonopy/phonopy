@@ -677,10 +677,13 @@ def _produce_force_constants(
     if forces_in_dataset(phonon.dataset):
         is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
         fc_calculator, fc_calculator_options = (
-            _get_fc_calculator_and_options_from_settings(
-                settings, load_phonopy_yaml, phonon.dataset, log_level=log_level
-            )
+            _get_fc_calculator_and_options_from_settings(settings, log_level=log_level)
         )
+        # Set "symfc" for type-II dataset when phonopy-load is called without
+        # specifying fc-calculator.
+        if load_phonopy_yaml and settings.fc_symmetry and fc_calculator is None:
+            fc_calculator = "symfc"
+
         produce_force_constants(
             phonon,
             fc_calculator=fc_calculator,
@@ -692,10 +695,7 @@ def _produce_force_constants(
 
 
 def _get_fc_calculator_and_options_from_settings(
-    settings: Settings,
-    load_phonopy_yaml: bool,
-    dataset: dict | None,
-    log_level: int = 0,
+    settings: Settings, log_level: int = 0
 ) -> tuple[Literal["traditional", "symfc", "alm"] | None, str | None]:
     fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
 
@@ -706,13 +706,6 @@ def _get_fc_calculator_and_options_from_settings(
         if log_level:
             print_error()
         sys.exit(1)
-
-    # Set "symfc" for type-II dataset when phonopy-load is called without
-    # specifying fc-calculator.
-    assert dataset is not None
-    if load_phonopy_yaml and "displacements" in dataset:
-        if settings.fc_symmetry and settings.fc_calculator is None:
-            fc_calculator = "symfc"
 
     return fc_calculator, fc_calculator_options
 
@@ -798,7 +791,7 @@ def _post_process_force_constants(
     # Impose symmetry to force constants
     # For phonopy-load, symfc projector is used otherwise traditional symmetrization.
     fc_calculator, _ = _get_fc_calculator_and_options_from_settings(
-        settings, load_phonopy_yaml, phonon.dataset, log_level=log_level
+        settings, log_level=log_level
     )
     if settings.fc_symmetry:
         if fc_calculator == "traditional":
@@ -2054,73 +2047,76 @@ def main(**argparse_control):
             log_level=log_level,
         )
 
-    ###############
-    # Set dataset #
-    ###############
-    if cell_info.phonopy_yaml is None:
-        phonopy_yaml_dataset = None
-    else:
-        phonopy_yaml_dataset = cell_info.phonopy_yaml.dataset
-
-    phonon.dataset = select_and_load_dataset(
-        len(phonon.supercell),
-        phonopy_yaml_dataset,
-        phonopy_yaml_filename=unitcell_filename,
-        log_level=log_level,
-    )
-
-    ###########################
-    # Prepare polynomial MLPs #
-    ###########################
-    if settings.use_pypolymlp:
-        if phonon.dataset is not None:
-            phonon.mlp_dataset = phonon.dataset
-            phonon.dataset = None
-
-        try:
-            develop_or_load_pypolymlp(
-                phonon, mlp_params=settings.mlp_params, log_level=log_level
-            )
-        except (PypolymlpDevelopmentError, PypolymlpFileNotFoundError) as e:
-            print_error_message(str(e))
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-    ################################################
-    # Relax atomic positions using polynomial MLPs #
-    ################################################
-    if settings.use_pypolymlp and settings.relax_atomic_positions:
-        assert phonon.mlp is not None
-        if log_level:
-            print("Relaxing atomic positions using polynomial MLPs...")
-
-        try:
-            relaxed_unitcell = relax_atomic_positions(
-                phonon.unitcell,
-                phonon.mlp.mlp,
-                verbose=log_level > 1,
-            )
-        except PypolymlpRelaxationError as e:
-            print_error_message(str(e))
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        if log_level:
-            if relaxed_unitcell is None:
-                print("No relaxation was performed due to symmetry constraints.")
-            else:
-                get_change_in_positions(
-                    relaxed_unitcell, phonon.unitcell, verbose=log_level > 0
-                )
-                print("Note: This unit cell is not used in phonon calculations.")
-            print("-" * 76)
-
-    ###########################
-    # Produce force constants #
-    ###########################
+    #####################################################
+    # Calculate force constants from disp-force dataset #
+    #####################################################
     if phonon.force_constants is None:
+        ###############
+        # Set dataset #
+        ###############
+        if cell_info.phonopy_yaml is None:
+            phonopy_yaml_dataset = None
+        else:
+            phonopy_yaml_dataset = cell_info.phonopy_yaml.dataset
+
+        phonon.dataset = select_and_load_dataset(
+            len(phonon.supercell),
+            phonopy_yaml_dataset,
+            phonopy_yaml_filename=unitcell_filename,
+            log_level=log_level,
+        )
+
+        ###########################
+        # Prepare polynomial MLPs #
+        ###########################
+        if settings.use_pypolymlp:
+            if phonon.dataset is not None:
+                phonon.mlp_dataset = phonon.dataset
+                phonon.dataset = None
+
+            try:
+                develop_or_load_pypolymlp(
+                    phonon, mlp_params=settings.mlp_params, log_level=log_level
+                )
+            except (PypolymlpDevelopmentError, PypolymlpFileNotFoundError) as e:
+                print_error_message(str(e))
+                if log_level:
+                    print_error()
+                sys.exit(1)
+
+        ################################################
+        # Relax atomic positions using polynomial MLPs #
+        ################################################
+        if settings.use_pypolymlp and settings.relax_atomic_positions:
+            assert phonon.mlp is not None
+            if log_level:
+                print("Relaxing atomic positions using polynomial MLPs...")
+
+            try:
+                relaxed_unitcell = relax_atomic_positions(
+                    phonon.unitcell,
+                    phonon.mlp.mlp,
+                    verbose=log_level > 1,
+                )
+            except PypolymlpRelaxationError as e:
+                print_error_message(str(e))
+                if log_level:
+                    print_error()
+                sys.exit(1)
+
+            if log_level:
+                if relaxed_unitcell is None:
+                    print("No relaxation was performed due to symmetry constraints.")
+                else:
+                    get_change_in_positions(
+                        relaxed_unitcell, phonon.unitcell, verbose=log_level > 0
+                    )
+                    print("Note: This unit cell is not used in phonon calculations.")
+                print("-" * 76)
+
+        ###########################
+        # Produce force constants #
+        ###########################
         _produce_force_constants(
             phonon,
             settings,
@@ -2129,6 +2125,9 @@ def main(**argparse_control):
             log_level,
         )
 
+    ################################
+    # Post-process force constants #
+    ################################
     if phonon.force_constants is None:
         if log_level:
             print_error()
