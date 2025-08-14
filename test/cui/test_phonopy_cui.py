@@ -30,8 +30,8 @@ class MockArgs:
     conf_filename: str | os.PathLike | None = None
     log_level: int | None = None
     fc_symmetry: bool = True
-    cell_filename: str | None = None
-    create_force_sets: list[str] | None = None
+    cell_filename: str | os.PathLike | None = None
+    create_force_sets: list[str | os.PathLike] | None = None
     frequency_conversion_factor: float | None = None
     is_check_symmetry: bool | None = None
     is_graph_plot: bool | None = None
