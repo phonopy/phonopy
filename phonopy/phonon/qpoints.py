@@ -205,8 +205,6 @@ class QpointsPhonon:
             w.write("\n")
 
     def _run(self):
-        import phonopy._phonopy as phonoc
-
         if self._gv_obj is not None:
             self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._gv_obj.group_velocities
