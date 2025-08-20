@@ -221,7 +221,7 @@ class QpointsPhonon:
         )
         eigenvectors = dynmat
 
-        for i, q in enumerate(self._qpoints):
+        for i, _q in enumerate(self._qpoints):
             dm = dynmat[i]
             if self._with_dynamical_matrices:
                 dynamical_matrices.append(dm)
