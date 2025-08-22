@@ -50,7 +50,9 @@ from phonopy.harmonic.dynamical_matrix import (
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.cells import Primitive
+from phonopy.phonon import acc
 
+import cupy
 
 class QpointsPhonon:
     """Calculate phonons at specified qpoints.
@@ -209,6 +211,29 @@ class QpointsPhonon:
             self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._gv_obj.group_velocities
 
+        if acc.use_acc():
+            self._run_acc()
+        else:
+            self._run_cpu()
+
+    def _run_acc(self):
+        freqs, eigvals, eigvecs, dynmat = acc.run_qpoints_phonon(
+            self._qpoints,
+            self._dynamical_matrix,
+            nac_q_direction=self._nac_q_direction,
+            with_eigenvectors=self._with_eigenvectors,
+            factor=self._factor,
+        )
+
+        self._frequencies = cupy.asnumpy(freqs)
+        self._eigenvalues = cupy.asnumpy(eigvals)
+        if self._with_eigenvectors:
+            self._eigenvectors = cupy.asnumpy(eigvecs)
+
+        if self._with_dynamical_matrices:
+            self._dynamical_matrices = cupy.asnumpy(dynmat)
+
+    def _run_cpu(self):
         if self._with_dynamical_matrices:
             dynamical_matrices = []
 
