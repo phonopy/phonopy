@@ -371,11 +371,6 @@ def _show_pypolymlp_header(mlp_params: str | dict | PypolymlpParams | None = Non
     print("Pypolymlp is a generator of polynomial machine learning potentials.")
     print("Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).")
     print("Pypolymlp is developed at https://github.com/sekocha/pypolymlp.")
-    if mlp_params:
-        print("Parameters:")
-        for k, v in dataclasses.asdict(parse_mlp_params(mlp_params)).items():
-            if v is not None:
-                print(f"  {k}: {v}")
 
 
 def _load_pypolymlp(
