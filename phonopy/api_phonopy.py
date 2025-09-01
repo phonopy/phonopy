@@ -42,8 +42,8 @@ import os
 import sys
 import textwrap
 import warnings
-from collections.abc import Sequence
-from typing import Any, Literal, Optional, Union
+from collections.abc import Callable, Sequence
+from typing import Any, Literal, cast
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -714,7 +714,7 @@ class Phonopy:
         return self._get_forces_energies(target="forces")
 
     @forces.setter
-    def forces(self, sets_of_forces):
+    def forces(self, sets_of_forces: ArrayLike):
         self._set_forces_energies(sets_of_forces, target="forces")
 
     @property
@@ -1073,6 +1073,7 @@ class Phonopy:
         )
 
         if show_drift and self._log_level:
+            assert self._force_constants is not None
             show_drift_force_constants(self._force_constants, primitive=self._primitive)
 
         if self._primitive.masses is not None:
@@ -1193,14 +1194,14 @@ class Phonopy:
             test_size=test_size,
         )
 
-    def save_mlp(self, filename: Optional[str] = None):
+    def save_mlp(self, filename: str | os.PathLike | None = None):
         """Save machine learning potential."""
         if self._mlp is None:
             raise RuntimeError("MLP is not developed yet.")
 
         self._mlp.save(filename=filename)
 
-    def load_mlp(self, filename: Optional[Union[str, bytes, os.PathLike]] = None):
+    def load_mlp(self, filename: str | os.PathLike | None = None):
         """Load machine learning potential."""
         self._mlp = PhonopyMLP(log_level=self._log_level)
         self._mlp.load(filename=filename)
@@ -1540,6 +1541,7 @@ class Phonopy:
             Default is ``band.hdf5``.
 
         """
+        assert self._band_structure is not None
         self._band_structure.write_hdf5(comment=comment, filename=filename)
 
     def write_yaml_band_structure(
@@ -1570,14 +1572,14 @@ class Phonopy:
 
     def init_mesh(
         self,
-        mesh=100.0,
-        shift=None,
-        is_time_reversal=True,
-        is_mesh_symmetry=True,
-        with_eigenvectors=False,
-        with_group_velocities=False,
-        is_gamma_center=False,
-        use_iter_mesh=False,
+        mesh: float | ArrayLike = 100.0,
+        shift: ArrayLike | None = None,
+        is_time_reversal: bool = True,
+        is_mesh_symmetry: bool = True,
+        with_eigenvectors: bool = False,
+        with_group_velocities: bool = False,
+        is_gamma_center: bool = False,
+        use_iter_mesh: bool = False,
     ) -> None:
         """Initialize mesh sampling phonon calculation without starting to run.
 
@@ -1680,13 +1682,13 @@ class Phonopy:
 
     def run_mesh(
         self,
-        mesh=100.0,
-        shift=None,
-        is_time_reversal=True,
-        is_mesh_symmetry=True,
-        with_eigenvectors=False,
-        with_group_velocities=False,
-        is_gamma_center=False,
+        mesh: float | ArrayLike = 100.0,
+        shift: ArrayLike | None = None,
+        is_time_reversal: bool = True,
+        is_mesh_symmetry: bool = True,
+        with_eigenvectors: bool = False,
+        with_group_velocities: bool = False,
+        is_gamma_center: bool = False,
     ) -> None:
         """Run mesh sampling phonon calculation.
 
@@ -1702,6 +1704,7 @@ class Phonopy:
             with_group_velocities=with_group_velocities,
             is_gamma_center=is_gamma_center,
         )
+        assert isinstance(self._mesh, Mesh)
         self._mesh.run()
 
     def get_mesh_dict(self) -> dict:
@@ -1741,32 +1744,41 @@ class Phonopy:
                 shape=(ir-grid points, bands, 3)
 
         """
-        if self._mesh is None:
-            msg = "run_mesh has to be done."
+        if isinstance(self._mesh, Mesh):
+            retdict = {
+                "qpoints": self._mesh.qpoints,
+                "weights": self._mesh.weights,
+                "frequencies": self._mesh.frequencies,
+                "eigenvectors": self._mesh.eigenvectors,
+                "group_velocities": self._mesh.group_velocities,
+            }
+        elif isinstance(self._mesh, IterMesh):
+            retdict = {"qpoints": self._mesh.qpoints, "weights": self._mesh.weights}
+        else:
+            msg = "Mesh is not initialized."
             raise RuntimeError(msg)
-
-        retdict = {
-            "qpoints": self._mesh.qpoints,
-            "weights": self._mesh.weights,
-            "frequencies": self._mesh.frequencies,
-            "eigenvectors": self._mesh.eigenvectors,
-            "group_velocities": self._mesh.group_velocities,
-        }
 
         return retdict
 
     def write_hdf5_mesh(self) -> None:
         """Write mesh calculation results in hdf5 format."""
+        if not isinstance(self._mesh, Mesh):
+            msg = "Mesh is not initialized."
+            raise RuntimeError(msg)
         self._mesh.write_hdf5()
 
     def write_yaml_mesh(self) -> None:
         """Write mesh calculation results in yaml format."""
+        if not isinstance(self._mesh, Mesh):
+            msg = "Mesh is not initialized."
+            raise RuntimeError(msg)
         self._mesh.write_yaml()
 
     # Plot band structure and DOS (PDOS) together
     def plot_band_structure_and_dos(self, pdos_indices=None):
         """Plot band structure and DOS."""
         import matplotlib.pyplot as plt
+        from matplotlib.axes import Axes
 
         if self._total_dos is None and pdos_indices is None:
             msg = "run_total_dos has to be done."
@@ -1785,12 +1797,14 @@ class Phonopy:
             gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
             ax2 = plt.subplot(gs[0, 1])
             if pdos_indices is None:
+                assert self._total_dos is not None
                 self._total_dos.plot(ax2, ylabel="", draw_grid=False, flip_xy=True)
             else:
+                assert self._pdos is not None
                 self._pdos.plot(
                     ax2, indices=pdos_indices, ylabel="", draw_grid=False, flip_xy=True
                 )
-            ax2.set_xlim((0, None))
+            ax2.set_xlim(left=0, right=None)
             plt.setp(ax2.get_yticklabels(), visible=False)
 
             ax1 = plt.subplot(gs[0, 0], sharey=ax2)
@@ -1813,10 +1827,12 @@ class Phonopy:
             self._band_structure.plot(axs[:-1])
 
             if pdos_indices is None:
+                assert self._total_dos is not None
                 self._total_dos.plot(
                     axs[-1], xlabel="", ylabel="", draw_grid=False, flip_xy=True
                 )
             else:
+                assert self._pdos is not None
                 self._pdos.plot(
                     axs[-1],
                     indices=pdos_indices,
@@ -1825,12 +1841,13 @@ class Phonopy:
                     draw_grid=False,
                     flip_xy=True,
                 )
-            xlim = axs[-1].get_xlim()
-            ylim = axs[-1].get_ylim()
+            last_axs = cast(Axes, axs[-1])
+            xlim = last_axs.get_xlim()
+            ylim = last_axs.get_ylim()
             aspect = (xlim[1] - xlim[0]) / (ylim[1] - ylim[0]) * 3
-            axs[-1].set_aspect(aspect)
-            axs[-1].axhline(y=0, linestyle=":", linewidth=0.5, color="b")
-            axs[-1].set_xlim((0, None))
+            last_axs.set_aspect(aspect)
+            last_axs.axhline(y=0, linestyle=":", linewidth=0.5, color="b")
+            last_axs.set_xlim(left=0, right=None)
 
         return plt
 
@@ -1925,10 +1942,16 @@ class Phonopy:
 
     def write_hdf5_qpoints_phonon(self) -> None:
         """Write phonon properties calculated at q-points in hdf5 format."""
+        if self._qpoints is None:
+            msg = "Phonopy.run_qpoints() has to be done."
+            raise RuntimeError(msg)
         self._qpoints.write_hdf5()
 
     def write_yaml_qpoints_phonon(self) -> None:
         """Write phonon properties calculated at q-points in yaml format."""
+        if self._qpoints is None:
+            msg = "Phonopy.run_qpoints() has to be done."
+            raise RuntimeError(msg)
         self._qpoints.write_yaml()
 
     # DOS
@@ -2010,23 +2033,35 @@ class Phonopy:
             shape=(frequency_sampling_points, ), dtype='double'
 
         """
+        if self._total_dos is None:
+            msg = "run_total_dos has to be done before getting total DOS."
+            raise RuntimeError(msg)
         return {
             "frequency_points": self._total_dos.frequency_points,
             "total_dos": self._total_dos.dos,
         }
 
-    def set_Debye_frequency(self, freq_max_fit=None) -> None:
+    def set_Debye_frequency(self, freq_max_fit: float | None = None) -> None:
         """Calculate Debye frequency on top of total DOS."""
+        if self._total_dos is None:
+            msg = "run_total_dos has to be done before getting total DOS."
+            raise RuntimeError(msg)
         self._total_dos.set_Debye_frequency(
             len(self._primitive), freq_max_fit=freq_max_fit
         )
 
-    def get_Debye_frequency(self) -> float:
+    def get_Debye_frequency(self) -> float | None:
         """Return Debye frequency."""
+        if self._total_dos is None:
+            msg = "run_total_dos has to be done before getting total DOS."
+            raise RuntimeError(msg)
         return self._total_dos.get_Debye_frequency()
 
     def plot_total_dos(
-        self, xlabel=None, ylabel=None, with_tight_frequency_range=False
+        self,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
+        with_tight_frequency_range: bool = False,
     ):
         """Plot total DOS.
 
@@ -2048,27 +2083,30 @@ class Phonopy:
         self._total_dos.plot(ax, xlabel=xlabel, ylabel=ylabel, draw_grid=False)
         if with_tight_frequency_range:
             fmin, fmax = get_dos_frequency_range(
-                self._pdos.frequency_points, self._total_dos.dos
+                self._total_dos.frequency_points, self._total_dos.dos
             )
-            ax.set_xlim(fmin, fmax)
-        ax.set_ylim((0, None))
+            ax.set_xlim(left=fmin, right=fmax)
+        ax.set_ylim(bottom=0, top=None)
 
         return plt
 
-    def write_total_dos(self, filename="total_dos.dat") -> None:
+    def write_total_dos(self, filename: str | os.PathLike = "total_dos.dat") -> None:
         """Write total DOS to text file."""
+        if self._total_dos is None:
+            msg = "run_total_dos has to be done before writing total DOS."
+            raise RuntimeError(msg)
         self._total_dos.write(filename=filename)
 
     # PDOS
     def run_projected_dos(
         self,
-        sigma=None,
-        freq_min=None,
-        freq_max=None,
-        freq_pitch=None,
-        use_tetrahedron_method=True,
-        direction=None,
-        xyz_projection=False,
+        sigma: float | None = None,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+        freq_pitch: float | None = None,
+        use_tetrahedron_method: bool = True,
+        direction: np.ndarray | None = None,
+        xyz_projection: bool = False,
     ) -> None:
         """Run projected DOS calculation.
 
@@ -2098,6 +2136,10 @@ class Phonopy:
             msg = "run_mesh has to be done before PDOS calculation."
             raise RuntimeError(msg)
 
+        if isinstance(self._mesh, IterMesh):
+            msg = "IterMesh does not support projected DOS calculation."
+            raise RuntimeError(msg)
+
         if not self._mesh.with_eigenvectors:
             msg = "run_mesh has to be called with with_eigenvectors=True."
             raise RuntimeError(msg)
@@ -2122,19 +2164,19 @@ class Phonopy:
 
     def auto_projected_dos(
         self,
-        mesh=100.0,
-        is_time_reversal=True,
-        is_gamma_center=False,
-        plot=False,
-        pdos_indices=None,
-        legend=None,
-        legend_prop=None,
-        legend_frameon=True,
-        xlabel=None,
-        ylabel=None,
-        with_tight_frequency_range=False,
-        write_dat=False,
-        filename="projected_dos.dat",
+        mesh: float | ArrayLike = 100.0,
+        is_time_reversal: bool = True,
+        is_gamma_center: bool = False,
+        plot: bool = False,
+        pdos_indices: Sequence[int] | None = None,
+        legend: Sequence[str] | None = None,
+        legend_prop: dict | None = None,
+        legend_frameon: bool = True,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
+        with_tight_frequency_range: bool = False,
+        write_dat: bool = False,
+        filename: str | os.PathLike = "projected_dos.dat",
     ) -> Any | None:
         """Conveniently calculate and draw projected DOS.
 
@@ -2197,6 +2239,9 @@ class Phonopy:
             shape=(projections, frequency_sampling_points), dtype='double'
 
         """
+        if self._pdos is None:
+            msg = "run_projected_dos has to be done before getting projected DOS."
+            raise RuntimeError(msg)
         return {
             "frequency_points": self._pdos.frequency_points,
             "projected_dos": self._pdos.projected_dos,
@@ -2204,13 +2249,13 @@ class Phonopy:
 
     def plot_projected_dos(
         self,
-        pdos_indices=None,
-        legend=None,
-        legend_prop=None,
-        legend_frameon=True,
-        xlabel=None,
-        ylabel=None,
-        with_tight_frequency_range=False,
+        pdos_indices: Sequence[int] | None = None,
+        legend: Sequence[str] | None = None,
+        legend_prop: dict | None = None,
+        legend_frameon: bool = True,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
+        with_tight_frequency_range: bool = False,
     ):
         """Plot projected DOS.
 
@@ -2240,6 +2285,10 @@ class Phonopy:
         """
         import matplotlib.pyplot as plt
 
+        if self._pdos is None:
+            msg = "run_projected_dos has to be done before plotting projected DOS."
+            raise RuntimeError(msg)
+
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position("both")
         ax.yaxis.set_ticks_position("both")
@@ -2258,30 +2307,36 @@ class Phonopy:
         )
 
         if with_tight_frequency_range:
+            assert self._pdos.projected_dos is not None
             fmin, fmax = get_dos_frequency_range(
                 self._pdos.frequency_points, self._pdos.projected_dos.sum(axis=0)
             )
-            ax.set_xlim(fmin, fmax)
-        ax.set_ylim((0, None))
+            ax.set_xlim(left=fmin, right=fmax)
+        ax.set_ylim(bottom=0, top=None)
 
         return plt
 
-    def write_projected_dos(self, filename="projected_dos.dat") -> None:
+    def write_projected_dos(
+        self, filename: str | os.PathLike = "projected_dos.dat"
+    ) -> None:
         """Write projected DOS to text file."""
+        if self._pdos is None:
+            msg = "run_projected_dos has to be done before writing projected DOS."
+            raise RuntimeError(msg)
         self._pdos.write(filename=filename)
 
     # Thermal property
     def run_thermal_properties(
         self,
-        t_min=0,
-        t_max=1000,
-        t_step=10,
-        temperatures=None,
-        cutoff_frequency=None,
-        pretend_real=False,
-        band_indices=None,
-        is_projection=False,
-        classical=False,
+        t_min: float = 0,
+        t_max: float = 1000,
+        t_step: float = 10,
+        temperatures: ArrayLike | None = None,
+        cutoff_frequency: float | None = None,
+        pretend_real: bool = False,
+        band_indices: ArrayLike | None = None,
+        is_projection: bool = False,
+        classical: bool = False,
     ) -> None:
         """Run calculation of thermal properties at constant volume.
 
@@ -2322,6 +2377,10 @@ class Phonopy:
             msg = "run_mesh has to be done before run_thermal_properties."
             raise RuntimeError(msg)
 
+        if not isinstance(self._mesh, Mesh):
+            msg = "IterMesh is not supported for thermal properties."
+            raise RuntimeError(msg)
+
         tp = ThermalProperties(
             self._mesh,
             cutoff_frequency=cutoff_frequency,
@@ -2356,16 +2415,25 @@ class Phonopy:
             shape=(temperatures, ), dtype='double'
 
         """
+        if self._thermal_properties is None:
+            msg = (
+                "run_thermal_properties has to be done before "
+                "getting thermal properties."
+            )
+            raise RuntimeError(msg)
+
+        assert self._thermal_properties.thermal_properties is not None
+
         keys = ("temperatures", "free_energy", "entropy", "heat_capacity")
         return dict(zip(keys, self._thermal_properties.thermal_properties))
 
     def plot_thermal_properties(
         self,
-        xlabel: Optional[str] = None,
-        ylabel: Optional[str] = None,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
         with_grid: bool = True,
         divide_by_Z: bool = False,
-        legend_style: Optional[str] = "normal",
+        legend_style: str | None = "normal",
     ):
         """Plot thermal properties.
 
@@ -2386,7 +2454,10 @@ class Phonopy:
         """
         import matplotlib.pyplot as plt
 
-        if self._thermal_properties is None:
+        if (
+            self._thermal_properties is None
+            or self._thermal_properties.temperatures is None
+        ):
             msg = "run_thermal_properties has to be done."
             raise RuntimeError(msg)
 
@@ -2409,24 +2480,29 @@ class Phonopy:
         )
 
         temps = self._thermal_properties.temperatures
-        ax.set_xlim((0, temps[-1]))
+        ax.set_xlim(left=0, right=temps[-1])
 
         return plt
 
-    def write_yaml_thermal_properties(self, filename="thermal_properties.yaml") -> None:
+    def write_yaml_thermal_properties(
+        self, filename: str | os.PathLike = "thermal_properties.yaml"
+    ) -> None:
         """Write thermal properties in yaml format."""
+        if self._thermal_properties is None:
+            msg = "run_thermal_properties has to be done."
+            raise RuntimeError(msg)
         self._thermal_properties.write_yaml(filename=filename)
 
     # Thermal displacement
     def run_thermal_displacements(
         self,
-        t_min=0,
-        t_max=1000,
-        t_step=10,
-        temperatures=None,
-        direction=None,
-        freq_min=None,
-        freq_max=None,
+        t_min: float = 0,
+        t_max: float = 1000,
+        t_step: float = 10,
+        temperatures: ArrayLike | None = None,
+        direction: ArrayLike | None = None,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
     ) -> None:
         """Run thermal displacements calculation.
 
@@ -2493,9 +2569,13 @@ class Phonopy:
             "thermal_displacements": td.thermal_displacements,
         }
 
-    def plot_thermal_displacements(self, is_legend=False):
+    def plot_thermal_displacements(self, is_legend: bool = False):
         """Plot thermal displacements."""
         import matplotlib.pyplot as plt
+
+        if self._thermal_displacements is None:
+            msg = "run_thermal_displacements has to be done."
+            raise RuntimeError(msg)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position("both")
@@ -2505,24 +2585,28 @@ class Phonopy:
 
         self._thermal_displacements.plot(plt, is_legend=is_legend)
 
-        temps, _ = self._thermal_displacements.get_thermal_displacements()
-        ax.set_xlim((0, temps[-1]))
+        assert self._thermal_displacements.temperatures is not None
+        temps = self._thermal_displacements.temperatures
+        ax.set_xlim(left=0, right=temps[-1])
 
         return plt
 
     def write_yaml_thermal_displacements(self) -> None:
         """Write thermal displacements in yaml format."""
+        if self._thermal_displacements is None:
+            msg = "run_thermal_displacements has to be done."
+            raise RuntimeError(msg)
         self._thermal_displacements.write_yaml()
 
     # Thermal displacement matrix
     def run_thermal_displacement_matrices(
         self,
-        t_min=0,
-        t_max=1000,
-        t_step=10,
-        temperatures=None,
-        freq_min=None,
-        freq_max=None,
+        t_min: float = 0,
+        t_max: float = 1000,
+        t_step: float = 10,
+        temperatures: ArrayLike | None = None,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
     ) -> None:
         """Run thermal displacement matrices calculation.
 
@@ -2585,10 +2669,16 @@ class Phonopy:
 
     def write_yaml_thermal_displacement_matrices(self) -> None:
         """Write thermal displacement matrices in yaml format."""
+        if self._thermal_displacement_matrices is None:
+            msg = "run_thermal_displacement_matrices has to be done."
+            raise RuntimeError(msg)
         self._thermal_displacement_matrices.write_yaml()
 
     def write_thermal_displacement_matrix_to_cif(self, temperature_index) -> None:
-        """Write thermal displacement matrices at a termperature in cif."""
+        """Write thermal displacement matrices at a temperature in cif."""
+        if self._thermal_displacement_matrices is None:
+            msg = "run_thermal_displacement_matrices has to be done."
+            raise RuntimeError(msg)
         self._thermal_displacement_matrices.write_cif(
             self._primitive, temperature_index
         )
@@ -2689,6 +2779,9 @@ class Phonopy:
             Modulated structures.
 
         """
+        if self._modulation is None:
+            msg = "run_modulations has to be done before getting modulated supercells."
+            raise RuntimeError(msg)
         return self._modulation.get_modulated_supercells()
 
     def get_modulations_and_supercell(self) -> tuple[np.ndarray, PhonopyAtoms]:
@@ -2700,10 +2793,16 @@ class Phonopy:
         supercell: Supercell as an PhonopyAtoms instance.
 
         """
+        if self._modulation is None:
+            msg = "run_modulations has to be done before getting modulations."
+            raise RuntimeError(msg)
         return self._modulation.get_modulations_and_supercell()
 
     def write_modulations(self, calculator=None, optional_structure_info=None) -> None:
         """Write modulated structures to MPOSCAR's."""
+        if self._modulation is None:
+            msg = "run_modulations has to be done before writing modulations."
+            raise RuntimeError(msg)
         self._modulation.write(
             interface_mode=calculator,
             optional_structure_info=optional_structure_info,
@@ -2711,16 +2810,19 @@ class Phonopy:
 
     def write_yaml_modulations(self) -> None:
         """Write atomic modulations in yaml format."""
+        if self._modulation is None:
+            msg = "run_modulations has to be done before writing modulations."
+            raise RuntimeError(msg)
         self._modulation.write_yaml()
 
     # Irreducible representation
     def set_irreps(
         self,
-        q,
-        is_little_cogroup=False,
-        nac_q_direction=None,
-        degeneracy_tolerance=1e-4,
-    ) -> None:
+        q: ArrayLike,
+        is_little_cogroup: bool = False,
+        nac_q_direction: ArrayLike | None = None,
+        degeneracy_tolerance: float | None = None,
+    ):
         """Identify ir-reps of phonon modes.
 
         The design of this API is not very satisfactory and is expceted
@@ -2749,63 +2851,82 @@ class Phonopy:
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level,
         )
+        self._irreps.run()
 
-        return self._irreps.run()
-
-    def show_irreps(self, show_irreps=False) -> None:
+    def show_irreps(self, show_irreps: bool = False) -> None:
         """Show Ir-reps."""
+        if self._irreps is None:
+            msg = "set_irreps has to be done before showing Ir-reps."
+            raise RuntimeError(msg)
         self._irreps.show(show_irreps=show_irreps)
 
-    def write_yaml_irreps(self, show_irreps=False) -> None:
+    def write_yaml_irreps(self, show_irreps: bool = False) -> None:
         """Write Ir-reps in yaml format."""
+        if self._irreps is None:
+            msg = "set_irreps has to be done before writing Ir-reps."
+            raise RuntimeError(msg)
         self._irreps.write_yaml(show_irreps=show_irreps)
 
-    def get_group_velocity_at_q(self, q_point) -> np.ndarray:
+    def get_group_velocity_at_q(self, q_point: ArrayLike) -> NDArray:
         """Return group velocity at a q-point."""
         if self._group_velocity is None:
             self._set_group_velocity()
+        assert self._group_velocity is not None
         self._group_velocity.run([q_point])
+        assert self._group_velocity.group_velocities is not None
         return self._group_velocity.group_velocities[0]
 
     # Moment
     def run_moment(
-        self, order=1, is_projection=False, freq_min=None, freq_max=None
-    ) -> None:
+        self,
+        order: int = 1,
+        is_projection: bool = False,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+    ):
         """Run moment calculation."""
         if self._mesh is None:
             msg = "run_mesh has to be done before run_moment."
             raise RuntimeError(msg)
-        else:
-            if is_projection:
-                if self._mesh.eigenvectors is None:
-                    return RuntimeError(
-                        "run_mesh has to be done with with_eigenvectors=True."
-                    )
-                self._moment = PhononMoment(
-                    self._mesh.frequencies,
-                    weights=self._mesh.weights,
-                    eigenvectors=self._mesh.eigenvectors,
-                )
-            else:
-                self._moment = PhononMoment(
-                    self._mesh.get_frequencies(), weights=self._mesh.get_weights()
-                )
-            if freq_min is not None or freq_max is not None:
-                self._moment.set_frequency_range(freq_min=freq_min, freq_max=freq_max)
-            self._moment.run(order=order)
 
-    def get_moment(self) -> Optional[float]:
+        if isinstance(self._mesh, IterMesh):
+            msg = "IterMesh is not supported for moment calculation."
+            raise RuntimeError(msg)
+
+        if is_projection:
+            if self._mesh.eigenvectors is None:
+                raise RuntimeError(
+                    "run_mesh has to be done with with_eigenvectors=True."
+                )
+            self._moment = PhononMoment(
+                self._mesh.frequencies,
+                weights=self._mesh.weights,
+                eigenvectors=self._mesh.eigenvectors,
+            )
+        else:
+            self._moment = PhononMoment(
+                self._mesh.frequencies, weights=self._mesh.weights
+            )
+        if freq_min is not None or freq_max is not None:
+            self._moment.set_frequency_range(freq_min=freq_min, freq_max=freq_max)
+        self._moment.run(order=order)
+
+    def get_moment(self) -> float | NDArray | None:
         """Return moment."""
+        if self._moment is None:
+            msg = "run_moment has to be done before getting moment."
+            raise RuntimeError(msg)
+
         return self._moment.moment
 
     def init_dynamic_structure_factor(
         self,
-        Qpoints,
-        T,
-        atomic_form_factor_func=None,
-        scattering_lengths=None,
-        freq_min=None,
-        freq_max=None,
+        Qpoints: ArrayLike,
+        T: float,
+        atomic_form_factor_func: Callable | None = None,
+        scattering_lengths: dict | None = None,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
     ) -> None:
         """Initialize dynamic structure factor calculation.
 
@@ -2892,10 +3013,17 @@ class Phonopy:
             freq_min=freq_min,
             freq_max=freq_max,
         )
+        assert self._dynamic_structure_factor is not None
         self._dynamic_structure_factor.run()
 
-    def get_dynamic_structure_factor(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_dynamic_structure_factor(self) -> tuple[NDArray, NDArray]:
         """Return dynamic structure factors."""
+        if self._dynamic_structure_factor is None:
+            msg = (
+                "run_dynamic_structure_factor has to be done before "
+                "getting dynamic structure factor."
+            )
+            raise RuntimeError(msg)
         return (
             self._dynamic_structure_factor.qpoints,
             self._dynamic_structure_factor.dynamic_structure_factors,
@@ -2903,9 +3031,9 @@ class Phonopy:
 
     def init_random_displacements(
         self,
-        dist_func: Optional[str] = None,
-        cutoff_frequency: Optional[float] = None,
-        max_distance: Optional[float] = None,
+        dist_func: str | None = None,
+        cutoff_frequency: float | None = None,
+        max_distance: float | None = None,
     ) -> None:
         """Initialize random displacements at finite temperature.
 
@@ -2923,7 +3051,11 @@ class Phonopy:
             by d -> d / |d| * max_distance if |d| > max_distance.
 
         """
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
+
+        if self._force_constants is None:
+            msg = "Force constants have not yet been set."
+            raise RuntimeError(msg)
 
         self._random_displacements = RandomDisplacements(
             self._supercell,
@@ -2941,7 +3073,7 @@ class Phonopy:
         temperature: float,
         number_of_snapshots: int,
         is_plusminus: bool = False,
-        random_seed: Optional[int] = None,
+        random_seed: int | None = None,
     ) -> np.ndarray:
         """Generate random displacements from phonon structure.
 
@@ -2981,10 +3113,10 @@ class Phonopy:
 
     def save(
         self,
-        filename="phonopy_params.yaml",
-        settings=None,
-        hdf5_settings=None,
-        compression: Union[str, bool] = False,
+        filename: str | os.PathLike = "phonopy_params.yaml",
+        settings: dict | None = None,
+        hdf5_settings: dict | None = None,
+        compression: str | bool = False,
     ) -> str:
         """Save phonopy parameters into file.
 
@@ -3042,12 +3174,12 @@ class Phonopy:
                 w.write(str(phpy_yaml))
         else:
             with open(filename, "w") as w:
-                out_filename = filename
+                out_filename = str(filename)
                 w.write(str(phpy_yaml))
 
         return out_filename
 
-    def ph2ph(self, supercell_matrix, with_nac=False) -> Phonopy:
+    def ph2ph(self, supercell_matrix: ArrayLike, with_nac: bool = False) -> Phonopy:
         """Transform force constants in Phonopy class instance to other shape.
 
         Fourier interpolation of force constants is performed. This Phonopy
@@ -3082,7 +3214,7 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants are not prepared.")
 
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
         fc_shape = self._force_constants.shape
         ph_copy = self._copy()
@@ -3107,7 +3239,7 @@ class Phonopy:
 
         return ph
 
-    def copy(self, log_level=None) -> Phonopy:
+    def copy(self, log_level: int | None = None) -> Phonopy:
         """Copy this Phonopy class instance with init parameters.
 
         Note
@@ -3127,7 +3259,9 @@ class Phonopy:
     ###################
     # private methods #
     ###################
-    def _copy(self, supercell_matrix=None, log_level=None) -> Phonopy:
+    def _copy(
+        self, supercell_matrix: ArrayLike | None = None, log_level: int | None = None
+    ) -> Phonopy:
         """Copy this Phonopy class instance with init parameters.
 
         Parameters
@@ -3173,9 +3307,9 @@ class Phonopy:
         is_compact_fc: bool = False,
         fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
         fc_calculator_options: str | None = None,
-        decimals: Optional[int] = None,
+        decimals: int | None = None,
         log_level: int = 0,
-    ) -> None:
+    ):
         if self._dataset is None:
             return None
 
@@ -3192,8 +3326,8 @@ class Phonopy:
         if decimals:
             self._force_constants = self._force_constants.round(decimals=decimals)
 
-    def _set_dynamical_matrix(self) -> None:
-        import phonopy._phonopy as phonoc
+    def _set_dynamical_matrix(self):
+        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
         self._dynamical_matrix = None
 
@@ -3238,7 +3372,7 @@ class Phonopy:
         if self._group_velocity is not None:
             self._set_group_velocity()
 
-    def _set_group_velocity(self) -> None:
+    def _set_group_velocity(self):
         if self._dynamical_matrix is None:
             raise RuntimeError("Dynamical matrix has not yet built.")
 
@@ -3266,7 +3400,7 @@ class Phonopy:
             frequency_factor_to_THz=self._unit_conversion_factor,
         )
 
-    def _search_symmetry(self) -> None:
+    def _search_symmetry(self):
         self._symmetry = Symmetry(
             self._supercell,
             self._symprec,
@@ -3274,7 +3408,7 @@ class Phonopy:
             s2p_map=self._primitive.s2p_map,
         )
 
-    def _search_primitive_symmetry(self) -> None:
+    def _search_primitive_symmetry(self):
         self._primitive_symmetry = Symmetry(
             self._primitive, self._symprec, self._is_symmetry
         )
@@ -3282,12 +3416,14 @@ class Phonopy:
         if len(self._symmetry.pointgroup_operations) != len(
             self._primitive_symmetry.pointgroup_operations
         ):
-            print(
+            warnings.warn(
                 "Warning: Point group symmetries of supercell and primitive"
-                "cell are different."
+                "cell are different.",
+                UserWarning,
+                stacklevel=2,
             )
 
-    def _build_supercell(self) -> None:
+    def _build_supercell(self):
         self._supercell = get_supercell(
             self._unitcell,
             self._supercell_matrix,
@@ -3295,8 +3431,9 @@ class Phonopy:
             symprec=self._symprec,
         )
 
-    def _build_supercells_with_displacements(self) -> None:
+    def _build_supercells_with_displacements(self):
         all_positions = []
+        assert self._dataset is not None
         if "first_atoms" in self._dataset:  # type-1
             for disp in self._dataset["first_atoms"]:
                 positions = self._supercell.positions
@@ -3321,7 +3458,7 @@ class Phonopy:
             )
         self._supercells_with_displacements = supercells
 
-    def _build_primitive_cell(self) -> None:
+    def _build_primitive_cell(self):
         """Create primitive cell.
 
         primitive_matrix:
@@ -3396,10 +3533,11 @@ class Phonopy:
         raise RuntimeError(f"{target} is not found in displacement-force dataset.")
 
     def _set_forces_energies(
-        self, values, target: Literal["forces", "supercell_energies"]
+        self, values: ArrayLike, target: Literal["forces", "supercell_energies"]
     ):
+        assert self._dataset is not None
         if "first_atoms" in self._dataset:  # type-1
-            for disp, v in zip(self._dataset["first_atoms"], values):
+            for disp, v in zip(self._dataset["first_atoms"], values):  # type: ignore
                 if target == "forces":
                     disp[target] = np.array(v, dtype="double", order="C")
                 elif target == "supercell_energies":

@@ -40,6 +40,7 @@ import datetime
 import os
 import pathlib
 import sys
+from typing import Literal
 
 import numpy as np
 import spglib
@@ -48,8 +49,9 @@ from phonopy import Phonopy, __version__
 from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, get_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
+    develop_or_load_pypolymlp,
     get_nac_params,
-    prepare_pypolymlp_and_dataset,
+    prepare_dataset_by_pypolymlp,
     produce_force_constants,
     select_and_extract_force_constants,
     select_and_load_dataset,
@@ -59,9 +61,11 @@ from phonopy.cui.settings import PhonopyConfParser, PhonopySettings, Settings
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.exception import (
     CellNotFoundError,
-    ForceCalculatorRequiredError,
+    ForceConstantsCalculatorNotFoundError,
     MagmomValueError,
+    PypolymlpDevelopmentError,
     PypolymlpFileNotFoundError,
+    PypolymlpRelaxationError,
 )
 from phonopy.file_IO import (
     get_supported_file_extensions_for_compression,
@@ -81,9 +85,11 @@ from phonopy.interface.fc_calculator import (
     fc_calculator_names,
 )
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.pypolymlp import get_change_in_positions, relax_atomic_positions
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import get_pdos_indices
+from phonopy.phonon.mesh import Mesh
 from phonopy.physical_units import get_physical_units
 from phonopy.sscha.core import MLPSSCHA
 from phonopy.structure.atoms import atom_data, symbol_map
@@ -515,6 +521,7 @@ def _print_settings(
         print("  Supercell: %s" % np.diag(supercell_matrix))
     if is_primitive_axes_auto or _is_band_auto(settings):
         print("  Primitive matrix (Auto):")
+        assert primitive_matrix is not None
         for v in primitive_matrix:
             print("    %s" % v)
     elif primitive_matrix is not None:
@@ -630,8 +637,6 @@ def _create_FORCE_SETS_from_settings(
 def _produce_force_constants(
     phonon: Phonopy,
     settings: PhonopySettings,
-    phonopy_yaml: PhonopyYaml | None,
-    phonopy_yaml_filename: str | os.PathLike | None,
     confs: dict,
     load_phonopy_yaml: bool,
     log_level: int,
@@ -641,55 +646,17 @@ def _produce_force_constants(
     Return True if force constants are created.
 
     """
-    # Read dataset
-    if phonopy_yaml is None:
-        phonopy_yaml_dataset = None
-    else:
-        phonopy_yaml_dataset = phonopy_yaml.dataset
-
-    phonon.dataset = select_and_load_dataset(
-        len(phonon.supercell),
-        phonopy_yaml_dataset,
-        phonopy_yaml_filename=phonopy_yaml_filename,
-        log_level=log_level,
-    )
-
-    # polynomial MLPs
     if settings.use_pypolymlp:
-        prepare_dataset = (
-            settings.create_displacements or settings.random_displacements is not None
-        )
-        if phonon.dataset is not None:
-            phonon.mlp_dataset = phonon.dataset
-            phonon.dataset = None
-        try:
-            prepare_pypolymlp_and_dataset(
+        if settings.create_displacements or settings.random_displacements is not None:
+            prepare_dataset_by_pypolymlp(
                 phonon,
-                mlp_params=settings.mlp_params,
                 displacement_distance=settings.displacement_distance,
                 number_of_snapshots=settings.random_displacements,
-                random_seed=settings.random_seed,
                 rd_number_estimation_factor=settings.rd_number_estimation_factor,
-                prepare_dataset=prepare_dataset,
+                random_seed=settings.random_seed,
                 log_level=log_level,
             )
-        except PypolymlpFileNotFoundError as e:
-            print_error_message(str(e))
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        if phonon.dataset is not None:
-            mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
-            if log_level:
-                print(
-                    "Dataset generated using MMLPs was written in "
-                    f'"{mlp_eval_filename}".'
-                )
-            phonon.save(mlp_eval_filename)
-
-        # pypolymlp dataset is stored in "polymlp.yaml" and stop here.
-        if not prepare_dataset:
+        else:
             if log_level:
                 print(
                     "Use --rd or -d option for running phonon "
@@ -698,30 +665,49 @@ def _produce_force_constants(
 
             _finalize_phonopy(log_level, settings, confs, phonon)
 
-    if forces_in_dataset(phonon.dataset):
-        try:
-            is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-            fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
-            fc_calculator = check_and_cast_fc_calculator_name(fc_calculator)
-            # Set "symfc" for type-II dataset when phonopy-load is called without
-            # specifying fc-calculator.
-            assert phonon.dataset is not None
-            if load_phonopy_yaml and "displacements" in phonon.dataset:
-                if settings.fc_symmetry and settings.fc_calculator is None:
-                    fc_calculator = "symfc"
-            produce_force_constants(
-                phonon,
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-                symmetrize_fc=False,  # treated in _post_process_force_constants
-                is_compact_fc=(not is_full_fc),
-                log_level=log_level,
-            )
-        except (RuntimeError, ValueError, ForceCalculatorRequiredError) as e:
-            print_error_message(str(e))
+        if phonon.dataset is not None:
+            mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
             if log_level:
-                print_error()
-            sys.exit(1)
+                print(
+                    "Dataset generated using MLPs was written in "
+                    f'"{mlp_eval_filename}".'
+                )
+            phonon.save(mlp_eval_filename)
+
+    if forces_in_dataset(phonon.dataset):
+        is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
+        fc_calculator, fc_calculator_options = (
+            _get_fc_calculator_and_options_from_settings(settings, log_level=log_level)
+        )
+        # Set "symfc" for type-II dataset when phonopy-load is called without
+        # specifying fc-calculator.
+        if load_phonopy_yaml and settings.fc_symmetry and fc_calculator is None:
+            fc_calculator = "symfc"
+
+        produce_force_constants(
+            phonon,
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options,
+            symmetrize_fc=False,  # treated in _post_process_force_constants
+            is_compact_fc=(not is_full_fc),
+            log_level=log_level,
+        )
+
+
+def _get_fc_calculator_and_options_from_settings(
+    settings: Settings, log_level: int = 0
+) -> tuple[Literal["traditional", "symfc", "alm"] | None, str | None]:
+    fc_calculator, fc_calculator_options = _get_fc_calculator_params(settings)
+
+    try:
+        fc_calculator = check_and_cast_fc_calculator_name(fc_calculator)
+    except ForceConstantsCalculatorNotFoundError as e:
+        print_error_message(str(e))
+        if log_level:
+            print_error()
+        sys.exit(1)
+
+    return fc_calculator, fc_calculator_options
 
 
 def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
@@ -804,7 +790,9 @@ def _post_process_force_constants(
 
     # Impose symmetry to force constants
     # For phonopy-load, symfc projector is used otherwise traditional symmetrization.
-    fc_calculator, _ = _get_fc_calculator_params(settings)
+    fc_calculator, _ = _get_fc_calculator_and_options_from_settings(
+        settings, log_level=log_level
+    )
     if settings.fc_symmetry:
         if fc_calculator == "traditional":
             phonon.symmetrize_force_constants(use_symfc_projector=False)
@@ -885,6 +873,7 @@ def _create_random_displacements_at_finite_temperature(
     )
 
     if log_level:
+        assert phonon.random_displacements is not None
         rd_comm_points = phonon.random_displacements.qpoints
         rd_integrated_modes = phonon.random_displacements.integrated_modes
         rd_frequencies = phonon.random_displacements.frequencies
@@ -1047,6 +1036,7 @@ def _run_calculation(
             else:
                 bands = get_band_qpoints(band_paths, npoints=npoints)
             path_connections = []
+            assert band_paths is not None
             for paths in band_paths:
                 path_connections += [
                     True,
@@ -1136,8 +1126,11 @@ def _run_calculation(
                 with_group_velocities=settings.is_group_velocity,
                 is_gamma_center=is_gamma_center,
             )
+            assert isinstance(phonon.mesh, Mesh)
+            assert phonon.mesh is not None
+            assert phonon.mesh_numbers is not None
             if log_level:
-                print("Mesh numbers: %s" % phonon.mesh_numbers)
+                print(f"Mesh numbers: {phonon.mesh_numbers}")
                 weights = phonon.mesh.weights
                 if q_symmetry:
                     print(
@@ -1181,6 +1174,7 @@ def _run_calculation(
             phonon.write_yaml_thermal_properties()
 
             if log_level:
+                assert phonon.thermal_properties is not None
                 cutoff_freq = phonon.thermal_properties.cutoff_frequency
                 cutoff_freq /= get_physical_units().THzToEv
                 print("Cutoff frequency: %.5f" % cutoff_freq)
@@ -1398,7 +1392,9 @@ def _run_calculation(
                     is_projection=True,
                 )
                 text = " %3d |%10.5f | " % (settings.moment_order, total_moment)
-                for m in phonon.get_moment():
+                moments = phonon.get_moment()
+                assert isinstance(moments, np.ndarray)
+                for m in moments:
                     text += "%10.5f " % m
                 print(text)
             else:
@@ -1417,7 +1413,9 @@ def _run_calculation(
                         is_projection=True,
                     )
                     text = " %3d |%10.5f | " % (i, total_moment)
-                    for m in phonon.get_moment():
+                    moments = phonon.get_moment()
+                    assert isinstance(moments, np.ndarray)
+                    for m in moments:
                         text += "%10.5f " % m
                     print(text)
 
@@ -1449,6 +1447,7 @@ def _run_calculation(
         anime_type = settings.anime_type
         if anime_type == "v_sim":
             q_point = settings.anime_qpoint
+            assert q_point is not None
             amplitude = settings.anime_amplitude
             fname_out = phonon.write_animation(
                 q_point=q_point, anime_type="v_sim", amplitude=amplitude
@@ -1482,6 +1481,7 @@ def _run_calculation(
     #
     elif run_mode == "modulation":
         mod_setting = settings.modulation
+        assert mod_setting is not None
         phonon_modes = mod_setting["modulations"]
         dimension = mod_setting["dimension"]
         if "delta_q" in mod_setting:
@@ -1542,14 +1542,16 @@ def _run_calculation(
     # Ir-representation
     #
     elif run_mode == "irreps":
-        if phonon.set_irreps(
-            settings.irreps_q_point,
+        irreps_q_point = settings.irreps_q_point
+        assert irreps_q_point is not None
+        phonon.set_irreps(
+            irreps_q_point,
             is_little_cogroup=settings.is_little_cogroup,
             nac_q_direction=settings.nac_q_direction,
             degeneracy_tolerance=settings.irreps_tolerance,
-        ):
-            phonon.show_irreps(settings.show_irreps)
-            phonon.write_yaml_irreps(settings.show_irreps)
+        )
+        phonon.show_irreps(settings.show_irreps)
+        phonon.write_yaml_irreps(settings.show_irreps)
 
 
 def _start_phonopy(**argparse_control):
@@ -1575,7 +1577,7 @@ def _start_phonopy(**argparse_control):
     if log_level:
         _print_phonopy()
 
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore[import]
 
         max_threads = phonoc.omp_max_threads()
         if max_threads > 0:
@@ -1585,9 +1587,9 @@ def _start_phonopy(**argparse_control):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
         try:  # spglib.get_version() is deprecated.
-            print(f"Spglib version {spglib.spg_get_version()}")
+            print(f"Spglib version {spglib.spg_get_version()}")  # type: ignore
         except AttributeError:
-            print("Spglib version %d.%d.%d" % spglib.get_version())
+            print("Spglib version %d.%d.%d" % spglib.get_version())  # type: ignore
 
         print("")
 
@@ -1672,9 +1674,12 @@ def _is_pdos_auto(settings):
     return settings.pdos_indices == "auto"
 
 
-def _get_pdos_indices_and_legend(settings, phonon: Phonopy):
+def _get_pdos_indices_and_legend(
+    settings: PhonopySettings, phonon: Phonopy
+) -> tuple[list, list]:
     """Return pdos_indices and legend from settings."""
     pdos_indices = settings.pdos_indices
+    assert pdos_indices is not None
     if settings.xyz_projection:
         legend = []
         if _is_pdos_auto(settings):
@@ -1959,8 +1964,8 @@ def main(**argparse_control):
         if phonon.unitcell.magnetic_moments is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
         elif phonon.symmetry.dataset is not None:
-            uni_number = phonon.symmetry.dataset.uni_number
-            msg_type = phonon.symmetry.dataset.msg_type
+            uni_number = phonon.symmetry.dataset.uni_number  # type: ignore
+            msg_type = phonon.symmetry.dataset.msg_type  # type: ignore
             print(f"Magnetic space group UNI number: {uni_number}")
             print(f"Type-{msg_type} magnetic space group")
         print(
@@ -2042,20 +2047,87 @@ def main(**argparse_control):
             log_level=log_level,
         )
 
-    ###########################
-    # Produce force constants #
-    ###########################
+    #####################################################
+    # Calculate force constants from disp-force dataset #
+    #####################################################
     if phonon.force_constants is None:
+        ###############
+        # Set dataset #
+        ###############
+        if cell_info.phonopy_yaml is None:
+            phonopy_yaml_dataset = None
+        else:
+            phonopy_yaml_dataset = cell_info.phonopy_yaml.dataset
+
+        phonon.dataset = select_and_load_dataset(
+            len(phonon.supercell),
+            phonopy_yaml_dataset,
+            phonopy_yaml_filename=unitcell_filename,
+            log_level=log_level,
+        )
+
+        ###########################
+        # Prepare polynomial MLPs #
+        ###########################
+        if settings.use_pypolymlp:
+            if phonon.dataset is not None:
+                phonon.mlp_dataset = phonon.dataset
+                phonon.dataset = None
+
+            try:
+                develop_or_load_pypolymlp(
+                    phonon, mlp_params=settings.mlp_params, log_level=log_level
+                )
+            except (PypolymlpDevelopmentError, PypolymlpFileNotFoundError) as e:
+                print_error_message(str(e))
+                if log_level:
+                    print_error()
+                sys.exit(1)
+
+        ################################################
+        # Relax atomic positions using polynomial MLPs #
+        ################################################
+        if settings.use_pypolymlp and settings.relax_atomic_positions:
+            assert phonon.mlp is not None
+            if log_level:
+                print("Relaxing atomic positions using polynomial MLPs...")
+
+            try:
+                relaxed_unitcell = relax_atomic_positions(
+                    phonon.unitcell,
+                    phonon.mlp.mlp,
+                    verbose=log_level > 1,
+                )
+            except PypolymlpRelaxationError as e:
+                print_error_message(str(e))
+                if log_level:
+                    print_error()
+                sys.exit(1)
+
+            if log_level:
+                if relaxed_unitcell is None:
+                    print("No relaxation was performed due to symmetry constraints.")
+                else:
+                    get_change_in_positions(
+                        relaxed_unitcell, phonon.unitcell, verbose=log_level > 0
+                    )
+                    print("Note: This unit cell is not used in phonon calculations.")
+                print("-" * 76)
+
+        ###########################
+        # Produce force constants #
+        ###########################
         _produce_force_constants(
             phonon,
             settings,
-            cell_info.phonopy_yaml,
-            unitcell_filename,
             confs,
             load_phonopy_yaml,
             log_level,
         )
 
+    ################################
+    # Post-process force constants #
+    ################################
     if phonon.force_constants is None:
         if log_level:
             print_error()

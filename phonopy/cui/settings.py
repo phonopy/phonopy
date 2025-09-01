@@ -96,7 +96,7 @@ class Settings:
             self.is_nac = True
         else:
             self.is_nac = False
-        self.is_plusminus_displacement = "auto"
+        self.is_plusminus_displacement: Literal["auto"] | bool = "auto"
         self.is_symmetry = True
         self.is_tetrahedron_method = True
         self.is_time_reversal_symmetry = True
@@ -108,8 +108,9 @@ class Settings:
         self.nac_method = None
         self.nac_q_direction = None
         self.num_frequency_points = None
+        self.relax_atomic_positions = False
         self.primitive_matrix = None
-        self.qpoints = None
+        self.qpoints: list | None = None
         self.random_displacements: Literal["auto"] | int | None = None
         self.random_seed = None
         self.rd_number_estimation_factor = None
@@ -411,6 +412,14 @@ class ConfParser:
         if "read_qpoints" in arg_list:
             if args.read_qpoints:
                 self._confs["read_qpoints"] = ".true."
+            elif args.read_qpoints is False:
+                self._confs["read_qpoints"] = ".false."
+
+        if "relax_atomic_positions" in arg_list:
+            if args.relax_atomic_positions:
+                self._confs["relax_atomic_positions"] = ".true."
+            elif args.relax_atomic_positions is False:
+                self._confs["relax_atomic_positions"] = ".false."
 
         if "save_params" in arg_list:
             if args.save_params:
@@ -746,6 +755,12 @@ class ConfParser:
                 elif confs["read_qpoints"].lower() == ".true.":
                     self._set_parameter("read_qpoints", True)
 
+            if conf_key == "relax_atomic_positions":
+                if confs["relax_atomic_positions"].lower() == ".true.":
+                    self._set_parameter("relax_atomic_positions", True)
+                elif confs["relax_atomic_positions"].lower() == ".false.":
+                    self._set_parameter("relax_atomic_positions", False)
+
             # Select yaml summary contents
             if conf_key == "save_params":
                 if confs["save_params"].lower() == ".true.":
@@ -968,7 +983,7 @@ class ConfParser:
 
         # Primitive cell shape
         if "primitive_axes" in params:
-            settings.primitive_axes = params["primitive_axes"]
+            settings.primitive_matrix = params["primitive_axes"]
 
         # Q-points mode
         if "qpoints" in params:
@@ -980,13 +995,16 @@ class ConfParser:
 
         if "random_seed" in params:
             settings.random_seed = params["random_seed"]
-        if "read_qpoints" in params:
-            if params["read_qpoints"]:
-                settings.read_qpoints = params["read_qpoints"]
 
         # Random displacements number estimation factor
         if "rd_number_estimation_factor" in params:
             settings.rd_number_estimation_factor = params["rd_number_estimation_factor"]
+
+        if "read_qpoints" in params:
+            settings.read_qpoints = params["read_qpoints"]
+
+        if "relax_atomic_positions" in params:
+            settings.relax_atomic_positions = params["relax_atomic_positions"]
 
         # Smearing width
         if "sigma" in params:
@@ -1036,7 +1054,7 @@ class PhonopySettings(Settings):
         self.anime_band_index = None
         self.anime_amplitude = None
         self.anime_division = None
-        self.anime_qpoint = None
+        self.anime_qpoint: list | None = None
         self.anime_shift = None
         self.anime_type = "v_sim"
         self.band_format = "yaml"
@@ -1050,8 +1068,8 @@ class PhonopySettings(Settings):
         self.fits_Debye_model = False
         self.max_frequency = None
         self.min_frequency = None
-        self.irreps_q_point = None
-        self.irreps_tolerance = None
+        self.irreps_q_point: list | None = None
+        self.irreps_tolerance: float | None = None
         self.is_band_connection = False
         self.is_dos_mode = False
         self.is_full_fc = False
@@ -1073,9 +1091,9 @@ class PhonopySettings(Settings):
         self.lapack_solver = False
         self.mesh_shift = None
         self.mesh_format = "yaml"
-        self.modulation = None
+        self.modulation: dict | None = None
         self.moment_order = None
-        self.pdos_indices = None
+        self.pdos_indices: list | None = None
         self.pretend_real = False
         self.projection_direction = None
         self.qpoints_format = "yaml"
@@ -1862,7 +1880,7 @@ class PhonopyConfParser(ConfParser):
             settings.run_mode = "irreps"
             settings.irreps_q_point = params["irreps_qpoint"][:3]
             if len(params["irreps_qpoint"]) == 4:
-                settings.irreps_tolerance = params["irreps_qpoint"][3]
+                settings.irreps_tolerance = float(params["irreps_qpoint"][3])
         if "show_irreps" in params:
             settings.show_irreps = params["show_irreps"]
         if "little_cogroup" in params:

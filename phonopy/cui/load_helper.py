@@ -36,16 +36,22 @@
 
 from __future__ import annotations
 
+import dataclasses
+import io
 import os
 import pathlib
-from dataclasses import asdict
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from phonopy import Phonopy
-from phonopy.exception import ForcesetsNotFoundError, PypolymlpFileNotFoundError
+from phonopy.exception import (
+    ForcesetsNotFoundError,
+    PypolymlpDevelopmentError,
+    PypolymlpFileNotFoundError,
+    PypolymlpTrainingDatasetNotFoundError,
+)
 from phonopy.file_IO import (
     parse_BORN,
     parse_FORCE_CONSTANTS,
@@ -165,12 +171,20 @@ def get_nac_params(
 
     """
     if born_filename is not None:
+        if primitive is None:
+            raise ValueError(
+                "Primitive cell has to be specified when born_filename is given."
+            )
         _nac_params = parse_BORN(primitive, filename=born_filename)
         if log_level:
             print('NAC parameters were read from "%s".' % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
     elif is_nac and pathlib.Path("BORN").exists():
+        if primitive is None:
+            raise ValueError(
+                "Primitive cell has to be specified when born_filename is given."
+            )
         _nac_params = parse_BORN(primitive, filename="BORN")
         if log_level:
             print('NAC params were read from "BORN".')
@@ -213,16 +227,17 @@ def read_force_constants_from_hdf5(
 def select_and_load_dataset(
     nsatom: int,
     dataset: dict | None = None,
-    phonopy_yaml_filename: str | os.PathLike | None = None,
+    phonopy_yaml_filename: str | os.PathLike | io.IOBase | None = None,
     force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
-) -> Optional[dict]:
+) -> dict | None:
     """Set displacement-force dataset."""
     _dataset = None
     _force_sets_filename = None
     if forces_in_dataset(dataset):
         _dataset = dataset
-        _force_sets_filename = phonopy_yaml_filename
+        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
+            _force_sets_filename = phonopy_yaml_filename
     elif force_sets_filename is not None:
         _dataset = parse_FORCE_SETS(natom=nsatom, filename=force_sets_filename)
         _force_sets_filename = force_sets_filename
@@ -231,6 +246,8 @@ def select_and_load_dataset(
         _force_sets_filename = "FORCE_SETS"
     else:
         _dataset = dataset
+        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
+            _force_sets_filename = phonopy_yaml_filename
 
     if log_level:
         if forces_in_dataset(_dataset):
@@ -283,29 +300,6 @@ def select_and_extract_force_constants(
     return _fc
 
 
-def prepare_pypolymlp_and_dataset(
-    phonon: Phonopy,
-    mlp_params: dict | None = None,
-    displacement_distance: float | None = None,
-    number_of_snapshots: int | Literal["auto"] | None = None,
-    random_seed: int | None = None,
-    rd_number_estimation_factor: float | None = None,
-    prepare_dataset: bool = False,
-    log_level: int = 0,
-):
-    """Prepare pypolymlp and dataset."""
-    _run_pypolymlp(phonon, mlp_params, log_level=log_level)
-    if prepare_dataset:
-        _prepare_dataset_by_pypolymlp(
-            phonon,
-            displacement_distance=displacement_distance,
-            number_of_snapshots=number_of_snapshots,
-            random_seed=random_seed,
-            rd_number_estimation_factor=rd_number_estimation_factor,
-            log_level=log_level,
-        )
-
-
 def produce_force_constants(
     phonon: Phonopy,
     fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
@@ -333,7 +327,7 @@ def produce_force_constants(
                 )
     except ForcesetsNotFoundError:
         if log_level:
-            print("Displacement-force datast was not found. ")
+            print("Displacement-force dataset was not found. ")
 
 
 def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray):
@@ -344,64 +338,125 @@ def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray)
         raise ValueError(msg)
 
 
-def _run_pypolymlp(
+def develop_or_load_pypolymlp(
     phonon: Phonopy,
-    mlp_params: str | dict | PypolymlpParams | None,
+    mlp_params: str | dict | PypolymlpParams | None = None,
+    mlp_filename: str | os.PathLike | None = None,
     log_level: int = 0,
 ):
     """Run pypolymlp to compute forces."""
     if log_level:
-        import pypolymlp
-
         print("-" * 29 + " pypolymlp start " + "-" * 30)
-        print(f"Pypolymlp version {pypolymlp.__version__}")
-        print("Pypolymlp is a generator of polynomial machine learning potentials.")
-        print("Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).")
-        print("Pypolymlp is developed at https://github.com/sekocha/pypolymlp.")
-        if mlp_params:
-            print("Parameters:")
-            for k, v in asdict(parse_mlp_params(mlp_params)).items():
-                if v is not None:
-                    print(f"  {k}: {v}")
+        _show_pypolymlp_header(mlp_params=mlp_params)
 
-    for mlp_filename in ["polymlp.yaml", "phonopy.pmlp"]:
-        _mlp_filename_list = list(pathlib.Path().glob(f"{mlp_filename}*"))
-        if _mlp_filename_list:
-            _mlp_filename = _mlp_filename_list[0]
-            if _mlp_filename.suffix not in [
-                ".yaml",
-                ".pmlp",
-                ".xz",
-                ".gz",
-                ".bz2",
-                "lzma",
-            ]:
-                continue
-            if log_level:
-                print(f'Load MLPs from "{_mlp_filename}".')
+    _load_pypolymlp(phonon, mlp_filename=mlp_filename, log_level=log_level)
 
-            phonon.load_mlp(_mlp_filename)
-            if log_level and mlp_filename == "phonopy.pmlp":
-                print(f'Loading MLPs from "{_mlp_filename}" is obsolete.')
-            break
-
-    mlp_filename = "polymlp.yaml"
     if phonon.mlp is None:
-        if forces_in_dataset(phonon.mlp_dataset):
-            if log_level:
-                print("Developing MLPs by pypolymlp...", flush=True)
-            phonon.develop_mlp(params=mlp_params)
-            phonon.save_mlp()
-            if log_level:
-                print(f'MLPs were written into "{mlp_filename}"', flush=True)
-        else:
-            raise PypolymlpFileNotFoundError(f'"{mlp_filename}" is not found.')
+        _develop_and_save_pypolymlp(
+            phonon,
+            mlp_params=mlp_params,
+            mlp_filename=mlp_filename,
+            log_level=log_level,
+        )
 
     if log_level:
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
 
 
-def _prepare_dataset_by_pypolymlp(
+def _show_pypolymlp_header(mlp_params: str | dict | PypolymlpParams | None = None):
+    """Show pypolymlp header."""
+    import pypolymlp
+
+    print(f"Pypolymlp version {pypolymlp.__version__}")
+    print("Pypolymlp is a generator of polynomial machine learning potentials.")
+    print("Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).")
+    print("Pypolymlp is developed at https://github.com/sekocha/pypolymlp.")
+    if mlp_params:
+        print("Parameters:")
+        for k, v in dataclasses.asdict(parse_mlp_params(mlp_params)).items():
+            if v is not None:
+                print(f"  {k}: {v}")
+
+
+def _load_pypolymlp(
+    phonon: Phonopy,
+    mlp_filename: str | os.PathLike | None = None,
+    log_level: int = 0,
+):
+    """Load MLPs from polymlp.yaml or phonopy.pmlp."""
+    _mlp_filename = None
+    if mlp_filename is None:
+        for default_mlp_filename in ["polymlp.yaml", "phonopy.pmlp", "phono3py.pmlp"]:
+            _mlp_filename_list = list(pathlib.Path().glob(f"{default_mlp_filename}*"))
+            if _mlp_filename_list:
+                _mlp_filename = _mlp_filename_list[0]
+                if _mlp_filename.suffix not in [
+                    ".yaml",
+                    ".pmlp",
+                    ".xz",
+                    ".gz",
+                    ".bz2",
+                    "lzma",
+                ]:
+                    continue
+                if log_level and "pmlp" in default_mlp_filename:
+                    print(f'Loading MLPs from "{_mlp_filename}" is obsolete.')
+                break
+    else:
+        _mlp_filename = mlp_filename
+
+    if _mlp_filename is None:
+        return None
+
+    if log_level:
+        print(f'Load MLPs from "{_mlp_filename}".')
+
+    if not pathlib.Path(_mlp_filename).exists():
+        raise PypolymlpFileNotFoundError(f'"{_mlp_filename}" is not found.')
+
+    phonon.load_mlp(_mlp_filename)
+
+
+def _develop_and_save_pypolymlp(
+    phonon: Phonopy,
+    mlp_params: str | dict | PypolymlpParams | None = None,
+    mlp_filename: str | os.PathLike | None = None,
+    log_level: int = 0,
+):
+    """Develop MLPs by pypolymlp and save them into polymlp.yaml."""
+    if forces_in_dataset(phonon.mlp_dataset):
+        if log_level:
+            if mlp_params is None:
+                pmlp_params = PypolymlpParams()
+            else:
+                pmlp_params = parse_mlp_params(mlp_params)
+            print("Parameters:")
+            for k, v in dataclasses.asdict(pmlp_params).items():
+                if v is not None:
+                    print(f"  {k}: {v}")
+            print("Developing MLPs by pypolymlp...", flush=True)
+
+        try:
+            phonon.develop_mlp(params=mlp_params)
+        except PypolymlpDevelopmentError as e:
+            if log_level:
+                print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
+            raise PypolymlpDevelopmentError(str(e)) from e
+
+        if mlp_filename is None:
+            _mlp_filename = "polymlp.yaml"
+        else:
+            _mlp_filename = mlp_filename
+        phonon.save_mlp(filename=_mlp_filename)
+        if log_level:
+            print(f'MLPs were written into "{_mlp_filename}"', flush=True)
+    else:
+        raise PypolymlpTrainingDatasetNotFoundError(
+            "Pypolymlp training dataset is not found."
+        )
+
+
+def prepare_dataset_by_pypolymlp(
     phonon: Phonopy,
     displacement_distance: float | None = None,
     number_of_snapshots: int | Literal["auto"] | None = None,

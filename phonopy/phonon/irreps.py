@@ -34,10 +34,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
-from typing import Union
+from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
@@ -61,14 +61,14 @@ class IrReps:
 
     def __init__(
         self,
-        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        q,
-        is_little_cogroup=False,
-        nac_q_direction=None,
-        factor=None,
-        symprec=1e-5,
-        degeneracy_tolerance=None,
-        log_level=0,
+        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
+        qpoint: ArrayLike,
+        is_little_cogroup: bool = False,
+        nac_q_direction: ArrayLike | None = None,
+        factor: float | None = None,
+        symprec: float = 1e-5,
+        degeneracy_tolerance: float | None = None,
+        log_level: int = 0,
     ):
         """Init method."""
         self._is_little_cogroup = is_little_cogroup
@@ -79,7 +79,7 @@ class IrReps:
             self._factor = factor
         self._log_level = log_level
 
-        self._q = np.array(q)
+        self._qpoint = np.array(qpoint)
         if degeneracy_tolerance is None:
             self._degeneracy_tolerance = 1e-5
         else:
@@ -103,45 +103,37 @@ class IrReps:
     def run(self):
         """Calculate irreps."""
         self._set_eigenvectors(self._dynamical_matrix)
-
         (self._rotations_at_q, self._translations_at_q) = self._get_rotations_at_q()
-
-        self._g = len(self._rotations_at_q)
-
         (
             self._pointgroup_symbol,
             self._transformation_matrix,
             self._conventional_rotations,
         ) = self._get_conventional_rotations()
-
+        self._rotation_symbols, self._character_table = self._get_rotation_symbols()
         self._ground_matrices = self._get_ground_matrix()
+
+        # Degeneracy for irreps has to be determined considering character tables, too.
+        # But currently only similarity of phonon frequencies is used to judge it.
         self._degenerate_sets = self._get_degenerate_sets()
         self._irreps = self._get_irreps()
         self._characters, self._irrep_dims = self._get_characters()
-
         self._ir_labels = None
+        if (abs(self._qpoint) < self._symprec).all():
+            self._ir_labels = self._get_ir_labels(
+                self._character_table, self._characters, self._rotation_symbols
+            )
 
-        if (
-            self._pointgroup_symbol in character_table.keys()
-            and character_table[self._pointgroup_symbol] is not None
-        ):
-            self._rotation_symbols = self._get_rotation_symbols()
-            if (abs(self._q) < self._symprec).all() and self._rotation_symbols:
-                self._ir_labels = self._get_ir_labels()
-            elif (abs(self._q) < self._symprec).all():
+        if self._ir_labels is None:
+            if (abs(self._qpoint) < self._symprec).all():
                 if self._log_level > 0:
-                    print("Database for this point group is not preprared.")
+                    print("Database for this point group is not prepared.")
             else:
-                if self._log_level > 0:
+                if self._log_level > 0 and self._rotation_symbols is not None:
                     print("Database for non-Gamma point is not prepared.")
-        else:
-            self._rotation_symbols = None
-
-        return True
 
     def _get_degenerate_sets(self):
         deg_sets = get_degenerate_sets(self._freqs, cutoff=self._degeneracy_tolerance)
-        self._ddm.run(self._q)
+        self._ddm.run(self._qpoint)
         return deg_sets
 
     @property
@@ -155,103 +147,35 @@ class IrReps:
         """
         return self._degenerate_sets
 
-    def get_band_indices(self):
-        """Return band indices."""
-        warnings.warn(
-            "IrReps.get_band_indices() is deprecated. "
-            "Use IrReps.band_indices attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.band_indices
-
     @property
     def characters(self):
         """Return characters of irreps."""
         return self._characters
-
-    def get_characters(self):
-        """Return characters of irreps."""
-        warnings.warn(
-            "IrReps.get_characters() is deprecated. Use IrReps.characters attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.characters
 
     @property
     def eigenvectors(self):
         """Return eigenvectors."""
         return self._eig_vecs
 
-    def get_eigenvectors(self):
-        """Return eigenvectors."""
-        warnings.warn(
-            "IrReps.get_eigenvectors() is deprecated. "
-            "Use IrReps.eigenvectors attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.eigenvectors
-
     @property
     def irreps(self):
         """Return irreps."""
         return self._irreps
-
-    def get_irreps(self):
-        """Return irreps."""
-        warnings.warn(
-            "IrReps.get_irreps() is deprecated. Use IrReps.irreps attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.irreps
 
     @property
     def ground_matrices(self):
         """Return ground matrices."""
         return self._ground_matrices
 
-    def get_ground_matrices(self):
-        """Return ground matrices."""
-        warnings.warn(
-            "IrReps.get_ground_matrices() is deprecated. "
-            "Use IrReps.ground_matrices attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.ground_matrices
-
     @property
     def rotation_symbols(self):
         """Return symbols assigned to rotation matrices."""
         return self._rotation_symbols
 
-    def get_rotation_symbols(self):
-        """Return symbols assigned to rotation matrices."""
-        warnings.warn(
-            "IrReps.get_rotation_symbols() is deprecated. "
-            "Use IrReps.rotation_symbols attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.rotation_symbols
-
     @property
     def conventional_rotations(self):
         """Return rotation matrices."""
         return self._conventional_rotations
-
-    def get_rotations(self):
-        """Return rotation matrices."""
-        warnings.warn(
-            "IrReps.get_rotations() is deprecated. "
-            "Use IrReps.conventional_rotations attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.conventional_rotations
 
     def get_projection_operators(self, idx_irrep, i=None, j=None):
         """Return projection operators."""
@@ -263,7 +187,7 @@ class IrReps:
     @property
     def qpoint(self):
         """Return q-point."""
-        return self._q
+        return self._qpoint
 
     def show(self, show_irreps=False):
         """Show irreps."""
@@ -274,10 +198,10 @@ class IrReps:
         self._write_yaml(show_irreps)
 
     def _set_eigenvectors(self, dm):
-        if self._nac_q_direction is not None and (np.abs(self._q) < 1e-5).all():
-            dm.run(self._q, q_direction=self._nac_q_direction)
+        if self._nac_q_direction is not None and (np.abs(self._qpoint) < 1e-5).all():
+            dm.run(self._qpoint, q_direction=self._nac_q_direction)
         else:
-            dm.run(self._q)
+            dm.run(self._qpoint)
         eig_vals, self._eig_vecs = np.linalg.eigh(dm.dynamical_matrix)
         self._freqs = np.sqrt(abs(eig_vals)) * np.sign(eig_vals) * self._factor
 
@@ -287,7 +211,7 @@ class IrReps:
         for r, t in zip(
             self._symmetry_dataset.rotations, self._symmetry_dataset.translations
         ):
-            diff = np.dot(self._q, r) - self._q
+            diff = np.dot(self._qpoint, r) - self._qpoint
             if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
                 for i in range(3):
@@ -345,16 +269,16 @@ class IrReps:
                 diff = p_rot - p2  # Rx_i + t - x_j
                 if (abs(diff - np.rint(diff)) < self._symprec).all():
                     phase_factor = np.dot(
-                        self._q, np.dot(np.linalg.inv(r), p2 - t) - p2
+                        self._qpoint, np.dot(np.linalg.inv(r), p2 - t) - p2
                     )
                     if self._is_little_cogroup:
-                        phase_factor = np.dot(t, self._q)
+                        phase_factor = np.dot(t, self._qpoint)
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
         return matrix
 
     def _get_irreps(self):
         eigvecs = self._eig_vecs.T
-        irrep = []
+        irreps = []
         for band_indices in self._degenerate_sets:
             irrep_Rs = []
             for mat in self._ground_matrices:
@@ -373,9 +297,9 @@ class IrReps:
                         irrep_R[i, j] = np.vdot(vec_i, np.dot(mat, vec_j))
                 irrep_Rs.append(irrep_R)
 
-            irrep.append(irrep_Rs)
+            irreps.append(np.array(irrep_Rs))
 
-        return irrep
+        return irreps
 
     def _get_character_projection_operators(self, idx_irrep):
         dim = self._irrep_dims[idx_irrep]
@@ -386,7 +310,7 @@ class IrReps:
                 axis=0,
             )
             * dim
-            / self._g
+            / len(self._rotations_at_q)
         )
 
     def _get_projection_operators(self, idx_irrep, i, j):
@@ -400,37 +324,44 @@ class IrReps:
                 axis=0,
             )
             * dim
-            / self._g
+            / len(self._rotations_at_q)
         )
 
     def _get_rotation_symbols(self):
-        ptg_symbol = self._pointgroup_symbol
-        for ct in character_table[ptg_symbol]:
+        # Check availability of database
+        if (
+            self._pointgroup_symbol not in character_table.keys()
+            or character_table[self._pointgroup_symbol] is None
+        ):
+            return None, None
+
+        for ct in character_table[self._pointgroup_symbol]:
             mapping_table = ct["mapping_table"]
             rotation_symbols = []
             for r in self._conventional_rotations:
                 rotation_symbols.append(_get_rotation_symbol(r, mapping_table))
-            if False in rotation_symbols:
-                ret_val = None
-            else:
-                ret_val = rotation_symbols
-            if ret_val is not None:
-                self._character_table = ct
+            if False not in rotation_symbols:
                 break
 
-        return ret_val
+        if False in rotation_symbols:
+            return None, None
 
-    def _get_ir_labels(self):
+        return rotation_symbols, ct
+
+    def _get_ir_labels(self, character_table, characters, rotation_symbols):
+        if rotation_symbols is None:
+            return None
+
         ir_labels = []
-        rot_list = self._character_table["rotation_list"]
-        char_table = self._character_table["character_table"]
-        for chars in self._characters:
+        rot_list = character_table["rotation_list"]
+        char_table = character_table["character_table"]
+        for chars in characters:
             chars_ordered = np.zeros(len(rot_list), dtype=complex)
-            for rs, ch in zip(self._rotation_symbols, chars):
+            for rs, ch in zip(rotation_symbols, chars):
                 chars_ordered[rot_list.index(rs)] += ch
 
             for i, rl in enumerate(rot_list):
-                chars_ordered[i] /= len(self._character_table["mapping_table"][rl])
+                chars_ordered[i] /= len(character_table["mapping_table"][rl])
 
             found = False
             for ct_label in char_table.keys():
@@ -460,11 +391,11 @@ class IrReps:
         print("-------------------------------")
         print("  Irreducible representations")
         print("-------------------------------")
-        print("q-point: %s" % self._q)
+        print("q-point: %s" % self._qpoint)
         print("Point group: %s" % self._pointgroup_symbol)
         print("")
 
-        if (np.abs(self._q) < self._symprec).all():
+        if (np.abs(self._qpoint) < self._symprec).all():
             width = 6
             print("Original rotation matrices:")
             print("")
@@ -550,7 +481,7 @@ class IrReps:
 
     def _write_yaml(self, show_irreps):
         w = open("irreps.yaml", "w")
-        w.write("q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(self._q))
+        w.write("q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(self._qpoint))
         w.write("point_group: %s\n" % self._pointgroup_symbol)
         w.write("transformation_matrix:\n")
         for v in self._transformation_matrix:

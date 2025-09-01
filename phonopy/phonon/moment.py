@@ -34,9 +34,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
+from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 class PhononMoment:
@@ -58,22 +59,12 @@ class PhononMoment:
         self._fmin = None
         self._fmax = None
         self.set_frequency_range()
-        self._moment = None
+        self._moment: float | NDArray | None = None
 
     @property
-    def moment(self):
+    def moment(self) -> float | NDArray | None:
         """Return phonon state moment."""
         return self._moment
-
-    def get_moment(self):
-        """Return phonon state moment."""
-        warnings.warn(
-            "PhononMoment.get_moment() is deprecated. "
-            "Use PhononMoment.moment attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.moment
 
     def set_frequency_range(self, freq_min=None, freq_max=None, tolerance=1e-8):
         """Set frequeny range where moment is computed."""

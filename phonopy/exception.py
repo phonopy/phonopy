@@ -53,12 +53,6 @@ class ForceConstantsCalculatorNotFoundError(RuntimeError):
     pass
 
 
-class PypolymlpFileNotFoundError(RuntimeError):
-    """Exception when pypolymlp file is not found."""
-
-    pass
-
-
 class CellNotFoundError(RuntimeError):
     """Exception when unit cell not found."""
 
@@ -67,5 +61,29 @@ class CellNotFoundError(RuntimeError):
 
 class MagmomValueError(ValueError):
     """Exception when magnetic moment value is not valid."""
+
+    pass
+
+
+class PypolymlpFileNotFoundError(RuntimeError):
+    """Exception when pypolymlp file is not found."""
+
+    pass
+
+
+class PypolymlpTrainingDatasetNotFoundError(RuntimeError):
+    """Exception when pypolymlp dataset is not found."""
+
+    pass
+
+
+class PypolymlpRelaxationError(RuntimeError):
+    """Exception when relaxation of atomic positions by pypolymlp fails."""
+
+    pass
+
+
+class PypolymlpDevelopmentError(RuntimeError):
+    """Exception when development of pypolymlp fails."""
 
     pass

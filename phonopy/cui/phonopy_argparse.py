@@ -722,14 +722,6 @@ def get_parser(load_phonopy_yaml=False):
         metavar="TEMPERATURE",
         help="A temperature used to generate random displacements.",
     )
-    parser.add_argument(
-        "--temperature",
-        dest="temperature",
-        type=float,
-        default=None,
-        metavar="TEMPERATURE",
-        help="(Deprecated) A temperature used to generate random displacements.",
-    )
     if not load_phonopy_yaml:
         parser.add_argument(
             "--readfc",
@@ -750,6 +742,13 @@ def get_parser(load_phonopy_yaml=False):
         action="store_true",
         default=None,
         help="Read QPOITNS",
+    )
+    parser.add_argument(
+        "--relax-atomic-positions",
+        dest="relax_atomic_positions",
+        action="store_true",
+        default=None,
+        help="Relax atomic positions using polynomial MLPs",
     )
     parser.add_argument(
         "-s",
@@ -831,6 +830,14 @@ def get_parser(load_phonopy_yaml=False):
         type=float,
         default=None,
         help="Write cif with aniso_U for which temperature is specified",
+    )
+    parser.add_argument(
+        "--temperature",
+        dest="temperature",
+        type=float,
+        default=None,
+        metavar="TEMPERATURE",
+        help="(Deprecated) A temperature used to generate random displacements.",
     )
     parser.add_argument(
         "--tmax",

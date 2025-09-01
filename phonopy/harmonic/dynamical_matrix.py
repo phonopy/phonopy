@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import itertools
 import sys
+import warnings
 from typing import Optional, Type, Union
 
 import numpy as np
@@ -146,6 +147,11 @@ class DynamicalMatrix:
 
     def is_nac(self) -> bool:
         """Return bool if NAC is considered or not."""
+        warnings.warn(
+            "is_nac() is deprecated. Use isinstance(dm, DynamicalMatrixNAC) instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self._nac
 
     @property
@@ -1060,7 +1066,7 @@ def run_dynamical_matrix_solver_c(
     _qpoints = _qpoints.reshape(-1, 3)
 
     if is_nac is None:
-        _is_nac = dm.is_nac()
+        _is_nac = isinstance(dm, DynamicalMatrixNAC)
     else:
         _is_nac = is_nac
 
@@ -1157,7 +1163,7 @@ def _extract_params(dm: Union[DynamicalMatrix, DynamicalMatrixNAC]):
     masses = dm.primitive.masses
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
     positions = dm.primitive.positions
-    if dm.is_nac():
+    if isinstance(dm, DynamicalMatrixNAC):
         born = dm.born
         nac_factor = float(dm.nac_factor)
         dielectric = dm.dielectric_constant

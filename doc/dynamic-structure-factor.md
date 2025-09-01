@@ -22,11 +22,11 @@ S(\mathbf{Q}, \nu, \omega)^{-1\text{ph}} = \frac{k'}{k} \frac{N}{\hbar}
 with
 
 ```{math}
-F(\mathbf{Q}, \mathbf{q}\nu) = \sum_j \sqrt{\frac{\hbar}{2 m_j
-\omega_{\mathbf{q}\nu}}} \bar{b}_j \exp\left[ -\frac{1}{2} \langle
+F(\mathbf{Q}, \mathbf{q}'\nu) = \sum_j \sqrt{\frac{\hbar}{2 m_j
+\omega_{\mathbf{q}'\nu}}} \bar{b}_j \exp\left[ -\frac{1}{2} \langle
 |\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle \right]
-e^{i(\mathbf{Q} + \mathbf{q}) \cdot \mathbf{r}_{j0}}
-\mathbf{Q} \cdot\mathbf{e}(j, \mathbf{q}\nu).
+e^{i(\mathbf{Q} + \mathbf{q}') \cdot \mathbf{r}_{j0}}
+\mathbf{Q} \cdot\mathbf{e}(j, \mathbf{q}'\nu).
 ```
 
 where {math}`\mathbf{Q}` is the scattering vector defined as

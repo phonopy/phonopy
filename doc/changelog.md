@@ -2,6 +2,31 @@
 
 # Change Log
 
+## Aug-5-2025: Version 2.43.1
+
+- Fixed a specific combination use case of `phonopy` command (PR 626).
+
+## Aug-2-2025: Version 2.43.0
+
+- Maintenance release.
+
+## Jul-21-2025: Version 2.42.0
+
+- Maintenance release.
+
+## Jul-19-2025: Version 2.41.4
+
+- Fixed issue where irreps were not shown.
+
+## Jul-17-2025: Version 2.41.3
+
+- Fixed issue where the `--pa` option (`PRIMITIVE_AXIS` tag) was not working.
+
+## Jul-16-2025: Version 2.41.2
+
+- Fixed critical bug in dynamic structure factor calculation for
+  non-centrosymmetric crystals.
+
 ## Jul-3-2025: Version 2.41.1
 
 - Updated version dependency for symfc

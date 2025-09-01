@@ -34,9 +34,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 from typing import Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.qpoints import QpointsPhonon
@@ -165,10 +168,10 @@ class DynamicStructureFactor:
             self._fmax = freq_max
 
         self._rec_lat = np.linalg.inv(self._primitive.cell)
-        self.qpoints = None
+        self.qpoints: NDArray
         self._set_qpoints()  # self.qpoints needed in self._set_phonon()
-        self.frequencies = None
-        self._eigvecs = None
+        self.frequencies: NDArray
+        self._eigvecs: NDArray
         self._set_phonon()
 
         self._q_count = 0
@@ -187,6 +190,7 @@ class DynamicStructureFactor:
         )
         td.temperatures = [self._T]
         td.run()
+        assert td.thermal_displacement_matrices is not None
         self._thermal_displacement_matrices = td.thermal_displacement_matrices[0]
 
     def __iter__(self):
@@ -228,7 +232,7 @@ class DynamicStructureFactor:
                     G_vector,
                     debye_waller,
                     f,
-                    eigvecs[:, i],
+                    eigvecs[:, i].conj(),
                 )
                 n = bose_einstein_dist(f, self._T)
                 S[i] = abs(F) ** 2 * (n + 1)
@@ -239,9 +243,10 @@ class DynamicStructureFactor:
             self.qpoints, self._dynamical_matrix, with_eigenvectors=True
         )
         self.frequencies = qpoints_phonon.frequencies
+        assert qpoints_phonon.eigenvectors is not None
         self._eigvecs = qpoints_phonon.eigenvectors
 
-    def _get_thermal_displacements(self, proj_dir):
+    def _get_thermal_displacements(self, proj_dir: NDArray):
         thermal_displacements = np.zeros(
             self._thermal_displacement_matrices.shape[0], dtype=float
         )
@@ -253,7 +258,14 @@ class DynamicStructureFactor:
 
         return thermal_displacements
 
-    def _phonon_structure_factor(self, Q_cart, G_vector, DW, freq, eigvec):
+    def _phonon_structure_factor(
+        self,
+        Q_cart: NDArray,
+        G_vector: NDArray,
+        DW: NDArray,
+        freq: float,
+        eigvec: NDArray,
+    ):
         """Return F(Q, q nu).
 
         The phase factor is different by exp(iq.r) from that of the book
@@ -284,7 +296,7 @@ class DynamicStructureFactor:
         self.qpoints = np.array([q[0] for q in qpoints], dtype="double", order="C")
 
 
-def atomic_form_factor_WK1995(s, f_x):
+def atomic_form_factor_WK1995(s: float, f_x: list) -> float:
     """Return atomic form factor of WK1995.
 
     D. Waasmaier and A. Kirfel, Acta Cryst. (1995). A51, 416-431
@@ -300,7 +312,7 @@ def atomic_form_factor_WK1995(s, f_x):
     return (a * np.exp(-b * s**2)).sum() + f_x[10]
 
 
-def atomic_form_factor_ITC(s, f_x):
+def atomic_form_factor_ITC(s: float, f_x: list) -> float:
     """Return atomic form factor of international tables for crystallography C.
 
     ITC table 6.1.1.4.
