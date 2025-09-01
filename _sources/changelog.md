@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Sep-1-2025: Version 2.43.2
+
+- Maintenance release.
+
 ## Aug-5-2025: Version 2.43.1
 
 - Fixed a specific combination use case of `phonopy` command (PR 626).
