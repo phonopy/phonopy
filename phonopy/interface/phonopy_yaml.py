@@ -40,7 +40,7 @@ import dataclasses
 import io
 import os
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 import yaml
@@ -195,7 +195,7 @@ class PhonopyYamlLoaderBase(ABC):
         pass
 
     def _get_dataset(
-        self, supercell: PhonopyAtoms, key_prefix: str = ""
+        self, supercell: PhonopyAtoms | None, key_prefix: str = ""
     ) -> dict | None:
         dataset = None
         if f"{key_prefix}displacements" in self._yaml:
@@ -217,8 +217,9 @@ class PhonopyYamlLoaderBase(ABC):
         return dataset
 
     def _parse_force_sets_type1(
-        self, natom: Optional[int] = None, key_prefix: str = ""
+        self, natom: int | None = None, key_prefix: str = ""
     ) -> dict:
+        dataset: dict
         key = f"{key_prefix}displacements"
         if "forces" in self._yaml[key][0]:
             dataset = {"natom": len(self._yaml[key][0]["forces"])}
@@ -292,6 +293,7 @@ class PhonopyYamlLoaderBase(ABC):
         ...
 
         """
+        dataset: dict
         key = f"{key_prefix}displacements"
         nsets = len(self._yaml[key])
         natom = len(self._yaml[key][0])
@@ -462,10 +464,10 @@ class PhonopyYamlDumperBase(ABC):
         dataset = self._data.symmetry.dataset
         if dataset is not None:
             try:
-                uni_number = dataset.uni_number
+                uni_number = dataset.uni_number  # type: ignore
                 lines.append("magnetic_space_group:")
                 lines.append(f"  uni_number: {uni_number}")
-                lines.append(f"  msg_type: {dataset.msg_type}")
+                lines.append(f"  msg_type: {dataset.msg_type}")  # type: ignore
                 lines.append("")
             except AttributeError:
                 lines.append("space_group:")
@@ -509,10 +511,10 @@ class PhonopyYamlDumperBase(ABC):
             lines.append("")
         return lines
 
-    def _primitive_yaml_lines(self, primitive: Primitive, name):
+    def _primitive_yaml_lines(self, primitive: PhonopyAtoms | None, name):
         lines = []
         if primitive is not None:
-            lines += self._cell_yaml_lines(self._data.primitive, name, None)
+            lines += self._cell_yaml_lines(primitive, name, None)
             lines.append("  reciprocal_lattice: # without 2pi")
             rec_lat = np.linalg.inv(primitive.cell)
             for v, a in zip(rec_lat.T, ("a*", "b*", "c*")):
@@ -548,7 +550,7 @@ class PhonopyYamlDumperBase(ABC):
         return lines
 
     def _cell_yaml_lines(
-        self, cell: PhonopyAtoms, name, map_to_primitive: Optional[list] = None
+        self, cell: PhonopyAtoms, name, map_to_primitive: list | None = None
     ):
         lines = []
         lines.append("%s:" % name)
@@ -561,10 +563,10 @@ class PhonopyYamlDumperBase(ABC):
         return lines
 
     @abstractmethod
-    def _nac_yaml_lines(self):
+    def _nac_yaml_lines(self) -> list:
         pass
 
-    def _nac_yaml_lines_given_symbols(self, symbols=None):
+    def _nac_yaml_lines_given_symbols(self, symbols=None) -> list:
         lines = []
         if self._data.nac_params is not None:
             if self._dumper_settings["born_effective_charge"]:
@@ -612,7 +614,7 @@ class PhonopyYamlDumperBase(ABC):
 
     def _displacements_yaml_lines_2types(
         self,
-        dataset: dict,
+        dataset: dict | None,
         with_forces: bool = False,
         key_prefix: str = "",
         v223_mode: bool = False,
@@ -757,7 +759,7 @@ class PhonopyYamlDumper(PhonopyYamlDumperBase):
             self._data.dataset, with_forces=with_forces
         )
 
-    def _nac_yaml_lines(self):
+    def _nac_yaml_lines(self) -> list:
         if self._data.primitive is None:
             symbols = []
         else:
@@ -1006,7 +1008,7 @@ class PhonopyYaml:
         )
         return "\n".join(phyml_dumper.get_yaml_lines())
 
-    def read(self, filename: Union[str, bytes, os.PathLike, io.IOBase]):
+    def read(self, filename: str | bytes | os.PathLike | io.IOBase):
         """Read PhonopyYaml file."""
         self._data = read_phonopy_yaml(
             filename,
@@ -1034,7 +1036,7 @@ class PhonopyYaml:
 
 
 def read_phonopy_yaml(
-    filename: Union[str, bytes, os.PathLike, io.IOBase],
+    filename: str | bytes | os.PathLike | io.IOBase,
     configuration=None,
     calculator=None,
     physical_units=None,
@@ -1077,7 +1079,7 @@ def load_phonopy_yaml(
 
 
 def read_cell_yaml(
-    filename: Union[str, bytes, os.PathLike, io.IOBase], cell_type: str = "unitcell"
+    filename: str | bytes | os.PathLike | io.IOBase, cell_type: str = "unitcell"
 ) -> PhonopyAtoms:
     """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
 
@@ -1124,7 +1126,7 @@ def read_cell_yaml(
             raise RuntimeError(f'Crystal structure data was not found in "{filename}".')
 
 
-def load_yaml(fp: Union[str, bytes, os.PathLike, io.IOBase]):
+def load_yaml(fp: str | bytes | os.PathLike | io.IOBase):
     """Load yaml file.
 
     Parameters

@@ -7,7 +7,6 @@ import pathlib
 import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass, fields
-from typing import Optional, Union
 
 import numpy as np
 import pytest
@@ -25,22 +24,22 @@ cwd = pathlib.Path(__file__).parent
 class MockArgs:
     """Mock args of ArgumentParser."""
 
+    anime: str | None = None
     band_paths: str | None = None
-    filename: Optional[Sequence[Union[os.PathLike, str]]] = None
-    conf_filename: Optional[os.PathLike] = None
-    log_level: Optional[int] = None
+    filename: Sequence[os.PathLike | str] | None = None
+    conf_filename: str | os.PathLike | None = None
+    log_level: int | None = None
     fc_symmetry: bool = True
-    cell_filename: Optional[str] = None
-    conf_filename: Optional[str] = None
-    create_force_sets: Optional[list[str]] = None
+    cell_filename: str | os.PathLike | None = None
+    create_force_sets: list[str | os.PathLike] | None = None
     frequency_conversion_factor: float | None = None
-    is_check_symmetry: Optional[bool] = None
-    is_graph_plot: Optional[bool] = None
-    is_graph_save: Optional[bool] = None
-    is_legend: Optional[bool] = None
-    is_displacement: Optional[bool] = None
-    supercell_dimension: Optional[str] = None
-    magmoms: Optional[str] = None
+    is_check_symmetry: bool | None = None
+    is_graph_plot: bool | None = None
+    is_graph_save: bool | None = None
+    is_legend: bool | None = None
+    is_displacement: bool | None = None
+    supercell_dimension: str | None = None
+    magmoms: str | None = None
     use_pypolymlp: bool = False
 
     def __iter__(self):
@@ -83,7 +82,8 @@ def test_phonopy_disp_Cr(is_ncl: bool):
 
             if is_ncl:
                 np.testing.assert_allclose(
-                    vals, np.ravel([[0, 0, 1]] * 8 + [[0, 0, -1]] * 8)
+                    vals,
+                    np.ravel([[0, 0, 1]] * 8 + [[0, 0, -1]] * 8),  # type: ignore
                 )
             else:
                 np.testing.assert_allclose(vals, [1.0] * 8 + [-1.0] * 8)
@@ -97,6 +97,8 @@ def test_phonopy_disp_Cr(is_ncl: bool):
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists()
                 file_path.unlink()
+
+            _check_no_files()
 
         finally:
             os.chdir(original_cwd)
@@ -136,6 +138,8 @@ def test_create_force_sets():
             with pytest.raises(RuntimeError) as excinfo:
                 main(**argparse_control)
 
+            _check_no_files()
+
         finally:
             os.chdir(original_cwd)
 
@@ -164,6 +168,8 @@ def test_phonopy_load(load_phonopy_yaml: bool):
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists()
                 file_path.unlink()
+
+            _check_no_files()
 
         finally:
             os.chdir(original_cwd)
@@ -205,6 +211,8 @@ def test_unit_conversion_factor(load_phonopy_yaml: bool):
                 assert file_path.exists()
                 file_path.unlink()
 
+            _check_no_files()
+
         finally:
             os.chdir(original_cwd)
 
@@ -245,6 +253,8 @@ def test_unit_conversion_factor_QE(load_phonopy_yaml: bool):
                 assert file_path.exists()
                 file_path.unlink()
 
+            _check_no_files()
+
         finally:
             os.chdir(original_cwd)
 
@@ -272,8 +282,9 @@ def test_phonopy_is_check_symmetry():
             ph = phonopy.load(file_path)
             assert type(ph.unitcell) is PhonopyAtoms
             assert type(ph.primitive) is Primitive
-
             file_path.unlink()
+
+            _check_no_files()
 
         finally:
             os.chdir(original_cwd)
@@ -299,6 +310,8 @@ def test_conf_file():
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists()
                 file_path.unlink()
+
+            _check_no_files()
 
         finally:
             os.chdir(original_cwd)
@@ -328,11 +341,55 @@ def test_config_option():
                 assert file_path.exists()
                 file_path.unlink()
 
+            _check_no_files()
+
         finally:
             os.chdir(original_cwd)
 
 
+def test_anime():
+    """Test phonopy/phonopy-load command."""
+    pytest.importorskip("symfc")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            # Check sys.exit(0)
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz", anime="0 0 0"
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            _ls()
+
+            # Clean files created by phonopy-load script.
+            for created_filename in ("phonopy.yaml", "anime.ascii"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def _ls():
+    current_dir = pathlib.Path(".")
+    for file in current_dir.iterdir():
+        print(file.name)
+
+
+def _check_no_files():
+    assert not list(pathlib.Path(".").iterdir())
+
+
 def _get_phonopy_args(
+    anime: str | None = None,
     band_paths: str | None = None,
     cell_filename: str | os.PathLike | None = None,
     create_force_sets: list[str | os.PathLike] | None = None,
@@ -351,6 +408,7 @@ def _get_phonopy_args(
     else:
         _filename = [filename]
     mockargs = MockArgs(
+        anime=anime,
         band_paths=band_paths,
         cell_filename=cell_filename,
         conf_filename=conf_filename,

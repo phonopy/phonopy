@@ -36,6 +36,7 @@
 
 import numpy as np
 
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.interface.vasp import write_vasp
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
@@ -101,7 +102,7 @@ def write_animation(
 class Animation:
     """Class to convert phonon results to animation formats."""
 
-    def __init__(self, qpoint, dynamical_matrix, shift=None):
+    def __init__(self, qpoint, dynamical_matrix: DynamicalMatrix, shift=None):
         """Init method."""
         if qpoint is None:
             _qpoint = [0, 0, 0]
@@ -109,9 +110,9 @@ class Animation:
             _qpoint = qpoint
         dynamical_matrix.run(_qpoint)
         dynmat = dynamical_matrix.dynamical_matrix
-        self._eigenvalues, self._eigenvectors = np.linalg.eigh(dynmat)
+        self._eigenvalues, self._eigenvectors = np.linalg.eigh(dynmat)  # type: ignore
         self._qpoint = _qpoint
-        primitive = dynamical_matrix.get_primitive()
+        primitive = dynamical_matrix.primitive
         self._positions = primitive.scaled_positions
         self._symbols = primitive.symbols
         self._masses = primitive.masses
