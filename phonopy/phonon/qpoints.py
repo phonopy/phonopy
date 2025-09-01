@@ -205,8 +205,6 @@ class QpointsPhonon:
             w.write("\n")
 
     def _run(self):
-        import phonopy._phonopy as phonoc
-
         if self._gv_obj is not None:
             self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._gv_obj.group_velocities
@@ -218,28 +216,13 @@ class QpointsPhonon:
         num_qpoints = len(self._qpoints)
         self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
         self._eigenvalues = np.zeros((num_qpoints, num_band), dtype="double")
-        if phonoc.use_openmp():
-            dynmat = run_dynamical_matrix_solver_c(
-                self._dynamical_matrix, self._qpoints, self._nac_q_direction
-            )
-            eigenvectors = dynmat
-        elif self._with_eigenvectors:
-            dtype = "c%d" % (np.dtype("double").itemsize * 2)
-            eigenvectors = np.zeros(
-                (
-                    num_qpoints,
-                    num_band,
-                    num_band,
-                ),
-                dtype=dtype,
-                order="C",
-            )
+        dynmat = run_dynamical_matrix_solver_c(
+            self._dynamical_matrix, self._qpoints, self._nac_q_direction
+        )
+        eigenvectors = dynmat
 
-        for i, q in enumerate(self._qpoints):
-            if phonoc.use_openmp():
-                dm = dynmat[i]
-            else:
-                dm = self._get_dynamical_matrix(q)
+        for i, _q in enumerate(self._qpoints):
+            dm = dynmat[i]
             if self._with_dynamical_matrices:
                 dynamical_matrices.append(dm)
             if self._with_eigenvectors:
