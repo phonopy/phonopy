@@ -39,7 +39,11 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    DynamicalMatrixNAC,
+    DynamicalMatrixWang,
+)
 from phonopy.structure.cells import sparse_to_dense_svecs
 
 
@@ -154,7 +158,8 @@ class DerivativeOfDynamicalMatrix:
                 q_dir = np.array(q_direction, dtype="double")
                 is_nac_q_zero = False
 
-        if fc.shape[0] == fc.shape[1]:  # full fc
+        # full-FC or compact-FC
+        if fc.shape[0] == fc.shape[1]:  # type: ignore
             phonoc.derivative_dynmat(
                 ddm.view(dtype="double"),
                 fc,
@@ -204,6 +209,16 @@ class DerivativeOfDynamicalMatrix:
 
         """
         if isinstance(self._dynmat, DynamicalMatrixNAC):
+            if not isinstance(self._dynmat, DynamicalMatrixWang):
+                raise NotImplementedError(
+                    "Error: Wang NAC is not implemented in Python version."
+                )
+                if self._derivative_order == 2:
+                    print(
+                        "Error: Second derivative of NAC is not implemented. "
+                        "Set derivative order to 1."
+                    )
+                    self._derivative_order = 1
             if q_direction is None:
                 fc_nac = self._nac(q)
                 d_nac = self._d_nac(q)
