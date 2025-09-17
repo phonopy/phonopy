@@ -36,6 +36,8 @@
 
 from __future__ import annotations
 
+from typing import TextIO
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
@@ -88,7 +90,7 @@ class IrReps:
         self._primitive = dynamical_matrix.primitive
         self._dynamical_matrix = dynamical_matrix
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
-        self._character_table = None
+        self._character_table: dict
 
         self._symmetry_dataset = Symmetry(
             self._primitive, symprec=self._symprec
@@ -102,7 +104,7 @@ class IrReps:
 
     def run(self):
         """Calculate irreps."""
-        self._set_eigenvectors(self._dynamical_matrix)
+        self._set_eigenvectors()
         self._rotations_at_q, self._translations_at_q = self._get_rotations_at_q()
         (
             self._pointgroup_symbol,
@@ -120,19 +122,12 @@ class IrReps:
         self._ddm.run(self._qpoint)
         self._irreps = self._get_irreps()
         self._characters, self._irrep_dims = self._get_characters()
-        self._ir_labels = None
         if (abs(self._qpoint) < self._symprec).all():
-            self._ir_labels = self._get_ir_labels(
-                self._character_table, self._characters, self._rotation_symbols
-            )
-
-        if self._ir_labels is None:
-            if (abs(self._qpoint) < self._symprec).all():
-                if self._log_level > 0:
-                    print("Database for this point group is not prepared.")
-            else:
-                if self._log_level > 0 and self._rotation_symbols is not None:
-                    print("Database for non-Gamma point is not prepared.")
+            self._ir_labels = self._get_ir_labels()
+            if self._log_level:
+                if (abs(self._qpoint) < self._symprec).all():
+                    if self._ir_labels is None:
+                        print("Database for this point group is not prepared.")
 
     @property
     def band_indices(self) -> list[list[int]]:
@@ -146,36 +141,38 @@ class IrReps:
         return self._degenerate_sets
 
     @property
-    def characters(self):
+    def characters(self) -> NDArray:
         """Return characters of irreps."""
         return self._characters
 
     @property
-    def eigenvectors(self):
+    def eigenvectors(self) -> NDArray:
         """Return eigenvectors."""
         return self._eig_vecs
 
     @property
-    def irreps(self):
+    def irreps(self) -> list[NDArray]:
         """Return irreps."""
         return self._irreps
 
     @property
-    def ground_matrices(self):
+    def ground_matrices(self) -> NDArray:
         """Return ground matrices."""
         return self._ground_matrices
 
     @property
-    def rotation_symbols(self):
+    def rotation_symbols(self) -> list[str]:
         """Return symbols assigned to rotation matrices."""
         return self._rotation_symbols
 
     @property
-    def conventional_rotations(self):
+    def conventional_rotations(self) -> NDArray:
         """Return rotation matrices."""
         return self._conventional_rotations
 
-    def get_projection_operators(self, idx_irrep, i=None, j=None):
+    def get_projection_operators(
+        self, idx_irrep: int, i: int | None = None, j: int | None = None
+    ) -> NDArray:
         """Return projection operators."""
         if i is None or j is None:
             return self._get_character_projection_operators(idx_irrep)
@@ -183,19 +180,20 @@ class IrReps:
             return self._get_projection_operators(idx_irrep, i, j)
 
     @property
-    def qpoint(self):
+    def qpoint(self) -> NDArray:
         """Return q-point."""
         return self._qpoint
 
-    def show(self, show_irreps=False):
+    def show(self, show_irreps: bool = False):
         """Show irreps."""
         self._show(show_irreps)
 
-    def write_yaml(self, show_irreps=False):
+    def write_yaml(self, show_irreps: bool = False):
         """Write irreps in yaml file."""
         self._write_yaml(show_irreps)
 
-    def _set_eigenvectors(self, dm: DynamicalMatrix | DynamicalMatrixNAC):
+    def _set_eigenvectors(self):
+        dm = self._dynamical_matrix
         if isinstance(dm, DynamicalMatrixNAC):
             dm.run(self._qpoint, q_direction=self._nac_q_direction)
         else:
@@ -253,7 +251,7 @@ class IrReps:
 
         return np.array(matrices)
 
-    def _get_characters(self):
+    def _get_characters(self) -> tuple[NDArray, NDArray]:
         characters = []
         irrep_dims = []
         for irrep_Rs in self._irreps:
@@ -277,7 +275,7 @@ class IrReps:
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
         return matrix
 
-    def _get_irreps(self):
+    def _get_irreps(self) -> list[NDArray]:
         eigvecs = self._eig_vecs.T
         irreps = []
         for band_indices in self._degenerate_sets:
@@ -302,7 +300,7 @@ class IrReps:
 
         return irreps
 
-    def _get_character_projection_operators(self, idx_irrep):
+    def _get_character_projection_operators(self, idx_irrep: int) -> NDArray:
         dim = self._irrep_dims[idx_irrep]
         chars = self._characters[idx_irrep]
         return (
@@ -314,7 +312,7 @@ class IrReps:
             / len(self._rotations_at_q)
         )
 
-    def _get_projection_operators(self, idx_irrep, i, j):
+    def _get_projection_operators(self, idx_irrep: int, i: int, j: int) -> NDArray:
         dim = self._irrep_dims[idx_irrep]
         return (
             np.sum(
@@ -328,13 +326,13 @@ class IrReps:
             / len(self._rotations_at_q)
         )
 
-    def _get_rotation_symbols(self) -> tuple[list[str] | None, dict | None]:
+    def _get_rotation_symbols(self) -> tuple[list[str], dict]:
         # Check availability of database
         if (
             self._pointgroup_symbol not in character_table.keys()
             or character_table[self._pointgroup_symbol] is None
         ):
-            return None, None
+            raise RuntimeError("Character table not found.")
 
         # Loop over possible sets of character tables for the point group
         # Among them, only one set can fit.
@@ -347,24 +345,21 @@ class IrReps:
                 break
 
         if None in rotation_symbols:
-            return None, None
+            raise RuntimeError("Rotation symbols not found.")
 
         return rotation_symbols, ct
 
-    def _get_ir_labels(self, character_table, characters, rotation_symbols):
-        if rotation_symbols is None:
-            return None
-
+    def _get_ir_labels(self) -> list[str | None]:
         ir_labels = []
-        rot_list = character_table["rotation_list"]
-        char_table = character_table["character_table"]
-        for chars in characters:
+        rot_list = self._character_table["rotation_list"]
+        char_table = self._character_table["character_table"]
+        for chars in self._characters:
             chars_ordered = np.zeros(len(rot_list), dtype=complex)
-            for rs, ch in zip(rotation_symbols, chars):
+            for rs, ch in zip(self._rotation_symbols, chars):
                 chars_ordered[rot_list.index(rs)] += ch
 
             for i, rl in enumerate(rot_list):
-                chars_ordered[i] /= len(character_table["mapping_table"][rl])
+                chars_ordered[i] /= len(self._character_table["mapping_table"][rl])
 
             found = False
             for ct_label in char_table.keys():
@@ -389,7 +384,7 @@ class IrReps:
 
         return ir_labels
 
-    def _show(self, show_irreps):
+    def _show(self, show_irreps: bool):
         print("")
         print("-------------------------------")
         print("  Irreducible representations")
@@ -482,7 +477,7 @@ class IrReps:
             if len(irrep_R) == 1:
                 print("")
 
-    def _write_yaml(self, show_irreps):
+    def _write_yaml(self, show_irreps: bool):
         w = open("irreps.yaml", "w")
         w.write("q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(self._qpoint))
         w.write("point_group: %s\n" % self._pointgroup_symbol)
@@ -522,7 +517,7 @@ class IrReps:
 
         w.close()
 
-    def _write_yaml_irreps(self, file_pointer):
+    def _write_yaml_irreps(self, file_pointer: TextIO):
         w = file_pointer
         if not self._irreps:
             self._irrep = self._get_irreps()
@@ -576,7 +571,7 @@ def _get_rotation_symbol(rotation: NDArray, mapping_table: dict) -> str | None:
     return None
 
 
-def _print_characters(characters, width=6):
+def _print_characters(characters: NDArray, width: int = 6):
     text = ""
     for i, c in enumerate(characters):
         angle = np.angle(c) / np.pi * 180
@@ -595,7 +590,14 @@ def _print_characters(characters, width=6):
             text = ""
 
 
-def _get_rotation_text(rotations, translations, rotation_symbols, width, num_rest, i):
+def _get_rotation_text(
+    rotations: NDArray,
+    translations: NDArray | None,
+    rotation_symbols: list[str] | None,
+    width: int,
+    num_rest: int,
+    i: int,
+) -> str:
     lines = []
     if rotation_symbols is None:
         if translations is None:
@@ -644,7 +646,12 @@ def _get_rotation_text(rotations, translations, rotation_symbols, width, num_res
     return "\n".join(lines)
 
 
-def _print_rotations(rotations, translations=None, rotation_symbols=None, width=6):
+def _print_rotations(
+    rotations: NDArray,
+    translations: NDArray | None = None,
+    rotation_symbols: list[str] | None = None,
+    width: int = 6,
+):
     for i in range(len(rotations) // width):
         print(
             _get_rotation_text(
