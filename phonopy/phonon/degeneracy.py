@@ -150,18 +150,18 @@ def _get_dD(
 
     """
     ddm.run(q)
-    ddm_vals = ddm.get_derivative_of_dynamical_matrix()
+    ddm_vals = ddm.d_dynamical_matrix
     assert ddm_vals is not None
     dD = np.zeros(ddm_vals.shape[1:], dtype=ddm_vals.dtype, order="C")
     if len(ddm_vals) == 3:
         for i in range(3):
-            dD += perturbation[i] * ddm_vals[i]
+            dD += perturbation[i] * ddm_vals[i]  # type: ignore
         return dD / np.linalg.norm(perturbation)
     else:
-        dD += perturbation[0] * perturbation[0] * ddm_vals[0]
-        dD += perturbation[1] * perturbation[1] * ddm_vals[1]
-        dD += perturbation[2] * perturbation[2] * ddm_vals[2]
-        dD += 2 * perturbation[0] * perturbation[1] * ddm_vals[5]
-        dD += 2 * perturbation[0] * perturbation[2] * ddm_vals[4]
-        dD += 2 * perturbation[1] * perturbation[2] * ddm_vals[3]
+        dD += perturbation[0] * perturbation[0] * ddm_vals[0]  # type: ignore
+        dD += perturbation[1] * perturbation[1] * ddm_vals[1]  # type: ignore
+        dD += perturbation[2] * perturbation[2] * ddm_vals[2]  # type: ignore
+        dD += 2 * perturbation[0] * perturbation[1] * ddm_vals[5]  # type: ignore
+        dD += 2 * perturbation[0] * perturbation[2] * ddm_vals[4]  # type: ignore
+        dD += 2 * perturbation[1] * perturbation[2] * ddm_vals[3]  # type: ignore
         return dD / np.linalg.norm(perturbation) ** 2
