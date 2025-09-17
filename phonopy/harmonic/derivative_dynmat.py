@@ -38,6 +38,7 @@ import warnings
 from typing import Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.structure.cells import sparse_to_dense_svecs
@@ -100,7 +101,7 @@ class DerivativeOfDynamicalMatrix:
         else:
             self._run_c(q, q_direction=q_direction)
 
-    def set_derivative_order(self, order):
+    def set_derivative_order(self, order: int):
         """Set order of derivative."""
         if order == 1 or order == 2:
             self._derivative_order = order
@@ -108,12 +109,12 @@ class DerivativeOfDynamicalMatrix:
             print("Error: derivative order has to be 1 or 2")
 
     @property
-    def d_dynamical_matrix(self):
+    def d_dynamical_matrix(self) -> NDArray | None:
         """Return derivative of dynamical matrix.
 
         Returns
         -------
-        ndarray
+        ndarray or None
             Derivative of dynamical matrix with respect to q.
             shape=(3, num_patom * 3, num_patom * 3),
             dtype="c%d" % (np.dtype('double').itemsize * 2)

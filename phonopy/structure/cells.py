@@ -922,7 +922,7 @@ def isclose(
     return True
 
 
-def is_primitive_cell(rotations):
+def is_primitive_cell(rotations: NDArray) -> bool:
     """Check if single identity operation exists in rotations or not.
 
     This is used for checking a cell is a primitive cell or not.
