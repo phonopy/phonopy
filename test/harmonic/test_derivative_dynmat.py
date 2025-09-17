@@ -140,6 +140,7 @@ def test_ddm_nac(ph_nacl: Phonopy):
 def test_ddm_nac_wang(ph_nacl_wang: Phonopy):
     """Test by NaCl with Wang's NAC."""
     _assert(ph_nacl_wang, ddm_ph_nacl, show=True)
+    _assert(ph_nacl_wang, ddm_ph_nacl, show=True, lang="Py")
 
 
 def test_ddm_nac_compact(ph_nacl_compact_fcsym: Phonopy):
@@ -157,11 +158,12 @@ def test_ddm_nonac_compact(ph_nacl_nonac_compact_fc: Phonopy):
     _assert(ph_nacl_nonac_compact_fc, ddm_ph_nacl_nonac)
 
 
-def _assert(ph: Phonopy, ref_vals, show=False):
+def _assert(ph: Phonopy, ref_vals: list, show: bool = False, lang: str = "C"):
     dynmat = ph.dynamical_matrix
+    assert dynmat is not None
     ddynmat = DerivativeOfDynamicalMatrix(dynmat)
     for i, q in enumerate(([0, 0.1, 0.1], [0, 0.25, 0.25])):
-        ddynmat.run(q)
+        ddynmat.run(q, lang=lang)
         ddm = ddynmat.d_dynamical_matrix
         condition = np.abs(ddm) > 1e-8
         vals = np.extract(condition, ddm).real

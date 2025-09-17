@@ -280,7 +280,6 @@ class DerivativeOfDynamicalMatrix:
 
         """
         assert isinstance(self._dynmat, DynamicalMatrixNAC)
-        raise RuntimeError()
         num_atom = len(self._pcell)
         nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double")
         if (np.abs(q_direction) < 1e-5).all():
@@ -305,15 +304,16 @@ class DerivativeOfDynamicalMatrix:
         return nac_q * nac_factor / N
 
     def _d_nac(self, q_direction):
+        assert isinstance(self._dynmat, DynamicalMatrixNAC)
         num_atom = len(self._pcell)
         d_nac_q = np.zeros((3, num_atom, num_atom, 3, 3), dtype="double")
         if (np.abs(q_direction) < 1e-5).all():
             return d_nac_q
 
         rec_lat = np.linalg.inv(self._pcell.cell)
-        nac_factor = self._dynmat.get_nac_factor()
-        Z = self._dynmat.get_born_effective_charges()
-        e = self._dynmat.get_dielectric_constant()
+        nac_factor = self._dynmat.nac_factor
+        Z = self._dynmat.born
+        e = self._dynmat.dielectric_constant
         q = np.dot(rec_lat, q_direction)
 
         B = self._B(e, q)
