@@ -34,12 +34,16 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
-from typing import Union
+from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    DynamicalMatrixNAC,
+    DynamicalMatrixWang,
+)
 from phonopy.structure.cells import sparse_to_dense_svecs
 
 
@@ -57,7 +61,7 @@ class DerivativeOfDynamicalMatrix:
 
     Q_DIRECTION_TOLERANCE = 1e-5
 
-    def __init__(self, dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC]):
+    def __init__(self, dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC):
         """Init method.
 
         Parameters
@@ -93,14 +97,14 @@ class DerivativeOfDynamicalMatrix:
         # 2. Python implementation
         self._derivative_order = None
 
-    def run(self, q, q_direction=None, lang="C"):
+    def run(self, q, q_direction: ArrayLike | None = None, lang="C"):
         """Run at q."""
         if self._derivative_order is not None or lang != "C":
             self._run_py(q, q_direction=q_direction)
         else:
             self._run_c(q, q_direction=q_direction)
 
-    def set_derivative_order(self, order):
+    def set_derivative_order(self, order: int):
         """Set order of derivative."""
         if order == 1 or order == 2:
             self._derivative_order = order
@@ -108,28 +112,18 @@ class DerivativeOfDynamicalMatrix:
             print("Error: derivative order has to be 1 or 2")
 
     @property
-    def d_dynamical_matrix(self):
+    def d_dynamical_matrix(self) -> NDArray | None:
         """Return derivative of dynamical matrix.
 
         Returns
         -------
-        ndarray
+        ndarray or None
             Derivative of dynamical matrix with respect to q.
             shape=(3, num_patom * 3, num_patom * 3),
             dtype="c%d" % (np.dtype('double').itemsize * 2)
 
         """
         return self._ddm
-
-    def get_derivative_of_dynamical_matrix(self):
-        """Return derivative of dynamical matrix."""
-        warnings.warn(
-            "DerivativeOfDynamicalMatrix.get_derivative_of_dynamical_matrix() is "
-            "deprecated. Use d_dynamical_matrix attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.d_dynamical_matrix
 
     def _run_c(self, q, q_direction=None):
         import phonopy._phonopy as phonoc
@@ -164,7 +158,8 @@ class DerivativeOfDynamicalMatrix:
                 q_dir = np.array(q_direction, dtype="double")
                 is_nac_q_zero = False
 
-        if fc.shape[0] == fc.shape[1]:  # full fc
+        # full-FC or compact-FC
+        if fc.shape[0] == fc.shape[1]:  # type: ignore
             phonoc.derivative_dynmat(
                 ddm.view(dtype="double"),
                 fc,
@@ -207,13 +202,23 @@ class DerivativeOfDynamicalMatrix:
 
         self._ddm = ddm
 
-    def _run_py(self, q, q_direction=None):
+    def _run_py(self, q, q_direction: ArrayLike | None = None):
         """Run in python.
 
         This works only for full-FC.
 
         """
         if isinstance(self._dynmat, DynamicalMatrixNAC):
+            if not isinstance(self._dynmat, DynamicalMatrixWang):
+                raise NotImplementedError(
+                    "Error: Wang NAC is not implemented in Python version."
+                )
+                if self._derivative_order == 2:
+                    print(
+                        "Error: Second derivative of NAC is not implemented. "
+                        "Set derivative order to 1."
+                    )
+                    self._derivative_order = 1
             if q_direction is None:
                 fc_nac = self._nac(q)
                 d_nac = self._d_nac(q)
@@ -283,17 +288,22 @@ class DerivativeOfDynamicalMatrix:
         # Impose Hermite condition
         self._ddm = np.array([(ddm[i] + ddm[i].conj().T) / 2 for i in range(num_elem)])
 
-    def _nac(self, q_direction):
-        """nac_term = (A1 (x) A2) / B * coef."""
+    def _nac(self, q_direction: ArrayLike):
+        """Python implementation of nac_term = (A1 (x) A2) / B * coef.
+
+        This is for testing purposes.
+
+        """
+        assert isinstance(self._dynmat, DynamicalMatrixNAC)
         num_atom = len(self._pcell)
         nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double")
         if (np.abs(q_direction) < 1e-5).all():
             return nac_q
 
         rec_lat = np.linalg.inv(self._pcell.cell)
-        nac_factor = self._dynmat.get_nac_factor()
-        Z = self._dynmat.get_born_effective_charges()
-        e = self._dynmat.get_dielectric_constant()
+        nac_factor = self._dynmat.nac_factor
+        Z = self._dynmat.born
+        e = self._dynmat.dielectric_constant
         q = np.dot(rec_lat, q_direction)
 
         B = self._B(e, q)
@@ -309,15 +319,16 @@ class DerivativeOfDynamicalMatrix:
         return nac_q * nac_factor / N
 
     def _d_nac(self, q_direction):
+        assert isinstance(self._dynmat, DynamicalMatrixNAC)
         num_atom = len(self._pcell)
         d_nac_q = np.zeros((3, num_atom, num_atom, 3, 3), dtype="double")
         if (np.abs(q_direction) < 1e-5).all():
             return d_nac_q
 
         rec_lat = np.linalg.inv(self._pcell.cell)
-        nac_factor = self._dynmat.get_nac_factor()
-        Z = self._dynmat.get_born_effective_charges()
-        e = self._dynmat.get_dielectric_constant()
+        nac_factor = self._dynmat.nac_factor
+        Z = self._dynmat.born
+        e = self._dynmat.dielectric_constant
         q = np.dot(rec_lat, q_direction)
 
         B = self._B(e, q)

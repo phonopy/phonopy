@@ -36,8 +36,10 @@
 
 from __future__ import annotations
 
+from typing import TextIO
+
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
@@ -88,7 +90,7 @@ class IrReps:
         self._primitive = dynamical_matrix.primitive
         self._dynamical_matrix = dynamical_matrix
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
-        self._character_table = None
+        self._character_table: dict
 
         self._symmetry_dataset = Symmetry(
             self._primitive, symprec=self._symprec
@@ -102,8 +104,8 @@ class IrReps:
 
     def run(self):
         """Calculate irreps."""
-        self._set_eigenvectors(self._dynamical_matrix)
-        (self._rotations_at_q, self._translations_at_q) = self._get_rotations_at_q()
+        self._set_eigenvectors()
+        self._rotations_at_q, self._translations_at_q = self._get_rotations_at_q()
         (
             self._pointgroup_symbol,
             self._transformation_matrix,
@@ -114,30 +116,21 @@ class IrReps:
 
         # Degeneracy for irreps has to be determined considering character tables, too.
         # But currently only similarity of phonon frequencies is used to judge it.
-        self._degenerate_sets = self._get_degenerate_sets()
+        self._degenerate_sets = get_degenerate_sets(
+            self._freqs, cutoff=self._degeneracy_tolerance
+        )
+        self._ddm.run(self._qpoint)
         self._irreps = self._get_irreps()
         self._characters, self._irrep_dims = self._get_characters()
-        self._ir_labels = None
         if (abs(self._qpoint) < self._symprec).all():
-            self._ir_labels = self._get_ir_labels(
-                self._character_table, self._characters, self._rotation_symbols
-            )
-
-        if self._ir_labels is None:
-            if (abs(self._qpoint) < self._symprec).all():
-                if self._log_level > 0:
-                    print("Database for this point group is not prepared.")
-            else:
-                if self._log_level > 0 and self._rotation_symbols is not None:
-                    print("Database for non-Gamma point is not prepared.")
-
-    def _get_degenerate_sets(self):
-        deg_sets = get_degenerate_sets(self._freqs, cutoff=self._degeneracy_tolerance)
-        self._ddm.run(self._qpoint)
-        return deg_sets
+            self._ir_labels = self._get_ir_labels()
+            if self._log_level:
+                if (abs(self._qpoint) < self._symprec).all():
+                    if self._ir_labels is None:
+                        print("Database for this point group is not prepared.")
 
     @property
-    def band_indices(self):
+    def band_indices(self) -> list[list[int]]:
         """Return band indices.
 
         Returns
@@ -148,36 +141,38 @@ class IrReps:
         return self._degenerate_sets
 
     @property
-    def characters(self):
+    def characters(self) -> NDArray:
         """Return characters of irreps."""
         return self._characters
 
     @property
-    def eigenvectors(self):
+    def eigenvectors(self) -> NDArray:
         """Return eigenvectors."""
         return self._eig_vecs
 
     @property
-    def irreps(self):
+    def irreps(self) -> list[NDArray]:
         """Return irreps."""
         return self._irreps
 
     @property
-    def ground_matrices(self):
+    def ground_matrices(self) -> NDArray:
         """Return ground matrices."""
         return self._ground_matrices
 
     @property
-    def rotation_symbols(self):
+    def rotation_symbols(self) -> list[str]:
         """Return symbols assigned to rotation matrices."""
         return self._rotation_symbols
 
     @property
-    def conventional_rotations(self):
+    def conventional_rotations(self) -> NDArray:
         """Return rotation matrices."""
         return self._conventional_rotations
 
-    def get_projection_operators(self, idx_irrep, i=None, j=None):
+    def get_projection_operators(
+        self, idx_irrep: int, i: int | None = None, j: int | None = None
+    ) -> NDArray:
         """Return projection operators."""
         if i is None or j is None:
             return self._get_character_projection_operators(idx_irrep)
@@ -185,33 +180,36 @@ class IrReps:
             return self._get_projection_operators(idx_irrep, i, j)
 
     @property
-    def qpoint(self):
+    def qpoint(self) -> NDArray:
         """Return q-point."""
         return self._qpoint
 
-    def show(self, show_irreps=False):
+    def show(self, show_irreps: bool = False):
         """Show irreps."""
         self._show(show_irreps)
 
-    def write_yaml(self, show_irreps=False):
+    def write_yaml(self, show_irreps: bool = False):
         """Write irreps in yaml file."""
         self._write_yaml(show_irreps)
 
-    def _set_eigenvectors(self, dm):
-        if self._nac_q_direction is not None and (np.abs(self._qpoint) < 1e-5).all():
+    def _set_eigenvectors(self):
+        dm = self._dynamical_matrix
+        if isinstance(dm, DynamicalMatrixNAC):
             dm.run(self._qpoint, q_direction=self._nac_q_direction)
         else:
             dm.run(self._qpoint)
+        assert dm.dynamical_matrix is not None
         eig_vals, self._eig_vecs = np.linalg.eigh(dm.dynamical_matrix)
         self._freqs = np.sqrt(abs(eig_vals)) * np.sign(eig_vals) * self._factor
 
-    def _get_rotations_at_q(self):
+    def _get_rotations_at_q(self) -> tuple[NDArray, NDArray]:
+        """Return little group of q."""
         rotations_at_q = []
         trans_at_q = []
         for r, t in zip(
             self._symmetry_dataset.rotations, self._symmetry_dataset.translations
         ):
-            diff = np.dot(self._qpoint, r) - self._qpoint
+            diff = self._qpoint @ r - self._qpoint
             if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
                 for i in range(3):
@@ -221,7 +219,7 @@ class IrReps:
 
         return np.array(rotations_at_q), np.array(trans_at_q)
 
-    def _get_conventional_rotations(self):
+    def _get_conventional_rotations(self) -> tuple[str, NDArray, NDArray]:
         rotations = self._rotations_at_q.copy()
         pointgroup_symbol = self._symmetry_dataset.pointgroup
         transformation_matrix = self._symmetry_dataset.transformation_matrix
@@ -229,18 +227,20 @@ class IrReps:
             transformation_matrix, rotations
         )
 
-        return (pointgroup_symbol, transformation_matrix, conventional_rotations)
+        return pointgroup_symbol, transformation_matrix, conventional_rotations
 
-    def _transform_rotations(self, tmat, rotations):
+    def _transform_rotations(
+        self, transformation_matrix: NDArray, rotations: NDArray
+    ) -> NDArray:
         trans_rots = []
 
         for r in rotations:
-            r_conv = similarity_transformation(tmat, r)
+            r_conv = similarity_transformation(transformation_matrix, r)
             trans_rots.append(np.rint(r_conv).astype(int))
 
         return np.array(trans_rots)
 
-    def _get_ground_matrix(self):
+    def _get_ground_matrix(self) -> NDArray:
         matrices = []
 
         for r, t in zip(self._rotations_at_q, self._translations_at_q):
@@ -251,7 +251,7 @@ class IrReps:
 
         return np.array(matrices)
 
-    def _get_characters(self):
+    def _get_characters(self) -> tuple[NDArray, NDArray]:
         characters = []
         irrep_dims = []
         for irrep_Rs in self._irreps:
@@ -259,24 +259,23 @@ class IrReps:
             irrep_dims.append(len(irrep_Rs[0]))
         return np.array(characters), np.array(irrep_dims)
 
-    def _get_modified_permutation_matrix(self, r, t):
+    def _get_modified_permutation_matrix(self, r: NDArray, t: NDArray) -> NDArray:
         num_atom = len(self._primitive)
         pos = self._primitive.scaled_positions
         matrix = np.zeros((num_atom, num_atom), dtype=complex)
         for i, p1 in enumerate(pos):
-            p_rot = np.dot(r, p1) + t  # i -> j
+            p_rot = r @ p1 + t  # i -> j
             for j, p2 in enumerate(pos):
                 diff = p_rot - p2  # Rx_i + t - x_j
-                if (abs(diff - np.rint(diff)) < self._symprec).all():
-                    phase_factor = np.dot(
-                        self._qpoint, np.dot(np.linalg.inv(r), p2 - t) - p2
-                    )
+                diff -= np.rint(diff)
+                if (np.linalg.norm(diff @ self._primitive.cell) < self._symprec).all():
+                    phase_factor = self._qpoint @ (np.linalg.inv(r) @ (p2 - t) - p2)
                     if self._is_little_cogroup:
-                        phase_factor = np.dot(t, self._qpoint)
+                        phase_factor = t @ self._qpoint
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
         return matrix
 
-    def _get_irreps(self):
+    def _get_irreps(self) -> list[NDArray]:
         eigvecs = self._eig_vecs.T
         irreps = []
         for band_indices in self._degenerate_sets:
@@ -286,7 +285,7 @@ class IrReps:
 
                 if n_deg == 1:
                     vec = eigvecs[band_indices[0]]
-                    irrep_Rs.append([[np.vdot(vec, np.dot(mat, vec))]])
+                    irrep_Rs.append([[np.vdot(vec, mat @ vec)]])
                     continue
 
                 irrep_R = np.zeros((n_deg, n_deg), dtype=complex)
@@ -294,14 +293,14 @@ class IrReps:
                     vec_i = eigvecs[b_i]
                     for j, b_j in enumerate(band_indices):
                         vec_j = eigvecs[b_j]
-                        irrep_R[i, j] = np.vdot(vec_i, np.dot(mat, vec_j))
+                        irrep_R[i, j] = np.vdot(vec_i, mat @ vec_j)
                 irrep_Rs.append(irrep_R)
 
             irreps.append(np.array(irrep_Rs))
 
         return irreps
 
-    def _get_character_projection_operators(self, idx_irrep):
+    def _get_character_projection_operators(self, idx_irrep: int) -> NDArray:
         dim = self._irrep_dims[idx_irrep]
         chars = self._characters[idx_irrep]
         return (
@@ -313,7 +312,7 @@ class IrReps:
             / len(self._rotations_at_q)
         )
 
-    def _get_projection_operators(self, idx_irrep, i, j):
+    def _get_projection_operators(self, idx_irrep: int, i: int, j: int) -> NDArray:
         dim = self._irrep_dims[idx_irrep]
         return (
             np.sum(
@@ -327,41 +326,40 @@ class IrReps:
             / len(self._rotations_at_q)
         )
 
-    def _get_rotation_symbols(self):
+    def _get_rotation_symbols(self) -> tuple[list[str], dict]:
         # Check availability of database
         if (
             self._pointgroup_symbol not in character_table.keys()
             or character_table[self._pointgroup_symbol] is None
         ):
-            return None, None
+            raise RuntimeError("Character table not found.")
 
+        # Loop over possible sets of character tables for the point group
+        # Among them, only one set can fit.
         for ct in character_table[self._pointgroup_symbol]:
-            mapping_table = ct["mapping_table"]
+            mapping_table: dict = ct["mapping_table"]
             rotation_symbols = []
             for r in self._conventional_rotations:
                 rotation_symbols.append(_get_rotation_symbol(r, mapping_table))
-            if False not in rotation_symbols:
+            if None not in rotation_symbols:
                 break
 
-        if False in rotation_symbols:
-            return None, None
+        if None in rotation_symbols:
+            raise RuntimeError("Rotation symbols not found.")
 
         return rotation_symbols, ct
 
-    def _get_ir_labels(self, character_table, characters, rotation_symbols):
-        if rotation_symbols is None:
-            return None
-
+    def _get_ir_labels(self) -> list[str | None]:
         ir_labels = []
-        rot_list = character_table["rotation_list"]
-        char_table = character_table["character_table"]
-        for chars in characters:
+        rot_list = self._character_table["rotation_list"]
+        char_table = self._character_table["character_table"]
+        for chars in self._characters:
             chars_ordered = np.zeros(len(rot_list), dtype=complex)
-            for rs, ch in zip(rotation_symbols, chars):
+            for rs, ch in zip(self._rotation_symbols, chars):
                 chars_ordered[rot_list.index(rs)] += ch
 
             for i, rl in enumerate(rot_list):
-                chars_ordered[i] /= len(character_table["mapping_table"][rl])
+                chars_ordered[i] /= len(self._character_table["mapping_table"][rl])
 
             found = False
             for ct_label in char_table.keys():
@@ -386,7 +384,7 @@ class IrReps:
 
         return ir_labels
 
-    def _show(self, show_irreps):
+    def _show(self, show_irreps: bool):
         print("")
         print("-------------------------------")
         print("  Irreducible representations")
@@ -479,7 +477,7 @@ class IrReps:
             if len(irrep_R) == 1:
                 print("")
 
-    def _write_yaml(self, show_irreps):
+    def _write_yaml(self, show_irreps: bool):
         w = open("irreps.yaml", "w")
         w.write("q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(self._qpoint))
         w.write("point_group: %s\n" % self._pointgroup_symbol)
@@ -519,7 +517,7 @@ class IrReps:
 
         w.close()
 
-    def _write_yaml_irreps(self, file_pointer):
+    def _write_yaml_irreps(self, file_pointer: TextIO):
         w = file_pointer
         if not self._irreps:
             self._irrep = self._get_irreps()
@@ -564,16 +562,16 @@ class IrReps:
         pass
 
 
-def _get_rotation_symbol(rotation, mapping_table):
-    for k in mapping_table:
-        v = mapping_table[k]
-        for r in v:
+def _get_rotation_symbol(rotation: NDArray, mapping_table: dict) -> str | None:
+    for rotation_symbol in mapping_table:
+        rot_mats = mapping_table[rotation_symbol]
+        for r in rot_mats:
             if (r == rotation).all():
-                return k
-    return False
+                return rotation_symbol
+    return None
 
 
-def _print_characters(characters, width=6):
+def _print_characters(characters: NDArray, width: int = 6):
     text = ""
     for i, c in enumerate(characters):
         angle = np.angle(c) / np.pi * 180
@@ -592,7 +590,14 @@ def _print_characters(characters, width=6):
             text = ""
 
 
-def _get_rotation_text(rotations, translations, rotation_symbols, width, num_rest, i):
+def _get_rotation_text(
+    rotations: NDArray,
+    translations: NDArray | None,
+    rotation_symbols: list[str] | None,
+    width: int,
+    num_rest: int,
+    i: int,
+) -> str:
     lines = []
     if rotation_symbols is None:
         if translations is None:
@@ -641,7 +646,12 @@ def _get_rotation_text(rotations, translations, rotation_symbols, width, num_res
     return "\n".join(lines)
 
 
-def _print_rotations(rotations, translations=None, rotation_symbols=None, width=6):
+def _print_rotations(
+    rotations: NDArray,
+    translations: NDArray | None = None,
+    rotation_symbols: list[str] | None = None,
+    width: int = 6,
+):
     for i in range(len(rotations) // width):
         print(
             _get_rotation_text(
