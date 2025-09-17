@@ -37,7 +37,7 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
@@ -103,7 +103,7 @@ class IrReps:
     def run(self):
         """Calculate irreps."""
         self._set_eigenvectors(self._dynamical_matrix)
-        (self._rotations_at_q, self._translations_at_q) = self._get_rotations_at_q()
+        self._rotations_at_q, self._translations_at_q = self._get_rotations_at_q()
         (
             self._pointgroup_symbol,
             self._transformation_matrix,
@@ -114,7 +114,10 @@ class IrReps:
 
         # Degeneracy for irreps has to be determined considering character tables, too.
         # But currently only similarity of phonon frequencies is used to judge it.
-        self._degenerate_sets = self._get_degenerate_sets()
+        self._degenerate_sets = get_degenerate_sets(
+            self._freqs, cutoff=self._degeneracy_tolerance
+        )
+        self._ddm.run(self._qpoint)
         self._irreps = self._get_irreps()
         self._characters, self._irrep_dims = self._get_characters()
         self._ir_labels = None
@@ -131,13 +134,8 @@ class IrReps:
                 if self._log_level > 0 and self._rotation_symbols is not None:
                     print("Database for non-Gamma point is not prepared.")
 
-    def _get_degenerate_sets(self):
-        deg_sets = get_degenerate_sets(self._freqs, cutoff=self._degeneracy_tolerance)
-        self._ddm.run(self._qpoint)
-        return deg_sets
-
     @property
-    def band_indices(self):
+    def band_indices(self) -> list[list[int]]:
         """Return band indices.
 
         Returns
@@ -197,21 +195,23 @@ class IrReps:
         """Write irreps in yaml file."""
         self._write_yaml(show_irreps)
 
-    def _set_eigenvectors(self, dm):
-        if self._nac_q_direction is not None and (np.abs(self._qpoint) < 1e-5).all():
+    def _set_eigenvectors(self, dm: DynamicalMatrix | DynamicalMatrixNAC):
+        if isinstance(dm, DynamicalMatrixNAC):
             dm.run(self._qpoint, q_direction=self._nac_q_direction)
         else:
             dm.run(self._qpoint)
+        assert dm.dynamical_matrix is not None
         eig_vals, self._eig_vecs = np.linalg.eigh(dm.dynamical_matrix)
         self._freqs = np.sqrt(abs(eig_vals)) * np.sign(eig_vals) * self._factor
 
-    def _get_rotations_at_q(self):
+    def _get_rotations_at_q(self) -> tuple[NDArray, NDArray]:
+        """Return little group of q."""
         rotations_at_q = []
         trans_at_q = []
         for r, t in zip(
             self._symmetry_dataset.rotations, self._symmetry_dataset.translations
         ):
-            diff = np.dot(self._qpoint, r) - self._qpoint
+            diff = self._qpoint @ r - self._qpoint
             if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
                 for i in range(3):
@@ -221,7 +221,7 @@ class IrReps:
 
         return np.array(rotations_at_q), np.array(trans_at_q)
 
-    def _get_conventional_rotations(self):
+    def _get_conventional_rotations(self) -> tuple[str, NDArray, NDArray]:
         rotations = self._rotations_at_q.copy()
         pointgroup_symbol = self._symmetry_dataset.pointgroup
         transformation_matrix = self._symmetry_dataset.transformation_matrix
@@ -229,18 +229,20 @@ class IrReps:
             transformation_matrix, rotations
         )
 
-        return (pointgroup_symbol, transformation_matrix, conventional_rotations)
+        return pointgroup_symbol, transformation_matrix, conventional_rotations
 
-    def _transform_rotations(self, tmat, rotations):
+    def _transform_rotations(
+        self, transformation_matrix: NDArray, rotations: NDArray
+    ) -> NDArray:
         trans_rots = []
 
         for r in rotations:
-            r_conv = similarity_transformation(tmat, r)
+            r_conv = similarity_transformation(transformation_matrix, r)
             trans_rots.append(np.rint(r_conv).astype(int))
 
         return np.array(trans_rots)
 
-    def _get_ground_matrix(self):
+    def _get_ground_matrix(self) -> NDArray:
         matrices = []
 
         for r, t in zip(self._rotations_at_q, self._translations_at_q):
@@ -259,20 +261,19 @@ class IrReps:
             irrep_dims.append(len(irrep_Rs[0]))
         return np.array(characters), np.array(irrep_dims)
 
-    def _get_modified_permutation_matrix(self, r, t):
+    def _get_modified_permutation_matrix(self, r: NDArray, t: NDArray) -> NDArray:
         num_atom = len(self._primitive)
         pos = self._primitive.scaled_positions
         matrix = np.zeros((num_atom, num_atom), dtype=complex)
         for i, p1 in enumerate(pos):
-            p_rot = np.dot(r, p1) + t  # i -> j
+            p_rot = r @ p1 + t  # i -> j
             for j, p2 in enumerate(pos):
                 diff = p_rot - p2  # Rx_i + t - x_j
-                if (abs(diff - np.rint(diff)) < self._symprec).all():
-                    phase_factor = np.dot(
-                        self._qpoint, np.dot(np.linalg.inv(r), p2 - t) - p2
-                    )
+                diff -= np.rint(diff)
+                if (np.linalg.norm(diff @ self._primitive.cell) < self._symprec).all():
+                    phase_factor = self._qpoint @ (np.linalg.inv(r) @ (p2 - t) - p2)
                     if self._is_little_cogroup:
-                        phase_factor = np.dot(t, self._qpoint)
+                        phase_factor = t @ self._qpoint
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
         return matrix
 
@@ -286,7 +287,7 @@ class IrReps:
 
                 if n_deg == 1:
                     vec = eigvecs[band_indices[0]]
-                    irrep_Rs.append([[np.vdot(vec, np.dot(mat, vec))]])
+                    irrep_Rs.append([[np.vdot(vec, mat @ vec)]])
                     continue
 
                 irrep_R = np.zeros((n_deg, n_deg), dtype=complex)
@@ -294,7 +295,7 @@ class IrReps:
                     vec_i = eigvecs[b_i]
                     for j, b_j in enumerate(band_indices):
                         vec_j = eigvecs[b_j]
-                        irrep_R[i, j] = np.vdot(vec_i, np.dot(mat, vec_j))
+                        irrep_R[i, j] = np.vdot(vec_i, mat @ vec_j)
                 irrep_Rs.append(irrep_R)
 
             irreps.append(np.array(irrep_Rs))
@@ -327,7 +328,7 @@ class IrReps:
             / len(self._rotations_at_q)
         )
 
-    def _get_rotation_symbols(self):
+    def _get_rotation_symbols(self) -> tuple[list[str] | None, dict | None]:
         # Check availability of database
         if (
             self._pointgroup_symbol not in character_table.keys()
@@ -335,15 +336,17 @@ class IrReps:
         ):
             return None, None
 
+        # Loop over possible sets of character tables for the point group
+        # Among them, only one set can fit.
         for ct in character_table[self._pointgroup_symbol]:
-            mapping_table = ct["mapping_table"]
+            mapping_table: dict = ct["mapping_table"]
             rotation_symbols = []
             for r in self._conventional_rotations:
                 rotation_symbols.append(_get_rotation_symbol(r, mapping_table))
-            if False not in rotation_symbols:
+            if None not in rotation_symbols:
                 break
 
-        if False in rotation_symbols:
+        if None in rotation_symbols:
             return None, None
 
         return rotation_symbols, ct
@@ -564,13 +567,13 @@ class IrReps:
         pass
 
 
-def _get_rotation_symbol(rotation, mapping_table):
-    for k in mapping_table:
-        v = mapping_table[k]
-        for r in v:
+def _get_rotation_symbol(rotation: NDArray, mapping_table: dict) -> str | None:
+    for rotation_symbol in mapping_table:
+        rot_mats = mapping_table[rotation_symbol]
+        for r in rot_mats:
             if (r == rotation).all():
-                return k
-    return False
+                return rotation_symbol
+    return None
 
 
 def _print_characters(characters, width=6):

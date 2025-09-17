@@ -34,12 +34,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 
-def similarity_transformation(rot, mat):
+def similarity_transformation(rot: ArrayLike, mat: ArrayLike) -> NDArray:
     """Similarity transformation by R x M x R^-1."""
-    return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
+    return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))  # type: ignore
 
 
 def get_dot_access_dataset(dataset):
@@ -51,7 +54,7 @@ def get_dot_access_dataset(dataset):
     """
     import spglib
 
-    spg_version = tuple(int(v) for v in spglib.__version__.split(".")[:3])
+    spg_version = tuple(int(v) for v in spglib.__version__.split(".")[:3])  # type: ignore
 
     if spg_version < (2, 5, 0):
         from types import SimpleNamespace

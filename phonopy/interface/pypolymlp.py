@@ -367,6 +367,11 @@ def develop_mlp_by_pypolymlp(
 def relax_atomic_positions(
     unitcell: PhonopyAtoms,
     polymlp: Pypolymlp,  # type: ignore
+    method: Literal["BFGS", "CG", "L-BFGS-B", "SLSQP"] = "BFGS",
+    gtol: float = 1e-4,
+    maxiter: int = 1000,
+    c1: float | None = None,
+    c2: float | None = None,
     verbose: bool = False,
 ) -> PhonopyAtoms | None:
     """Relax structure using pypolymlp.
@@ -402,7 +407,9 @@ def relax_atomic_positions(
         relax_cell=False,
         relax_positions=True,
     )
-    _, _, success = polymlp.run_geometry_optimization()
+    _, _, success = polymlp.run_geometry_optimization(
+        method=method, gtol=gtol, maxiter=maxiter, c1=c1, c2=c2
+    )
     if success is None:
         relaxed_cell = None
     elif success is False:

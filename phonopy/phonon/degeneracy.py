@@ -34,15 +34,16 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Union
+from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 
 
-def degenerate_sets(freqs, cutoff=1e-4):
+def degenerate_sets(freqs: NDArray, cutoff: float = 1e-4) -> list[list[int]]:
     """Find degenerate bands from frequencies.
 
     Parameters
@@ -85,20 +86,22 @@ def degenerate_sets(freqs, cutoff=1e-4):
 
 
 def get_eigenvectors(
-    q,
-    dm: Union[DynamicalMatrix, DynamicalMatrixNAC],
+    q: ArrayLike,
+    dm: DynamicalMatrix | DynamicalMatrixNAC,
     ddm: DerivativeOfDynamicalMatrix,
-    perturbation=None,
-    derivative_order=None,
-    nac_q_direction=None,
-):
+    perturbation: ArrayLike | None = None,
+    derivative_order: int | None = None,
+    nac_q_direction: ArrayLike | None = None,
+) -> tuple[NDArray, NDArray]:
     """Return degenerated eigenvalues and rotated eigenvalues."""
-    if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
+    if isinstance(dm, DynamicalMatrixNAC):
         dm.run(q, q_direction=nac_q_direction)
     else:
         dm.run(q)
+
+    assert dm.dynamical_matrix is not None
     eigvals, eigvecs = np.linalg.eigh(dm.dynamical_matrix)
-    eigvals = eigvals.real
+    eigvals = eigvals.real  # type: ignore
     if perturbation is None:
         return eigvals, eigvecs
 
@@ -110,7 +113,9 @@ def get_eigenvectors(
     return eigvals, rot_eigvecs
 
 
-def rotate_eigenvectors(eigvals, eigvecs, dD):
+def rotate_eigenvectors(
+    eigvals: NDArray, eigvecs: NDArray, dD: NDArray
+) -> tuple[NDArray, NDArray]:
     """Rotate eigenvectors among degenerated band.
 
     Parameters
@@ -134,7 +139,9 @@ def rotate_eigenvectors(eigvals, eigvecs, dD):
     return rot_eigvecs, eigvals_dD
 
 
-def _get_dD(q, ddm: DerivativeOfDynamicalMatrix, perturbation):
+def _get_dD(
+    q: ArrayLike, ddm: DerivativeOfDynamicalMatrix, perturbation: ArrayLike
+) -> NDArray:
     """Return q-vector derivative of dynamical matrix.
 
     Returns
@@ -144,6 +151,7 @@ def _get_dD(q, ddm: DerivativeOfDynamicalMatrix, perturbation):
     """
     ddm.run(q)
     ddm_vals = ddm.get_derivative_of_dynamical_matrix()
+    assert ddm_vals is not None
     dD = np.zeros(ddm_vals.shape[1:], dtype=ddm_vals.dtype, order="C")
     if len(ddm_vals) == 3:
         for i in range(3):
