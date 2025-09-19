@@ -188,11 +188,7 @@ def write_crystal_structure(
     elif interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
 
-        if optional_structure_info is not None:
-            atypes = optional_structure_info[1]
-        else:
-            raise RuntimeError("Optional structure information (atypes) is missing.")
-        siesta.write_siesta(filename, cell, atypes)
+        siesta.write_siesta(filename, cell)
     elif interface_mode == "cp2k":
         import phonopy.interface.cp2k as cp2k
 
@@ -347,9 +343,7 @@ def write_supercells_with_displacements(
     elif interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
 
-        atypes = optional_structure_info[1]
-        sst_args = args + (atypes,)
-        siesta.write_supercells_with_displacements(*sst_args, **kwargs)
+        siesta.write_supercells_with_displacements(*args, **kwargs)
     elif interface_mode == "cp2k":
         import phonopy.interface.cp2k as cp2k
 
@@ -512,8 +506,8 @@ def read_crystal_structure(
     elif interface_mode == "siesta":
         from phonopy.interface.siesta import read_siesta
 
-        unitcell, atypes = read_siesta(cell_filename)
-        return unitcell, (cell_filename, atypes)
+        unitcell = read_siesta(cell_filename)
+        return unitcell, (cell_filename,)
     elif interface_mode == "cp2k":
         from phonopy.interface.cp2k import read_cp2k
 
