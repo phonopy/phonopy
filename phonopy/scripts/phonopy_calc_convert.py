@@ -49,6 +49,7 @@ def get_options():
         dest="filename_in",
         metavar="FILE_IN",
         default=None,
+        type=_infile_exist,
         help="Input crystal structure filename",
         required=True,
     )
@@ -56,6 +57,7 @@ def get_options():
         "-o",
         dest="filename_out",
         metavar="FILE_OUT",
+        type=_outfile_exist,
         default=None,
         help="Output crystal structure filename",
         required=True,
@@ -65,6 +67,7 @@ def get_options():
         dest="calculator_in",
         metavar="CALC_IN",
         default=None,
+        type=_calc_check,
         help="Input calculator format",
         required=True,
     )
@@ -72,6 +75,7 @@ def get_options():
         "--calcout",
         dest="calculator_out",
         metavar="CALC_OUT",
+        type=_calc_check,
         default=None,
         help="Output calculator format",
         required=True,
@@ -99,30 +103,23 @@ def run():
         opts.additional_info,
     )
 
-    try:
-        _infile_exist(args[0])
-        _outfile_exist(args[2])
-        _calc_check(args[1])
-        _calc_check(args[3])
-    except (RuntimeError, FileNotFoundError) as err:
-        print("ERROR: %s" % err)
-
     convert_crystal_structure(*args)
 
-
 def _calc_check(calc_str):
-    if calc_str.lower() not in calculator_info:
+    calc = calc_str.lower()
+    if calc not in calculator_info:
         msg = 'Calculator name of "%s" is not supported.' % calc_str
         raise RuntimeError(msg)
-
+    return calc
 
 def _infile_exist(filename):
     if not os.path.isfile(filename):
         msg = 'No such file of "%s"' % filename
         raise FileNotFoundError(msg)
-
+    return filename
 
 def _outfile_exist(filename):
     if os.path.isfile(filename):
         msg = '"%s" exists in the current directory. Use different filename.' % filename
         raise RuntimeError(msg)
+    return filename
