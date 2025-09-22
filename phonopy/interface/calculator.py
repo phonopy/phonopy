@@ -238,9 +238,9 @@ def write_crystal_structure(
             orbitals = optional_structure_info[2]
             abfs = optional_structure_info[3]
         else:
-            raise RuntimeError(
-                "Optional structure information (pps, orbitals, abfs) is missing."
-            )
+            pps = None
+            orbitals = None
+            abfs = None
         abacus.write_abacus(filename, cell, pps, orbitals, abfs)
     elif interface_mode == "lammps":
         import phonopy.interface.lammps as lammps
