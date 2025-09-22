@@ -225,11 +225,10 @@ def write_crystal_structure(
         import phonopy.interface.fleur as fleur
 
         if optional_structure_info is not None:
-            speci, restlines = optional_structure_info
+            _, speci, restlines = optional_structure_info
         else:
-            raise RuntimeError(
-                "Optional structure information (speci, restlines) is missing."
-            )
+            speci = None
+            restlines = None
         fleur.write_fleur(filename, cell, speci, 1, restlines)
     elif interface_mode == "abacus":
         import phonopy.interface.abacus as abacus
