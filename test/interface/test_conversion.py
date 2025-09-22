@@ -1,6 +1,4 @@
 """Test Conversion between calculator formats."""
-
-import os
 import pathlib
 import tempfile
 
@@ -22,12 +20,11 @@ def test_conversion():
             with tempfile.TemporaryDirectory() as td:
                 convert_crystal_structure(poscar_file, "vasp", td, calc)
         else:
-            with tempfile.NamedTemporaryFile(delete=False) as temp:
+            with tempfile.NamedTemporaryFile() as temp:
                 name = temp.name
-            if calc in require_extra_info:
-                with pytest.raises(RuntimeError):
-                    # These calcs need additional info to write their input files
+                if calc in require_extra_info:
+                    with pytest.raises(RuntimeError):
+                        # These calcs need additional info to write their input files
+                        convert_crystal_structure(poscar_file, "vasp", name, calc)
+                else:
                     convert_crystal_structure(poscar_file, "vasp", name, calc)
-            else:
-                convert_crystal_structure(poscar_file, "vasp", name, calc)
-            os.unlink(name)
