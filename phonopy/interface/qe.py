@@ -35,6 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import warnings
 from collections import OrderedDict
 
 import numpy as np
@@ -162,6 +163,12 @@ def write_supercells_with_displacements(
 
 def get_pwscf_structure(cell, pp_filenames=None):
     """Return QE structure in text."""
+    if pp_filenames is None:
+        warnings.warn(
+            "Optional structure information (pp_filenames) is missing.\n"
+            "You will need to manually add pp filenames to the qe input file.",
+            stacklevel=2,
+        )
     lattice = cell.cell
     positions = cell.scaled_positions
     masses = cell.masses

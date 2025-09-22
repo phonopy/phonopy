@@ -159,11 +159,6 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             pp_filenames = optional_structure_info[1]
         else:
-            warnings.warn(
-                "Optional structure information (pp_filenames) is missing\n\
-                    You will need to manually add pp filenames to the qe input file.",
-                stacklevel=2,
-            )
             pp_filenames = None
         qe.write_pwscf(filename, cell, pp_filenames)
 
