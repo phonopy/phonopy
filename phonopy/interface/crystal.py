@@ -125,7 +125,7 @@ def write_crystal(
     if conv_numbers is None:
         #NAT<200: all-electron BS 	Given Z, NAT=Z, NAT'=Z+100
         #NAT>200: valence-electron BS 	Given Z, NAT=Z+200, NAT'=Z+300
-        conv_numbers = [z+200 if z > 200 else z for z in cell.numbers]
+        conv_numbers = cell.numbers
         warnings.warn(
                 (
                     "No CRYSTAL conventional atomic numbers provided, "
