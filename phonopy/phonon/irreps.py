@@ -74,40 +74,37 @@ class IrReps:
     ):
         """Init method."""
         self._is_little_cogroup = is_little_cogroup
-        self._nac_q_direction = nac_q_direction
-        if factor is None:
-            self._factor = get_physical_units().DefaultToTHz
-        else:
-            self._factor = factor
         self._log_level = log_level
 
         self._qpoint = np.array(qpoint)
-        if degeneracy_tolerance is None:
-            self._degeneracy_tolerance = 1e-5
-        else:
-            self._degeneracy_tolerance = degeneracy_tolerance
         self._primitive = dynamical_matrix.primitive
-        self._dynamical_matrix = dynamical_matrix
-        self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
-
-        self._symprec = primitive_symmetry.tolerance
         self._symmetry_dataset = primitive_symmetry.dataset
-        self._pointgroup_symbol = self._symmetry_dataset.pointgroup
-
         if not is_primitive_cell(self._symmetry_dataset.rotations):
             raise RuntimeError(
                 "Non-primitve cell is used. Your unit cell may be transformed to "
                 "a primitive cell by PRIMITIVE_AXIS tag."
             )
+        self._symprec = primitive_symmetry.tolerance
+        self._pointgroup_symbol = self._symmetry_dataset.pointgroup
+        self._rotations_at_q, self._translations_at_q = self._get_rotations_at_q()
 
-        self._freqs, self._eig_vecs = self._get_eigenvectors()
+        self._freqs, self._eig_vecs = self._get_eigenvectors(
+            dynamical_matrix, nac_q_direction, factor
+        )
+        # Degeneracy for irreps has to be determined considering character tables, too.
+        # But currently only similarity of phonon frequencies is used to judge it.
+        if degeneracy_tolerance is None:
+            _degeneracy_tolerance = 1e-5
+        else:
+            _degeneracy_tolerance = degeneracy_tolerance
+        self._degenerate_sets = get_degenerate_sets(
+            self._freqs, cutoff=_degeneracy_tolerance
+        )
+        self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
 
-        self._rotations_at_q: NDArray
-        self._translations_at_q: NDArray
         self._transformation_matrix: NDArray
         self._conventional_rotations: NDArray
         self._ground_matrice: NDArray
-        self._degenerate_sets: list[list[int]]
         self._irreps: list[NDArray]
         self._characters: NDArray
         self._irrep_dims: NDArray
@@ -129,17 +126,11 @@ class IrReps:
 
     def _run_irreps(self):
         """Calculate irreps."""
-        self._rotations_at_q, self._translations_at_q = self._get_rotations_at_q()
         (
             self._transformation_matrix,
             self._conventional_rotations,
         ) = self._get_conventional_rotations()
         self._ground_matrices = self._get_ground_matrix()
-        # Degeneracy for irreps has to be determined considering character tables, too.
-        # But currently only similarity of phonon frequencies is used to judge it.
-        self._degenerate_sets = get_degenerate_sets(
-            self._freqs, cutoff=self._degeneracy_tolerance
-        )
         self._ddm.run(self._qpoint)
         self._irreps = self._get_irreps()
         self._characters, self._irrep_dims = self._get_characters()
@@ -212,15 +203,24 @@ class IrReps:
         """Write irreps in yaml file."""
         self._write_yaml(show_irreps)
 
-    def _get_eigenvectors(self) -> tuple[NDArray, NDArray]:
-        dm = self._dynamical_matrix
+    def _get_eigenvectors(
+        self,
+        dynamical_matrix: DynamicalMatrix,
+        nac_q_direction: ArrayLike | None,
+        factor: float | None,
+    ) -> tuple[NDArray, NDArray]:
+        if factor is None:
+            _factor = get_physical_units().DefaultToTHz
+        else:
+            _factor = factor
+        dm = dynamical_matrix
         if isinstance(dm, DynamicalMatrixNAC):
-            dm.run(self._qpoint, q_direction=self._nac_q_direction)
+            dm.run(self._qpoint, q_direction=nac_q_direction)
         else:
             dm.run(self._qpoint)
         assert dm.dynamical_matrix is not None
         eig_vals, eig_vecs = np.linalg.eigh(dm.dynamical_matrix)
-        freqs = np.sqrt(abs(eig_vals)) * np.sign(eig_vals) * self._factor
+        freqs = np.sqrt(abs(eig_vals)) * np.sign(eig_vals) * _factor
         return freqs, eig_vecs
 
     def _get_rotations_at_q(self) -> tuple[NDArray, NDArray]:
