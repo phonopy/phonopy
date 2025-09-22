@@ -86,16 +86,16 @@ def get_options():
         nargs="+",
         default=None,
         help="Additional information for the conversion,"
-            " which is required for some calculators."
-            " Pass 'help' to this option to see the format"
-            " for your desired output format.",
+        " which is required for some calculators."
+        " Pass 'help' to this option to see the format"
+        " for your desired output format.",
     )
     return parser.parse_args()
 
 
 def parse_qe(opts):
     """Parse additional info used in some calculators.
-    
+
     qe:
         additional_info is an alternating list of element symbols followed by
         their corresponding pseudopotential filenames
@@ -110,6 +110,7 @@ def parse_qe(opts):
     values = opts.additional_info[1::2]
     pp_files = dict(zip(keys, values))
     return (opts.filename_out, pp_files)
+
 
 def parse_wien2k(opts):
     """Parse additional info used in wien2k.
@@ -129,9 +130,10 @@ def parse_wien2k(opts):
 
     return (opts.filename_out, npts, r0s, rmts)
 
+
 def parse_elk(opts):
     """Parse additional info used in elk.
-    
+
     elk:
         additional_info is a list in the format
         spfname1 spfname2 ...
@@ -142,14 +144,16 @@ def parse_elk(opts):
     spfnames = opts.additional_info
     return (opts.filename_out, spfnames)
 
+
 def parse_cp2k(opts):
     """Not Implemented."""
     if opts.additional_info is not None:
         raise NotImplementedError()
-    
+
+
 def parse_fleur(opts):
     r"""Parse additional info used in fleur.
-    
+
     fleur:
         additional_info is a list of atom lables. They are either Z or Z.x,
         where Z is the atomic number and x is any number of decimal places.
@@ -165,14 +169,15 @@ def parse_fleur(opts):
             float(arg)
             speci.append(float(arg))
         except ValueError:
-            restlines = arg.split('\\n')
+            restlines = arg.split("\\n")
     if len(speci) == 0:
         speci = None
     return (opts.filename_out, speci, restlines)
 
+
 def parse_crystal(opts):
     """Parse additional info used in crystal.
-    
+
     crystal:
         additional_info is a list of CRYSTAL conventional atomic numbers
         eg. 'Ge' -> 32 or 'Ge' -> 232
@@ -180,9 +185,10 @@ def parse_crystal(opts):
     atomic_numbers = [int(x.strip()) for x in opts.additional_info]
     return (opts.filename_out, atomic_numbers)
 
+
 def parse_abacus(opts):
     """Parse additional info used in abacus.
-    
+
     abacus:
         additional_info is a list in the format
         symbol1 PP_file1 symbol2 PP_file2 ...
@@ -216,6 +222,7 @@ def parse_additional_info(opts):
         additional_info = None
     return additional_info
 
+
 def run():
     """Run phonopy-calc-convert."""
     opts = get_options()
@@ -231,6 +238,7 @@ def run():
 
     convert_crystal_structure(*args)
 
+
 def _calc_check(calc_str):
     calc = calc_str.lower()
     if calc not in calculator_info:
@@ -238,11 +246,13 @@ def _calc_check(calc_str):
         raise RuntimeError(msg)
     return calc
 
+
 def _infile_exist(filename):
     if not os.path.isfile(filename):
         msg = 'No such file of "%s"' % filename
         raise FileNotFoundError(msg)
     return filename
+
 
 def _outfile_exist(filename):
     if os.path.isfile(filename):

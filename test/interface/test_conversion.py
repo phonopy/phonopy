@@ -1,4 +1,5 @@
 """Test Conversion between calculator formats."""
+
 import os
 import pathlib
 import sys
@@ -36,7 +37,10 @@ def test_conversion():
                     else:
                         convert_crystal_structure(poscar_file, "vasp", name, calc)
 
-def simulate_calc_convert_script(input_file, output_file, calc_in, calc_out, addinfo=None):
+
+def simulate_calc_convert_script(
+    input_file, output_file, calc_in, calc_out, addinfo=None
+):
     """Simulate running the phonopy_calc_convert script with given arguments."""
     # Convert PosixPath objects to strings
     input_file = str(input_file)
@@ -45,10 +49,14 @@ def simulate_calc_convert_script(input_file, output_file, calc_in, calc_out, add
     # Build the argument list
     args = [
         "phonopy_calc_convert.py",  # Script name
-        "-i", input_file,           # Input file
-        "-o", output_file,          # Output file
-        "--calcin", calc_in,        # Input calculator
-        "--calcout", calc_out       # Output calculator
+        "-i",
+        input_file,  # Input file
+        "-o",
+        output_file,  # Output file
+        "--calcin",
+        calc_in,  # Input calculator
+        "--calcout",
+        calc_out,  # Output calculator
     ]
 
     # Add additional info if provided
@@ -66,33 +74,38 @@ def simulate_calc_convert_script(input_file, output_file, calc_in, calc_out, add
         # Restore the original sys.argv
         sys.argv = original_argv
 
+
 def test_calc_convert():
     """
     Test parsing of additional info kwarg.
-    
+
     Converts to/from vasp for calculators that accept
     additional info into phonopy-calc-convert script.
     """
     example_dir = cwd / "../../example"
-    
+
     # Simulate command-line arguments
-    xtra_inps = {"qe": [
-                    "Na",
-                    "Na.pbe-spn-kjpaw_psl.0.2.UPF",
-                    "Cl",
-                    "Cl.pbe-n-kjpaw_psl.0.1.UPF",
-                ],
-                "wien2k": ["781 781 781", "1e-05 5e-05 5e-05", "2.5 2.28 2.28"],
-                "elk":["alternate_si_file.in"],
-                "crystal":[14, 14],
-                "fleur":[13.0, 13.0, 13.1, "Title \n other stuff"],
-                "abacus":["Al", "Al.PD04.PBE.UPF"]}
-    xtra_files = {"qe":cwd / "NaCl-pwscf.in",
-                "wien2k":cwd / "BaGa2.struct",
-                "elk":example_dir / "Si-elk/elk.in",
-                "crystal":cwd / "Si-CRYSTAL.o",
-                "fleur":example_dir / "Al-Fleur/fleur_inpgen",
-                "abacus":example_dir / "Al-ABACUS/abacus-pw/STRU.in"}
+    xtra_inps = {
+        "qe": [
+            "Na",
+            "Na.pbe-spn-kjpaw_psl.0.2.UPF",
+            "Cl",
+            "Cl.pbe-n-kjpaw_psl.0.1.UPF",
+        ],
+        "wien2k": ["781 781 781", "1e-05 5e-05 5e-05", "2.5 2.28 2.28"],
+        "elk": ["alternate_si_file.in"],
+        "crystal": [14, 14],
+        "fleur": [13.0, 13.0, 13.1, "Title \n other stuff"],
+        "abacus": ["Al", "Al.PD04.PBE.UPF"],
+    }
+    xtra_files = {
+        "qe": cwd / "NaCl-pwscf.in",
+        "wien2k": cwd / "BaGa2.struct",
+        "elk": example_dir / "Si-elk/elk.in",
+        "crystal": cwd / "Si-CRYSTAL.o",
+        "fleur": example_dir / "Al-Fleur/fleur_inpgen",
+        "abacus": example_dir / "Al-ABACUS/abacus-pw/STRU.in",
+    }
 
     for calc in xtra_inps.keys():
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -123,20 +123,20 @@ def write_crystal(
 ):
     """Write cell to file."""
     if conv_numbers is None:
-        #NAT<200: all-electron BS 	Given Z, NAT=Z, NAT'=Z+100
-        #NAT>200: valence-electron BS 	Given Z, NAT=Z+200, NAT'=Z+300
+        # NAT<200: all-electron BS 	Given Z, NAT=Z, NAT'=Z+100
+        # NAT>200: valence-electron BS 	Given Z, NAT=Z+200, NAT'=Z+300
         conv_numbers = cell.numbers
         warnings.warn(
-                (
-                    "No CRYSTAL conventional atomic numbers provided, "
-                    "so generating from atomic numbers instead. "
-                    "If you want to use a different basis set as specified "
-                    "with additions to the hundreds place, "
-                    "please provide the conventional atomic numbers explicitly."
-                ),
-                UserWarning,
-                stacklevel=2,
-            )
+            (
+                "No CRYSTAL conventional atomic numbers provided, "
+                "so generating from atomic numbers instead. "
+                "If you want to use a different basis set as specified "
+                "with additions to the hundreds place, "
+                "please provide the conventional atomic numbers explicitly."
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
     if len(cell.positions) != len(conv_numbers):
         raise ValueError(
             f"Length of conv_numbers ({len(conv_numbers)}) does not match "
