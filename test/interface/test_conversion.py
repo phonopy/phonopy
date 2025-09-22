@@ -28,4 +28,6 @@ def test_conversion():
                 with pytest.raises(RuntimeError):
                     # These calcs need additional info to write their input files
                     convert_crystal_structure(poscar_file, "vasp", name, calc)
+            else:
+                convert_crystal_structure(poscar_file, "vasp", name, calc)
             os.unlink(name)
