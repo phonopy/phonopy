@@ -211,7 +211,7 @@ def _get_wien2k_struct(cell, npts, r0s, rmts):
     alpha, beta, gamma = get_angles(lattice)
     positions = cell.scaled_positions
     symbols = cell.symbols
-    numbers = cell.get_atomic_numbers()
+    numbers = cell.numbers
 
     text = ""
 
