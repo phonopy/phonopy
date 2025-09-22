@@ -251,7 +251,7 @@ def write_crystal_structure(
         lammps.write_lammps(filename, cell)
 
     elif interface_mode == "qlm":
-        import phonopy.interface.qlm as write_qlm
+        from phonopy.interface.qlm import write_qlm
 
         write_qlm(filename, cell)
     elif interface_mode == "pwmat":
