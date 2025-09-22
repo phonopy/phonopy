@@ -14,7 +14,7 @@ cwd = pathlib.Path(__file__).parent
 def test_conversion():
     """Calcs that can use extra info are below."""
     calcs = calculator_info.keys()
-    require_extra_info = ["wien2k", "cp2k", "crystal", "fleur", "abacus"]
+    require_extra_info = ["wien2k", "cp2k", "fleur", "abacus"]
     poscar_file = cwd / "../POSCAR_NaCl"
 
     for calc in calcs:

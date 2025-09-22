@@ -203,9 +203,7 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             conv_numbers = optional_structure_info[1]
         else:
-            raise RuntimeError(
-                "Optional structure information (conv_numbers) is missing."
-            )
+            conv_numbers = None
         crystal.write_crystal(filename, cell, conv_numbers)
     elif interface_mode == "dftbp":
         import phonopy.interface.dftbp as dftbp
