@@ -36,8 +36,6 @@
 
 from __future__ import annotations
 
-from typing import TextIO
-
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
@@ -440,78 +438,77 @@ class IrReps:
                 print("")
 
     def _write_yaml(self, show_irreps: bool):
-        w = open("irreps.yaml", "w")
-        w.write("q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(self._qpoint))
-        w.write("point_group: %s\n" % self._pointgroup_symbol)
-        w.write("transformation_matrix:\n")
+        lines = []
+        lines.append("q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(self._qpoint))
+        lines.append("point_group: %s" % self._pointgroup_symbol)
+        lines.append("transformation_matrix:")
         for v in self._transformation_matrix:
-            w.write("- [ %10.7f, %10.7f, %10.7f ]\n" % tuple(v))
-        w.write("rotations:\n")
+            lines.append("- [ %10.7f, %10.7f, %10.7f ]" % tuple(v))
+        lines.append("rotations:")
         for i, r in enumerate(self._conventional_rotations):
-            w.write("- matrix:\n")
+            lines.append("- matrix:")
             for v in r:
-                w.write("  - [ %2d, %2d, %2d ]\n" % tuple(v))
+                lines.append("  - [ %2d, %2d, %2d ]" % tuple(v))
             if self._rotation_symbols:
-                w.write("  symbol: %s\n" % self._rotation_symbols[i])
-        w.write("normal_modes:\n")
+                lines.append("  symbol: %s" % self._rotation_symbols[i])
+        lines.append("normal_modes:")
         for i, deg_set in enumerate(self._degenerate_sets):
-            w.write("- band_indices: [ ")
-            w.write("%d" % (deg_set[0] + 1))
+            text = "- band_indices: [ "
+            text += "%d" % (deg_set[0] + 1)
             for bi in deg_set[1:]:
-                w.write(", %d" % (bi + 1))
-            w.write(" ]\n")
-            w.write("  frequency: %-15.10f\n" % self._freqs[deg_set[0]])
+                text += ", %d" % (bi + 1)
+            text += " ]"
+            lines.append(text)
+            lines.append("  frequency: %-15.10f" % self._freqs[deg_set[0]])
             if self._ir_labels:
-                w.write("  ir_label: %s\n" % self._ir_labels[i])
-            w.write("  characters: ")
+                lines.append("  ir_label: %s" % self._ir_labels[i])
+            text = "  characters: "
             chars = np.rint(np.abs(self._characters[i]))
             phase = (np.angle(self._characters[i]) / np.pi * 180) % 360
             if len(chars) > 1:
-                w.write("[ [ %2d, %5.1f ]" % (chars[0], phase[0]))
+                text += "[ [ %2d, %5.1f ]" % (chars[0], phase[0])
                 for chi, theta in zip(chars[1:], phase[1:]):
-                    w.write(", [ %2d, %5.1f ]" % (chi, theta))
-                w.write(" ]\n")
+                    text += ", [ %2d, %5.1f ]" % (chi, theta)
+                text += " ]"
             else:
-                w.write("[ [ %2d, %5.1f ] ]\n" % (chars[0], phase[0]))
+                text += "[ [ %2d, %5.1f ] ]" % (chars[0], phase[0])
+            lines.append(text)
 
         if show_irreps:
-            self._write_yaml_irreps(w)
+            self._write_yaml_irreps(lines)
 
-        w.close()
+        with open("irreps.yaml", "w") as w:
+            print("\n".join(lines), file=w)
 
-    def _write_yaml_irreps(self, file_pointer: TextIO):
-        w = file_pointer
-        if not self._irreps:
-            self._irrep = self._get_irreps()
-
-        w.write("\n")
-        w.write("irreps:\n")
+    def _write_yaml_irreps(self, lines: list[str]):
+        lines.append("")
+        lines.append("irreps:")
         for i, (deg_set, irrep_Rs) in enumerate(
             zip(self._degenerate_sets, self._irreps)
         ):
-            w.write("- # %d\n" % (i + 1))
+            lines.append("- # %d" % (i + 1))
             for j, irrep_R in enumerate(irrep_Rs):
                 if self._rotation_symbols:
                     symbol = self._rotation_symbols[j]
                 else:
                     symbol = ""
                 if len(deg_set) > 1:
-                    w.write("  - # %d %s\n" % (j + 1, symbol))
+                    lines.append("  - # %d %s" % (j + 1, symbol))
                     for _, v in enumerate(irrep_R):
-                        w.write("    - [ ")
+                        text = "    - [ "
                         for x in v[:-1]:
-                            w.write("%10.7f, %10.7f,   " % (x.real, x.imag))
-                        w.write("%10.7f, %10.7f ] # (" % (v[-1].real, v[-1].imag))
+                            text += "%10.7f, %10.7f,   " % (x.real, x.imag)
+                        text += "%10.7f, %10.7f ] # (" % (v[-1].real, v[-1].imag)
 
-                        w.write(
-                            ("%5.0f" * len(v))
-                            % tuple((np.angle(v) / np.pi * 180) % 360)
+                        text += ("%5.0f" * len(v)) % tuple(
+                            (np.angle(v) / np.pi * 180) % 360
                         )
-                        w.write(")\n")
+                        text += ")"
+                        lines.append(text)
                 else:
                     x = irrep_R[0][0]
-                    w.write(
-                        "  - [ [ %10.7f, %10.7f ] ] # (%3.0f) %d %s\n"
+                    lines.append(
+                        "  - [ [ %10.7f, %10.7f ] ] # (%3.0f) %d %s"
                         % (
                             x.real,
                             x.imag,
@@ -520,17 +517,6 @@ class IrReps:
                             symbol,
                         )
                     )
-
-        pass
-
-
-def _get_rotation_symbol(rotation: NDArray, mapping_table: dict) -> str | None:
-    for rotation_symbol in mapping_table:
-        rot_mats = mapping_table[rotation_symbol]
-        for r in rot_mats:
-            if (r == rotation).all():
-                return rotation_symbol
-    return None
 
 
 def _print_characters(characters: NDArray, width: int = 6):
@@ -717,3 +703,12 @@ class IrRepLabels:
                     print("%s Not found" % text)
 
         return ir_labels
+
+
+def _get_rotation_symbol(rotation: NDArray, mapping_table: dict) -> str | None:
+    for rotation_symbol in mapping_table:
+        rot_mats = mapping_table[rotation_symbol]
+        for r in rot_mats:
+            if (r == rotation).all():
+                return rotation_symbol
+    return None
