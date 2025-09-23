@@ -42,6 +42,7 @@ from typing import Optional, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from phonopy import acc
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     DynamicalMatrixNAC,
@@ -50,7 +51,7 @@ from phonopy.harmonic.dynamical_matrix import (
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.cells import Primitive
-from phonopy import acc
+
 
 class QpointsPhonon:
     """Calculate phonons at specified qpoints.

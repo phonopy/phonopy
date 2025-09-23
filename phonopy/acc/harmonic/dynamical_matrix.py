@@ -1,17 +1,14 @@
+import cupy
 import numpy as np
 
-from phonopy.acc.numba_imports import exp, rsqrt, sincospi, sqrt
-from phonopy.acc.numba_imports import numba, cuda, use_acc
 from phonopy.acc import vec3_numba as vec3
-from phonopy.acc import mat3_numba as mat3
-import cupy
-
-import phonopy
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.acc.numba_imports import cuda, exp, numba, rsqrt, sincospi, sqrt
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
 from phonopy.structure.cells import sparse_to_dense_svecs
 
 Q_ZERO_TOLERANCE = 1e-5
 ZERO_TOLERANCE = 1e-12
+
 
 def _extract_params(dm):
     """Port from dynamical_matrix.py to use device arrays."""
@@ -45,6 +42,7 @@ def _extract_params(dm):
         cuda.to_device(dielectric),
     )
 
+
 def _get_gonze_nac_params(dm):
     """Port from dynamical_matrix.py to use device arrays."""
     gonze_nac_dataset = dm.Gonze_nac_dataset
@@ -63,8 +61,9 @@ def _get_gonze_nac_params(dm):
         cupy.asarray(dd_q0),
         G_cutoff,
         cupy.asarray(G_list),
-        Lambda
+        Lambda,
     )
+
 
 def _get_fc_elements_mapping(dm, fc):
     """Port from dynamical_matrix.py to use device arrays."""
@@ -80,35 +79,54 @@ def _get_fc_elements_mapping(dm, fc):
         )
         return cupy.arange(len(p2s_map), dtype="int64"), s2pp_map
 
+
 @cuda.jit(device=True, inline=True)
 def get_q_cart(q, rec_lat, q_cart):
     """Port from c/dynmat.c."""
     for i in range(3):
         q_cart[i] = 0.0
         for j in range(3):
-            q_cart[i] += rec_lat[i,j] * q[j]
+            q_cart[i] += rec_lat[i, j] * q[j]
     return
+
 
 @cuda.jit(device=True)
 def dym_get_charge_sum(charge_sum, num_patom, factor, q_cart, born, q_born):
     """Port from c/dynmat.c."""
     for i in range(num_patom):
         for j in range(3):
-            q_born[i,j] = 0.0
+            q_born[i, j] = 0.0
             for k in range(3):
-                q_born[i,j] += q_cart[k] * born[i,k,j]
+                q_born[i, j] += q_cart[k] * born[i, k, j]
 
     for i in range(num_patom):
         for j in range(num_patom):
             for a in range(3):
                 for b in range(3):
-                    charge_sum[i,j,a,b] = q_born[i,a] * q_born[j,b] * factor
+                    charge_sum[i, j, a, b] = q_born[i, a] * q_born[j, b] * factor
     return
 
+
 @cuda.jit(device=True)
-def get_dynmat_wang(dynmat, charge_sum, q_born, q, fc, svecs, multi, masses,
-        p2s, s2p, born, dielectric, rec_lat, q_dir, q_dir_cart, nac_factor,
-        hermitianize):
+def get_dynmat_wang(
+    dynmat,
+    charge_sum,
+    q_born,
+    q,
+    fc,
+    svecs,
+    multi,
+    masses,
+    p2s,
+    s2p,
+    born,
+    dielectric,
+    rec_lat,
+    q_dir,
+    q_dir_cart,
+    nac_factor,
+    hermitianize,
+):
     """Port from c/dynmat.c."""
     n = len(s2p) / len(p2s)
     q_cart = cuda.local.array(3, dtype=numba.float64)
@@ -117,20 +135,23 @@ def get_dynmat_wang(dynmat, charge_sum, q_born, q, fc, svecs, multi, masses,
         if vec3.norm(q_dir) >= ZERO_TOLERANCE:
             dielectric_part = get_dielectric_part(q_dir_cart, dielectric)
             factor = nac_factor / n / dielectric_part
-            dym_get_charge_sum(charge_sum, len(p2s), factor, q_dir_cart, born,
-                q_born)
-            get_dynamical_matrix_at_q(dynmat, fc, q, svecs, multi, masses, s2p,
-                p2s, charge_sum, hermitianize)
+            dym_get_charge_sum(charge_sum, len(p2s), factor, q_dir_cart, born, q_born)
+            get_dynamical_matrix_at_q(
+                dynmat, fc, q, svecs, multi, masses, s2p, p2s, charge_sum, hermitianize
+            )
         else:
-            get_dynamical_matrix_at_q(dynmat, fc, q, svecs, multi, masses, s2p,
-                p2s, None, hermitianize)
+            get_dynamical_matrix_at_q(
+                dynmat, fc, q, svecs, multi, masses, s2p, p2s, None, hermitianize
+            )
     else:
         dielectric_part = get_dielectric_part(q_cart, dielectric)
         factor = nac_factor / n / dielectric_part
         dym_get_charge_sum(charge_sum, len(p2s), factor, q_cart, born, q_born)
-        get_dynamical_matrix_at_q(dynmat, fc, q, svecs, multi, masses, s2p, p2s,
-            charge_sum, hermitianize)
+        get_dynamical_matrix_at_q(
+            dynmat, fc, q, svecs, multi, masses, s2p, p2s, charge_sum, hermitianize
+        )
     return
+
 
 @cuda.jit(device=True)
 def get_dm(dm, fc, q, svecs, multi, charge_sum, i, j):
@@ -152,9 +173,10 @@ def get_dm(dm, fc, q, svecs, multi, charge_sum, i, j):
                 fc_elem = fc[l, m] + charge_sum[i, j, l, m]
             else:
                 fc_elem = fc[l, m]
-            dm[l,m] += fc_elem * csphase
+            dm[l, m] += fc_elem * csphase
 
     return
+
 
 @cuda.jit(device=True)
 def get_dynmat_ij(dynmat, fc, q, svecs, multi, masses, s2p, p2s, charge_sum, i, j):
@@ -163,7 +185,7 @@ def get_dynmat_ij(dynmat, fc, q, svecs, multi, masses, s2p, p2s, charge_sum, i, 
     dm = cuda.local.array((3, 3), dtype=numba.complex128)
     for l in range(3):
         for m in range(3):
-            dm[l,m] = 0.0
+            dm[l, m] = 0.0
 
     for k in range(len(s2p)):
         if s2p[k] != p2s[j]:
@@ -172,31 +194,36 @@ def get_dynmat_ij(dynmat, fc, q, svecs, multi, masses, s2p, p2s, charge_sum, i, 
 
     for k in range(3):
         for l in range(3):
-            dynmat[i * 3 + k, j * 3 + l] = dm[k,l] * mass_rsqrt
+            dynmat[i * 3 + k, j * 3 + l] = dm[k, l] * mass_rsqrt
     return
+
 
 @cuda.jit(device=True, inline=True)
 def make_Hermitian(mat, num_band):
     """Port from c/dynmat.c."""
     for i in range(num_band):
         for j in range(i, num_band):
-            mat[i,j] += mat[j,i].conjugate()
-            mat[i,j] /= 2
-            mat[j,i] = mat[i,j].conjugate()
+            mat[i, j] += mat[j, i].conjugate()
+            mat[i, j] /= 2
+            mat[j, i] = mat[i, j].conjugate()
     return
 
+
 @cuda.jit(device=True)
-def get_dynamical_matrix_at_q(dynmat, fc, q, svecs, multi, masses, s2p, p2s,
-        charge_sum, hermitianize):
+def get_dynamical_matrix_at_q(
+    dynmat, fc, q, svecs, multi, masses, s2p, p2s, charge_sum, hermitianize
+):
     """Port from c/dynmat.c."""
     num_patom = len(p2s)
     for i in range(num_patom):
         for j in range(num_patom):
-            get_dynmat_ij(dynmat, fc, q, svecs, multi, masses, s2p, p2s,
-                charge_sum, i, j)
+            get_dynmat_ij(
+                dynmat, fc, q, svecs, multi, masses, s2p, p2s, charge_sum, i, j
+            )
     if hermitianize:
         make_Hermitian(dynmat, num_patom * 3)
     return
+
 
 @cuda.jit(device=True, inline=True)
 def get_dielectric_part(q_cart, dielectric):
@@ -206,6 +233,7 @@ def get_dielectric_part(q_cart, dielectric):
         for j in range(3):
             lsum += q_cart[i] * dielectric[i, j] * q_cart[j]
     return lsum
+
 
 @cuda.jit(device=True, inline=True)
 def get_dd_at_g(dd_part, i, j, G, num_patom, pos, KK):
@@ -221,9 +249,9 @@ def get_dd_at_g(dd_part, i, j, G, num_patom, pos, KK):
             dd_part[i * 3 + k, j * 3 + l] += KK[k, l] * cs_phase
     return
 
+
 @cuda.jit(device=True)
-def get_dd(dd_part, G_list, num_patom, q_cart, q_dir_cart, dielectric, pos,
-        Lambda):
+def get_dd(dd_part, G_list, num_patom, q_cart, q_dir_cart, dielectric, pos, Lambda):
     """Port from c/dynmat.c."""
     KK = cuda.local.array((3, 3), dtype=numba.float64)
     L2 = 4 * Lambda * Lambda
@@ -232,7 +260,7 @@ def get_dd(dd_part, G_list, num_patom, q_cart, q_dir_cart, dielectric, pos,
         norm = 0.0
         for i in range(3):
             for j in range(3):
-                KK[i,j] = 0.0
+                KK[i, j] = 0.0
         for i in range(3):
             q_K[i] = G_list[g, i] + q_cart[i]
             norm += q_K[i] * q_K[i]
@@ -247,13 +275,15 @@ def get_dd(dd_part, G_list, num_patom, q_cart, q_dir_cart, dielectric, pos,
             dielectric_part = get_dielectric_part(q_K, dielectric)
             for i in range(3):
                 for j in range(3):
-                    KK[i, j] = ((q_K[i] * q_K[j] / dielectric_part) *
-                        exp(-dielectric_part / L2))
+                    KK[i, j] = (q_K[i] * q_K[j] / dielectric_part) * exp(
+                        -dielectric_part / L2
+                    )
         for i in range(num_patom):
             for j in range(num_patom):
                 get_dd_at_g(dd_part, i, j, G_list[g], num_patom, pos, KK)
 
     return
+
 
 @cuda.jit(device=True, inline=True)
 def multiply_borns_at_ij(dd, i, j, dd_in, num_patom, born):
@@ -265,6 +295,7 @@ def multiply_borns_at_ij(dd, i, j, dd_in, num_patom, born):
                     zz = born[i, m, k] * born[j, n, l]
                     dd[i * 3 + k, j * 3 + l] += dd_in[i * 3 + m, j * 3 + n] * zz
 
+
 @cuda.jit(device=True, inline=True)
 def multiply_borns(dd, dd_in, num_patom, born):
     """Port from c/dynmat.c."""
@@ -272,9 +303,22 @@ def multiply_borns(dd, dd_in, num_patom, born):
         for j in range(num_patom):
             multiply_borns_at_ij(dd, i, j, dd_in, num_patom, born)
 
+
 @cuda.jit(device=True)
-def dym_get_recip_dipole_dipole(dd, dd_tmp, dd_q0, G_list, num_patom, q_cart,
-        q_dir_cart, born, dielectric, pos, factor, Lambda):
+def dym_get_recip_dipole_dipole(
+    dd,
+    dd_tmp,
+    dd_q0,
+    G_list,
+    num_patom,
+    q_cart,
+    q_dir_cart,
+    born,
+    dielectric,
+    pos,
+    factor,
+    Lambda,
+):
     """Port from c/dynmat.c."""
     get_dd(dd_tmp, G_list, num_patom, q_cart, q_dir_cart, dielectric, pos, Lambda)
     multiply_borns(dd, dd_tmp, num_patom, born)
@@ -282,25 +326,53 @@ def dym_get_recip_dipole_dipole(dd, dd_tmp, dd_q0, G_list, num_patom, q_cart,
         for k in range(3):
             for l in range(3):
                 dd[i * 3 + k, i * 3 + l] -= dd_q0[i, k, l]
-    for i in range(num_patom*3):
-        for j in range(num_patom*3):
-            dd[i,j] *= factor
+    for i in range(num_patom * 3):
+        for j in range(num_patom * 3):
+            dd[i, j] *= factor
     return
 
+
 @cuda.jit(device=True)
-def add_dynmat_dd_at_q(dynmat, dd, dd_tmp, q, fc, positions, num_patom, masses,
-        born, dielectric, rec_lat, q_dir_cart, nac_factor, dd_q0, G_list,
-        Lambda):
+def add_dynmat_dd_at_q(
+    dynmat,
+    dd,
+    dd_tmp,
+    q,
+    fc,
+    positions,
+    num_patom,
+    masses,
+    born,
+    dielectric,
+    rec_lat,
+    q_dir_cart,
+    nac_factor,
+    dd_q0,
+    G_list,
+    Lambda,
+):
     """Port from c/dynmat.c."""
     q_cart = cuda.local.array(3, dtype=numba.float64)
     get_q_cart(q, rec_lat, q_cart)
     for k in range(num_patom * 3):
         for l in range(num_patom * 3):
-            dd[k,l] = 0.0
-            dd_tmp[k,l] = 0.0
+            dd[k, l] = 0.0
+            dd_tmp[k, l] = 0.0
 
-    dym_get_recip_dipole_dipole(dd, dd_tmp, dd_q0, G_list, num_patom, q_cart,
-            q_dir_cart, born, dielectric, positions, nac_factor, Lambda)
+    dym_get_recip_dipole_dipole(
+        dd,
+        dd_tmp,
+        dd_q0,
+        G_list,
+        num_patom,
+        q_cart,
+        q_dir_cart,
+        born,
+        dielectric,
+        positions,
+        nac_factor,
+        Lambda,
+    )
 
     for i in range(num_patom):
         for j in range(num_patom):
@@ -310,12 +382,15 @@ def add_dynmat_dd_at_q(dynmat, dd, dd_tmp, q, fc, positions, num_patom, masses,
                     dynmat[i * 3 + k, j * 3 + l] += dd[i * 3 + k, j * 3 + l] * mm
     return
 
+
 @cuda.jit(device=True)
 def _run_dynamical_matrix(dynmat, svecs, multi, masses, fc, p2s, s2p, qpoint):
     """Non-NAC version."""
-    get_dynamical_matrix_at_q(dynmat, fc, qpoint, svecs, multi, masses, s2p,
-        p2s, None, False)
+    get_dynamical_matrix_at_q(
+        dynmat, fc, qpoint, svecs, multi, masses, s2p, p2s, None, False
+    )
     return
+
 
 @cuda.jit
 def _dm_kernel(dynmat, dm_svecs, dm_multi, dm_masses, dm_fc, p2s, s2p, qpoints):
@@ -324,60 +399,202 @@ def _dm_kernel(dynmat, dm_svecs, dm_multi, dm_masses, dm_fc, p2s, s2p, qpoints):
     if i >= len(qpoints):
         return
     q = qpoints[i]
-    _run_dynamical_matrix(dynmat[i,:,:], dm_svecs, dm_multi, dm_masses, dm_fc,
-            p2s, s2p, q)
+    _run_dynamical_matrix(
+        dynmat[i, :, :], dm_svecs, dm_multi, dm_masses, dm_fc, p2s, s2p, q
+    )
     return
 
+
 @cuda.jit(device=True)
-def dynamical_matrices_with_dd_over_qpoints(dynmat, dd, dd_tmp, qpoint, fc,
-        svecs, multi, positions, masses, s2p, p2s, nac_q_dir, q_dir_cart, born,
-        dielectric, rec_lat, nac_factor, do_dd, dd_q0, G_list, Lambda,
-        hermitianize):
+def dynamical_matrices_with_dd_over_qpoints(
+    dynmat,
+    dd,
+    dd_tmp,
+    qpoint,
+    fc,
+    svecs,
+    multi,
+    positions,
+    masses,
+    s2p,
+    p2s,
+    nac_q_dir,
+    q_dir_cart,
+    born,
+    dielectric,
+    rec_lat,
+    nac_factor,
+    do_dd,
+    dd_q0,
+    G_list,
+    Lambda,
+    hermitianize,
+):
     """Port of c/dynmat.c:dym_dynamical_matrices_with_dd_openmp_over_qpoints."""
-    get_dynamical_matrix_at_q(dynmat, fc, qpoint, svecs, multi, masses, s2p,
-        p2s, None, hermitianize)
+    get_dynamical_matrix_at_q(
+        dynmat, fc, qpoint, svecs, multi, masses, s2p, p2s, None, hermitianize
+    )
     if do_dd:
-        add_dynmat_dd_at_q(dynmat, dd, dd_tmp, qpoint, fc, positions, len(p2s),
-            masses, born, dielectric, rec_lat, q_dir_cart, nac_factor, dd_q0,
-            G_list, Lambda)
+        add_dynmat_dd_at_q(
+            dynmat,
+            dd,
+            dd_tmp,
+            qpoint,
+            fc,
+            positions,
+            len(p2s),
+            masses,
+            born,
+            dielectric,
+            rec_lat,
+            q_dir_cart,
+            nac_factor,
+            dd_q0,
+            G_list,
+            Lambda,
+        )
     return
 
+
 @cuda.jit(device=True)
-def _run_dynamical_matrix_nac(i, dynmat, dd, dd_tmp, charge_sum, q_born,
-        dm_svecs, dm_multi, dm_masses, dm_rec_lat, dm_positions, dm_born,
-        dm_nac_factor, dm_dielectric, dm_fc, dd_q0, G_list, Lambda, p2s, s2p,
-        qpoint, q_dir, hermitianize, use_Wang_NAC):
+def _run_dynamical_matrix_nac(
+    i,
+    dynmat,
+    dd,
+    dd_tmp,
+    charge_sum,
+    q_born,
+    dm_svecs,
+    dm_multi,
+    dm_masses,
+    dm_rec_lat,
+    dm_positions,
+    dm_born,
+    dm_nac_factor,
+    dm_dielectric,
+    dm_fc,
+    dd_q0,
+    G_list,
+    Lambda,
+    p2s,
+    s2p,
+    qpoint,
+    q_dir,
+    hermitianize,
+    use_Wang_NAC,
+):
     """Port of NAC portion of dynamical_matrix.py:run_dynamical_matrix_solver_c."""
     fc = dm_fc
     q_dir_cart = cuda.local.array(3, dtype=numba.float64)
     get_q_cart(q_dir, dm_rec_lat, q_dir_cart)
     if use_Wang_NAC:
-        get_dynmat_wang(dynmat, charge_sum[i], q_born[i], qpoint, fc, dm_svecs,
-            dm_multi, dm_masses, p2s, s2p, dm_born, dm_dielectric, dm_rec_lat,
-            q_dir, q_dir_cart, dm_nac_factor, hermitianize)
+        get_dynmat_wang(
+            dynmat,
+            charge_sum[i],
+            q_born[i],
+            qpoint,
+            fc,
+            dm_svecs,
+            dm_multi,
+            dm_masses,
+            p2s,
+            s2p,
+            dm_born,
+            dm_dielectric,
+            dm_rec_lat,
+            q_dir,
+            q_dir_cart,
+            dm_nac_factor,
+            hermitianize,
+        )
     else:
         do_dd = True
-        dynamical_matrices_with_dd_over_qpoints(dynmat, dd[i], dd_tmp[i],
-            qpoint, fc, dm_svecs, dm_multi, dm_positions, dm_masses, s2p, p2s,
-            q_dir, q_dir_cart, dm_born, dm_dielectric, dm_rec_lat,
-            dm_nac_factor, do_dd, dd_q0, G_list, Lambda, hermitianize)
+        dynamical_matrices_with_dd_over_qpoints(
+            dynmat,
+            dd[i],
+            dd_tmp[i],
+            qpoint,
+            fc,
+            dm_svecs,
+            dm_multi,
+            dm_positions,
+            dm_masses,
+            s2p,
+            p2s,
+            q_dir,
+            q_dir_cart,
+            dm_born,
+            dm_dielectric,
+            dm_rec_lat,
+            dm_nac_factor,
+            do_dd,
+            dd_q0,
+            G_list,
+            Lambda,
+            hermitianize,
+        )
     return
 
+
 @cuda.jit
-def _dm_kernel_nac(dynmat, dd, dd_tmp, charge_sum, q_born, dm_svecs, dm_multi,
-        dm_masses, dm_rec_lat, dm_positions, dm_born, dm_nac_factor,
-        dm_dielectric, dm_fc, dd_q0, G_list, Lambda, p2s, s2p, qpoints, q_dir,
-        hermitianize, use_Wang_NAC):
+def _dm_kernel_nac(
+    dynmat,
+    dd,
+    dd_tmp,
+    charge_sum,
+    q_born,
+    dm_svecs,
+    dm_multi,
+    dm_masses,
+    dm_rec_lat,
+    dm_positions,
+    dm_born,
+    dm_nac_factor,
+    dm_dielectric,
+    dm_fc,
+    dd_q0,
+    G_list,
+    Lambda,
+    p2s,
+    s2p,
+    qpoints,
+    q_dir,
+    hermitianize,
+    use_Wang_NAC,
+):
     """Kernel function for NAC dynamical matrix."""
     i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
     if i >= len(qpoints):
         return
     q = qpoints[i]
-    _run_dynamical_matrix_nac(i, dynmat[i,:,:], dd, dd_tmp, charge_sum, q_born,
-        dm_svecs, dm_multi, dm_masses, dm_rec_lat, dm_positions, dm_born,
-        dm_nac_factor, dm_dielectric, dm_fc, dd_q0, G_list, Lambda, p2s, s2p,
-        q, q_dir, hermitianize, use_Wang_NAC)
+    _run_dynamical_matrix_nac(
+        i,
+        dynmat[i, :, :],
+        dd,
+        dd_tmp,
+        charge_sum,
+        q_born,
+        dm_svecs,
+        dm_multi,
+        dm_masses,
+        dm_rec_lat,
+        dm_positions,
+        dm_born,
+        dm_nac_factor,
+        dm_dielectric,
+        dm_fc,
+        dd_q0,
+        G_list,
+        Lambda,
+        p2s,
+        s2p,
+        q,
+        q_dir,
+        hermitianize,
+        use_Wang_NAC,
+    )
     return
+
 
 class DynMatWorkspace:
     """Class to hold reusable data for dynamical matrix calculations."""
@@ -423,8 +640,8 @@ class DynMatWorkspace:
                 self.use_Wang_NAC = False
             elif self.dm.nac_method == "wang":
                 self.use_Wang_NAC = True
-                self.dd_q0 = cupy.array((0,0,0))
-                self.G_list = cupy.array((0,0))
+                self.dd_q0 = cupy.array((0, 0, 0))
+                self.G_list = cupy.array((0, 0))
                 self.Lambda = 0.0
 
             self.dd = cupy.zeros(0, dtype=np.complex128)
@@ -438,13 +655,14 @@ class DynMatWorkspace:
         """Allocate data for variables used in Wang version."""
         if self.charge_sum.shape[0] < len(qpoints):
             self.charge_sum = cupy.zeros(
-                (len(qpoints), len(self._p2s), len(self._p2s), 3, 3))
+                (len(qpoints), len(self._p2s), len(self._p2s), 3, 3)
+            )
             self.q_born = cupy.zeros((len(qpoints), len(self._p2s), 3))
             charge_sum = self.charge_sum
             q_born = self.q_born
         else:
-            charge_sum = self.charge_sum[0:len(qpoints),:,:,:,:]
-            q_born = self.q_born[0:len(qpoints),:,:]
+            charge_sum = self.charge_sum[0 : len(qpoints), :, :, :, :]
+            q_born = self.q_born[0 : len(qpoints), :, :]
             charge_sum.fill(0.0)
             q_born.fill(0.0)
         return (charge_sum, q_born)
@@ -461,8 +679,8 @@ class DynMatWorkspace:
             dd = self.dd
             dd_tmp = self.dd_tmp
         else:
-            dd = self.dd[0:len(qpoints),:,:]
-            dd_tmp = self.dd_tmp[0:len(qpoints),:,:]
+            dd = self.dd[0 : len(qpoints), :, :]
+            dd_tmp = self.dd_tmp[0 : len(qpoints), :, :]
             dd.fill(0.0)
             dd_tmp.fill(0.0)
         return (dd, dd_tmp)
@@ -470,16 +688,18 @@ class DynMatWorkspace:
     def solve_dm_on_qpoints(self, qpoints, nac_q_direction=None, hermitianize=True):
         """Perform final preparation and launch appropriate kernel."""
         if self.dynmat.shape[0] < len(qpoints):
-            self.dynmat = cupy.zeros((len(qpoints), len(self.p2s) * 3,
-                len(self.p2s) * 3), dtype=np.complex128)
+            self.dynmat = cupy.zeros(
+                (len(qpoints), len(self.p2s) * 3, len(self.p2s) * 3),
+                dtype=np.complex128,
+            )
             dynmat = self.dynmat
         else:
-            dynmat = self.dynmat[0:len(qpoints),:,:]
+            dynmat = self.dynmat[0 : len(qpoints), :, :]
             dynmat.fill(0.0)
 
         dynmat = cupy.zeros(
-            (len(qpoints), len(self.p2s) * 3, len(self.p2s) * 3),
-            dtype=np.complex128)
+            (len(qpoints), len(self.p2s) * 3, len(self.p2s) * 3), dtype=np.complex128
+        )
 
         qpoints_d = cupy.asarray(qpoints)
 
@@ -498,14 +718,42 @@ class DynMatWorkspace:
                 (dd, dd_tmp) = self.get_Gonze_data(dynmat, qpoints)
                 (charge_sum, q_born) = self.get_empty_Wang_data()
 
-            _dm_kernel_nac[blocks, threads](dynmat, dd, dd_tmp, charge_sum,
-                q_born, self.svecs, self.multi, self.masses, self.rec_lattice,
-                self.positions, self.born, self.nac_factor, self.dielectric,
-                self.dm_fc, self.dd_q0, self.G_list, self.Lambda, self.p2s,
-                self.s2p, qpoints_d, q_dir, hermitianize, self.use_Wang_NAC)
+            _dm_kernel_nac[blocks, threads](
+                dynmat,
+                dd,
+                dd_tmp,
+                charge_sum,
+                q_born,
+                self.svecs,
+                self.multi,
+                self.masses,
+                self.rec_lattice,
+                self.positions,
+                self.born,
+                self.nac_factor,
+                self.dielectric,
+                self.dm_fc,
+                self.dd_q0,
+                self.G_list,
+                self.Lambda,
+                self.p2s,
+                self.s2p,
+                qpoints_d,
+                q_dir,
+                hermitianize,
+                self.use_Wang_NAC,
+            )
         else:
-            _dm_kernel[blocks, threads](dynmat, self.svecs, self.multi,
-                self.masses, self.dm_fc, self.p2s, self.s2p, qpoints_d)
+            _dm_kernel[blocks, threads](
+                dynmat,
+                self.svecs,
+                self.multi,
+                self.masses,
+                self.dm_fc,
+                self.p2s,
+                self.s2p,
+                qpoints_d,
+            )
 
         if self.with_eigenvectors:
             eigvals_d, eigvecs_d = cupy.linalg.eigh(dynmat)

@@ -1,11 +1,12 @@
-import numpy as np
 from math import ceil
+
 import cupy
+import numpy as np
 
 import phonopy
-from phonopy.acc.numba_imports import copysign, sqrt
-from phonopy.acc.numba_imports import cuda
 from phonopy.acc.harmonic.dynamical_matrix import DynMatWorkspace
+from phonopy.acc.numba_imports import copysign, cuda, sqrt
+
 
 @cuda.jit
 def _freq(frequencies, eigenvalues, factor):
@@ -17,9 +18,11 @@ def _freq(frequencies, eigenvalues, factor):
     if j >= eigenvalues.shape[1]:
         return
 
-    frequencies[i, j] = copysign(
-        sqrt(abs(eigenvalues[i, j])), eigenvalues[i, j]) * factor
+    frequencies[i, j] = (
+        copysign(sqrt(abs(eigenvalues[i, j])), eigenvalues[i, j]) * factor
+    )
     return
+
 
 def frequencies(eigenvalues, factor):
     """Compute frequencies from eigenvalues."""
@@ -33,26 +36,33 @@ def frequencies(eigenvalues, factor):
     _freq[blockspergrid, threadsperblock](freq_path, eigenvalues, factor)
     return freq_path
 
-def _run_qpoints_phonon(qpoints, dynamical_matrix, nac_q_direction=None,
-        with_eigenvectors=False, factor=None, dm_ws=None):
+
+def _run_qpoints_phonon(
+    qpoints,
+    dynamical_matrix,
+    nac_q_direction=None,
+    with_eigenvectors=False,
+    factor=None,
+    dm_ws=None,
+):
     """Accelerated version of QpointsPhonon.run()."""
     if factor is None:
         factor = phonopy.physical_units.get_physical_units().DefaultToTHz
 
     if dm_ws is None:
-        dm_ws = DynMatWorkspace(dynamical_matrix,
-                with_eigenvectors=with_eigenvectors)
+        dm_ws = DynMatWorkspace(dynamical_matrix, with_eigenvectors=with_eigenvectors)
     else:
         dm_ws.with_eigenvectors = False
-    qp_d, eigvals, eigvecs, dynmat = dm_ws.solve_dm_on_qpoints(qpoints,
-        nac_q_direction=nac_q_direction)
+    qp_d, eigvals, eigvecs, dynmat = dm_ws.solve_dm_on_qpoints(
+        qpoints, nac_q_direction=nac_q_direction
+    )
     freqs = frequencies(cupy.asarray(eigvals), factor)
-    
+
     return freqs, eigvals, eigvecs, dynmat
+
 
 def run_qpoints_phonon(qpp):
     """Accelerated version of QpointsPhonon.run()."""
-
     freqs, eigvals, eigvecs, dynmat = _run_qpoints_phonon(
         qpp._qpoints,
         qpp._dynamical_matrix,
