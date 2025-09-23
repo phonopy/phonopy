@@ -15,9 +15,7 @@ dependencies = [
     "matplotlib>=2.2.2",
     "h5py>=3.0",
     "spglib>=2.3",
-    "symfc>=1.5",
-    "numba-cuda",
-    "cupy"
+    "symfc>=1.5"
 ]
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
@@ -31,6 +29,7 @@ cp2k = ["cp2k-input-tools"]
 seekpath = ["seekpath"]
 pypolymlp = ["pypolymlp>=0.10.0"]
 tools = ["seekpath", "pypolymlp>=0.10.0"]
+acc = ["numba-cuda", "cupy"]
 
 [project.scripts]
 phonopy = "phonopy.scripts.phonopy:run"
@@ -75,6 +74,7 @@ exclude = [
     "test/phonon/test_irreps.py",
     "test/qha/test_electron.py",
     "phonopy/interface/cp2k.py",
+    "phonopy/acc/numba_imports.py",
     "cmake-format.py"
 ]
 

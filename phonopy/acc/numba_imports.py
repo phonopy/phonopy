@@ -1,9 +1,12 @@
 import os
-use_rocm = os.getenv('ROCM_PATH') is not None
+
+use_rocm = os.getenv("ROCM_PATH") is not None
 
 import numba
+
 if use_rocm:
     from numba import hip
+
     hip.pose_as_cuda()
 
 from numba import cuda
@@ -19,7 +22,7 @@ if use_rocm:
     @cuda.jit(device=True)
     def sincospi(x):
         """(sin(pi*x), cos(pi*x))."""
-        return (sin(pi*x), cos(pi*x))
+        return (sin(pi * x), cos(pi * x))
 
 else:
     from numba.cuda.libdevice import copysign, cos, exp, rsqrt, sin, sincospi, sqrt
