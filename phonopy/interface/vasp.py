@@ -47,6 +47,7 @@ from collections.abc import Sequence
 from typing import Literal, Optional, Union
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.file_IO import (
     get_io_module_to_decompress,
@@ -100,7 +101,7 @@ def get_scaled_positions_lines(scaled_positions):
 
 
 def sort_positions_by_symbols(
-    symbols: Sequence, positions: Optional[np.ndarray] = None
+    symbols: Sequence[str | int] | ArrayLike, positions: NDArray | None = None
 ):
     """Sort atomic positions by symbols.
 
@@ -913,91 +914,37 @@ class VasprunxmlExpat:
         self._p.ParseFile(self._fileptr)
 
     @property
-    def forces(self):
+    def forces(self) -> NDArray:
         """Return forces."""
         return np.array(self._all_forces, dtype="double", order="C")
 
-    def get_forces(self):
-        """Return forces."""
-        warnings.warn(
-            "VasprunxmlExpat.get_forces()) is deprecated. "
-            "Use VasprunxmlExpat.forces attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.forces
-
     @property
-    def stress(self):
+    def stress(self) -> NDArray:
         """Return stress tensor."""
         return np.array(self._all_stress, dtype="double", order="C")
 
-    def get_stress(self):
-        """Return stress tensor."""
-        warnings.warn(
-            "VasprunxmlExpat.get_stress()) is deprecated. "
-            "Use VasprunxmlExpat.stress attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.stress
-
     @property
-    def epsilon(self):
+    def epsilon(self) -> NDArray:
         """Return dielectric constant tensor."""
         return np.array(self._epsilon, dtype="double", order="C")
 
-    def get_epsilon(self):
-        """Return dielectric constant tensor."""
-        warnings.warn(
-            "VasprunxmlExpat.get_epsilon()) is deprecated. "
-            "Use VasprunxmlExpat.epsilon attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.epsilon
-
     @property
-    def efermi(self):
+    def efermi(self) -> float | None:
         """Return Fermi energy."""
         return self._efermi
 
-    def get_efermi(self):
-        """Return efermi."""
-        warnings.warn(
-            "VasprunxmlExpat.get_efermi()) is deprecated. "
-            "Use VasprunxmlExpat.efermi attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._efermi
-
     @property
-    def born(self):
+    def born(self) -> NDArray:
         """Return Born effective charges."""
         return np.array(self._born, dtype="double", order="C")
 
-    def get_born(self):
-        """Return Born effective charges."""
-        return self.born
-
     @property
-    def points(self):
+    def points(self) -> NDArray:
         """Return all atomic positions of structure optimization steps."""
         return np.array(self._all_points, dtype="double", order="C")
 
-    def get_points(self):
-        """Return all atomic positions of structure optimization steps."""
-        warnings.warn(
-            "VasprunxmlExpat.get_points()) is deprecated. "
-            "Use VasprunxmlExpat.points attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.points
-
     @property
-    def lattice(self):
+    def lattice(self) -> NDArray:
         """Return all basis vectors of structure optimization steps.
 
         Each basis vectors are in row vectors (a, b, c)
@@ -1005,38 +952,18 @@ class VasprunxmlExpat:
         """
         return np.array(self._all_lattice, dtype="double", order="C")
 
-    def get_lattice(self):
-        """Return all basis vectors of structure optimization steps."""
-        warnings.warn(
-            "VasprunxmlExpat.get_lattice()) is deprecated. "
-            "Use VasprunxmlExpat.lattice attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.lattice
-
     @property
-    def volume(self):
+    def volume(self) -> NDArray:
         """Return all cell volumes of structure optimization steps."""
         return np.array(self._all_volumes, dtype="double")
 
     @property
-    def symbols(self):
+    def symbols(self) -> list[str]:
         """Return atomic symbols."""
-        return self._symbols
-
-    def get_symbols(self):
-        """Return atomic symbols."""
-        warnings.warn(
-            "VasprunxmlExpat.get_symbols()) is deprecated. "
-            "Use VasprunxmlExpat.symbols attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         return self._symbols
 
     @property
-    def energies(self):
+    def energies(self) -> NDArray:
         """Return energies.
 
         Returns
@@ -1049,28 +976,18 @@ class VasprunxmlExpat:
         """
         return np.array(self._all_energies, dtype="double", order="C")
 
-    def get_energies(self):
-        """Return energies."""
-        warnings.warn(
-            "VasprunxmlExpat.get_energies()) is deprecated. "
-            "Use VasprunxmlExpat.energies attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.energies
-
     @property
-    def k_mesh(self):
+    def k_mesh(self) -> NDArray:
         """Return k_mesh."""
         return np.array(self._k_mesh, dtype="intc")
 
     @property
-    def kpointlist(self):
+    def kpointlist(self) -> NDArray:
         """Return kpoint list."""
         return np.array(self._kpointlist, dtype="double")
 
     @property
-    def k_weights(self):
+    def k_weights(self) -> NDArray:
         """Return k_weights.
 
         Returns
@@ -1084,18 +1001,8 @@ class VasprunxmlExpat:
         """
         return np.array(self._k_weights, dtype="double")
 
-    def get_k_weights(self):
-        """Return k_weights."""
-        warnings.warn(
-            "VasprunxmlExpat.get_k_weights()) is deprecated. "
-            "Use VasprunxmlExpat.k_weights attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.k_weights
-
     @property
-    def k_weights_int(self):
+    def k_weights_int(self) -> NDArray:
         """Return k_weights in integers.
 
         Returns
@@ -1113,7 +1020,7 @@ class VasprunxmlExpat:
         return np.array(weights, dtype="intc")
 
     @property
-    def eigenvalues(self):
+    def eigenvalues(self) -> NDArray:
         """Return eigenvalues.
 
         Returns
@@ -1126,33 +1033,13 @@ class VasprunxmlExpat:
         """
         return np.array(self._eigenvalues, dtype="double", order="C")
 
-    def get_eigenvalues(self):
-        """Return eigenvalues."""
-        warnings.warn(
-            "VasprunxmlExpat.get_eigenvalues()) is deprecated. "
-            "Use VasprunxmlExpat.eigenvalues attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.eigenvalues
-
     @property
-    def projectors(self):
+    def projectors(self) -> NDArray:
         """Return projectors."""
         return self._projectors
 
-    def get_projectors(self):
-        """Return projectors."""
-        warnings.warn(
-            "VasprunxmlExpat.get_projectors()) is deprecated. "
-            "Use VasprunxmlExpat.projectors attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.projectors
-
     @property
-    def pseudopotentials(self):
+    def pseudopotentials(self) -> list:
         """Return pseudo potential information.
 
         Example:
@@ -1162,18 +1049,8 @@ class VasprunxmlExpat:
         """
         return self._pseudopotentials
 
-    def get_pseudopotentials(self):
-        """Return pseudo potential information."""
-        warnings.warn(
-            "VasprunxmlExpat.get_pseudopotentials()) is deprecated. "
-            "Use VasprunxmlExpat.pseudopotentials attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.pseudopotentials
-
     @property
-    def cell(self):
+    def cell(self) -> PhonopyAtoms:
         """Return cell in PhonopyAtoms."""
         return PhonopyAtoms(
             symbols=self._symbols,
@@ -1182,17 +1059,17 @@ class VasprunxmlExpat:
         )
 
     @property
-    def fft_grid(self):
+    def fft_grid(self) -> list[int, int, int]:
         """Return FFT gird [NGX, NGY, NGZ]."""
         return self._fft_grid
 
     @property
-    def fft_fine_grid(self):
+    def fft_fine_grid(self) -> list[int, int, int]:
         """Return fine FFT gird [NGXF, NGYF, NGZF]."""
         return self._fft_fine_grid
 
     @property
-    def NELECT(self):
+    def NELECT(self) -> float | None:
         """Return number of electrons, NELECT."""
         return self._NELECT
 
