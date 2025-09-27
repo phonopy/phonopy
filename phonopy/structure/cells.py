@@ -974,7 +974,7 @@ def _trim_cell(
 #
 # Delaunay and Niggli reductions
 #
-def get_reduced_bases(lattice, method="niggli", tolerance=1e-5):
+def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray | None:
     """Search kinds of shortest basis vectors.
 
     Parameters
@@ -1649,7 +1649,7 @@ def get_primitive_matrix(
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring) -> np.ndarray | None:
+def get_primitive_matrix_by_centring(centring) -> NDArray:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
         return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
@@ -1687,7 +1687,8 @@ def get_primitive_matrix_by_centring(centring) -> np.ndarray | None:
             dtype="double",
         )
     else:
-        return None
+        msg = "centring has to be 'P', 'F', 'I', 'A', 'C', or 'R'"
+        raise RuntimeError(msg)
 
 
 def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDArray:
