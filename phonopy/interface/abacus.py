@@ -255,8 +255,8 @@ def get_abacus_structure(atoms, pps=None, orbitals=None, abfs=None):
     numbers = list(Counter(atoms.symbols).values())
     if pps is None:
         warnings.warn(
-            "Optional structure information (pp_filenames) is missing.\n"
-            "You will need to manually add pp filenames to the qe input file.",
+            "Optional structure information (pseudopotential filenames) is missing.\n"
+            "You will need to manually add them to the STRU file.",
             stacklevel=2,
         )
         pps = {elem: elem + "_pp_filename_here" for elem in elements}
