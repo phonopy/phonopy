@@ -77,7 +77,6 @@ def read_siesta(filename):
     alat = siesta_in._tags["latticeconstant"]
     lattice = siesta_in._tags["latticevectors"]
     positions = siesta_in._tags["atomiccoordinates"]
-    atypes = siesta_in._tags["chemicalspecieslabel"]
     cell = PhonopyAtoms(numbers=numbers, cell=lattice, scaled_positions=positions)
 
     coordformat = siesta_in._tags["atomiccoordinatesformat"]
@@ -96,36 +95,45 @@ def read_siesta(filename):
         )
         sys.exit(1)
 
-    return cell, atypes
+    return cell
 
 
-def write_siesta(filename, cell, atypes):
+def write_siesta(filename, cell):
     """Write cell to file."""
     with open(filename, "w") as w:
-        w.write(get_siesta_structure(cell, atypes))
+        w.write(get_siesta_structure(cell))
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_displacements, ids, atypes, pre_filename="supercell", width=3
+    supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
 ):
     """Write supercells with displacements to files."""
-    write_siesta("%s.fdf" % pre_filename, supercell, atypes)
+    write_siesta("%s.fdf" % pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.fdf".format(
             i, pre_filename=pre_filename, width=width
         )
-        write_siesta(filename, cell, atypes)
+        write_siesta(filename, cell)
 
 
-def get_siesta_structure(cell, atypes):
+def get_siesta_structure(cell):
     """Return SIESTA structure in text."""
     lattice = cell.cell
     positions = cell.scaled_positions
     chemical_symbols = cell.symbols
+    nums = cell.numbers
 
     lines = ""
 
-    lines += "NumberOfAtoms %d\n\n" % len(positions)
+    lines += "NumberOfSpecies %d\n" % len(set(chemical_symbols))
+    lines += "%block ChemicalSpeciesLabel\n"
+    unique_nums = set(nums)
+    unique_symbols = set(chemical_symbols)
+    atypes = {}
+    for i, (num, symbol) in enumerate(zip(unique_nums, unique_symbols), start=1):
+        atypes[symbol] = i
+        lines += "%4d %4d %s\n" % (i, num, symbol)
+    lines += "%endblock ChemicalSpeciesLabel\n\n"
 
     lines += "%block LatticeVectors\n"
     lines += ((" %21.16f" * 3 + "\n") * 3) % tuple(lattice.ravel())
@@ -250,7 +258,7 @@ class SiestaIn:
 if __name__ == "__main__":
     from phonopy.structure.symmetry import Symmetry
 
-    cell, atypes = read_siesta(sys.argv[1])
+    cell = read_siesta(sys.argv[1])
     symmetry = Symmetry(cell)
     print("# %s" % symmetry.get_international_table())
-    print(get_siesta_structure(cell, atypes))
+    print(get_siesta_structure(cell))
