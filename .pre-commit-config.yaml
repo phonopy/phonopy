@@ -9,6 +9,8 @@ repos:
   - id: check-yaml
     exclude: ^conda/
   - id: check-added-large-files
+  - id: mixed-line-ending
+    args: ['--fix=lf']
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.13.0
