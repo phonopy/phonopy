@@ -57,7 +57,7 @@ def create_FORCE_SETS(
     symmetry_tolerance: float | None = None,
     wien2k_P1_mode: bool = False,
     force_sets_zero_mode: bool = False,
-    disp_filename: str = "disp.yaml",
+    disp_filename: str = "phonopy_disp.yaml",
     force_sets_filename: str = "FORCE_SETS",
     save_params: bool = False,
     log_level=0,
