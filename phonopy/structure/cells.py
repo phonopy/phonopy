@@ -793,9 +793,9 @@ def get_supercell(
 def get_primitive(
     supercell: PhonopyAtoms,
     primitive_matrix: str | ArrayLike | None = None,
-    symprec=1e-5,
-    store_dense_svecs=True,
-    positions_to_reorder=None,
+    symprec: float = 1e-5,
+    store_dense_svecs: bool = True,
+    positions_to_reorder: ArrayLike | None = None,
 ) -> Primitive:
     """Create primitive cell."""
     return Primitive(
