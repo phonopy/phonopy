@@ -301,7 +301,7 @@ def save_pypolymlp(mlp: Pypolymlp, filename: str):  # type: ignore
     mlp.save_mlp(filename=filename)
 
 
-def load_pypolymlp(filename: str | bytes | os.PathLike | None) -> Pypolymlp:  # type: ignore
+def load_pypolymlp(filename: str | os.PathLike | None) -> Pypolymlp:  # type: ignore
     """Load MLP data from file."""
     mlp = Pypolymlp()  # type: ignore
     myio = get_io_module_to_decompress(filename)

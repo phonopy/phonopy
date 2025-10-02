@@ -405,7 +405,9 @@ def write_force_constants_to_hdf5(
             w.create_dataset("physical_unit", data=[physical_unit])
 
 
-def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):
+def parse_FORCE_CONSTANTS(
+    filename: str | os.PathLike = "FORCE_CONSTANTS", p2s_map: ArrayLike | None = None
+):
     """Parse FORCE_CONSTANTS.
 
     Parameters

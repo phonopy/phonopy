@@ -38,7 +38,7 @@ from __future__ import annotations
 import io
 import os
 import re
-from typing import Union
+import typing
 
 import numpy as np
 
@@ -202,7 +202,7 @@ class LammpsForcesLoader:
         """Init method."""
         self._forces = None
 
-    def load(self, fp: Union[str, bytes, os.PathLike, io.IOBase]):
+    def load(self, fp: str | os.PathLike | typing.IO):
         """Load and parse LAMMPS structure file.
 
         Parameters
@@ -278,7 +278,7 @@ class LammpsStructureLoader:
         """Return parsed cell."""
         return self._cell
 
-    def load(self, fp: Union[str, bytes, os.PathLike, io.IOBase]):
+    def load(self, fp: str | os.PathLike | typing.IO):
         """Load and parse LAMMPS structure file.
 
         Parameters
@@ -390,7 +390,7 @@ class LammpsStructureLoader:
         self._header_tags[key] = int(line.split("#")[0])
 
 
-def _load(self, fp: Union[str, bytes, os.PathLike, io.IOBase], return_lines=True):
+def _load(self, fp: str | os.PathLike | typing.IO, return_lines=True):
     """Load and parse LAMMPS structure file.
 
     Parameters
