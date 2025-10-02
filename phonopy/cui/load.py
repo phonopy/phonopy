@@ -129,7 +129,7 @@ def load(
 
     Parameters
     ----------
-    phonopy_yaml : str, os.PathLike, io.IOBase, optional
+    phonopy_yaml : str, os.PathLike, typing.IO, optional
         Filename of "phonopy.yaml"-like file for str or bytes, otherwise file
         pointer-like. If this is given, the data in the file are parsed. Default
         is None.

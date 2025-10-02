@@ -37,7 +37,7 @@
 import io
 import os
 import sys
-from typing import Union
+import typing
 
 import numpy as np
 
@@ -77,7 +77,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_abinit(filename: Union[str, bytes, os.PathLike, io.IOBase]):
+def read_abinit(filename: str | os.PathLike | typing.IO):
     """Read crystal structure."""
     if isinstance(filename, io.IOBase):
         abinit_in = AbinitIn(filename.readlines())
