@@ -2844,14 +2844,13 @@ class Phonopy:
         self._irreps = IrReps(
             self._dynamical_matrix,
             q,
+            self._primitive_symmetry,
             is_little_cogroup=is_little_cogroup,
             nac_q_direction=nac_q_direction,
             factor=self._unit_conversion_factor,
-            symprec=self._symprec,
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level,
         )
-        self._irreps.run()
 
     def show_irreps(self, show_irreps: bool = False) -> None:
         """Show Ir-reps."""

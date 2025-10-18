@@ -265,7 +265,7 @@ q2r_filename = sys.argv[2]
 cell, _ = read_pwscf(primcell_filename)
 q2r = PH_Q2R(q2r_filename)
 q2r.run(cell)
-q2r.write_force_constants()
+q2r.save()
 ```
 
 Saving this script as `make_fc_q2r.py`, this is used as, e.g.,
@@ -274,12 +274,8 @@ Saving this script as `make_fc_q2r.py`, this is used as, e.g.,
 % python make_fc_q2r.py NaCl.in NaCl.fc
 ```
 
-This gives `force_constants.hdf5` file in the compact format (see
-{ref}`file_force_constants`).  From version 1.13.2, full supercell
-force constants can be written by `q2r.run(cell, is_full_fc=True)`
-instead of `q2r.run(cell)` in the above
-script. `FORCE_CONSTANTS` file instead of `force_constants.hdf5`
-can be obtained by `q2r.write_force_constants(fc_format='text')`.
+This gives `phonopy_params_q2r.yaml` file that contains supercell force
+constants.
 
 ### Non-analytical term correction
 
@@ -344,7 +340,7 @@ NaCl example is found at
 <https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r>.
 
 ```bash
-% phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --readfc-format=hdf5 --fc-symmetry --nac -p
+% phonopy-load phonopy_params_q2r.yaml --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" -p
 ```
 
 ```{image} NaCl-q2r-band-NAC.png

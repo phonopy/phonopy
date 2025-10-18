@@ -159,11 +159,6 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             pp_filenames = optional_structure_info[1]
         else:
-            warnings.warn(
-                "Optional structure information (pp_filenames) is missing\n\
-                    You will need to manually add pp filenames to the qe input file.",
-                stacklevel=2,
-            )
             pp_filenames = None
         qe.write_pwscf(filename, cell, pp_filenames)
 
@@ -188,11 +183,7 @@ def write_crystal_structure(
     elif interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
 
-        if optional_structure_info is not None:
-            atypes = optional_structure_info[1]
-        else:
-            raise RuntimeError("Optional structure information (atypes) is missing.")
-        siesta.write_siesta(filename, cell, atypes)
+        siesta.write_siesta(filename, cell)
     elif interface_mode == "cp2k":
         import phonopy.interface.cp2k as cp2k
 
@@ -207,9 +198,7 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             conv_numbers = optional_structure_info[1]
         else:
-            raise RuntimeError(
-                "Optional structure information (conv_numbers) is missing."
-            )
+            conv_numbers = None
         crystal.write_crystal(filename, cell, conv_numbers)
     elif interface_mode == "dftbp":
         import phonopy.interface.dftbp as dftbp
@@ -231,11 +220,10 @@ def write_crystal_structure(
         import phonopy.interface.fleur as fleur
 
         if optional_structure_info is not None:
-            speci, restlines = optional_structure_info
+            _, speci, restlines = optional_structure_info
         else:
-            raise RuntimeError(
-                "Optional structure information (speci, restlines) is missing."
-            )
+            speci = None
+            restlines = None
         fleur.write_fleur(filename, cell, speci, 1, restlines)
     elif interface_mode == "abacus":
         import phonopy.interface.abacus as abacus
@@ -245,9 +233,9 @@ def write_crystal_structure(
             orbitals = optional_structure_info[2]
             abfs = optional_structure_info[3]
         else:
-            raise RuntimeError(
-                "Optional structure information (pps, orbitals, abfs) is missing."
-            )
+            pps = None
+            orbitals = None
+            abfs = None
         abacus.write_abacus(filename, cell, pps, orbitals, abfs)
     elif interface_mode == "lammps":
         import phonopy.interface.lammps as lammps
@@ -255,7 +243,7 @@ def write_crystal_structure(
         lammps.write_lammps(filename, cell)
 
     elif interface_mode == "qlm":
-        import phonopy.interface.qlm as write_qlm
+        from phonopy.interface.qlm import write_qlm
 
         write_qlm(filename, cell)
     elif interface_mode == "pwmat":
@@ -320,7 +308,10 @@ def write_supercells_with_displacements(
     elif interface_mode == "qe":
         import phonopy.interface.qe as qe
 
-        pp_filenames = optional_structure_info[1]
+        if optional_structure_info is not None:
+            pp_filenames = optional_structure_info[1]
+        else:
+            pp_filenames = None
         qe_args = args + (pp_filenames,)
         qe.write_supercells_with_displacements(*qe_args, **kwargs)
         write_magnetic_moments(supercell, sort_by_elements=False)
@@ -332,7 +323,12 @@ def write_supercells_with_displacements(
     elif interface_mode == "wien2k":
         import phonopy.interface.wien2k as wien2k
 
-        unitcell_filename, npts, r0s, rmts = optional_structure_info
+        if optional_structure_info is not None:
+            unitcell_filename, npts, r0s, rmts = optional_structure_info
+        else:
+            raise RuntimeError(
+                "Optional structure information (_, npts, r0s, rmts) is missing."
+            )
         N = abs(determinant(additional_info["supercell_matrix"]))
         w2k_args = args + (npts, r0s, rmts, N)
         if "pre_filename" not in kwargs:
@@ -341,19 +337,23 @@ def write_supercells_with_displacements(
     elif interface_mode == "elk":
         import phonopy.interface.elk as elk
 
-        sp_filenames = optional_structure_info[1]
+        if optional_structure_info is not None:
+            sp_filenames = optional_structure_info[1]
+        else:
+            sp_filenames = None
         elk_args = args + (sp_filenames,)
         elk.write_supercells_with_displacements(*elk_args, **kwargs)
     elif interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
 
-        atypes = optional_structure_info[1]
-        sst_args = args + (atypes,)
-        siesta.write_supercells_with_displacements(*sst_args, **kwargs)
+        siesta.write_supercells_with_displacements(*args, **kwargs)
     elif interface_mode == "cp2k":
         import phonopy.interface.cp2k as cp2k
 
-        cp2k_args = args + (optional_structure_info,)
+        if optional_structure_info is not None:
+            cp2k_args = args + (optional_structure_info,)
+        else:
+            raise RuntimeError("Optional structure information (tree) is missing.")
         cp2k.write_supercells_with_displacements(*cp2k_args, **kwargs)
     elif interface_mode == "crystal":
         import phonopy.interface.crystal as crystal
@@ -362,7 +362,10 @@ def write_supercells_with_displacements(
             kwargs["template_file"] = "TEMPLATE"
         else:
             kwargs["template_file"] = additional_info.get("template_file", "TEMPLATE")
-        conv_numbers = optional_structure_info[1]
+        if optional_structure_info is not None:
+            conv_numbers = optional_structure_info[1]
+        else:
+            conv_numbers = None
         N = abs(determinant(additional_info["supercell_matrix"]))
         cst_args = args + (conv_numbers, N)
         crystal.write_supercells_with_displacements(*cst_args, **kwargs)
@@ -385,17 +388,26 @@ def write_supercells_with_displacements(
     elif interface_mode == "fleur":
         import phonopy.interface.fleur as fleur
 
-        speci = optional_structure_info[1]
-        restlines = optional_structure_info[2]
+        if optional_structure_info is not None:
+            speci = optional_structure_info[1]
+            restlines = optional_structure_info[2]
+        else:
+            speci = None
+            restlines = None
         N = abs(determinant(additional_info["supercell_matrix"]))
         fleur_args = args + (speci, N, restlines)
         fleur.write_supercells_with_displacements(*fleur_args, **kwargs)
     elif interface_mode == "abacus":
         import phonopy.interface.abacus as abacus
 
-        pps = optional_structure_info[1]
-        orbitals = optional_structure_info[2]
-        abfs = optional_structure_info[3]
+        if optional_structure_info is not None:
+            pps = optional_structure_info[1]
+            orbitals = optional_structure_info[2]
+            abfs = optional_structure_info[3]
+        else:
+            pps = None
+            orbitals = None
+            abfs = None
         abacus_args = args + (pps, orbitals, abfs)
         abacus.write_supercells_with_displacements(*abacus_args, **kwargs)
     elif interface_mode == "lammps":
@@ -406,7 +418,10 @@ def write_supercells_with_displacements(
     elif interface_mode == "qlm":
         import phonopy.interface.qlm as qlm
 
-        qlm_args = args + optional_structure_info
+        if optional_structure_info is not None:
+            qlm_args = args + optional_structure_info
+        else:
+            qlm_args = args
         qlm.write_supercells_with_displacements(*qlm_args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -512,8 +527,8 @@ def read_crystal_structure(
     elif interface_mode == "siesta":
         from phonopy.interface.siesta import read_siesta
 
-        unitcell, atypes = read_siesta(cell_filename)
-        return unitcell, (cell_filename, atypes)
+        unitcell = read_siesta(cell_filename)
+        return unitcell, (cell_filename,)
     elif interface_mode == "cp2k":
         from phonopy.interface.cp2k import read_cp2k
 

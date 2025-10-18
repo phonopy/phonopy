@@ -37,9 +37,9 @@
 from __future__ import annotations
 
 import dataclasses
-import io
 import os
 import pathlib
+import typing
 from typing import Literal
 
 import numpy as np
@@ -227,7 +227,7 @@ def read_force_constants_from_hdf5(
 def select_and_load_dataset(
     nsatom: int,
     dataset: dict | None = None,
-    phonopy_yaml_filename: str | os.PathLike | io.IOBase | None = None,
+    phonopy_yaml_filename: str | os.PathLike | typing.IO | None = None,
     force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
 ) -> dict | None:
