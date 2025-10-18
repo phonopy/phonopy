@@ -81,8 +81,6 @@ def test_calc_convert():
     Converts to/from vasp for calculators that accept
     additional info into phonopy-calc-convert script.
     """
-    example_dir = cwd / "../../example"
-
     # Simulate command-line arguments
     xtra_inps = {
         "qe": [
@@ -100,10 +98,10 @@ def test_calc_convert():
     xtra_files = {
         "qe": cwd / "NaCl-pwscf.in",
         "wien2k": cwd / "BaGa2.struct",
-        "elk": example_dir / "Si-elk/elk.in",
+        "elk": cwd / "elk.in",
         "crystal": cwd / "Si-CRYSTAL.o",
-        "fleur": example_dir / "Al-Fleur/fleur_inpgen",
-        "abacus": example_dir / "Al-ABACUS/abacus-pw/STRU.in",
+        "fleur": cwd / "fleur_inpgen",
+        "abacus": cwd / "STRU.in",
     }
 
     for calc in xtra_inps.keys():
