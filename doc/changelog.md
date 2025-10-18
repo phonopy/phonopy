@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Oct-18-2025: Version 2.43.5
+
+- Fix test for conda-forge deployment
+
 ## Oct-18-2025: Version 2.43.4
 
 - Fix test for deploying windows package.
