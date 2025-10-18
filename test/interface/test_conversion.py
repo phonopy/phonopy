@@ -20,11 +20,10 @@ def test_conversion():
     require_extra_info = ["wien2k", "cp2k"]
     expected_warnings = ["qe", "abacus", "crystal", "fleur", "wien2k"]
     for calc in calcs:
-        if calc == "turbomole":
-            with tempfile.TemporaryDirectory() as td:
+        with tempfile.TemporaryDirectory() as td:
+            if calc == "turbomole":
                 convert_crystal_structure(poscar_file, "vasp", td, calc)
-        else:
-            with tempfile.TemporaryDirectory() as td:
+            else:
                 name = str(pathlib.Path(td) / f"crystal_structure_{calc}")
                 if calc in require_extra_info:
                     with pytest.raises(RuntimeError):
