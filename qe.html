@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.43.2</title>
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.43.3</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=11fc04d2"></script>
+    <script src="_static/documentation_options.js?v=aa0086cf"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.43.2</p>
+    <p class="title logo__title">Phonopy v.2.43.3</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -595,19 +595,15 @@ symmetrized by the translational invariance condition using
 <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_pwscf</span><span class="p">(</span><span class="n">primcell_filename</span><span class="p">)</span>
 <span class="n">q2r</span> <span class="o">=</span> <span class="n">PH_Q2R</span><span class="p">(</span><span class="n">q2r_filename</span><span class="p">)</span>
 <span class="n">q2r</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-<span class="n">q2r</span><span class="o">.</span><span class="n">write_force_constants</span><span class="p">()</span>
+<span class="n">q2r</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Saving this script as <code class="docutils literal notranslate"><span class="pre">make_fc_q2r.py</span></code>, this is used as, e.g.,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>make_fc_q2r.py<span class="w"> </span>NaCl.in<span class="w"> </span>NaCl.fc
 </pre></div>
 </div>
-<p>This gives <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> file in the compact format (see
-<a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">FORCE_CONSTANTS and force_constants.hdf5</span></a>).  From version 1.13.2, full supercell
-force constants can be written by <code class="docutils literal notranslate"><span class="pre">q2r.run(cell,</span> <span class="pre">is_full_fc=True)</span></code>
-instead of <code class="docutils literal notranslate"><span class="pre">q2r.run(cell)</span></code> in the above
-script. <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> file instead of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code>
-can be obtained by <code class="docutils literal notranslate"><span class="pre">q2r.write_force_constants(fc_format='text')</span></code>.</p>
+<p>This gives <code class="docutils literal notranslate"><span class="pre">phonopy_params_q2r.yaml</span></code> file that contains supercell force
+constants.</p>
 <section id="non-analytical-term-correction">
 <h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
 <p>Treatment of non-analytical term correction (NAC) is different between
@@ -665,7 +661,7 @@ text.</p>
 <h4>NaCl example<a class="headerlink" href="#nacl-example" title="Link to this heading">#</a></h4>
 <p>NaCl example is found at
 <a class="github reference external" href="https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r">phonopy/phonopy</a>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--qe<span class="w"> </span>-c<span class="w"> </span>NaCl.in<span class="w"> </span>--dim<span class="o">=</span><span class="s2">&quot;8 8 8&quot;</span><span class="w"> </span>--band<span class="o">=</span><span class="s2">&quot;0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2&quot;</span><span class="w"> </span>--readfc<span class="w"> </span>--readfc-format<span class="o">=</span>hdf5<span class="w"> </span>--fc-symmetry<span class="w"> </span>--nac<span class="w"> </span>-p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>phonopy_params_q2r.yaml<span class="w"> </span>--band<span class="o">=</span><span class="s2">&quot;0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2&quot;</span><span class="w"> </span>-p
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/NaCl-q2r-band-NAC.png"><img alt="_images/NaCl-q2r-band-NAC.png" src="_images/NaCl-q2r-band-NAC.png" style="width: 50%;" />
