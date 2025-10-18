@@ -24,8 +24,8 @@ def test_conversion():
             with tempfile.TemporaryDirectory() as td:
                 convert_crystal_structure(poscar_file, "vasp", td, calc)
         else:
-            with tempfile.NamedTemporaryFile() as temp:
-                name = temp.name
+            with tempfile.TemporaryDirectory() as td:
+                name = str(pathlib.Path(td) / f"crystal_structure_{calc}")
                 if calc in require_extra_info:
                     with pytest.raises(RuntimeError):
                         # These calcs need additional info to write their input files
