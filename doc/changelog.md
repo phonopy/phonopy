@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Oct-18-2025: Version 2.43.4
+
+- Fix test for deploying windows package.
+
 ## Oct-18-2025: Version 2.43.3
 
 - Bug fix `PH_Q2R`.
