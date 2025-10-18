@@ -793,9 +793,9 @@ def get_supercell(
 def get_primitive(
     supercell: PhonopyAtoms,
     primitive_matrix: str | ArrayLike | None = None,
-    symprec=1e-5,
-    store_dense_svecs=True,
-    positions_to_reorder=None,
+    symprec: float = 1e-5,
+    store_dense_svecs: bool = True,
+    positions_to_reorder: ArrayLike | None = None,
 ) -> Primitive:
     """Create primitive cell."""
     return Primitive(
@@ -922,7 +922,7 @@ def isclose(
     return True
 
 
-def is_primitive_cell(rotations):
+def is_primitive_cell(rotations: NDArray) -> bool:
     """Check if single identity operation exists in rotations or not.
 
     This is used for checking a cell is a primitive cell or not.
@@ -974,7 +974,7 @@ def _trim_cell(
 #
 # Delaunay and Niggli reductions
 #
-def get_reduced_bases(lattice, method="niggli", tolerance=1e-5):
+def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray | None:
     """Search kinds of shortest basis vectors.
 
     Parameters
@@ -1649,7 +1649,7 @@ def get_primitive_matrix(
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring) -> np.ndarray | None:
+def get_primitive_matrix_by_centring(centring) -> NDArray:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
         return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
@@ -1687,7 +1687,8 @@ def get_primitive_matrix_by_centring(centring) -> np.ndarray | None:
             dtype="double",
         )
     else:
-        return None
+        msg = "centring has to be 'P', 'F', 'I', 'A', 'C', or 'R'"
+        raise RuntimeError(msg)
 
 
 def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDArray:

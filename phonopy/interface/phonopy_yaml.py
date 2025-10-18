@@ -39,6 +39,7 @@ from __future__ import annotations
 import dataclasses
 import io
 import os
+import typing
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -1008,7 +1009,7 @@ class PhonopyYaml:
         )
         return "\n".join(phyml_dumper.get_yaml_lines())
 
-    def read(self, filename: str | bytes | os.PathLike | io.IOBase):
+    def read(self, filename: str | os.PathLike | typing.IO):
         """Read PhonopyYaml file."""
         self._data = read_phonopy_yaml(
             filename,
@@ -1036,7 +1037,7 @@ class PhonopyYaml:
 
 
 def read_phonopy_yaml(
-    filename: str | bytes | os.PathLike | io.IOBase,
+    filename: str | os.PathLike | typing.IO,
     configuration=None,
     calculator=None,
     physical_units=None,
@@ -1079,7 +1080,7 @@ def load_phonopy_yaml(
 
 
 def read_cell_yaml(
-    filename: str | bytes | os.PathLike | io.IOBase, cell_type: str = "unitcell"
+    filename: str | os.PathLike | typing.IO, cell_type: str = "unitcell"
 ) -> PhonopyAtoms:
     """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
 
@@ -1105,7 +1106,7 @@ def read_cell_yaml(
 
     Parameters
     ----------
-    filename : str, bytes, os.PathLike, io.IOBase
+    filename : str, os.PathLike, typing.IO
         File name or file stream.
     cell_type : str
         "unitcell", "primitive", or "supercell". Default is "unitcell".
@@ -1126,12 +1127,12 @@ def read_cell_yaml(
             raise RuntimeError(f'Crystal structure data was not found in "{filename}".')
 
 
-def load_yaml(fp: str | bytes | os.PathLike | io.IOBase):
+def load_yaml(fp: str | os.PathLike | typing.IO):
     """Load yaml file.
 
     Parameters
     ----------
-    fp : str, bytes, os.PathLike or io.IOBase
+    fp : str, os.PathLike or typing.IO
         Filename, file path, or file stream.
 
     lzma and gzip comppressed non-stream files can be loaded.

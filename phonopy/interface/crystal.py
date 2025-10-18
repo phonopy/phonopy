@@ -35,6 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import warnings
 
 import numpy as np
 
@@ -121,6 +122,27 @@ def write_crystal(
     filename, cell, conv_numbers, template_file="TEMPLATE", write_symmetry=False
 ):
     """Write cell to file."""
+    if conv_numbers is None:
+        # NAT<200: all-electron BS 	Given Z, NAT=Z, NAT'=Z+100
+        # NAT>200: valence-electron BS 	Given Z, NAT=Z+200, NAT'=Z+300
+        conv_numbers = cell.numbers
+        warnings.warn(
+            (
+                "No CRYSTAL conventional atomic numbers provided, "
+                "so generating from atomic numbers instead. "
+                "If you want to use a different basis set as specified "
+                "with additions to the hundreds place, "
+                "please provide the conventional atomic numbers explicitly."
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+    if len(cell.positions) != len(conv_numbers):
+        raise ValueError(
+            f"Length of conv_numbers ({len(conv_numbers)}) does not match "
+            f"number of atoms ({len(cell.positions)})."
+        )
+
     # Write geometry in EXTERNAL file (fort.34)
     f_ext = open(filename + ".ext", "w")
     f_ext.write(get_crystal_structure(cell, conv_numbers, write_symmetry))

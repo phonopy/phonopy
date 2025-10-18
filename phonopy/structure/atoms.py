@@ -39,9 +39,9 @@ import re
 import warnings
 from collections.abc import Sequence
 from math import gcd
-from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 
 def Atoms(*args, **kwargs):
@@ -58,7 +58,7 @@ def Atoms(*args, **kwargs):
     return PhonopyAtoms(*args, **kwargs)
 
 
-def split_symbol_and_index(symnum: str):
+def split_symbol_and_index(symnum: str) -> tuple[str, int]:
     """Split symbol and index.
 
     H --> H, 0
@@ -117,16 +117,16 @@ class PhonopyAtoms:
 
     def __init__(
         self,
-        symbols: Optional[Sequence] = None,
-        numbers: Optional[Union[Sequence, np.ndarray]] = None,
-        masses: Optional[Union[Sequence, np.ndarray]] = None,
-        magnetic_moments: Optional[Union[Sequence, np.ndarray]] = None,
-        scaled_positions: Optional[Union[Sequence, np.ndarray]] = None,
-        positions: Optional[Union[Sequence, np.ndarray]] = None,
-        cell: Optional[Union[Sequence, np.ndarray]] = None,
-        atoms: Optional["PhonopyAtoms"] = None,
-        magmoms: Optional[Union[Sequence, np.ndarray]] = None,
-        pbc: Optional[bool] = None,
+        symbols: Sequence | None = None,
+        numbers: ArrayLike | None = None,
+        masses: ArrayLike | None = None,
+        magnetic_moments: ArrayLike | None = None,
+        scaled_positions: ArrayLike | None = None,
+        positions: ArrayLike | None = None,
+        cell: ArrayLike | None = None,
+        atoms: "PhonopyAtoms" | None = None,
+        magmoms: ArrayLike | None = None,
+        pbc: bool | None = None,
     ):  # pbc is dummy argument, and never used.
         """Init method."""
         if magmoms is not None:
@@ -170,13 +170,13 @@ class PhonopyAtoms:
 
     def _set_parameters(
         self,
-        symbols: Optional[Sequence[str]] = None,
-        numbers: Optional[Union[Sequence, np.ndarray]] = None,
-        masses: Optional[Union[Sequence, np.ndarray]] = None,
-        magnetic_moments: Optional[Union[Sequence, np.ndarray]] = None,
-        scaled_positions: Optional[Union[Sequence, np.ndarray]] = None,
-        positions: Optional[Union[Sequence, np.ndarray]] = None,
-        cell: Optional[Union[Sequence, np.ndarray]] = None,
+        symbols: Sequence[str] | None = None,
+        numbers: ArrayLike | None = None,
+        masses: ArrayLike | None = None,
+        magnetic_moments: ArrayLike | None = None,
+        scaled_positions: ArrayLike | None = None,
+        positions: ArrayLike | None = None,
+        cell: ArrayLike | None = None,
     ):
         """Set crystal structure parameters.
 
@@ -188,12 +188,12 @@ class PhonopyAtoms:
         number next to the chemical symbol.
 
         """
-        self._cell: np.ndarray
-        self._scaled_positions: np.ndarray
+        self._cell: NDArray
+        self._scaled_positions: NDArray
         self._symbols: list[str]
-        self._magnetic_moments: Optional[np.ndarray]
-        self._masses: np.ndarray
-        self._numbers_with_shifts: np.ndarray
+        self._magnetic_moments: NDArray | None
+        self._masses: NDArray
+        self._numbers_with_shifts: NDArray
 
         self._set_cell_and_positions(
             cell, positions=positions, scaled_positions=scaled_positions
@@ -232,7 +232,7 @@ class PhonopyAtoms:
         return len(self.numbers)
 
     @property
-    def cell(self) -> np.ndarray:
+    def cell(self) -> NDArray:
         """Setter and getter of basis vectors. For getter, copy is returned."""
         return self._cell.copy()
 
@@ -241,85 +241,27 @@ class PhonopyAtoms:
         self._set_cell(cell)
         self._check()
 
-    def set_cell(self, cell):
-        """Set basis vectors."""
-        warnings.warn(
-            "PhonopyAtoms.set_cell() is deprecated. Use cell attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.cell = cell
-
-    def get_cell(self):
-        """Return copy of basis vectors."""
-        warnings.warn(
-            "PhonopyAtoms.get_cell() is deprecated. Use cell attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.cell
-
     @property
-    def positions(self) -> np.ndarray:
+    def positions(self) -> NDArray:
         """Setter and getter of positions in Cartesian coordinates."""
         return np.array(
             np.dot(self._scaled_positions, self._cell), dtype="double", order="C"
         )
 
     @positions.setter
-    def positions(self, positions):
+    def positions(self, positions: ArrayLike):
         self._set_positions(positions)
         self._check()
 
-    def get_positions(self):
-        """Return positions in Cartesian coordinates."""
-        warnings.warn(
-            "PhonopyAtoms.get_positions() is deprecated. "
-            "Use positions attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.positions
-
-    def set_positions(self, positions):
-        """Set positions in Cartesian coordinates."""
-        warnings.warn(
-            "PhonopyAtoms.set_positions() is deprecated. "
-            "Use positions attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.positions = positions
-
     @property
-    def scaled_positions(self) -> np.ndarray:
+    def scaled_positions(self) -> NDArray:
         """Setter and getter of scaled positions. For getter, copy is returned."""
         return self._scaled_positions.copy()
 
     @scaled_positions.setter
-    def scaled_positions(self, scaled_positions):
+    def scaled_positions(self, scaled_positions: ArrayLike):
         self._set_scaled_positions(scaled_positions)
         self._check()
-
-    def get_scaled_positions(self):
-        """Return scaled positions."""
-        warnings.warn(
-            "PhonopyAtoms.get_scaled_positions() is deprecated. "
-            "Use scaled_positions attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.scaled_positions
-
-    def set_scaled_positions(self, scaled_positions):
-        """Set scaled positions."""
-        warnings.warn(
-            "PhonopyAtoms.set_scaled_positions() is deprecated. "
-            "Use scaled_positions attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.scaled_positions = scaled_positions
 
     @property
     def symbols(self) -> list[str]:
@@ -328,7 +270,7 @@ class PhonopyAtoms:
         return self._symbols[:]
 
     @symbols.setter
-    def symbols(self, symbols):
+    def symbols(self, symbols: Sequence[str]):
         warnings.warn(
             "Setter of PhonopyAtoms.symbols is deprecated.",
             DeprecationWarning,
@@ -339,33 +281,13 @@ class PhonopyAtoms:
         self._symbols_to_numbers()
         self._symbols_to_masses()
 
-    def get_chemical_symbols(self):
-        """Return chemical symbols."""
-        warnings.warn(
-            "PhonopyAtoms.get_chemical_symbols() is deprecated. "
-            "Use symbols attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.symbols
-
-    def set_chemical_symbols(self, symbols):
-        """Set chemical symbols."""
-        warnings.warn(
-            "PhonopyAtoms.set_chemical_symbols() is deprecated. "
-            "Use symbols attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.symbols = symbols
-
     @property
-    def numbers_with_shifts(self) -> np.ndarray:
+    def numbers_with_shifts(self) -> NDArray:
         """Getter of atomic numbers + MOD_DIVISOR * index."""
         return self._numbers_with_shifts.copy()
 
     @property
-    def numbers(self) -> np.ndarray:
+    def numbers(self) -> NDArray:
         """Setter and getter of atomic numbers. For getter, new array is returned.
 
         Atomic numbers larger than 118 are not allowed.
@@ -376,7 +298,7 @@ class PhonopyAtoms:
         )
 
     @numbers.setter
-    def numbers(self, numbers):
+    def numbers(self, numbers: ArrayLike):
         if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
             raise RuntimeError("Atomic numbers cannot be larger than 118.")
         warnings.warn(
@@ -389,56 +311,18 @@ class PhonopyAtoms:
         self._numbers_to_symbols()
         self._symbols_to_masses()
 
-    def get_atomic_numbers(self):
-        """Return atomic numbers."""
-        warnings.warn(
-            "PhonopyAtoms.get_atomic_numbers() is deprecated. "
-            "Use numbers attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.numbers
-
-    def set_atomic_numbers(self, numbers):
-        """Set atomic numbers."""
-        warnings.warn(
-            "PhonopyAtoms.set_atomic_numbers() is deprecated. "
-            "Use numbers attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.numbers = numbers
-
     @property
-    def masses(self) -> np.ndarray:
+    def masses(self) -> NDArray:
         """Setter and getter of atomic masses. For getter copy is returned."""
         return self._masses.copy()
 
     @masses.setter
-    def masses(self, masses):
+    def masses(self, masses: ArrayLike):
         self._set_masses(masses)
         self._check()
 
-    def get_masses(self):
-        """Return atomic masses."""
-        warnings.warn(
-            "PhonopyAtoms.get_masses() is deprecated. Use masses attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.masses
-
-    def set_masses(self, masses):
-        """Set atomic masses."""
-        warnings.warn(
-            "PhonopyAtoms.set_masses() is deprecated. Use masses attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.masses = masses
-
     @property
-    def magnetic_moments(self) -> Optional[np.ndarray]:
+    def magnetic_moments(self) -> NDArray | None:
         """Setter and getter of magnetic moments. For getter, copy is returned.
 
         shape=(natom,) or (natom, 3), dtype='double', order='C'
@@ -461,43 +345,14 @@ class PhonopyAtoms:
                 )
 
     @magnetic_moments.setter
-    def magnetic_moments(self, magnetic_moments):
+    def magnetic_moments(self, magnetic_moments: ArrayLike | None):
         self._set_magnetic_moments(magnetic_moments)
         self._check()
 
-    def get_magnetic_moments(self):
-        """Return magnetic moments."""
-        warnings.warn(
-            "PhonopyAtoms.get_magnetic_moments() is deprecated. "
-            "Use magnetic_moments attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.magnetic_moments
-
-    def set_magnetic_moments(self, magmoms):
-        """Set magnetic moments."""
-        warnings.warn(
-            "PhonopyAtoms.set_magnetic_moments() is deprecated. "
-            "Use magnetic_moments attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.magnetic_moments = magmoms
-
     @property
-    def volume(self):
+    def volume(self) -> float:
         """Return cell volume."""
-        return np.linalg.det(self._cell)
-
-    def get_volume(self):
-        """Return cell volume."""
-        warnings.warn(
-            "PhonopyAtoms.get_volume() is deprecated. Use volume attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.volume
+        return float(np.linalg.det(self._cell))
 
     @property
     def Z(self):
@@ -514,34 +369,25 @@ class PhonopyAtoms:
             x = gcd(x, v)
         return x
 
-    def get_number_of_atoms(self):
-        """Return number of atoms."""
-        warnings.warn(
-            "PhonopyAtoms.get_number_of_atoms() is deprecated. Use len(PhonopyAtoms).",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return len(self)
-
-    def _set_cell(self, cell):
+    def _set_cell(self, cell: ArrayLike):
         _cell = np.array(cell, dtype="double", order="C")
         if _cell.shape == (3, 3):
             self._cell = _cell
         else:
             raise TypeError("Array shape of cell is not 3x3.")
 
-    def _set_positions(self, cart_positions):
+    def _set_positions(self, cart_positions: ArrayLike):
         self._scaled_positions = np.array(
             np.dot(cart_positions, np.linalg.inv(self._cell)), dtype="double", order="C"
         )
 
-    def _set_scaled_positions(self, scaled_positions):
+    def _set_scaled_positions(self, scaled_positions: ArrayLike):
         self._scaled_positions = np.array(scaled_positions, dtype="double", order="C")
 
-    def _set_masses(self, masses: Union[Sequence, np.ndarray]):
+    def _set_masses(self, masses: ArrayLike):
         self._masses = np.array(masses, dtype="double")
 
-    def _set_magnetic_moments(self, magmoms):
+    def _set_magnetic_moments(self, magmoms: ArrayLike | None):
         """Set magnetic moments in 1D array of shape=(natom,) or (natom*3)."""
         if magmoms is None:
             self._magnetic_moments = None
@@ -552,7 +398,12 @@ class PhonopyAtoms:
                 )
             self._magnetic_moments = np.array(np.ravel(magmoms), dtype="double")
 
-    def _set_cell_and_positions(self, cell, positions=None, scaled_positions=None):
+    def _set_cell_and_positions(
+        self,
+        cell: ArrayLike = None,
+        positions: ArrayLike | None = None,
+        scaled_positions: ArrayLike | None = None,
+    ):
         self._set_cell(cell)
         if positions is not None:
             self._set_positions(positions)
@@ -627,7 +478,7 @@ class PhonopyAtoms:
             symbols=self._symbols,
         )
 
-    def totuple(self, distinguish_symbol_index: bool = False):
+    def totuple(self, distinguish_symbol_index: bool = False) -> tuple:
         """Return (cell, scaled_position, numbers).
 
         If magmams is set, (cell, scaled_position, numbers, magmoms) is
@@ -658,7 +509,7 @@ class PhonopyAtoms:
                 self.magnetic_moments,
             )
 
-    def to_tuple(self):
+    def to_tuple(self) -> tuple:
         """Return (cell, scaled_position, numbers).
 
         If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
@@ -671,7 +522,7 @@ class PhonopyAtoms:
         )
         return self.totuple()
 
-    def get_yaml_lines(self):
+    def get_yaml_lines(self) -> list[str]:
         """Return list of text lines of crystal structure in yaml."""
         lines = ["lattice:"]
         for pos, a in zip(self._cell, ("a", "b", "c")):
@@ -709,11 +560,11 @@ class PhonopyAtoms:
                 lines.append(f"  magnetic_moment: {mag_str}")
         return lines
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return text lines of crystal structure in yaml."""
         return "\n".join(self.get_yaml_lines())
 
-    def _get_element_counts(self):
+    def _get_element_counts(self) -> dict[str, int]:
         """Return dict of element counts, with indices stripped from symbols."""
         counts = {}
         for symbol in self._symbols:
@@ -721,7 +572,7 @@ class PhonopyAtoms:
             counts[base_symbol] = counts.get(base_symbol, 0) + 1
         return counts
 
-    def _build_formula(self, counts, divisor=1):
+    def _build_formula(self, counts, divisor=1) -> str:
         """Build formula string from element counts and optional divisor.
 
         Parameters
@@ -735,6 +586,7 @@ class PhonopyAtoms:
         -------
         str
             Formula string with elements in alphabetical order
+
         """
         if not counts:
             return ""
@@ -750,22 +602,24 @@ class PhonopyAtoms:
         return "".join(formula_parts)
 
     @property
-    def formula(self):
+    def formula(self) -> str:
         """Return chemical formula as a string.
 
         The formula is constructed by sorting elements alphabetically and
         appending numbers for elements that appear more than once.
         E.g., "Si2O4" for two Si and four O atoms.
+
         """
         counts = self._get_element_counts()
         return self._build_formula(counts)
 
     @property
-    def reduced_formula(self):
+    def reduced_formula(self) -> str:
         """Return reduced chemical formula as a string.
 
         The reduced formula divides all element counts by their GCD.
         E.g., "Fe4O8" becomes "Fe2O4".
+
         """
         counts = self._get_element_counts()
         if not counts:
@@ -780,11 +634,12 @@ class PhonopyAtoms:
         return self._build_formula(counts, divisor)
 
     @property
-    def normalized_formula(self):
+    def normalized_formula(self) -> str:
         """Return normalized formula as a string.
 
         The normalized formula scales all element counts so they sum to 1.
         E.g., "Fe2O3" becomes "Fe0.4O0.6".
+
         """
         counts = self._get_element_counts()
         if not counts:
@@ -803,7 +658,7 @@ class PhonopyAtoms:
         return "".join(formula_parts)
 
 
-def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
+def parse_cell_dict(cell_dict: dict) -> PhonopyAtoms | None:
     """Parse cell dict."""
     lattice = None
     if "lattice" in cell_dict:
