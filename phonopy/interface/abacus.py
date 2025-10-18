@@ -36,6 +36,7 @@
 
 import re
 import sys
+import warnings
 from collections import Counter
 
 import numpy as np
@@ -245,13 +246,20 @@ def write_supercells_with_displacements(
         write_abacus(filename, cell, pps, orbitals, abfs)
 
 
-def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
+def get_abacus_structure(atoms, pps=None, orbitals=None, abfs=None):
     """Return ABACUS structure in text."""
     empty_line = ""
     line = []
     line.append("ATOMIC_SPECIES")
     elements = list(Counter(atoms.symbols).keys())
     numbers = list(Counter(atoms.symbols).values())
+    if pps is None:
+        warnings.warn(
+            "Optional structure information (pseudopotential filenames) is missing.\n"
+            "You will need to manually add them to the STRU file.",
+            stacklevel=2,
+        )
+        pps = {elem: elem + "_pp_filename_here" for elem in elements}
 
     for _, elem in enumerate(elements):
         line.append(f"{elem}\t{atom_data[symbol_map[elem]][3]}\t{pps[elem]}")

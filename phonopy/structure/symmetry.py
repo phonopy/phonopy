@@ -36,10 +36,8 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Sequence
-from typing import Optional
 
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 try:
     from spglib import SpglibDataset
@@ -66,7 +64,7 @@ class Symmetry:
         cell: PhonopyAtoms,
         symprec: float = 1e-5,
         is_symmetry: bool = True,
-        s2p_map: Optional[np.ndarray] = None,
+        s2p_map: NDArray | None = None,
     ):
         """Init method.
 
@@ -576,15 +574,15 @@ def elaborate_borns_and_epsilon(
 
 
 def symmetrize_borns_and_epsilon(
-    borns: Sequence,
-    epsilon: Sequence,
+    borns: ArrayLike,
+    epsilon: ArrayLike,
     ucell: PhonopyAtoms,
-    primitive_matrix: Optional[Sequence] = None,
-    primitive: PhonopyAtoms = None,
-    supercell_matrix: Optional[Sequence] = None,
+    primitive_matrix: ArrayLike | None = None,
+    primitive: PhonopyAtoms | None = None,
+    supercell_matrix: ArrayLike | None = None,
     symprec: float = 1e-5,
     is_symmetry: bool = True,
-):
+) -> tuple[NDArray, NDArray]:
     """Symmetrize Born effective charges and dielectric tensor.
 
     Parameters
@@ -668,12 +666,12 @@ def symmetrize_borns_and_epsilon(
 
 
 def _take_average_of_borns(
-    borns: np.ndarray,
-    rotations: np.ndarray,
-    translations: np.ndarray,
+    borns: NDArray,
+    rotations: NDArray,
+    translations: NDArray,
     cell: PhonopyAtoms,
     symprec: float,
-) -> np.ndarray:
+) -> NDArray:
     lattice = cell.cell
     positions = cell.scaled_positions
     borns_ = np.zeros_like(borns)

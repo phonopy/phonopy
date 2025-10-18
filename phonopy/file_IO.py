@@ -42,7 +42,7 @@ import pathlib
 import sys
 from collections.abc import Sequence
 from types import ModuleType
-from typing import Optional
+from typing import Optional, TextIO
 
 import numpy as np
 import yaml
@@ -155,7 +155,7 @@ def parse_FORCE_SETS_from_strings(
     return _get_dataset(io.StringIO(strings), natom=natom, to_type2=to_type2)
 
 
-def _get_dataset(f: io.TextIOBase, natom: int | None = None, to_type2: bool = False):
+def _get_dataset(f: TextIO, natom: int | None = None, to_type2: bool = False):
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
     if len(first_line_ary) == 1:
@@ -175,7 +175,7 @@ def _get_dataset(f: io.TextIOBase, natom: int | None = None, to_type2: bool = Fa
         return get_dataset_type2(f, natom)
 
 
-def _get_dataset_type1(f: io.TextIOBase) -> dict:
+def _get_dataset_type1(f: TextIO) -> dict:
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
@@ -202,7 +202,7 @@ def _get_dataset_type1(f: io.TextIOBase) -> dict:
     return dataset
 
 
-def get_dataset_type2(f: io.TextIOBase, natom: int | None = None) -> dict:
+def get_dataset_type2(f: TextIO, natom: int | None = None) -> dict:
     """Parse type2 FORCE_SETS text and return dataset."""
     data = np.loadtxt(f, dtype="double")
     if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
@@ -222,7 +222,7 @@ def get_dataset_type2(f: io.TextIOBase, natom: int | None = None) -> dict:
     return dataset
 
 
-def _get_line_ignore_blank(f: io.TextIOBase) -> str:
+def _get_line_ignore_blank(f: TextIO) -> str:
     line = f.readline().strip()
     if line == "":
         line = _get_line_ignore_blank(f)
@@ -405,7 +405,9 @@ def write_force_constants_to_hdf5(
             w.create_dataset("physical_unit", data=[physical_unit])
 
 
-def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):
+def parse_FORCE_CONSTANTS(
+    filename: str | os.PathLike = "FORCE_CONSTANTS", p2s_map: ArrayLike | None = None
+):
     """Parse FORCE_CONSTANTS.
 
     Parameters
@@ -727,14 +729,14 @@ def parse_BORN_from_strings(
 
 
 def _parse_BORN_from_file_object(
-    f: io.TextIOBase, primitive: PhonopyAtoms, symprec: float, is_symmetry: bool
+    f: TextIO, primitive: PhonopyAtoms, symprec: float, is_symmetry: bool
 ) -> Optional[dict]:
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
 
 
 def get_born_parameters(
-    f: io.TextIOBase, primitive: PhonopyAtoms, prim_symmetry: Symmetry
+    f: TextIO, primitive: PhonopyAtoms, prim_symmetry: Symmetry
 ) -> Optional[dict]:
     """Parse BORN file text.
 
