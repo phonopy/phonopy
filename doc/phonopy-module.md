@@ -136,11 +136,9 @@ information on physical unit conversion is found at
 ```python
 import numpy as np
 from phonopy import Phonopy
-from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.interface.calculator import (
     read_crystal_structure,
     write_crystal_structure,
-    get_calculator_physical_units,
 )
 
 calc = "qe"  # Quantum Espresso
