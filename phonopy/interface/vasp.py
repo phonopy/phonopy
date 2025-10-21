@@ -397,7 +397,7 @@ def get_vasp_structure_lines(
     """Generate POSCAR text lines as a list from PhonopyAtoms instance.
 
     direct : bool
-        Dummy argument. This doesn nothing.
+        Dummy argument. This does nothing.
     is_vasp5 : bool
         Deprecated. This is replaced by ``is_vasp4 = not is_vasp5``.
 
