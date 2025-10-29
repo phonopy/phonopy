@@ -2,9 +2,13 @@
 
 # Change Log
 
+## Oct-29-2025: Version 2.43.6
+
+- Fix to write `tdispmat.cif` (PR 663).
+
 ## Oct-18-2025: Version 2.43.5
 
-- Fix test for conda-forge deployment
+- Fix test for conda-forge deployment.
 
 ## Oct-18-2025: Version 2.43.4
 
