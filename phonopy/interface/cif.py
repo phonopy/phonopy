@@ -34,17 +34,24 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from phonopy.structure.cells import get_angles, get_cell_parameters
 
+if TYPE_CHECKING:
+    from phonopy.structure.atoms import PhonopyAtoms
 
-def write_cif_P1(cell, U_cif=None, filename=None):
+
+def write_cif_P1(cell: PhonopyAtoms, U_cif=None, filename=None):
     """Write P1 symmetry CIF file."""
     if filename:
         with open(filename, "w") as w:
             w.write(get_cif_P1(cell, U_cif=U_cif))
 
 
-def get_cif_P1(cell, U_cif=None):
+def get_cif_P1(cell: PhonopyAtoms, U_cif=None):
     """Return P1 symmetry CIF text."""
     a, b, c = get_cell_parameters(cell.cell)
     alpha, beta, gamma = get_angles(cell.cell)
@@ -80,7 +87,7 @@ _atom_site_occupancy\n""" % (
         alpha,
         beta,
         gamma,
-        cell.get_volume(),
+        cell.volume,
     )
 
     symbols = []

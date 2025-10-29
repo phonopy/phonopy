@@ -1,0 +1,16 @@
+Aluminium test Fleur
+
+0.0 1.0 1.0          ! a1
+1.0 0.0 1.0          ! a2
+1.0 1.0 0.0          ! a3
+7.656                ! aa
+0.5  0.5  0.5        ! scale
+
+1 ! num atoms
+13.1 0.0 0.0 0.0
+
+&atom element="al" id=13.1 rmt=2.50 lmax=12 lnonsph=12 /
+&exco xctyp='vwn' /
+&comp kmax=4.0 gmax=24.01 gmaxxc=24.01 /
+&kpt div1=4 div2=4 div3=4 /
+&end /
