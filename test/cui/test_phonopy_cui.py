@@ -26,20 +26,22 @@ class MockArgs:
 
     anime: str | None = None
     band_paths: str | None = None
-    filename: Sequence[os.PathLike | str] | None = None
-    conf_filename: str | os.PathLike | None = None
-    log_level: int | None = None
-    fc_symmetry: bool = True
     cell_filename: str | os.PathLike | None = None
+    conf_filename: str | os.PathLike | None = None
     create_force_sets: list[str | os.PathLike] | None = None
+    fc_symmetry: bool = True
+    filename: Sequence[os.PathLike | str] | None = None
     frequency_conversion_factor: float | None = None
     is_check_symmetry: bool | None = None
     is_graph_plot: bool | None = None
     is_graph_save: bool | None = None
     is_legend: bool | None = None
     is_displacement: bool | None = None
-    supercell_dimension: str | None = None
+    log_level: int | None = None
     magmoms: str | None = None
+    mesh_numbers: str | None = None
+    supercell_dimension: str | None = None
+    thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool = False
 
     def __iter__(self):
@@ -349,8 +351,6 @@ def test_config_option():
 
 def test_anime():
     """Test phonopy/phonopy-load command."""
-    pytest.importorskip("symfc")
-
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
         os.chdir(temp_dir)
@@ -378,6 +378,43 @@ def test_anime():
             os.chdir(original_cwd)
 
 
+def test_tdm_cif():
+    """Test phonopy command with thermal displacement matrices cif output."""
+    pytest.importorskip("symfc")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            # Check sys.exit(0)
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                thermal_displacement_matrices_cif=1000,
+                mesh_numbers="5 5 5",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            # Clean files created by phonopy-load script.
+            for created_filename in (
+                "phonopy.yaml",
+                "tdispmat.cif",
+                "thermal_displacement_matrices.yaml",
+            ):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+    pass
+
+
 def _ls():
     current_dir = pathlib.Path(".")
     for file in current_dir.iterdir():
@@ -392,15 +429,17 @@ def _get_phonopy_args(
     anime: str | None = None,
     band_paths: str | None = None,
     cell_filename: str | os.PathLike | None = None,
+    conf_filename: str | os.PathLike | None = None,
     create_force_sets: list[str | os.PathLike] | None = None,
-    supercell_dimension: str | None = None,
-    is_displacement: bool | None = None,
-    magmoms: str | None = None,
-    load_phonopy_yaml: bool = False,
-    is_check_symmetry: bool = False,
     filename: str | os.PathLike | None = None,
     frequency_conversion_factor: float | None = None,
-    conf_filename: str | os.PathLike | None = None,
+    is_displacement: bool | None = None,
+    is_check_symmetry: bool = False,
+    load_phonopy_yaml: bool = False,
+    magmoms: str | None = None,
+    mesh_numbers: str | None = None,
+    supercell_dimension: str | None = None,
+    thermal_displacement_matrices_cif: float | None = None,
     use_pypolymlp: bool = False,
 ):
     if filename is None:
@@ -419,6 +458,8 @@ def _get_phonopy_args(
         is_check_symmetry=is_check_symmetry,
         log_level=1,
         magmoms=magmoms,
+        mesh_numbers=mesh_numbers,
+        thermal_displacement_matrices_cif=thermal_displacement_matrices_cif,
         supercell_dimension=supercell_dimension,
         use_pypolymlp=use_pypolymlp,
     )
