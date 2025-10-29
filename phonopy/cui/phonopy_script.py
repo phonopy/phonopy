@@ -2160,7 +2160,7 @@ def main(**argparse_control):
         print("*" * 76)
 
         print(
-            ' The "phonopy" command for running phonon calculations'
+            ' The "phonopy" command for running phonon calculations '
             "will be phased out in "
         )
         print(
