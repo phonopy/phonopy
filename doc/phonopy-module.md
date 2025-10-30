@@ -118,7 +118,7 @@ supercells = phonon.supercells_with_displacements
 In this example, the displacement distance is set to 0.03 (0.01 by default).
 The units are determined by the `calculator` used (See {ref}`interfaces-physical-units`
 for the complete list). This example uses the default `calculator` for the instance of
-`Phonopy`—VASP, which uses Angstroms as its unit for distance.
+`Phonopy`—VASP—which uses Angstroms for distance.
 The supercells with displacements are given as a list of `PhonopyAtoms`. See
 {ref}`phonopy_read_write_structure` to write
 those into files in a crystal structure format.
