@@ -56,8 +56,16 @@ from phonopy.cui.load_helper import (
     select_and_extract_force_constants,
     select_and_load_dataset,
 )
-from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
-from phonopy.cui.settings import PhonopyConfParser, PhonopySettings, Settings
+from phonopy.cui.phonopy_argparse import (
+    PhonopyMockArgs,
+    get_parser,
+    show_deprecated_option_warnings,
+)
+from phonopy.cui.settings import (
+    PhonopyConfParser,
+    PhonopySettings,
+    Settings,
+)
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.exception import (
     CellNotFoundError,
@@ -1816,7 +1824,7 @@ def _init_phonopy(
     return phonon
 
 
-def main(**argparse_control):
+def main(**argparse_control: bool | PhonopyMockArgs):
     """Start phonopy.
 
     The argparse_control parameter is used to modify the behavior of this
@@ -1845,11 +1853,18 @@ def main(**argparse_control):
     ############################################
     # Parse phonopy conf and crystal structure #
     ############################################
-    load_phonopy_yaml = argparse_control.get("load_phonopy_yaml", False)
+    if "load_phonopy_yaml" in argparse_control:
+        assert isinstance(argparse_control["load_phonopy_yaml"], bool)
+        load_phonopy_yaml = argparse_control["load_phonopy_yaml"]
+    else:
+        load_phonopy_yaml = False
 
     if "args" in argparse_control:  # For pytest
+        assert isinstance(argparse_control["args"], PhonopyMockArgs)
         args = argparse_control["args"]
         log_level = args.log_level
+        if log_level is None:
+            log_level = 1
     else:
         args, log_level = _start_phonopy(**argparse_control)
 
