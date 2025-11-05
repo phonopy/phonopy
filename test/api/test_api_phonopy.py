@@ -17,6 +17,7 @@ cwd = Path(__file__).parent
 def test_displacements_setter_NaCl(ph_nacl: Phonopy):
     """Test Phonopy.displacements setter and getter."""
     ph_in = ph_nacl
+    assert ph_in.dataset is not None
     displacements, _ = get_displacements_and_forces(ph_in.dataset)
     ph = Phonopy(
         ph_in.unitcell,
@@ -25,6 +26,20 @@ def test_displacements_setter_NaCl(ph_nacl: Phonopy):
     )
     ph.displacements = displacements
     np.testing.assert_allclose(displacements, ph.displacements)
+
+
+def test_displacements_masses_setter_NaCl(ph_nacl: Phonopy):
+    """Test Phonopy.masses setter and getter."""
+    ph_in = ph_nacl
+    ph = Phonopy(
+        ph_in.unitcell,
+        supercell_matrix=ph_in.supercell_matrix,
+        primitive_matrix=ph_in.primitive_matrix,
+    )
+    ph.masses = ph_in.masses * 2
+    np.testing.assert_allclose(ph.primitive.masses, ph_in.primitive.masses * 2)
+    np.testing.assert_allclose(ph.unitcell.masses, ph_in.unitcell.masses * 2)
+    np.testing.assert_allclose(ph.supercell.masses, ph_in.supercell.masses * 2)
 
 
 def test_forces_setter_NaCl_type1(ph_nacl: Phonopy):
@@ -44,6 +59,7 @@ def test_forces_setter_NaCl_type1(ph_nacl: Phonopy):
 def test_forces_setter_NaCl_type2(ph_nacl: Phonopy):
     """Test Phonopy.forces setter and getter (type2 dataset)."""
     ph_in = ph_nacl
+    assert ph_in.dataset is not None
     displacements, forces = get_displacements_and_forces(ph_in.dataset)
     ph = Phonopy(
         ph_in.unitcell,
@@ -51,6 +67,7 @@ def test_forces_setter_NaCl_type2(ph_nacl: Phonopy):
         primitive_matrix=ph_in.primitive_matrix,
     )
     ph.displacements = displacements
+    assert forces is not None
     ph.forces = forces
     np.testing.assert_allclose(ph.forces, forces)
 
@@ -118,6 +135,7 @@ def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
         log_level=2,
     )
     ph.nac_params = ph_in.nac_params
+    assert ph_in.dataset is not None
     ph.mlp_dataset = copy.copy(ph_in.dataset)
     ph.develop_mlp(params=params)
     # ph.generate_displacements(distance=0.001, number_of_snapshots=2, random_seed=1)

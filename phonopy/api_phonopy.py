@@ -844,19 +844,23 @@ class Phonopy:
 
     @property
     def masses(self) -> NDArray:
-        """Getter and setter of masses of primitive cell atoms."""
+        """Getter and setter of masses of primitive cell atoms.
+
+        By setter, masses of supercell and unit cell atoms are also updated.
+
+        """
         return self._primitive.masses
 
     @masses.setter
     def masses(self, masses):
         p_masses = np.array(masses)
-        self._primitive.set_masses(p_masses)
+        self._primitive.masses = p_masses
         p2p_map = self._primitive.p2p_map
         s_masses = p_masses[[p2p_map[x] for x in self._primitive.s2p_map]]
-        self._supercell.set_masses(s_masses)
+        self._supercell.masses = s_masses
         u2s_map = self._supercell.u2s_map
         u_masses = s_masses[u2s_map]
-        self._unitcell.set_masses(u_masses)
+        self._unitcell.masses = u_masses
         if self._force_constants is not None:
             self._set_dynamical_matrix()
 
