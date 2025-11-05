@@ -75,7 +75,7 @@ calculator_info = {
 }
 
 
-def add_arguments_of_calculators(parser: ArgumentParser, calculator_info):
+def add_arguments_of_calculators(parser: ArgumentParser, calculator_info: dict):
     """Add options of calculators to ArgumentParser class instance."""
     for calculator in calculator_info:
         option = calculator_info[calculator]["option"]
@@ -88,7 +88,7 @@ def add_arguments_of_calculators(parser: ArgumentParser, calculator_info):
         )
 
 
-def get_interface_mode(args_dict):
+def get_interface_mode(args_dict: dict) -> str | None:
     """Return calculator name.
 
     The calculator name is obtained from command option arguments where
@@ -104,7 +104,11 @@ def get_interface_mode(args_dict):
 
 
 def convert_crystal_structure(
-    filename_in, interface_in, filename_out, interface_out, optional_structure_info=None
+    filename_in: str | os.PathLike,
+    interface_in: str | None,
+    filename_out: str | os.PathLike,
+    interface_out: str | None,
+    optional_structure_info: tuple | None = None,
 ):
     """Convert crystal structures between different calculator interfaces.
 

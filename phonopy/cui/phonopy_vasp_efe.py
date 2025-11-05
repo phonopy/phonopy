@@ -32,7 +32,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
+import dataclasses
+import os
+import sys
+from typing import Sequence
+
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import parse_vasprunxml
 from phonopy.qha.electron import get_free_energy_at_T
@@ -46,10 +53,8 @@ Here the free energy is approximately given by:
 """
 
 
-def get_options():
+def get_options() -> argparse.Namespace:
     """Parse command-line options."""
-    import argparse
-
     parser = argparse.ArgumentParser(description="Phonopy vasp-efe command-line-tool")
     parser.set_defaults(tmax=1000.0, tmin=0.0, tstep=10.0)
     parser.add_argument(
@@ -70,7 +75,25 @@ def get_options():
     return args
 
 
-def get_free_energy_lines(temperatures, free_energies):
+@dataclasses.dataclass
+class PhonopyVaspEfeMockArgs:
+    """Mock args of ArgumentParser."""
+
+    tmax: float = 1000.0
+    tmin: float = 0.0
+    tstep: float = 10.0
+    filenames: Sequence[os.PathLike | str] | None = None
+
+    def __iter__(self):
+        """Make self iterable to support in."""
+        return (getattr(self, field.name) for field in dataclasses.fields(self))
+
+    def __contains__(self, item):
+        """Implement in operator."""
+        return item in (field.name for field in dataclasses.fields(self))
+
+
+def get_free_energy_lines(temperatures: NDArray, free_energies: NDArray) -> list[str]:
     """Return Free energy lines."""
     lines = []
     n_vol = free_energies.shape[1]
@@ -79,17 +102,21 @@ def get_free_energy_lines(temperatures, free_energies):
     return lines
 
 
-def get_fe_ev_lines(args):
+def get_fe_ev_lines(
+    args: argparse.Namespace | PhonopyVaspEfeMockArgs,
+) -> tuple[list[str], list[str]]:
     """Return Free energy vs volume lines."""
     volumes = []
     energy_sigma0 = []
     free_energies = []
     temperatures = None
+    assert args.filenames is not None
     for filename in args.filenames:
         vxml = parse_vasprunxml(filename)
         weights = vxml.k_weights
         eigenvalues = vxml.eigenvalues[:, :, :, 0]
         n_electrons = vxml.NELECT
+        assert n_electrons is not None
         energy = vxml.energies[-1, 1]
         temps, fe = get_free_energy_at_T(
             args.tmin, args.tmax, args.tstep, eigenvalues, weights, n_electrons
@@ -101,6 +128,7 @@ def get_fe_ev_lines(args):
             temperatures = temps
         else:
             assert (np.abs(temperatures - temps) < 1e-5).all()
+    assert temperatures is not None
 
     lines_fe = []
     lines_fe.append(("# volume:  " + " %15.8f" * len(volumes)) % tuple(volumes))
@@ -113,9 +141,12 @@ def get_fe_ev_lines(args):
     return lines_fe, lines_ev
 
 
-def run():
+def main(**argparse_control: PhonopyVaspEfeMockArgs):
     """Run phonopy-vasp-efe."""
-    args = get_options()
+    if argparse_control:
+        args = argparse_control["args"]
+    else:
+        args = get_options()
 
     lines_fe, lines_ev = get_fe_ev_lines(args)
 
@@ -128,3 +159,5 @@ def run():
         w.write("\n".join(lines_ev))
         w.write("\n")
         print('* energy (sigma->0) and volumes are written in "e-v.dat".')
+
+    sys.exit(0)

@@ -5,52 +5,18 @@ from __future__ import annotations
 import os
 import pathlib
 import tempfile
-from collections.abc import Sequence
-from dataclasses import dataclass, fields
 
 import numpy as np
 import pytest
 import yaml
 
 import phonopy
+from phonopy.cui.phonopy_argparse import PhonopyMockArgs
 from phonopy.cui.phonopy_script import main
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 
 cwd = pathlib.Path(__file__).parent
-
-
-@dataclass
-class MockArgs:
-    """Mock args of ArgumentParser."""
-
-    anime: str | None = None
-    band_paths: str | None = None
-    cell_filename: str | os.PathLike | None = None
-    conf_filename: str | os.PathLike | None = None
-    create_force_sets: list[str | os.PathLike] | None = None
-    fc_symmetry: bool = True
-    filename: Sequence[os.PathLike | str] | None = None
-    frequency_conversion_factor: float | None = None
-    is_check_symmetry: bool | None = None
-    is_graph_plot: bool | None = None
-    is_graph_save: bool | None = None
-    is_legend: bool | None = None
-    is_displacement: bool | None = None
-    log_level: int | None = None
-    magmoms: str | None = None
-    mesh_numbers: str | None = None
-    supercell_dimension: str | None = None
-    thermal_displacement_matrices_cif: float | None = None
-    use_pypolymlp: bool = False
-
-    def __iter__(self):
-        """Make self iterable to support in."""
-        return (getattr(self, field.name) for field in fields(self))
-
-    def __contains__(self, item):
-        """Implement in operator."""
-        return item in (field.name for field in fields(self))
 
 
 @pytest.mark.parametrize("is_ncl", [False, True])
@@ -446,7 +412,7 @@ def _get_phonopy_args(
         _filename = []
     else:
         _filename = [filename]
-    mockargs = MockArgs(
+    mockargs = PhonopyMockArgs(
         anime=anime,
         band_paths=band_paths,
         cell_filename=cell_filename,

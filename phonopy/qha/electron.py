@@ -34,20 +34,30 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
 
 
-def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
+def get_free_energy_at_T(
+    tmin: float,
+    tmax: float,
+    tstep: float,
+    eigenvalues: NDArray,
+    weights: NDArray,
+    n_electrons: float | None,
+) -> tuple[NDArray, NDArray]:
     """Return free energies at given temperatures."""
     free_energies = []
     efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
     temperatures = np.arange(tmin, tmax + 1e-8, tstep)
-    for T in temperatures:
-        efe.run(T)
+    for temp in temperatures:
+        efe.run(float(temp))
         free_energies.append(efe.free_energy)
-    return temperatures, free_energies
+    return temperatures, np.array(free_energies)
 
 
 class ElectronFreeEnergy:
@@ -127,60 +137,66 @@ class ElectronFreeEnergy:
         else:
             raise RuntimeError
 
-        self._T = None
-        self._f = None
+        self._T: float
+        self._f: NDArray
         self._mu = None
         self._entropy = None
         self._energy = None
 
-    def run(self, T):
+    def run(self, temp: float):
         """Calculate free energies.
 
         Parameters
         ----------
-        T: float
+        temp: float
             Temperature in K
 
         """
-        if T < 1e-10:
+        if temp < 1e-10:
             self._T = 1e-10
         else:
-            self._T = T * get_physical_units().KB
+            self._T = temp * get_physical_units().KB
         self._mu = self._chemical_potential()
         self._f = self._occupation_number(self._eigenvalues, self._mu)
         self._entropy = self._get_entropy()
         self._energy = self._get_energy()
 
     @property
-    def free_energy(self):
+    def free_energy(self) -> float:
         """Return free energies."""
-        return self._energy - self._entropy
+        return self.energy - self.entropy
 
     @property
-    def energy(self):
+    def energy(self) -> float:
         """Return energies."""
+        if self._energy is None:
+            raise RuntimeError("Run method has not been called yet.")
         return self._energy
 
     @property
-    def entropy(self):
+    def entropy(self) -> float:
         """Return entropies."""
+        if self._entropy is None:
+            raise RuntimeError("Run method has not been called yet.")
         return self._entropy
 
     @property
-    def mu(self):
+    def mu(self) -> float:
         """Return chemical potential."""
+        if self._mu is None:
+            raise RuntimeError("Run method has not been called yet.")
         return self._mu
 
-    def _get_entropy(self):
-        S = 0
+    def _get_entropy(self) -> float:
+        entropy = 0.0
         for f_k, w in zip(self._f.reshape(len(self._weights), -1), self._weights):
             _f = np.extract((f_k > 1e-12) * (f_k < 1 - 1e-12), f_k)
-            S -= (_f * np.log(_f) + (1 - _f) * np.log(1 - _f)).sum() * w
-        return S * self._g * self._T / self._weights.sum()
+            entropy -= (_f * np.log(_f) + (1 - _f) * np.log(1 - _f)).sum() * w
+        return float(entropy * self._g * self._T / self._weights.sum())
 
-    def _get_energy(self):
+    def _get_energy(self) -> float:
         occ_eigvals = self._f * self._eigenvalues
-        return (
+        return float(
             np.dot(
                 occ_eigvals.reshape(len(self._weights), -1).sum(axis=1), self._weights
             )
@@ -188,7 +204,7 @@ class ElectronFreeEnergy:
             / self._weights.sum()
         )
 
-    def _chemical_potential(self):
+    def _chemical_potential(self) -> float:
         emin = np.min(self._eigenvalues)
         emax = np.max(self._eigenvalues)
         mu = (emin + emax) / 2
@@ -203,18 +219,18 @@ class ElectronFreeEnergy:
                 emax = mu
             mu = (emin + emax) / 2
 
-        return mu
+        return float(mu)
 
-    def _number_of_electrons(self, mu):
+    def _number_of_electrons(self, mu: float) -> float:
         eigvals = self._eigenvalues.reshape(len(self._weights), -1)
         n = (
             np.dot(self._occupation_number(eigvals, mu).sum(axis=1), self._weights)
             * self._g
             / self._weights.sum()
         )
-        return n
+        return float(n)
 
-    def _occupation_number(self, e, mu):
+    def _occupation_number(self, e: NDArray, mu: float) -> NDArray:
         de = (e - mu) / self._T
         de = np.where(de < 100, de, 100.0)  # To avoid overflow
         de = np.where(de > -100, de, -100.0)  # To avoid underflow
