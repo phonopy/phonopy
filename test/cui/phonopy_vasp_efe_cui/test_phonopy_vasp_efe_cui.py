@@ -9,7 +9,7 @@ from typing import Sequence
 
 import pytest
 
-from phonopy.cui.phonopy_vasp_efe import PhonopyVaspEfeMockArgs, main
+from phonopy.cui.phonopy_vasp_efe_script import PhonopyVaspEfeMockArgs, main
 
 cwd = pathlib.Path(__file__).parent
 
