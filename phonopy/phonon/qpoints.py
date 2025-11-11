@@ -42,6 +42,7 @@ from typing import Optional, Union
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
+from phonopy import acc
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     DynamicalMatrixNAC,
@@ -209,6 +210,23 @@ class QpointsPhonon:
             self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._gv_obj.group_velocities
 
+        if acc.use_acc():
+            self._run_acc()
+        else:
+            self._run_cpu()
+
+    def _run_acc(self):
+        freqs, eigvals, eigvecs, dynmat = acc.run_qpoints_phonon(self)
+
+        self._frequencies = freqs
+        self._eigenvalues = eigvals
+        if self._with_eigenvectors:
+            self._eigenvectors = eigvecs
+
+        if self._with_dynamical_matrices:
+            self._dynamical_matrices = dynmat
+
+    def _run_cpu(self):
         if self._with_dynamical_matrices:
             dynamical_matrices = []
 
