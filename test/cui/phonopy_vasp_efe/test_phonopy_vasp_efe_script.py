@@ -1,4 +1,4 @@
-"""Tests of Phonopy --symmetry."""
+"""Tests of phonopy-vasp-efe command."""
 
 from __future__ import annotations
 
@@ -15,9 +15,7 @@ cwd = pathlib.Path(__file__).parent
 
 
 def test_phonopy_vasp_efe():
-    """Test phonopy command with thermal displacement matrices cif output."""
-    pytest.importorskip("symfc")
-
+    """Test phonopy-vasp-efe command."""
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
         os.chdir(temp_dir)
@@ -33,7 +31,7 @@ def test_phonopy_vasp_efe():
                 main(**argparse_control)
             assert excinfo.value.code == 0
 
-            # Clean files created by phonopy-load script.
+            # Clean files created by phonopy-vasp-efe script.
             for created_filename in ("e-v.dat", "fe-v.dat"):
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists()

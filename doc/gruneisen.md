@@ -71,7 +71,8 @@ follows:
 If one of the force calculator options is specified, the interface mode is
 changed to it. The unit conversion factor to THz is appropriately selected and
 its crystal structure file format is accepted. If none of them is specified, as
-the VASP interface mode is invoked as the default interface.
+the VASP interface mode is invoked as the default interface. **The `--factor`
+option was deprecated at v2.44.**
 
 The following command options can be used for all interface modes. They work
 similarly to those for `phonopy` script.
@@ -83,7 +84,6 @@ similarly to those for `phonopy` script.
 - `--readfc`
 - `--band_points`
 - `--nac`
-- `--factor`
 - `--nomeshsym`
 - `-p`
 - `-c`

@@ -184,7 +184,8 @@ class Phonopy:
         nac_params : None
             Deprecated.
         factor : None
-            Deprecated.
+            Deprecated at v2.24. The default frequency conversion factor is that
+            to THz for given displacements in Angstroms and forces in eV/Angstrom.
         group_velocity_delta_q : float, optional
             Delta-q distance to calculate group velocity.
         symprec : float, optional
@@ -292,7 +293,9 @@ class Phonopy:
                     "Phonopy class instantiation with factor is deprecated. "
                     "The frequency conversion factor now automatically "
                     "corresponds to the calculator keyword argument if "
-                    "set_factor_by_calculator is True."
+                    "set_factor_by_calculator is True. The default frequency "
+                    "conversion factor is that to THz for given displacements "
+                    "in Angstroms and forces in eV/Angstrom."
                 ),
                 DeprecationWarning,
                 stacklevel=2,
@@ -443,15 +446,21 @@ class Phonopy:
         """Return phonon frequency unit conversion factor.
 
         float
-            Phonon frequency unit conversion factor. This factor
-            converts sqrt(<force>/<distance>/<AMU>)/2pi/1e12 to the
-            other favorite phonon frequency unit. Normally this factor
-            is recommended to be that converts to THz (ordinary
-            frequency) to calculate a variety of phonon properties
-            that assumes that input phonon frequencies have THz unit.
+            Phonon frequency unit conversion factor. This factor converts
+            sqrt(<force>/<distance>/<AMU>)/2pi/1e12 to another preferred phonon
+            frequency unit. This factor should convert to THz (ordinary
+            frequency) to calculate various phonon properties that assume input
+            phonon frequencies are in THz units. When only frequencies are
+            necessary as output, this factor may be used for getting results in
+            other units. The default frequency conversion factor is that to THz
+            for given displacements in Angstroms and forces in eV/Angstrom.
 
         """
         return self._unit_conversion_factor
+
+    @unit_conversion_factor.setter
+    def unit_conversion_factor(self, unit_conversion_factor: float):
+        self._unit_conversion_factor = unit_conversion_factor
 
     @property
     def calculator(self) -> str | None:

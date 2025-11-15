@@ -48,7 +48,6 @@ from phonopy.cui.settings import fracval
 from phonopy.interface.calculator import (
     add_arguments_of_calculators,
     calculator_info,
-    get_calculator_physical_units,
     get_default_cell_filename,
     get_interface_mode,
 )
@@ -321,10 +320,7 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
     # Phonopy gruneisen interface mode
     #
     interface_mode = get_interface_mode(vars(args))
-    units = get_calculator_physical_units(interface_mode)
-
-    if args.factor is not None:
-        units["factor"] = args.factor
+    factor = args.factor
 
     if args.cell_filename:
         cell_filename = args.cell_filename
@@ -357,7 +353,7 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
                 unitcell_filename=unitcell_filename,
                 born_filename=born_filename,
                 force_constants_filename=fc_filename,
-                factor=units["factor"],
+                factor=factor,
                 symprec=args.symprec,
             )
             phonons.append(phonon)
@@ -371,7 +367,7 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
                 unitcell_filename=unitcell_filename,
                 born_filename=born_filename,
                 force_sets_filename=force_filename,
-                factor=units["factor"],
+                factor=factor,
                 symprec=args.symprec,
             )
             phonons.append(phonon)
@@ -449,3 +445,5 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
                 plt.savefig("gruneisen.pdf")
         else:
             plt.show()
+
+    sys.exit(0)
