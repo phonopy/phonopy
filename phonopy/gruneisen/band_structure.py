@@ -34,6 +34,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import gzip
 import lzma
 import sys
@@ -239,7 +241,7 @@ class GruneisenBandStructure(GruneisenBase):
         else:
             w.write(text)
 
-    def plot(self, axarr, epsilon=None, color_scheme=None):
+    def plot(self, axarr, epsilon: float | None = None, color_scheme=None):
         """Return pyplot of band structure calculation results."""
         for band_structure in self._paths:
             self._plot(axarr, band_structure, epsilon, color_scheme)

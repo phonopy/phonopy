@@ -58,15 +58,26 @@ Here the free energy is approximately given by:
 def get_options() -> argparse.Namespace:
     """Parse command-line options."""
     parser = argparse.ArgumentParser(description="Phonopy vasp-efe command-line-tool")
-    parser.set_defaults(tmax=1000.0, tmin=0.0, tstep=10.0)
     parser.add_argument(
-        "--tmax", dest="tmax", type=float, help="Maximum calculated temperature"
+        "--tmax",
+        dest="tmax",
+        type=float,
+        default=1000.0,
+        help="Maximum calculated temperature",
     )
     parser.add_argument(
-        "--tmin", dest="tmin", type=float, help="Minimum calculated temperature"
+        "--tmin",
+        dest="tmin",
+        type=float,
+        default=0.0,
+        help="Minimum calculated temperature",
     )
     parser.add_argument(
-        "--tstep", dest="tstep", type=float, help="Calculated temperature step"
+        "--tstep",
+        dest="tstep",
+        type=float,
+        default=10.0,
+        help="Calculated temperature step",
     )
     parser.add_argument(
         "filenames",
