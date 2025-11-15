@@ -34,6 +34,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Sequence
 from types import SimpleNamespace
 
 import numpy as np
@@ -107,14 +108,14 @@ def length2mesh(length, lattice, rotations=None):
 
 
 def get_qpoints(
-    mesh_numbers,
-    reciprocal_lattice,  # column vectors
-    q_mesh_shift=None,  # Monkhorst-Pack style grid shift
-    is_gamma_center=True,
-    is_time_reversal=True,
-    fit_in_BZ=True,
-    rotations=None,  # Point group operations in real space
-    is_mesh_symmetry=True,
+    mesh_numbers: Sequence[int] | NDArray,
+    reciprocal_lattice: Sequence[Sequence[float]] | NDArray,  # column vectors
+    q_mesh_shift: Sequence[float] | NDArray | None = None,
+    is_gamma_center: bool = True,
+    is_time_reversal: bool = True,
+    fit_in_BZ: bool = True,
+    rotations: Sequence | NDArray | None = None,  # Point group operations in real space
+    is_mesh_symmetry: bool = True,
 ):
     """Return q-points and weights on a mesh sampling grid.
 
@@ -186,14 +187,14 @@ class GridPoints:
 
     def __init__(
         self,
-        mesh_numbers,
-        reciprocal_lattice,
-        q_mesh_shift=None,  # Monkhorst-Pack style grid shift
-        is_gamma_center=True,
-        is_time_reversal=True,
-        fit_in_BZ=True,
-        rotations=None,  # Point group operations in real space
-        is_mesh_symmetry=True,
+        mesh_numbers: Sequence[int] | NDArray,
+        reciprocal_lattice: Sequence[Sequence[float]] | NDArray,
+        q_mesh_shift: Sequence[float] | NDArray | None = None,
+        is_gamma_center: bool = True,
+        is_time_reversal: bool = True,
+        fit_in_BZ: bool = True,
+        rotations: Sequence | NDArray | None = None,
+        is_mesh_symmetry: bool = True,
     ):  # Except for time reversal symmetry
         """Init method.
 

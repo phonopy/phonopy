@@ -37,10 +37,13 @@
 import gzip
 import lzma
 import sys
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.gruneisen.core import GruneisenBase
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.grid_points import get_qpoints
 
@@ -50,17 +53,17 @@ class GruneisenMesh(GruneisenBase):
 
     def __init__(
         self,
-        dynmat,
-        dynmat_plus,
-        dynmat_minus,
-        mesh,
-        delta_strain=None,
-        shift=None,
-        is_time_reversal=True,
-        is_gamma_center=False,
-        is_mesh_symmetry=True,
-        rotations=None,  # Point group operations in real space
-        factor=None,
+        dynmat: DynamicalMatrix,
+        dynmat_plus: DynamicalMatrix,
+        dynmat_minus: DynamicalMatrix,
+        mesh: Sequence[int] | NDArray,
+        delta_strain: float | None = None,
+        shift: Sequence[float] | NDArray | None = None,
+        is_time_reversal: bool = True,
+        is_gamma_center: bool = False,
+        is_mesh_symmetry: bool = True,
+        rotations: Sequence | NDArray | None = None,
+        factor: float | None = None,
     ):
         """Init method."""
         super().__init__(dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain)
