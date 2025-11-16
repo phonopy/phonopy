@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.2.43.6</title>
+    <title>Setting tags &#8212; Phonopy v.2.44.0</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=939d0665"></script>
+    <script src="_static/documentation_options.js?v=26e185ee"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.43.6</p>
+    <p class="title logo__title">Phonopy v.2.44.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -643,6 +643,14 @@ to be explicitly written.</p>
 </section>
 <section id="frequency-conversion-factor">
 <span id="frequency-conversion-factor-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code><a class="headerlink" href="#frequency-conversion-factor" title="Link to this heading">#</a></h3>
+<p><strong>This tag was deprecated at v2.44.</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For unsupported force calculators, displacement-force dataset with displacements
+in Angstrom and forces in eV/Angstrom should be prepared to obtain frequencies in
+THz.</p>
+</div>
+<p>The following is the old documentation of the <code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code> tag.</p>
 <p>This tag should be used to convert the phonon frequency unit to THz because if
 the frequency unit is different from THz, derived values like thermal properties
 and mean square displacements are wrongly calculated. Normally this tag is
@@ -1246,7 +1254,7 @@ script. For example, <code class="docutils literal notranslate"><span class="pre
 <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span><span class="p">,</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">dynmat</span><span class="p">)</span>
 <span class="n">frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigvals</span><span class="o">.</span><span class="n">real</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">eigvals</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
 <span class="n">conversion_factor_to_THz</span> <span class="o">=</span> <span class="mf">15.633302</span>
-<span class="nb">print</span> <span class="n">frequencies</span> <span class="o">*</span> <span class="n">conversion_factor_to_THz</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">frequencies</span> <span class="o">*</span> <span class="n">conversion_factor_to_THz</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
