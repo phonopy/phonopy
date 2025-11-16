@@ -5,52 +5,18 @@ from __future__ import annotations
 import os
 import pathlib
 import tempfile
-from collections.abc import Sequence
-from dataclasses import dataclass, fields
 
 import numpy as np
 import pytest
 import yaml
 
 import phonopy
+from phonopy.cui.phonopy_argparse import PhonopyMockArgs
 from phonopy.cui.phonopy_script import main
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 
 cwd = pathlib.Path(__file__).parent
-
-
-@dataclass
-class MockArgs:
-    """Mock args of ArgumentParser."""
-
-    anime: str | None = None
-    band_paths: str | None = None
-    cell_filename: str | os.PathLike | None = None
-    conf_filename: str | os.PathLike | None = None
-    create_force_sets: list[str | os.PathLike] | None = None
-    fc_symmetry: bool = True
-    filename: Sequence[os.PathLike | str] | None = None
-    frequency_conversion_factor: float | None = None
-    is_check_symmetry: bool | None = None
-    is_graph_plot: bool | None = None
-    is_graph_save: bool | None = None
-    is_legend: bool | None = None
-    is_displacement: bool | None = None
-    log_level: int | None = None
-    magmoms: str | None = None
-    mesh_numbers: str | None = None
-    supercell_dimension: str | None = None
-    thermal_displacement_matrices_cif: float | None = None
-    use_pypolymlp: bool = False
-
-    def __iter__(self):
-        """Make self iterable to support in."""
-        return (getattr(self, field.name) for field in fields(self))
-
-    def __contains__(self, item):
-        """Implement in operator."""
-        return item in (field.name for field in fields(self))
 
 
 @pytest.mark.parametrize("is_ncl", [False, True])
@@ -158,7 +124,7 @@ def test_phonopy_load(load_phonopy_yaml: bool):
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 load_phonopy_yaml=load_phonopy_yaml,
             )
             with pytest.raises(SystemExit) as excinfo:
@@ -187,7 +153,7 @@ def test_unit_conversion_factor(load_phonopy_yaml: bool):
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-fd.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-fd.yaml.xz",
                 band_paths="0 0 0 0 0 1/2",
                 frequency_conversion_factor=100,
                 load_phonopy_yaml=load_phonopy_yaml,
@@ -231,7 +197,7 @@ def test_unit_conversion_factor_QE(load_phonopy_yaml: bool):
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-QE.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-QE.yaml.xz",
                 band_paths="0 0 0 0 0 1/2",
                 load_phonopy_yaml=load_phonopy_yaml,
             )
@@ -270,7 +236,7 @@ def test_phonopy_is_check_symmetry():
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 load_phonopy_yaml=False,
                 is_check_symmetry=True,
             )
@@ -329,7 +295,7 @@ def test_config_option():
 
         try:
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 conf_filename=cwd / "mesh.conf",
                 load_phonopy_yaml=True,
             )
@@ -358,7 +324,8 @@ def test_anime():
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz", anime="0 0 0"
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                anime="0 0 0",
             )
             with pytest.raises(SystemExit) as excinfo:
                 main(**argparse_control)
@@ -389,7 +356,7 @@ def test_tdm_cif():
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 thermal_displacement_matrices_cif=1000,
                 mesh_numbers="5 5 5",
                 load_phonopy_yaml=True,
@@ -446,7 +413,7 @@ def _get_phonopy_args(
         _filename = []
     else:
         _filename = [filename]
-    mockargs = MockArgs(
+    mockargs = PhonopyMockArgs(
         anime=anime,
         band_paths=band_paths,
         cell_filename=cell_filename,
