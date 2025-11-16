@@ -23,7 +23,7 @@ Some of command-line options are equivalent to respective setting tags:
 - `--eigvecs`, `--eigenvectors` (`EIGENVECTORS = .TRUE.`)
   [{ref}`eigenvectors_tag`]
 - `--factor` (`FREQUENCY_CONVERSION_FACTOR`)
-  [{ref}`frequency_conversion_factor_tag`]
+  [{ref}`frequency_conversion_factor_tag`] **Deprecated at v2.44**
 - `--fc-calc` (`FC_CALCULATOR`) [{ref}`fc_calculator_tag`]
 - `--fc-calc-opt` (`FC_CALCULATOR_OPTIONS`) [{ref}`fc_calculator_options_tag`]
 - `--fc-symmetry` (`FC_SYMMETRY = .TRUE.`) [{ref}`fc_symmetry_tag`]

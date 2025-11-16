@@ -32,99 +32,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import numpy as np
 
-from phonopy.interface.vasp import parse_vasprunxml
-from phonopy.qha.electron import get_free_energy_at_T
-
-"""Calculate electronic free energy from vasprun.xml at temperatures
-
-Here the free energy is approximately given by:
-
-    energy(sigma->0) - energy(T=0) + energy(T) - entropy(T) * T
-
-"""
-
-
-def get_options():
-    """Parse command-line options."""
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Phonopy vasp-efe command-line-tool")
-    parser.set_defaults(tmax=1000.0, tmin=0.0, tstep=10.0)
-    parser.add_argument(
-        "--tmax", dest="tmax", type=float, help="Maximum calculated temperature"
-    )
-    parser.add_argument(
-        "--tmin", dest="tmin", type=float, help="Minimum calculated temperature"
-    )
-    parser.add_argument(
-        "--tstep", dest="tstep", type=float, help="Calculated temperature step"
-    )
-    parser.add_argument(
-        "filenames",
-        nargs="*",
-        help="Filenames: vasprun.xml's of all volumes in correct order",
-    )
-    args = parser.parse_args()
-    return args
-
-
-def get_free_energy_lines(temperatures, free_energies):
-    """Return Free energy lines."""
-    lines = []
-    n_vol = free_energies.shape[1]
-    for t, fe in zip(temperatures, free_energies):
-        lines.append(("%10.4f " + " %15.8f" * n_vol) % ((t,) + tuple(fe)))
-    return lines
-
-
-def get_fe_ev_lines(args):
-    """Return Free energy vs volume lines."""
-    volumes = []
-    energy_sigma0 = []
-    free_energies = []
-    temperatures = None
-    for filename in args.filenames:
-        vxml = parse_vasprunxml(filename)
-        weights = vxml.k_weights
-        eigenvalues = vxml.eigenvalues[:, :, :, 0]
-        n_electrons = vxml.NELECT
-        energy = vxml.energies[-1, 1]
-        temps, fe = get_free_energy_at_T(
-            args.tmin, args.tmax, args.tstep, eigenvalues, weights, n_electrons
-        )
-        volumes.append(vxml.volume[-1])
-        energy_sigma0.append(energy)
-        free_energies.append(energy - fe[0] + fe)
-        if temperatures is None:
-            temperatures = temps
-        else:
-            assert (np.abs(temperatures - temps) < 1e-5).all()
-
-    lines_fe = []
-    lines_fe.append(("# volume:  " + " %15.8f" * len(volumes)) % tuple(volumes))
-    lines_fe.append("#    T(K)     Free energies")
-    lines_fe += get_free_energy_lines(temperatures, np.transpose(free_energies))
-
-    lines_ev = ["#   cell volume        energy of cell other than phonon"]
-    lines_ev += ["%20.8f %20.8f" % (v, e) for v, e in zip(volumes, energy_sigma0)]
-
-    return lines_fe, lines_ev
+from phonopy.cui.phonopy_vasp_efe_script import main
 
 
 def run():
     """Run phonopy-vasp-efe."""
-    args = get_options()
-
-    lines_fe, lines_ev = get_fe_ev_lines(args)
-
-    with open("fe-v.dat", "w") as w:
-        w.write("\n".join(lines_fe))
-        w.write("\n")
-        print('* Electronic free energies are written in "fe-v.dat".')
-
-    with open("e-v.dat", "w") as w:
-        w.write("\n".join(lines_ev))
-        w.write("\n")
-        print('* energy (sigma->0) and volumes are written in "e-v.dat".')
+    main(**{})

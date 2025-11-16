@@ -399,7 +399,7 @@ def get_vasp_structure_lines(
     """Generate POSCAR text lines as a list from PhonopyAtoms instance.
 
     direct : bool
-        Dummy argument. This doesn nothing.
+        Dummy argument. This does nothing.
     is_vasp5 : bool
         Deprecated. This is replaced by ``is_vasp4 = not is_vasp5``.
 
@@ -1482,7 +1482,7 @@ class VasprunxmlExpat:
             raise
 
 
-def parse_vasprunxml(filename):
+def parse_vasprunxml(filename: str | os.PathLike):
     """Parse vasprun.xml using VasprunxmlExpat."""
     if not os.path.exists(filename):
         print("File %s not found." % filename)
@@ -1503,7 +1503,7 @@ def parse_vasprunxml(filename):
 #
 # XDATCAR
 #
-def read_XDATCAR(filename: str = "XDATCAR", fileptr=None):
+def read_XDATCAR(filename: str = "XDATCAR", fileptr: typing.IO | None = None):
     """Read XDATCAR.
 
     filename : str, optional
@@ -1548,7 +1548,7 @@ def read_XDATCAR(filename: str = "XDATCAR", fileptr=None):
         return None
 
 
-def _read_XDATCAR_fileptr(f):
+def _read_XDATCAR_fileptr(f: typing.IO):
     f.readline()
     scale = float(f.readline())
     a = [float(x) for x in f.readline().split()[:3]]
@@ -1565,7 +1565,7 @@ def _read_XDATCAR_fileptr(f):
 def get_XDATCAR_lines_from_vasprunxml(
     vasprunxml_filename: str = "vasprun.xml",
     vasprunxml_expat: VasprunxmlExpat | None = None,
-    shift: Sequence | np.ndarray | None = None,
+    shift: ArrayLike | None = None,
 ):
     """Return XDATCAR lines from vasprun.xml or VasprunxmlExpat instance.
 
@@ -1605,7 +1605,7 @@ def write_XDATCAR(
     vasprunxml_filename: str = "vasprun.xml",
     vasprunxml_expat: VasprunxmlExpat | None = None,
     filename: str = "XDATCAR",
-    fileptr: str | os.PathLike | typing.IO | None = None,
+    fileptr: typing.IO | None = None,
     shift: Sequence | np.ndarray | None = None,
 ):
     """Write XDATCAR from vasprun.xml or VasprunxmlExpat instance.
@@ -1628,12 +1628,12 @@ def write_XDATCAR(
 #
 # OUTCAR handling (obsolete)
 #
-def read_force_constants_OUTCAR(filename):
+def read_force_constants_OUTCAR(filename: str | os.PathLike):
     """Read force constants from OUTCAR."""
     return get_force_constants_OUTCAR(filename)
 
 
-def get_force_constants_OUTCAR(filename):
+def get_force_constants_OUTCAR(filename: str | os.PathLike):
     """Read force constants from OUTCAR."""
     file = open(filename)
     while 1:

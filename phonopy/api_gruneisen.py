@@ -34,6 +34,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from numpy.typing import NDArray
+
+from phonopy.api_phonopy import Phonopy
 from phonopy.gruneisen.band_structure import GruneisenBandStructure
 from phonopy.gruneisen.mesh import GruneisenMesh
 
@@ -41,7 +48,13 @@ from phonopy.gruneisen.mesh import GruneisenMesh
 class PhonopyGruneisen:
     """Class to calculate mode Grueneisen parameters."""
 
-    def __init__(self, phonon, phonon_plus, phonon_minus, delta_strain=None):
+    def __init__(
+        self,
+        phonon: Phonopy,
+        phonon_plus: Phonopy,
+        phonon_minus: Phonopy,
+        delta_strain: float | None = None,
+    ):
         """Init method.
 
         Parameters
@@ -58,8 +71,8 @@ class PhonopyGruneisen:
         self._phonon_minus = phonon_minus
         self._delta_strain = delta_strain
 
-        self._mesh = None
-        self._band_structure = None
+        self._mesh: GruneisenMesh | None = None
+        self._band_structure: GruneisenBandStructure | None = None
 
     def get_phonon(self):
         """Return Phonopy class instance at dV=0."""
@@ -67,11 +80,11 @@ class PhonopyGruneisen:
 
     def set_mesh(
         self,
-        mesh,
-        shift=None,
-        is_time_reversal=True,
-        is_gamma_center=False,
-        is_mesh_symmetry=True,
+        mesh: Sequence[int] | NDArray,
+        shift: Sequence[float] | NDArray | None = None,
+        is_time_reversal: bool = True,
+        is_gamma_center: bool = False,
+        is_mesh_symmetry: bool = True,
     ):
         """Set sampling mesh."""
         for phonon in (self._phonon, self._phonon_plus, self._phonon_minus):
@@ -81,6 +94,9 @@ class PhonopyGruneisen:
 
         symmetry = phonon.primitive_symmetry
         rotations = symmetry.pointgroup_operations
+        assert self._phonon.dynamical_matrix is not None
+        assert self._phonon_plus.dynamical_matrix is not None
+        assert self._phonon_minus.dynamical_matrix is not None
         self._mesh = GruneisenMesh(
             self._phonon.dynamical_matrix,
             self._phonon_plus.dynamical_matrix,
@@ -111,10 +127,15 @@ class PhonopyGruneisen:
 
     def write_yaml_mesh(self, filename="gruneisen_mesh.yaml"):
         """Write mesh sampling calculation results to file in yaml."""
+        if self._mesh is None:
+            raise RuntimeError("Mesh has not been set.")
         self._mesh.write_yaml(filename=filename)
 
     def write_hdf5_mesh(self, filename="gruneisen_mesh.hdf5"):
         """Write mesh sampling calculation results to file in hdf5."""
+        if self._mesh is None:
+            raise RuntimeError("Mesh has not been set.")
+
         self._mesh.write_hdf5(filename=filename)
 
     def plot_mesh(
@@ -122,6 +143,9 @@ class PhonopyGruneisen:
     ):
         """Return pyplot of mesh sampling calculation results."""
         import matplotlib.pyplot as plt
+
+        if self._mesh is None:
+            raise RuntimeError("Mesh has not been set.")
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position("both")
@@ -150,6 +174,9 @@ class PhonopyGruneisen:
 
     def get_band_structure(self):
         """Return band structure calculation results."""
+        self._assert_band_structure()
+        assert self._band_structure is not None
+
         band = self._band_structure
         return (
             band.get_qpoints(),
@@ -161,11 +188,18 @@ class PhonopyGruneisen:
 
     def write_yaml_band_structure(self, filename="gruneisen_band.yaml"):
         """Write band structure calculation results to file in yaml."""
+        self._assert_band_structure()
+        assert self._band_structure is not None
         self._band_structure.write_yaml(filename=filename)
 
-    def plot_band_structure(self, epsilon=1e-4, color_scheme=None):
+    def plot_band_structure(
+        self, epsilon: float | None = 1e-4, color_scheme: str | None = None
+    ):
         """Return pyplot of band structure calculation results."""
         import matplotlib.pyplot as plt
+
+        self._assert_band_structure()
+        assert self._band_structure is not None
 
         fig, axarr = plt.subplots(2, 1)
         for ax in axarr:
@@ -175,3 +209,7 @@ class PhonopyGruneisen:
             ax.yaxis.set_tick_params(which="both", direction="in")
             self._band_structure.plot(axarr, epsilon=epsilon, color_scheme=color_scheme)
         return plt
+
+    def _assert_band_structure(self):
+        if self._band_structure is None:
+            raise RuntimeError("Band structure has not been set.")

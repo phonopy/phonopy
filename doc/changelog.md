@@ -2,6 +2,13 @@
 
 # Change Log
 
+## Oct-29-2025: Version 2.44.0
+
+- The `FREQUENCY_CONVERSION_FACTOR` tag (`--factor` option) is deprecated. Using
+  the `factor` parameter in `Phonopy.__init__()` will emit a warning. For
+  unsupported calculators, it is recommended to use displacement-force datasets
+- Spglib dependency updated to v2.5.
+
 ## Oct-29-2025: Version 2.43.6
 
 - Fix to write `tdispmat.cif` (PR 663).

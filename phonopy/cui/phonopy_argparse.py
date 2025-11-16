@@ -34,10 +34,21 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import argparse
+import dataclasses
+import os
 import sys
+from typing import Sequence
+
+from phonopy.interface.calculator import (
+    add_arguments_of_calculators,
+    calculator_info,
+)
 
 
-def fix_deprecated_option_names(argv):
+def fix_deprecated_option_names(argv) -> list[str]:
     """Replace underscore in command option name by hyphen."""
     deprecated = []
     for i, v in enumerate(argv[1:]):
@@ -51,7 +62,7 @@ def fix_deprecated_option_names(argv):
     return deprecated
 
 
-def show_deprecated_option_warnings(deprecated):
+def show_deprecated_option_warnings(deprecated: list[str]):
     """Show warning when underscore is included in command option name."""
     lines = [
         "Option names with underscores are deprecated, by which",
@@ -66,15 +77,11 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser(load_phonopy_yaml=False):
+def get_parser(
+    load_phonopy_yaml: bool = False,
+) -> tuple[argparse.ArgumentParser, list[str]]:
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
-    import argparse
-
-    from phonopy.interface.calculator import (
-        add_arguments_of_calculators,
-        calculator_info,
-    )
 
     try:
         parser = argparse.ArgumentParser(
@@ -932,3 +939,36 @@ def get_parser(load_phonopy_yaml=False):
         )
 
     return parser, deprecated
+
+
+@dataclasses.dataclass
+class PhonopyMockArgs:
+    """Mock args of ArgumentParser."""
+
+    anime: str | None = None
+    band_paths: str | None = None
+    cell_filename: str | os.PathLike | None = None
+    conf_filename: str | os.PathLike | None = None
+    create_force_sets: list[str | os.PathLike] | None = None
+    fc_symmetry: bool = True
+    filename: Sequence[os.PathLike | str] | None = None
+    frequency_conversion_factor: float | None = None
+    is_check_symmetry: bool | None = None
+    is_graph_plot: bool | None = None
+    is_graph_save: bool | None = None
+    is_legend: bool | None = None
+    is_displacement: bool | None = None
+    log_level: int | None = None
+    magmoms: str | None = None
+    mesh_numbers: str | None = None
+    supercell_dimension: str | None = None
+    thermal_displacement_matrices_cif: float | None = None
+    use_pypolymlp: bool = False
+
+    def __iter__(self):
+        """Make self iterable to support in."""
+        return (getattr(self, field.name) for field in dataclasses.fields(self))
+
+    def __contains__(self, item):
+        """Implement in operator."""
+        return item in (field.name for field in dataclasses.fields(self))

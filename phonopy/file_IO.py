@@ -875,13 +875,16 @@ def is_file_phonopy_yaml(
 #
 # e-v.dat, thermal_properties.yaml
 #
-def read_thermal_properties_yaml(filenames):
+def read_thermal_properties_yaml(
+    filenames,
+) -> tuple[NDArray, NDArray, NDArray, NDArray, list, list]:
     """Read thermal_properties.yaml."""
     thermal_properties = []
     num_modes = []
     num_integrated_modes = []
     for filename in filenames:
-        with open(filename) as f:
+        myio = get_io_module_to_decompress(filename)
+        with myio.open(filename, "rb") as f:
             tp_yaml = yaml.load(f, Loader=Loader)
             thermal_properties.append(tp_yaml["thermal_properties"])
             if "num_modes" in tp_yaml and "num_integrated_modes" in tp_yaml:
@@ -917,8 +920,9 @@ def read_thermal_properties_yaml(filenames):
     cv = np.array(cv).T
     entropy = np.array(entropy).T
     fe_phonon = np.array(fe_phonon).T
+    temperatures = np.array(temperatures)
 
-    return (temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes)
+    return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
 
 
 def read_v_e(filename):

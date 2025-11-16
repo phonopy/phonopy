@@ -332,7 +332,7 @@ class PwscfIn:
             raise RuntimeError("As a unit, alat, angstrom, and bohr can be only used.")
 
         if len(self._values[1:]) < 9:
-            raise RuntimeError("%s is wrongly set." % self._current_tag_name)
+            raise RuntimeError("%s is malformed." % self._current_tag_name)
 
         lattice = np.reshape([float(x) for x in self._values[1:10]], (3, 3))
         self._tags["cell_parameters"] = lattice * factor
