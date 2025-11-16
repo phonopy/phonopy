@@ -124,7 +124,7 @@ def test_phonopy_load(load_phonopy_yaml: bool):
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 load_phonopy_yaml=load_phonopy_yaml,
             )
             with pytest.raises(SystemExit) as excinfo:
@@ -153,7 +153,7 @@ def test_unit_conversion_factor(load_phonopy_yaml: bool):
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-fd.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-fd.yaml.xz",
                 band_paths="0 0 0 0 0 1/2",
                 frequency_conversion_factor=100,
                 load_phonopy_yaml=load_phonopy_yaml,
@@ -197,7 +197,7 @@ def test_unit_conversion_factor_QE(load_phonopy_yaml: bool):
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-QE.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-QE.yaml.xz",
                 band_paths="0 0 0 0 0 1/2",
                 load_phonopy_yaml=load_phonopy_yaml,
             )
@@ -236,7 +236,7 @@ def test_phonopy_is_check_symmetry():
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 load_phonopy_yaml=False,
                 is_check_symmetry=True,
             )
@@ -295,7 +295,7 @@ def test_config_option():
 
         try:
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 conf_filename=cwd / "mesh.conf",
                 load_phonopy_yaml=True,
             )
@@ -324,7 +324,8 @@ def test_anime():
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz", anime="0 0 0"
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                anime="0 0 0",
             )
             with pytest.raises(SystemExit) as excinfo:
                 main(**argparse_control)
@@ -355,7 +356,7 @@ def test_tdm_cif():
         try:
             # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
-                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 thermal_displacement_matrices_cif=1000,
                 mesh_numbers="5 5 5",
                 load_phonopy_yaml=True,

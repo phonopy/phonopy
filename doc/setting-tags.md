@@ -186,6 +186,16 @@ See {ref}`cell_filename_option`.
 (frequency_conversion_factor_tag)=
 ### `FREQUENCY_CONVERSION_FACTOR`
 
+**This tag was deprecated at v2.44.**
+
+```{note}
+For unsupported force calculators, displacement-force dataset with displacements
+in Angstrom and forces in eV/Angstrom should be prepared to obtain frequencies in
+THz.
+```
+
+The following is the old documentation of the `FREQUENCY_CONVERSION_FACTOR` tag.
+
 This tag should be used to convert the phonon frequency unit to THz because if
 the frequency unit is different from THz, derived values like thermal properties
 and mean square displacements are wrongly calculated. Normally this tag is
@@ -927,7 +937,7 @@ dynmat = np.array(dynmat)
 eigvals, eigvecs, = np.linalg.eigh(dynmat)
 frequencies = np.sqrt(np.abs(eigvals.real)) * np.sign(eigvals.real)
 conversion_factor_to_THz = 15.633302
-print frequencies * conversion_factor_to_THz
+print(frequencies * conversion_factor_to_THz)
 ```
 
 ## Non-analytical term correction

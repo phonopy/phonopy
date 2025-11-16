@@ -42,6 +42,11 @@ import os
 import sys
 from typing import Sequence
 
+from phonopy.interface.calculator import (
+    add_arguments_of_calculators,
+    calculator_info,
+)
+
 
 def fix_deprecated_option_names(argv) -> list[str]:
     """Replace underscore in command option name by hyphen."""
@@ -77,11 +82,6 @@ def get_parser(
 ) -> tuple[argparse.ArgumentParser, list[str]]:
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
-
-    from phonopy.interface.calculator import (
-        add_arguments_of_calculators,
-        calculator_info,
-    )
 
     try:
         parser = argparse.ArgumentParser(
