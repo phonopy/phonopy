@@ -34,9 +34,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import warnings
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 def get_eos(eos):
@@ -94,12 +97,12 @@ def get_eos(eos):
         return vinet
 
 
-def fit_to_eos(volumes, fe, eos):
+def fit_to_eos(volumes, fe, eos) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     """Fit volume-energy data to EOS."""
     fit = EOSFit(volumes, fe, eos)
     fit.fit([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
 
-    return fit.parameters
+    return fit.parameters  # type: ignore
 
 
 class EOSFit:
@@ -142,7 +145,7 @@ class EOSFit:
                     residuals,
                     initial_parameters,
                     args=(self._eos, self._volume, self._energy),
-                    full_output=1,
+                    full_output=True,
                 )
             except RuntimeError as exc:
                 raise RuntimeError("Fitting to EOS failed.") from exc

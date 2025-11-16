@@ -57,56 +57,60 @@ def get_options() -> argparse.Namespace:
     """Parse command-line options."""
     parser = argparse.ArgumentParser(description="Phonopy gruneisen command-line-tool")
     add_arguments_of_calculators(parser, calculator_info)
+    default_vals = PhonopyGruneisenMockArgs()
 
     parser.add_argument(
         "--band",
         dest="band_paths",
-        default=None,
+        default=default_vals.band_paths,
         help="Band paths in reduced coordinates",
     )
     parser.add_argument(
         "--band_points",
         dest="band_points",
         type=int,
-        default=51,
+        default=default_vals.band_points,
         help="Number of sampling points in a segment of band path",
     )
     parser.add_argument(
         "-c",
         "--cell",
         dest="cell_filename",
-        default=None,
+        default=default_vals.cell_filename,
         help="Read unit cell",
         metavar="FILE",
     )
     parser.add_argument(
-        "--color", dest="color_scheme", default=None, help="Color scheme"
+        "--color",
+        dest="color_scheme",
+        default=default_vals.color_scheme,
+        help="Color scheme",
     )
     parser.add_argument(
         "--cutoff",
         dest="cutoff_frequency",
         type=float,
-        default=1e-4,
+        default=default_vals.cutoff_frequency,
         help="Plot above this cutoff frequency for mesh sampling mode.",
     )
     parser.add_argument(
         "--dim",
         dest="supercell_dimension",
-        default=None,
+        default=default_vals.supercell_dimension,
         help="Same behavior as DIM tag",
     )
     parser.add_argument(
         "--factor",
         dest="factor",
         type=float,
-        default=None,
+        default=default_vals.factor,
         help="Conversion factor to favorite frequency unit",
     )
     parser.add_argument(
         "--hdf5",
         dest="is_hdf5",
         action="store_true",
-        default=False,
+        default=default_vals.is_hdf5,
         help="Use hdf5 to read force constants and store results",
     )
     parser.add_argument(
@@ -114,7 +118,7 @@ def get_options() -> argparse.Namespace:
         "--gamma_center",
         dest="is_gamma_center",
         action="store_true",
-        default=False,
+        default=default_vals.is_gamma_center,
         help="Set mesh as Gamma center",
     )
     parser.add_argument(
@@ -124,39 +128,45 @@ def get_options() -> argparse.Namespace:
         "--markersize",
         dest="markersize",
         type=float,
-        default=None,
+        default=default_vals.markersize,
         help="Markersize for plot in points (matplotlib)",
     )
-    parser.add_argument("--mass", dest="masses", default=None, help="Same as MASS tag")
     parser.add_argument(
-        "--mp", "--mesh", dest="sampling_mesh", default=None, help="Sampling mesh"
+        "--mass", dest="masses", default=default_vals.masses, help="Same as MASS tag"
+    )
+    parser.add_argument(
+        "--mp",
+        "--mesh",
+        dest="sampling_mesh",
+        default=default_vals.sampling_mesh,
+        help="Sampling mesh",
     )
     parser.add_argument(
         "--nac",
         dest="is_nac",
         action="store_true",
-        default=False,
+        default=default_vals.is_nac,
         help="Non-analytical term correction",
     )
     parser.add_argument(
         "--nomeshsym",
         dest="is_mesh_symmetry",
         action="store_false",
-        default=True,
+        default=default_vals.is_mesh_symmetry,
         help="Symmetry is not imposed for mesh sampling.",
     )
     parser.add_argument(
         "-o",
         "--output",
         dest="output_filename",
-        default=None,
+        default=default_vals.output_filename,
         help="Output filename of PDF plot",
     )
     parser.add_argument(
         "-p",
         "--plot",
         dest="plot_graph",
-        default=False,
+        default=default_vals.plot_graph,
         action="store_true",
         help="Plot data",
     )
@@ -165,21 +175,21 @@ def get_options() -> argparse.Namespace:
         "--primitive-axis",
         "--primitive-axes",
         dest="primitive_axes",
-        default=None,
+        default=default_vals.primitive_axes,
         help="Same as PRIMITIVE_AXES tags",
     )
     parser.add_argument(
         "--q_cutoff",
         dest="cutoff_wave_vector",
         type=float,
-        default=None,
+        default=default_vals.cutoff_wave_vector,
         help="Acoustic modes inside cutoff wave vector is treated.",
     )
     parser.add_argument(
         "--readfc",
         dest="reads_force_constants",
         action="store_true",
-        default=False,
+        default=default_vals.reads_force_constants,
         help="Read FORCE_CONSTANTS",
     )
     parser.add_argument(
@@ -187,37 +197,37 @@ def get_options() -> argparse.Namespace:
         "--save",
         dest="save_graph",
         action="store_true",
-        default=False,
+        default=default_vals.save_graph,
         help="Save plot data in pdf",
     )
     parser.add_argument(
         "--delta-strain",
         dest="delta_strain",
         type=float,
-        default=None,
+        default=default_vals.delta_strain,
         help="Delta strain instead of using delta-V/V",
     )
     parser.add_argument(
-        "-t", "--title", dest="title", default=None, help="Title of plot"
+        "-t", "--title", dest="title", default=default_vals.title, help="Title of plot"
     )
     parser.add_argument(
         "--tmax",
         dest="tmax",
         type=float,
-        default=2004,
+        default=default_vals.tmax,
         help="Maximum calculated temperature",
     )
     parser.add_argument(
         "--tmin",
         dest="tmin",
         type=float,
-        default=0,
+        default=default_vals.tmin,
         help="Minimum calculated temperature",
     )
     parser.add_argument(
         "--tolerance",
         dest="symprec",
-        default=1e-5,
+        default=default_vals.symprec,
         type=float,
         help="Symmetry tolerance to search",
     )
@@ -225,7 +235,7 @@ def get_options() -> argparse.Namespace:
         "--tstep",
         dest="tstep",
         type=float,
-        default=2,
+        default=default_vals.tstep,
         help="Calculated temperature step",
     )
     parser.add_argument(

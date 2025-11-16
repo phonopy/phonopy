@@ -34,9 +34,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import warnings
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
 from phonopy.qha.eos import fit_to_eos, get_eos
@@ -50,7 +54,13 @@ class BulkModulus:
 
     """
 
-    def __init__(self, volumes, energies, pressure=None, eos="vinet"):
+    def __init__(
+        self,
+        volumes: Sequence[float],
+        energies: Sequence[float] | Sequence[Sequence[float]],
+        pressure: float | None = None,
+        eos: str = "vinet",
+    ):
         """Init method.
 
         volumes : array_like
@@ -76,10 +86,6 @@ class BulkModulus:
             )
 
         if self._energies.ndim == 1:
-            self._energy = None
-            self._bulk_modulus = None
-            self._b_prime = None
-            self._equiv_volume = None
             (
                 self._energy,
                 self._bulk_modulus,
@@ -100,7 +106,7 @@ class BulkModulus:
         else:
             raise TypeError("Array shape of energies is wrong.")
 
-    def fit_to_eos(self, energies):
+    def fit_to_eos(self, energies) -> tuple[NDArray, NDArray, NDArray, NDArray]:
         """Fit energy-volume to EOS."""
         try:
             e, b, bp, ev = fit_to_eos(self._volumes, energies, self._eos)
@@ -113,74 +119,28 @@ class BulkModulus:
         return e, b, bp, ev
 
     @property
-    def bulk_modulus(self):
+    def bulk_modulus(self) -> NDArray:
         """Return bulk modulus."""
         return self._bulk_modulus
 
-    def get_bulk_modulus(self):
-        """Return bulk modulus."""
-        warnings.warn(
-            "BulkModulus.get_bulk_modulus() is deprecated."
-            "Use BulkModulus.bulk_modulus attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.bulk_modulus
-
     @property
-    def equilibrium_volume(self):
+    def equilibrium_volume(self) -> NDArray:
         """Return volume at equilibrium."""
         return self._equiv_volume
 
-    def get_equilibrium_volume(self):
-        """Return volume at equilibrium."""
-        warnings.warn(
-            "BulkModulus.get_equilibrium_volume() is deprecated."
-            "Use BulkModulus.equilibrium_volume attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.equilibrium_volume
-
     @property
-    def b_prime(self):
+    def b_prime(self) -> NDArray:
         """Return fitted parameter B'."""
         return self._b_prime
 
-    def get_b_prime(self):
-        """Return fitted parameter B'."""
-        warnings.warn(
-            "BulkModulus.get_b_prime() is deprecated."
-            "Use BulkModulus.b_prime attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._b_prime
-
     @property
-    def energy(self):
+    def energy(self) -> NDArray:
         """Return fitted parameter of energy."""
         return self._energy
 
-    def get_energy(self):
-        """Return fitted parameter of energy."""
-        warnings.warn(
-            "BulkModulus.get_energy() is deprecated.Use BulkModulus.energy attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._energy
-
-    def get_parameters(self):
+    def get_parameters(self) -> tuple[NDArray, NDArray, NDArray, NDArray]:
         """Return fitted parameters."""
-        return (self._energy, self._bulk_modulus, self._b_prime, self._equiv_volume)
-
-    def get_eos(self):
-        """Return EOS function as a python method."""
-        warnings.warn(
-            "BulkModulus.get_eos() is deprecated.", DeprecationWarning, stacklevel=2
-        )
-        return self._eos
+        return self._energy, self._bulk_modulus, self._b_prime, self._equiv_volume
 
     def plot(self, thin_number=10):
         """Plot fitted EOS curve."""
@@ -207,16 +167,16 @@ class QHA:
 
     def __init__(
         self,
-        volumes,  # angstrom^3
-        electronic_energies,  # eV
-        temperatures,  # K
-        cv,  # J/K/mol
-        entropy,  # J/K/mol
-        fe_phonon,  # kJ/mol
-        pressure=None,
-        eos="vinet",
-        t_max=None,
-        energy_plot_factor=None,
+        volumes: Sequence[float],
+        electronic_energies: Sequence[float],
+        temperatures: Sequence[float] | Sequence[Sequence[float]],
+        cv: Sequence[Sequence[float]],  # J/K/mol
+        entropy: Sequence[Sequence[float]],  # J/K/mol
+        fe_phonon: Sequence[Sequence[float]],  # kJ/mol
+        pressure: float | None = None,
+        eos: str = "vinet",
+        t_max: float | None = None,
+        energy_plot_factor: float | None = None,
     ):
         """Init method.
 
