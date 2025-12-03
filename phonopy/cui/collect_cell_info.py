@@ -38,6 +38,7 @@ from __future__ import annotations
 import dataclasses
 import os
 from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -61,8 +62,8 @@ class CellInfoResult:
 
     unitcell: PhonopyAtoms
     optional_structure_info: tuple
-    supercell_matrix: ArrayLike | None = None
-    primitive_matrix: ArrayLike | str | None = None
+    supercell_matrix: Sequence[Sequence] | None = None
+    primitive_matrix: Sequence[Sequence] | Literal["auto"] | None = None
     interface_mode: str | None = None
 
 
