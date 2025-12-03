@@ -783,7 +783,7 @@ class TrimmedCell(PhonopyAtoms):
 
 def get_supercell(
     unitcell: PhonopyAtoms,
-    supercell_matrix: ArrayLike,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray,
     is_old_style: bool = True,
     symprec: float = 1e-5,
 ) -> Supercell:
@@ -1679,11 +1679,12 @@ def get_primitive_matrix(
 def get_primitive_matrix_by_centring(centring) -> NDArray:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
-        return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
+        return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double", order="C")
     elif centring == "F":
         return np.array(
             [[0.0, 1.0 / 2, 1.0 / 2], [1.0 / 2, 0, 1.0 / 2], [1.0 / 2, 1.0 / 2, 0.0]],
             dtype="double",
+            order="C",
         )
     elif centring == "I":
         return np.array(
@@ -1698,11 +1699,13 @@ def get_primitive_matrix_by_centring(centring) -> NDArray:
         return np.array(
             [[1.0, 0.0, 0.0], [0.0, 1.0 / 2, -1.0 / 2], [0.0, 1.0 / 2, 1.0 / 2]],
             dtype="double",
+            order="C",
         )
     elif centring == "C":
         return np.array(
             [[1.0 / 2, 1.0 / 2, 0], [-1.0 / 2, 1.0 / 2, 0], [0.0, 0.0, 1.0]],
             dtype="double",
+            order="C",
         )
     elif centring == "R":
         return np.array(
@@ -1712,6 +1715,7 @@ def get_primitive_matrix_by_centring(centring) -> NDArray:
                 [1.0 / 3, 1.0 / 3, 1.0 / 3],
             ],
             dtype="double",
+            order="C",
         )
     else:
         msg = "centring has to be 'P', 'F', 'I', 'A', 'C', or 'R'"

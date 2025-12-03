@@ -454,7 +454,7 @@ def read_crystal_structure(
     interface_mode: str | None = None,
     chemical_symbols: Sequence[str] | None = None,
     phonopy_yaml_cls: type[PhonopyYaml] | None = None,
-) -> tuple[PhonopyAtoms, tuple]:
+) -> tuple[PhonopyAtoms | None, tuple]:
     """Return crystal structure from file in each calculator format.
 
     Parameters
@@ -589,7 +589,7 @@ def read_crystal_structure(
         raise RuntimeError("No calculator interface was found.")
 
 
-def get_default_cell_filename(interface_mode: str | None) -> str | None:
+def get_default_cell_filename(interface_mode: str | None) -> str:
     """Return default filename of unit cell structure of each calculator."""
     if interface_mode is None or interface_mode == "vasp":
         return "POSCAR"
@@ -624,7 +624,7 @@ def get_default_cell_filename(interface_mode: str | None) -> str | None:
     elif interface_mode == "pwmat":
         return "atom.config"
     else:
-        return None
+        raise RuntimeError("No calculator interface was found.")
 
 
 def get_default_supercell_filename(interface_mode: str | None) -> str | None:
@@ -1011,7 +1011,7 @@ def get_force_constant_conversion_factor(
 
 
 def _read_phonopy_yaml(
-    filename: str, phonopy_yaml_cls: type[PhonopyYaml] | None
+    filename: str | os.PathLike | None, phonopy_yaml_cls: type[PhonopyYaml] | None
 ) -> tuple[PhonopyAtoms | None, tuple]:
     cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
