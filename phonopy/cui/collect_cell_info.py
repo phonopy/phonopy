@@ -38,9 +38,10 @@ from __future__ import annotations
 import dataclasses
 import os
 from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from phonopy.cui.settings import Settings
 from phonopy.exception import CellNotFoundError, MagmomValueError
@@ -52,7 +53,7 @@ from phonopy.interface.calculator import (
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_primitive_matrix, guess_primitive_matrix
+from phonopy.structure.cells import get_primitive_matrix_with_auto
 
 
 @dataclasses.dataclass
@@ -61,8 +62,13 @@ class CellInfoResult:
 
     unitcell: PhonopyAtoms
     optional_structure_info: tuple
-    supercell_matrix: ArrayLike | None = None
-    primitive_matrix: ArrayLike | str | None = None
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None
+    primitive_matrix: (
+        Sequence[Sequence[float]]
+        | NDArray
+        | Literal["P", "F", "I", "A", "C", "R", "auto"]
+        | None
+    ) = None
     interface_mode: str | None = None
 
 
@@ -107,12 +113,16 @@ def get_cell_info(
     if phpy_yaml is not None:
         assert phpy_yaml.unitcell is not None
         yaml_filename = cell_info.optional_structure_info[0]
-        pmat_in_settings = _get_primitive_matrix(
-            cell_info.primitive_matrix, phpy_yaml.unitcell
+        pmat_in_settings = get_primitive_matrix_with_auto(
+            phpy_yaml.unitcell, cell_info.primitive_matrix
         )
-        pmat_in_phpy_yaml = _get_primitive_matrix(
-            phpy_yaml.primitive_matrix, phpy_yaml.unitcell
+        if pmat_in_settings is None:
+            pmat_in_settings = np.eye(3, dtype="double", order="C")
+        pmat_in_phpy_yaml = get_primitive_matrix_with_auto(
+            phpy_yaml.unitcell, phpy_yaml.primitive_matrix
         )
+        if pmat_in_phpy_yaml is None:
+            pmat_in_phpy_yaml = np.eye(3, dtype="double", order="C")
         if log_level and not np.allclose(
             pmat_in_phpy_yaml, pmat_in_settings, atol=1e-5
         ):
@@ -133,8 +143,11 @@ def get_cell_info(
 
 
 def collect_cell_info(
-    supercell_matrix: ArrayLike | None = None,
-    primitive_matrix: ArrayLike | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | Sequence[Sequence[float]]
+    | NDArray
+    | None = None,
     interface_mode: str | None = None,
     cell_filename: str | os.PathLike | None = None,
     chemical_symbols: Sequence[str] | None = None,
@@ -271,8 +284,12 @@ def set_magnetic_moments(
 
 
 def _decide_interface_mode_and_filename(
-    supercell_matrix, interface_mode, cell_filename, phonopy_yaml_cls, load_phonopy_yaml
-):
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None,
+    interface_mode: str | None,
+    cell_filename: str | os.PathLike | None,
+    phonopy_yaml_cls: type[PhonopyYaml],
+    load_phonopy_yaml: bool,
+) -> tuple[str | None, str | os.PathLike | None]:
     """Decide interface mode and filename for crystal structure input."""
     # In some cases, interface mode falls back to phonopy_yaml mode.
     if load_phonopy_yaml:
@@ -441,12 +458,22 @@ def _poscar_failed(cell_filename):
 
 
 def _collect_cells_info(
-    _interface_mode,
-    optional_structure_info,
-    interface_mode,
-    supercell_matrix,
-    primitive_matrix,
-):
+    _interface_mode: str | None,
+    optional_structure_info: tuple,
+    interface_mode: str | None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None,
+    primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | Sequence[Sequence[float]]
+    | NDArray
+    | None = None,
+) -> tuple[
+    str | None,
+    Sequence[Sequence[int]] | NDArray | None,
+    Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | Sequence[Sequence[float]]
+    | NDArray
+    | None,
+]:
     if _interface_mode == "phonopy_yaml" and optional_structure_info[1] is not None:
         phpy: PhonopyYaml = optional_structure_info[1]
         if phpy.calculator is None:
@@ -540,14 +567,3 @@ def _get_error_message(
         msg_list.append(f'But parsing "{final_cell_filename}" failed.')
 
     return "\n".join(msg_list)
-
-
-def _get_primitive_matrix(
-    pmat: str | ArrayLike | None, unitcell: PhonopyAtoms, symprec: float = 1e-5
-) -> NDArray:
-    _pmat = get_primitive_matrix(pmat)
-    if isinstance(_pmat, str) and _pmat == "auto":
-        _pmat = guess_primitive_matrix(unitcell, symprec=symprec)
-    if _pmat is None:
-        _pmat = np.eye(3, dtype="double")
-    return _pmat

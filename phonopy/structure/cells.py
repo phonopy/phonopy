@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Literal
 
 import numpy as np
@@ -306,10 +307,10 @@ class Primitive(PhonopyAtoms):
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        primitive_matrix: ArrayLike,
+        primitive_matrix: Sequence[Sequence[float]] | NDArray,
         symprec: float = 1e-5,
         store_dense_svecs: bool = True,
-        positions_to_reorder: ArrayLike | None = None,
+        positions_to_reorder: Sequence | None = None,
     ):
         """Init method.
 
@@ -744,8 +745,10 @@ class TrimmedCell(PhonopyAtoms):
                 num_atoms += 1
                 trimmed_symbols.append(symbols[i])
                 if masses is not None:
+                    assert trimmed_masses is not None
                     trimmed_masses.append(masses[i])
                 if magmoms is not None:
+                    assert trimmed_magmoms is not None
                     trimmed_magmoms.append(magmoms[i])
                 extracted_atoms.append(i)
 
@@ -780,7 +783,7 @@ class TrimmedCell(PhonopyAtoms):
 
 def get_supercell(
     unitcell: PhonopyAtoms,
-    supercell_matrix: ArrayLike,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray,
     is_old_style: bool = True,
     symprec: float = 1e-5,
 ) -> Supercell:
@@ -792,15 +795,19 @@ def get_supercell(
 
 def get_primitive(
     supercell: PhonopyAtoms,
-    primitive_matrix: str | ArrayLike | None = None,
+    primitive_matrix: Literal["P", "F", "I", "A", "C", "R"]
+    | Sequence[Sequence[float]]
+    | NDArray,
     symprec: float = 1e-5,
     store_dense_svecs: bool = True,
-    positions_to_reorder: ArrayLike | None = None,
+    positions_to_reorder: Sequence | None = None,
 ) -> Primitive:
     """Create primitive cell."""
+    pmat = get_primitive_matrix(primitive_matrix)
+    assert pmat is not None
     return Primitive(
         supercell,
-        get_primitive_matrix(primitive_matrix),
+        pmat,
         symprec=symprec,
         store_dense_svecs=store_dense_svecs,
         positions_to_reorder=positions_to_reorder,
@@ -1136,7 +1143,7 @@ class ShortestPairs:
         multiplicity = np.zeros(
             (len(supercell_fracs), len(primitive_fracs), 2), dtype="int64", order="C"
         )
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
 
         phonoc.gsv_set_smallest_vectors_dense(
             shortest_vectors,
@@ -1200,7 +1207,7 @@ class ShortestPairs:
         multiplicity = np.zeros(
             (len(supercell_fracs), len(primitive_fracs)), dtype="intc", order="C"
         )
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
 
         phonoc.gsv_set_smallest_vectors_sparse(
             shortest_vectors,
@@ -1220,6 +1227,7 @@ class ShortestPairs:
         reduced_bases = get_reduced_bases(
             self._supercell_bases, method=reduced_cell_method, tolerance=self._symprec
         )
+        assert reduced_bases is not None
         trans_mat_float = np.dot(self._supercell_bases, np.linalg.inv(reduced_bases))
         trans_mat = np.rint(trans_mat_float).astype(int)
         assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
@@ -1439,7 +1447,7 @@ def _compute_permutation_c(
         )
 
     try:
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
 
         tolerance = symprec
         for _ in range(20):
@@ -1601,10 +1609,33 @@ def determinant(m):
     )
 
 
-def get_primitive_matrix(
-    pmat: str | ArrayLike | None = None,
+def get_primitive_matrix_with_auto(
+    unitcell: PhonopyAtoms,
+    primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | Sequence[Sequence[float]]
+    | NDArray
+    | None,
     symprec: float = 1e-5,
-) -> Literal["auto"] | NDArray | None:
+) -> NDArray | None:
+    """Return primitive matrix that supports 'auto' option."""
+    if primitive_matrix is None:
+        return None
+    elif isinstance(primitive_matrix, str):
+        if primitive_matrix == "auto":
+            return guess_primitive_matrix(unitcell, symprec=symprec)
+        else:
+            return get_primitive_matrix(primitive_matrix, symprec=symprec)
+    else:
+        return np.array(primitive_matrix, dtype="double", order="C")
+
+
+def get_primitive_matrix(
+    pmat: Literal["P", "F", "I", "A", "C", "R"]
+    | Sequence[Sequence[float]]
+    | NDArray
+    | None = None,
+    symprec: float = 1e-5,
+) -> NDArray | None:
     """Find primitive matrix from primitive cell.
 
     None is equivalent to "P" but None is returned.
@@ -1613,7 +1644,6 @@ def get_primitive_matrix(
     ----------
     pmat : str, np.ndarray, Sequency, or None
         symbol of centring type: "P", "F", "I", "A", "C", "R"
-        "auto" : estimates a centring type.
         3x3 matrix (can be flattened, i.e., 9 elements)
     symprec : float
         Tolerance.
@@ -1623,11 +1653,8 @@ def get_primitive_matrix(
     None or 3x3 np.ndarray representing transformation matrix to primitive cell.
 
     """
-    if isinstance(pmat, str) and pmat in ("P", "F", "I", "A", "C", "R", "auto"):
-        if pmat == "auto":
-            _pmat = pmat
-        else:
-            _pmat = get_primitive_matrix_by_centring(pmat)
+    if isinstance(pmat, str) and pmat in ("P", "F", "I", "A", "C", "R"):
+        _pmat = get_primitive_matrix_by_centring(pmat)
     elif pmat is None:
         _pmat = None
     elif len(np.ravel(pmat)) == 9:
@@ -1652,11 +1679,12 @@ def get_primitive_matrix(
 def get_primitive_matrix_by_centring(centring) -> NDArray:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
-        return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
+        return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double", order="C")
     elif centring == "F":
         return np.array(
             [[0.0, 1.0 / 2, 1.0 / 2], [1.0 / 2, 0, 1.0 / 2], [1.0 / 2, 1.0 / 2, 0.0]],
             dtype="double",
+            order="C",
         )
     elif centring == "I":
         return np.array(
@@ -1671,11 +1699,13 @@ def get_primitive_matrix_by_centring(centring) -> NDArray:
         return np.array(
             [[1.0, 0.0, 0.0], [0.0, 1.0 / 2, -1.0 / 2], [0.0, 1.0 / 2, 1.0 / 2]],
             dtype="double",
+            order="C",
         )
     elif centring == "C":
         return np.array(
             [[1.0 / 2, 1.0 / 2, 0], [-1.0 / 2, 1.0 / 2, 0], [0.0, 0.0, 1.0]],
             dtype="double",
+            order="C",
         )
     elif centring == "R":
         return np.array(
@@ -1685,6 +1715,7 @@ def get_primitive_matrix_by_centring(centring) -> NDArray:
                 [1.0 / 3, 1.0 / 3, 1.0 / 3],
             ],
             dtype="double",
+            order="C",
         )
     else:
         msg = "centring has to be 'P', 'F', 'I', 'A', 'C', or 'R'"

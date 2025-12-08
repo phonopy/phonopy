@@ -95,9 +95,8 @@ from phonopy.structure.cells import (
     Primitive,
     Supercell,
     get_primitive,
-    get_primitive_matrix,
+    get_primitive_matrix_with_auto,
     get_supercell,
-    guess_primitive_matrix,
     isclose,
     shape_supercell_matrix,
 )
@@ -152,8 +151,11 @@ class Phonopy:
     def __init__(
         self,
         unitcell: PhonopyAtoms,
-        supercell_matrix: ArrayLike | None = None,
-        primitive_matrix: str | ArrayLike | None = None,
+        supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+        primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
+        | Sequence[Sequence[float]]
+        | NDArray
+        | None = None,
         nac_params: dict | None = None,
         factor: float | None = None,
         frequency_scale_factor: float | None = None,
@@ -315,8 +317,10 @@ class Phonopy:
 
         # Create supercell and primitive cell
         self._unitcell = unitcell.copy()
-        self._supercell_matrix = self._shape_supercell_matrix(supercell_matrix)
-        self._primitive_matrix = self._set_primitive_matrix(primitive_matrix)
+        self._supercell_matrix = shape_supercell_matrix(supercell_matrix)
+        self._primitive_matrix = get_primitive_matrix_with_auto(
+            self._unitcell, primitive_matrix, symprec=self._symprec
+        )
         self._supercell: Supercell
         self._primitive: Primitive
         self._build_supercell()
@@ -3191,7 +3195,11 @@ class Phonopy:
 
         return out_filename
 
-    def ph2ph(self, supercell_matrix: ArrayLike, with_nac: bool = False) -> Phonopy:
+    def ph2ph(
+        self,
+        supercell_matrix: Sequence[Sequence[int]] | NDArray,
+        with_nac: bool = False,
+    ) -> Phonopy:
         """Transform force constants in Phonopy class instance to other shape.
 
         Fourier interpolation of force constants is performed. This Phonopy
@@ -3272,7 +3280,9 @@ class Phonopy:
     # private methods #
     ###################
     def _copy(
-        self, supercell_matrix: ArrayLike | None = None, log_level: int | None = None
+        self,
+        supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+        log_level: int | None = None,
     ) -> Phonopy:
         """Copy this Phonopy class instance with init parameters.
 
@@ -3500,24 +3510,6 @@ class Phonopy:
                 "PRIMITIVE_AXIS may be incorrectly specified."
             )
             raise RuntimeError(msg) from exc
-
-    def _set_primitive_matrix(
-        self, primitive_matrix: str | ArrayLike | None
-    ) -> NDArray | None:
-        if primitive_matrix is None:
-            return None
-
-        if isinstance(primitive_matrix, str):
-            pmat = get_primitive_matrix(primitive_matrix, symprec=self._symprec)
-            if isinstance(pmat, str) and pmat == "auto":
-                return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
-            else:
-                return pmat
-
-        return np.array(primitive_matrix, dtype="double", order="C")
-
-    def _shape_supercell_matrix(self, smat) -> np.ndarray:
-        return shape_supercell_matrix(smat)
 
     def _get_forces_energies(
         self, target: Literal["forces", "supercell_energies"]
