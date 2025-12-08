@@ -36,29 +36,32 @@
 
 from __future__ import annotations
 
-import io
 import os
+import typing
+from collections.abc import Sequence
 from typing import Literal
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 
 import phonopy.cui.load_helper as load_helper
 from phonopy.api_phonopy import Phonopy
 from phonopy.interface.calculator import get_calculator_physical_units
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_primitive_matrix
 from phonopy.structure.dataset import forces_in_dataset
 
 
 def load(
     phonopy_yaml: str
     | os.PathLike
-    | io.IOBase
+    | typing.IO
     | None = None,  # phonopy.yaml-like must be the first argument.
-    supercell_matrix: ArrayLike | None = None,
-    primitive_matrix: ArrayLike | str | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    primitive_matrix: Sequence[Sequence[float]]
+    | Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | NDArray
+    | None = None,
     is_nac: bool = True,
     calculator: str | None = None,
     unitcell: PhonopyAtoms | None = None,
@@ -253,10 +256,10 @@ def load(
         smat = phpy_yaml.supercell_matrix
         if smat is None:
             smat = np.eye(3, dtype="intc", order="C")
-        if primitive_matrix is not None:
-            pmat = get_primitive_matrix(primitive_matrix, symprec=symprec)
-        else:
+        if primitive_matrix is None:
             pmat = phpy_yaml.primitive_matrix
+        else:
+            pmat = primitive_matrix
         if nac_params is not None:
             _nac_params = nac_params
         elif is_nac:

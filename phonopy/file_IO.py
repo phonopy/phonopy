@@ -40,13 +40,13 @@ import io
 import os
 import pathlib
 import sys
+import typing
 from collections.abc import Sequence
 from types import ModuleType
-from typing import Optional, TextIO
 
 import numpy as np
 import yaml
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 try:
     from yaml import CLoader as Loader
@@ -54,6 +54,7 @@ except ImportError:
     from yaml import Loader
 
 from phonopy.cui.settings import fracval
+from phonopy.exception import BORNFileParseError
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
@@ -128,7 +129,7 @@ def parse_FORCE_SETS(
     natom: int | None = None,
     filename: str | os.PathLike = "FORCE_SETS",
     to_type2: bool = False,
-):
+) -> dict:
     """Parse FORCE_SETS from file.
 
     to_type2 : bool
@@ -150,12 +151,14 @@ def parse_FORCE_SETS(
 
 def parse_FORCE_SETS_from_strings(
     strings: str, natom: int | None = None, to_type2: bool = False
-):
+) -> dict:
     """Parse FORCE_SETS from strings."""
     return _get_dataset(io.StringIO(strings), natom=natom, to_type2=to_type2)
 
 
-def _get_dataset(f: TextIO, natom: int | None = None, to_type2: bool = False):
+def _get_dataset(
+    f: typing.TextIO, natom: int | None = None, to_type2: bool = False
+) -> dict:
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
     if len(first_line_ary) == 1:
@@ -174,8 +177,10 @@ def _get_dataset(f: TextIO, natom: int | None = None, to_type2: bool = False):
     elif len(first_line_ary) == 6:
         return get_dataset_type2(f, natom)
 
+    raise RuntimeError("Unknown dataset format.")
 
-def _get_dataset_type1(f: TextIO) -> dict:
+
+def _get_dataset_type1(f: typing.TextIO) -> dict:
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
@@ -202,7 +207,7 @@ def _get_dataset_type1(f: TextIO) -> dict:
     return dataset
 
 
-def get_dataset_type2(f: TextIO, natom: int | None = None) -> dict:
+def get_dataset_type2(f: typing.TextIO, natom: int | None = None) -> dict:
     """Parse type2 FORCE_SETS text and return dataset."""
     data = np.loadtxt(f, dtype="double")
     if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
@@ -222,14 +227,20 @@ def get_dataset_type2(f: TextIO, natom: int | None = None) -> dict:
     return dataset
 
 
-def _get_line_ignore_blank(f: TextIO) -> str:
+def _get_line_ignore_blank(f: typing.TextIO) -> str:
     line = f.readline().strip()
     if line == "":
         line = _get_line_ignore_blank(f)
     return line
 
 
-def collect_forces(f, num_atom, hook, force_pos, word=None):
+def collect_forces(
+    f: typing.TextIO,
+    num_atom: int,
+    hook: str,
+    force_pos: Sequence[int],
+    word: str | None = None,
+) -> list:
     """General function to collect forces from lines of a text file.
 
     Parameters
@@ -282,7 +293,7 @@ def collect_forces(f, num_atom, hook, force_pos, word=None):
                 forces = []
                 break
         else:
-            return False
+            return []
 
         if len(forces) == num_atom:
             break
@@ -290,13 +301,20 @@ def collect_forces(f, num_atom, hook, force_pos, word=None):
     return forces
 
 
-def iter_collect_forces(filename, num_atom, hook, force_pos, word=None, max_iter=1000):
+def iter_collect_forces(
+    filename: str | os.PathLike,
+    num_atom: int,
+    hook: str,
+    force_pos: Sequence[int],
+    word: str | None = None,
+    max_iter: int = 1000,
+) -> list:
     """Repeat ``collect_forces`` to get the last set of forces in the file.
 
     Details of parameters are explained in ``collect_forces``.
 
     """
-    with open(filename) as f:
+    with open(filename, "r") as f:
         forces = []
         prev_forces = []
 
@@ -317,7 +335,11 @@ def iter_collect_forces(filename, num_atom, hook, force_pos, word=None, max_iter
 #
 # FORCE_CONSTANTS, force_constants.hdf5
 #
-def write_FORCE_CONSTANTS(force_constants, filename="FORCE_CONSTANTS", p2s_map=None):
+def write_FORCE_CONSTANTS(
+    force_constants: NDArray,
+    filename: str | os.PathLike = "FORCE_CONSTANTS",
+    p2s_map: NDArray | None = None,
+):
     """Write force constants in text file format.
 
     Parameters
@@ -338,7 +360,9 @@ def write_FORCE_CONSTANTS(force_constants, filename="FORCE_CONSTANTS", p2s_map=N
         w.write("\n".join(lines))
 
 
-def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
+def get_FORCE_CONSTANTS_lines(
+    force_constants: NDArray, p2s_map: NDArray | None = None
+) -> list:
     """Return text in FORCE_CONSTANTS format.
 
     See also ``write_FORCE_CONSTANTS``.
@@ -406,8 +430,8 @@ def write_force_constants_to_hdf5(
 
 
 def parse_FORCE_CONSTANTS(
-    filename: str | os.PathLike = "FORCE_CONSTANTS", p2s_map: ArrayLike | None = None
-):
+    filename: str | os.PathLike = "FORCE_CONSTANTS", p2s_map: NDArray | None = None
+) -> NDArray:
     """Parse FORCE_CONSTANTS.
 
     Parameters
@@ -443,7 +467,7 @@ def parse_FORCE_CONSTANTS(
 
 def read_force_constants_hdf5(
     filename: str | os.PathLike = "force_constants.hdf5",
-    p2s_map: ArrayLike | None = None,
+    p2s_map: NDArray | None = None,
     return_physical_unit: bool = False,
 ) -> NDArray | tuple[NDArray, str | None]:
     """Parse force_constants.hdf5.
@@ -489,7 +513,9 @@ def read_force_constants_hdf5(
             return fc
 
 
-def check_force_constants_indices(shape, indices, p2s_map, filename):
+def check_force_constants_indices(
+    shape: tuple, indices: NDArray, p2s_map: NDArray | None, filename: str | os.PathLike
+):
     """Check consistency of force constants data type."""
     if shape[0] != shape[1] and p2s_map is not None:
         if len(p2s_map) != len(indices) or (p2s_map != indices).any():
@@ -502,7 +528,9 @@ def check_force_constants_indices(shape, indices, p2s_map, filename):
             raise RuntimeError("\n".join(lines))
 
 
-def parse_disp_yaml(filename="disp.yaml", return_cell=False):
+def parse_disp_yaml(
+    filename: str | os.PathLike = "disp.yaml", return_cell: bool = False
+):
     """Read disp.yaml or phonopy_disp.yaml.
 
     This method was originally made for parsing disp.yaml. Later this
@@ -545,7 +573,9 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
             return new_dataset
 
 
-def write_disp_yaml_from_dataset(dataset, supercell, filename="disp.yaml"):
+def write_disp_yaml_from_dataset(
+    dataset: dict, supercell: PhonopyAtoms, filename: str | os.PathLike = "disp.yaml"
+):
     """Write disp.yaml from dataset.
 
     This function is obsolete, because disp.yaml is obsolete.
@@ -557,7 +587,11 @@ def write_disp_yaml_from_dataset(dataset, supercell, filename="disp.yaml"):
     write_disp_yaml(displacements, supercell, filename=filename)
 
 
-def write_disp_yaml(displacements: dict, supercell: PhonopyAtoms, filename="disp.yaml"):
+def write_disp_yaml(
+    displacements: list,
+    supercell: PhonopyAtoms,
+    filename: str | os.PathLike = "disp.yaml",
+):
     """Write disp.yaml from displacements.
 
     This function is obsolete, because disp.yaml is obsolete.
@@ -565,14 +599,14 @@ def write_disp_yaml(displacements: dict, supercell: PhonopyAtoms, filename="disp
     """
     lines = []
     lines.append("natom: %4d" % len(supercell))
-    lines += _get_disp_yaml_lines(displacements, supercell)
+    lines += _get_disp_yaml_lines(displacements)
     lines.append(str(supercell))
 
     with open(filename, "w") as w:
         w.write("\n".join(lines))
 
 
-def _get_disp_yaml_lines(displacements, supercell):
+def _get_disp_yaml_lines(displacements: list) -> list:
     lines = []
     lines.append("displacements:")
     for _, disp in enumerate(displacements):
@@ -694,7 +728,7 @@ def parse_BORN(
     symprec: float = 1e-5,
     is_symmetry: bool = True,
     filename: str | os.PathLike = "BORN",
-):
+) -> dict:
     """Parse BORN file.
 
     Parameters
@@ -718,7 +752,7 @@ def parse_BORN_from_strings(
     primitive: PhonopyAtoms,
     symprec: float = 1e-5,
     is_symmetry: bool = True,
-) -> Optional[dict]:
+) -> dict:
     """Parse BORN file text.
 
     See `parse_BORN` for parameters.
@@ -729,15 +763,15 @@ def parse_BORN_from_strings(
 
 
 def _parse_BORN_from_file_object(
-    f: TextIO, primitive: PhonopyAtoms, symprec: float, is_symmetry: bool
-) -> Optional[dict]:
+    f: typing.TextIO, primitive: PhonopyAtoms, symprec: float, is_symmetry: bool
+) -> dict:
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
 
 
 def get_born_parameters(
-    f: TextIO, primitive: PhonopyAtoms, prim_symmetry: Symmetry
-) -> Optional[dict]:
+    f: typing.TextIO, primitive: PhonopyAtoms, prim_symmetry: Symmetry
+) -> dict:
     """Parse BORN file text.
 
     Parameters
@@ -752,8 +786,8 @@ def get_born_parameters(
     """
     line_arr = f.readline().split()
     if len(line_arr) < 1:
-        print("BORN file format of line 1 is incorrect")
-        return None
+        msg = "BORN file format of line 1 is incorrect"
+        raise BORNFileParseError(msg)
 
     factor = None
     G_cutoff = None
@@ -778,8 +812,7 @@ def get_born_parameters(
     # Read dielectric constant
     line = f.readline().split()
     if not len(line) == 9:
-        print("BORN file format of line 2 is incorrect")
-        return None
+        raise BORNFileParseError("BORN file format of line 2 is incorrect")
     dielectric = np.reshape([float(x) for x in line], (3, 3))
 
     # Read Born effective charge
@@ -789,21 +822,23 @@ def get_born_parameters(
     for i in independent_atoms:
         line = f.readline().split()
         if len(line) == 0:
-            print("Number of lines for Born effect charge is not enough.")
-            return None
+            raise BORNFileParseError(
+                "Number of lines for Born effect charge is not enough."
+            )
         if not len(line) == 9:
-            print("BORN file format of line %d is incorrect" % (i + 3))
-            return None
+            raise BORNFileParseError(
+                "BORN file format of line %d is incorrect" % (i + 3)
+            )
         borns[i] = np.reshape([float(x) for x in line], (3, 3))
 
     # Check that the number of atoms in the BORN file was correct
     line = f.readline().split()
     if len(line) > 0:
-        print(
+        msg = (
             "Too many atoms in the BORN file (it should only contain "
             "symmetry-independent atoms)"
         )
-        return None
+        raise BORNFileParseError(msg)
 
     _expand_borns(borns, primitive, prim_symmetry)
     non_anal = {"born": borns, "dielectric": dielectric}
@@ -836,7 +871,7 @@ def _expand_borns(borns: NDArray, primitive: PhonopyAtoms, prim_symmetry: Symmet
 # phonopy.yaml
 #
 def is_file_phonopy_yaml(
-    filename, keyword: Optional[str] = None, yaml_dict_keys: Optional[Sequence] = None
+    filename, keyword: str | None = None, yaml_dict_keys: Sequence[str] | None = None
 ):
     """Check whether the file is phonopy.yaml like file or not.
 

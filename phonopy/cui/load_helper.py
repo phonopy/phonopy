@@ -40,6 +40,7 @@ import dataclasses
 import os
 import pathlib
 import typing
+from collections.abc import Sequence
 from typing import Literal
 
 import numpy as np
@@ -76,8 +77,11 @@ from phonopy.structure.dataset import forces_in_dataset
 
 
 def get_cell_settings(
-    supercell_matrix: ArrayLike | None = None,
-    primitive_matrix: ArrayLike | str | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    primitive_matrix: Sequence[Sequence[float]]
+    | Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | NDArray
+    | None = None,
     unitcell: PhonopyAtoms | None = None,
     supercell: PhonopyAtoms | None = None,
     unitcell_filename: str | os.PathLike | None = None,
@@ -85,7 +89,11 @@ def get_cell_settings(
     calculator: str | None = None,
     symprec: float = 1e-5,
     log_level: int = 0,
-) -> tuple[PhonopyAtoms, ArrayLike | None, str | NDArray | None]:
+) -> tuple[
+    PhonopyAtoms,
+    Sequence[Sequence[int]] | NDArray | None,
+    Literal["auto"] | NDArray | None,
+]:
     """Return crystal structures."""
     optional_structure_info = None
     if primitive_matrix is None or (
@@ -93,7 +101,7 @@ def get_cell_settings(
     ):
         pmat = "auto"
     else:
-        pmat = primitive_matrix
+        pmat = get_primitive_matrix(primitive_matrix, symprec=symprec)
 
     if unitcell_filename is not None:
         cell, optional_structure_info = _read_crystal_structure(
@@ -126,8 +134,6 @@ def get_cell_settings(
         filename = optional_structure_info[0]
         msg = "'%s' could not be found." % filename
         raise FileNotFoundError(msg)
-
-    pmat = get_primitive_matrix(pmat, symprec=symprec)
 
     return cell, smat, pmat
 

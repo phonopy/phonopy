@@ -87,3 +87,9 @@ class PypolymlpDevelopmentError(RuntimeError):
     """Exception when development of pypolymlp fails."""
 
     pass
+
+
+class BORNFileParseError(RuntimeError):
+    """Exception when parsing BORN file fails."""
+
+    pass

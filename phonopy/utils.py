@@ -40,7 +40,7 @@ from types import SimpleNamespace
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from spglib.spglib import SpglibDataset
+from spglib import SpglibDataset
 
 
 def similarity_transformation(rot: ArrayLike, mat: ArrayLike) -> NDArray:
