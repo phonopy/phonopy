@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Dec-9-2025: Version 2.45.0
+
+- Maintenance release including avoiding nanobind 2.10.0
+
 ## Oct-29-2025: Version 2.44.0
 
 - The `FREQUENCY_CONVERSION_FACTOR` tag (`--factor` option) is deprecated. Using
