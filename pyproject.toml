@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core", "nanobind!=2.10.0", "numpy"]
+requires = ["scikit-build-core", "nanobind<2.10.0", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project]
