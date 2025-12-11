@@ -471,7 +471,7 @@ class BandStructure:
             if self._cell.magnetic_moments is not None:
                 w.create_dataset("magnetic_moments", data=self._cell.magnetic_moments)
 
-            w.create_dataset("path", data=paths)
+            w.create_dataset("path", data=paths, compression=compression)
             w.create_dataset("distance", data=distances, compression=compression)
             w.create_dataset("frequency", data=frequencies, compression=compression)
 
