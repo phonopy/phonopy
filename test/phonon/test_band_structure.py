@@ -98,7 +98,7 @@ def _test_band_structure_write_hdf5(
     with_eigenvectors: bool = False,
     with_group_velocities: bool = False,
 ):
-    """Test band structure calculation by NaCl."""
+    """Test writing hdf5 of band structure calculation by NaCl."""
     if is_band_const_interval:
         qpoints = _get_band_qpoints(np.linalg.inv(ph_nacl.primitive.cell))
     else:

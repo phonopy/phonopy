@@ -1784,12 +1784,15 @@ class Phonopy:
 
         return retdict
 
-    def write_hdf5_mesh(self) -> None:
+    def write_hdf5_mesh(
+        self,
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ) -> None:
         """Write mesh calculation results in hdf5 format."""
         if not isinstance(self._mesh, Mesh):
             msg = "Mesh is not initialized."
             raise RuntimeError(msg)
-        self._mesh.write_hdf5()
+        self._mesh.write_hdf5(compression=compression)
 
     def write_yaml_mesh(self) -> None:
         """Write mesh calculation results in yaml format."""
@@ -1964,12 +1967,15 @@ class Phonopy:
             "dynamical_matrices": self._qpoints.dynamical_matrices,
         }
 
-    def write_hdf5_qpoints_phonon(self) -> None:
+    def write_hdf5_qpoints_phonon(
+        self,
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ) -> None:
         """Write phonon properties calculated at q-points in hdf5 format."""
         if self._qpoints is None:
             msg = "Phonopy.run_qpoints() has to be done."
             raise RuntimeError(msg)
-        self._qpoints.write_hdf5()
+        self._qpoints.write_hdf5(compression=compression)
 
     def write_yaml_qpoints_phonon(self) -> None:
         """Write phonon properties calculated at q-points in yaml format."""
