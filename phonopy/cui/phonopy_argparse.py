@@ -423,7 +423,7 @@ def get_parser(
         "--hdf5-compression",
         dest="hdf5_compression",
         default=None,
-        help="hdf5 compression filter (default: gzip)",
+        help='hdf5 compression filter (default: "gzip") and "none" for no compression',
     )
     parser.add_argument(
         "--irreps",

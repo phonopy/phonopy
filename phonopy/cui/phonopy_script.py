@@ -1087,7 +1087,9 @@ def _run_calculation(
             }
 
         if settings.is_hdf5 or settings.band_format == "hdf5":
-            phonon.write_hdf5_band_structure(comment=comment)
+            phonon.write_hdf5_band_structure(
+                comment=comment, compression=settings.hdf5_compression
+            )
         else:
             phonon.write_yaml_band_structure(comment=comment)
 

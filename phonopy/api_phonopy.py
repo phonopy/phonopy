@@ -1547,7 +1547,12 @@ class Phonopy:
         self._band_structure.plot(axs)
         return plt
 
-    def write_hdf5_band_structure(self, comment=None, filename="band.hdf5") -> None:
+    def write_hdf5_band_structure(
+        self,
+        comment: dict | None = None,
+        filename: str | os.PathLike = "band.hdf5",
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ) -> None:
         """Write band structure in hdf5 format.
 
         Parameters
@@ -1559,7 +1564,9 @@ class Phonopy:
 
         """
         assert self._band_structure is not None
-        self._band_structure.write_hdf5(comment=comment, filename=filename)
+        self._band_structure.write_hdf5(
+            comment=comment, filename=filename, compression=compression
+        )
 
     def write_yaml_band_structure(
         self, comment=None, filename=None, compression=None
