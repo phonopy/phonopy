@@ -947,15 +947,19 @@ class PhonopyMockArgs:
 
     anime: str | None = None
     band_paths: str | None = None
+    band_points: int | None = None
     cell_filename: str | os.PathLike | None = None
     conf_filename: str | os.PathLike | None = None
     create_force_sets: list[str | os.PathLike] | None = None
     fc_symmetry: bool = True
     filename: Sequence[os.PathLike | str] | None = None
     frequency_conversion_factor: float | None = None
+    hdf5_compression: str | None = None
     is_check_symmetry: bool | None = None
+    is_eigenvectors: bool | None = None
     is_graph_plot: bool | None = None
     is_graph_save: bool | None = None
+    is_hdf5: bool | None = None
     is_legend: bool | None = None
     is_displacement: bool | None = None
     log_level: int | None = None

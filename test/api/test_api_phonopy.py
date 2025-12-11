@@ -122,7 +122,6 @@ def test_energies_setter_NaCl_type2(ph_nacl_rd: Phonopy):
 def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
     """Test MLP features in Phonopy."""
     pytest.importorskip("pypolymlp", minversion="0.10.0")
-    pytest.importorskip("symfc")
 
     atom_energies = {"Cl": -0.31144759, "Na": -0.24580545}
     params = PypolymlpParams(gtinv_maxl=(4, 4), atom_energies=atom_energies)

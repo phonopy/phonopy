@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import itertools
 import os
 import pathlib
 import tempfile
 
+import h5py
 import numpy as np
 import pytest
 import yaml
@@ -115,8 +117,6 @@ def test_create_force_sets():
 @pytest.mark.parametrize("load_phonopy_yaml", [False, True])
 def test_phonopy_load(load_phonopy_yaml: bool):
     """Test phonopy/phonopy-load command."""
-    pytest.importorskip("symfc")
-
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
         os.chdir(temp_dir)
@@ -188,8 +188,6 @@ def test_unit_conversion_factor(load_phonopy_yaml: bool):
 @pytest.mark.parametrize("load_phonopy_yaml", [False, True])
 def test_unit_conversion_factor_QE(load_phonopy_yaml: bool):
     """Test unit_conversion_factor for QE using phonopy/phonopy-load command."""
-    pytest.importorskip("symfc")
-
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
         os.chdir(temp_dir)
@@ -287,8 +285,6 @@ def test_conf_file():
 
 def test_config_option():
     """Test phonopy-yaml --config."""
-    pytest.importorskip("symfc")
-
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
         os.chdir(temp_dir)
@@ -347,8 +343,6 @@ def test_anime():
 
 def test_tdm_cif():
     """Test phonopy command with thermal displacement matrices cif output."""
-    pytest.importorskip("symfc")
-
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
         os.chdir(temp_dir)
@@ -379,7 +373,66 @@ def test_tdm_cif():
 
         finally:
             os.chdir(original_cwd)
-    pass
+
+
+@pytest.mark.parametrize(
+    "hdf5_compression,is_eigenvectors",
+    itertools.product(["gzip", "lzf", "1", None], [True, False]),
+)
+def test_band_h5py(hdf5_compression: str | None, is_eigenvectors: bool):
+    """Test phonopy band structure output in HDF5 format."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            # Check sys.exit(0)
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                band_paths="0 0 0 1/2 1/2 1/2",
+                band_points=11,
+                load_phonopy_yaml=True,
+                is_hdf5=True,
+                is_eigenvectors=is_eigenvectors,
+                hdf5_compression=hdf5_compression,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            # Clean files created by phonopy-load script.
+            for created_filename in ("phonopy.yaml", "band.hdf5"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+
+                if created_filename == "band.hdf5":
+                    hdf5_keys = [
+                        "coordinates",
+                        "distance",
+                        "frequency",
+                        "label",
+                        "lattice",
+                        "masses",
+                        "natom",
+                        "nqpoint",
+                        "numbers",
+                        "path",
+                        "reciprocal_lattice",
+                        "segment_nqpoint",
+                        "symbols",
+                    ]
+                    if is_eigenvectors:
+                        hdf5_keys.append("eigenvector")
+                    with h5py.File(file_path, "r") as f:
+                        assert set(f.keys()) == set(hdf5_keys)
+                        assert f["frequency"].compression is None
+
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
 
 
 def _ls():
@@ -395,13 +448,17 @@ def _check_no_files():
 def _get_phonopy_args(
     anime: str | None = None,
     band_paths: str | None = None,
+    band_points: int | None = None,
     cell_filename: str | os.PathLike | None = None,
     conf_filename: str | os.PathLike | None = None,
     create_force_sets: list[str | os.PathLike] | None = None,
     filename: str | os.PathLike | None = None,
     frequency_conversion_factor: float | None = None,
-    is_displacement: bool | None = None,
+    hdf5_compression: str | None = None,
     is_check_symmetry: bool = False,
+    is_displacement: bool | None = None,
+    is_eigenvectors: bool | None = None,
+    is_hdf5: bool | None = None,
     load_phonopy_yaml: bool = False,
     magmoms: str | None = None,
     mesh_numbers: str | None = None,
@@ -416,13 +473,17 @@ def _get_phonopy_args(
     mockargs = PhonopyMockArgs(
         anime=anime,
         band_paths=band_paths,
+        band_points=band_points,
         cell_filename=cell_filename,
         conf_filename=conf_filename,
         create_force_sets=create_force_sets,
         filename=_filename,
         frequency_conversion_factor=frequency_conversion_factor,
-        is_displacement=is_displacement,
+        hdf5_compression=hdf5_compression,
         is_check_symmetry=is_check_symmetry,
+        is_displacement=is_displacement,
+        is_eigenvectors=is_eigenvectors,
+        is_hdf5=is_hdf5,
         log_level=1,
         magmoms=magmoms,
         mesh_numbers=mesh_numbers,

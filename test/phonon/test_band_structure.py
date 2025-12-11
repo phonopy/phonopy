@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
+import tempfile
 
+import h5py
 import numpy as np
-import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.band_structure import get_band_qpoints
@@ -59,14 +61,10 @@ def test_band_structure_write_hdf5(ph_nacl: Phonopy):
     G -> W  False (last one has to be False)
 
     """
-    pytest.importorskip("h5py")
-
     _test_band_structure_write_hdf5(ph_nacl, labels=["G", "L", "X", "G", "W"])
 
 
 def _test_band_structure_write_hdf5(ph_nacl: Phonopy, labels: list[str]):
-    import h5py
-
     ph_nacl.run_band_structure(
         _get_band_qpoints(),
         path_connections=[False, True, False],
@@ -75,19 +73,28 @@ def _test_band_structure_write_hdf5(ph_nacl: Phonopy, labels: list[str]):
         is_legacy_plot=False,
         labels=labels,
     )
-    ph_nacl.band_structure.write_hdf5()
-    for created_filename in ["band.hdf5"]:
-        file_path = pathlib.Path(cwd_called / created_filename)
-        assert file_path.exists()
-        pairs_ref = [labels[i] for i in (0, 1, 2, 3, 3, 4)]
 
-        with h5py.File(file_path) as f:
-            pairs = []
-            for pair in f["label"][:]:
-                pairs += [pair[0].decode(), pair[1].decode()]
-            assert pairs == pairs_ref
-            print(pairs)
-        file_path.unlink()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        ph_nacl.band_structure.write_hdf5()
+        for created_filename in ["band.hdf5"]:
+            file_path = pathlib.Path(created_filename)
+            assert file_path.exists()
+            pairs_ref = [labels[i] for i in (0, 1, 2, 3, 3, 4)]
+
+            with h5py.File(file_path) as f:
+                pairs = []
+                for pair in f["label"][:]:
+                    pairs += [pair[0].decode(), pair[1].decode()]
+                assert pairs == pairs_ref
+                print(pairs)
+            file_path.unlink()
+
+        _check_no_files()
+
+        os.chdir(original_cwd)
 
 
 def _get_band_qpoints():
@@ -97,3 +104,7 @@ def _get_band_qpoints():
     ]
     qpoints = get_band_qpoints(band_paths, npoints=11)
     return qpoints
+
+
+def _check_no_files():
+    assert not list(pathlib.Path(".").iterdir())
