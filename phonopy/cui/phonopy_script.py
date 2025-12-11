@@ -1009,7 +1009,7 @@ def _run_calculation(
         )
 
         if settings.is_hdf5 or settings.qpoints_format == "hdf5":
-            phonon.write_hdf5_qpoints_phonon()
+            phonon.write_hdf5_qpoints_phonon(compression=settings.hdf5_compression)
         else:
             phonon.write_yaml_qpoints_phonon()
 
@@ -1164,7 +1164,7 @@ def _run_calculation(
 
             if settings.write_mesh:
                 if settings.is_hdf5 or settings.mesh_format == "hdf5":
-                    phonon.write_hdf5_mesh()
+                    phonon.write_hdf5_mesh(compression=settings.hdf5_compression)
                 else:
                     phonon.write_yaml_mesh()
 

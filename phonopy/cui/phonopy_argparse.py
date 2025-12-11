@@ -965,9 +965,11 @@ class PhonopyMockArgs:
     log_level: int | None = None
     magmoms: str | None = None
     mesh_numbers: str | None = None
+    qpoints: str | None = None
     supercell_dimension: str | None = None
     thermal_displacement_matrices_cif: float | None = None
-    use_pypolymlp: bool = False
+    use_pypolymlp: bool | None = None
+    write_dynamical_matrices: bool | None = None
 
     def __iter__(self):
         """Make self iterable to support in."""

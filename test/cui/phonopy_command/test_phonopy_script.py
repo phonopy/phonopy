@@ -424,6 +424,109 @@ def test_band_h5py(hdf5_compression: str, with_eigenvectors: bool):
             os.chdir(original_cwd)
 
 
+@pytest.mark.parametrize(
+    "hdf5_compression,with_eigenvectors",
+    itertools.product(["gzip", "None"], [True, False]),
+)
+def test_mesh_h5py(hdf5_compression: str, with_eigenvectors: bool):
+    """Test phonopy mesh output in HDF5 format."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            # Check sys.exit(0)
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                mesh_numbers="3 3 3",
+                load_phonopy_yaml=True,
+                is_hdf5=True,
+                is_eigenvectors=with_eigenvectors,
+                hdf5_compression=hdf5_compression,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            # Clean files created by phonopy-load script.
+            for created_filename in ("phonopy.yaml", "mesh.hdf5"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+
+                if created_filename == "mesh.hdf5":
+                    with h5py.File(file_path, "r") as f:
+                        if hdf5_compression == "None":
+                            assert f["frequency"].compression is None  # type: ignore
+                        else:
+                            assert f["frequency"].compression == hdf5_compression  # type: ignore
+                        if with_eigenvectors:
+                            assert "eigenvector" in f
+                        else:
+                            assert "eigenvector" not in f
+
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize(
+    "hdf5_compression,with_eigenvectors,write_dynamical_matrices",
+    itertools.product(["gzip", "None"], [True, False], [True, False]),
+)
+def test_qpoints_h5py(
+    hdf5_compression: str, with_eigenvectors: bool, write_dynamical_matrices: bool
+):
+    """Test phonopy qpoints output in HDF5 format."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            # Check sys.exit(0)
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                qpoints="0 0 0 0 0 0.5",
+                load_phonopy_yaml=True,
+                is_hdf5=True,
+                is_eigenvectors=with_eigenvectors,
+                write_dynamical_matrices=write_dynamical_matrices,
+                hdf5_compression=hdf5_compression,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            # Clean files created by phonopy-load script.
+            for created_filename in ("phonopy.yaml", "qpoints.hdf5"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+
+                if created_filename == "qpoints.hdf5":
+                    with h5py.File(file_path, "r") as f:
+                        if hdf5_compression == "None":
+                            assert f["frequency"].compression is None  # type: ignore
+                        else:
+                            assert f["frequency"].compression == hdf5_compression  # type: ignore
+                        if with_eigenvectors:
+                            assert "eigenvector" in f
+                        else:
+                            assert "eigenvector" not in f
+                        if write_dynamical_matrices:
+                            assert "dynamical_matrix" in f
+                        else:
+                            assert "dynamical_matrix" not in f
+
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def _ls():
     current_dir = pathlib.Path(".")
     for file in current_dir.iterdir():
@@ -451,9 +554,11 @@ def _get_phonopy_args(
     load_phonopy_yaml: bool = False,
     magmoms: str | None = None,
     mesh_numbers: str | None = None,
+    qpoints: str | None = None,
     supercell_dimension: str | None = None,
     thermal_displacement_matrices_cif: float | None = None,
-    use_pypolymlp: bool = False,
+    use_pypolymlp: bool | None = None,
+    write_dynamical_matrices: bool | None = None,
 ):
     if filename is None:
         _filename = []
@@ -477,9 +582,11 @@ def _get_phonopy_args(
         log_level=1,
         magmoms=magmoms,
         mesh_numbers=mesh_numbers,
+        qpoints=qpoints,
         thermal_displacement_matrices_cif=thermal_displacement_matrices_cif,
         supercell_dimension=supercell_dimension,
         use_pypolymlp=use_pypolymlp,
+        write_dynamical_matrices=write_dynamical_matrices,
     )
 
     if load_phonopy_yaml:

@@ -1,8 +1,19 @@
 """Tests for phonon calculation on sampling mesh."""
 
+from __future__ import annotations
+
+import itertools
+import os
+import pathlib
+import tempfile
+from typing import Literal
+
+import h5py
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
+from phonopy.phonon.mesh import IterMesh, Mesh
 
 freqs_full_fcsym_ref = [
     0.000000,
@@ -197,8 +208,72 @@ def test_Mesh_full_fcsym_si(ph_si: Phonopy):
     _test_IterMesh(ph_si, freqs_full_fcsym_ref_si)
 
 
+@pytest.mark.parametrize(
+    "compression,with_eigenvectors,with_group_velocities",
+    itertools.product(
+        ["gzip", "lzf", 1, 2, None],
+        [False, True],
+        [False, True],
+    ),
+)
+def test_mesh_write_hdf5(
+    ph_nacl: Phonopy,
+    compression: Literal["gzip", "lzf"] | int | None,
+    with_eigenvectors: bool,
+    with_group_velocities: bool,
+):
+    """Test hdf5 output of mesh calculation by NaCl."""
+    ph_nacl.run_mesh(
+        [3, 3, 3],
+        with_group_velocities=with_group_velocities,
+        with_eigenvectors=with_eigenvectors,
+    )
+    assert ph_nacl.mesh is not None
+    assert isinstance(ph_nacl.mesh, Mesh)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        ph_nacl.mesh.write_hdf5(compression=compression)
+
+        for created_filename in ["mesh.hdf5"]:
+            file_path = pathlib.Path(created_filename)
+            assert file_path.exists()
+
+            if created_filename == "mesh.hdf5":
+                hdf5_keys = [
+                    "frequency",
+                    "mesh",
+                    "qpoint",
+                    "weight",
+                ]
+                if with_eigenvectors:
+                    hdf5_keys.append("eigenvector")
+                if with_group_velocities:
+                    hdf5_keys.append("group_velocity")
+
+            with h5py.File(file_path) as f:
+                assert set(f.keys()) == set(hdf5_keys)
+
+                freqs = f["frequency"]
+                if compression in ("gzip", "lzf"):
+                    assert freqs.compression == compression  # type: ignore
+                elif isinstance(compression, int):
+                    assert freqs.compression == "gzip"  # type: ignore
+                    assert freqs.compression_opts == compression  # type: ignore
+                else:
+                    assert freqs.compression is None  # type: ignore
+
+            file_path.unlink()
+
+        _check_no_files()
+
+        os.chdir(original_cwd)
+
+
 def _test_IterMesh(ph_nacl: Phonopy, freqs_ref):
     ph_nacl.init_mesh(mesh=[3, 3, 3], with_eigenvectors=True, use_iter_mesh=True)
+    assert isinstance(ph_nacl.mesh, IterMesh)
     freqs = []
     eigvecs = []
     for f, e in ph_nacl.mesh:
@@ -210,6 +285,11 @@ def _test_IterMesh(ph_nacl: Phonopy, freqs_ref):
 
     np.testing.assert_allclose(freqs_ref, np.reshape(freqs, -1), atol=1e-5)
     ph_nacl.run_mesh([3, 3, 3], with_eigenvectors=True)
+    assert isinstance(ph_nacl.mesh, Mesh)
     mesh_obj = ph_nacl.mesh
     mesh_freqs = mesh_obj.frequencies
     np.testing.assert_allclose(mesh_freqs, freqs, atol=1e-5)
+
+
+def _check_no_files():
+    assert not list(pathlib.Path(".").iterdir())

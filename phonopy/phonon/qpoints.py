@@ -37,7 +37,7 @@
 from __future__ import annotations
 
 import os
-from typing import Optional, Union
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -80,7 +80,7 @@ class QpointsPhonon:
     def __init__(
         self,
         qpoints,
-        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
+        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
         nac_q_direction: ArrayLike | None = None,
         with_eigenvectors: bool = False,
         group_velocity: GroupVelocity | None = None,
@@ -99,7 +99,7 @@ class QpointsPhonon:
         self._dynamical_matrix = dynamical_matrix
         self._nac_q_direction = nac_q_direction
         self._with_eigenvectors = with_eigenvectors
-        self._gv_obj: Optional[GroupVelocity] = group_velocity
+        self._gv_obj: GroupVelocity | None = group_velocity
         self._with_dynamical_matrices = with_dynamical_matrices
         if factor is None:
             self._factor = get_physical_units().DefaultToTHz
@@ -139,21 +139,37 @@ class QpointsPhonon:
         """Return DynamicalMatrix class instance."""
         return self._dynamical_matrices
 
-    def write_hdf5(self, filename: str | os.PathLike = "qpoints.hdf5"):
+    def write_hdf5(
+        self,
+        filename: str | os.PathLike = "qpoints.hdf5",
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ):
         """Write results in hdf5."""
         import h5py
 
         with h5py.File(filename, "w") as w:
             w.create_dataset("reciprocal_lattice", data=np.linalg.inv(self._lattice.T))
             w.create_dataset("masses", data=self._masses)
-            w.create_dataset("qpoint", data=self._qpoints)
-            w.create_dataset("frequency", data=self._frequencies)
+            w.create_dataset("qpoint", data=self._qpoints, compression=compression)
+            w.create_dataset(
+                "frequency", data=self._frequencies, compression=compression
+            )
             if self._with_eigenvectors:
-                w.create_dataset("eigenvector", data=self._eigenvectors)
+                w.create_dataset(
+                    "eigenvector", data=self._eigenvectors, compression=compression
+                )
             if self._group_velocities is not None:
-                w.create_dataset("group_velocity", data=self._group_velocities)
+                w.create_dataset(
+                    "group_velocity",
+                    data=self._group_velocities,
+                    compression=compression,
+                )
             if self._with_dynamical_matrices:
-                w.create_dataset("dynamical_matrix", data=self._dynamical_matrices)
+                w.create_dataset(
+                    "dynamical_matrix",
+                    data=self._dynamical_matrices,
+                    compression=compression,
+                )
 
     def write_yaml(self, filename: str | os.PathLike = "qpoints.yaml"):
         """Write results in yaml."""
@@ -169,6 +185,7 @@ class QpointsPhonon:
         for i, q in enumerate(self._qpoints):
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
             if self._with_dynamical_matrices:
+                assert self._dynamical_matrices is not None
                 w.write("  dynamical_matrix:\n")
                 for row in self._dynamical_matrices[i]:
                     w.write("  - [ ")
@@ -191,6 +208,7 @@ class QpointsPhonon:
                     )
 
                 if self._with_eigenvectors:
+                    assert self._eigenvectors is not None
                     w.write("    eigenvector:\n")
                     for k in range(self._natom):
                         w.write("    - # atom %d\n" % (k + 1))
@@ -230,7 +248,7 @@ class QpointsPhonon:
                 eigenvectors[i] = eigvecs
             else:
                 eigvals = np.linalg.eigvalsh(dm)  # type: ignore
-            eigvals = eigvals.real
+            eigvals = eigvals.real  # type: ignore
             self._eigenvalues[i] = eigvals
             self._frequencies[i] = (
                 np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
