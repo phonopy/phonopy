@@ -38,12 +38,14 @@ from __future__ import annotations
 
 import gzip
 import lzma
+import os
 import sys
 from typing import Literal, Sequence
 
+import h5py
 import numpy as np
 import yaml
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.group_velocity import GroupVelocity
@@ -308,10 +310,10 @@ class BandStructure:
         self._paths = [np.array(path) for path in paths]
         self._is_legacy_plot = is_legacy_plot
         self._labels = None
-        self._path_connections: Sequence[bool]
+        self._path_connections: list[bool]
         if self._is_legacy_plot:
             if labels is not None and len(labels) == len(self._paths) + 1:
-                self._labels = labels
+                self._labels = list(labels)
         else:
             if path_connections is None:
                 self._path_connections = [
@@ -319,19 +321,19 @@ class BandStructure:
                 ] * len(self._paths)
                 self._path_connections[-1] = False
             else:
-                self._path_connections = path_connections
+                self._path_connections = list(path_connections)
             if (
                 labels is not None
                 and len(labels) == (2 - np.array(self._path_connections)).sum()
             ):
-                self._labels = labels
-        self._distances = []
-        self._distance = 0.0
-        self._special_points = [0.0]
-        self._eigenvalues = None
-        self._eigenvectors = None
-        self._frequencies = None
-        self._group_velocities = None
+                self._labels = list(labels)
+        self._distances: list
+        self._distance: float = 0.0
+        self._special_points: list[float] = [0.0]
+        self._eigenvalues: list
+        self._eigenvectors: list | None = None
+        self._frequencies: list
+        self._group_velocities: list | None = None
         self._set_band()
 
     @property
@@ -360,12 +362,12 @@ class BandStructure:
         return self._group_velocities
 
     @property
-    def labels(self) -> Sequence[str] | None:
+    def labels(self) -> list[str] | None:
         """Return special point symbols."""
         return self._labels
 
     @property
-    def path_connections(self) -> Sequence[bool]:
+    def path_connections(self) -> list[bool]:
         """Return band segment connections."""
         return self._path_connections
 
@@ -413,14 +415,52 @@ class BandStructure:
 
     def write_hdf5(
         self,
-        comment=None,
-        filename="band.hdf5",
+        comment: dict | None = None,
+        filename: str | os.PathLike = "band.hdf5",
         compression: Literal["gzip", "lzf"] | int | None = None,
     ):
-        """Write band structure in hdf5 format."""
-        import h5py
+        """Write band structure in hdf5 format.
+
+        When the number of sampling points in each segment is not uniform,
+        the largest number is used to define the dataset shape. Smaller
+        segments are padded with zeros. The number of valid points is stored
+        in 'segment_nqpoint'.
+
+        """
+
+        def pad_array(array: Sequence[NDArray], nq: int):
+            ret = []
+            shape = array[0].shape[1:]
+            for vals in array:
+                vals_padded = np.zeros((nq,) + shape, dtype=vals.dtype)
+                vals_padded[: len(vals)] = vals
+                ret.append(vals_padded)
+            return ret
+
+        nq_paths = [len(qpoints) for qpoints in self._paths]
+        if len(set(nq_paths)) == 1:
+            paths = self._paths
+            distances = self._distances
+            frequencies = self._frequencies
+            eigenvectors = self._eigenvectors
+            group_velocities = self._group_velocities
+        else:
+            nq = max(nq_paths)
+            paths = pad_array(self._paths, nq)
+            distances = pad_array(self._distances, nq)
+            frequencies = pad_array(self._frequencies, nq)
+            if self._eigenvectors is None:
+                eigenvectors = None
+            else:
+                eigenvectors = pad_array(self._eigenvectors, nq)
+            if self._group_velocities is None:
+                group_velocities = None
+            else:
+                group_velocities = pad_array(self._group_velocities, nq)
 
         with h5py.File(filename, "w") as w:
+            w.create_dataset("nqpoint", data=[np.sum(nq_paths)])
+            w.create_dataset("segment_nqpoint", data=nq_paths)
             w.create_dataset("reciprocal_lattice", data=self._rec_lattice.T)
             w.create_dataset("lattice", data=self._cell.cell)
             w.create_dataset("natom", data=len(self._cell))
@@ -430,19 +470,19 @@ class BandStructure:
             w.create_dataset("masses", data=self._cell.masses)
             if self._cell.magnetic_moments is not None:
                 w.create_dataset("magnetic_moments", data=self._cell.magnetic_moments)
-            w.create_dataset("path", data=self._paths)
-            w.create_dataset("distance", data=self._distances, compression=compression)
-            w.create_dataset(
-                "frequency", data=self._frequencies, compression=compression
-            )
+
+            w.create_dataset("path", data=paths)
+            w.create_dataset("distance", data=distances, compression=compression)
+            w.create_dataset("frequency", data=frequencies, compression=compression)
+
             if self._eigenvectors is not None:
                 w.create_dataset(
-                    "eigenvector", data=self._eigenvectors, compression=compression
+                    "eigenvector", data=eigenvectors, compression=compression
                 )
             if self._group_velocities is not None:
                 w.create_dataset(
                     "group_velocity",
-                    data=self._group_velocities,
+                    data=group_velocities,
                     compression=compression,
                 )
             if comment:
@@ -480,12 +520,6 @@ class BandStructure:
                         else:
                             i += 2
             w.create_dataset("label", data=path_labels)
-
-            nq_paths = []
-            for qpoints in self._paths:
-                nq_paths.append(len(qpoints))
-            w.create_dataset("nqpoint", data=[np.sum(nq_paths)])
-            w.create_dataset("segment_nqpoint", data=nq_paths)
 
     def write_yaml(self, comment=None, filename=None, compression=None):
         """Write band structure in yaml format.
@@ -627,8 +661,10 @@ class BandStructure:
         self._lastq = qpoint.copy()
 
     def _shift_point(self, qpoint):
-        self._distance += np.linalg.norm(
-            np.dot(qpoint - self._lastq, np.linalg.inv(self._cell.cell).T)
+        self._distance += float(
+            np.linalg.norm(
+                np.dot(qpoint - self._lastq, np.linalg.inv(self._cell.cell).T)
+            )
         )
         self._lastq = qpoint.copy()
 
@@ -697,10 +733,10 @@ class BandStructure:
             dm = self._dynamical_matrix.dynamical_matrix
 
             if self._with_eigenvectors:
-                eigvals, eigvecs = np.linalg.eigh(dm)
+                eigvals, eigvecs = np.linalg.eigh(dm)  # type: ignore
                 eigvals = eigvals.real
             else:
-                eigvals = np.linalg.eigvalsh(dm).real
+                eigvals = np.linalg.eigvalsh(dm).real  # type: ignore
 
             if self._is_band_connection:
                 if i == 0:
@@ -713,6 +749,7 @@ class BandStructure:
                 eigvecs_on_path.append((eigvecs.T)[band_order].T)
 
                 if self._group_velocity is not None:
+                    assert gv is not None
                     gv_on_path.append(gv[i][band_order])
                 prev_eigvecs = eigvecs
             else:
@@ -720,6 +757,7 @@ class BandStructure:
                 if self._with_eigenvectors:
                     eigvecs_on_path.append(eigvecs)
                 if self._group_velocity is not None:
+                    assert gv is not None
                     gv_on_path.append(gv[i])
 
         return distances_on_path, eigvals_on_path, eigvecs_on_path, gv_on_path
@@ -767,7 +805,11 @@ def get_band_qpoints_and_path_connections(band_paths, npoints=51, rec_lattice=No
     )
 
 
-def get_band_qpoints(band_paths, npoints=51, rec_lattice=None):
+def get_band_qpoints(
+    band_paths: Sequence | NDArray,
+    npoints: int = 51,
+    rec_lattice: NDArray | None = None,
+):
     """Generate qpoints for band structure path.
 
     Note
@@ -864,7 +906,9 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     return qpoints_of_paths, labels, path_connections
 
 
-def band_plot(axs, frequencies, distances, path_connections, labels, fmt="r-"):
+def band_plot(
+    axs, frequencies, distances, path_connections, labels, fmt: str | None = "r-"
+):
     """Return band structure plot."""
     bp = BandPlot(axs)
     bp.decorate(labels, path_connections, frequencies, distances)

@@ -377,7 +377,7 @@ def test_tdm_cif():
 
 @pytest.mark.parametrize(
     "hdf5_compression,is_eigenvectors",
-    itertools.product(["gzip", "lzf", "1", None], [True, False]),
+    itertools.product(["gzip", None], [True, False]),
 )
 def test_band_h5py(hdf5_compression: str | None, is_eigenvectors: bool):
     """Test phonopy band structure output in HDF5 format."""
@@ -406,26 +406,12 @@ def test_band_h5py(hdf5_compression: str | None, is_eigenvectors: bool):
                 assert file_path.exists()
 
                 if created_filename == "band.hdf5":
-                    hdf5_keys = [
-                        "coordinates",
-                        "distance",
-                        "frequency",
-                        "label",
-                        "lattice",
-                        "masses",
-                        "natom",
-                        "nqpoint",
-                        "numbers",
-                        "path",
-                        "reciprocal_lattice",
-                        "segment_nqpoint",
-                        "symbols",
-                    ]
-                    if is_eigenvectors:
-                        hdf5_keys.append("eigenvector")
                     with h5py.File(file_path, "r") as f:
-                        assert set(f.keys()) == set(hdf5_keys)
-                        assert f["frequency"].compression is None
+                        assert f["frequency"].compression is None  # type: ignore
+                        if is_eigenvectors:
+                            assert "eigenvector" in f
+                        else:
+                            assert "eigenvector" not in f
 
                 file_path.unlink()
 

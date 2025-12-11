@@ -1023,6 +1023,8 @@ def _run_calculation(
             npoints = settings.band_points
         band_paths = settings.band_paths
 
+        assert band_paths is not None
+
         if _is_band_auto(settings):
             print("SeeK-path is used to generate band paths.")
             print(
@@ -1035,6 +1037,13 @@ def _run_calculation(
                 is_const_interval=settings.is_band_const_interval,
             )
         else:
+            if isinstance(band_paths, str):
+                if log_level:
+                    msg = f'Incorrect band paths "{band_paths}" specified.'
+                    print_error_message(msg)
+                print_error()
+                sys.exit(1)
+
             is_legacy_plot = settings.is_legacy_plot
             if settings.is_band_const_interval:
                 reclat = np.linalg.inv(phonon.primitive.cell)
