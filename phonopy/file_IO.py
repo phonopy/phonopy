@@ -43,6 +43,7 @@ import sys
 import typing
 from collections.abc import Sequence
 from types import ModuleType
+from typing import Literal
 
 import numpy as np
 import yaml
@@ -390,7 +391,7 @@ def write_force_constants_to_hdf5(
     filename: str = "force_constants.hdf5",
     p2s_map: NDArray | None = None,
     physical_unit: str | None = None,
-    compression: str | int | None = None,
+    compression: Literal["gzip", "lzf"] | int | None = None,
 ):
     """Write force constants in hdf5 format.
 
