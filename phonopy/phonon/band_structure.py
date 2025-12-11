@@ -39,8 +39,7 @@ from __future__ import annotations
 import gzip
 import lzma
 import sys
-import warnings
-from typing import Optional, Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 import yaml
@@ -340,93 +339,25 @@ class BandStructure:
         """Return distances of band segments."""
         return self._distances
 
-    def get_distances(self):
-        """Return distances of band segments."""
-        warnings.warn(
-            "BandStructure.get_distances() is deprecated."
-            "Use BandStructure.distances attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.distances
-
     @property
     def qpoints(self) -> list:
         """Return qpoints of band segments."""
         return self._paths
 
-    def get_qpoints(self):
-        """Return qpoints of band segments."""
-        warnings.warn(
-            "BandStructure.get_qpoints() is deprecated."
-            "Use BandStructure.qpoints attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.qpoints
-
     @property
-    def eigenvectors(self) -> Optional[list]:
+    def eigenvectors(self) -> list | None:
         """Return phonon eigenvectors of band segments."""
         return self._eigenvectors
 
-    def get_eigenvectors(self):
-        """Return phonon eigenvectors of band segments."""
-        warnings.warn(
-            "BandStructure.get_eigenvectors() is deprecated."
-            "Use BandStructure.eigenvectors attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.eigenvectors
-
     @property
-    def frequencies(self) -> Optional[list]:
+    def frequencies(self) -> list | None:
         """Return phonon frequencies of band segments."""
         return self._frequencies
 
-    def get_frequencies(self):
-        """Return phonon frequencies of band segments."""
-        warnings.warn(
-            "BandStructure.get_frequencies() is deprecated."
-            "Use BandStructure.frequencies attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.frequencies
-
     @property
-    def group_velocities(self) -> Optional[list]:
+    def group_velocities(self) -> list | None:
         """Return phonon group velocities of band segments."""
         return self._group_velocities
-
-    def get_group_velocities(self):
-        """Return phonon group velocities of band segments."""
-        warnings.warn(
-            "BandStructure.get_group_velocities() is deprecated."
-            "Use BandStructure.group_velocities attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.group_velocities
-
-    def get_eigenvalues(self):
-        """Return phonon eigenvalues of band segments."""
-        warnings.warn(
-            "Bandstructure.get_engenvalues is deprecated.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._eigenvalues
-
-    def get_unit_conversion_factor(self):
-        """Return frequency unit conversion factor of band segments."""
-        warnings.warn(
-            "Bandstructure.get_unit_conversion_factor is deprecated.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._factor
 
     @property
     def labels(self) -> Sequence[str] | None:
@@ -480,7 +411,12 @@ class BandStructure:
             self._is_band_connection,
         )
 
-    def write_hdf5(self, comment=None, filename="band.hdf5"):
+    def write_hdf5(
+        self,
+        comment=None,
+        filename="band.hdf5",
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ):
         """Write band structure in hdf5 format."""
         import h5py
 
@@ -495,12 +431,20 @@ class BandStructure:
             if self._cell.magnetic_moments is not None:
                 w.create_dataset("magnetic_moments", data=self._cell.magnetic_moments)
             w.create_dataset("path", data=self._paths)
-            w.create_dataset("distance", data=self._distances)
-            w.create_dataset("frequency", data=self._frequencies)
+            w.create_dataset("distance", data=self._distances, compression=compression)
+            w.create_dataset(
+                "frequency", data=self._frequencies, compression=compression
+            )
             if self._eigenvectors is not None:
-                w.create_dataset("eigenvector", data=self._eigenvectors)
+                w.create_dataset(
+                    "eigenvector", data=self._eigenvectors, compression=compression
+                )
             if self._group_velocities is not None:
-                w.create_dataset("group_velocity", data=self._group_velocities)
+                w.create_dataset(
+                    "group_velocity",
+                    data=self._group_velocities,
+                    compression=compression,
+                )
             if comment:
                 for key in comment:
                     if key not in (
