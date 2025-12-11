@@ -376,10 +376,10 @@ def test_tdm_cif():
 
 
 @pytest.mark.parametrize(
-    "hdf5_compression,is_eigenvectors",
-    itertools.product(["gzip", None], [True, False]),
+    "hdf5_compression,with_eigenvectors",
+    itertools.product(["gzip", "None"], [True, False]),
 )
-def test_band_h5py(hdf5_compression: str | None, is_eigenvectors: bool):
+def test_band_h5py(hdf5_compression: str, with_eigenvectors: bool):
     """Test phonopy band structure output in HDF5 format."""
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
@@ -393,7 +393,7 @@ def test_band_h5py(hdf5_compression: str | None, is_eigenvectors: bool):
                 band_points=11,
                 load_phonopy_yaml=True,
                 is_hdf5=True,
-                is_eigenvectors=is_eigenvectors,
+                is_eigenvectors=with_eigenvectors,
                 hdf5_compression=hdf5_compression,
             )
             with pytest.raises(SystemExit) as excinfo:
@@ -407,8 +407,11 @@ def test_band_h5py(hdf5_compression: str | None, is_eigenvectors: bool):
 
                 if created_filename == "band.hdf5":
                     with h5py.File(file_path, "r") as f:
-                        assert f["frequency"].compression is None  # type: ignore
-                        if is_eigenvectors:
+                        if hdf5_compression == "None":
+                            assert f["frequency"].compression is None  # type: ignore
+                        else:
+                            assert f["frequency"].compression == hdf5_compression  # type: ignore
+                        if with_eigenvectors:
                             assert "eigenvector" in f
                         else:
                             assert "eigenvector" not in f
@@ -456,6 +459,7 @@ def _get_phonopy_args(
         _filename = []
     else:
         _filename = [filename]
+
     mockargs = PhonopyMockArgs(
         anime=anime,
         band_paths=band_paths,
