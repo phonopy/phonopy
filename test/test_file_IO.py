@@ -1,6 +1,8 @@
 """Tests of file_IO functions."""
 
+import os
 import pathlib
+import tempfile
 
 import numpy as np
 import pytest
@@ -29,15 +31,25 @@ def test_parse_BORN():
 
 def test_write_force_constants_to_hdf5():
     """Test write_force_constants_to_hdf5."""
-    pytest.importorskip("h5py")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
 
-    write_force_constants_to_hdf5(np.zeros(1), physical_unit="eV/angstrom^2")
-    for created_filename in ["force_constants.hdf5"]:
-        file_path = pathlib.Path(cwd_called / created_filename)
-        assert file_path.exists()
-        fc, physical_unit = read_force_constants_hdf5(
-            file_path, return_physical_unit=True
-        )
-        assert fc[0] == pytest.approx(0)
-        assert physical_unit == "eV/angstrom^2"
-        file_path.unlink()
+        write_force_constants_to_hdf5(np.zeros(1), physical_unit="eV/angstrom^2")
+        for created_filename in ["force_constants.hdf5"]:
+            file_path = pathlib.Path(created_filename)
+            assert file_path.exists()
+            fc, physical_unit = read_force_constants_hdf5(
+                file_path, return_physical_unit=True
+            )
+            assert fc[0] == pytest.approx(0)
+            assert physical_unit == "eV/angstrom^2"
+            file_path.unlink()
+
+        _check_no_files()
+
+        os.chdir(original_cwd)
+
+
+def _check_no_files():
+    assert not list(pathlib.Path(".").iterdir())

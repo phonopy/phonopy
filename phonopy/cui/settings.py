@@ -87,7 +87,7 @@ class Settings:
         self.frequency_conversion_factor = None
         self.frequency_scale_factor = None
         self.group_velocity_delta_q = None
-        self.hdf5_compression = "gzip"
+        self.hdf5_compression: str | None = "gzip"
         self.is_band_const_interval = False
         self.is_diagonal_displacement = True
         self.is_eigenvectors = False
