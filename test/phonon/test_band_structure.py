@@ -6,7 +6,7 @@ import itertools
 import os
 import pathlib
 import tempfile
-from typing import Literal
+from typing import Literal, cast
 
 import h5py
 import numpy as np
@@ -58,12 +58,11 @@ def test_band_structure_bc(ph_nacl: Phonopy):
 
 
 @pytest.mark.parametrize(
-    "compression,is_band_const_interval",
+    "compression,is_band_const_interval,with_eigenvectors,with_group_velocities",
     itertools.product(
-        #        ["gzip", "lzf", 1, 2, None],
-        [
-            "gzip",
-        ],
+        ["gzip", "lzf", 1, 2, None],
+        [False, True],
+        [False, True],
         [False, True],
     ),
 )
@@ -71,6 +70,8 @@ def test_band_structure_write_hdf5(
     ph_nacl: Phonopy,
     compression: Literal["gzip", "lzf"] | int | None,
     is_band_const_interval: bool,
+    with_group_velocities: bool,
+    with_eigenvectors: bool,
 ):
     """Test band structure calculation by NaCl.
 
@@ -84,6 +85,8 @@ def test_band_structure_write_hdf5(
         labels=["G", "L", "X", "G", "W"],
         compression=compression,
         is_band_const_interval=is_band_const_interval,
+        with_eigenvectors=with_eigenvectors,
+        with_group_velocities=with_group_velocities,
     )
 
 
@@ -92,7 +95,8 @@ def _test_band_structure_write_hdf5(
     labels: list[str],
     compression: Literal["gzip", "lzf"] | int | None = None,
     is_band_const_interval: bool = False,
-    is_eigenvectors: bool = False,
+    with_eigenvectors: bool = False,
+    with_group_velocities: bool = False,
 ):
     """Test band structure calculation by NaCl."""
     if is_band_const_interval:
@@ -102,7 +106,8 @@ def _test_band_structure_write_hdf5(
     ph_nacl.run_band_structure(
         qpoints,
         path_connections=[False, True, False],
-        with_group_velocities=False,
+        with_group_velocities=with_group_velocities,
+        with_eigenvectors=with_eigenvectors,
         is_band_connection=False,
         is_legacy_plot=False,
         labels=labels,
@@ -135,8 +140,10 @@ def _test_band_structure_write_hdf5(
                     "segment_nqpoint",
                     "symbols",
                 ]
-                if is_eigenvectors:
+                if with_eigenvectors:
                     hdf5_keys.append("eigenvector")
+                if with_group_velocities:
+                    hdf5_keys.append("group_velocity")
 
             with h5py.File(file_path) as f:
                 assert set(f.keys()) == set(hdf5_keys)
@@ -155,11 +162,46 @@ def _test_band_structure_write_hdf5(
                 else:
                     assert freqs.compression is None  # type: ignore
 
+                _assert_band_structure_hdf5_arrays(
+                    cast(h5py.Dataset, freqs), ph_nacl.band_structure.frequencies
+                )
+                _assert_band_structure_hdf5_arrays(
+                    cast(h5py.Dataset, f["distance"]),
+                    ph_nacl.band_structure.distances,
+                )
+                _assert_band_structure_hdf5_arrays(
+                    cast(h5py.Dataset, f["path"]),
+                    ph_nacl.band_structure.qpoints,
+                )
+                if with_eigenvectors:
+                    _assert_band_structure_hdf5_arrays(
+                        cast(h5py.Dataset, f["eigenvector"]),
+                        ph_nacl.band_structure.eigenvectors,
+                    )
+                if with_group_velocities:
+                    _assert_band_structure_hdf5_arrays(
+                        cast(h5py.Dataset, f["group_velocity"]),
+                        ph_nacl.band_structure.group_velocities,
+                    )
+
             file_path.unlink()
 
         _check_no_files()
 
         os.chdir(original_cwd)
+
+
+def _assert_band_structure_hdf5_arrays(
+    dataset: h5py.Dataset, ref_array: list[NDArray] | None
+):
+    assert ref_array is not None
+    val_array = dataset[:]
+    for i, ref_f in enumerate(ref_array):
+        np.testing.assert_allclose(
+            val_array[i][: len(ref_f)],  # type: ignore
+            ref_f,
+            atol=1e-5,
+        )  # type: ignore
 
 
 def _get_band_qpoints(reclat: NDArray | None = None):

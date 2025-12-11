@@ -419,8 +419,48 @@ class BandStructure:
         filename: str | os.PathLike = "band.hdf5",
         compression: Literal["gzip", "lzf"] | int | None = None,
     ):
-        """Write band structure in hdf5 format."""
+        """Write band structure in hdf5 format.
+
+        When the number of sampling points in each segment is not uniform,
+        the largest number is used to define the dataset shape. Smaller
+        segments are padded with zeros. The number of valid points is stored
+        in 'segment_nqpoint'.
+
+        """
+
+        def pad_array(array: Sequence[NDArray], nq: int):
+            ret = []
+            shape = array[0].shape[1:]
+            for vals in array:
+                vals_padded = np.zeros((nq,) + shape, dtype=vals.dtype)
+                vals_padded[: len(vals)] = vals
+                ret.append(vals_padded)
+            return ret
+
+        nq_paths = [len(qpoints) for qpoints in self._paths]
+        if len(set(nq_paths)) == 1:
+            paths = self._paths
+            distances = self._distances
+            frequencies = self._frequencies
+            eigenvectors = self._eigenvectors
+            group_velocities = self._group_velocities
+        else:
+            nq = max(nq_paths)
+            paths = pad_array(self._paths, nq)
+            distances = pad_array(self._distances, nq)
+            frequencies = pad_array(self._frequencies, nq)
+            if self._eigenvectors is None:
+                eigenvectors = None
+            else:
+                eigenvectors = pad_array(self._eigenvectors, nq)
+            if self._group_velocities is None:
+                group_velocities = None
+            else:
+                group_velocities = pad_array(self._group_velocities, nq)
+
         with h5py.File(filename, "w") as w:
+            w.create_dataset("nqpoint", data=[np.sum(nq_paths)])
+            w.create_dataset("segment_nqpoint", data=nq_paths)
             w.create_dataset("reciprocal_lattice", data=self._rec_lattice.T)
             w.create_dataset("lattice", data=self._cell.cell)
             w.create_dataset("natom", data=len(self._cell))
@@ -430,20 +470,19 @@ class BandStructure:
             w.create_dataset("masses", data=self._cell.masses)
             if self._cell.magnetic_moments is not None:
                 w.create_dataset("magnetic_moments", data=self._cell.magnetic_moments)
-            w.create_dataset("path", data=self._paths)
-            w.create_dataset("distance", data=self._distances, compression=compression)
-            w.create_dataset(
-                "frequency", data=self._frequencies, compression=compression
-            )
+
+            w.create_dataset("path", data=paths)
+            w.create_dataset("distance", data=distances, compression=compression)
+            w.create_dataset("frequency", data=frequencies, compression=compression)
 
             if self._eigenvectors is not None:
                 w.create_dataset(
-                    "eigenvector", data=self._eigenvectors, compression=compression
+                    "eigenvector", data=eigenvectors, compression=compression
                 )
             if self._group_velocities is not None:
                 w.create_dataset(
                     "group_velocity",
-                    data=self._group_velocities,
+                    data=group_velocities,
                     compression=compression,
                 )
             if comment:
@@ -481,12 +520,6 @@ class BandStructure:
                         else:
                             i += 2
             w.create_dataset("label", data=path_labels)
-
-            nq_paths = []
-            for qpoints in self._paths:
-                nq_paths.append(len(qpoints))
-            w.create_dataset("nqpoint", data=[np.sum(nq_paths)])
-            w.create_dataset("segment_nqpoint", data=nq_paths)
 
     def write_yaml(self, comment=None, filename=None, compression=None):
         """Write band structure in yaml format.
