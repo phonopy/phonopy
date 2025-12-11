@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import itertools
 import os
 import pathlib
 import tempfile
+from typing import Literal
 
 import h5py
 import numpy as np
+import pytest
+from numpy.typing import NDArray
 
 from phonopy import Phonopy
 from phonopy.phonon.band_structure import get_band_qpoints
@@ -53,7 +57,21 @@ def test_band_structure_bc(ph_nacl: Phonopy):
     )
 
 
-def test_band_structure_write_hdf5(ph_nacl: Phonopy):
+@pytest.mark.parametrize(
+    "compression,is_band_const_interval",
+    itertools.product(
+        #        ["gzip", "lzf", 1, 2, None],
+        [
+            "gzip",
+        ],
+        [False, True],
+    ),
+)
+def test_band_structure_write_hdf5(
+    ph_nacl: Phonopy,
+    compression: Literal["gzip", "lzf"] | int | None,
+    is_band_const_interval: bool,
+):
     """Test band structure calculation by NaCl.
 
     G -> L  False
@@ -61,35 +79,82 @@ def test_band_structure_write_hdf5(ph_nacl: Phonopy):
     G -> W  False (last one has to be False)
 
     """
-    _test_band_structure_write_hdf5(ph_nacl, labels=["G", "L", "X", "G", "W"])
+    _test_band_structure_write_hdf5(
+        ph_nacl,
+        labels=["G", "L", "X", "G", "W"],
+        compression=compression,
+        is_band_const_interval=is_band_const_interval,
+    )
 
 
-def _test_band_structure_write_hdf5(ph_nacl: Phonopy, labels: list[str]):
+def _test_band_structure_write_hdf5(
+    ph_nacl: Phonopy,
+    labels: list[str],
+    compression: Literal["gzip", "lzf"] | int | None = None,
+    is_band_const_interval: bool = False,
+    is_eigenvectors: bool = False,
+):
+    """Test band structure calculation by NaCl."""
+    if is_band_const_interval:
+        qpoints = _get_band_qpoints(np.linalg.inv(ph_nacl.primitive.cell))
+    else:
+        qpoints = _get_band_qpoints()
     ph_nacl.run_band_structure(
-        _get_band_qpoints(),
+        qpoints,
         path_connections=[False, True, False],
         with_group_velocities=False,
         is_band_connection=False,
         is_legacy_plot=False,
         labels=labels,
     )
+    assert ph_nacl.band_structure is not None
 
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = pathlib.Path.cwd()
         os.chdir(temp_dir)
+        ph_nacl.band_structure.write_hdf5(compression=compression)
 
-        ph_nacl.band_structure.write_hdf5()
         for created_filename in ["band.hdf5"]:
             file_path = pathlib.Path(created_filename)
             assert file_path.exists()
             pairs_ref = [labels[i] for i in (0, 1, 2, 3, 3, 4)]
 
+            if created_filename == "band.hdf5":
+                hdf5_keys = [
+                    "coordinates",
+                    "distance",
+                    "frequency",
+                    "label",
+                    "lattice",
+                    "masses",
+                    "natom",
+                    "nqpoint",
+                    "numbers",
+                    "path",
+                    "reciprocal_lattice",
+                    "segment_nqpoint",
+                    "symbols",
+                ]
+                if is_eigenvectors:
+                    hdf5_keys.append("eigenvector")
+
             with h5py.File(file_path) as f:
+                assert set(f.keys()) == set(hdf5_keys)
+
                 pairs = []
-                for pair in f["label"][:]:
+                for pair in f["label"][:]:  # type: ignore
                     pairs += [pair[0].decode(), pair[1].decode()]
                 assert pairs == pairs_ref
-                print(pairs)
+
+                freqs = f["frequency"]
+                if compression in ("gzip", "lzf"):
+                    assert freqs.compression == compression  # type: ignore
+                elif isinstance(compression, int):
+                    assert freqs.compression == "gzip"  # type: ignore
+                    assert freqs.compression_opts == compression  # type: ignore
+                else:
+                    assert freqs.compression is None  # type: ignore
+
             file_path.unlink()
 
         _check_no_files()
@@ -97,12 +162,12 @@ def _test_band_structure_write_hdf5(ph_nacl: Phonopy, labels: list[str]):
         os.chdir(original_cwd)
 
 
-def _get_band_qpoints():
+def _get_band_qpoints(reclat: NDArray | None = None):
     band_paths = [
         [[0, 0, 0], [0.5, 0.5, 0.5]],
         [[0.5, 0.5, 0], [0, 0, 0], [0.5, 0.25, 0.75]],
     ]
-    qpoints = get_band_qpoints(band_paths, npoints=11)
+    qpoints = get_band_qpoints(band_paths, npoints=11, rec_lattice=reclat)
     return qpoints
 
 
