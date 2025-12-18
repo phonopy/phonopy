@@ -419,7 +419,7 @@ class DynmatToForceConstants:
 
         """
         dm = []
-        for eigvals, eigvecs in zip(eigenvalues, eigenvectors):
+        for eigvals, eigvecs in zip(eigenvalues, eigenvectors, strict=True):
             dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
         self.dynamical_matrices = dm
 

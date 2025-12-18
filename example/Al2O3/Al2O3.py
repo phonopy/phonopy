@@ -40,8 +40,10 @@ frequencies = bs["frequencies"]
 qpoints = bs["qpoints"]
 
 for qs_at_segments, dists_at_segments, freqs_at_segments in zip(
-    qpoints, distances, frequencies
+    qpoints, distances, frequencies, strict=True
 ):
-    for q, d, f in zip(qs_at_segments, dists_at_segments, freqs_at_segments):
+    for q, d, f in zip(
+        qs_at_segments, dists_at_segments, freqs_at_segments, strict=True
+    ):
         print("# %f %f %f" % tuple(q))
         print(("%s " + "%f " * len(f)) % ((d,) + tuple(f)))

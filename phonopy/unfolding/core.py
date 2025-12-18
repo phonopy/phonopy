@@ -342,7 +342,9 @@ class Unfolding:
         e = np.zeros((len(self._atom_mapping) * 3, eigvecs.shape[1]), dtype=dtype)
         phases = np.exp(2j * np.pi * np.dot(self._trans_p, G))
 
-        for phase, indices in zip(phases, self._atom_mapping[self._index_map_inv]):
+        for phase, indices in zip(
+            phases, self._atom_mapping[self._index_map_inv], strict=True
+        ):
             eig_indices = (np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
             e += eigvecs[eig_indices, :] * phase
         e /= self._N

@@ -451,7 +451,7 @@ def write_total_dos(
         if comment is not None:
             fp.write("# %s\n" % comment)
 
-        for freq, dos in zip(frequency_points, total_dos):
+        for freq, dos in zip(frequency_points, total_dos, strict=True):
             fp.write("%20.10f%20.10f\n" % (freq, dos))
 
 
@@ -466,7 +466,7 @@ def write_projected_dos(
         if comment is not None:
             fp.write("# %s\n" % comment)
 
-        for freq, pdos in zip(frequency_points, projected_dos.T):
+        for freq, pdos in zip(frequency_points, projected_dos.T, strict=True):
             fp.write("%20.10f" % freq)
             fp.write(("%20.10f" * len(pdos)) % tuple(pdos))
             fp.write("\n")
@@ -620,12 +620,12 @@ def get_dos_frequency_range(freqs, dos):
     i_min = 0
     i_max = 1000
 
-    for i, (_, d) in enumerate(zip(freqs, dos)):
+    for i, (_, d) in enumerate(zip(freqs, dos, strict=True)):
         if d > 1e-5:
             i_min = i
             break
 
-    for i, (_, d) in enumerate(zip(freqs[::-1], dos[::-1])):
+    for i, (_, d) in enumerate(zip(freqs[::-1], dos[::-1], strict=True)):
         if d > 1e-5:
             i_max = len(freqs) - 1 - i
             break

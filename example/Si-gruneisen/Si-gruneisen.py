@@ -34,7 +34,7 @@ gruneisen = PhonopyGruneisen(phonons["orig"], phonons["plus"], phonons["minus"])
 
 gruneisen.set_mesh([2, 2, 2])
 q_points, _, frequencies, _, gammas = gruneisen.get_mesh()
-for q, freq, g in zip(q_points, frequencies, gammas):
+for q, freq, g in zip(q_points, frequencies, gammas, strict=True):
     print(
         ("%5.2f %5.2f %5.2f " + (" %7.3f" * len(freq)))
         % ((q[0], q[1], q[2]) + tuple(freq))
@@ -47,8 +47,10 @@ _append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 gruneisen.set_band_structure(bands)
 
 q_points, distances, frequencies, _, gammas = gruneisen.get_band_structure()
-for q_path, d_path, freq_path, g_path in zip(q_points, distances, frequencies, gammas):
-    for q, d, freq, g in zip(q_path, d_path, freq_path, g_path):
+for q_path, d_path, freq_path, g_path in zip(
+    q_points, distances, frequencies, gammas, strict=True
+):
+    for q, d, freq, g in zip(q_path, d_path, freq_path, g_path, strict=True):
         print(
             ("%10.5f  %5.2f %5.2f %5.2f " + (" %7.3f" * len(freq)))
             % ((d, q[0], q[1], q[2]) + tuple(freq))

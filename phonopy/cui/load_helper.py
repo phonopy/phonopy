@@ -44,7 +44,7 @@ from collections.abc import Sequence
 from typing import Literal
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from phonopy import Phonopy
 from phonopy.exception import (
@@ -77,7 +77,7 @@ from phonopy.structure.dataset import forces_in_dataset
 
 
 def get_cell_settings(
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    supercell_matrix: Sequence[int] | Sequence[Sequence[int]] | NDArray | None = None,
     primitive_matrix: Sequence[Sequence[float]]
     | Literal["P", "F", "I", "A", "C", "R", "auto"]
     | NDArray
@@ -90,8 +90,8 @@ def get_cell_settings(
     symprec: float = 1e-5,
     log_level: int = 0,
 ) -> tuple[
-    PhonopyAtoms,
-    Sequence[Sequence[int]] | NDArray | None,
+    PhonopyAtoms | None,
+    Sequence[int] | Sequence[Sequence[int]] | NDArray | None,
     Literal["auto"] | NDArray | None,
 ]:
     """Return crystal structures."""
@@ -205,7 +205,7 @@ def get_nac_params(
 
 def read_force_constants_from_hdf5(
     filename: str | os.PathLike = "force_constants.hdf5",
-    p2s_map: ArrayLike | None = None,
+    p2s_map: NDArray | None = None,
     calculator: str | None = None,
 ) -> NDArray:
     """Convert force constants physical unit.
@@ -524,7 +524,9 @@ def _read_force_constants_file(phonon: Phonopy, force_constants_filename) -> NDA
     return _fc
 
 
-def _read_crystal_structure(filename=None, interface_mode=None):
+def _read_crystal_structure(
+    filename: str | os.PathLike | None = None, interface_mode: str | None = None
+) -> tuple[PhonopyAtoms | None, tuple]:
     try:
         return read_crystal_structure(filename=filename, interface_mode=interface_mode)
     except FileNotFoundError:

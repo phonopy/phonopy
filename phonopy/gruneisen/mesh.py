@@ -146,19 +146,19 @@ class GruneisenMesh(GruneisenBase):
         text.append("mesh: [ %5d, %5d, %5d ]" % tuple(self._mesh))
         text.append("nqpoint: %d" % len(self._qpoints))
         text.append("reciprocal_lattice:")
-        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*")):
+        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*"), strict=True):
             text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" % (tuple(vec) + (axis,)))
         text.append("natom:   %-7d" % natom)
         text.append(str(self._cell))
         text.append("")
         text.append("phonon:")
         for q, m, gs, freqs in zip(
-            self._qpoints, self._weights, self._gamma, self._frequencies
+            self._qpoints, self._weights, self._gamma, self._frequencies, strict=True
         ):
             text.append("- q-position: [ %10.7f, %10.7f, %10.7f ]" % tuple(q))
             text.append("  multiplicity: %d" % m)
             text.append("  band:")
-            for j, (g, freq) in enumerate(zip(gs, freqs)):
+            for j, (g, freq) in enumerate(zip(gs, freqs, strict=True)):
                 text.append("  - # %d" % (j + 1))
                 text.append("    gruneisen: %15.10f" % g)
                 text.append("    frequency: %15.10f" % freq)
@@ -193,7 +193,9 @@ class GruneisenMesh(GruneisenBase):
     ):
         """Return pyplot of calculation results."""
         n = len(self._gamma.T) - 1
-        for i, (g, freqs) in enumerate(zip(self._gamma.T, self._frequencies.T)):
+        for i, (g, freqs) in enumerate(
+            zip(self._gamma.T, self._frequencies.T, strict=True)
+        ):
             if cutoff_frequency:
                 g = np.extract(freqs > cutoff_frequency, g)
                 freqs = np.extract(freqs > cutoff_frequency, freqs)

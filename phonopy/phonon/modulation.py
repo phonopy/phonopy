@@ -230,7 +230,7 @@ class Modulation:
         inv_lattice = np.linalg.inv(self._supercell.cell.T)
 
         w.write("modulations:\n")
-        for u, mode in zip(self._u, self._phonon_modes):
+        for u, mode in zip(self._u, self._phonon_modes, strict=True):
             q = mode[0]
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
             w.write("  band: %d\n" % (mode[1] + 1))
@@ -264,7 +264,9 @@ class Modulation:
 
         w.write("phonon:\n")
         freqs = self._eigvals_to_frequencies(self._eigvals)
-        for eigvec, freq, mode in zip(self._eigvecs, freqs, self._phonon_modes):
+        for eigvec, freq, mode in zip(
+            self._eigvecs, freqs, self._phonon_modes, strict=True
+        ):
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(mode[0]))
             w.write("  band: %d\n" % (mode[1] + 1))
             w.write("  amplitude: %f\n" % mode[2])
@@ -286,11 +288,11 @@ class Modulation:
         masses = cell.masses
         symbols = cell.symbols
         w.write("  atom_info:\n")
-        for m, s in zip(masses, symbols):
+        for m, s in zip(masses, symbols, strict=True):
             w.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
 
         w.write("  reciprocal_lattice:\n")
-        for vec, axis in zip(np.linalg.inv(lattice), ("a*", "b*", "c*")):
+        for vec, axis in zip(np.linalg.inv(lattice), ("a*", "b*", "c*"), strict=True):
             w.write("  - [ %12.8f, %12.8f, %12.8f ] # %2s\n" % (tuple(vec) + (axis,)))
         w.write("  real_lattice:\n")
         w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))

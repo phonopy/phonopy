@@ -119,8 +119,10 @@ def _get_FORCE_SETS_lines_type1(dataset: dict, forces: NDArray | None = None) ->
 
 def _get_FORCE_SETS_lines_type2(dataset: dict) -> list:
     lines = []
-    for displacements, forces in zip(dataset["displacements"], dataset["forces"]):
-        for d, f in zip(displacements, forces):
+    for displacements, forces in zip(
+        dataset["displacements"], dataset["forces"], strict=True
+    ):
+        for d, f in zip(displacements, forces, strict=True):
             lines.append(("%15.8f" * 6) % (tuple(d) + tuple(f)))
 
     return lines
@@ -940,7 +942,7 @@ def read_thermal_properties_yaml(
             ]
             msg.append("Check your input files")
             msg.append("Disagreement of temperature range or step")
-            for t, fname in zip(temp, filenames):
+            for t, fname in zip(temp, filenames, strict=True):
                 msg.append(
                     "%s: Range [ %d, %d ], Step %f"
                     % (fname, int(t[0]), int(t[-1]), t[1] - t[0])

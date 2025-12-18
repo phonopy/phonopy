@@ -184,10 +184,10 @@ def create_FORCE_SETS(
 
         if dataset_type == 1:
             dataset = copy.deepcopy(disp_dataset)
-            for forces, disp in zip(force_sets, dataset["first_atoms"]):
+            for forces, disp in zip(force_sets, dataset["first_atoms"], strict=True):
                 disp["forces"] = forces
             if energies is not None:
-                for energy, disp in zip(energies, dataset["first_atoms"]):
+                for energy, disp in zip(energies, dataset["first_atoms"], strict=True):
                     disp["supercell_energy"] = energy
         elif dataset_type == 2:
             dataset = {
@@ -250,7 +250,9 @@ def check_agreements_of_displacements(
     displacements = get_displacements_and_forces(dataset)[0] @ np.linalg.inv(
         supercell.cell
     )
-    for disp, points, filename in zip(displacements, all_points, force_filenames):
+    for disp, points, filename in zip(
+        displacements, all_points, force_filenames, strict=True
+    ):
         diff = supercell.scaled_positions + disp - points
         diff -= np.rint(diff)
         if (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any():

@@ -310,7 +310,7 @@ def get_random_displacements_dataset(
         )
         dists = rng.random(num_supercells) * max_distance
         dists[dists < distance] = distance
-        for i, (dirs, dist) in enumerate(zip(directions, dists)):
+        for i, (dirs, dist) in enumerate(zip(directions, dists, strict=True)):
             supercell_disps[i] = dirs * dist
 
     if is_plusminus is True:

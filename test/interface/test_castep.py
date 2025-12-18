@@ -19,5 +19,5 @@ def test_read_castep():
     diff_pos = cell.scaled_positions - cell_ref.scaled_positions
     diff_pos -= np.rint(diff_pos)
     assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols):
+    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
         assert s == s_r

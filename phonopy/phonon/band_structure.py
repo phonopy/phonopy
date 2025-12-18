@@ -113,7 +113,7 @@ class BandPlot:
         count = 0
         distances_scaled = [d * self.xscale for d in distances]
         for i, (d, f, c) in enumerate(
-            zip(distances_scaled, frequencies, path_connections)
+            zip(distances_scaled, frequencies, path_connections, strict=True)
         ):
             ax = self._axs[count]
             if i == 0 and label is not None:
@@ -158,7 +158,9 @@ class BandPlot:
             if not c:
                 lefts.append(i + 1)
                 rights.append(i)
-        seg_indices = [list(range(lft, rgt + 1)) for lft, rgt in zip(lefts, rights)]
+        seg_indices = [
+            list(range(lft, rgt + 1)) for lft, rgt in zip(lefts, rights, strict=True)
+        ]
         special_points = []
         for indices in seg_indices:
             pts = [distances_scaled[i][0] for i in indices]
@@ -167,7 +169,7 @@ class BandPlot:
 
         self._axs[0].set_ylabel("Frequency")
         l_count = 0
-        for ax, spts in zip(self._axs, special_points):
+        for ax, spts in zip(self._axs, special_points, strict=True):
             ax.xaxis.set_ticks_position("both")
             ax.yaxis.set_ticks_position("both")
             ax.xaxis.set_tick_params(which="both", direction="in")
@@ -583,7 +585,7 @@ class BandStructure:
                     else:
                         i += 2
         text.append("reciprocal_lattice:")
-        for vec, axis in zip(self._rec_lattice.T, ("a*", "b*", "c*")):
+        for vec, axis in zip(self._rec_lattice.T, ("a*", "b*", "c*"), strict=True):
             text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" % (tuple(vec) + (axis,)))
         text.append("natom: %-7d" % (natom))
         text.append(str(self._cell))
@@ -924,7 +926,7 @@ def _plot_legacy(
     ax.xaxis.set_tick_params(which="both", direction="in")
     ax.yaxis.set_tick_params(which="both", direction="in")
 
-    for distances, frequencies in zip(all_distances, all_frequencies):
+    for distances, frequencies in zip(all_distances, all_frequencies, strict=True):
         for freqs in frequencies.T:
             if is_band_connection:
                 ax.plot(distances, freqs, "-")

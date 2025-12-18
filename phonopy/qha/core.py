@@ -154,7 +154,7 @@ class BulkModulus:
             ax.plot(volume_points, self._eos(volume_points, *parameters), "r-")
             ax.plot(vols, self._energies, "bo", markersize=4)
         elif self._energies.ndim == 2:
-            for i, (e_t, b_t, bp_t, ev_t) in enumerate(zip(*parameters)):
+            for i, (e_t, b_t, bp_t, ev_t) in enumerate(zip(*parameters, strict=True)):
                 if i % thin_number == 0:
                     ep = (e_t, b_t, bp_t, ev_t)
                     ax.plot(volume_points, self._eos(volume_points, *ep), "-")
@@ -334,7 +334,10 @@ class QHA:
                 el_energy = self._electronic_energies
             else:
                 el_energy = self._electronic_energies[i]
-            fe = [ph_e + el_e for ph_e, el_e in zip(self._fe_phonon[i], el_energy)]
+            fe = [
+                ph_e + el_e
+                for ph_e, el_e in zip(self._fe_phonon[i], el_energy, strict=True)
+            ]
 
             try:
                 ep = fit_to_eos(self._volumes, fe, self._eos)
@@ -461,7 +464,12 @@ class QHA:
         """Write Helmholtz free energy vs volume in file."""
         w = open(filename, "w")
         for i, (t, ep, fe) in enumerate(
-            zip(self._temperatures, self._equiv_parameters, self._free_energies)
+            zip(
+                self._temperatures,
+                self._equiv_parameters,
+                self._free_energies,
+                strict=True,
+            )
         ):
             if i == self._len:
                 break
@@ -523,20 +531,20 @@ class QHA:
 
         with open(filename, "w") as w:
             w.write("# Volume points\n")
-            for j, k in zip(self._volumes, data_vol_points):
+            for j, k in zip(self._volumes, data_vol_points, strict=True):
                 w.write("%10.5f " % j)
                 for ll in k:
                     w.write("%10.5f" % ll)
                 w.write("\n")
             w.write("\n# Fitted data\n")
 
-            for m, n in zip(volume_points, data_eos):
+            for m, n in zip(volume_points, data_eos, strict=True):
                 w.write("%10.5f " % m)
                 for ll in n:
                     w.write("%10.5f" % ll)
                 w.write("\n")
             w.write("\n# Minimas\n")
-            for a, b in zip(selected_volumes, data_min):
+            for a, b in zip(selected_volumes, data_min, strict=True):
                 w.write("%10.5f %10.5f %s" % (a, b, "\n"))
             w.write("\n")
 
@@ -806,7 +814,9 @@ class QHA:
                 "# %20.15f %20.15f %20.15f %20.15f %20.15f\n"
                 % tuple(self._volume_cv_parameters[i - 1])
             )
-            for ve, vcv in zip(self._volume_entropy[i - 1], self._volume_cv[i - 1]):
+            for ve, vcv in zip(
+                self._volume_entropy[i - 1], self._volume_cv[i - 1], strict=True
+            ):
                 wve.write("%20.15f %20.15f\n" % tuple(ve))
                 wvcv.write("%20.15f %20.15f\n" % tuple(vcv))
             wve.write("\n\n")

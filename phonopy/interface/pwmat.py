@@ -135,7 +135,7 @@ def get_pwmat_structure(cell):
     for row in lattice:
         line.append(" ".join(f" {val:.16f}" for val in row))
     line.append("Position, move_x, move_y, move_z")
-    for number, position in zip(numbers, positions):
+    for number, position in zip(numbers, positions, strict=True):
         line.append(
             f" {number}  "
             + "   ".join(f"{val:.16f}" for val in position)
@@ -144,12 +144,12 @@ def get_pwmat_structure(cell):
     if mag_mom is not None and len(mag_mom) == len(cell.numbers):
         if np.size(mag_mom[0]) == 1:
             line.append("magnetic")
-            for number, mag in zip(numbers, mag_mom):
+            for number, mag in zip(numbers, mag_mom, strict=True):
                 line.append(f" {number}  {mag:.16f}")
 
         if np.size(mag_mom[0]) == 3:
             line.append("magnetic_xyz")
-            for number, mag in zip(numbers, mag_mom):
+            for number, mag in zip(numbers, mag_mom, strict=True):
                 line.append(f" {number}  {mag[0]:.6f} {mag[1]:.6f} {mag[2]:.6f}")
     return "\n".join(line)
 
@@ -166,7 +166,7 @@ def write_supercells_with_displacements(
         "%s.config" % pre_filename,
         supercell,
     )
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}.config".format(
             i, pre_filename=pre_filename, width=width
         )

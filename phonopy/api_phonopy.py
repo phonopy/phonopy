@@ -120,7 +120,7 @@ class Phonopy:
     primitive_symmetry : Symmetry
         Symmetry of primitive cell.
     supercell_matrix : ndarray
-        shape=(3, 3), dtype='intc', order='C'.
+        shape=(3,) or (3, 3), dtype='intc', order='C'.
     primitive_matrix : ndarray
         shape=(3, 3), dtype='double', order='C'.
     unit_conversion_factor : float
@@ -151,7 +151,10 @@ class Phonopy:
     def __init__(
         self,
         unitcell: PhonopyAtoms,
-        supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+        supercell_matrix: Sequence[int]
+        | Sequence[Sequence[int]]
+        | NDArray
+        | None = None,
         primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
         | Sequence[Sequence[float]]
         | NDArray
@@ -2455,7 +2458,7 @@ class Phonopy:
         assert self._thermal_properties.thermal_properties is not None
 
         keys = ("temperatures", "free_energy", "entropy", "heat_capacity")
-        return dict(zip(keys, self._thermal_properties.thermal_properties))
+        return dict(zip(keys, self._thermal_properties.thermal_properties, strict=True))
 
     def plot_thermal_properties(
         self,
@@ -3554,7 +3557,7 @@ class Phonopy:
     ):
         assert self._dataset is not None
         if "first_atoms" in self._dataset:  # type-1
-            for disp, v in zip(self._dataset["first_atoms"], values):  # type: ignore
+            for disp, v in zip(self._dataset["first_atoms"], values, strict=True):  # type: ignore
                 if target == "forces":
                     disp[target] = np.array(v, dtype="double", order="C")
                 elif target == "supercell_energies":

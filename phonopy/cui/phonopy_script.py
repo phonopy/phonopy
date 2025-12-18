@@ -890,7 +890,7 @@ def _create_random_displacements_at_finite_temperature(
             "(number of integrated modes):"
         )
         for q, integrated_modes, freqs in zip(
-            rd_comm_points, rd_integrated_modes, rd_frequencies
+            rd_comm_points, rd_integrated_modes, rd_frequencies, strict=True
         ):
             print(f"{q} ({integrated_modes.sum()})")
             if log_level > 1:
@@ -963,7 +963,7 @@ def store_nac_params(
                 print("         %12.7f %12.7f %12.7f" % tuple(v))
             print("-" * 26 + " Born effective charges " + "-" * 26)
             symbols = phonon.primitive.symbols
-            for i, (z, s) in enumerate(zip(nac_params["born"], symbols)):
+            for i, (z, s) in enumerate(zip(nac_params["born"], symbols, strict=True)):
                 for j, v in enumerate(z):
                     if j == 0:
                         text = "%5d %-2s" % (i + 1, s)
@@ -1221,7 +1221,7 @@ def _run_calculation(
                 fe = tp["free_energy"]
                 entropy = tp["entropy"]
                 heat_capacity = tp["heat_capacity"]
-                for T, F, S, CV in zip(temps, fe, entropy, heat_capacity):
+                for T, F, S, CV in zip(temps, fe, entropy, heat_capacity, strict=True):
                     print(("%12.3f " + "%15.7f" * 4) % (T, F, S, CV, F + T * S / 1000))
 
             if plot_conf["plot_graph"]:

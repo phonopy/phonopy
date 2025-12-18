@@ -17,7 +17,7 @@ phonon_mesh = phonon.get_mesh_dict()
 frequencies = phonon_mesh["frequencies"]
 group_velocity = phonon_mesh["group_velocities"]
 gv_norm = np.sqrt((group_velocity**2).sum(axis=2))
-for i, (f, g) in enumerate(zip(frequencies.T, gv_norm.T)):
+for i, (f, g) in enumerate(zip(frequencies.T, gv_norm.T, strict=True)):
     plt.plot(f, g, "o", label=("band%d" % (i + 1)))
 plt.legend()
 plt.xlabel("Frequency (THz)")

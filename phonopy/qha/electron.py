@@ -189,7 +189,9 @@ class ElectronFreeEnergy:
 
     def _get_entropy(self) -> float:
         entropy = 0.0
-        for f_k, w in zip(self._f.reshape(len(self._weights), -1), self._weights):
+        for f_k, w in zip(
+            self._f.reshape(len(self._weights), -1), self._weights, strict=True
+        ):
             _f = np.extract((f_k > 1e-12) * (f_k < 1 - 1e-12), f_k)
             entropy -= (_f * np.log(_f) + (1 - _f) * np.log(1 - _f)).sum() * w
         return float(entropy * self._g * self._T / self._weights.sum())

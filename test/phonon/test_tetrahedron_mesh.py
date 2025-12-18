@@ -60,7 +60,7 @@ def test_Amm2(langs):
 
 def _show(freq_points, dos):
     data = []
-    for f, d in zip(freq_points, dos):
+    for f, d in zip(freq_points, dos, strict=True):
         data.append([f, d])
     data = np.reshape(data, (10, 8))
     for row in data:

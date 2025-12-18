@@ -219,7 +219,7 @@ def write_supercells_with_displacements(
     write_crystal(
         pre_filename, supercell, convnum_super, template_file, write_symmetry=False
     )
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}".format(
             i, pre_filename=pre_filename, width=width
         )
@@ -266,7 +266,7 @@ def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
     # Number of atoms in the unit cell (asymmetric unit)
     lines += ("%d\n") % len(positions)
     # Conventional atomic number and cartesian coordinates of the atoms
-    for i, pos in zip(conv_numbers, positions):
+    for i, pos in zip(conv_numbers, positions, strict=True):
         lines += ("  %d " + "%16.12f" * 3 + "\n") % (i, pos[0], pos[1], pos[2])
 
     return lines
