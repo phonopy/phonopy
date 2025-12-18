@@ -133,7 +133,7 @@ class PhonopyYamlLoaderBase(ABC):
         """Return PhonopyYamlData instance."""
         return self._data
 
-    def parse(self) -> "PhonopyYamlLoaderBase":
+    def parse(self) -> PhonopyYamlLoaderBase:
         """Parse raw yaml data."""
         self._parse_command_header()
         self._parse_physical_units()
@@ -1027,7 +1027,7 @@ class PhonopyYaml:
         )
         return self
 
-    def set_phonon_info(self, phonopy: "Phonopy") -> "PhonopyYaml":
+    def set_phonon_info(self, phonopy: Phonopy) -> PhonopyYaml:
         """Collect data from Phonopy instance."""
         self._data.unitcell = phonopy.unitcell
         self._data.primitive = phonopy.primitive
