@@ -488,7 +488,9 @@ class Primitive(PhonopyAtoms):
             for i, s in enumerate(trimmed_cell.symbols):
                 msg.append(f"  {i + 1}: {s}")
             msg.append("Original cell:")
-            for i, (s1, s2) in enumerate(zip(supercell.symbols, mapped_symbols)):
+            for i, (s1, s2) in enumerate(
+                zip(supercell.symbols, mapped_symbols, strict=True)
+            ):
                 msg.append(f"  {i + 1}: {s1} -> {s2}")
             raise RuntimeError("\n".join(msg))
         super().__init__(
@@ -1344,7 +1346,7 @@ def compute_all_sg_permutations(
 
     """
     out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
-    for sym, t in zip(rotations, translations):
+    for sym, t in zip(rotations, translations, strict=True):
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(

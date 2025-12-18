@@ -215,7 +215,7 @@ def write_supercells_with_displacements(
     write_aims(pre_filename + ".supercell", supercell)
 
     # displaced cells
-    for i, cell in zip(ids, cells_with_disps):
+    for i, cell in zip(ids, cells_with_disps, strict=True):
         filename = "{pre_filename}-{0:0{width}}".format(
             i, pre_filename=pre_filename, width=width
         )

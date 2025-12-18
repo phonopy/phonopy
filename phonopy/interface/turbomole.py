@@ -128,7 +128,7 @@ def write_turbomole(filename, cell):
     symbols = cell.symbols
     positions = cell.positions
     lines = "$coord\n"
-    for atom, pos in zip(symbols, positions):
+    for atom, pos in zip(symbols, positions, strict=True):
         lines += ("%16.12f" * 3 + "   %s\n") % (pos[0], pos[1], pos[2], atom.lower())
     lines += "$end\n"
     f_coord = open(os.path.join(filename, "coord"), "w")
@@ -141,7 +141,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     write_turbomole(pre_filename, supercell)
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}".format(
             i, pre_filename=pre_filename, width=width
         )

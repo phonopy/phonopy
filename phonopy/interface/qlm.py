@@ -72,7 +72,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     qlm_ctx.write_site(supercell, prefix="supercell")
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         qlm_ctx.write_site(cell, prefix="supercell", idx=i, width=width)
 
 
@@ -196,7 +196,7 @@ class QlmFl:
         symbs = cell.symbols
         if len(self._sp2sq) > 0:
             symbs = list(self._sp2sq[symb] for symb in cell.symbols)
-        for symb, crd in zip(symbs, poss):
+        for symb, crd in zip(symbs, poss, strict=True):
             lines.append(
                 " %7s %17.12f %17.12f %17.12f" % (symb.ljust(7), crd[0], crd[1], crd[2])
             )

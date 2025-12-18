@@ -192,7 +192,7 @@ def _test_compute_permutation(ph: Phonopy):
     rots = symmetry.symmetry_operations["rotations"]
     trans = symmetry.symmetry_operations["translations"]
     perms = compute_all_sg_permutations(ppos, rots, trans, plat, symprec)
-    for i, (r, t) in enumerate(zip(rots, trans)):
+    for i, (r, t) in enumerate(zip(rots, trans, strict=True)):
         ppos_rot = np.dot(ppos, r.T) + t
         perm = compute_permutation_for_rotation(ppos, ppos_rot, plat, symprec)
         np.testing.assert_array_equal(perms[i], perm)

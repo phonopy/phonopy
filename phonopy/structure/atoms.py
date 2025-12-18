@@ -525,7 +525,7 @@ class PhonopyAtoms:
     def get_yaml_lines(self) -> list[str]:
         """Return list of text lines of crystal structure in yaml."""
         lines = ["lattice:"]
-        for pos, a in zip(self._cell, ("a", "b", "c")):
+        for pos, a in zip(self._cell, ("a", "b", "c"), strict=True):
             lines.append(
                 "- [ %21.15f, %21.15f, %21.15f ] # %s" % (pos[0], pos[1], pos[2], a)
             )
@@ -541,6 +541,7 @@ class PhonopyAtoms:
                 self.scaled_positions,
                 self.masses,
                 magmoms,
+                strict=True,
             )
         ):
             formal_s = atom_data[number][1]

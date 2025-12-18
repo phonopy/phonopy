@@ -145,7 +145,7 @@ def plot_mesh(x, y, is_fg, cutoff_frequency=None):
     """Plot mesh data."""
     import matplotlib.pyplot as plt
 
-    for g, freqs in zip(np.transpose(y), np.transpose(x)):
+    for g, freqs in zip(np.transpose(y), np.transpose(x), strict=True):
         if cutoff_frequency:
             g = np.extract(freqs > cutoff_frequency, g)
             freqs = np.extract(freqs > cutoff_frequency, freqs)

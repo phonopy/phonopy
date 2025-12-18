@@ -74,8 +74,8 @@ q_points = band_dict["qpoints"]
 distances = band_dict["distances"]
 frequencies = band_dict["frequencies"]
 eigvecs = band_dict["eigenvectors"]
-for q_path, d_path, freq_path in zip(q_points, distances, frequencies):
-    for q, d, freq in zip(q_path, d_path, freq_path):
+for q_path, d_path, freq_path in zip(q_points, distances, frequencies, strict=True):
+    for q, d, freq in zip(q_path, d_path, freq_path, strict=True):
         print(
             ("%10.5f  %5.2f %5.2f %5.2f " + (" %7.3f" * len(freq)))
             % ((d, q[0], q[1], q[2]) + tuple(freq))
@@ -90,7 +90,7 @@ phonon.run_thermal_properties(t_step=10, t_max=1000, t_min=0)
 # DOS
 phonon.run_total_dos(sigma=0.1)
 dos_dict = phonon.get_total_dos_dict()
-for omega, dos in zip(dos_dict["frequency_points"], dos_dict["total_dos"]):
+for omega, dos in zip(dos_dict["frequency_points"], dos_dict["total_dos"], strict=True):
     print("%15.7f%15.7f" % (omega, dos))
 phonon.plot_total_dos().show()
 
@@ -102,6 +102,7 @@ for t, free_energy, entropy, cv in zip(
     tprop_dict["free_energy"],
     tprop_dict["entropy"],
     tprop_dict["heat_capacity"],
+    strict=True,
 ):
     print(("%12.3f " + "%15.7f" * 3) % (t, free_energy, entropy, cv))
 phonon.plot_thermal_properties().show()

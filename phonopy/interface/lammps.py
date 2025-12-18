@@ -56,7 +56,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     write_lammps(pre_filename, supercell)
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = f"{pre_filename}-{i:0{width}d}"
         write_lammps(filename, cell)
 
@@ -169,7 +169,9 @@ class LammpsStructureDumper:
         lines.append("")
         lines.append("Atoms")
         lines.append("")
-        for i, (position, number) in enumerate(zip(cell.positions, cell.numbers)):
+        for i, (position, number) in enumerate(
+            zip(cell.positions, cell.numbers, strict=True)
+        ):
             pos_str = f"{position[0]} {position[1]} {position[2]}"
             lines.append(f"{i + 1} {usyms[num_map[number]]} {pos_str}")
         self._lines = lines

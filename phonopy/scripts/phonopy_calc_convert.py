@@ -108,7 +108,7 @@ def parse_qe(opts):
         raise ArgumentTypeError("Equal number of symbols and pp files expected.")
     keys = opts.additional_info[0::2]
     values = opts.additional_info[1::2]
-    pp_files = dict(zip(keys, values))
+    pp_files = dict(zip(keys, values, strict=True))
     return (opts.filename_out, pp_files)
 
 

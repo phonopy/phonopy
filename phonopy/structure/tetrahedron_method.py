@@ -285,7 +285,10 @@ class TetrahedronMethod:
         sum_value = 0.0
         self._omega = omega
         for omegas, indices, ci in zip(
-            self._tetrahedra_omegas, self._sort_indices, self._central_indices
+            self._tetrahedra_omegas,
+            self._sort_indices,
+            self._central_indices,
+            strict=True,
         ):
             self._vertices_omegas = omegas[indices]
             # i_where = np.where(omega < self._vertices_omegas)[0]

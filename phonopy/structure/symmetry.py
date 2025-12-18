@@ -33,19 +33,16 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
 from __future__ import annotations
 
 import warnings
-
-from numpy.typing import ArrayLike, NDArray
-
-try:
-    from spglib import SpglibDataset
-except ImportError:
-    from types import SimpleNamespace as SpglibDataset
+from collections.abc import Sequence
 
 import numpy as np
 import spglib
+from numpy.typing import ArrayLike, NDArray
+from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -53,7 +50,7 @@ from phonopy.structure.cells import (
     get_primitive,
     get_supercell,
 )
-from phonopy.utils import get_dot_access_dataset, similarity_transformation
+from phonopy.utils import similarity_transformation
 
 
 class Symmetry:
@@ -85,7 +82,7 @@ class Symmetry:
 
         self._symmetry_operations: dict
         self._international_table = None
-        self._dataset = None
+        self._dataset: SpglibDataset | SpglibMagneticDataset
         self._wyckoff_letters = None
         self._map_atoms: NDArray
         self._atomic_permutations: NDArray
@@ -93,7 +90,7 @@ class Symmetry:
         self._reciprocal_operations: NDArray
         self._pointgroup = None
         self._independent_atoms: NDArray
-        self._map_operations = None
+        self._map_operations: NDArray
 
         magmom = cell.magnetic_moments
 
@@ -107,7 +104,9 @@ class Symmetry:
             self._pointgroup_operations,
             self._reciprocal_operations,
         ) = get_pointgroup_operations(self._symmetry_operations["rotations"])
-        ptg_symbol = spglib.get_pointgroup(self._pointgroup_operations)[0]
+        _ptg = spglib.get_pointgroup(self._pointgroup_operations)
+        assert _ptg is not None
+        ptg_symbol = _ptg[0]
         self._pointgroup = ptg_symbol.strip()
         self._set_atomic_permutations()
         self._set_independent_atoms()
@@ -186,7 +185,7 @@ class Symmetry:
         return self._wyckoff_letters
 
     @property
-    def dataset(self) -> SpglibDataset:
+    def dataset(self) -> SpglibDataset | SpglibMagneticDataset:
         """Return spglib dataset.
 
         This is raw data of symmetry.
@@ -322,7 +321,7 @@ class Symmetry:
         pos = positions[atom_number]
         site_symmetries = []
 
-        for r, t in zip(rotations, translations):
+        for r, t in zip(rotations, translations, strict=True):
             rot_pos = np.dot(pos, r.T) + t
             diff = pos - rot_pos
             diff -= np.rint(diff)
@@ -333,9 +332,9 @@ class Symmetry:
         return np.array(site_symmetries, dtype="intc")
 
     def _set_symmetry_dataset(self):
-        self._dataset = get_dot_access_dataset(
-            spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
-        )
+        _dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
+        assert _dataset is not None
+        self._dataset = _dataset
 
         self._symmetry_operations = {
             "rotations": self._dataset.rotations,
@@ -350,11 +349,12 @@ class Symmetry:
         self._map_atoms = self._dataset.equivalent_atoms
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._dataset = get_dot_access_dataset(
-            spglib.get_magnetic_symmetry_dataset(
-                self._cell.totuple(), symprec=self._symprec
-            )
+        _dataset = spglib.get_magnetic_symmetry_dataset(
+            self._cell.totuple(), symprec=self._symprec
         )
+        assert _dataset is not None
+        self._dataset = _dataset
+
         self._symmetry_operations = {
             "rotations": self._dataset.rotations,
             "translations": self._dataset.translations,
@@ -383,7 +383,9 @@ class Symmetry:
         map_operations = np.zeros(len(pos), dtype="intc")
 
         for i, eq_atom in enumerate(self._map_atoms):
-            for j, (r, t) in enumerate(zip(ops["rotations"], ops["translations"])):
+            for j, (r, t) in enumerate(
+                zip(ops["rotations"], ops["translations"], strict=True)
+            ):
                 diff = np.dot(pos[i], r.T) + t - pos[eq_atom]
                 diff -= np.rint(diff)
                 dist = np.linalg.norm(np.dot(diff, lattice))
@@ -392,7 +394,7 @@ class Symmetry:
                     break
         self._map_operations = map_operations
 
-    def _get_map_operations_from_permutations(self):
+    def _get_map_operations_from_permutations(self) -> NDArray:
         perm = self._atomic_permutations
         map_operations = np.zeros(perm.shape[1], dtype="intc")
         for i, eq_atom in enumerate(self._map_atoms):
@@ -408,14 +410,14 @@ class Symmetry:
         if s2p_map is None:
             rotations.append(np.eye(3, dtype="intc"))
             translations.append(np.zeros(3, dtype="double"))
-            self._map_atoms = range(len(self._cell))
+            self._map_atoms = np.arange(len(self._cell), dtype="intc")
         else:
             positions = self._cell.scaled_positions
             for i, j in enumerate(s2p_map):
                 if j == 0:
                     ipos0 = i
                     break
-            for i, p in zip(s2p_map, positions):
+            for i, p in zip(s2p_map, positions, strict=True):
                 if i == 0:
                     trans = p - positions[ipos0]
                     trans -= np.floor(trans)
@@ -574,8 +576,8 @@ def elaborate_borns_and_epsilon(
 
 
 def symmetrize_borns_and_epsilon(
-    borns: ArrayLike,
-    epsilon: ArrayLike,
+    borns: Sequence | NDArray,
+    epsilon: Sequence | NDArray,
     ucell: PhonopyAtoms,
     primitive_matrix: ArrayLike | None = None,
     primitive: PhonopyAtoms | None = None,
@@ -666,7 +668,7 @@ def symmetrize_borns_and_epsilon(
 
 
 def _take_average_of_borns(
-    borns: NDArray,
+    borns: Sequence | NDArray,
     rotations: NDArray,
     translations: NDArray,
     cell: PhonopyAtoms,
@@ -676,7 +678,7 @@ def _take_average_of_borns(
     positions = cell.scaled_positions
     borns_ = np.zeros_like(borns)
     for i in range(len(borns)):
-        for r, t in zip(rotations, translations):
+        for r, t in zip(rotations, translations, strict=True):
             diff = np.dot(positions, r.T) + t - positions[i]
             diff -= np.rint(diff)
             dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))

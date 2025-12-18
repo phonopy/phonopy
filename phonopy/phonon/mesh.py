@@ -319,14 +319,14 @@ class Mesh(MeshBase):
         lines.append("mesh: [ %5d, %5d, %5d ]" % tuple(self._mesh))
         lines.append("nqpoint: %-7d" % self._qpoints.shape[0])
         lines.append("reciprocal_lattice:")
-        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*")):
+        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*"), strict=True):
             lines.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" % (tuple(vec) + (axis,)))
         lines.append("natom:   %-7d" % natom)
         lines.append(str(self._cell))
         lines.append("")
         lines.append("phonon:")
 
-        for i, (q, d) in enumerate(zip(self._qpoints, distances)):
+        for i, (q, d) in enumerate(zip(self._qpoints, distances, strict=True)):
             lines.append("- q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(q))
             lines.append("  distance_from_gamma: %12.9f" % d)
             lines.append("  weight: %-5d" % self._weights[i])

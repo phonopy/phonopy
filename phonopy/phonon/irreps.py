@@ -226,7 +226,9 @@ class IrReps:
         rotations_at_q = []
         trans_at_q = []
         for r, t in zip(
-            self._symmetry_dataset.rotations, self._symmetry_dataset.translations
+            self._symmetry_dataset.rotations,
+            self._symmetry_dataset.translations,
+            strict=True,
         ):
             diff = self._qpoint @ r - self._qpoint
             if (abs(diff - np.rint(diff)) < self._symprec).all():
@@ -261,7 +263,7 @@ class IrReps:
     def _get_ground_matrix(self) -> NDArray:
         matrices = []
 
-        for r, t in zip(self._rotations_at_q, self._translations_at_q):
+        for r, t in zip(self._rotations_at_q, self._translations_at_q, strict=True):
             lat = self._primitive.cell.T
             r_cart = similarity_transformation(lat, r)
             perm_mat = self._get_modified_permutation_matrix(r, t)
@@ -323,7 +325,10 @@ class IrReps:
         chars = self._characters[idx_irrep]
         return (
             np.sum(
-                [mat * char.conj() for mat, char in zip(self._ground_matrices, chars)],
+                [
+                    mat * char.conj()
+                    for mat, char in zip(self._ground_matrices, chars, strict=True)
+                ],
                 axis=0,
             )
             * dim
@@ -336,7 +341,9 @@ class IrReps:
             np.sum(
                 [
                     mat * r[i, j].conj()
-                    for mat, r in zip(self._ground_matrices, self._irreps[idx_irrep])
+                    for mat, r in zip(
+                        self._ground_matrices, self._irreps[idx_irrep], strict=True
+                    )
                 ],
                 axis=0,
             )
@@ -399,7 +406,7 @@ class IrReps:
         print("IR representations:")
         print("")
 
-        for deg_set, irrep_Rs in zip(self._degenerate_sets, self._irreps):
+        for deg_set, irrep_Rs in zip(self._degenerate_sets, self._irreps, strict=True):
             print("%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]]))
             print("")
             for j, irrep_R in enumerate(irrep_Rs):
@@ -467,7 +474,7 @@ class IrReps:
             phase = (np.angle(self._characters[i]) / np.pi * 180) % 360
             if len(chars) > 1:
                 text += "[ [ %2d, %5.1f ]" % (chars[0], phase[0])
-                for chi, theta in zip(chars[1:], phase[1:]):
+                for chi, theta in zip(chars[1:], phase[1:], strict=True):
                     text += ", [ %2d, %5.1f ]" % (chi, theta)
                 text += " ]"
             else:
@@ -484,7 +491,7 @@ class IrReps:
         lines.append("")
         lines.append("irreps:")
         for i, (deg_set, irrep_Rs) in enumerate(
-            zip(self._degenerate_sets, self._irreps)
+            zip(self._degenerate_sets, self._irreps, strict=True)
         ):
             lines.append("- # %d" % (i + 1))
             for j, irrep_R in enumerate(irrep_Rs):
@@ -677,7 +684,7 @@ class IrRepLabels:
         char_table = character_table_of_ptg["character_table"]
         for chars in self._characters:
             chars_ordered = np.zeros(len(rot_list), dtype=complex)
-            for rs, ch in zip(self._rotation_symbols, chars):
+            for rs, ch in zip(self._rotation_symbols, chars, strict=True):
                 chars_ordered[rot_list.index(rs)] += ch
 
             for i, rl in enumerate(rot_list):

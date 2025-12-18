@@ -31,7 +31,7 @@ def test_get_map_operations(nacl_unitcell_order1):
     positions = scell.scaled_positions
     rotations = symmetry.symmetry_operations["rotations"]
     translations = symmetry.symmetry_operations["translations"]
-    for i, (op_i, atom_i) in enumerate(zip(map_ops, map_atoms)):
+    for i, (op_i, atom_i) in enumerate(zip(map_ops, map_atoms, strict=True)):
         r_pos = np.dot(rotations[op_i], positions[i]) + translations[op_i]
         diff = positions[atom_i] - r_pos
         diff -= np.rint(diff)

@@ -178,7 +178,7 @@ class QpointsPhonon:
         w.write("natom:   %-7d\n" % self._natom)
         rec_lattice = np.linalg.inv(self._lattice)  # column vectors
         w.write("reciprocal_lattice:\n")
-        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*")):
+        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*"), strict=True):
             w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" % (tuple(vec) + (axis,)))
         w.write("phonon:\n")
 

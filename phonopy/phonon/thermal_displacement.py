@@ -257,7 +257,7 @@ class ThermalDisplacements(ThermalMotion):
                 Q2 = self._get_Q2(fs[valid_indices], temps[0])
                 disps[0] += np.dot(Q2, vecs2[valid_indices])
             else:
-                for f, v2 in zip(fs[valid_indices], vecs2[valid_indices]):
+                for f, v2 in zip(fs[valid_indices], vecs2[valid_indices], strict=True):
                     disps += np.outer(self._get_Q2(f, temps), v2)
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
@@ -272,7 +272,7 @@ class ThermalDisplacements(ThermalMotion):
         lines.append("freq_min: %f" % self._fmin)
 
         lines.append("thermal_displacements:")
-        for t, u in zip(self._temperatures, self._displacements):
+        for t, u in zip(self._temperatures, self._displacements, strict=True):
             lines.append("- temperature:   %15.7f" % t)
             lines.append("  displacements:")
             for i, elems in enumerate(np.reshape(u, (natom, -1))):
@@ -404,10 +404,12 @@ class ThermalDisplacementMatrices(ThermalMotion):
             if self._fmax is not None:
                 valid_indices *= freqs < self._fmax
             for i_band, (f, vec) in enumerate(
-                zip(freqs[valid_indices], (eigvecs.T)[valid_indices])
+                zip(freqs[valid_indices], (eigvecs.T)[valid_indices], strict=True)
             ):
                 c = np.zeros((len(self._masses), 3, 3), dtype=dtype_complex, order="C")
-                for i, (v, m) in enumerate(zip(vec.reshape(-1, 3), self._masses)):
+                for i, (v, m) in enumerate(
+                    zip(vec.reshape(-1, 3), self._masses, strict=True)
+                ):
                     c[i] = np.outer(v, v.conj()) / m
 
                 # for i, t in enumerate(self._temperatures):

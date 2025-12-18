@@ -99,7 +99,9 @@ class PhononMoment:
         moment = np.zeros(self._frequencies.shape[1], dtype="double")
         norm0 = np.zeros_like(moment)
         for i, w in enumerate(self._weights):
-            for freq, eigvec in zip(self._frequencies[i], self._eigenvectors[i].T):
+            for freq, eigvec in zip(
+                self._frequencies[i], self._eigenvectors[i].T, strict=True
+            ):
                 if self._fmin < freq and freq < self._fmax:
                     projection = np.abs(eigvec) ** 2
                     norm0 += w * projection

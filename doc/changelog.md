@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Dec-*-2025: Version 2.46.0
+
+- Drop python 3.9 support
+
 ## Dec-9-2025: Version 2.45.1
 
 - Limit nanobind<2.10.0 for windows build

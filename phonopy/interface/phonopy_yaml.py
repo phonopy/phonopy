@@ -522,7 +522,7 @@ class PhonopyYamlDumperBase(ABC):
             lines += self._cell_yaml_lines(primitive, name, None)
             lines.append("  reciprocal_lattice: # without 2pi")
             rec_lat = np.linalg.inv(primitive.cell)
-            for v, a in zip(rec_lat.T, ("a*", "b*", "c*")):
+            for v, a in zip(rec_lat.T, ("a*", "b*", "c*"), strict=True):
                 lines.append(
                     "  - [ %21.15f, %21.15f, %21.15f ] # %s" % (v[0], v[1], v[2], a)
                 )

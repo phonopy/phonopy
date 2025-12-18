@@ -49,7 +49,7 @@ def test_AcO2_copy():
 
 def _test_cell(cell: PhonopyAtoms, lattice, points, symbols):
     np.testing.assert_allclose(cell.cell, lattice, atol=1e-8)
-    for s1, s2 in zip(cell.symbols, symbols):
+    for s1, s2 in zip(cell.symbols, symbols, strict=True):
         assert s1 == s2
     diff = cell.scaled_positions - points
     diff -= np.rint(diff)
@@ -109,7 +109,9 @@ def test_parse_cell_dict(helper_methods: Callable):
     """Test parse_cell_dict."""
     cell = cell_SiO2
     points = []
-    for coord, mass, symbol in zip(cell.scaled_positions, cell.masses, cell.symbols):
+    for coord, mass, symbol in zip(
+        cell.scaled_positions, cell.masses, cell.symbols, strict=True
+    ):
         points.append({"symbol": symbol, "coordinates": coord, "mass": mass})
     cell_dict = {"lattice": cell_SiO2.cell, "points": points}
     _cell = parse_cell_dict(cell_dict)
@@ -177,7 +179,7 @@ def _test_phonopy_atoms(cell: PhonopyAtoms):
         np.testing.assert_allclose(cell.cell, data["lattice"], atol=1e-8)
         positions = []
         magmoms = []
-        for atom, symbol in zip(data["points"], cell.symbols):
+        for atom, symbol in zip(data["points"], cell.symbols, strict=True):
             positions.append(atom["coordinates"])
             if "magnetic_moment" in atom:
                 magmoms.append(atom["magnetic_moment"])

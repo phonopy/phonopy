@@ -736,7 +736,7 @@ def get_harmonic_potential_energy(force_constants, displacements):
 
 def _get_rotated_forces(forces_syms, site_sym_cart):
     rot_forces = []
-    for forces, sym_cart in zip(forces_syms, site_sym_cart):
+    for forces, sym_cart in zip(forces_syms, site_sym_cart, strict=True):
         rot_forces.append(np.dot(forces, sym_cart.T))
 
     return rot_forces
