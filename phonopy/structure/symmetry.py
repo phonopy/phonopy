@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import warnings
 from collections.abc import Sequence
 
@@ -51,6 +52,14 @@ from phonopy.structure.cells import (
     get_supercell,
 )
 from phonopy.utils import similarity_transformation
+
+
+@dataclasses.dataclass(eq=False, frozen=True)
+class NosymDataset:
+    """Dataset for no symmetry case."""
+
+    rotations: NDArray[np.intc]
+    translations: NDArray[np.double]
 
 
 class Symmetry:
@@ -82,7 +91,7 @@ class Symmetry:
 
         self._symmetry_operations: dict
         self._international_table = None
-        self._dataset: SpglibDataset | SpglibMagneticDataset
+        self._dataset: SpglibDataset | SpglibMagneticDataset | NosymDataset
         self._wyckoff_letters = None
         self._map_atoms: NDArray
         self._atomic_permutations: NDArray
@@ -129,16 +138,6 @@ class Symmetry:
         """
         return self._symmetry_operations
 
-    def get_symmetry_operations(self):
-        """Return symmetry operations."""
-        warnings.warn(
-            "Symmetry.get_symmetry_operations() is deprecated."
-            "Use symmetry_operations attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.symmetry_operations
-
     def get_symmetry_operation(self, operation_number):
         """Return one symmetry operation."""
         operation = self._symmetry_operations
@@ -152,28 +151,9 @@ class Symmetry:
         """Return crystallographic point group operations."""
         return self._pointgroup_operations
 
-    def get_pointgroup_operations(self):
-        """Return crystallographic point group operations."""
-        warnings.warn(
-            "Symmetry.get_pointgroup_operations() is deprecated."
-            "Use pointgroup_operations attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.pointgroup_operations
-
     @property
     def pointgroup_symbol(self):
         """Return symbol of crystallographic point group."""
-        return self._pointgroup
-
-    def get_pointgroup(self):
-        """Return symbol of crystallographic point group."""
-        warnings.warn(
-            "Symmetry.get_pointgroup() is deprecated.Use pointgroup_symbol attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         return self._pointgroup
 
     def get_international_table(self):
@@ -185,22 +165,13 @@ class Symmetry:
         return self._wyckoff_letters
 
     @property
-    def dataset(self) -> SpglibDataset | SpglibMagneticDataset:
+    def dataset(self) -> SpglibDataset | SpglibMagneticDataset | NosymDataset:
         """Return spglib dataset.
 
         This is raw data of symmetry.
 
         """
         return self._dataset
-
-    def get_dataset(self):
-        """Return spglib dataset."""
-        warnings.warn(
-            "Symmetry.get_dataset() is deprecated.Use dataset attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.dataset
 
     def get_independent_atoms(self) -> NDArray:
         """Return symmetrically unique atoms."""
@@ -249,16 +220,6 @@ class Symmetry:
         """Return symmetry tolerance."""
         return self._symprec
 
-    def get_symmetry_tolerance(self):
-        """Return symmetry tolerance."""
-        warnings.warn(
-            "Symmetry.get_symmetry_tolerance() is deprecated."
-            "Use tolerance attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.tolerance
-
     @property
     def reciprocal_operations(self):
         """Return reciprocal space point group operations.
@@ -271,16 +232,6 @@ class Symmetry:
         """
         return self._reciprocal_operations
 
-    def get_reciprocal_operations(self):
-        """Return reciprocal space point group operations."""
-        warnings.warn(
-            "Symmetry.get_reciprocal_operations() is deprecated."
-            "Use reciprocal_operations attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.reciprocal_operations
-
     @property
     def atomic_permutations(self) -> NDArray:
         """Return atomic index permutations by space group operations.
@@ -291,16 +242,6 @@ class Symmetry:
 
         """
         return self._atomic_permutations
-
-    def get_atomic_permutations(self):
-        """Return atomic index permutations by space group operations."""
-        warnings.warn(
-            "Symmetry.get_atomic_permutations() is deprecated."
-            "Use atomic_permutations attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.atomic_permutations
 
     def _set_atomic_permutations(self):
         positions = self._cell.scaled_positions
@@ -430,6 +371,10 @@ class Symmetry:
         }
         self._international_table = "P1 (1)"
         self._wyckoff_letters = ["a"] * len(self._cell)
+        self._dataset = NosymDataset(
+            rotations=self._symmetry_operations["rotations"],
+            translations=self._symmetry_operations["translations"],
+        )
 
 
 def get_pointgroup_operations(
