@@ -392,6 +392,8 @@ def test_band_h5py(hdf5_compression: str, with_eigenvectors: bool):
                 band_paths="0 0 0 1/2 1/2 1/2",
                 band_points=11,
                 load_phonopy_yaml=True,
+                is_graph_plot=True,
+                is_graph_save=True,
                 is_hdf5=True,
                 is_eigenvectors=with_eigenvectors,
                 hdf5_compression=hdf5_compression,
@@ -401,7 +403,7 @@ def test_band_h5py(hdf5_compression: str, with_eigenvectors: bool):
             assert excinfo.value.code == 0
 
             # Clean files created by phonopy-load script.
-            for created_filename in ("phonopy.yaml", "band.hdf5"):
+            for created_filename in ("phonopy.yaml", "band.hdf5", "band.pdf"):
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists()
 
@@ -550,6 +552,8 @@ def _get_phonopy_args(
     is_check_symmetry: bool = False,
     is_displacement: bool | None = None,
     is_eigenvectors: bool | None = None,
+    is_graph_plot: bool | None = None,
+    is_graph_save: bool | None = None,
     is_hdf5: bool | None = None,
     load_phonopy_yaml: bool = False,
     magmoms: str | None = None,
@@ -578,6 +582,8 @@ def _get_phonopy_args(
         is_check_symmetry=is_check_symmetry,
         is_displacement=is_displacement,
         is_eigenvectors=is_eigenvectors,
+        is_graph_plot=is_graph_plot,
+        is_graph_save=is_graph_save,
         is_hdf5=is_hdf5,
         log_level=1,
         magmoms=magmoms,

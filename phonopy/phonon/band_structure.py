@@ -158,6 +158,7 @@ class BandPlot:
             if not c:
                 lefts.append(i + 1)
                 rights.append(i)
+        lefts.pop(-1)
         seg_indices = [
             list(range(lft, rgt + 1)) for lft, rgt in zip(lefts, rights, strict=True)
         ]
