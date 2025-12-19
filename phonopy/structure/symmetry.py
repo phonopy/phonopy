@@ -58,7 +58,8 @@ from phonopy.utils import similarity_transformation
 class NosymDataset:
     """Dataset for no symmetry case."""
 
-    pass
+    rotations: NDArray[np.intc]
+    translations: NDArray[np.double]
 
 
 class Symmetry:
@@ -164,7 +165,7 @@ class Symmetry:
         return self._wyckoff_letters
 
     @property
-    def dataset(self) -> SpglibDataset | SpglibMagneticDataset | None:
+    def dataset(self) -> SpglibDataset | SpglibMagneticDataset | NosymDataset:
         """Return spglib dataset.
 
         This is raw data of symmetry.
@@ -370,7 +371,10 @@ class Symmetry:
         }
         self._international_table = "P1 (1)"
         self._wyckoff_letters = ["a"] * len(self._cell)
-        self._dataset = NosymDataset()
+        self._dataset = NosymDataset(
+            rotations=self._symmetry_operations["rotations"],
+            translations=self._symmetry_operations["translations"],
+        )
 
 
 def get_pointgroup_operations(
