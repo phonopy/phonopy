@@ -2,17 +2,19 @@
 
 # Change Log
 
-## Dec-*-2025: Version 2.46.0
+## Dec-21-2025: Version 2.46.0
 
-- Drop python 3.9 support
+- Drop python 3.9 support.
+- HDF5 datasets compression in `mesh.hdf5`, `band.hdf5`, and `qpoints.hdf5` by
+  default.
 
 ## Dec-9-2025: Version 2.45.1
 
-- Limit nanobind<2.10.0 for windows build
+- Limit nanobind<2.10.0 for windows build.
 
 ## Dec-9-2025: Version 2.45.0
 
-- Maintenance release including avoiding nanobind 2.10.0
+- Maintenance release including avoiding nanobind 2.10.0.
 
 ## Oct-29-2025: Version 2.44.0
 
