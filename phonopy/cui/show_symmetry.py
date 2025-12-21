@@ -173,7 +173,7 @@ def _get_symmetry_yaml(cell: PhonopyAtoms, symmetry: Symmetry, phonopy_version=N
         lines.append("space_group_number: %d" % spg_number)
         lines.append("point_group_type: '%s'" % symmetry.pointgroup_symbol)
     lines.append("space_group_operations:")
-    for i, (r, t) in enumerate(zip(rotations, translations)):
+    for i, (r, t) in enumerate(zip(rotations, translations, strict=True)):
         lines.append("- rotation: # %d" % (i + 1))
         for vec in r:
             lines.append("  - [%2d, %2d ,%2d]" % tuple(vec))

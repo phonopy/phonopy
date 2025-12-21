@@ -43,6 +43,7 @@ import sys
 import typing
 from collections.abc import Sequence
 from types import ModuleType
+from typing import Literal
 
 import numpy as np
 import yaml
@@ -118,8 +119,10 @@ def _get_FORCE_SETS_lines_type1(dataset: dict, forces: NDArray | None = None) ->
 
 def _get_FORCE_SETS_lines_type2(dataset: dict) -> list:
     lines = []
-    for displacements, forces in zip(dataset["displacements"], dataset["forces"]):
-        for d, f in zip(displacements, forces):
+    for displacements, forces in zip(
+        dataset["displacements"], dataset["forces"], strict=True
+    ):
+        for d, f in zip(displacements, forces, strict=True):
             lines.append(("%15.8f" * 6) % (tuple(d) + tuple(f)))
 
     return lines
@@ -390,7 +393,7 @@ def write_force_constants_to_hdf5(
     filename: str = "force_constants.hdf5",
     p2s_map: NDArray | None = None,
     physical_unit: str | None = None,
-    compression: str | int | None = None,
+    compression: Literal["gzip", "lzf"] | int | None = None,
 ):
     """Write force constants in hdf5 format.
 
@@ -939,7 +942,7 @@ def read_thermal_properties_yaml(
             ]
             msg.append("Check your input files")
             msg.append("Disagreement of temperature range or step")
-            for t, fname in zip(temp, filenames):
+            for t, fname in zip(temp, filenames, strict=True):
                 msg.append(
                     "%s: Range [ %d, %d ], Step %f"
                     % (fname, int(t[0]), int(t[-1]), t[1] - t[0])

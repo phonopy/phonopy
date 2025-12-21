@@ -161,7 +161,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     write_pwscf("%s.in" % pre_filename, supercell, pp_filenames)
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}.in".format(
             i, pre_filename=pre_filename, width=width
         )
@@ -182,7 +182,7 @@ def get_pwscf_structure(cell, pp_filenames=None):
     chemical_symbols = cell.symbols
     unique_symbols = []
     atomic_species = []
-    for symbol, m in zip(chemical_symbols, masses):
+    for symbol, m in zip(chemical_symbols, masses, strict=True):
         if symbol not in unique_symbols:
             unique_symbols.append(symbol)
             atomic_species.append((symbol, m))
@@ -202,7 +202,11 @@ def get_pwscf_structure(cell, pp_filenames=None):
             lines += " %2s %10.5f   %s\n" % (symbol, mass, pp_filenames[symbol])
     lines += "ATOMIC_POSITIONS crystal\n"
     for i, (symbol, pos_line) in enumerate(
-        zip(chemical_symbols, get_scaled_positions_lines(positions).split("\n"))
+        zip(
+            chemical_symbols,
+            get_scaled_positions_lines(positions).split("\n"),
+            strict=True,
+        )
     ):
         lines += (" %2s " % symbol) + pos_line
         if i < len(chemical_symbols) - 1:

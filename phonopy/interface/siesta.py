@@ -109,7 +109,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     write_siesta("%s.fdf" % pre_filename, supercell)
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}.fdf".format(
             i, pre_filename=pre_filename, width=width
         )
@@ -130,7 +130,9 @@ def get_siesta_structure(cell):
     unique_nums = set(nums)
     unique_symbols = set(chemical_symbols)
     atypes = {}
-    for i, (num, symbol) in enumerate(zip(unique_nums, unique_symbols), start=1):
+    for i, (num, symbol) in enumerate(
+        zip(unique_nums, unique_symbols, strict=True), start=1
+    ):
         atypes[symbol] = i
         lines += "%4d %4d %s\n" % (i, num, symbol)
     lines += "%endblock ChemicalSpeciesLabel\n\n"
@@ -144,7 +146,7 @@ def get_siesta_structure(cell):
     lines += "LatticeConstant 1.0 Bohr\n\n"
 
     lines += "%block AtomicCoordinatesAndAtomicSpecies\n"
-    for pos, i in zip(positions, chemical_symbols):
+    for pos, i in zip(positions, chemical_symbols, strict=True):
         lines += ("%21.16lf" * 3 + " %d\n") % tuple(pos.tolist() + [atypes[i]])
     lines += "%endblock AtomicCoordinatesAndAtomicSpecies\n"
 

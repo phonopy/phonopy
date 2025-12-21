@@ -14,7 +14,6 @@ cwd = pathlib.Path(__file__).parent
 def test_MLPSSCHA(ph_kcl: Phonopy):
     """Test MLPSSCHA class."""
     pytest.importorskip("pypolymlp")
-    pytest.importorskip("symfc")
     mlp = PhonopyMLP().load(cwd / ".." / "polymlp_KCL-120.yaml")
     sscha = MLPSSCHA(
         ph_kcl,

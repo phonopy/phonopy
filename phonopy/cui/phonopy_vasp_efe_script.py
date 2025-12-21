@@ -110,7 +110,7 @@ def get_free_energy_lines(temperatures: NDArray, free_energies: NDArray) -> list
     """Return Free energy lines."""
     lines = []
     n_vol = free_energies.shape[1]
-    for t, fe in zip(temperatures, free_energies):
+    for t, fe in zip(temperatures, free_energies, strict=True):
         lines.append(("%10.4f " + " %15.8f" * n_vol) % ((t,) + tuple(fe)))
     return lines
 
@@ -149,7 +149,9 @@ def get_fe_ev_lines(
     lines_fe += get_free_energy_lines(temperatures, np.transpose(free_energies))
 
     lines_ev = ["#   cell volume        energy of cell other than phonon"]
-    lines_ev += ["%20.8f %20.8f" % (v, e) for v, e in zip(volumes, energy_sigma0)]
+    lines_ev += [
+        "%20.8f %20.8f" % (v, e) for v, e in zip(volumes, energy_sigma0, strict=True)
+    ]
 
     return lines_fe, lines_ev
 

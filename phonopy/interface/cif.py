@@ -91,7 +91,7 @@ _atom_site_occupancy\n""" % (
     )
 
     symbols = []
-    for s, p in zip(cell.symbols, cell.scaled_positions):
+    for s, p in zip(cell.symbols, cell.scaled_positions, strict=True):
         symbols.append(s)
         cif += "%-7s%2s %10.5f%10.5f%10.5f   1.00000\n" % (
             s + "%d" % symbols.count(s),

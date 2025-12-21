@@ -120,7 +120,7 @@ class Phonopy:
     primitive_symmetry : Symmetry
         Symmetry of primitive cell.
     supercell_matrix : ndarray
-        shape=(3, 3), dtype='intc', order='C'.
+        shape=(3,) or (3, 3), dtype='intc', order='C'.
     primitive_matrix : ndarray
         shape=(3, 3), dtype='double', order='C'.
     unit_conversion_factor : float
@@ -151,7 +151,10 @@ class Phonopy:
     def __init__(
         self,
         unitcell: PhonopyAtoms,
-        supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+        supercell_matrix: Sequence[int]
+        | Sequence[Sequence[int]]
+        | NDArray
+        | None = None,
         primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
         | Sequence[Sequence[float]]
         | NDArray
@@ -1547,7 +1550,12 @@ class Phonopy:
         self._band_structure.plot(axs)
         return plt
 
-    def write_hdf5_band_structure(self, comment=None, filename="band.hdf5") -> None:
+    def write_hdf5_band_structure(
+        self,
+        comment: dict | None = None,
+        filename: str | os.PathLike = "band.hdf5",
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ) -> None:
         """Write band structure in hdf5 format.
 
         Parameters
@@ -1559,7 +1567,9 @@ class Phonopy:
 
         """
         assert self._band_structure is not None
-        self._band_structure.write_hdf5(comment=comment, filename=filename)
+        self._band_structure.write_hdf5(
+            comment=comment, filename=filename, compression=compression
+        )
 
     def write_yaml_band_structure(
         self, comment=None, filename=None, compression=None
@@ -1777,12 +1787,15 @@ class Phonopy:
 
         return retdict
 
-    def write_hdf5_mesh(self) -> None:
+    def write_hdf5_mesh(
+        self,
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ) -> None:
         """Write mesh calculation results in hdf5 format."""
         if not isinstance(self._mesh, Mesh):
             msg = "Mesh is not initialized."
             raise RuntimeError(msg)
-        self._mesh.write_hdf5()
+        self._mesh.write_hdf5(compression=compression)
 
     def write_yaml_mesh(self) -> None:
         """Write mesh calculation results in yaml format."""
@@ -1957,12 +1970,15 @@ class Phonopy:
             "dynamical_matrices": self._qpoints.dynamical_matrices,
         }
 
-    def write_hdf5_qpoints_phonon(self) -> None:
+    def write_hdf5_qpoints_phonon(
+        self,
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ) -> None:
         """Write phonon properties calculated at q-points in hdf5 format."""
         if self._qpoints is None:
             msg = "Phonopy.run_qpoints() has to be done."
             raise RuntimeError(msg)
-        self._qpoints.write_hdf5()
+        self._qpoints.write_hdf5(compression=compression)
 
     def write_yaml_qpoints_phonon(self) -> None:
         """Write phonon properties calculated at q-points in yaml format."""
@@ -2442,7 +2458,7 @@ class Phonopy:
         assert self._thermal_properties.thermal_properties is not None
 
         keys = ("temperatures", "free_energy", "entropy", "heat_capacity")
-        return dict(zip(keys, self._thermal_properties.thermal_properties))
+        return dict(zip(keys, self._thermal_properties.thermal_properties, strict=True))
 
     def plot_thermal_properties(
         self,
@@ -3541,7 +3557,7 @@ class Phonopy:
     ):
         assert self._dataset is not None
         if "first_atoms" in self._dataset:  # type-1
-            for disp, v in zip(self._dataset["first_atoms"], values):  # type: ignore
+            for disp, v in zip(self._dataset["first_atoms"], values, strict=True):  # type: ignore
                 if target == "forces":
                     disp[target] = np.array(v, dtype="double", order="C")
                 elif target == "supercell_energies":

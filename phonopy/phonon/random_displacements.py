@@ -445,7 +445,7 @@ class RandomDisplacements:
         eigvals = self._eigvals_ii
         eigvecs = []
         # Transform eigenvectors of D-type to those of C-type
-        for q, eigvec in zip(qpoints, self._eigvecs_ii):
+        for q, eigvec in zip(qpoints, self._eigvecs_ii, strict=True):
             Vd = np.repeat(np.exp(-2j * np.pi * np.dot(self._ppos, q)), 3)
             eigvecs.append((Vd * eigvec.T).T)
 
@@ -527,7 +527,7 @@ class RandomDisplacements:
 
         sigmas, conditions = self._get_sigma(self._eigvals_ii, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            randn, sigmas, self._eigvecs_ii, self._phase_ii
+            randn, sigmas, self._eigvecs_ii, self._phase_ii, strict=True
         ):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3
@@ -553,7 +553,7 @@ class RandomDisplacements:
         u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
         sigmas, conditions = self._get_sigma(self._eigvals_ij, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            randn, sigmas, self._eigvecs_ij, self._phase_ij
+            randn, sigmas, self._eigvecs_ij, self._phase_ij, strict=True
         ):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3

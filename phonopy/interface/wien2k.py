@@ -64,7 +64,7 @@ def parse_set_of_forces(
     is_parsed = True
     force_sets = []
 
-    for i, (filename, disp) in enumerate(zip(forces_filenames, disps)):
+    for i, (filename, disp) in enumerate(zip(forces_filenames, disps, strict=True)):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
 
@@ -177,7 +177,7 @@ def write_supercells_with_displacements(
     npts_super = []
     r0s_super = []
     rmts_super = []
-    for i, j, k in zip(npts, r0s, rmts):
+    for i, j, k in zip(npts, r0s, rmts, strict=True):
         for _ in range(num_unitcells_in_supercell):
             npts_super.append(i)
             r0s_super.append(j)
@@ -186,7 +186,7 @@ def write_supercells_with_displacements(
     _pre_filename = pre_filename.split("/")[-1] + "S"
     write_wein2k(_pre_filename, supercell, npts_super, r0s_super, rmts_super)
 
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         symmetry = Symmetry(cell)
         filename = "{pre_filename}-{0:0{width}}.in".format(
             i, pre_filename=_pre_filename, width=width
@@ -454,7 +454,7 @@ if __name__ == "__main__":
         w = open("wien2k_core.dat", "w")
 
         w.write("# symbol       npt       r0             rmt\n")
-        for symbol, npt, r0, rmt in zip(cell.symbols, npts, r0s, rmts):
+        for symbol, npt, r0, rmt in zip(cell.symbols, npts, r0s, rmts, strict=True):
             w.write("%-10s     %5d     %10.8f     %10.5f\n" % (symbol, npt, r0, rmt))
     else:
         print("You need to set -r or -w option.")

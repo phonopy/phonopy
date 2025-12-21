@@ -314,7 +314,7 @@ def main(**argparse_control: PhonopyQHAMockArgs):
     if num_modes:
         num_imag_modes = np.array(num_modes) - np.array(num_integrated_modes)
         for filename, nim in zip(
-            args.filenames[1 : (len(volumes) + 1)], num_imag_modes
+            args.filenames[1 : (len(volumes) + 1)], num_imag_modes, strict=True
         ):
             if nim > 3:
                 if args.exclude_imaginary:

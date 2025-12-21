@@ -72,7 +72,7 @@ def read_abacus(filename):
     symbols = specie_lines[:, 0]
     ntype = len(symbols)
     try:
-        atom_potential = dict(zip(symbols, specie_lines[:, 2].tolist()))
+        atom_potential = dict(zip(symbols, specie_lines[:, 2].tolist(), strict=True))
     except IndexError:
         atom_potential = None
 
@@ -82,7 +82,7 @@ def read_abacus(filename):
     orb_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     orb_lines = orb_pattern.search(contents)
     if orb_lines:
-        atom_basis = dict(zip(symbols, orb_lines.group(1).split("\n")))
+        atom_basis = dict(zip(symbols, orb_lines.group(1).split("\n"), strict=True))
     else:
         atom_basis = None
 
@@ -92,7 +92,9 @@ def read_abacus(filename):
     abf_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     abf_lines = abf_pattern.search(contents)
     if abf_lines:
-        atom_offsite_basis = dict(zip(symbols, abf_lines.group(1).split("\n")))
+        atom_offsite_basis = dict(
+            zip(symbols, abf_lines.group(1).split("\n"), strict=True)
+        )
     else:
         atom_offsite_basis = None
 
@@ -239,7 +241,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     write_abacus("%s.in" % pre_filename, supercell, pps, orbitals, abfs)
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}".format(
             i, pre_filename=pre_filename, width=width
         )

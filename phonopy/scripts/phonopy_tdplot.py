@@ -153,7 +153,7 @@ def run():
         td = yamldata["thermal_distances"]
         temperatures = [v["temperature"] for v in td]
         distances = [v["distance"] for v in td]
-        for t, dists in zip(temperatures, distances):
+        for t, dists in zip(temperatures, distances, strict=True):
             print(("%14.7f" * (len(dists) + 1)) % ((t,) + tuple(dists)))
             print("")
         print("")

@@ -298,7 +298,7 @@ class ThermalPropertiesBase:
     def _calculate_thermal_property(self, func, t):
         if not self._is_projection:
             t_property = 0.0
-            for freqs, w in zip(self._frequencies, self._weights):
+            for freqs, w in zip(self._frequencies, self._weights, strict=True):
                 cond = freqs > self._cutoff_frequency
                 t_property += (
                     np.sum(func(t, freqs[cond], classical=self._classical)) * w
@@ -307,7 +307,10 @@ class ThermalPropertiesBase:
         else:
             t_property = np.zeros(len(self._frequencies[0]), dtype="double")
             for freqs, eigvecs2, w in zip(
-                self._frequencies, np.abs(self._eigenvectors) ** 2, self._weights
+                self._frequencies,
+                np.abs(self._eigenvectors) ** 2,
+                self._weights,
+                strict=True,
             ):
                 cond = freqs > self._cutoff_frequency
                 t_property += (
@@ -362,7 +365,7 @@ class ThermalProperties(ThermalPropertiesBase):
         if classical:
             self._zero_point_energy = 0.0
         else:
-            for freqs, w in zip(self._frequencies, self._weights):
+            for freqs, w in zip(self._frequencies, self._weights, strict=True):
                 positive_fs = np.extract(freqs > 0.0, freqs)
                 zp_energy += np.sum(positive_fs) * w / 2
             self._zero_point_energy = (

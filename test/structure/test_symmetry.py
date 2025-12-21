@@ -1,5 +1,7 @@
 """Tests for symmetry tools."""
 
+from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -7,6 +9,7 @@ from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 from phonopy.structure.symmetry import (
+    NosymDataset,
     Symmetry,
     _get_mapping_between_cells,
     collect_unique_rotations,
@@ -14,7 +17,7 @@ from phonopy.structure.symmetry import (
 )
 
 
-def test_get_map_operations(nacl_unitcell_order1):
+def test_get_map_operations(nacl_unitcell_order1: PhonopyAtoms):
     """Test get_map_operations()."""
     symprec = 1e-5
     cell = nacl_unitcell_order1
@@ -31,7 +34,7 @@ def test_get_map_operations(nacl_unitcell_order1):
     positions = scell.scaled_positions
     rotations = symmetry.symmetry_operations["rotations"]
     translations = symmetry.symmetry_operations["translations"]
-    for i, (op_i, atom_i) in enumerate(zip(map_ops, map_atoms)):
+    for i, (op_i, atom_i) in enumerate(zip(map_ops, map_atoms, strict=True)):
         r_pos = np.dot(rotations[op_i], positions[i]) + translations[op_i]
         diff = positions[atom_i] - r_pos
         diff -= np.rint(diff)
@@ -136,6 +139,8 @@ def test_Symmetry_nosym_s2p_map(nacl_unitcell_order1: PhonopyAtoms):
     )
     # for i, v in enumerate(ph.symmetry.symmetry_operations["translations"]):
     #     print("[", ", ".join(f"{x}" for x in v), "],")
+    assert isinstance(ph.symmetry.dataset, NosymDataset)
+
     np.testing.assert_equal(
         ph.symmetry.symmetry_operations["translations"],
         [

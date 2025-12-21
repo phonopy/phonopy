@@ -125,7 +125,7 @@ def _savefig(plt, file, fonttype=42, family="serif"):
 
 def _get_dos(d, f, dmax):
     pdos = []
-    for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:]):
+    for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:], strict=True):
         pdos += _cut_dos([f1, d1], [f2, d2], dmax)
     return np.transpose(pdos)
 
@@ -801,7 +801,9 @@ def _write_gnuplot_data(args):
             q = 0
             for nq in segment_nqpoint:
                 for d, f in zip(
-                    distances[q : (q + nq)], freqs[q : (q + nq)] * args.factor
+                    distances[q : (q + nq)],
+                    freqs[q : (q + nq)] * args.factor,
+                    strict=True,
                 ):
                     print("%f %f" % (d, f))
                 q += nq
