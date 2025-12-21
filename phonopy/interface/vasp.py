@@ -359,7 +359,7 @@ def _expand_symbols(num_atoms, symbols=None):
                     break
 
     if is_symbols:
-        for s, num in zip(symbols, num_atoms):
+        for s, num in zip(symbols, num_atoms, strict=True):
             expanded_symbols += [s] * num
     else:
         for i, num in enumerate(num_atoms):
@@ -435,7 +435,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     write_vasp("S%s" % pre_filename, supercell, direct=True)
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}".format(
             i, pre_filename=pre_filename, width=width
         )
@@ -697,7 +697,7 @@ class Vasprun:
                     num_atoms, elements, elem_masses = atomtypes[:3]
                     num_atom = np.sum(num_atoms)
                     masses = []
-                    for n, m in zip(num_atoms, elem_masses):
+                    for n, m in zip(num_atoms, elem_masses, strict=True):
                         masses += [m] * n
 
             # Get dynmat node

@@ -75,8 +75,6 @@ def test_tio2_random_disp(
     Currently default displacement distance = 0.01.
 
     """
-    pytest.importorskip("symfc")
-
     ph = ph_tio2.copy()
     ph.generate_displacements(
         number_of_snapshots=number_of_snapshots,
@@ -105,8 +103,6 @@ def test_tio2_random_disp_rd_auto_estimation_factor(ph_tio2: Phonopy):
     number_estimation_factor=NUM)
 
     """
-    pytest.importorskip("symfc")
-
     ph = ph_tio2.copy()
     ph.generate_displacements(number_of_snapshots="auto")
     assert len(ph.displacements) == 4

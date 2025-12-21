@@ -8,7 +8,7 @@ dynamic = ["version"]
 readme = { file = "README.md", content-type = "text/markdown" }
 description = "This is the phonopy module."
 authors = [{ name = "Atsushi Togo", email = "atz.togo@gmail.com" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.17.0",
     "PyYAML>=5.3",

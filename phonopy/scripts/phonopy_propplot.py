@@ -197,6 +197,7 @@ def run():
                 props[1][tmin_index:tmax_index],
                 props[2][tmin_index:tmax_index],
                 props[3][tmin_index:tmax_index],
+                strict=True,
             ):
                 print(("%14.7f " * 5) % (t, f, e, h, f + e * t / 1000))
             print("")

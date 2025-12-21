@@ -423,7 +423,7 @@ def get_parser(
         "--hdf5-compression",
         dest="hdf5_compression",
         default=None,
-        help="hdf5 compression filter (default: gzip)",
+        help='hdf5 compression filter (default: "gzip") and "none" for no compression',
     )
     parser.add_argument(
         "--irreps",
@@ -947,23 +947,29 @@ class PhonopyMockArgs:
 
     anime: str | None = None
     band_paths: str | None = None
+    band_points: int | None = None
     cell_filename: str | os.PathLike | None = None
     conf_filename: str | os.PathLike | None = None
     create_force_sets: list[str | os.PathLike] | None = None
     fc_symmetry: bool = True
     filename: Sequence[os.PathLike | str] | None = None
     frequency_conversion_factor: float | None = None
+    hdf5_compression: str | None = None
     is_check_symmetry: bool | None = None
+    is_eigenvectors: bool | None = None
     is_graph_plot: bool | None = None
     is_graph_save: bool | None = None
+    is_hdf5: bool | None = None
     is_legend: bool | None = None
     is_displacement: bool | None = None
     log_level: int | None = None
     magmoms: str | None = None
     mesh_numbers: str | None = None
+    qpoints: str | None = None
     supercell_dimension: str | None = None
     thermal_displacement_matrices_cif: float | None = None
-    use_pypolymlp: bool = False
+    use_pypolymlp: bool | None = None
+    write_dynamical_matrices: bool | None = None
 
     def __iter__(self):
         """Make self iterable to support in."""

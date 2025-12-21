@@ -21,7 +21,7 @@ def test_read_abacus_nomag():
     diff_pos = cell.scaled_positions - cell_ref.scaled_positions
     diff_pos -= np.rint(diff_pos)
     assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols):
+    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
         assert s == s_r
     assert pps["Na"] == "Na_ONCV_PBE-1.0.upf"
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"
@@ -41,7 +41,7 @@ def test_read_abacus_mag():
     diff_pos = cell.scaled_positions - cell_ref.scaled_positions
     diff_pos -= np.rint(diff_pos)
     assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols):
+    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
         assert s == s_r
     assert pps["Na"] == "Na_ONCV_PBE-1.0.upf"
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"
@@ -64,7 +64,7 @@ def test_read_abacus_mag_noncolin():
     diff_pos = cell.scaled_positions - cell_ref.scaled_positions
     diff_pos -= np.rint(diff_pos)
     assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols):
+    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
         assert s == s_r
     assert pps["Na"] == "Na_ONCV_PBE-1.0.upf"
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"

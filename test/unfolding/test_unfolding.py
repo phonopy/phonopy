@@ -109,7 +109,7 @@ def _get_weights(unfolding, qpoints):
 
     out_vals = []
     for i, q in enumerate(qpoints):
-        for f, w in zip(freqs[i], weights[i]):
+        for f, w in zip(freqs[i], weights[i], strict=True):
             out_vals.append([q[0], q[1], q[2], f, w])
 
     return out_vals
@@ -141,7 +141,7 @@ def _binning(data):
     w = np.array(w)
 
     points = {}
-    for e_x, e_y, e_z in zip(x, y, w):
+    for e_x, e_y, e_z in zip(x, y, w, strict=True):
         if (e_x, e_y) in points:
             points[(e_x, e_y)] += e_z
         else:

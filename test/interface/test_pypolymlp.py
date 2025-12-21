@@ -227,7 +227,6 @@ atom_energies = {
 def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     """Test of pypolymlp-develop using NaCl 2x2x2 with RD results."""
     pytest.importorskip("pypolymlp", minversion="0.10.0")
-    pytest.importorskip("symfc")
     params = PypolymlpParams(gtinv_maxl=(4, 4), atom_energies=atom_energies)
     disps = ph_nacl_rd.displacements
     forces = ph_nacl_rd.forces

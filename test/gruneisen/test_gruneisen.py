@@ -99,7 +99,7 @@ def test_gruneisen_mesh(ph_nacl_gruneisen):
     # qpoints, weights, freqs, eigvecs, gamma = phg.get_mesh()
     weights = []
     g_mesh_vals = np.reshape(np.asarray(g_mesh.split(), dtype="double"), (-1, 15))
-    for i, (qpt, w, freqs, _, gammas) in enumerate(zip(*phg.get_mesh())):
+    for i, (qpt, w, freqs, _, gammas) in enumerate(zip(*phg.get_mesh(), strict=True)):
         weights.append(w)
         # print(" ".join(["%.5f" % v for v in qpt]))
         # print(" ".join(["%.5f" % v for v in freqs]))
@@ -120,9 +120,9 @@ def test_gruneisen_band(ph_nacl_gruneisen):
     np.testing.assert_allclose(qpoints[0], band_qpoints, atol=1e-5)
     # for line in freqs[0].reshape(-1, 6):
     #     print(", ".join(["%.5f" % v for v in line]))
-    for freqs_q, band_freqs_q in zip(freqs[0], band_freqs):
+    for freqs_q, band_freqs_q in zip(freqs[0], band_freqs, strict=True):
         np.testing.assert_allclose(np.sort(freqs_q), np.sort(band_freqs_q), atol=1e-5)
     # for line in gammas[0].reshape(-1, 6):
     #     print(", ".join(["%.5f" % v for v in line]))
-    for gammas_q, band_gammas_q in zip(gammas[0], band_gammas):
+    for gammas_q, band_gammas_q in zip(gammas[0], band_gammas, strict=True):
         np.testing.assert_allclose(np.sort(gammas_q), np.sort(band_gammas_q), atol=1e-5)

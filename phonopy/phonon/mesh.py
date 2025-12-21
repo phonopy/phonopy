@@ -36,6 +36,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -280,19 +282,31 @@ class Mesh(MeshBase):
             self.run()
         return self._group_velocities
 
-    def write_hdf5(self, filename="mesh.hdf5"):
+    def write_hdf5(
+        self,
+        filename="mesh.hdf5",
+        compression: Literal["gzip", "lzf"] | int | None = None,
+    ):
         """Write results to hdf5 file."""
         import h5py
 
         with h5py.File(filename, "w") as w:
             w.create_dataset("mesh", data=self._mesh)
-            w.create_dataset("qpoint", data=self._qpoints)
-            w.create_dataset("weight", data=self._weights)
-            w.create_dataset("frequency", data=self._frequencies)
+            w.create_dataset("qpoint", data=self._qpoints, compression=compression)
+            w.create_dataset("weight", data=self._weights, compression=compression)
+            w.create_dataset(
+                "frequency", data=self._frequencies, compression=compression
+            )
             if self._eigenvectors is not None:
-                w.create_dataset("eigenvector", data=self._eigenvectors)
+                w.create_dataset(
+                    "eigenvector", data=self._eigenvectors, compression=compression
+                )
             if self._group_velocities is not None:
-                w.create_dataset("group_velocity", data=self._group_velocities)
+                w.create_dataset(
+                    "group_velocity",
+                    data=self._group_velocities,
+                    compression=compression,
+                )
 
     def write_yaml(self, filename="mesh.yaml"):
         """Write results to yaml file."""
@@ -305,14 +319,14 @@ class Mesh(MeshBase):
         lines.append("mesh: [ %5d, %5d, %5d ]" % tuple(self._mesh))
         lines.append("nqpoint: %-7d" % self._qpoints.shape[0])
         lines.append("reciprocal_lattice:")
-        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*")):
+        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*"), strict=True):
             lines.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" % (tuple(vec) + (axis,)))
         lines.append("natom:   %-7d" % natom)
         lines.append(str(self._cell))
         lines.append("")
         lines.append("phonon:")
 
-        for i, (q, d) in enumerate(zip(self._qpoints, distances)):
+        for i, (q, d) in enumerate(zip(self._qpoints, distances, strict=True)):
             lines.append("- q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(q))
             lines.append("  distance_from_gamma: %12.9f" % d)
             lines.append("  weight: %-5d" % self._weights[i])
@@ -377,10 +391,10 @@ class Mesh(MeshBase):
                 self._dynamical_matrix.run(q)
                 dm = self._dynamical_matrix.dynamical_matrix
             if self._with_eigenvectors:
-                eigvals, eigenvectors[i] = np.linalg.eigh(dm)
+                eigvals, eigenvectors[i] = np.linalg.eigh(dm)  # type: ignore
                 eigenvalues = eigvals.real
             else:
-                eigenvalues = np.linalg.eigvalsh(dm).real
+                eigenvalues = np.linalg.eigvalsh(dm).real  # type: ignore
             self._frequencies[i] = (
                 np.array(
                     np.sqrt(abs(eigenvalues)) * np.sign(eigenvalues),
@@ -450,10 +464,10 @@ class IterMesh(MeshBase):
             self._dynamical_matrix.run(q)
             dm = self._dynamical_matrix.dynamical_matrix
             if self._with_eigenvectors:
-                eigvals, eigenvectors = np.linalg.eigh(dm)
+                eigvals, eigenvectors = np.linalg.eigh(dm)  # type: ignore
                 eigenvalues = eigvals.real
             else:
-                eigenvalues = np.linalg.eigvalsh(dm).real
+                eigenvalues = np.linalg.eigvalsh(dm).real  # type: ignore
             frequencies = (
                 np.array(
                     np.sqrt(abs(eigenvalues)) * np.sign(eigenvalues),

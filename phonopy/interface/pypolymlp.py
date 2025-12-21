@@ -431,7 +431,9 @@ def get_change_in_positions(
     disps = np.linalg.norm(diffs @ original_cell.cell, axis=1)
     if verbose:
         print("Change in fractional position and in distance:")
-        for i, (symbol, d, disp) in enumerate(zip(original_cell.symbols, diffs, disps)):
+        for i, (symbol, d, disp) in enumerate(
+            zip(original_cell.symbols, diffs, disps, strict=True)
+        ):
             print(
                 f"{i + 1:3d} {symbol:<2}: {d[0]:11.8f} {d[1]:11.8f} {d[2]:11.8f} "
                 f"(|d|={disp:.8f})"

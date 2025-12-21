@@ -160,9 +160,6 @@ def ph_nacl_rd_symfc() -> Phonopy:
     compute force constants.
 
     """
-    pytest.importorskip("symfc")
-    pytest.importorskip("spglib", minversion="2.5")
-
     yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
     return phonopy.load(
         yaml_filename, log_level=1, fc_calculator="symfc", is_compact_fc=True

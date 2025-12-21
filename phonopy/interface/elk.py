@@ -95,7 +95,7 @@ def read_elk(filename):
                     break
     pos_all = []
     num_all = []
-    for num, pos in zip(numbers, tags["atoms"]["positions"]):
+    for num, pos in zip(numbers, tags["atoms"]["positions"], strict=True):
         pos_all += pos
         num_all += [num] * len(pos)
 
@@ -118,7 +118,7 @@ def write_supercells_with_displacements(
 ):
     """Write supercells with displacements to files."""
     write_elk("%s.in" % pre_filename, supercell, sp_filenames)
-    for i, cell in zip(ids, cells_with_displacements):
+    for i, cell in zip(ids, cells_with_displacements, strict=True):
         filename = "{pre_filename}-{0:0{width}}.in".format(
             i, pre_filename=pre_filename, width=width
         )
@@ -143,7 +143,7 @@ def get_elk_structure(cell, sp_filenames=None):
     lines += "atoms\n"
     n_pos = 0
     lines += " %d\n" % len(num_atoms)
-    for i, (n, s) in enumerate(zip(num_atoms, spfnames)):
+    for i, (n, s) in enumerate(zip(num_atoms, spfnames, strict=True)):
         lines += " '%s'\n" % s
         lines += " %d\n" % n
         lines += get_scaled_positions_lines(scaled_positions[n_pos : (n_pos + n)])

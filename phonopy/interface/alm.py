@@ -236,7 +236,9 @@ class ALMFCSolver:
                             ("cutoff" + " %6s" * num_elems)
                             % tuple(alm.kind_names.values())
                         )
-                        for r, kn in zip(cutoff_radii[i], alm.kind_names.values()):
+                        for r, kn in zip(
+                            cutoff_radii[i], alm.kind_names.values(), strict=True
+                        ):
                             print(
                                 ("   %-3s" + " %6.2f" * num_elems) % ((kn,) + tuple(r))
                             )
@@ -385,7 +387,7 @@ def _extract_fc_from_alm(
             fc_shape = (len(p2s_map),) + (natom,) * order + (3,) * (order + 1)
             fc = np.zeros(fc_shape, dtype="double", order="C")
             for fc_elem, indices in zip(
-                *alm.get_fc(order, mode="origin", permutation=1)
+                *alm.get_fc(order, mode="origin", permutation=1), strict=True
             ):
                 v = indices // 3
                 c = indices % 3
@@ -399,7 +401,9 @@ def _extract_fc_from_alm(
                 atom_list = np.arange(natom, dtype=int)
             fc_shape = (len(atom_list),) + (natom,) * order + (3,) * (order + 1)
             fc = np.zeros(fc_shape, dtype="double", order="C")
-            for fc_elem, indices in zip(*alm.get_fc(order, mode="all", permutation=1)):
+            for fc_elem, indices in zip(
+                *alm.get_fc(order, mode="all", permutation=1), strict=True
+            ):
                 v = indices // 3
                 idx = np.where(atom_list == v[0])[0]
                 if len(idx) > 0:

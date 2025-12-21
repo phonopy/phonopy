@@ -76,5 +76,7 @@ def _test_thermal_properties(ph):
     for i in range(2):
         if i == 1:
             tp.run(lang="py")
-        for vals_ref, vals in zip((temps, fes, entropies, cvs), tp.thermal_properties):
+        for vals_ref, vals in zip(
+            (temps, fes, entropies, cvs), tp.thermal_properties, strict=True
+        ):
             np.testing.assert_allclose(vals_ref, vals, atol=1e-5)
