@@ -102,6 +102,7 @@ def test_non_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms, is_flat: boo
 def test_symmetrize_borns_and_epsilon_nacl(ph_nacl: Phonopy):
     """Test symmetrization of Born charges and dielectric tensors by NaCl."""
     nac_params = ph_nacl.nac_params
+    assert nac_params is not None
     borns, epsilon = symmetrize_borns_and_epsilon(
         nac_params["born"], nac_params["dielectric"], ph_nacl.primitive
     )
@@ -112,11 +113,28 @@ def test_symmetrize_borns_and_epsilon_nacl(ph_nacl: Phonopy):
 def test_symmetrize_borns_and_epsilon_tio2(ph_tio2: Phonopy):
     """Test symmetrization of Born charges and dielectric tensors by TiO2."""
     nac_params = ph_tio2.nac_params
+    assert nac_params is not None
     borns, epsilon = symmetrize_borns_and_epsilon(
         nac_params["born"], nac_params["dielectric"], ph_tio2.primitive
     )
     # np.testing.assert_allclose(borns, nac_params['born'], atol=1e-8)
     np.testing.assert_allclose(epsilon, nac_params["dielectric"], atol=1e-8)
+
+
+def test_symmetrize_force_constants_by_space_group(ph_nacl: Phonopy):
+    """Test running symmetrize_force_constants_by_space_group."""
+    ph = ph_nacl.copy()
+    assert ph_nacl.force_constants is not None
+    ph.force_constants = ph_nacl.force_constants.copy()
+    ph.symmetrize_force_constants_by_space_group()
+
+
+def test_set_force_constants_zero_with_radius(ph_nacl: Phonopy):
+    """Test running set_force_constants_zero_with_radius."""
+    ph = ph_nacl.copy()
+    assert ph_nacl.force_constants is not None
+    ph.force_constants = ph_nacl.force_constants.copy()
+    ph.set_force_constants_zero_with_radius(5.0)
 
 
 def test_Symmetry_pointgroup(ph_tio2: Phonopy):
@@ -331,6 +349,7 @@ def test_reciprocal_operations(ph_zr3n4: Phonopy):
 
 def _get_nac_params_in_unitcell(ph: Phonopy):
     nac_params = ph.nac_params
+    assert nac_params is not None
     uepsilon = nac_params["dielectric"]
     pborns = nac_params["born"]
     s2p_map = ph.primitive.s2p_map

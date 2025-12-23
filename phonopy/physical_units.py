@@ -39,9 +39,10 @@ To overwrite the physical units, use set_physical_units().
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 from dataclasses import asdict, dataclass
 from math import pi, sqrt
-from typing import Optional
 
 
 @dataclass
@@ -55,22 +56,22 @@ class PhysicalUnitsGenerator:
     AMU: float  # [kg]
     EV: float  # [J]
     Me: float  # [kg]
-    THz: Optional[float] = None  # [/s]
-    Angstrom: Optional[float] = None  # [m]
-    Newton: Optional[float] = None  # [kg m / s^2]
-    Joule: Optional[float] = None  # [kg m^2 / s^2]
-    Hbar: Optional[float] = None  # [eV s]
-    Epsilon0: Optional[float] = None  # [C^2 / N m^2]
-    Bohr: Optional[float] = None  # Bohr radius [A]
-    Hartree: Optional[float] = None  # Hartree [eV]
-    Rydberg: Optional[float] = None  # Rydberg [eV]
-    THzToEv: Optional[float] = None  # [eV]
-    KB: Optional[float] = None  # [eV/K]
-    THzToCm: Optional[float] = None  # [cm^-1]
-    CmToEv: Optional[float] = None  # [eV]
-    EVAngstromToGPa: Optional[float] = None
-    EvTokJmol: Optional[float] = None  # [kJ/mol]
-    DefaultToTHz: Optional[float] = None  # [THz]
+    THz: float | None = None  # [/s]
+    Angstrom: float | None = None  # [m]
+    Newton: float | None = None  # [kg m / s^2]
+    Joule: float | None = None  # [kg m^2 / s^2]
+    Hbar: float | None = None  # [eV s]
+    Epsilon0: float | None = None  # [C^2 / N m^2]
+    Bohr: float | None = None  # Bohr radius [A]
+    Hartree: float | None = None  # Hartree [eV]
+    Rydberg: float | None = None  # Rydberg [eV]
+    THzToEv: float | None = None  # [eV]
+    KB: float | None = None  # [eV/K]
+    THzToCm: float | None = None  # [cm^-1]
+    CmToEv: float | None = None  # [eV]
+    EVAngstromToGPa: float | None = None
+    EvTokJmol: float | None = None  # [kJ/mol]
+    DefaultToTHz: float | None = None  # [THz]
 
     def __post_init__(self):
         """Initialize derived physical constants."""
@@ -181,10 +182,6 @@ class PhysicalUnits:
     DefaultToTHz: float  # [THz]
 
 
-# Global variable to store physical units
-_physical_units: Optional[PhysicalUnits] = None
-
-
 def set_physical_units(
     KB_J: float = 1.3806504e-23,  # [J/K]
     PlanckConstant: float = 4.13566733e-15,  # [eV s]
@@ -241,4 +238,5 @@ def get_physical_units() -> PhysicalUnits:
     return _physical_units
 
 
+# Global variable _physical_units is initialized here.
 set_physical_units()

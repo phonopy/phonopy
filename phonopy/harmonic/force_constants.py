@@ -281,7 +281,7 @@ def symmetrize_force_constants(force_constants: np.ndarray, level: int = 1):
 
     """
     try:
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
 
         phonoc.perm_trans_symmetrize_fc(force_constants, level)
     except ImportError:
@@ -314,7 +314,7 @@ def symmetrize_compact_force_constants(force_constants, primitive: Primitive, le
     permutations = primitive.atomic_permutations
     s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map, p2p_map, permutations)
     try:
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
 
         phonoc.perm_trans_symmetrize_compact_fc(
             force_constants, permutations, s2pp_map, p2s_map, nsym_list, level
@@ -371,7 +371,7 @@ def distribute_force_constants(
     if rots_cartesian.shape[0] != permutations.shape[0]:
         raise ValueError("permutations and rotations are different length")
 
-    import phonopy._phonopy as phonoc
+    import phonopy._phonopy as phonoc  # type: ignore
 
     phonoc.distribute_fc2(
         force_constants,
@@ -512,8 +512,8 @@ def set_tensor_symmetry_PJ(
         Symmetry of the supercell.
 
     """
-    rotations = symmetry.get_symmetry_operations()["rotations"]
-    translations = symmetry.get_symmetry_operations()["translations"]
+    rotations = symmetry.symmetry_operations["rotations"]
+    translations = symmetry.symmetry_operations["translations"]
     symprec = symmetry.tolerance
 
     N = len(rotations)
@@ -613,7 +613,7 @@ def get_drift_force_constants(
         s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map, p2p_map, permutations)
 
         try:
-            import phonopy._phonopy as phonoc
+            import phonopy._phonopy as phonoc  # type: ignore
 
             phonoc.transpose_compact_fc(
                 force_constants, permutations, s2pp_map, p2s_map, nsym_list
