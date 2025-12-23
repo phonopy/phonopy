@@ -34,13 +34,17 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import sys
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.grid_points import get_qpoints
+from phonopy.structure.symmetry import Symmetry
 
 
 class Velocity:
@@ -48,9 +52,9 @@ class Velocity:
 
     def __init__(
         self,
-        lattice=None,  # column vectors, in angstrom
-        positions=None,  # fractional coordinates
-        timestep=None,  # in femtosecond
+        lattice: NDArray | None = None,  # column vectors, in angstrom
+        positions: NDArray | None = None,  # fractional coordinates
+        timestep: float | None = None,  # in femtosecond
     ):
         """Init method."""
         self._lattice = lattice
@@ -61,9 +65,11 @@ class Velocity:
     def run(self, skip_steps=0):
         """Calculate velocities."""
         pos = self._positions
+        assert pos is not None
         diff = pos[(skip_steps + 1) :] - pos[skip_steps:-1]
         diff = np.where(diff > 0.5, diff - 1, diff)
         diff = np.where(diff < -0.5, diff + 1, diff)
+        assert self._lattice is not None
         self._velocities = np.dot(diff, self._lattice.T * 1e5) / self._timestep
 
     def get_velocities(self):
@@ -83,11 +89,11 @@ class VelocityQpoints:
         supercell,
         primitive,
         velocities,  # in m/s either real or reciprocal
-        symmetry=None,
+        symmetry: Symmetry | None = None,
     ):
         """Init method."""
         if symmetry is not None:
-            self._polonggroup_opts = symmetry.get_pointgroup_operations()
+            self._polonggroup_opts = symmetry.pointgroup_operations
         else:
             self._polonggroup_opts = None
 
@@ -209,7 +215,7 @@ class AutoCorrelation:
                 self._vv[:, i] *= (
                     m
                     * get_physical_units().AMU
-                    / (get_physical_units().kb_J * self._temperature)
+                    / (get_physical_units().KB_J * self._temperature)
                 )
 
         self._n_elements = n_elem
