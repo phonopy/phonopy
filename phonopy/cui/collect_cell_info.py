@@ -93,8 +93,8 @@ def get_cell_info(
 ) -> PhonopyCellInfoResult:
     """Return calculator interface and crystal structure information.
 
-    CellNotFoundError and MagmomValueError can be raised by collect_cell_info and
-    set_magnetic_moments functions, respectively.
+    CellNotFoundError and MagmomValueError can be raised by collect_cell_info
+    and set_magnetic_moments functions, respectively.
 
     """
     cell_info = collect_cell_info(

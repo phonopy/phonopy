@@ -100,18 +100,18 @@ def read_crystal(filename):
         print(
             "CRYSTAL-interface: Magnetic structure, "
             "number of operations without spin: %d"
-            % len(symmetry.get_symmetry_operations()["rotations"])
+            % len(symmetry.symmetry_operations["rotations"])
         )
         print(
             "CRYSTAL-interface: Spacegroup without spin: %s"
             % symmetry.get_international_table()
         )
 
-        cell.set_magnetic_moments(magmoms)
+        cell.magnetic_moments = magmoms
         symmetry = Symmetry(cell, symprec=1e-5)
         print(
             "CRYSTAL-interface: Magnetic structure, number of operations with spin: %d"
-            % len(symmetry.get_symmetry_operations()["rotations"])
+            % len(symmetry.symmetry_operations["rotations"])
         )
         print("")
 
@@ -243,8 +243,8 @@ def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
     # Symmetry operators
     if write_symmetry:
         symmetry = Symmetry(cell, symprec=1e-5)
-        rotations = symmetry.get_symmetry_operations()["rotations"]
-        translations = symmetry.get_symmetry_operations()["translations"]
+        rotations = symmetry.symmetry_operations["rotations"]
+        translations = symmetry.symmetry_operations["translations"]
         N_symmops = 0
         symmlines = ""
         for i in range(0, len(rotations)):

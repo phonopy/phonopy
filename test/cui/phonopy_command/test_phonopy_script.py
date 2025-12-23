@@ -166,7 +166,7 @@ def test_unit_conversion_factor(load_phonopy_yaml: bool):
             if load_phonopy_yaml:
                 ref_freq = 47.3113552091
             else:
-                ref_freq = 29.5294946098
+                ref_freq = 29.4784373936
             with open("band.yaml") as f:
                 band = yaml.safe_load(f)
                 assert band["phonon"][0]["band"][5]["frequency"] == pytest.approx(
@@ -206,7 +206,7 @@ def test_unit_conversion_factor_QE(load_phonopy_yaml: bool):
             if load_phonopy_yaml:
                 ref_freq = 7.3823649712
             else:
-                ref_freq = 4.5259552147
+                ref_freq = 4.5382475036
             with open("band.yaml") as f:
                 band = yaml.safe_load(f)
                 assert band["phonon"][0]["band"][5]["frequency"] == pytest.approx(
@@ -546,6 +546,7 @@ def _get_phonopy_args(
     cell_filename: str | os.PathLike | None = None,
     conf_filename: str | os.PathLike | None = None,
     create_force_sets: list[str | os.PathLike] | None = None,
+    fc_spg_symmetry: bool | None = None,
     filename: str | os.PathLike | None = None,
     frequency_conversion_factor: float | None = None,
     hdf5_compression: str | None = None,
@@ -576,6 +577,7 @@ def _get_phonopy_args(
         cell_filename=cell_filename,
         conf_filename=conf_filename,
         create_force_sets=create_force_sets,
+        fc_spg_symmetry=fc_spg_symmetry,
         filename=_filename,
         frequency_conversion_factor=frequency_conversion_factor,
         hdf5_compression=hdf5_compression,

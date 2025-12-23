@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Dec-23-2025: Version 2.46.1
+
+- Bug fix for calling non-existent methods.
+
 ## Dec-21-2025: Version 2.46.0
 
 - Drop python 3.9 support.
