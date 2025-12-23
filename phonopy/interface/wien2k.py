@@ -34,11 +34,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import sys
 
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_angles, get_cell_parameters
 from phonopy.structure.symmetry import Symmetry
@@ -340,7 +343,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
 
     # Rotation matrices in Cartesian
     rotations = []
-    for r in symmetry.get_symmetry_operations()["rotations"]:
+    for r in symmetry.symmetry_operations["rotations"]:
         rotations.append(similarity_transformation(lattice.T, r))
 
     map_operations = symmetry.get_map_operations()
@@ -421,7 +424,7 @@ if __name__ == "__main__":
                 # The following %19.16f follows write_vasp
                 if float("%19.16f" % pos[i]) >= 1:
                     pos[i] -= 1.0
-        cell.set_scaled_positions(positions)
+        cell.scaled_positions = positions
 
     parser = OptionParser()
     parser.set_defaults(w2v=False, v2w=False)
@@ -433,12 +436,10 @@ if __name__ == "__main__":
     )
     (options, args) = parser.parse_args()
 
-    from phonopy.physical_units import physical_units
-
     if options.v2w:
         cell = read_vasp(args[0])
-        lattice = cell.cell / physical_units.Bohr
-        cell.set_cell(lattice)
+        lattice = cell.cell / get_physical_units().Bohr
+        cell.cell = lattice
         npts, r0s, rmts = _parse_core_param(open(args[1]))
         text = _get_wien2k_struct(cell, npts, r0s, rmts)
         print(text)
@@ -446,9 +447,9 @@ if __name__ == "__main__":
     elif options.w2v:
         cell, npts, r0s, rmts = parse_wien2k_struct(args[0])
         positions = cell.scaled_positions
-        lattice = cell.cell * physical_units.Bohr
-        cell.set_cell(lattice)
-        cell.set_scaled_positions(positions)
+        lattice = cell.cell * get_physical_units().Bohr
+        cell.cell = lattice
+        cell.scaled_positions = positions
         _clean_scaled_positions(cell)
         write_vasp("POSCAR.wien2k", cell, direct=True)
         w = open("wien2k_core.dat", "w")

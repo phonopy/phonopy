@@ -33,6 +33,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
 from __future__ import annotations
 
 import re
@@ -41,7 +42,7 @@ from collections.abc import Sequence
 from math import gcd
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 
 def Atoms(*args, **kwargs):
@@ -118,14 +119,14 @@ class PhonopyAtoms:
     def __init__(
         self,
         symbols: Sequence | None = None,
-        numbers: ArrayLike | None = None,
-        masses: ArrayLike | None = None,
-        magnetic_moments: ArrayLike | None = None,
-        scaled_positions: ArrayLike | None = None,
-        positions: ArrayLike | None = None,
-        cell: ArrayLike | None = None,
-        atoms: "PhonopyAtoms" | None = None,
-        magmoms: ArrayLike | None = None,
+        numbers: Sequence | NDArray | None = None,
+        masses: Sequence | NDArray | None = None,
+        magnetic_moments: Sequence | NDArray | None = None,
+        scaled_positions: Sequence | NDArray | None = None,
+        positions: Sequence | NDArray | None = None,
+        cell: Sequence | NDArray | None = None,
+        atoms: PhonopyAtoms | None = None,
+        magmoms: Sequence | NDArray | None = None,
         pbc: bool | None = None,
     ):  # pbc is dummy argument, and never used.
         """Init method."""
@@ -171,12 +172,12 @@ class PhonopyAtoms:
     def _set_parameters(
         self,
         symbols: Sequence[str] | None = None,
-        numbers: ArrayLike | None = None,
-        masses: ArrayLike | None = None,
-        magnetic_moments: ArrayLike | None = None,
-        scaled_positions: ArrayLike | None = None,
-        positions: ArrayLike | None = None,
-        cell: ArrayLike | None = None,
+        numbers: Sequence | NDArray | None = None,
+        masses: Sequence | NDArray | None = None,
+        magnetic_moments: Sequence | NDArray | None = None,
+        scaled_positions: Sequence | NDArray | None = None,
+        positions: Sequence | NDArray | None = None,
+        cell: Sequence | NDArray | None = None,
     ):
         """Set crystal structure parameters.
 
@@ -249,7 +250,7 @@ class PhonopyAtoms:
         )
 
     @positions.setter
-    def positions(self, positions: ArrayLike):
+    def positions(self, positions: Sequence | NDArray):
         self._set_positions(positions)
         self._check()
 
@@ -259,7 +260,7 @@ class PhonopyAtoms:
         return self._scaled_positions.copy()
 
     @scaled_positions.setter
-    def scaled_positions(self, scaled_positions: ArrayLike):
+    def scaled_positions(self, scaled_positions: Sequence | NDArray):
         self._set_scaled_positions(scaled_positions)
         self._check()
 
@@ -276,7 +277,7 @@ class PhonopyAtoms:
             DeprecationWarning,
             stacklevel=2,
         )
-        self._symbols = symbols
+        self._symbols = list(symbols)
         self._check()
         self._symbols_to_numbers()
         self._symbols_to_masses()
@@ -298,7 +299,7 @@ class PhonopyAtoms:
         )
 
     @numbers.setter
-    def numbers(self, numbers: ArrayLike):
+    def numbers(self, numbers: Sequence | NDArray):
         if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
             raise RuntimeError("Atomic numbers cannot be larger than 118.")
         warnings.warn(
@@ -317,7 +318,7 @@ class PhonopyAtoms:
         return self._masses.copy()
 
     @masses.setter
-    def masses(self, masses: ArrayLike):
+    def masses(self, masses: Sequence | NDArray):
         self._set_masses(masses)
         self._check()
 
@@ -345,7 +346,7 @@ class PhonopyAtoms:
                 )
 
     @magnetic_moments.setter
-    def magnetic_moments(self, magnetic_moments: ArrayLike | None):
+    def magnetic_moments(self, magnetic_moments: Sequence | NDArray | None):
         self._set_magnetic_moments(magnetic_moments)
         self._check()
 
@@ -369,25 +370,25 @@ class PhonopyAtoms:
             x = gcd(x, v)
         return x
 
-    def _set_cell(self, cell: ArrayLike):
+    def _set_cell(self, cell: Sequence | NDArray):
         _cell = np.array(cell, dtype="double", order="C")
         if _cell.shape == (3, 3):
             self._cell = _cell
         else:
             raise TypeError("Array shape of cell is not 3x3.")
 
-    def _set_positions(self, cart_positions: ArrayLike):
+    def _set_positions(self, cart_positions: Sequence | NDArray):
         self._scaled_positions = np.array(
             np.dot(cart_positions, np.linalg.inv(self._cell)), dtype="double", order="C"
         )
 
-    def _set_scaled_positions(self, scaled_positions: ArrayLike):
+    def _set_scaled_positions(self, scaled_positions: Sequence | NDArray):
         self._scaled_positions = np.array(scaled_positions, dtype="double", order="C")
 
-    def _set_masses(self, masses: ArrayLike):
+    def _set_masses(self, masses: Sequence | NDArray):
         self._masses = np.array(masses, dtype="double")
 
-    def _set_magnetic_moments(self, magmoms: ArrayLike | None):
+    def _set_magnetic_moments(self, magmoms: Sequence | NDArray | None):
         """Set magnetic moments in 1D array of shape=(natom,) or (natom*3)."""
         if magmoms is None:
             self._magnetic_moments = None
@@ -400,11 +401,12 @@ class PhonopyAtoms:
 
     def _set_cell_and_positions(
         self,
-        cell: ArrayLike = None,
-        positions: ArrayLike | None = None,
-        scaled_positions: ArrayLike | None = None,
+        cell: Sequence | NDArray | None = None,
+        positions: Sequence | NDArray | None = None,
+        scaled_positions: Sequence | NDArray | None = None,
     ):
-        self._set_cell(cell)
+        if cell is not None:
+            self._set_cell(cell)
         if positions is not None:
             self._set_positions(positions)
         elif scaled_positions is not None:
