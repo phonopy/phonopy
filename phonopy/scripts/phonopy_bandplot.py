@@ -42,6 +42,7 @@ import h5py
 import numpy as np
 
 from phonopy.phonon.band_structure import BandPlot
+from phonopy.phonon.dos import plot_projected_dos
 
 try:
     import yaml
@@ -309,7 +310,7 @@ def get_options():
         "--dmax",
         dest="dos_max",
         type=float,
-        help="Maximum DOS plotted (legacy plot only)",
+        help="Maximum DOS plotted",
     )
     parser.add_argument(
         "--dmin",
@@ -673,16 +674,19 @@ def _plot(args):
         axes_pad=0.11,
         label_mode="L",
     )
-    for ax in axs[:-1]:
+    for ax in axs:
         if args.f_min:
             ax.set_ylim(ymin=args.f_min)
         if args.f_max:
             ax.set_ylim(ymax=args.f_max)
 
-    band_plot = BandPlot(axs)
+    if args.dos:
+        band_plot = BandPlot(axs[:-1])
+    else:
+        band_plot = BandPlot(axs)
     band_plot.set_xscale_from_data(plot_data[2], plot_data[3])
     band_plot.xscale = band_plot.xscale * args.factor
-    band_plot.decorate(*plot_data)
+    band_plot.decorate(*plot_data, ylabel=args.ylabel)
 
     # Plot band structures
     fmts = [
@@ -713,11 +717,15 @@ def _plot(args):
     # dos
     if args.dos:
         arg_fmax = len(dos_frequencies)
-        if args.f_max is not None:
-            for i, f in enumerate(dos_frequencies):
-                if f > args.f_max:
-                    arg_fmax = i
-                    break
+        if args.f_max is None:
+            max_freq = max(max_frequencies) * 1.01
+        else:
+            max_freq = args.f_max
+        for i, f in enumerate(dos_frequencies):
+            if f > max_freq:
+                arg_fmax = i
+                break
+
         arg_fmin = 0
         if args.f_min is not None:
             for i, f in enumerate(dos_frequencies):
@@ -731,6 +739,8 @@ def _plot(args):
         axs[-1].xaxis.set_tick_params(which="both", direction="in")
         axs[-1].yaxis.set_tick_params(which="both", direction="in")
 
+        pdos_plot_data = []
+
         for pdos in dos.T:
             if args.dos_max:
                 _pdos = _get_dos(
@@ -738,12 +748,19 @@ def _plot(args):
                     dos_frequencies[arg_fmin:arg_fmax],
                     args.dos_max,
                 )
-                axs[-1].plot(_pdos[1], _pdos[0])
+                pdos_plot_data.append(_pdos[1])
+                freqs_plot_data = _pdos[0]
             else:
-                axs[-1].plot(
-                    pdos[arg_fmin:arg_fmax], dos_frequencies[arg_fmin:arg_fmax]
-                )
-        axs[-1].set_xlabel("DOS")
+                pdos_plot_data.append(pdos[arg_fmin:arg_fmax])
+                freqs_plot_data = dos_frequencies[arg_fmin:arg_fmax]
+        plot_projected_dos(
+            axs[-1],
+            freqs_plot_data,
+            pdos_plot_data,
+            draw_grid=False,
+            flip_xy=True,
+            xlabel="DOS",
+        )
 
         xlim = axs[-1].get_xlim()
         ylim = axs[-1].get_ylim()

@@ -81,13 +81,13 @@ def read_siesta(filename):
 
     coordformat = siesta_in._tags["atomiccoordinatesformat"]
     if coordformat == "fractional" or coordformat == "scaledbylatticevectors":
-        cell.set_scaled_positions(positions)
+        cell.scaled_positions = positions
     elif coordformat == "scaledcartesian":
-        cell.set_positions(np.array(positions) * alat)
+        cell.positions = np.array(positions) * alat
     elif coordformat == "notscaledcartesianang" or coordformat == "ang":
-        cell.set_positions(np.array(positions) / get_physical_units().Bohr)
+        cell.positions = np.array(positions) / get_physical_units().Bohr
     elif coordformat == "notscaledcartesianbohr" or coordformat == "bohr":
-        cell.set_positions(np.array(positions))
+        cell.positions = np.array(positions)
     else:
         print(
             "The format %s for the AtomicCoordinatesFormat is not "

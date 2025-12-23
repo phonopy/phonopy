@@ -337,7 +337,7 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
     else:
         cell_filename = get_default_cell_filename(interface_mode)
 
-    phonons = []
+    phonons: list[phonopy.Phonopy] = []
     for i in range(3):
         directory = args.dirnames[i]
 
@@ -387,7 +387,7 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
     if args.masses:
         masses = [float(v) for v in args.masses.split()]
         for ph in phonons:
-            ph.set_masses(masses)
+            ph.masses = masses
 
     gruneisen = PhonopyGruneisen(
         phonons[0],  # equilibrium

@@ -125,13 +125,20 @@ class BandPlot:
             if not c:
                 count += 1
 
-    def set_xscale_from_data(self, frequencies, distances):
+    def set_xscale_from_data(self, frequencies: Sequence, distances: Sequence):
         """Set xscale from data."""
         max_freq = max([np.max(fq) for fq in frequencies])
         max_dist = distances[-1][-1]
         self.xscale = max_freq / max_dist * 1.5
 
-    def decorate(self, labels, path_connections, frequencies, distances):
+    def decorate(
+        self,
+        labels: Sequence[str] | None,
+        path_connections: Sequence[bool],
+        frequencies: Sequence,
+        distances: Sequence,
+        ylabel: str | None = None,
+    ):
         """Decorate plots.
 
         Parameters
@@ -168,7 +175,10 @@ class BandPlot:
             pts.append(distances_scaled[indices[-1]][-1])
             special_points.append(pts)
 
-        self._axs[0].set_ylabel("Frequency")
+        if ylabel is not None:
+            self._axs[0].set_ylabel(ylabel)
+        else:
+            self._axs[0].set_ylabel("Frequency")
         l_count = 0
         for ax, spts in zip(self._axs, special_points, strict=True):
             ax.xaxis.set_ticks_position("both")
