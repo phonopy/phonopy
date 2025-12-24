@@ -482,6 +482,11 @@ def plot_total_dos(
     ylabel=None,
     draw_grid=True,
     flip_xy=False,
+    linestyle: str = "solid",
+    color: str = "red",
+    linewidth: float = 1.0,
+    linestyle_Debye: str = "solid",
+    color_Debye: str = "blue",
 ):
     """Plot total DOS."""
     ax.xaxis.set_ticks_position("both")
@@ -495,21 +500,35 @@ def plot_total_dos(
         freqs = np.linspace(0, freq_Debye, num_points + 1)
 
     if flip_xy:
-        ax.plot(total_dos, frequency_points, "r-", linewidth=1)
+        ax.plot(
+            total_dos,
+            frequency_points,
+            linestyle=linestyle,
+            color=color,
+            linewidth=linewidth,
+        )
         if freq_Debye:
             ax.plot(
                 np.append(Debye_fit_coef * freqs**2, 0),
                 np.append(freqs, freq_Debye),
-                "b-",
+                linestyle=linestyle_Debye,
+                color=color_Debye,
                 linewidth=1,
             )
     else:
-        ax.plot(frequency_points, total_dos, "r-", linewidth=1)
+        ax.plot(
+            frequency_points,
+            total_dos,
+            linestyle=linestyle,
+            color=color,
+            linewidth=linewidth,
+        )
         if freq_Debye:
             ax.plot(
                 np.append(freqs, freq_Debye),
                 np.append(Debye_fit_coef * freqs**2, 0),
-                "b-",
+                linestyle=linestyle_Debye,
+                color=color_Debye,
                 linewidth=1,
             )
 
