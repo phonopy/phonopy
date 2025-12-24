@@ -289,6 +289,7 @@ def get_options():
         dos_max=None,
         dos_min=None,
         dos_factor=None,
+        dos_xlabel=None,
         factor=1.0,
         f_max=None,
         f_min=None,
@@ -326,6 +327,11 @@ def get_options():
         dest="dos_factor",
         type=float,
         help="Factor to be multiplied with DOS (legacy plot only)",
+    )
+    parser.add_argument(
+        "--dos-xlabel",
+        dest="dos_xlabel",
+        help="Specify x-label of DOS",
     )
     parser.add_argument(
         "--factor",
@@ -375,10 +381,12 @@ def get_options():
         help="Output filename of PDF plot",
     )
     parser.add_argument(
-        "--xlabel", dest="xlabel", help="Specify x-label (legacy plot only)"
+        "--xlabel",
+        dest="xlabel",
+        help="Specify x-label of band structure (legacy plot only)",
     )
     parser.add_argument(
-        "--ylabel", dest="ylabel", help="Specify y-label (legacy plot only)"
+        "--ylabel", dest="ylabel", help="Specify y-label of band structure"
     )
     parser.add_argument(
         "--points",
@@ -759,7 +767,7 @@ def _plot(args):
             pdos_plot_data,
             draw_grid=False,
             flip_xy=True,
-            xlabel="DOS",
+            xlabel=args.dos_xlabel,
         )
 
         xlim = axs[-1].get_xlim()
