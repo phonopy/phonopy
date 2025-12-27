@@ -42,7 +42,7 @@ import h5py
 import numpy as np
 
 from phonopy.phonon.band_structure import BandPlot
-from phonopy.phonon.dos import plot_projected_dos
+from phonopy.phonon.dos import plot_projected_dos, plot_total_dos
 
 try:
     import yaml
@@ -250,26 +250,37 @@ def _read_band_hdf5(filename):
 
 
 def _read_dos_dat(filename, pdos_indices=None, dos_factor=None):
-    dos = []
-    frequencies = []
+    """Read DOS data.
+
+    When pdos_indices is given, sum up projected DOSs of specified indices.
+
+    Total DOS is appended at the last column.
+
+    """
+    dos_from_file = []
+    frequencies_from_file = []
     for line in open(filename):
         if line.strip()[0] == "#":
             continue
         ary = [float(x) for x in line.split()]
-        frequencies.append(ary.pop(0))
-        dos.append(ary)
-    dos = np.array(dos)
-    frequencies = np.array(frequencies)
+        frequencies_from_file.append(ary.pop(0))
+        dos_from_file.append(ary)
 
-    if pdos_indices:
+    dos = np.array(dos_from_file)
+    frequencies = np.array(frequencies_from_file)
+
+    if pdos_indices is None:
+        pi = [[i] for i in range(dos.shape[1])]
+    else:
         pi = []
         for nums in pdos_indices.split(","):
             pi.append([int(x) - 1 for x in nums.split()])
-        dos_sum = []
-        for indices in pi:
-            dos_sum.append(dos[:, indices].sum(axis=1))
-        dos_sum.append(dos.sum(axis=1))
-        dos = np.transpose(dos_sum)
+
+    dos_sum = []
+    for indices in pi:
+        dos_sum.append(dos[:, indices].sum(axis=1))
+    dos_sum.append(dos.sum(axis=1))
+    dos = np.transpose(dos_sum)
 
     if dos_factor:
         dos *= dos_factor
@@ -289,6 +300,7 @@ def get_options():
         dos_max=None,
         dos_min=None,
         dos_factor=None,
+        dos_xlabel=None,
         factor=1.0,
         f_max=None,
         f_min=None,
@@ -328,6 +340,11 @@ def get_options():
         help="Factor to be multiplied with DOS (legacy plot only)",
     )
     parser.add_argument(
+        "--dos-xlabel",
+        dest="dos_xlabel",
+        help="Specify x-label of DOS",
+    )
+    parser.add_argument(
         "--factor",
         dest="factor",
         type=float,
@@ -349,7 +366,7 @@ def get_options():
         "-i",
         "--indices",
         dest="pdos_indices",
-        help="Indices like 1 2, 3 4 5 6... (legacy plot only)",
+        help="Indices like 1 2, 3 4 5 6...",
     )
     parser.add_argument(
         "--legend", dest="show_legend", action="store_true", help="Show legend"
@@ -375,10 +392,12 @@ def get_options():
         help="Output filename of PDF plot",
     )
     parser.add_argument(
-        "--xlabel", dest="xlabel", help="Specify x-label (legacy plot only)"
+        "--xlabel",
+        dest="xlabel",
+        help="Specify x-label of band structure (legacy plot only)",
     )
     parser.add_argument(
-        "--ylabel", dest="ylabel", help="Specify y-label (legacy plot only)"
+        "--ylabel", dest="ylabel", help="Specify y-label of band structure"
     )
     parser.add_argument(
         "--points",
@@ -641,11 +660,6 @@ def _plot(args):
             filenames = args.filenames
         bands_data = [_read_band_yaml(fname) for fname in filenames]
 
-    if args.dos:
-        dos_frequencies, dos = _read_dos_dat(
-            args.dos, pdos_indices=args.pdos_indices, dos_factor=args.dos_factor
-        )
-
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
     # Check consistency of input band structures
     all_path_connections = [data[1] for data in plots_data]
@@ -716,6 +730,9 @@ def _plot(args):
 
     # dos
     if args.dos:
+        dos_frequencies, dos = _read_dos_dat(
+            args.dos, pdos_indices=args.pdos_indices, dos_factor=args.dos_factor
+        )
         arg_fmax = len(dos_frequencies)
         if args.f_max is None:
             max_freq = max(max_frequencies) * 1.01
@@ -753,15 +770,31 @@ def _plot(args):
             else:
                 pdos_plot_data.append(pdos[arg_fmin:arg_fmax])
                 freqs_plot_data = dos_frequencies[arg_fmin:arg_fmax]
+
         plot_projected_dos(
             axs[-1],
             freqs_plot_data,
-            pdos_plot_data,
+            pdos_plot_data[:-1],
             draw_grid=False,
             flip_xy=True,
-            xlabel="DOS",
+            xlabel=args.dos_xlabel,
         )
 
+        if len(pdos_plot_data) > 1:
+            plot_total_dos(
+                axs[-1],
+                freqs_plot_data,
+                pdos_plot_data[-1],
+                draw_grid=False,
+                flip_xy=True,
+                linestyle="dotted",
+                color="black",
+                linewidth=0.5,
+            )
+
+        axs[-1].set_xlim(
+            left=0, right=max([np.max(p) * 1.1 for p in pdos_plot_data[:-1]])
+        )
         xlim = axs[-1].get_xlim()
         ylim = axs[-1].get_ylim()
         aspect = (xlim[1] - xlim[0]) / (ylim[1] - ylim[0]) * 3

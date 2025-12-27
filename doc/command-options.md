@@ -12,6 +12,7 @@ Some of command-line options are equivalent to respective setting tags:
 - `--anime` (`ANIME`) [{ref}`anime_tag`]
 - `--band` (`BAND`) [{ref}`band_tag`]
 - `--band-connection` (`BAND_CONNECTION = .TRUE.`) [{ref}`band_connection_tag`]
+- `--band-const-interval` (`BAND_CONST_INTERVAL = .TRUE.`) [{ref}`band_const_interval_tag`]
 - `--band-format` (`BAND_FORMAT`) [{ref}`band_format_tag`]
 - `--band-labels` (`BAND_LABELS`) [{ref}`band_labels_tag`]
 - `--band-points` (`BAND_POINTS`) [{ref}`band_points_tag`]
