@@ -822,7 +822,7 @@ def get_band_qpoints(
     band_paths: Sequence | NDArray,
     npoints: int = 51,
     rec_lattice: NDArray | None = None,
-):
+) -> list[NDArray]:
     """Generate qpoints for band structure path.
 
     Note
