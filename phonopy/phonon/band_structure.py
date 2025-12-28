@@ -77,8 +77,20 @@ class BandPlot:
 
         """
         self._axs = axs
-        self.xscale = None
+        self._xscale: float | None = None
         self._decorated = False
+
+    @property
+    def xscale(self) -> float:
+        """Return xscale."""
+        if self._xscale is None:
+            raise RuntimeError("Run plot() or set_xscale_from_data() first.")
+        return self._xscale
+
+    @xscale.setter
+    def xscale(self, value: float):
+        """Set xscale."""
+        self._xscale = value
 
     def plot(self, distances, frequencies, path_connections, fmt=None, label=None):
         """Plot one band structure.
@@ -107,11 +119,11 @@ class BandPlot:
         else:
             _fmt = fmt
 
-        if self.xscale is None:
+        if self._xscale is None:
             self.set_xscale_from_data(frequencies, distances)
 
         count = 0
-        distances_scaled = [d * self.xscale for d in distances]
+        distances_scaled = [d * self._xscale for d in distances]
         for i, (d, f, c) in enumerate(
             zip(distances_scaled, frequencies, path_connections, strict=True)
         ):
@@ -129,7 +141,7 @@ class BandPlot:
         """Set xscale from data."""
         max_freq = max([np.max(fq) for fq in frequencies])
         max_dist = distances[-1][-1]
-        self.xscale = max_freq / max_dist * 1.5
+        self._xscale = max_freq / max_dist * 1.5
 
     def decorate(
         self,
@@ -153,10 +165,10 @@ class BandPlot:
         else:
             self._decorated = True
 
-        if self.xscale is None:
+        if self._xscale is None:
             self.set_xscale_from_data(frequencies, distances)
 
-        distances_scaled = [d * self.xscale for d in distances]
+        distances_scaled = [d * self._xscale for d in distances]
 
         # T T T F F -> [[0, 3], [4, 4]]
         lefts = [0]
