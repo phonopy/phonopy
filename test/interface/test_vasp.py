@@ -14,6 +14,7 @@ from phonopy.interface.vasp import (
     Vasprun,
     VasprunxmlExpat,
     get_vasp_structure_lines,
+    parse_force_constants,
     parse_set_of_forces,
     read_vasp,
     read_vasp_from_strings,
@@ -196,3 +197,11 @@ def test_write_XDATCAR():
     np.testing.assert_allclose(lattice, np.eye(3) * 11.38060295, atol=1e-8)
     np.testing.assert_allclose(positions[0, 0], [0.00087869, 0, 0], atol=1e-8)
     np.testing.assert_allclose(positions[-1, -1], [0.5, 0.5, 0.75], atol=1e-8)
+
+
+def test_read_force_constants_from_vasprun_xml():
+    """Test reading force constants from vasprun.xml."""
+    fc, symbols = parse_force_constants(cwd / "vasprun_fc.xml.xz")
+    assert fc.shape == (64, 64, 3, 3)
+    assert symbols == ["Na", "Cl"]
+    assert fc[0, 1, 2, 2] == pytest.approx(0.0046225992999999995)
