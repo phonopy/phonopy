@@ -951,6 +951,7 @@ class PhonopyMockArgs:
     cell_filename: str | os.PathLike | None = None
     conf_filename: str | os.PathLike | None = None
     create_force_sets: list[str | os.PathLike] | None = None
+    create_force_sets_zero: list[str | os.PathLike] | None = None
     fc_symmetry: bool | None = None
     fc_spg_symmetry: bool | None = None
     filename: Sequence[os.PathLike | str] | None = None
