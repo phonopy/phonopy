@@ -174,7 +174,7 @@ def create_FORCE_SETS(
                         )
 
     if log_level > 0 and "first_atoms" not in disp_dataset:
-        if len(force_filenames) < num_displacements:
+        if len(force_filenames) - force_sets_zero_mode * 1 < num_displacements:
             print("** Number of supercell files is less than displacements. **")
 
     if interface_mode == "lammps":
@@ -256,10 +256,14 @@ def check_agreements_of_displacements(
     all_points: list[NDArray],
     force_filenames: list[str | os.PathLike],
 ) -> str | os.PathLike | None:
-    """Check agreements of displacements."""
-    displacements = get_displacements_and_forces(dataset)[0] @ np.linalg.inv(
-        supercell.cell
-    )
+    """Check agreements of displacements.
+
+    Length of force_filenames can be less than that of displacements in dataset.
+
+    """
+    displacements = get_displacements_and_forces(dataset)[0][
+        : len(force_filenames)
+    ] @ np.linalg.inv(supercell.cell)
     for disp, points, filename in zip(
         displacements, all_points, force_filenames, strict=True
     ):

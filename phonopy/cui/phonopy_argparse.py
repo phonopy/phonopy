@@ -968,6 +968,7 @@ class PhonopyMockArgs:
     magmoms: str | None = None
     mesh_numbers: str | None = None
     qpoints: str | None = None
+    save_params: bool | None = None
     supercell_dimension: str | None = None
     thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool | None = None
