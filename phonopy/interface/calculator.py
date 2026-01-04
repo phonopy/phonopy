@@ -903,7 +903,7 @@ def get_calculator_physical_units(interface_mode: str | None = None) -> dict:
 def get_calc_dataset(
     interface_mode: str | None,
     num_atoms: int,
-    force_filenames: str,
+    force_filenames: list[str | os.PathLike],
     verbose: bool = True,
 ) -> dict:
     """Read calculator output files and parse force sets.

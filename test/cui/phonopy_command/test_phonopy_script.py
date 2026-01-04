@@ -114,6 +114,38 @@ def test_create_force_sets():
             os.chdir(original_cwd)
 
 
+def test_create_force_sets_zero():
+    """Test phonopy --force-sets-zero command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "vaspruns_SnO2" / "phonopy_disp.yaml.xz",
+                create_force_sets_zero=[
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-000.xz",
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-001.xz",
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-002.xz",
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-003.xz",
+                ],
+                load_phonopy_yaml=False,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in ("FORCE_SETS",):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 @pytest.mark.parametrize("load_phonopy_yaml", [False, True])
 def test_phonopy_load(load_phonopy_yaml: bool):
     """Test phonopy/phonopy-load command."""
@@ -546,6 +578,7 @@ def _get_phonopy_args(
     cell_filename: str | os.PathLike | None = None,
     conf_filename: str | os.PathLike | None = None,
     create_force_sets: list[str | os.PathLike] | None = None,
+    create_force_sets_zero: list[str | os.PathLike] | None = None,
     fc_spg_symmetry: bool | None = None,
     filename: str | os.PathLike | None = None,
     frequency_conversion_factor: float | None = None,
@@ -577,6 +610,7 @@ def _get_phonopy_args(
         cell_filename=cell_filename,
         conf_filename=conf_filename,
         create_force_sets=create_force_sets,
+        create_force_sets_zero=create_force_sets_zero,
         fc_spg_symmetry=fc_spg_symmetry,
         filename=_filename,
         frequency_conversion_factor=frequency_conversion_factor,
