@@ -37,9 +37,10 @@
 from __future__ import annotations
 
 import copy
-from typing import Optional
+import os
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.cui.load_helper import get_nac_params
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
@@ -52,15 +53,15 @@ from phonopy.structure.dataset import get_displacements_and_forces
 
 def create_FORCE_SETS(
     interface_mode: str | None,
-    force_filenames: list[str],
+    force_filenames: list[str | os.PathLike],
     phpy_yaml: PhonopyYaml | None = None,
     symmetry_tolerance: float | None = None,
     wien2k_P1_mode: bool = False,
     force_sets_zero_mode: bool = False,
-    disp_filename: str = "phonopy_disp.yaml",
-    force_sets_filename: str = "FORCE_SETS",
+    disp_filename: str | os.PathLike = "phonopy_disp.yaml",
+    force_sets_filename: str | os.PathLike = "FORCE_SETS",
     save_params: bool = False,
-    log_level=0,
+    log_level: int = 0,
 ):
     """Create FORCE_SETS from phonopy_disp.yaml and calculator output files.
 
@@ -91,17 +92,18 @@ def create_FORCE_SETS(
             )
 
     if disp_filename == "disp.yaml":
-        if interface_mode == "wien2k":
-            disp_dataset, supercell = parse_disp_yaml(
-                filename=disp_filename, return_cell=True
-            )
-        else:
-            disp_dataset = parse_disp_yaml(filename=disp_filename)
+        disp_dataset, supercell = parse_disp_yaml(
+            filename=disp_filename, return_cell=True
+        )
+        if save_params:
+            raise RuntimeError('"disp.yaml" cannot be used with --save-params option.')
     elif phpy_yaml is not None:
         supercell = phpy_yaml.supercell
         disp_dataset = phpy_yaml.dataset
     else:
         raise RuntimeError("Could not read displacement dataset.")
+
+    assert disp_dataset is not None
 
     if "natom" in disp_dataset:  # type-1 dataset
         num_atoms = disp_dataset["natom"]
@@ -151,6 +153,7 @@ def create_FORCE_SETS(
                     range_start = 1
                 else:
                     range_start = 0
+                assert supercell is not None
                 if filename := check_agreements_of_displacements(
                     supercell,
                     disp_dataset,
@@ -175,12 +178,15 @@ def create_FORCE_SETS(
             print("** Number of supercell files is less than displacements. **")
 
     if interface_mode == "lammps":
+        assert supercell is not None
         rotate_lammps_forces(force_sets, supercell.cell, verbose=(log_level > 0))
 
     if force_sets:
+        energies = calc_dataset.get("supercell_energies")
         if force_sets_zero_mode:
             force_sets = _subtract_residual_forces(force_sets)
-        energies = calc_dataset.get("supercell_energies")
+            if energies is not None:
+                energies = energies[1:]
 
         if dataset_type == 1:
             dataset = copy.deepcopy(disp_dataset)
@@ -198,6 +204,7 @@ def create_FORCE_SETS(
                 dataset["supercell_energies"] = energies
 
         if save_params:
+            assert phpy_yaml is not None
             phpy_yaml.dataset = dataset
             nac_params = get_nac_params(primitive=phpy_yaml.primitive)
             if nac_params:
@@ -218,7 +225,10 @@ def create_FORCE_SETS(
 
 
 def check_number_of_force_files(
-    num_displacements, force_filenames, disp_filename, force_sets_zero_mode=False
+    num_displacements: int,
+    force_filenames: list[str | os.PathLike],
+    disp_filename: str | os.PathLike,
+    force_sets_zero_mode: bool = False,
 ):
     """Verify number of supercell force files.
 
@@ -243,9 +253,9 @@ def check_number_of_force_files(
 def check_agreements_of_displacements(
     supercell: PhonopyAtoms,
     dataset: dict,
-    all_points: list[np.ndarray],
-    force_filenames: list[str],
-) -> Optional[str]:
+    all_points: list[NDArray],
+    force_filenames: list[str | os.PathLike],
+) -> str | os.PathLike | None:
     """Check agreements of displacements."""
     displacements = get_displacements_and_forces(dataset)[0] @ np.linalg.inv(
         supercell.cell
@@ -260,7 +270,7 @@ def check_agreements_of_displacements(
 
 
 def check_agreement_of_supercell_positions(
-    supercell: PhonopyAtoms, points: np.ndarray
+    supercell: PhonopyAtoms, points: NDArray
 ) -> bool:
     """Check agreement of supercell positions."""
     diff = supercell.scaled_positions - points
@@ -268,7 +278,7 @@ def check_agreement_of_supercell_positions(
     return (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any()
 
 
-def _subtract_residual_forces(force_sets):
+def _subtract_residual_forces(force_sets: list[NDArray]) -> list[NDArray]:
     for i in range(1, len(force_sets)):
         force_sets[i] -= force_sets[0]
     return force_sets[1:]

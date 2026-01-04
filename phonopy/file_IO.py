@@ -65,7 +65,7 @@ from phonopy.utils import similarity_transformation
 #
 # FORCE_SETS
 #
-def write_FORCE_SETS(dataset, filename="FORCE_SETS"):
+def write_FORCE_SETS(dataset: dict, filename: str | os.PathLike = "FORCE_SETS"):
     """Write FORCE_SETS from dataset.
 
     See more detail in ``get_FORCE_SETS_lines``.
