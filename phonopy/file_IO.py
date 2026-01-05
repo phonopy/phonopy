@@ -65,7 +65,7 @@ from phonopy.utils import similarity_transformation
 #
 # FORCE_SETS
 #
-def write_FORCE_SETS(dataset, filename="FORCE_SETS"):
+def write_FORCE_SETS(dataset: dict, filename: str | os.PathLike = "FORCE_SETS"):
     """Write FORCE_SETS from dataset.
 
     See more detail in ``get_FORCE_SETS_lines``.
@@ -896,7 +896,7 @@ def is_file_phonopy_yaml(
         return True
 
     myio = get_io_module_to_decompress(filename)
-    with myio.open(filename, "r") as f:
+    with myio.open(filename, "rb") as f:
         try:
             data = yaml.load(f, Loader=Loader)
             if data is None:

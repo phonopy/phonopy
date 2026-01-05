@@ -1150,7 +1150,7 @@ def load_yaml(fp: str | os.PathLike | typing.IO) -> dict:
         yaml_data = yaml.load(fp, Loader=Loader)
     else:
         myio = get_io_module_to_decompress(fp)
-        with myio.open(fp) as f:
+        with myio.open(fp, "rb") as f:
             yaml_data = yaml.load(f, Loader=Loader)
 
     return yaml_data

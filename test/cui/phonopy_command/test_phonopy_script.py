@@ -114,6 +114,161 @@ def test_create_force_sets():
             os.chdir(original_cwd)
 
 
+def test_create_force_sets_zero():
+    """Test phonopy --force-sets-zero command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "vaspruns_SnO2" / "phonopy_disp.yaml.xz",
+                create_force_sets_zero=[
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-000.xz",
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-001.xz",
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-002.xz",
+                    cwd / "vaspruns_SnO2" / "vasprun.xml-003.xz",
+                ],
+                load_phonopy_yaml=False,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in ("FORCE_SETS",):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize("save_params", [False, True])
+def test_create_force_sets_rd(save_params: bool):
+    """Test phonopy with random displacements."""
+
+    def check_supercell_energies(num_force_files: int):
+        ph = phonopy.load("phonopy_params.yaml", produce_fc=False)
+        np.testing.assert_allclose(
+            ph.supercell_energies,
+            [-223.886324, -223.875031, -223.880732][:num_force_files],
+        )
+
+    if save_params:
+        created_filenames = ("phonopy_params.yaml",)
+    else:
+        created_filenames = ("FORCE_SETS",)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "vaspruns_NaCl_rd" / "phonopy_disp.yaml.xz",
+                create_force_sets_zero=[
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00000.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00001.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00002.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00003.xml.xz",
+                ],
+                load_phonopy_yaml=False,
+                save_params=save_params,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            if save_params:
+                check_supercell_energies(3)
+
+            for created_filename in created_filenames:
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+            # Allows less number of force files (three disps in phonopy_disp.yaml).
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "vaspruns_NaCl_rd" / "phonopy_disp.yaml.xz",
+                create_force_sets_zero=[
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00000.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00001.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00002.xml.xz",
+                ],
+                load_phonopy_yaml=False,
+                save_params=save_params,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            if save_params:
+                check_supercell_energies(2)
+
+            for created_filename in created_filenames:
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "vaspruns_NaCl_rd" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00001.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00002.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00003.xml.xz",
+                ],
+                load_phonopy_yaml=False,
+                save_params=save_params,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            if save_params:
+                check_supercell_energies(3)
+
+            for created_filename in created_filenames:
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+            # Allows less number of force files (three disps in phonopy_disp.yaml).
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "vaspruns_NaCl_rd" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00001.xml.xz",
+                    cwd / "vaspruns_NaCl_rd" / "vasprun-00002.xml.xz",
+                ],
+                load_phonopy_yaml=False,
+                save_params=save_params,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            if save_params:
+                check_supercell_energies(2)
+
+            for created_filename in created_filenames:
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 @pytest.mark.parametrize("load_phonopy_yaml", [False, True])
 def test_phonopy_load(load_phonopy_yaml: bool):
     """Test phonopy/phonopy-load command."""
@@ -546,11 +701,12 @@ def _get_phonopy_args(
     cell_filename: str | os.PathLike | None = None,
     conf_filename: str | os.PathLike | None = None,
     create_force_sets: list[str | os.PathLike] | None = None,
+    create_force_sets_zero: list[str | os.PathLike] | None = None,
     fc_spg_symmetry: bool | None = None,
     filename: str | os.PathLike | None = None,
     frequency_conversion_factor: float | None = None,
     hdf5_compression: str | None = None,
-    is_check_symmetry: bool = False,
+    is_check_symmetry: bool | None = None,
     is_displacement: bool | None = None,
     is_eigenvectors: bool | None = None,
     is_graph_plot: bool | None = None,
@@ -560,6 +716,7 @@ def _get_phonopy_args(
     magmoms: str | None = None,
     mesh_numbers: str | None = None,
     qpoints: str | None = None,
+    save_params: bool | None = None,
     supercell_dimension: str | None = None,
     thermal_displacement_matrices_cif: float | None = None,
     use_pypolymlp: bool | None = None,
@@ -577,6 +734,7 @@ def _get_phonopy_args(
         cell_filename=cell_filename,
         conf_filename=conf_filename,
         create_force_sets=create_force_sets,
+        create_force_sets_zero=create_force_sets_zero,
         fc_spg_symmetry=fc_spg_symmetry,
         filename=_filename,
         frequency_conversion_factor=frequency_conversion_factor,
@@ -592,6 +750,7 @@ def _get_phonopy_args(
         mesh_numbers=mesh_numbers,
         qpoints=qpoints,
         thermal_displacement_matrices_cif=thermal_displacement_matrices_cif,
+        save_params=save_params,
         supercell_dimension=supercell_dimension,
         use_pypolymlp=use_pypolymlp,
         write_dynamical_matrices=write_dynamical_matrices,

@@ -42,6 +42,7 @@ import sys
 import typing
 import warnings
 from collections import OrderedDict
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -63,7 +64,9 @@ from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index, symbol
 from phonopy.structure.cells import Primitive, get_primitive, get_supercell
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int, forces_filenames: Sequence[str | os.PathLike], verbose: bool = True
+) -> list[NDArray] | list:
     """Parse forces from output files."""
     hook = "Forces acting on atoms"
     is_parsed = True

@@ -1066,8 +1066,13 @@ def _run_calculation(
             for band in bands:
                 print(
                     "[%6.3f %6.3f %6.3f] --> [%6.3f %6.3f %6.3f]"
-                    % (tuple(band[0]) + tuple(band[-1]))
+                    % (tuple(band[0]) + tuple(band[-1])),
+                    end="",
                 )
+                if settings.is_band_const_interval:
+                    print(f"   ({len(band)} points)")
+                else:
+                    print("")
 
         phonon.run_band_structure(
             bands,

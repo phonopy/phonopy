@@ -72,7 +72,7 @@ from phonopy.interface.pypolymlp import (
     parse_mlp_params,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import Primitive, get_primitive_matrix
+from phonopy.structure.cells import get_primitive_matrix
 from phonopy.structure.dataset import forces_in_dataset
 
 
@@ -139,7 +139,7 @@ def get_cell_settings(
 
 
 def get_nac_params(
-    primitive: Primitive | None = None,
+    primitive: PhonopyAtoms | None = None,
     nac_params: dict | None = None,
     born_filename: str | os.PathLike | None = None,
     is_nac: bool = True,
@@ -150,7 +150,7 @@ def get_nac_params(
 
     Parameters
     ----------
-    primitive : Primitive
+    primitive : PhonopyAtoms
         Primitive cell.
     nac_params : dict
         NAC parameters.

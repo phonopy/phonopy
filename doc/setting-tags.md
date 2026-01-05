@@ -417,6 +417,22 @@ BAND_CONNECTION = .TRUE.
 :scale: 25
 ```
 
+(band_const_interval_tag)=
+### `BAND_CONST_INTERVAL`
+
+When `BAND_CONST_INTERVAL = .TRUE.`, the number of q-points sampled in each band
+path segment is determined by the longest path segment, which uses the number
+specified by `BAND_POINTS`. This ensures similar distances between points across
+all segments. Consequently, the number of q-points in each band path segment is
+equal to or less than the value of `BAND_POINTS`. The default value is
+`.FALSE.`.
+
+```
+BAND = AUTO
+BAND_POINTS = 101
+BAND_CONST_INTERVAL = .TRUE.
+```
+
 (mesh_sampling_tags)=
 
 ## Mesh sampling tags

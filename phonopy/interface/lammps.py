@@ -33,6 +33,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
 from __future__ import annotations
 
 import io
@@ -220,7 +221,7 @@ class LammpsForcesLoader:
         """Return forces."""
         return self._forces
 
-    def _parse(self, fp: io.IOBase, column_start=5, column_end=8):
+    def _parse(self, fp: typing.IO, column_start=5, column_end=8):
         """Parse lines of LAMMPS output file."""
         num_atoms = -1
         for line in fp:
