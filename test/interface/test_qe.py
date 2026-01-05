@@ -95,7 +95,7 @@ def test_make_fc_q2r():
 
     fc_filename = cwd / "NaCl-q2r.fc.xz"
     myio = get_io_module_to_decompress(fc_filename)
-    with myio.open(fc_filename) as f:
+    with myio.open(fc_filename, "rt") as f:
         primcell_filename = cwd / "NaCl-q2r.in"
         cell, _ = read_pwscf(primcell_filename)
         q2r = PH_Q2R(f)

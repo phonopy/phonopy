@@ -1613,7 +1613,7 @@ def read_XDATCAR(
 
     if fileptr is None:
         myio = get_io_module_to_decompress(filename)
-        with myio.open(filename) as f:
+        with myio.open(filename, "rt") as f:
             lattice, numbers_of_atoms = _read_XDATCAR_fileptr(f)
     else:
         lattice, numbers_of_atoms = _read_XDATCAR_fileptr(fileptr)
