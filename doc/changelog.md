@@ -2,6 +2,10 @@
 
 # Change Log
 
+# Jan-05-2026: Version 2.47.1
+
+- Just for releasing pypi package.
+
 # Jan-05-2026: Version 2.47.0
 
 - Bug fix for the `--save-params` option when used with the `--fz` option to
