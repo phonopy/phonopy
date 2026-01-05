@@ -2,6 +2,16 @@
 
 # Change Log
 
+# Jan-05-2026: Version 2.47.1
+
+- Just for releasing pypi package.
+
+# Jan-05-2026: Version 2.47.0
+
+- Bug fix for the `--save-params` option when used with the `--fz` option to
+  write energies in `phonopy_params.yaml` for the VASP interface. This bug
+  existed in all older versions.
+
 ## Dec-23-2025: Version 2.46.1
 
 - Bug fix for calling non-existent methods.
