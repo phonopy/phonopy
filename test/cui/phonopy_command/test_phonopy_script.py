@@ -706,7 +706,7 @@ def _get_phonopy_args(
     filename: str | os.PathLike | None = None,
     frequency_conversion_factor: float | None = None,
     hdf5_compression: str | None = None,
-    is_check_symmetry: bool = False,
+    is_check_symmetry: bool | None = None,
     is_displacement: bool | None = None,
     is_eigenvectors: bool | None = None,
     is_graph_plot: bool | None = None,

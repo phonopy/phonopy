@@ -896,7 +896,7 @@ def is_file_phonopy_yaml(
         return True
 
     myio = get_io_module_to_decompress(filename)
-    with myio.open(filename, "r") as f:
+    with myio.open(filename, "rb") as f:
         try:
             data = yaml.load(f, Loader=Loader)
             if data is None:
