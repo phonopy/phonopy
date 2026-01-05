@@ -943,7 +943,12 @@ def get_parser(
 
 @dataclasses.dataclass
 class PhonopyMockArgs:
-    """Mock args of ArgumentParser."""
+    """Mock args of ArgumentParser.
+
+    Default values should be None to centralize them in Settings and
+    PhonopySettings classes.
+
+    """
 
     anime: str | None = None
     band_paths: str | None = None
@@ -951,6 +956,7 @@ class PhonopyMockArgs:
     cell_filename: str | os.PathLike | None = None
     conf_filename: str | os.PathLike | None = None
     create_force_sets: list[str | os.PathLike] | None = None
+    create_force_sets_zero: list[str | os.PathLike] | None = None
     fc_symmetry: bool | None = None
     fc_spg_symmetry: bool | None = None
     filename: Sequence[os.PathLike | str] | None = None
@@ -967,6 +973,7 @@ class PhonopyMockArgs:
     magmoms: str | None = None
     mesh_numbers: str | None = None
     qpoints: str | None = None
+    save_params: bool | None = None
     supercell_dimension: str | None = None
     thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool | None = None

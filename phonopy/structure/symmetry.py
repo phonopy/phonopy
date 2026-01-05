@@ -453,15 +453,15 @@ def get_lattice_vector_equivalence(point_symmetry):
 
 
 def elaborate_borns_and_epsilon(
-    ucell,
-    borns,
-    epsilon,
-    primitive_matrix=None,
-    supercell_matrix=None,
-    is_symmetry=True,
-    symmetrize_tensors=False,
-    symprec=1e-5,
-):
+    ucell: PhonopyAtoms,
+    borns: NDArray,
+    epsilon: NDArray,
+    primitive_matrix: Sequence[Sequence[float]] | NDArray | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    is_symmetry: bool = True,
+    symmetrize_tensors: bool = False,
+    symprec: float = 1e-5,
+) -> tuple[NDArray, NDArray, NDArray]:
     """Symmetrize Born effective charges and dielectric constants.
 
     Born effective charges of symmetrically independent atoms
@@ -666,8 +666,12 @@ def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
 
 
 def _extract_independent_atoms(
-    ucell, primitive_matrix=None, supercell_matrix=None, is_symmetry=True, symprec=1e-5
-):
+    ucell: PhonopyAtoms,
+    primitive_matrix: Sequence[Sequence[float]] | NDArray | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    is_symmetry: bool = True,
+    symprec: float = 1e-5,
+) -> tuple[NDArray, list[int]]:
     scell, pcell = _get_supercell_and_primitive(
         ucell,
         primitive_matrix=primitive_matrix,
