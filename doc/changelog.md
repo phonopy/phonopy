@@ -2,7 +2,7 @@
 
 # Change Log
 
-# Jan-04-2026: UNRELEASED
+# Jan-05-2026: Version 2.47.0
 
 - Bug fix for the `--save-params` option when used with the `--fz` option to
   write energies in `phonopy_params.yaml` for the VASP interface. This bug
