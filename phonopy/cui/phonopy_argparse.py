@@ -943,7 +943,12 @@ def get_parser(
 
 @dataclasses.dataclass
 class PhonopyMockArgs:
-    """Mock args of ArgumentParser."""
+    """Mock args of ArgumentParser.
+
+    Default values should be None to centralize them in Settings and
+    PhonopySettings classes.
+
+    """
 
     anime: str | None = None
     band_paths: str | None = None
