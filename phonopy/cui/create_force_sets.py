@@ -226,7 +226,7 @@ def create_FORCE_SETS(
 
 def check_number_of_force_files(
     num_displacements: int,
-    force_filenames: list[str | os.PathLike],
+    force_filenames: list[str] | list[os.PathLike],
     disp_filename: str | os.PathLike,
     force_sets_zero_mode: bool = False,
 ):
@@ -254,7 +254,7 @@ def check_agreements_of_displacements(
     supercell: PhonopyAtoms,
     dataset: dict,
     all_points: list[NDArray],
-    force_filenames: list[str | os.PathLike],
+    force_filenames: list[str] | list[os.PathLike],
 ) -> str | os.PathLike | None:
     """Check agreements of displacements.
 
