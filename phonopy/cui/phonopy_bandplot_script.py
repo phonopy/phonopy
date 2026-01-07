@@ -234,30 +234,30 @@ def _read_band_hdf5(
     filename: str | os.PathLike,
 ) -> tuple[NDArray, NDArray, NDArray, NDArray, list[list[str]]]:
     with h5py.File(filename, "r") as data:
-        f2: NDArray = data["frequency"][:]  # type: ignore
-        d1: NDArray = data["distance"][:]  # type: ignore
-        # lbl = data['label'][:]
-
         labels_path = []
         for x in data["label"][:]:  # type: ignore
             labels_path.append([y.decode("utf-8") for y in x])
 
-        frequencies = f2.reshape((f2.shape[0] * f2.shape[1], f2.shape[2]))
+        seg_pt = np.array(data["segment_nqpoint"][:])  # type: ignore
+        frequencies = []
         distances = []
-        for x in d1:
-            for y in x:
-                distances.append(y)
-        qpoints = [i for j in data["path"][:] for i in j]  # type: ignore
-
-        seg_pt = data["segment_nqpoint"][:]  # type: ignore
-
-        # nqpt = data['nqpoint'][0]
+        qpoints = []
+        for npt, freqs, dst, path in zip(
+            seg_pt,
+            data["frequency"][:],  # type: ignore
+            data["distance"][:],  # type: ignore
+            data["path"][:],  # type: ignore
+            strict=True,
+        ):
+            frequencies += list(freqs[:npt])
+            distances += list(dst[:npt])
+            qpoints += list(path[:npt])
 
     return (
         np.array(distances),
         np.array(frequencies),
         np.array(qpoints),
-        np.array(seg_pt),
+        seg_pt,
         labels_path,
     )
 
