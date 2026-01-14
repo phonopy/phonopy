@@ -369,16 +369,16 @@ def test_formulas(symbols, expected_formula, expected_normalized):
 def test_import_deprecated_atom_data():
     """Test import of deprecated atom_data."""
     with pytest.warns(DeprecationWarning):
-        pass
+        from phonopy.structure.atoms import atom_data  # noqa: F401
 
 
 def test_import_deprecated_symbol_map():
     """Test import of deprecated symbol_map."""
     with pytest.warns(DeprecationWarning):
-        pass
+        from phonopy.structure.atoms import symbol_map  # noqa: F401
 
 
 def test_import_deprecated_isotope_data():
     """Test import of deprecated isotope_data."""
     with pytest.warns(DeprecationWarning):
-        pass
+        from phonopy.structure.atoms import isotope_data  # noqa: F401
