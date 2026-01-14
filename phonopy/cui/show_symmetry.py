@@ -37,6 +37,11 @@
 import numpy as np
 import spglib
 
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
+
 from phonopy import Phonopy
 from phonopy.cui.collect_cell_info import PhonopyCellInfoResult
 from phonopy.interface.calculator import (
@@ -63,9 +68,9 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
     """
     base_fname = get_default_cell_filename(phonon.calculator)
     symprec = phonon.primitive_symmetry.tolerance
-    (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(  # type: ignore
-        phonon.primitive.totuple(), symprec
-    )
+    spglib_cell = spglib.refine_cell(phonon.primitive.totuple(), symprec)
+    assert spglib_cell is not None
+    bravais_lattice, bravais_pos, bravais_numbers = spglib_cell
     _, _, _, perm = sort_positions_by_symbols(bravais_numbers)
     bravais = PhonopyAtoms(
         numbers=bravais_numbers[perm],

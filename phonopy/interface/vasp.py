@@ -57,7 +57,8 @@ from phonopy.file_IO import (
     write_force_constants_to_hdf5,
 )
 from phonopy.physical_units import get_physical_units
-from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
@@ -358,7 +359,7 @@ def _get_atoms_from_poscar(
 
 def _is_exist_symbols(symbols: Sequence[str]) -> bool:
     for s in symbols:
-        if s not in symbol_map:
+        if s not in get_atomic_data().symbol_map:
             return False
     return True
 
@@ -366,6 +367,8 @@ def _is_exist_symbols(symbols: Sequence[str]) -> bool:
 def _expand_symbols(
     num_atoms: Sequence[int] | NDArray, symbols: Sequence[str] | None = None
 ) -> list[str]:
+    symbol_map = get_atomic_data().symbol_map
+    atom_data = get_atomic_data().atom_data
     expanded_symbols = []
     is_symbols = True
     if symbols is None:

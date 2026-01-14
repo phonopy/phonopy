@@ -44,7 +44,8 @@ import typing
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms, atom_data
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_cell_matrix_from_lattice
 
 
@@ -330,6 +331,7 @@ class LammpsStructureLoader:
                 cell=lattice, positions=self._atom_positions, symbols=self._atom_labels
             )
         else:
+            atom_data = get_atomic_data().atom_data
             symbols = [atom_data[n][1] for n in self._atom_labels]
             self._cell = PhonopyAtoms(
                 cell=lattice, positions=self._atom_positions, symbols=symbols

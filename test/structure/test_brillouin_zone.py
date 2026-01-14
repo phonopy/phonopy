@@ -1,7 +1,14 @@
 """Tests for BrillouinZone class."""
 
+from __future__ import annotations
+
 import numpy as np
-from spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
+import spglib
+
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
 
 from phonopy.structure.brillouin_zone import BrillouinZone
 
@@ -27,7 +34,7 @@ def test_Hexagonal():
 
 
 def _testBrillouinZone(direct_lat, mesh, is_shift):
-    _, grid_address = get_stabilized_reciprocal_mesh(
+    _, grid_address = spglib.get_stabilized_reciprocal_mesh(  # type: ignore
         mesh,
         rotations=[
             np.eye(3, dtype="intc"),
@@ -35,7 +42,7 @@ def _testBrillouinZone(direct_lat, mesh, is_shift):
         is_shift=is_shift,
     )
     rec_lat = np.linalg.inv(direct_lat)
-    bz_grid_address, bz_map = relocate_BZ_grid_address(
+    bz_grid_address, bz_map = spglib.relocate_BZ_grid_address(  # type: ignore
         grid_address, mesh, rec_lat, is_shift=is_shift
     )
 

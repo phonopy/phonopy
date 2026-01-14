@@ -41,6 +41,12 @@ from typing import Literal
 
 import numpy as np
 import spglib
+
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
+
 from numpy.typing import ArrayLike, NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
@@ -983,7 +989,7 @@ def _trim_cell(
 #
 # Delaunay and Niggli reductions
 #
-def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray | None:
+def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray:
     """Search kinds of shortest basis vectors.
 
     Parameters
@@ -1006,9 +1012,12 @@ def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray | Non
 
     """
     if method == "niggli":
-        return spglib.niggli_reduce(lattice, eps=tolerance)
+        red_cell = spglib.niggli_reduce(lattice, eps=tolerance)
     else:
-        return spglib.delaunay_reduce(lattice, eps=tolerance)
+        red_cell = spglib.delaunay_reduce(lattice, eps=tolerance)
+    if red_cell is None:
+        raise RuntimeError(f"{method} reduction failed.")
+    return red_cell
 
 
 def get_smallest_vectors(
@@ -1229,7 +1238,6 @@ class ShortestPairs:
         reduced_bases = get_reduced_bases(
             self._supercell_bases, method=reduced_cell_method, tolerance=self._symprec
         )
-        assert reduced_bases is not None
         trans_mat_float = np.dot(self._supercell_bases, np.linalg.inv(reduced_bases))
         trans_mat = np.rint(trans_mat_float).astype(int)
         assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()

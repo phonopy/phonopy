@@ -39,8 +39,13 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import numpy as np
+import spglib
 from numpy.typing import ArrayLike, NDArray
-from spglib import SpglibDataset
+
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
 
 
 def similarity_transformation(rot: ArrayLike, mat: ArrayLike) -> NDArray:
@@ -48,7 +53,7 @@ def similarity_transformation(rot: ArrayLike, mat: ArrayLike) -> NDArray:
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))  # type: ignore
 
 
-def get_dot_access_dataset(dataset) -> SimpleNamespace | SpglibDataset:
+def get_dot_access_dataset(dataset) -> SimpleNamespace | spglib.SpglibDataset:
     """Return dataset with dot access.
 
     From spglib 2.5, dataset is returned as dataclass.

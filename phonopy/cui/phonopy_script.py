@@ -45,6 +45,11 @@ from typing import Literal
 import numpy as np
 import spglib
 
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
+
 from phonopy import Phonopy, __version__
 from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, get_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
@@ -100,7 +105,7 @@ from phonopy.phonon.dos import get_pdos_indices
 from phonopy.phonon.mesh import Mesh
 from phonopy.physical_units import get_physical_units
 from phonopy.sscha.core import MLPSSCHA
-from phonopy.structure.atoms import atom_data, symbol_map
+from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.cells import print_cell
 from phonopy.structure.dataset import forces_in_dataset
@@ -1610,10 +1615,7 @@ def _start_phonopy(**argparse_control):
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
-        try:  # spglib.get_version() is deprecated.
-            print(f"Spglib version {spglib.spg_get_version()}")  # type: ignore
-        except AttributeError:
-            print("Spglib version %d.%d.%d" % spglib.get_version())  # type: ignore
+        print(f"Spglib version {spglib.spg_get_version()}")  # type: ignore
 
         print("")
 
@@ -1822,6 +1824,8 @@ def _init_phonopy(
         phonon.masses = settings.masses
 
     # Atomic species without mass case
+    atom_data = get_atomic_data().atom_data
+    symbol_map = get_atomic_data().symbol_map
     symbols_with_no_mass = []
     if phonon.primitive.masses is None:
         for s in phonon.primitive.symbols:

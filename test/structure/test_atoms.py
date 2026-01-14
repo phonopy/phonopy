@@ -1,5 +1,7 @@
 """Tests for PhonopyAtoms."""
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from io import StringIO
 
@@ -72,7 +74,6 @@ def test_phonopy_atoms_AcO2():
 )
 def test_Cr_magnetic_moments(convcell_cr: PhonopyAtoms, is_ncl: bool, is_flat: bool):
     """Test by Cr with magnetic moments."""
-    print(len(convcell_cr))
     if is_ncl:
         if is_flat:
             convcell_cr.magnetic_moments = [0, 0, 1, 0, 0, -1]
@@ -363,3 +364,21 @@ def test_formulas(symbols, expected_formula, expected_normalized):
 
     assert cell.formula == expected_formula
     assert cell.normalized_formula == expected_normalized
+
+
+def test_import_deprecated_atom_data():
+    """Test import of deprecated atom_data."""
+    with pytest.warns(DeprecationWarning):
+        from phonopy.structure.atoms import atom_data  # noqa: F401
+
+
+def test_import_deprecated_symbol_map():
+    """Test import of deprecated symbol_map."""
+    with pytest.warns(DeprecationWarning):
+        from phonopy.structure.atoms import symbol_map  # noqa: F401
+
+
+def test_import_deprecated_isotope_data():
+    """Test import of deprecated isotope_data."""
+    with pytest.warns(DeprecationWarning):
+        from phonopy.structure.atoms import isotope_data  # noqa: F401
