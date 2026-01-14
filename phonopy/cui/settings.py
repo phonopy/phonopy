@@ -1068,6 +1068,7 @@ class PhonopySettings(Settings):
         self.fits_Debye_model = False
         self.max_frequency = None
         self.min_frequency = None
+        self.import_ase_masses_iupac2016 = False
         self.irreps_q_point: list | None = None
         self.irreps_tolerance: float | None = None
         self.is_band_connection = False
@@ -1204,6 +1205,10 @@ class PhonopyConfParser(ConfParser):
         if "fmin" in arg_list:
             if args.fmin is not None:
                 self._confs["fmin"] = args.fmin
+
+        if "import_ase_masses_iupac2016" in arg_list:
+            if args.import_ase_masses_iupac2016:
+                self._confs["import_ase_masses_iupac2016"] = ".true."
 
         if "is_thermal_properties" in arg_list:
             if args.is_thermal_properties:
@@ -1706,11 +1711,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == "store_dense_svecs":
                 if confs["store_dense_svecs"].lower() == ".true.":
                     self._set_parameter("store_dense_svecs", True)
+                elif confs["store_dense_svecs"].lower() == ".false.":
+                    self._set_parameter("store_dense_svecs", False)
 
             # SSCHA
             if conf_key == "sscha_iterations":
                 val = int(confs["sscha_iterations"])
                 self._set_parameter("sscha_iterations", val)
+
+            # Import atomic weights from ASE iupac2016
+            if conf_key == "import_ase_masses_iupac2016":
+                if confs["import_ase_masses_iupac2016"].lower() == ".true.":
+                    self._set_parameter("import_ase_masses_iupac2016", True)
+                elif confs["import_ase_masses_iupac2016"].lower() == ".false.":
+                    self._set_parameter("import_ase_masses_iupac2016", False)
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -2043,3 +2057,7 @@ class PhonopyConfParser(ConfParser):
         # SSCHA
         if "sscha_iterations" in params:
             settings.sscha_iterations = params["sscha_iterations"]
+
+        # Import atomic weights from ASE iupac2016
+        if "import_ase_masses_iupac2016" in params:
+            settings.import_ase_masses_iupac2016 = params["import_ase_masses_iupac2016"]

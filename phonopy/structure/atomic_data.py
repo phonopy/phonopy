@@ -651,10 +651,13 @@ class AtomicData:
     )
 
 
-def set_atomic_data():
+def set_atomic_data(atomic_data: AtomicData | None = None):
     """Set atomic data: symbol_map, atom_data, isotope_data."""
     global _atomic_data
-    _atomic_data = AtomicData()
+    if atomic_data is None:
+        _atomic_data = AtomicData()
+    else:
+        _atomic_data = atomic_data
 
 
 def get_atomic_data():
@@ -662,5 +665,53 @@ def get_atomic_data():
     return _atomic_data
 
 
-# Global variable _physical_units is initialized here.
+def set_ASE_atomic_masses_iupac2016():
+    """Set atomic masses from ASE according to IUPAC 2016.
+
+    Note
+    ----
+    isotope_data is not updated by this function.
+
+    """
+    try:
+        from ase.data import atomic_masses_iupac2016
+
+        atomic_data = get_atomic_data()
+        atom_data = atomic_data.atom_data
+        symbol_map = atomic_data.symbol_map
+
+        chemical_names = (
+            (113, "Nh", "Nihonium", None),
+            (114, "Fl", "Flerovium", None),
+            (115, "Mc", "Moscovium", None),
+            (116, "Lv", "Livermorium", None),
+            (117, "Ts", "Tennessine", None),
+            (118, "Og", "Oganesson", None),
+        )
+
+        for elem in ("Uut", "Uuq", "Uup", "Uuh", "Uus", "Uuo"):
+            symbol_map.pop(elem)
+
+        for atomic_number, symbol, _, _ in chemical_names:
+            symbol_map[symbol] = atomic_number
+
+        assert len(atom_data) == len(atomic_masses_iupac2016)
+        new_data = []
+        for i, ary in enumerate(atom_data):
+            assert ary[0] == i, "Atomic data index mismatch."
+            if i >= 113:
+                _ary = list(chemical_names[i - 113])
+            else:
+                _ary = list(ary)
+            _ary[3] = atomic_masses_iupac2016[i]
+            new_data.append(tuple(_ary))
+
+        atomic_data.atom_data = tuple(new_data)
+        set_atomic_data(atomic_data)
+
+    except ImportError as err:
+        raise ImportError("ASE package is required to use this function.") from err
+
+
+# Global variable _atomic_data is initialized here.
 set_atomic_data()
