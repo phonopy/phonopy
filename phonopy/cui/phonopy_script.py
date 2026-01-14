@@ -105,7 +105,10 @@ from phonopy.phonon.dos import get_pdos_indices
 from phonopy.phonon.mesh import Mesh
 from phonopy.physical_units import get_physical_units
 from phonopy.sscha.core import MLPSSCHA
-from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atomic_data import (
+    get_atomic_data,
+    set_ASE_atomic_masses_iupac2016,
+)
 from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.cells import print_cell
 from phonopy.structure.dataset import forces_in_dataset
@@ -1819,7 +1822,6 @@ def _init_phonopy(
 
         _check_supercell_in_yaml(cell_info, phonon, log_level)
 
-    # Set atomic masses of primitive cell
     if settings.masses is not None:
         phonon.masses = settings.masses
 
@@ -1897,6 +1899,20 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     settings, confs, cell_filename = _read_phonopy_settings(
         args, load_phonopy_yaml, log_level
     )
+
+    # Import masses from ASE based on IUPAC 2016
+    if settings.import_ase_masses_iupac2016:
+        set_ASE_atomic_masses_iupac2016()
+        if log_level > 0:
+            print("Atomic weights were imported from ASE based on IUPAC 2016.")
+            print("https://ase-lib.org/ase/data.html#ase.data.atomic_masses_iupac2016")
+            print(
+                "ASE citation is found in "
+                "https://ase-lib.org/faq.html#how-should-i-cite-ase"
+            )
+            print("IUPAC 2016: Meija, J., Coplen, T., Berglund, M., et al.,")
+            print("Pure and Applied Chemistry, 88(3), 265-291 (2016).")
+            print("")
 
     # phonopy --symmetry
     run_symmetry_info = args.is_check_symmetry
