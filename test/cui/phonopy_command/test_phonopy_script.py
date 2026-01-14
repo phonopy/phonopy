@@ -15,6 +15,7 @@ import yaml
 import phonopy
 from phonopy.cui.phonopy_argparse import PhonopyMockArgs
 from phonopy.cui.phonopy_script import main
+from phonopy.structure.atomic_data import set_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 
@@ -277,7 +278,6 @@ def test_phonopy_load(load_phonopy_yaml: bool):
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 load_phonopy_yaml=load_phonopy_yaml,
@@ -306,7 +306,6 @@ def test_unit_conversion_factor(load_phonopy_yaml: bool):
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-fd.yaml.xz",
                 band_paths="0 0 0 0 0 1/2",
@@ -348,7 +347,6 @@ def test_unit_conversion_factor_QE(load_phonopy_yaml: bool):
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-QE.yaml.xz",
                 band_paths="0 0 0 0 0 1/2",
@@ -387,7 +385,6 @@ def test_phonopy_is_check_symmetry():
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 load_phonopy_yaml=False,
@@ -473,7 +470,6 @@ def test_anime():
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 anime="0 0 0",
@@ -503,7 +499,6 @@ def test_tdm_cif():
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 thermal_displacement_matrices_cif=1000,
@@ -541,7 +536,6 @@ def test_band_h5py(hdf5_compression: str, with_eigenvectors: bool):
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 band_paths="0 0 0 1/2 1/2 1/2",
@@ -592,7 +586,6 @@ def test_mesh_h5py(hdf5_compression: str, with_eigenvectors: bool):
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 mesh_numbers="3 3 3",
@@ -642,7 +635,6 @@ def test_qpoints_h5py(
         os.chdir(temp_dir)
 
         try:
-            # Check sys.exit(0)
             argparse_control = _get_phonopy_args(
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 qpoints="0 0 0 0 0 0.5",
@@ -684,6 +676,49 @@ def test_qpoints_h5py(
             os.chdir(original_cwd)
 
 
+def test_import_masses_from_ASE():
+    """Test import masses from ASE."""
+    pytest.importorskip("ase")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / ".." / ".." / "POSCAR_NaCl",
+                supercell_dimension="1 1 1",
+                is_displacement=True,
+                primitive_axes="auto",
+                load_phonopy_yaml=False,
+                import_ase_masses_iupac2016=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            ph = phonopy.load("phonopy_disp.yaml", produce_fc=False)
+            masses = ph.unitcell.masses
+            assert masses[-1] == pytest.approx(35.45, abs=1e-3)
+
+            for created_filename in (
+                "POSCAR-001",
+                "POSCAR-002",
+                "SPOSCAR",
+                "phonopy_disp.yaml",
+            ):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            # Reset default atomic masses.
+            set_atomic_data()
+            os.chdir(original_cwd)
+
+
 def _ls():
     current_dir = pathlib.Path(".")
     for file in current_dir.iterdir():
@@ -716,6 +751,7 @@ def _get_phonopy_args(
     load_phonopy_yaml: bool = False,
     magmoms: str | None = None,
     mesh_numbers: str | None = None,
+    primitive_axes: str | None = None,
     qpoints: str | None = None,
     save_params: bool | None = None,
     supercell_dimension: str | None = None,
@@ -750,6 +786,7 @@ def _get_phonopy_args(
         log_level=1,
         magmoms=magmoms,
         mesh_numbers=mesh_numbers,
+        primitive_axes=primitive_axes,
         qpoints=qpoints,
         thermal_displacement_matrices_cif=thermal_displacement_matrices_cif,
         save_params=save_params,
