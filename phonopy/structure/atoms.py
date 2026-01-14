@@ -415,30 +415,34 @@ class PhonopyAtoms:
             self._set_scaled_positions(scaled_positions)
 
     def _numbers_to_symbols(self):
+        _atom_data = get_atomic_data().atom_data
         symbols = []
         for number in self._numbers_with_shifts:
             n = number % self._MOD_DIVISOR
             m = number // self._MOD_DIVISOR
             if m > 0:
-                symbols.append(f"{atom_data[n][1]}{m}")
+                symbols.append(f"{_atom_data[n][1]}{m}")
             else:
-                symbols.append(f"{atom_data[n][1]}")
+                symbols.append(f"{_atom_data[n][1]}")
         self._symbols = symbols
 
     def _symbols_to_numbers(self):
+        _symbol_map = get_atomic_data().symbol_map
         numbers = []
         for symnum in self._symbols:
             symbol, index = split_symbol_and_index(symnum)
-            numbers.append(symbol_map[symbol] + self._MOD_DIVISOR * index)
+            numbers.append(_symbol_map[symbol] + self._MOD_DIVISOR * index)
 
         self._numbers_with_shifts = np.array(numbers, dtype="intc")
 
     def _symbols_to_masses(self):
+        _symbol_map = get_atomic_data().symbol_map
+        _atom_data = get_atomic_data().atom_data
         symbols = [split_symbol_and_index(s)[0] for s in self._symbols]
-        masses = [atom_data[symbol_map[s]][3] for s in symbols]
+        masses = [_atom_data[_symbol_map[s]][3] for s in symbols]
         if None in masses:
             symbols_with_undefined_masses = set(
-                [s for s in self._symbols if atom_data[symbol_map[s]][3] is None]
+                [s for s in self._symbols if _atom_data[_symbol_map[s]][3] is None]
             )
             raise RuntimeError(
                 f"Masses of {symbols_with_undefined_masses} are undefined."
@@ -528,6 +532,7 @@ class PhonopyAtoms:
 
     def get_yaml_lines(self) -> list[str]:
         """Return list of text lines of crystal structure in yaml."""
+        _atom_data = get_atomic_data().atom_data
         lines = ["lattice:"]
         for pos, a in zip(self._cell, ("a", "b", "c"), strict=True):
             lines.append(
@@ -548,7 +553,7 @@ class PhonopyAtoms:
                 strict=True,
             )
         ):
-            formal_s = atom_data[number][1]
+            formal_s = _atom_data[number][1]
             if symbol == formal_s:
                 lines.append(f"- symbol: {symbol} # {i + 1}")
             else:
@@ -713,6 +718,17 @@ def parse_cell_dict(cell_dict: dict) -> PhonopyAtoms | None:
         return None
 
 
-symbol_map = get_atomic_data().symbol_map
-atom_data = get_atomic_data().atom_data
-isotope_data = get_atomic_data().isotope_data
+def __getattr__(name):
+    if name in ("symbol_map", "atom_data", "isotope_data"):
+        warnings.warn(
+            "symbol_map, atom_data, and isotope_data are deprecated. "
+            "Use phonopy.atomic_data.get_atomic_data() dataclass instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if name == "atom_data":
+            return get_atomic_data().atom_data
+        if name == "isotope_data":
+            return get_atomic_data().isotope_data
+        if name == "symbol_map":
+            return get_atomic_data().symbol_map

@@ -60,7 +60,8 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
 )
 from phonopy.physical_units import get_physical_units
-from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index, symbol_map
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index
 from phonopy.structure.cells import Primitive, get_primitive, get_supercell
 
 
@@ -115,6 +116,7 @@ def read_pwscf(filename):
     pp_all_filenames = [pp_map[x] for x in species]
 
     use_given_masses = False
+    symbol_map = get_atomic_data().symbol_map
     for symnum in species:  # symnum is like 'H', 'H1', 'H2', ...
         symbol, num = split_symbol_and_index(symnum)
         if symbol not in symbol_map:
