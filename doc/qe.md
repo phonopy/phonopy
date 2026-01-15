@@ -65,8 +65,8 @@ NaCl example found in `example/NaCl-QE` directory.
    atoms, e.g., as follows:
 
    ```bash
-   % mpirun pw.x -i NaCl-001.in |& tee NaCl-001.out
-   % mpirun pw.x -i NaCl-002.in |& tee NaCl-002.out
+   % pw.x -i NaCl-001.in |& tee NaCl-001.out
+   % pw.x -i NaCl-002.in |& tee NaCl-002.out
    ```
 
 3) To create `FORCE_SETS`, that is used by phonopy,
@@ -90,34 +90,60 @@ NaCl example found in `example/NaCl-QE` directory.
    automatically read. Examples of post-process are shown below.
 
    ```
-   % phonopy --qe -c NaCl.in -p band.conf
+   % phonopy-load -p --config band.conf
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
-                                         1.13.0
+                                         2.47.1
 
-   Python version 2.7.14
-   Spglib version 1.10.3
+   -------------------------[time 2026-01-16 08:09:24]-------------------------
+   Compiled with OpenMP support (max 10 threads).
+   Running in phonopy.load mode.
+   Python version 3.13.3
+   Spglib version 2.7.0
+
+   "band.conf" was read as phonopy configuration file.
    Calculator interface: qe
+   Crystal structure was read from "phonopy_disp.yaml".
+   Unit of length: au
    Band structure mode
    Settings:
      Supercell: [2 2 2]
-     Primitive axis:
-       [ 0.   0.5  0.5]
-       [ 0.5  0.   0.5]
-       [ 0.5  0.5  0. ]
+     Primitive matrix:
+       [0.  0.5 0.5]
+       [0.5 0.  0.5]
+       [0.5 0.5 0. ]
    Spacegroup: Fm-3m (225)
-   Computing force constants...
-   max drift of force constants: -0.001194 (zz) -0.000000 (zz)
+   Number of symmetry operations in supercell: 1536
+   Use -v option to watch primitive cell, unit cell, and supercell structures.
+
+   NAC params were read from "BORN".
+   Displacement-force dataset was read from "FORCE_SETS".
+   -------------------------------- Symfc start -------------------------------
+   Symfc version 1.6.0 (https://github.com/symfc/symfc)
+   Citation: A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024)
+   Computing [2] order force constants.
+   Increase log-level to watch detailed symfc log.
+   --------------------------------- Symfc end --------------------------------
+   Max drift of force constants: -0.00000000 (yy) -0.00000000 (yy)
+   Max drift after symmetrization by symfc projector: -0.00000000 (yy) -0.00000000 (yy)
+
    Reciprocal space paths in reduced coordinates:
-   [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
-   [ 0.50  0.00  0.00] --> [ 0.50  0.50  0.00]
-   [ 0.50  0.50  0.00] --> [-0.00 -0.00  0.00]
-   [ 0.00  0.00  0.00] --> [ 0.50  0.50  0.50]
-   ...
+   [ 0.000  0.000  0.000] --> [ 0.500  0.000  0.000]
+   [ 0.500  0.000  0.000] --> [ 0.500  0.500  0.000]
+   [ 0.500  0.500  0.000] --> [ 0.000  0.000  0.000]
+   [ 0.000  0.000  0.000] --> [ 0.500  0.500  0.500]
+
+   Summary of calculation was written in "phonopy.yaml".
+   -------------------------[time 2026-01-16 08:09:27]-------------------------
+                    _
+      ___ _ __   __| |
+     / _ \ '_ \ / _` |
+    |  __/ | | | (_| |
+     \___|_| |_|\__,_|
    ```
 
    ```{image} NaCl-pwscf-band.png
@@ -189,7 +215,7 @@ K_POINTS automatic
 where more the k-point mesh numbers are specified. This may be exectued as:
 
 ```bash
-% mpirun ~/espresso/bin/pw.x -i NaCl.in |& tee NaCl.out
+% pw.x -i NaCl.in |& tee NaCl.out
 ```
 
 Many files whose names stating with `pwscf` should be created. These
@@ -208,7 +234,7 @@ created as follows:
 Similary `ph.x` is executed:
 
 ```bash
-% mpirun ~/espresso/bin/ph.x -i NaCl.ph.in |& tee NaCl.ph.out
+% ph.x -i NaCl.ph.in |& tee NaCl.ph.out
 ```
 
 Finally the Born effective charges and dielectric constant are obtained in the
@@ -233,7 +259,7 @@ Once this is made, the non-analytical term correction is included
 just adding the `--nac` option as follows:
 
 ```bash
-% phonopy --qe --nac -c NaCl.in -p band.conf
+% phonopy-load -p --config band.conf
 ```
 
 ```{image} NaCl-pwscf-band-NAC.png
@@ -247,7 +273,7 @@ just adding the `--nac` option as follows:
 
 Using PW, PH, and Q2R, we can obtain supercell force constants that can be used
 for phonopy. But we may need some treatment before running Q2R. See
-{ref}`qe-nac`.
+{ref}`qe_nac`.
 
  `NaCl.in`
 ```
@@ -305,7 +331,6 @@ phonons of NaCl
  &inputph
   tr2_ph=1.0d-16,
   prefix='NaCl',
-  !epsil=.false.,
   ldisp=.true.,
   nq1=4, nq2=4, nq3=4
   amass(1)=22.98976928,
@@ -317,10 +342,10 @@ phonons of NaCl
  /
  ```
 
-The output file at Gamma-point thus calculated contains Born effective charge
-and dielectric constant if the crystal is insulator. These are unnecessary for
-phonopy. So `NaCl.dyn1` file should be replaced by `NaCl.dyn` calculated by the
-following input:
+The output file at the Gamma point calculated this way contains the Born
+effective charges and dielectric constant if the crystal is an insulator. These
+are unnecessary for phonopy. Therefore, the `NaCl.dyn1` file should be replaced
+with `NaCl.dyn`, which is calculated using the following input:
 
 ```
 phonons of NaCl
