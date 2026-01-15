@@ -1,5 +1,4 @@
 (qe_interface)=
-
 # Quantum ESPRESSO (QE) & phonopy calculation
 
 Quantum ESPRESSO package itself has a set of the phonon calculation
@@ -227,7 +226,7 @@ default value
 This `BORN` file can be made using `phonopy-qe-born` command.
 
 ```bash
-% phonopy-qe-born NaCl.in  | tee BORN
+% phonopy-qe-born NaCl.in NaCl.ph.out | tee BORN
 ```
 
 Once this is made, the non-analytical term correction is included
@@ -242,17 +241,105 @@ just adding the `--nac` option as follows:
 ```
 
 (qe_q2r)=
-
 ## Using `q2r.x` to create phonopy force constants file
 
 **Experimental**
 
-A parser of `q2r.x` output is implemented experimentally. Currently
-command-line user interface is not prepared. Using the following
-script, the force constants file readable by phonopy is
-created. Probably thus obtained force constants are required to be
-symmetrized by the translational invariance condition using
-`FC_SYMMETRY = .TRUE.`.
+Using PW, PH, and Q2R, we can obtain supercell force constants that can be used
+for phonopy. But we may need some treatment before running Q2R. See
+{ref}`qe-nac`.
+
+ `NaCl.in`
+```
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    tprnfor = .true.
+    tstress = .true.
+    prefix='NaCl',
+    pseudo_dir = '/home/togo/code/q-e-qe-7.5/pseudo'
+    outdir='.'
+ /
+ &system
+    ibrav = 0
+    nat = 2
+    ntyp = 2
+    ecutwfc = 70.0
+ /
+ &electrons
+    diagonalization = 'david'
+    !mixing_beta = 0.7
+    conv_thr = 1.0d-12
+ /
+ATOMIC_SPECIES
+ Na  22.98976928 Na.pbe-spn-kjpaw_psl.0.2.UPF
+ Cl  35.453      Cl.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS crystal
+ Na   0.0000000000000000  0.0000000000000000  0.0000000000000000
+ Cl   0.5000000000000000  0.5000000000000000  0.5000000000000000
+CELL_PARAMETERS angstrom
+0 2.8451507380878356 2.8451507380878356
+2.8451507380878356 0 2.8451507380878356
+2.8451507380878356 2.8451507380878356 0
+K_POINTS automatic
+8 8 8 0 0 0
+```
+and `NaCl.ph.in`
+```
+phonons of NaCl
+ &inputph
+  tr2_ph=1.0d-16,
+  prefix='NaCl',
+  ldisp=.true.,
+  nq1=4, nq2=4, nq3=4
+  amass(1)=22.98976928,
+  amass(2)=35.453,
+  outdir='.',
+  fildyn='NaCl.dyn',
+ /
+```
+
+The PH calculation can be peformed for each q-point independently, e.g.,
+```
+phonons of NaCl
+ &inputph
+  tr2_ph=1.0d-16,
+  prefix='NaCl',
+  !epsil=.false.,
+  ldisp=.true.,
+  nq1=4, nq2=4, nq3=4
+  amass(1)=22.98976928,
+  amass(2)=35.453,
+  outdir='.',
+  fildyn='NaCl.dyn',
+  start_q=1
+  last_q=1
+ /
+ ```
+
+The output file at Gamma-point thus calculated contains Born effective charge
+and dielectric constant if the crystal is insulator. These are unnecessary for
+phonopy. So `NaCl.dyn1` file should be replaced by `NaCl.dyn` calculated by the
+following input:
+
+```
+phonons of NaCl
+ &inputph
+  tr2_ph=1.0d-16,
+  prefix='NaCl',
+  epsil=.false.,
+  outdir='.',
+  fildyn='NaCl.dyn',
+ /
+0.0 0.0 0.0
+```
+
+Then having all `NaCl.dyn1`, ..., files, `NaCl.fc` for phonopy can be generated
+using Q2R.
+
+A parser of `q2r.x` output is implemented experimentally. Currently command-line
+user interface is not prepared. Using the following script, the force constants
+file readable by phonopy is created.
 
 ```python
 #!/usr/bin/env python
@@ -277,26 +364,26 @@ Saving this script as `make_fc_q2r.py`, this is used as, e.g.,
 This gives `phonopy_params_q2r.yaml` file that contains supercell force
 constants.
 
+(qe_nac)=
 ### Non-analytical term correction
 
-Treatment of non-analytical term correction (NAC) is different between
-phonopy and QE. For insulator, QE automatically calculate dielectric
-constant and Born effective charges at PH calculation when q-point
-mesh sampling mode (`ldisp = .true.`), and these data are written in
-the Gamma point dynamical matrix file (probably in `.dyn1`
-file). When running `q2r.x`, these files are read including the
-dielectric constant and Born effective charges, and the real space
-force constants where QE-NAC treatment is done are written to the q2r
-output file. This is not that phonopy expects. Therefore the
-dielectric constant and Born effective charges data have to be removed
-manually from the Gamma point dynamical matrix file before running
-`q2r.x`. Alternatively Gamma point only PH calculation with 'epsil =
-.false.' can generate the dynamical matrix file without the dielectric
-constant and Born effective charges data. So it is possible to replace
-the Gamma point file by this Gamma point only file to run `q2r.x`
-for phonopy.
+The treatment of non-analytical term correction (NAC) differs between phonopy
+and QE. For insulators, QE automatically calculates the dielectric constant and
+Born effective charges during PH calculations when the q-point mesh sampling
+mode is enabled (`ldisp = .true.`). These data are written to the Gamma point
+dynamical matrix file (typically the `.dyn1` file). When running `q2r.x`, this
+program reads these files including the dielectric constant and Born effective
+charges, and writes the real-space force constants (with QE's NAC treatment
+applied) to the Q2R output file. However, this differs from what phonopy
+expects. Therefore, the dielectric constant and Born effective charges data must
+be manually removed from the Gamma point dynamical matrix file before running
+`q2r.x`. Alternatively, performing a Gamma point-only phonon calculation with
+`epsil = .false.` generates a dynamical matrix file without the dielectric
+constant and Born effective charges data. This Gamma point-only file can then
+replace the original Gamma point file, allowing `q2r.x` to be run for phonopy
+without modification.
 
-#### Creating BORN file
+<!-- #### Creating BORN file
 
 If the `q2r.x` output contains dielectric constant and Born
 effective charges, the following script can generate `BORN` format
@@ -332,7 +419,7 @@ Saving this script as `make_born_q2r.py`,
 
 ```bash
 % python make_born_q2r.py NaCl.in NaCl.fc > BORN
-```
+``` -->
 
 #### NaCl example
 

@@ -585,7 +585,7 @@ class PH_Q2R:
         for _ in range(ntype + natom):
             line = f.readline()
         line = f.readline()
-        if line.strip() == "T":
+        if line.strip().startswith("T"):
             epsilon, borns = self._parse_born(f, natom)
         else:
             epsilon = None
