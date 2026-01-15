@@ -93,7 +93,7 @@ def parse_set_of_forces(
         return []
 
 
-def read_pwscf(filename):
+def read_pwscf(filename: str | os.PathLike) -> tuple[PhonopyAtoms, dict]:
     """Read crystal structure."""
     with open(filename) as f:
         pwscf_in = PwscfIn(f.readlines())
@@ -150,7 +150,11 @@ def read_pwscf(filename):
     return cell, pp_filenames
 
 
-def write_pwscf(filename, cell, pp_filenames):
+def write_pwscf(
+    filename: str | os.PathLike,
+    cell: PhonopyAtoms,
+    pp_filenames: str | os.PathLike | None,
+):
     """Write cell to file."""
     f = open(filename, "w")
     f.write(get_pwscf_structure(cell, pp_filenames=pp_filenames))
