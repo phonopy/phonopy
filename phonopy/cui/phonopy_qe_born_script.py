@@ -90,8 +90,8 @@ def parse_ph_out(file: str | os.PathLike, natoms: int) -> tuple[NDArray, NDArray
 
 
 def get_born_qe_ph(
-    file_pw: str | os.PathLike,
-    file_ph: str | os.PathLike,
+    file_pw_in: str | os.PathLike,
+    file_ph_out: str | os.PathLike,
     is_symmetry: bool = True,
     symmetrize_tensors: bool = True,
     symprec: float = 1e-5,
@@ -103,8 +103,8 @@ def get_born_qe_ph(
     See elaborate_borns_and_epsilon.
 
     """
-    ucell, _ = read_pwscf(file_pw)
-    epsilon, borns = parse_ph_out(file_ph, len(ucell))
+    ucell, _ = read_pwscf(file_pw_in)
+    epsilon, borns = parse_ph_out(file_ph_out, len(ucell))
     if len(borns) == 0 or len(epsilon) == 0:
         raise RuntimeError("No Born effective charges or dielectric tensor found.")
     else:
@@ -124,8 +124,8 @@ def get_options():
         description="Parse phonopy BORN file from QE output"
     )
     default_vals = PhonopyQeBornMockArgs()
-    parser.add_argument("file_pw", help="Input file for pw.x")
-    parser.add_argument("file_ph", help="Output file of ph.x")
+    parser.add_argument("file_pw_in", help="Input file for pw.x")
+    parser.add_argument("file_ph_out", help="Output file of ph.x")
     parser.add_argument(
         "--no-symmetrize-tensors",
         dest="symmetrize_tensors",
@@ -147,11 +147,11 @@ def get_options():
 def run(args: PhonopyQeBornMockArgs | argparse.Namespace):
     """Run phonopy-qe-born."""
     try:
-        assert args.file_pw is not None
-        assert args.file_ph is not None
+        assert args.file_pw_in is not None
+        assert args.file_ph_out is not None
         borns, epsilon, atom_indices = get_born_qe_ph(
-            file_pw=args.file_pw,
-            file_ph=args.file_ph,
+            file_pw_in=args.file_pw_in,
+            file_ph_out=args.file_ph_out,
             symmetrize_tensors=args.symmetrize_tensors,
             symprec=args.symprec,
         )
@@ -169,7 +169,8 @@ def run(args: PhonopyQeBornMockArgs | argparse.Namespace):
         lines.append(("%13.8f " * 9) % tuple(epsilon.flatten()))
         for z in borns:
             lines.append(("%13.8f " * 9) % tuple(z.flatten()))
-    except Exception:
+    except RuntimeError as e:
+        lines = [str(e)]
         sys.exit(1)
     else:
         print("\n".join(lines))
@@ -180,8 +181,8 @@ def run(args: PhonopyQeBornMockArgs | argparse.Namespace):
 class PhonopyQeBornMockArgs:
     """Mock args of ArgumentParser."""
 
-    file_pw: str | os.PathLike | None = None
-    file_ph: str | os.PathLike | None = None
+    file_pw_in: str | os.PathLike | None = None
+    file_ph_out: str | os.PathLike | None = None
     symmetrize_tensors: bool = True
     symprec: float = 1e-5
 
