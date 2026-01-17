@@ -47,7 +47,8 @@ try:
 except AttributeError:
     pass
 
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
+from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
@@ -1233,7 +1234,9 @@ class ShortestPairs:
 
         return shortest_vectors, multiplicity
 
-    def _transform_cell_basis(self, longdtype):
+    def _transform_cell_basis(
+        self, longdtype: np.dtype
+    ) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
         reduced_cell_method = "niggli"
         reduced_bases = get_reduced_bases(
             self._supercell_bases, method=reduced_cell_method, tolerance=self._symprec
@@ -1285,9 +1288,7 @@ class ShortestPairs:
         )
 
 
-def sparse_to_dense_svecs(
-    svecs: np.ndarray, multi: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
+def sparse_to_dense_svecs(svecs: NDArray, multi: NDArray) -> tuple[NDArray, NDArray]:
     """Convert sparse svecs to dense svecs."""
     dmulti = np.zeros(multi.shape + (2,), dtype="int64", order="C")
     dmulti[:, :, 0] = multi
@@ -1302,9 +1303,7 @@ def sparse_to_dense_svecs(
     return dsvecs, dmulti
 
 
-def dense_to_sparse_svecs(
-    svecs: np.ndarray, multi: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
+def dense_to_sparse_svecs(svecs: NDArray, multi: NDArray) -> tuple[NDArray, NDArray]:
     """Convert dense svecs to sparse svecs."""
     ssvecs = np.zeros(
         (multi.shape[0], multi.shape[1], 27, 3),
@@ -1321,11 +1320,11 @@ def dense_to_sparse_svecs(
 
 
 def compute_all_sg_permutations(
-    positions,  # scaled positions
-    rotations,  # scaled
-    translations,  # scaled
-    lattice,  # column vectors
-    symprec,
+    positions: NDArray,  # scaled positions
+    rotations: NDArray,  # scaled
+    translations: NDArray,  # scaled
+    lattice: NDArray,  # column vectors
+    symprec: float,
 ) -> NDArray:
     """Compute permutations for space group operations.
 
@@ -1369,7 +1368,7 @@ def compute_permutation_for_rotation(
     positions_b: np.ndarray,
     lattice: np.ndarray,
     symprec: float,
-):
+) -> NDArray:
     """Get the overall permutation such that.
 
         positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
@@ -1435,11 +1434,11 @@ def compute_permutation_for_rotation(
 
 
 def _compute_permutation_c(
-    positions_a,
-    positions_b,
-    lattice,
-    symprec,  # scaled positions  # column vectors
-):
+    positions_a: NDArray,
+    positions_b: NDArray,
+    lattice: NDArray,
+    symprec: float,  # scaled positions  # column vectors
+) -> NDArray:
     """Return mapping defined by positions_a[perm[i]] == positions_b[i].
 
     Version of `_compute_permutation_for_rotation` which just directly
@@ -1504,7 +1503,9 @@ def _compute_permutation_c(
 #
 # Other tiny tools
 #
-def get_angles(lattice, is_radian: bool = False) -> tuple:
+def get_angles(
+    lattice: NDArray | Sequence[Sequence[float]], is_radian: bool = False
+) -> tuple[float, float, float]:
     """Return angles between basis vectors.
 
     Parameters
@@ -1531,7 +1532,7 @@ def get_angles(lattice, is_radian: bool = False) -> tuple:
         return alpha / np.pi * 180, beta / np.pi * 180, gamma / np.pi * 180
 
 
-def get_cell_parameters(lattice) -> np.ndarray:
+def get_cell_parameters(lattice: NDArray | Sequence[Sequence[float]]) -> NDArray:
     """Return basis vector lengths.
 
     Parameters
@@ -1548,7 +1549,15 @@ def get_cell_parameters(lattice) -> np.ndarray:
     return np.sqrt(np.dot(lattice, np.transpose(lattice)).diagonal())
 
 
-def get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=False) -> np.ndarray:
+def get_cell_matrix(
+    a: float,
+    b: float,
+    c: float,
+    alpha: float,
+    beta: float,
+    gamma: float,
+    is_radian: bool = False,
+) -> NDArray:
     """Return basis vectors in another orientation.
 
     Parameters
@@ -1584,7 +1593,9 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=False) -> np.ndarray:
     return lattice
 
 
-def get_cell_matrix_from_lattice(lattice) -> np.ndarray:
+def get_cell_matrix_from_lattice(
+    lattice: NDArray | Sequence[Sequence[float]],
+) -> NDArray:
     """Return basis vectors in another orientation.
 
     Parameters
@@ -1607,7 +1618,7 @@ def get_cell_matrix_from_lattice(lattice) -> np.ndarray:
     return get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=True)
 
 
-def determinant(m):
+def determinant(m: Sequence[Sequence[int | float]]) -> float | int:
     """Compute determinant."""
     return (
         m[0][0] * m[1][1] * m[2][2]
@@ -1686,7 +1697,7 @@ def get_primitive_matrix(
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring) -> NDArray:
+def get_primitive_matrix_by_centring(centring: str) -> NDArray:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
         return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double", order="C")
@@ -1747,7 +1758,7 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDA
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat: ArrayLike | None) -> np.ndarray:
+def shape_supercell_matrix(smat: NDArray | Sequence | None) -> NDArray:
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="intc", order="C")
@@ -1762,7 +1773,9 @@ def shape_supercell_matrix(smat: ArrayLike | None) -> np.ndarray:
 
 
 def estimate_supercell_matrix(
-    spglib_dataset, max_num_atoms=120, max_iter=100
+    spglib_dataset: SpglibDataset | SpglibMagneticDataset,
+    max_num_atoms: int = 120,
+    max_iter: int = 100,
 ) -> list[int]:
     """Estimate supercell matrix from conventional cell.
 
@@ -1788,7 +1801,10 @@ def estimate_supercell_matrix(
         Multiplicities for a, b, c basis vectors, respectively.
 
     """
-    spg_num = spglib_dataset.number
+    spg_type = spglib.get_spacegroup_type(spglib_dataset.hall_number)
+    if spg_type is None:
+        raise RuntimeError("Space group type could not be determined from hall_number.")
+    spg_num = spg_type.number
     num_atoms = len(spglib_dataset.std_types)
     lengths = get_cell_parameters(spglib_dataset.std_lattice)
     if spg_num <= 74:  # Triclinic, monoclinic, and orthorhombic
@@ -1808,8 +1824,11 @@ def estimate_supercell_matrix(
 
 
 def estimate_supercell_matrix_from_pointgroup(
-    pointgroup_number, lattice, max_num_cells=120, max_iter=100
-):
+    pointgroup_number: int,
+    lattice: NDArray | Sequence[Sequence[float]],
+    max_num_cells: int = 120,
+    max_iter: int = 100,
+) -> list[int]:
     """Estimate supercell matrix from crystallographic point group.
 
     Parameters
@@ -1840,7 +1859,9 @@ def estimate_supercell_matrix_from_pointgroup(
     return multi
 
 
-def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):
+def _get_multiplicity_abc(
+    num_atoms: int, lengths: Sequence[float], max_num_atoms: int, max_iter: int = 20
+) -> list[int]:
     multi = [1, 1, 1]
 
     for _ in range(max_iter):
@@ -1853,7 +1874,9 @@ def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):
     return multi
 
 
-def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
+def _get_multiplicity_ac(
+    num_atoms: int, lengths: Sequence[float], max_num_atoms: int, max_iter: int = 20
+) -> list[int]:
     multi = [1, 1]
     a = lengths[0]
     c = lengths[2]
@@ -1868,7 +1891,9 @@ def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
     return [multi[0], multi[0], multi[1]]
 
 
-def _get_multiplicity_a(num_atoms, lengths, max_num_atoms, max_iter=20):
+def _get_multiplicity_a(
+    num_atoms: int, lengths: Sequence[float], max_num_atoms: int, max_iter: int = 20
+) -> list[int]:
     multi = 1
     for _ in range(max_iter):
         multi += 1
