@@ -46,6 +46,7 @@ import numpy as np
 
 from phonopy.phonon.band_structure import BandPlot
 from phonopy.phonon.dos import plot_projected_dos, plot_total_dos
+from phonopy.physical_units import get_physical_units
 
 try:
     import yaml
@@ -265,6 +266,7 @@ def _read_band_hdf5(
 def _read_dos_dat(
     filename: str | os.PathLike,
     pdos_indices: str | None = None,
+    factor: float | None = None,
     dos_factor: float | None = None,
 ) -> tuple[NDArray, NDArray]:
     """Read DOS data.
@@ -286,6 +288,12 @@ def _read_dos_dat(
     dos = np.array(dos_from_file)
     frequencies = np.array(frequencies_from_file)
 
+    if dos_factor:
+        dos *= dos_factor
+    if factor:
+        dos /= factor
+        frequencies *= factor
+
     if pdos_indices is None:
         pi = [[i] for i in range(dos.shape[1])]
     else:
@@ -298,10 +306,6 @@ def _read_dos_dat(
         dos_sum.append(dos[:, indices].sum(axis=1))
     dos_sum.append(dos.sum(axis=1))
     dos = np.transpose(dos_sum)
-
-    if dos_factor:
-        dos *= dos_factor
-
     ind = np.argsort(frequencies)
 
     return frequencies[ind], dos[ind]
@@ -399,6 +403,13 @@ def get_options():
         default=default_vals.ylabel,
         help="Specify y-label of band structure",
     )
+    parser.add_argument(
+        "--mev",
+        dest="convert_to_mev",
+        action="store_true",
+        default=default_vals.convert_to_mev,
+        help="Convert unit to meV assuming THz as input",
+    )
     parser.add_argument("-t", "--title", dest="title", help="Title of plot")
     parser.add_argument(
         "filenames",
@@ -412,26 +423,29 @@ def get_options():
     return args
 
 
-def _plot(args: argparse.Namespace | PhonopyBandplotMockArgs):
+def _plot(params: PhonopyBandplotMockArgs):
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1 import ImageGrid
 
-    if args.is_hdf5:
-        if len(args.filenames) == 0:
+    if params.convert_to_mev:
+        params.factor = get_physical_units().THzToEv * 1000
+
+    if params.is_hdf5:
+        if len(params.filenames) == 0:
             filenames = [
                 "band.hdf5",
             ]
         else:
-            filenames = args.filenames
+            filenames = params.filenames
 
         bands_data = [_read_band_hdf5(fname) for fname in filenames]
     else:
-        if len(args.filenames) == 0:
+        if len(params.filenames) == 0:
             filenames = [
                 "band.yaml",
             ]
         else:
-            filenames = args.filenames
+            filenames = params.filenames
         bands_data = [_read_band_yaml(fname) for fname in filenames]
 
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
@@ -451,7 +465,7 @@ def _plot(args: argparse.Namespace | PhonopyBandplotMockArgs):
     _, path_connections, _, _ = plot_data
     n = len([x for x in path_connections if not x])
 
-    if args.dos_filename:
+    if params.dos_filename:
         n += 1
 
     fig = plt.figure()
@@ -465,13 +479,13 @@ def _plot(args: argparse.Namespace | PhonopyBandplotMockArgs):
         )  # type: ignore
     )
 
-    if args.dos_filename:
+    if params.dos_filename:
         band_plot = BandPlot(axs[:-1])
     else:
         band_plot = BandPlot(axs)
     band_plot.set_xscale_from_data(plot_data[2], plot_data[3])
-    band_plot.xscale = band_plot.xscale * args.factor
-    band_plot.decorate(*plot_data, ylabel=args.ylabel)
+    band_plot.xscale = band_plot.xscale * params.factor
+    band_plot.decorate(*plot_data, ylabel=params.ylabel)
 
     # Plot band structures
     fmts = [
@@ -493,57 +507,62 @@ def _plot(args: argparse.Namespace | PhonopyBandplotMockArgs):
     for i, label in enumerate(filenames):
         _, p, f, d = plots_data[i]
         fmt = fmts[i % len(fmts)]
-        _f = [f_seg * args.factor for f_seg in f]
-        if args.show_legend:
+        _f = [f_seg * params.factor for f_seg in f]
+        if params.show_legend:
             band_plot.plot(d, _f, p, fmt=fmt, label=_get_label_for_latex(str(label)))
         else:
             band_plot.plot(d, _f, p, fmt=fmt)
 
     # dos
-    if args.dos_filename:
-        _plot_dos(args, axs, max_frequencies)
+    if params.dos_filename:
+        _plot_dos(params, axs, max_frequencies)
 
     for ax in axs:
-        ax.set_ylim(args.f_min, args.f_max)
+        ax.set_ylim(params.f_min, params.f_max)
 
     # Bring legend in front.
-    if args.show_legend:
+    if params.show_legend:
         axs[0].set_zorder(1)
 
-    if args.title is not None:
-        plt.suptitle(args.title)
+    if params.title is not None:
+        plt.suptitle(params.title)
 
-    if args.output_filename is not None:
-        _savefig(plt, args.output_filename)
+    if params.output_filename is not None:
+        _savefig(plt, params.output_filename)
     else:
         plt.show()
 
 
 def _plot_dos(
-    args: argparse.Namespace | PhonopyBandplotMockArgs,
+    params: PhonopyBandplotMockArgs,
     axs,
     max_frequencies: list[float],
 ):
-    assert args.dos_filename is not None
+    assert params.dos_filename is not None
     dos_frequencies, dos = _read_dos_dat(
-        args.dos_filename,
-        pdos_indices=args.pdos_indices,
-        dos_factor=args.dos_factor,
+        params.dos_filename,
+        pdos_indices=params.pdos_indices,
+        factor=params.factor,
+        dos_factor=params.dos_factor,
     )
     arg_fmax = None
-    if args.f_max is None:
+    if params.f_max is None:
         max_freq = max(max_frequencies) * 1.01
     else:
-        max_freq = args.f_max
+        max_freq = params.f_max
+
+    if params.factor:
+        max_freq *= params.factor
+
     for i, f in enumerate(dos_frequencies):
         if f > max_freq:
             arg_fmax = i
             break
 
     arg_fmin = None
-    if args.f_min is not None:
+    if params.f_min is not None:
         for i, f in enumerate(dos_frequencies):
-            if f > args.f_min:
+            if f > params.f_min:
                 if i > 0:
                     arg_fmin = i - 1
                 break
@@ -556,11 +575,11 @@ def _plot_dos(
     pdos_plot_data = []
 
     for pdos in dos.T:
-        if args.dos_max is not None:
+        if params.dos_max is not None:
             _pdos = _get_dos(
                 pdos[arg_fmin:arg_fmax],
                 dos_frequencies[arg_fmin:arg_fmax],
-                args.dos_max,
+                params.dos_max,
             )
             pdos_plot_data.append(_pdos[1])
             freqs_plot_data = _pdos[0]
@@ -574,7 +593,7 @@ def _plot_dos(
         pdos_plot_data[:-1],
         draw_grid=False,
         flip_xy=True,
-        xlabel=args.dos_xlabel,
+        xlabel=params.dos_xlabel,
     )
 
     if len(pdos_plot_data) > 1:
@@ -596,26 +615,26 @@ def _plot_dos(
     axs[-1].set_aspect(aspect)
 
 
-def _write_gnuplot_data(args: argparse.Namespace | PhonopyBandplotMockArgs):
-    if args.is_hdf5:
-        if len(args.filenames) == 0:
+def _write_gnuplot_data(params: PhonopyBandplotMockArgs):
+    if params.is_hdf5:
+        if len(params.filenames) == 0:
             filenames = [
                 "band.hdf5",
             ]
         else:
-            filenames = args.filenames
+            filenames = params.filenames
 
         bands_data = [_read_band_hdf5(fname) for fname in filenames]
     else:
-        if len(args.filenames) == 0:
+        if len(params.filenames) == 0:
             filenames = [
                 "band.yaml",
             ]
         else:
-            filenames = args.filenames
+            filenames = params.filenames
         bands_data = [_read_band_yaml(fname) for fname in filenames]
 
-    if args.is_gnuplot:
+    if params.is_gnuplot:
         distances = bands_data[0][0]
         frequencies = bands_data[0][1]
         segment_nqpoint = bands_data[0][3]
@@ -635,7 +654,7 @@ def _write_gnuplot_data(args: argparse.Namespace | PhonopyBandplotMockArgs):
             for nq in segment_nqpoint:
                 for d, f in zip(
                     distances[q : (q + nq)],
-                    freqs[q : (q + nq)] * args.factor,
+                    freqs[q : (q + nq)] * params.factor,
                     strict=True,
                 ):
                     print("%f %f" % (d, f))
@@ -650,6 +669,7 @@ class PhonopyBandplotMockArgs:
 
     is_hdf5: bool | None = None
     band_labels: str | None = None
+    convert_to_mev: bool | None = None
     dos_max: float | None = None
     dos_factor: float | None = None
     dos_xlabel: str | None = None
@@ -679,17 +699,18 @@ class PhonopyBandplotMockArgs:
 def main(**argparse_control: PhonopyBandplotMockArgs):
     """Run phonopy-bandplot."""
     if argparse_control:
-        args = argparse_control["args"]
+        params = argparse_control["args"]
     else:
         args = get_options()
+        params = PhonopyBandplotMockArgs(**vars(args))
 
-    if args.is_gnuplot:
-        _write_gnuplot_data(args)
+    if params.is_gnuplot:
+        _write_gnuplot_data(params)
         sys.exit(1)
 
-    if args.output_filename:
+    if params.output_filename:
         import matplotlib
 
         matplotlib.use("Agg")
 
-    _plot(args)
+    _plot(params)
