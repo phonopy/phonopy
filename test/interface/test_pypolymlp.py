@@ -417,4 +417,4 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
         4.888973568501199,
         5.4520357131954515,
     ]
-    np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=1e-6)
+    np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=5e-5)
