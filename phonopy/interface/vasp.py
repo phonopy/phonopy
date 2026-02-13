@@ -86,7 +86,7 @@ def check_forces(
 
 
 def get_drift_forces(
-    forces: Sequence[NDArray],
+    forces: NDArray | Sequence[Sequence],
     filename: str | os.PathLike | None = None,
     verbose: bool = True,
 ) -> NDArray:
@@ -100,7 +100,7 @@ def get_drift_forces(
                 % tuple(drift_force)
             )
         else:
-            print('Drift force of "%s" to be subtracted' % filename)
+            print(f'Drift force of "{filename}" to be subtracted')
             print("%12.8f %12.8f %12.8f" % tuple(drift_force))
         sys.stdout.flush()
 
