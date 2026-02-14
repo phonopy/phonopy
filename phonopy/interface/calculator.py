@@ -608,11 +608,15 @@ def _write_supercells_generic(
         msg = f"No handler found for calculator interface: {interface_mode}"
         raise RuntimeError(msg)
 
+    writer_kwargs: dict[str, Any] = {"width": width}
+    if config.additional_info and "pre_filename" in config.additional_info:
+        writer_kwargs["pre_filename"] = config.additional_info["pre_filename"]
+
     writer(
         config.supercell,
         config.cells_with_disps,
         config.displacement_ids,
-        width=width,
+        **writer_kwargs,
     )
 
 
