@@ -1618,7 +1618,9 @@ def get_cell_matrix_from_lattice(
     return get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=True)
 
 
-def determinant(m: Sequence[Sequence[int | float]]) -> float | int:
+def determinant(
+    m: Sequence[Sequence[int]] | Sequence[Sequence[float]] | NDArray,
+) -> float | int:
     """Compute determinant."""
     return (
         m[0][0] * m[1][1] * m[2][2]
