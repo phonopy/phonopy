@@ -101,23 +101,21 @@ class CalculatorPhysicalUnits:
         return self.field_names()
 
     def items(self) -> tuple[tuple[str, Any], ...]:
-        """Return (name, value) pairs (deprecated dict-like usage)."""
-        warnings.warn(
-            "Dict-like access to CalculatorPhysicalUnits is deprecated. "
-            "Use attribute access instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+        """Return (name, value) pairs (deprecated dict-like usage).
+
+        warnings.warn is not written in this method because it is emitted at
+        self.keys().
+
+        """
         return tuple((key, getattr(self, key)) for key in self.keys())
 
     def values(self) -> tuple[Any, ...]:
-        """Return values in key order (deprecated dict-like usage)."""
-        warnings.warn(
-            "Dict-like access to CalculatorPhysicalUnits is deprecated. "
-            "Use attribute access instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+        """Return values in key order (deprecated dict-like usage).
+
+        warnings.warn is not written in this method because it is emitted at
+        self.keys().
+
+        """
         return tuple(getattr(self, key) for key in self.keys())
 
 

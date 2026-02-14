@@ -1109,8 +1109,6 @@ def _as_physical_units(
 ) -> CalculatorPhysicalUnits | None:
     if value is None:
         return None
-    from phonopy.physical_units import CalculatorPhysicalUnits
-
     if isinstance(value, CalculatorPhysicalUnits):
         return value
     if isinstance(value, dict):
