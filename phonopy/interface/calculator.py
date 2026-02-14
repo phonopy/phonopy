@@ -41,7 +41,6 @@ import warnings
 from argparse import ArgumentParser
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from math import pi, sqrt
 from typing import Any
 
 import numpy as np
@@ -51,7 +50,11 @@ from numpy.typing import NDArray
 from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import sort_positions_by_symbols
-from phonopy.physical_units import get_physical_units
+from phonopy.physical_units import (
+    CalculatorPhysicalUnits,
+    get_calculator_physical_units,
+    get_physical_units,
+)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import determinant
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -80,7 +83,7 @@ class SupercellWriterConfig:
 
     supercell: PhonopyAtoms
     cells_with_disps: Sequence[PhonopyAtoms]
-    displacement_ids: NDArray
+    displacement_ids: NDArray | Sequence[int]
     zfill_width: int
     additional_info: dict[str, Any] | None
 
@@ -153,6 +156,13 @@ class AbacusStructureInfo(StructureInfo):
     abfs: list[str] | None
 
 
+@dataclass(frozen=True)
+class QlmStructureInfo(StructureInfo):
+    """QLM structure information."""
+
+    qlm_ctx: Any
+
+
 calculator_info = {
     "abacus": {"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
@@ -220,7 +230,7 @@ def convert_crystal_structure(
         raise RuntimeError(f"Failed to read the input file: {filename_in}")
     units_in = get_calculator_physical_units(interface_in)
     units_out = get_calculator_physical_units(interface_out)
-    factor = units_in["distance_to_A"] / units_out["distance_to_A"]
+    factor = units_in.distance_to_A / units_out.distance_to_A
     cell.cell = cell.cell * factor
     write_crystal_structure(
         filename_out,
@@ -360,11 +370,6 @@ def write_crystal_structure(
         raise RuntimeError("No calculator interface was found.")
 
 
-# ============================================================================
-# Handler functions for write_supercells_with_displacements by interface mode
-# ============================================================================
-
-
 def _write_supercells_vasp(
     config: SupercellWriterConfig,
     structure_info: StructureInfo,
@@ -372,9 +377,12 @@ def _write_supercells_vasp(
     """Write supercells for VASP interface."""
     import phonopy.interface.vasp as vasp
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
-    vasp.write_supercells_with_displacements(*args, **kwargs)
+    vasp.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        width=config.zfill_width,
+    )
     write_magnetic_moments(config.supercell, sort_by_elements=True)
 
 
@@ -385,10 +393,13 @@ def _write_supercells_qe(
     """Write supercells for Quantum Espresso interface."""
     import phonopy.interface.qe as qe
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
-    qe_args = args + (structure_info.pp_filenames,)
-    qe.write_supercells_with_displacements(*qe_args, **kwargs)
+    qe.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        structure_info.pp_filenames,
+        width=config.zfill_width,
+    )
     write_magnetic_moments(config.supercell, sort_by_elements=False)
 
 
@@ -402,14 +413,20 @@ def _write_supercells_wien2k(
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for wien2k.")
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {
-        "width": config.zfill_width,
-        "pre_filename": structure_info.unitcell_filename,
-    }
+    width = config.zfill_width
+    pre_filename = structure_info.unitcell_filename
     N = int(determinant(config.additional_info["supercell_matrix"]))
-    w2k_args = args + (structure_info.npts, structure_info.r0s, structure_info.rmts, N)
-    wien2k.write_supercells_with_displacements(*w2k_args, **kwargs)
+    wien2k.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        structure_info.npts,
+        structure_info.r0s,
+        structure_info.rmts,
+        N,
+        width=width,
+        pre_filename=pre_filename,
+    )
 
 
 def _write_supercells_elk(
@@ -419,10 +436,13 @@ def _write_supercells_elk(
     """Write supercells for Elk interface."""
     import phonopy.interface.elk as elk
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
-    elk_args = args + (structure_info.sp_filenames,)
-    elk.write_supercells_with_displacements(*elk_args, **kwargs)
+    elk.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        structure_info.sp_filenames,
+        width=config.zfill_width,
+    )
 
 
 def _write_supercells_cp2k(
@@ -432,10 +452,13 @@ def _write_supercells_cp2k(
     """Write supercells for CP2K interface."""
     import phonopy.interface.cp2k as cp2k
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
-    cp2k_args = args + ((structure_info.unitcell_filename, structure_info.config_tree),)
-    cp2k.write_supercells_with_displacements(*cp2k_args, **kwargs)
+    cp2k.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        (structure_info.unitcell_filename, structure_info.config_tree),
+        width=config.zfill_width,
+    )
 
 
 def _write_supercells_crystal(
@@ -448,14 +471,18 @@ def _write_supercells_crystal(
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for crystal.")
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {
-        "width": config.zfill_width,
-        "template_file": config.additional_info.get("template_file", "TEMPLATE"),
-    }
+    width = config.zfill_width
+    template_file = config.additional_info.get("template_file", "TEMPLATE")
     N = abs(determinant(config.additional_info["supercell_matrix"]))
-    cst_args = args + (structure_info.conv_numbers, N)
-    crystal.write_supercells_with_displacements(*cst_args, **kwargs)
+    crystal.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        structure_info.conv_numbers,
+        N,
+        width=width,
+        template_file=template_file,
+    )
 
 
 def _write_supercells_fleur(
@@ -468,11 +495,16 @@ def _write_supercells_fleur(
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for fleur.")
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
     N = int(determinant(config.additional_info["supercell_matrix"]))
-    fleur_args = args + (structure_info.speci, N, structure_info.restlines)
-    fleur.write_supercells_with_displacements(*fleur_args, **kwargs)
+    fleur.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        structure_info.speci,
+        N,
+        structure_info.restlines,
+        width=config.zfill_width,
+    )
 
 
 def _write_supercells_abacus(
@@ -482,75 +514,106 @@ def _write_supercells_abacus(
     """Write supercells for ABACUS interface."""
     import phonopy.interface.abacus as abacus
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
-    abacus_args = args + (
+    abacus.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
         structure_info.pps,
         structure_info.orbitals,
         structure_info.abfs,
+        width=config.zfill_width,
     )
-    abacus.write_supercells_with_displacements(*abacus_args, **kwargs)
+
+
+def _write_supercells_abinit(
+    config: SupercellWriterConfig,
+    structure_info: StructureInfo,
+) -> None:
+    """Write supercells for Abinit interface."""
+    import phonopy.interface.abinit as abinit
+
+    pre_filename = None
+    if config.additional_info is not None:
+        pre_filename = config.additional_info.get("pre_filename")
+
+    if pre_filename is None:
+        abinit.write_supercells_with_displacements(
+            config.supercell,
+            config.cells_with_disps,
+            config.displacement_ids,
+            width=config.zfill_width,
+        )
+    else:
+        abinit.write_supercells_with_displacements(
+            config.supercell,
+            config.cells_with_disps,
+            config.displacement_ids,
+            width=config.zfill_width,
+            pre_filename=pre_filename,
+        )
 
 
 def _write_supercells_qlm(
     config: SupercellWriterConfig,
-    structure_info: StructureInfo,
+    structure_info: QlmStructureInfo,
 ) -> None:
     """Write supercells for QLM interface."""
     import phonopy.interface.qlm as qlm
 
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
-    qlm.write_supercells_with_displacements(*args, **kwargs)
+    qlm.write_supercells_with_displacements(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        structure_info.qlm_ctx,
+        width=config.zfill_width,
+    )
 
 
 def _write_supercells_generic(
-    config: SupercellWriterConfig,
-    structure_info: StructureInfo,
-    interface_mode: str,
+    config: SupercellWriterConfig, structure_info: StructureInfo, interface_mode: str
 ) -> None:
     """Write supercells for generic interfaces (no special handling)."""
-    args = (config.supercell, config.cells_with_disps, config.displacement_ids)
-    kwargs = {"width": config.zfill_width}
+    width = config.zfill_width
 
-    if config.additional_info is not None and "pre_filename" in config.additional_info:
-        kwargs["pre_filename"] = config.additional_info["pre_filename"]
-
-    if interface_mode == "abinit":
-        import phonopy.interface.abinit as abinit
-
-        abinit.write_supercells_with_displacements(*args, **kwargs)
-    elif interface_mode == "siesta":
+    writer = None
+    if interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
 
-        siesta.write_supercells_with_displacements(*args, **kwargs)
+        writer = siesta.write_supercells_with_displacements
     elif interface_mode == "dftbp":
         import phonopy.interface.dftbp as dftbp
 
-        dftbp.write_supercells_with_displacements(*args, **kwargs)
+        writer = dftbp.write_supercells_with_displacements
     elif interface_mode == "turbomole":
         import phonopy.interface.turbomole as turbomole
 
-        turbomole.write_supercells_with_displacements(*args, **kwargs)
+        writer = turbomole.write_supercells_with_displacements
     elif interface_mode == "aims":
         import phonopy.interface.aims as aims
 
-        aims.write_supercells_with_displacements(*args, **kwargs)
+        writer = aims.write_supercells_with_displacements
     elif interface_mode == "castep":
         import phonopy.interface.castep as castep
 
-        castep.write_supercells_with_displacements(*args, **kwargs)
+        writer = castep.write_supercells_with_displacements
     elif interface_mode == "lammps":
         import phonopy.interface.lammps as lammps
 
-        lammps.write_supercells_with_displacements(*args, **kwargs)
+        writer = lammps.write_supercells_with_displacements
     elif interface_mode == "pwmat":
         import phonopy.interface.pwmat as pwmat
 
-        pwmat.write_supercells_with_displacements(*args, **kwargs)
+        writer = pwmat.write_supercells_with_displacements
     else:
         msg = f"No handler found for calculator interface: {interface_mode}"
         raise RuntimeError(msg)
+
+    writer(
+        config.supercell,
+        config.cells_with_disps,
+        config.displacement_ids,
+        width=width,
+    )
 
 
 def _parse_optional_structure_info(
@@ -579,6 +642,10 @@ def _parse_optional_structure_info(
     """
     if not optional_structure_info:
         raise ValueError("optional_structure_info cannot be empty")
+
+    if interface_mode == "qlm":
+        qlm_ctx = optional_structure_info[0]
+        return QlmStructureInfo(unitcell_filename="", qlm_ctx=qlm_ctx)
 
     filename = optional_structure_info[0]
 
@@ -686,6 +753,7 @@ def _get_writer_handler(
     handlers: dict[str | None, Callable] = {
         None: _write_supercells_vasp,  # VASP is default
         "vasp": _write_supercells_vasp,
+        "abinit": _write_supercells_abinit,
         "qe": _write_supercells_qe,
         "wien2k": _write_supercells_wien2k,
         "elk": _write_supercells_elk,
@@ -699,6 +767,8 @@ def _get_writer_handler(
     # Return specialized handler if available
     if interface_mode in handlers:
         return handlers[interface_mode]
+
+    assert interface_mode is not None
 
     # Return generic handler for remaining interfaces
     def generic_handler(
@@ -1050,7 +1120,9 @@ def get_default_displacement_distance(interface_mode: str | None) -> float:
     return displacement_distance
 
 
-def get_default_physical_units(interface_mode: str | None = None) -> dict:
+def get_default_physical_units(
+    interface_mode: str | None = None,
+) -> CalculatorPhysicalUnits:
     """Replace get_calculator_get_physical_units()."""
     warnings.warn(
         (
@@ -1061,210 +1133,6 @@ def get_default_physical_units(interface_mode: str | None = None) -> dict:
         stacklevel=2,
     )
     return get_calculator_physical_units(interface_mode=interface_mode)
-
-
-def get_calculator_physical_units(interface_mode: str | None = None) -> dict:
-    """Return physical units of each calculator.
-
-    Physical units: energy,  distance,  atomic mass, force,        force constants
-    vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
-    wien2k        : Ry,      au(=borh), AMU,         mRy/au,       mRy/au^2
-    abinit        : hartree, au,        AMU,         eV/angstrom,  eV/angstrom.au
-    elk           : hartree, au,        AMU,         hartree/au,   hartree/au^2
-    qe            : Ry,      au,        AMU,         Ry/au,        Ry/au^2
-    siesta        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
-    CRYSTAL       : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
-    DFTB+         : hartree, au,        AMU          hartree/au,   hartree/au^2
-    TURBOMOLE     : hartree, au,        AMU,         hartree/au,   hartree/au^2
-    CP2K          : hartree, angstrom,  AMU,         hartree/au,   hartree/angstrom.au
-    FHI-aims      : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
-    castep        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
-    fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
-    abacus        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
-    lammps        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
-    qlm           : Ry,      au,        AMU,         Ry/au,        Ry/au^2
-    pwmat         : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
-
-    units['force_constants_unit'] is used in
-    the 'get_force_constant_conversion_factor' method.
-
-    """
-    units = {
-        "factor": None,
-        "nac_factor": None,
-        "distance_to_A": None,
-        "force_to_eVperA": None,
-        "force_constants_unit": None,
-        "length_unit": None,
-        "force_unit": None,
-    }
-    physical_units = get_physical_units()
-
-    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps", "pwmat"):
-        VaspToTHz = physical_units.DefaultToTHz  # [THz] 15.633302
-        units["factor"] = VaspToTHz
-        units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
-        units["distance_to_A"] = 1.0
-        units["force_constants_unit"] = "eV/angstrom^2"
-        units["length_unit"] = "angstrom"
-        units["force_unit"] = "eV/angstrom"
-    elif interface_mode == "abinit":
-        AbinitToTHz = (
-            sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
-            / physical_units.Angstrom
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 21.49068
-        units["factor"] = AbinitToTHz
-        units["nac_factor"] = physical_units.Hartree / physical_units.Bohr
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_constants_unit"] = "eV/angstrom.au"
-        units["length_unit"] = "au"
-        units["force_unit"] = "eV/angstrom"
-    elif interface_mode == "qe":
-        PwscfToTHz = (
-            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 108.97077
-        units["factor"] = PwscfToTHz
-        units["nac_factor"] = 2.0
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_to_eVperA"] = physical_units.Rydberg / physical_units.Bohr
-        units["force_constants_unit"] = "Ry/au^2"
-        units["length_unit"] = "au"
-        units["force_unit"] = "Ry/au"
-    elif interface_mode == "wien2k":
-        Wien2kToTHz = (
-            sqrt(physical_units.Rydberg / 1000 * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 3.44595837
-        units["factor"] = Wien2kToTHz
-        units["nac_factor"] = 2000.0
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_to_eVperA"] = 0.001 * physical_units.Rydberg / physical_units.Bohr
-        units["force_constants_unit"] = "mRy/au^2"
-        units["length_unit"] = "au"
-        units["force_unit"] = "mRy/au"
-    elif interface_mode == "elk":
-        ElkToTHz = (
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 154.10794
-        units["factor"] = ElkToTHz
-        units["nac_factor"] = 1.0
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_constants_unit"] = "hartree/au^2"
-        units["length_unit"] = "au"
-        units["force_unit"] = "hartree/au"
-    elif interface_mode in ["siesta", "abacus"]:
-        SiestaToTHz = (
-            sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
-            / physical_units.Angstrom
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 21.49068
-        units["factor"] = SiestaToTHz
-        units["nac_factor"] = physical_units.Hartree / physical_units.Bohr
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_constants_unit"] = "eV/angstrom.au"
-        units["length_unit"] = "au"
-        units["force_unit"] = "eV/angstrom"
-    elif interface_mode == "cp2k":
-        CP2KToTHz = (  # CP2K uses a.u. for forces but Angstrom for distances
-            sqrt(
-                physical_units.Hartree
-                * physical_units.EV
-                / (physical_units.AMU * physical_units.Bohr)
-            )
-            / physical_units.Angstrom
-            / (2 * pi)
-            / 1e12
-        )
-        units["factor"] = CP2KToTHz
-        units["nac_factor"] = physical_units.Bohr**2
-        units["distance_to_A"] = 1.0
-        units["force_to_eVperA"] = physical_units.Hartree / physical_units.Bohr
-        units["force_constants_unit"] = "hartree/angstrom.au"
-        units["length_unit"] = "angstrom"
-        units["force_unit"] = "hartree/au"
-    elif interface_mode == "crystal":
-        CrystalToTHz = physical_units.DefaultToTHz
-        units["factor"] = CrystalToTHz
-        units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
-        units["distance_to_A"] = 1.0
-        units["force_constants_unit"] = "eV/angstrom^2"
-        units["length_unit"] = "angstrom"
-        units["force_unit"] = "eV/angstrom"
-    elif interface_mode == "dftbp":
-        DftbpToTHz = (
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 154.10794344
-        units["factor"] = DftbpToTHz
-        units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_constants_unit"] = "hartree/au^2"
-        units["length_unit"] = "au"
-        units["force_unit"] = "hartree/au"
-    elif interface_mode == "turbomole":
-        TurbomoleToTHz = (  # Turbomole uses atomic units (Hartree/Bohr)
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 154.10794
-        units["factor"] = TurbomoleToTHz
-        units["nac_factor"] = 1.0
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_to_eVperA"] = physical_units.Hartree / physical_units.Bohr
-        units["force_constants_unit"] = "hartree/au^2"
-        units["length_unit"] = "au"
-        units["force_unit"] = "hartree/au"
-    elif interface_mode == "castep":
-        CastepToTHz = physical_units.DefaultToTHz
-        units["factor"] = CastepToTHz
-        units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
-        units["distance_to_A"] = 1.0
-        units["force_constants_unit"] = "eV/angstrom^2"
-        units["length_unit"] = "angstrom"
-        units["force_unit"] = "eV/angstrom"
-    elif interface_mode == "fleur":
-        FleurToTHz = (  # Fleur uses atomic units (Hartree/Bohr)
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 154.10794
-        units["factor"] = FleurToTHz
-        units["nac_factor"] = 1.0
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_constants_unit"] = "hartree/au^2"
-        units["length_unit"] = "au"
-        units["force_unit"] = "hartree/au"
-    elif interface_mode == "qlm":
-        QlmToTHz = (
-            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 108.97077
-        units["factor"] = QlmToTHz
-        units["nac_factor"] = 2.0
-        units["distance_to_A"] = physical_units.Bohr
-        units["force_to_eVperA"] = physical_units.Rydberg / physical_units.Bohr
-        units["force_constants_unit"] = "Ry/au^2"
-        units["length_unit"] = "au"
-        units["force_unit"] = "Ry/au"
-
-    return units
 
 
 def get_calc_dataset(
@@ -1319,7 +1187,8 @@ def get_calc_dataset(
     elif interface_mode == "pwmat":
         from phonopy.interface.pwmat import parse_set_of_forces
     else:
-        return []
+        msg = f"No calculator interface was found: {interface_mode}"
+        raise RuntimeError(msg)
 
     data_sets = parse_set_of_forces(num_atoms, force_filenames, verbose=verbose)
     if isinstance(data_sets, dict):
@@ -1392,7 +1261,7 @@ def _read_phonopy_yaml(
         phyml.read(cell_filename)
     except TypeError:  # yaml.load returns str: File format seems not YAML.
         return None, (cell_filename, None)
-    except yaml.parser.ParserError:
+    except yaml.parser.ParserError:  # type: ignore
         return None, (cell_filename, None)
 
     cell = phyml.unitcell
@@ -1400,8 +1269,8 @@ def _read_phonopy_yaml(
 
 
 def _get_cell_filename(
-    filename: str, phonopy_yaml_cls: type[PhonopyYaml] | None
-) -> str | None:
+    filename: str | os.PathLike | None, phonopy_yaml_cls: type[PhonopyYaml] | None
+) -> os.PathLike | None:
     cell_filename = None
 
     default_filenames = []
@@ -1414,4 +1283,8 @@ def _get_cell_filename(
         if fname and pathlib.Path(fname).is_file():
             cell_filename = fname
             break
-    return cell_filename
+
+    if cell_filename is None:
+        return None
+    else:
+        return pathlib.Path(cell_filename)

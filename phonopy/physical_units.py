@@ -41,8 +41,84 @@ To overwrite the physical units, use set_physical_units().
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import asdict, dataclass
 from math import pi, sqrt
+from typing import Any
+
+
+@dataclass(frozen=True)
+class CalculatorPhysicalUnits:
+    """Physical units for calculator interfaces.
+
+    Dict-like access is supported for backward compatibility but deprecated.
+    """
+
+    factor: float
+    nac_factor: float
+    distance_to_A: float
+    force_to_eVperA: float
+    force_constants_unit: str
+    length_unit: str
+    force_unit: str
+
+    @classmethod
+    def field_names(cls) -> tuple[str, ...]:
+        """Return supported attribute names without dict-like access."""
+        return tuple(cls.__dataclass_fields__.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        """Return attribute by name (deprecated dict-like usage)."""
+        warnings.warn(
+            "Dict-like access to CalculatorPhysicalUnits is deprecated. "
+            "Use attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        try:
+            return getattr(self, key)
+        except AttributeError as exc:
+            raise KeyError(key) from exc
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Return attribute by name with a default (deprecated dict-like usage)."""
+        warnings.warn(
+            "Dict-like access to CalculatorPhysicalUnits is deprecated. "
+            "Use attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(self, key, default)
+
+    def keys(self) -> tuple[str, ...]:
+        """Return supported attribute names (deprecated dict-like usage)."""
+        warnings.warn(
+            "Dict-like access to CalculatorPhysicalUnits is deprecated. "
+            "Use attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.field_names()
+
+    def items(self) -> tuple[tuple[str, Any], ...]:
+        """Return (name, value) pairs (deprecated dict-like usage)."""
+        warnings.warn(
+            "Dict-like access to CalculatorPhysicalUnits is deprecated. "
+            "Use attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return tuple((key, getattr(self, key)) for key in self.keys())
+
+    def values(self) -> tuple[Any, ...]:
+        """Return values in key order (deprecated dict-like usage)."""
+        warnings.warn(
+            "Dict-like access to CalculatorPhysicalUnits is deprecated. "
+            "Use attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return tuple(getattr(self, key) for key in self.keys())
 
 
 @dataclass
@@ -236,6 +312,240 @@ def set_physical_units(
 def get_physical_units() -> PhysicalUnits:
     """Get physical units used globally."""
     return _physical_units
+
+
+def get_calculator_physical_units(
+    interface_mode: str | None = None,
+) -> CalculatorPhysicalUnits:
+    """Return physical units of each calculator.
+
+    Physical units: energy,  distance,  atomic mass, force,        force constants
+    vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    wien2k        : Ry,      au(=borh), AMU,         mRy/au,       mRy/au^2
+    abinit        : hartree, au,        AMU,         eV/angstrom,  eV/angstrom.au
+    elk           : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    qe            : Ry,      au,        AMU,         Ry/au,        Ry/au^2
+    siesta        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
+    CRYSTAL       : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    DFTB+         : hartree, au,        AMU          hartree/au,   hartree/au^2
+    TURBOMOLE     : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    CP2K          : hartree, angstrom,  AMU,         hartree/au,   hartree/angstrom.au
+    FHI-aims      : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    castep        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    abacus        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
+    lammps        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    qlm           : Ry,      au,        AMU,         Ry/au,        Ry/au^2
+    pwmat         : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+
+    units['force_constants_unit'] is used in
+    the 'get_force_constant_conversion_factor' method.
+
+    """
+    physical_units = get_physical_units()
+
+    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps", "pwmat"):
+        VaspToTHz = physical_units.DefaultToTHz  # [THz] 15.633302
+        units = CalculatorPhysicalUnits(
+            factor=VaspToTHz,
+            nac_factor=physical_units.Hartree * physical_units.Bohr,
+            distance_to_A=1.0,
+            force_to_eVperA=1.0,
+            force_constants_unit="eV/angstrom^2",
+            length_unit="angstrom",
+            force_unit="eV/angstrom",
+        )
+    elif interface_mode == "abinit":
+        AbinitToTHz = (
+            sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
+            / physical_units.Angstrom
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 21.49068
+        units = CalculatorPhysicalUnits(
+            factor=AbinitToTHz,
+            nac_factor=physical_units.Hartree / physical_units.Bohr,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=1.0,
+            force_constants_unit="eV/angstrom.au",
+            length_unit="au",
+            force_unit="eV/angstrom",
+        )
+    elif interface_mode == "qe":
+        PwscfToTHz = (
+            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 108.97077
+        units = CalculatorPhysicalUnits(
+            factor=PwscfToTHz,
+            nac_factor=2.0,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=physical_units.Rydberg / physical_units.Bohr,
+            force_constants_unit="Ry/au^2",
+            length_unit="au",
+            force_unit="Ry/au",
+        )
+    elif interface_mode == "wien2k":
+        Wien2kToTHz = (
+            sqrt(physical_units.Rydberg / 1000 * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 3.44595837
+        units = CalculatorPhysicalUnits(
+            factor=Wien2kToTHz,
+            nac_factor=2000.0,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=0.001 * physical_units.Rydberg / physical_units.Bohr,
+            force_constants_unit="mRy/au^2",
+            length_unit="au",
+            force_unit="mRy/au",
+        )
+    elif interface_mode == "elk":
+        ElkToTHz = (
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794
+        units = CalculatorPhysicalUnits(
+            factor=ElkToTHz,
+            nac_factor=1.0,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            force_constants_unit="hartree/au^2",
+            length_unit="au",
+            force_unit="hartree/au",
+        )
+    elif interface_mode in ["siesta", "abacus"]:
+        SiestaToTHz = (
+            sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
+            / physical_units.Angstrom
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 21.49068
+        units = CalculatorPhysicalUnits(
+            factor=SiestaToTHz,
+            nac_factor=physical_units.Hartree / physical_units.Bohr,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=1.0,
+            force_constants_unit="eV/angstrom.au",
+            length_unit="au",
+            force_unit="eV/angstrom",
+        )
+    elif interface_mode == "cp2k":
+        CP2KToTHz = (  # CP2K uses a.u. for forces but Angstrom for distances
+            sqrt(
+                physical_units.Hartree
+                * physical_units.EV
+                / (physical_units.AMU * physical_units.Bohr)
+            )
+            / physical_units.Angstrom
+            / (2 * pi)
+            / 1e12
+        )
+        units = CalculatorPhysicalUnits(
+            factor=CP2KToTHz,
+            nac_factor=physical_units.Bohr**2,
+            distance_to_A=1.0,
+            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            force_constants_unit="hartree/angstrom.au",
+            length_unit="angstrom",
+            force_unit="hartree/au",
+        )
+    elif interface_mode == "crystal":
+        CrystalToTHz = physical_units.DefaultToTHz
+        units = CalculatorPhysicalUnits(
+            factor=CrystalToTHz,
+            nac_factor=physical_units.Hartree * physical_units.Bohr,
+            distance_to_A=1.0,
+            force_to_eVperA=1.0,
+            force_constants_unit="eV/angstrom^2",
+            length_unit="angstrom",
+            force_unit="eV/angstrom",
+        )
+    elif interface_mode == "dftbp":
+        DftbpToTHz = (
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794344
+        units = CalculatorPhysicalUnits(
+            factor=DftbpToTHz,
+            nac_factor=physical_units.Hartree * physical_units.Bohr,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            force_constants_unit="hartree/au^2",
+            length_unit="au",
+            force_unit="hartree/au",
+        )
+    elif interface_mode == "turbomole":
+        TurbomoleToTHz = (  # Turbomole uses atomic units (Hartree/Bohr)
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794
+        units = CalculatorPhysicalUnits(
+            factor=TurbomoleToTHz,
+            nac_factor=1.0,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            force_constants_unit="hartree/au^2",
+            length_unit="au",
+            force_unit="hartree/au",
+        )
+    elif interface_mode == "castep":
+        CastepToTHz = physical_units.DefaultToTHz
+        units = CalculatorPhysicalUnits(
+            factor=CastepToTHz,
+            nac_factor=physical_units.Hartree * physical_units.Bohr,
+            distance_to_A=1.0,
+            force_to_eVperA=1.0,
+            force_constants_unit="eV/angstrom^2",
+            length_unit="angstrom",
+            force_unit="eV/angstrom",
+        )
+    elif interface_mode == "fleur":
+        FleurToTHz = (  # Fleur uses atomic units (Hartree/Bohr)
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794
+        units = CalculatorPhysicalUnits(
+            factor=FleurToTHz,
+            nac_factor=1.0,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            force_constants_unit="hartree/au^2",
+            length_unit="au",
+            force_unit="hartree/au",
+        )
+    elif interface_mode == "qlm":
+        QlmToTHz = (
+            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 108.97077
+        units = CalculatorPhysicalUnits(
+            factor=QlmToTHz,
+            nac_factor=2.0,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=physical_units.Rydberg / physical_units.Bohr,
+            force_constants_unit="Ry/au^2",
+            length_unit="au",
+            force_unit="Ry/au",
+        )
+    else:
+        msg = f"Unknown calculator interface: {interface_mode}"
+        raise ValueError(msg)
+
+    return units
 
 
 # Global variable _physical_units is initialized here.

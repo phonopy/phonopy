@@ -40,6 +40,7 @@ import dataclasses
 import io
 import os
 import typing
+import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -58,7 +59,13 @@ except ImportError:
 if TYPE_CHECKING:
     from phonopy import Phonopy
 
+from spglib import SpglibDataset, SpglibMagneticDataset
+
 from phonopy.file_IO import get_io_module_to_decompress
+from phonopy.physical_units import (
+    CalculatorPhysicalUnits,
+    get_calculator_physical_units,
+)
 from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
 from phonopy.structure.dataset import forces_in_dataset
 
@@ -69,7 +76,7 @@ class PhonopyYamlData:
 
     configuration: dict | None = None
     calculator: str | None = None
-    physical_units: dict | None = None
+    physical_units: CalculatorPhysicalUnits | None = None
     unitcell: PhonopyAtoms | None = None
     primitive: Primitive | PhonopyAtoms | None = None
     supercell: Supercell | PhonopyAtoms | None = None
@@ -104,7 +111,7 @@ class PhonopyYamlLoaderBase(ABC):
         yaml_data: dict,
         configuration: dict | None = None,
         calculator: str | None = None,
-        physical_units: dict | None = None,
+        physical_units: "CalculatorPhysicalUnits | dict | None" = None,
     ):
         """Init method.
 
@@ -125,7 +132,7 @@ class PhonopyYamlLoaderBase(ABC):
         self._data = PhonopyYamlData(
             configuration=configuration,
             calculator=calculator,
-            physical_units=physical_units,
+            physical_units=_as_physical_units(physical_units),
         )
 
     @property
@@ -136,13 +143,13 @@ class PhonopyYamlLoaderBase(ABC):
     def parse(self) -> PhonopyYamlLoaderBase:
         """Parse raw yaml data."""
         self._parse_command_header()
+        self._parse_calculator()
         self._parse_physical_units()
         self._parse_transformation_matrices()
         self._parse_all_cells()
         self._parse_force_constants()
         self._parse_dataset()
         self._parse_nac()
-        self._parse_calculator()
         return self
 
     def _parse_command_header(self):
@@ -154,14 +161,25 @@ class PhonopyYamlLoaderBase(ABC):
 
     def _parse_physical_units(self):
         if "physical_unit" in self._yaml:
-            self._data.physical_units = {}
+            physical_units = {}
             for key, val in self._yaml["physical_unit"].items():
                 if key == "atomic_mass":
                     continue
                 if key in ["length", "force", "force_constants"]:
-                    self._data.physical_units[key + "_unit"] = val
+                    physical_units[key + "_unit"] = val
                 else:
-                    self._data.physical_units[key] = val
+                    physical_units[key] = val
+
+            calc_units = get_calculator_physical_units(self._data.calculator)
+            for key, val in physical_units.items():
+                if getattr(calc_units, key, None) != val:
+                    msg = [
+                        "physical_unit in YAML conflicts with calculator settings.",
+                        "YAML: %s = %s" % (key, val),
+                        "Calculator: %s = %s" % (key, getattr(calc_units, key, None)),
+                    ]
+                    raise ValueError("\n".join(msg))
+            self._data.physical_units = calc_units
 
     def _parse_transformation_matrices(self):
         if "supercell_matrix" in self._yaml:
@@ -448,14 +466,14 @@ class PhonopyYamlDumperBase(ABC):
         if units is not None:
             lines.append("physical_unit:")
             lines.append('  atomic_mass: "AMU"')
-            length_unit = units.get("length_unit", None)
+            length_unit = units.length_unit
+            force_unit = units.force_unit
+            fc_unit = units.force_constants_unit
             if length_unit is not None:
                 lines.append(f'  length: "{length_unit}"')
-            force_unit = units.get("force_unit", None)
             if force_unit is not None and forces_in_dataset(self._data.dataset):
                 lines.append(f'  force: "{force_unit}"')
             if self._data.command_name == "phonopy":
-                fc_unit = units.get("force_constants_unit", None)
                 if fc_unit is not None and self._data.force_constants is not None:
                     lines.append(f'  force_constants: "{fc_unit}"')
             lines.append("")
@@ -467,23 +485,22 @@ class PhonopyYamlDumperBase(ABC):
             return lines
 
         dataset = self._data.symmetry.dataset
-        if dataset is not None:
-            try:
-                uni_number = dataset.uni_number  # type: ignore
-                lines.append("magnetic_space_group:")
-                lines.append(f"  uni_number: {uni_number}")
-                lines.append(f"  msg_type: {dataset.msg_type}")  # type: ignore
-                lines.append("")
-            except AttributeError:
-                lines.append("space_group:")
-                spg_type = dataset.international
-                lines.append(f'  type: "{spg_type}"')
-                lines.append(f"  number: {dataset.number}")
-                hall_symbol = dataset.hall
-                if '"' in hall_symbol:
-                    hall_symbol = hall_symbol.replace('"', '\\"')
-                lines.append(f'  Hall_symbol: "{hall_symbol}"')
-                lines.append("")
+        if isinstance(dataset, SpglibMagneticDataset):
+            uni_number = dataset.uni_number  # type: ignore
+            lines.append("magnetic_space_group:")
+            lines.append(f"  uni_number: {uni_number}")
+            lines.append(f"  msg_type: {dataset.msg_type}")  # type: ignore
+            lines.append("")
+        if isinstance(dataset, SpglibDataset):
+            lines.append("space_group:")
+            spg_type = dataset.international
+            lines.append(f'  type: "{spg_type}"')
+            lines.append(f"  number: {dataset.number}")
+            hall_symbol = dataset.hall
+            if '"' in hall_symbol:
+                hall_symbol = hall_symbol.replace('"', '\\"')
+            lines.append(f'  Hall_symbol: "{hall_symbol}"')
+            lines.append("")
         return lines
 
     def _cell_info_yaml_lines(self) -> list:
@@ -839,7 +856,7 @@ class PhonopyYaml:
         self,
         configuration: dict | None = None,
         calculator: str | None = None,
-        physical_units: dict | None = None,
+        physical_units: CalculatorPhysicalUnits | None = None,
         settings: dict | None = None,
     ):
         """Init method.
@@ -850,7 +867,7 @@ class PhonopyYaml:
             Key-value pairs of phonopy calculation settings.
         calculator : str
             Force calculator name.
-        physical_units : dict
+        physical_units : CalculatorPhysicalUnits
             Physical units used for the calculation.
         settings : dict
             This controls amount of information in yaml output. See Phonopy.save().
@@ -884,14 +901,14 @@ class PhonopyYaml:
         self._data.calculator = value
 
     @property
-    def physical_units(self) -> dict | None:
+    def physical_units(self) -> CalculatorPhysicalUnits | None:
         """Return physical units of phonopy calculation."""
         return self._data.physical_units
 
     @physical_units.setter
-    def physical_units(self, value: dict):
+    def physical_units(self, value: "CalculatorPhysicalUnits | dict | None"):
         """Set physical units of phonopy calculation."""
-        self._data.physical_units = value
+        self._data.physical_units = _as_physical_units(value)
 
     @property
     def unitcell(self) -> PhonopyAtoms | None:
@@ -1048,7 +1065,7 @@ def read_phonopy_yaml(
     filename: str | os.PathLike | typing.IO,
     configuration: dict | None = None,
     calculator: str | None = None,
-    physical_units: dict | None = None,
+    physical_units: "CalculatorPhysicalUnits | dict | None" = None,
 ) -> PhonopyYamlData:
     """Read phonopy.yaml like file."""
     yaml_data = load_yaml(filename)
@@ -1085,6 +1102,37 @@ def load_phonopy_yaml(
     )
     phyml_loader.parse()
     return phyml_loader.data
+
+
+def _as_physical_units(
+    value: CalculatorPhysicalUnits | dict | None,
+) -> CalculatorPhysicalUnits | None:
+    if value is None:
+        return None
+    from phonopy.physical_units import CalculatorPhysicalUnits
+
+    if isinstance(value, CalculatorPhysicalUnits):
+        return value
+    if isinstance(value, dict):
+        warnings.warn(
+            "Dict input for physical_units is deprecated. "
+            "Use CalculatorPhysicalUnits instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        allowed_keys = CalculatorPhysicalUnits.field_names()
+        missing_keys = [key for key in allowed_keys if key not in value]
+        if missing_keys:
+            msg = "physical_units dict is missing keys: %s"
+            raise ValueError(msg % ", ".join(missing_keys))
+        none_keys = [key for key in allowed_keys if value.get(key) is None]
+        if none_keys:
+            msg = "physical_units dict has None values for: %s"
+            raise ValueError(msg % ", ".join(none_keys))
+        filtered = {key: value[key] for key in allowed_keys}
+        return CalculatorPhysicalUnits(**filtered)
+    msg = "physical_units has to be CalculatorPhysicalUnits, dict, or None."
+    raise TypeError(msg)
 
 
 def read_cell_yaml(
