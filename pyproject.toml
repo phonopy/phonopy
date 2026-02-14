@@ -31,7 +31,8 @@ pypolymlp = ["pypolymlp>=0.10.0"]
 tools = ["seekpath", "pypolymlp>=0.10.0"]
 dev = [
     "pytest",
-    "ruff"
+    "ruff",
+    "mypy"
 ]
 
 [project.scripts]
