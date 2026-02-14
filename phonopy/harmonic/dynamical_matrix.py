@@ -672,6 +672,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         if self._with_full_terms:
             dd_q0 = np.zeros((len(pos), 3, 3), dtype=self._dtype_complex, order="C")
         else:
+            assert self._dd_q0 is not None
             dd_q0 = self._dd_q0
 
         if q_dir_cart is None:
