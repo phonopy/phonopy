@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.47.1</title>
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.48.0</title>
   
   
   
@@ -36,9 +36,9 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=43025f86"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=e87ee8b8"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'qe';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.47.1</p>
+    <p class="title logo__title">Phonopy v.2.48.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -194,6 +194,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+
 
 
 </ul>
@@ -351,7 +352,6 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-q2r-x-to-create-phonopy-force-constants-file">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-born-file">Creating BORN file</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#nacl-example">NaCl example</a></li>
 </ul>
 </li>
@@ -424,8 +424,8 @@ forces induced by a small atomic displacement are what we need for
 phonon calculation.</p>
 <p>Then QE-PW supercell calculations are executed to obtain force on
 atoms, e.g., as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mpirun<span class="w"> </span>pw.x<span class="w"> </span>-i<span class="w"> </span>NaCl-001.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl-001.out
-%<span class="w"> </span>mpirun<span class="w"> </span>pw.x<span class="w"> </span>-i<span class="w"> </span>NaCl-002.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl-002.out
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>pw.x<span class="w"> </span>-i<span class="w"> </span>NaCl-001.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl-001.out
+%<span class="w"> </span>pw.x<span class="w"> </span>-i<span class="w"> </span>NaCl-002.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl-002.out
 </pre></div>
 </div>
 </li>
@@ -446,34 +446,60 @@ displacements stored in <code class="docutils literal notranslate"><span class="
 <li><p>Now post-process of phonopy is ready to run. The unit cell file
 used in the step 1 has to be specified but <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is
 automatically read. Examples of post-process are shown below.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="o">-</span><span class="n">p</span> <span class="o">--</span><span class="n">config</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
  <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
  <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
-                                      <span class="mf">1.13.0</span>
+                                      <span class="mf">2.47.1</span>
 
-<span class="n">Python</span> <span class="n">version</span> <span class="mf">2.7.14</span>
-<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">1.10.3</span>
+<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2026</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">16</span> <span class="mi">08</span><span class="p">:</span><span class="mi">09</span><span class="p">:</span><span class="mi">24</span><span class="p">]</span><span class="o">-------------------------</span>
+<span class="n">Compiled</span> <span class="k">with</span> <span class="n">OpenMP</span> <span class="n">support</span> <span class="p">(</span><span class="nb">max</span> <span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
+<span class="n">Running</span> <span class="ow">in</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span> <span class="n">mode</span><span class="o">.</span>
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.13.3</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.7.0</span>
+
+<span class="s2">&quot;band.conf&quot;</span> <span class="n">was</span> <span class="n">read</span> <span class="k">as</span> <span class="n">phonopy</span> <span class="n">configuration</span> <span class="n">file</span><span class="o">.</span>
 <span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">qe</span>
+<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
+<span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">au</span>
 <span class="n">Band</span> <span class="n">structure</span> <span class="n">mode</span>
 <span class="n">Settings</span><span class="p">:</span>
   <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">]</span>
-  <span class="n">Primitive</span> <span class="n">axis</span><span class="p">:</span>
-    <span class="p">[</span> <span class="mf">0.</span>   <span class="mf">0.5</span>  <span class="mf">0.5</span><span class="p">]</span>
-    <span class="p">[</span> <span class="mf">0.5</span>  <span class="mf">0.</span>   <span class="mf">0.5</span><span class="p">]</span>
-    <span class="p">[</span> <span class="mf">0.5</span>  <span class="mf">0.5</span>  <span class="mf">0.</span> <span class="p">]</span>
+  <span class="n">Primitive</span> <span class="n">matrix</span><span class="p">:</span>
+    <span class="p">[</span><span class="mf">0.</span>  <span class="mf">0.5</span> <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">[</span><span class="mf">0.5</span> <span class="mf">0.</span>  <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">[</span><span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.</span> <span class="p">]</span>
 <span class="n">Spacegroup</span><span class="p">:</span> <span class="n">Fm</span><span class="o">-</span><span class="mi">3</span><span class="n">m</span> <span class="p">(</span><span class="mi">225</span><span class="p">)</span>
-<span class="n">Computing</span> <span class="n">force</span> <span class="n">constants</span><span class="o">...</span>
-<span class="nb">max</span> <span class="n">drift</span> <span class="n">of</span> <span class="n">force</span> <span class="n">constants</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.001194</span> <span class="p">(</span><span class="n">zz</span><span class="p">)</span> <span class="o">-</span><span class="mf">0.000000</span> <span class="p">(</span><span class="n">zz</span><span class="p">)</span>
+<span class="n">Number</span> <span class="n">of</span> <span class="n">symmetry</span> <span class="n">operations</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">:</span> <span class="mi">1536</span>
+<span class="n">Use</span> <span class="o">-</span><span class="n">v</span> <span class="n">option</span> <span class="n">to</span> <span class="n">watch</span> <span class="n">primitive</span> <span class="n">cell</span><span class="p">,</span> <span class="n">unit</span> <span class="n">cell</span><span class="p">,</span> <span class="ow">and</span> <span class="n">supercell</span> <span class="n">structures</span><span class="o">.</span>
+
+<span class="n">NAC</span> <span class="n">params</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;BORN&quot;</span><span class="o">.</span>
+<span class="n">Displacement</span><span class="o">-</span><span class="n">force</span> <span class="n">dataset</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;FORCE_SETS&quot;</span><span class="o">.</span>
+<span class="o">--------------------------------</span> <span class="n">Symfc</span> <span class="n">start</span> <span class="o">-------------------------------</span>
+<span class="n">Symfc</span> <span class="n">version</span> <span class="mf">1.6.0</span> <span class="p">(</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">symfc</span><span class="o">/</span><span class="n">symfc</span><span class="p">)</span>
+<span class="n">Citation</span><span class="p">:</span> <span class="n">A</span><span class="o">.</span> <span class="n">Seko</span> <span class="ow">and</span> <span class="n">A</span><span class="o">.</span> <span class="n">Togo</span><span class="p">,</span> <span class="n">Phys</span><span class="o">.</span> <span class="n">Rev</span><span class="o">.</span> <span class="n">B</span><span class="p">,</span> <span class="mi">110</span><span class="p">,</span> <span class="mi">214302</span> <span class="p">(</span><span class="mi">2024</span><span class="p">)</span>
+<span class="n">Computing</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="n">order</span> <span class="n">force</span> <span class="n">constants</span><span class="o">.</span>
+<span class="n">Increase</span> <span class="n">log</span><span class="o">-</span><span class="n">level</span> <span class="n">to</span> <span class="n">watch</span> <span class="n">detailed</span> <span class="n">symfc</span> <span class="n">log</span><span class="o">.</span>
+<span class="o">---------------------------------</span> <span class="n">Symfc</span> <span class="n">end</span> <span class="o">--------------------------------</span>
+<span class="n">Max</span> <span class="n">drift</span> <span class="n">of</span> <span class="n">force</span> <span class="n">constants</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span>
+<span class="n">Max</span> <span class="n">drift</span> <span class="n">after</span> <span class="n">symmetrization</span> <span class="n">by</span> <span class="n">symfc</span> <span class="n">projector</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span>
+
 <span class="n">Reciprocal</span> <span class="n">space</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">reduced</span> <span class="n">coordinates</span><span class="p">:</span>
-<span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span>
-<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.00</span><span class="p">]</span>
-<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.00</span> <span class="o">-</span><span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span>
-<span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.50</span><span class="p">]</span>
-<span class="o">...</span>
+<span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.000</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.500</span><span class="p">]</span>
+
+<span class="n">Summary</span> <span class="n">of</span> <span class="n">calculation</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">&quot;phonopy.yaml&quot;</span><span class="o">.</span>
+<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2026</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">16</span> <span class="mi">08</span><span class="p">:</span><span class="mi">09</span><span class="p">:</span><span class="mi">27</span><span class="p">]</span><span class="o">-------------------------</span>
+                 <span class="n">_</span>
+   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
+  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
+ <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/NaCl-pwscf-band.png"><img alt="_images/NaCl-pwscf-band.png" src="_images/NaCl-pwscf-band.png" style="width: 50%;" />
@@ -537,7 +563,7 @@ under DFPT.</p>
 </pre></div>
 </div>
 <p>where more the k-point mesh numbers are specified. This may be exectued as:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mpirun<span class="w"> </span>~/espresso/bin/pw.x<span class="w"> </span>-i<span class="w"> </span>NaCl.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl.out
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>pw.x<span class="w"> </span>-i<span class="w"> </span>NaCl.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl.out
 </pre></div>
 </div>
 <p>Many files whose names stating with <code class="docutils literal notranslate"><span class="pre">pwscf</span></code> should be created. These
@@ -552,7 +578,7 @@ created as follows:</p>
 </pre></div>
 </div>
 <p>Similary <code class="docutils literal notranslate"><span class="pre">ph.x</span></code> is executed:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mpirun<span class="w"> </span>~/espresso/bin/ph.x<span class="w"> </span>-i<span class="w"> </span>NaCl.ph.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl.ph.out
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>ph.x<span class="w"> </span>-i<span class="w"> </span>NaCl.ph.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl.ph.out
 </pre></div>
 </div>
 <p>Finally the Born effective charges and dielectric constant are obtained in the
@@ -566,12 +592,12 @@ would be something like below:</p>
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file can be made using <code class="docutils literal notranslate"><span class="pre">phonopy-qe-born</span></code> command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-qe-born<span class="w"> </span>NaCl.in<span class="w">  </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>BORN
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-qe-born<span class="w"> </span>NaCl.in<span class="w"> </span>NaCl.ph.out<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>BORN
 </pre></div>
 </div>
 <p>Once this is made, the non-analytical term correction is included
 just adding the <code class="docutils literal notranslate"><span class="pre">--nac</span></code> option as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--qe<span class="w"> </span>--nac<span class="w"> </span>-c<span class="w"> </span>NaCl.in<span class="w"> </span>-p<span class="w"> </span>band.conf
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>-p<span class="w"> </span>--config<span class="w"> </span>band.conf
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/NaCl-pwscf-band-NAC.png"><img alt="_images/NaCl-pwscf-band-NAC.png" src="_images/NaCl-pwscf-band-NAC.png" style="width: 50%;" />
@@ -581,12 +607,94 @@ just adding the <code class="docutils literal notranslate"><span class="pre">--n
 <section id="using-q2r-x-to-create-phonopy-force-constants-file">
 <span id="qe-q2r"></span><h2>Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file<a class="headerlink" href="#using-q2r-x-to-create-phonopy-force-constants-file" title="Link to this heading">#</a></h2>
 <p><strong>Experimental</strong></p>
-<p>A parser of <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> output is implemented experimentally. Currently
-command-line user interface is not prepared. Using the following
-script, the force constants file readable by phonopy is
-created. Probably thus obtained force constants are required to be
-symmetrized by the translational invariance condition using
-<code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>.</p>
+<p>Using PW, PH, and Q2R, we can obtain supercell force constants that can be used
+for phonopy. But we may need some treatment before running Q2R. See
+<a class="reference internal" href="#qe-nac"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">NaCl.in</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> &amp;control
+    calculation = &#39;scf&#39;
+    restart_mode=&#39;from_scratch&#39;,
+    tprnfor = .true.
+    tstress = .true.
+    prefix=&#39;NaCl&#39;,
+    pseudo_dir = &#39;/home/togo/code/q-e-qe-7.5/pseudo&#39;
+    outdir=&#39;.&#39;
+ /
+ &amp;system
+    ibrav = 0
+    nat = 2
+    ntyp = 2
+    ecutwfc = 70.0
+ /
+ &amp;electrons
+    diagonalization = &#39;david&#39;
+    !mixing_beta = 0.7
+    conv_thr = 1.0d-12
+ /
+ATOMIC_SPECIES
+ Na  22.98976928 Na.pbe-spn-kjpaw_psl.0.2.UPF
+ Cl  35.453      Cl.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS crystal
+ Na   0.0000000000000000  0.0000000000000000  0.0000000000000000
+ Cl   0.5000000000000000  0.5000000000000000  0.5000000000000000
+CELL_PARAMETERS angstrom
+0 2.8451507380878356 2.8451507380878356
+2.8451507380878356 0 2.8451507380878356
+2.8451507380878356 2.8451507380878356 0
+K_POINTS automatic
+8 8 8 0 0 0
+</pre></div>
+</div>
+<p>and <code class="docutils literal notranslate"><span class="pre">NaCl.ph.in</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonons</span> <span class="n">of</span> <span class="n">NaCl</span>
+ <span class="o">&amp;</span><span class="n">inputph</span>
+  <span class="n">tr2_ph</span><span class="o">=</span><span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
+  <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;NaCl&#39;</span><span class="p">,</span>
+  <span class="n">ldisp</span><span class="o">=.</span><span class="n">true</span><span class="o">.</span><span class="p">,</span>
+  <span class="n">nq1</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq2</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq3</span><span class="o">=</span><span class="mi">4</span>
+  <span class="n">amass</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">=</span><span class="mf">22.98976928</span><span class="p">,</span>
+  <span class="n">amass</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">=</span><span class="mf">35.453</span><span class="p">,</span>
+  <span class="n">outdir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+  <span class="n">fildyn</span><span class="o">=</span><span class="s1">&#39;NaCl.dyn&#39;</span><span class="p">,</span>
+ <span class="o">/</span>
+</pre></div>
+</div>
+<p>The PH calculation can be peformed for each q-point independently, e.g.,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonons</span> <span class="n">of</span> <span class="n">NaCl</span>
+ <span class="o">&amp;</span><span class="n">inputph</span>
+  <span class="n">tr2_ph</span><span class="o">=</span><span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
+  <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;NaCl&#39;</span><span class="p">,</span>
+  <span class="n">ldisp</span><span class="o">=.</span><span class="n">true</span><span class="o">.</span><span class="p">,</span>
+  <span class="n">nq1</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq2</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq3</span><span class="o">=</span><span class="mi">4</span>
+  <span class="n">amass</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">=</span><span class="mf">22.98976928</span><span class="p">,</span>
+  <span class="n">amass</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">=</span><span class="mf">35.453</span><span class="p">,</span>
+  <span class="n">outdir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+  <span class="n">fildyn</span><span class="o">=</span><span class="s1">&#39;NaCl.dyn&#39;</span><span class="p">,</span>
+  <span class="n">start_q</span><span class="o">=</span><span class="mi">1</span>
+  <span class="n">last_q</span><span class="o">=</span><span class="mi">1</span>
+ <span class="o">/</span>
+</pre></div>
+</div>
+<p>The output file at the Gamma point calculated this way contains the Born
+effective charges and dielectric constant if the crystal is an insulator. These
+are unnecessary for phonopy. Therefore, the <code class="docutils literal notranslate"><span class="pre">NaCl.dyn1</span></code> file should be replaced
+with <code class="docutils literal notranslate"><span class="pre">NaCl.dyn</span></code>, which is calculated using the following input:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonons</span> <span class="n">of</span> <span class="n">NaCl</span>
+ <span class="o">&amp;</span><span class="n">inputph</span>
+  <span class="n">tr2_ph</span><span class="o">=</span><span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
+  <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;NaCl&#39;</span><span class="p">,</span>
+  <span class="n">epsil</span><span class="o">=.</span><span class="n">false</span><span class="o">.</span><span class="p">,</span>
+  <span class="n">outdir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+  <span class="n">fildyn</span><span class="o">=</span><span class="s1">&#39;NaCl.dyn&#39;</span><span class="p">,</span>
+ <span class="o">/</span>
+<span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>Then having all <code class="docutils literal notranslate"><span class="pre">NaCl.dyn1</span></code>, …, files, <code class="docutils literal notranslate"><span class="pre">NaCl.fc</span></code> for phonopy can be generated
+using Q2R.</p>
+<p>A parser of <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> output is implemented experimentally. Currently command-line
+user interface is not prepared. Using the following script, the force constants
+file readable by phonopy is created.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
@@ -607,58 +715,59 @@ symmetrized by the translational invariance condition using
 <p>This gives <code class="docutils literal notranslate"><span class="pre">phonopy_params_q2r.yaml</span></code> file that contains supercell force
 constants.</p>
 <section id="non-analytical-term-correction">
-<h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
-<p>Treatment of non-analytical term correction (NAC) is different between
-phonopy and QE. For insulator, QE automatically calculate dielectric
-constant and Born effective charges at PH calculation when q-point
-mesh sampling mode (<code class="docutils literal notranslate"><span class="pre">ldisp</span> <span class="pre">=</span> <span class="pre">.true.</span></code>), and these data are written in
-the Gamma point dynamical matrix file (probably in <code class="docutils literal notranslate"><span class="pre">.dyn1</span></code>
-file). When running <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code>, these files are read including the
-dielectric constant and Born effective charges, and the real space
-force constants where QE-NAC treatment is done are written to the q2r
-output file. This is not that phonopy expects. Therefore the
-dielectric constant and Born effective charges data have to be removed
-manually from the Gamma point dynamical matrix file before running
-<code class="docutils literal notranslate"><span class="pre">q2r.x</span></code>. Alternatively Gamma point only PH calculation with ‘epsil =
-.false.’ can generate the dynamical matrix file without the dielectric
-constant and Born effective charges data. So it is possible to replace
-the Gamma point file by this Gamma point only file to run <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code>
-for phonopy.</p>
-<section id="creating-born-file">
-<h4>Creating BORN file<a class="headerlink" href="#creating-born-file" title="Link to this heading">#</a></h4>
-<p>If the <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> output contains dielectric constant and Born
-effective charges, the following script can generate <code class="docutils literal notranslate"><span class="pre">BORN</span></code> format
-text.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span id="qe-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
+<p>The treatment of non-analytical term correction (NAC) differs between phonopy
+and QE. For insulators, QE automatically calculates the dielectric constant and
+Born effective charges during PH calculations when the q-point mesh sampling
+mode is enabled (<code class="docutils literal notranslate"><span class="pre">ldisp</span> <span class="pre">=</span> <span class="pre">.true.</span></code>). These data are written to the Gamma point
+dynamical matrix file (typically the <code class="docutils literal notranslate"><span class="pre">.dyn1</span></code> file). When running <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code>, this
+program reads these files including the dielectric constant and Born effective
+charges, and writes the real-space force constants (with QE’s NAC treatment
+applied) to the Q2R output file. However, this differs from what phonopy
+expects. Therefore, the dielectric constant and Born effective charges data must
+be manually removed from the Gamma point dynamical matrix file before running
+<code class="docutils literal notranslate"><span class="pre">q2r.x</span></code>. Alternatively, performing a Gamma point-only phonon calculation with
+<code class="docutils literal notranslate"><span class="pre">epsil</span> <span class="pre">=</span> <span class="pre">.false.</span></code> generates a dynamical matrix file without the dielectric
+constant and Born effective charges data. This Gamma point-only file can then
+replace the original Gamma point file, allowing <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to be run for phonopy
+without modification.</p>
+<!-- #### Creating BORN file
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.symmetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">elaborate_borns_and_epsilon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_pwscf</span><span class="p">,</span> <span class="n">PH_Q2R</span>
+If the `q2r.x` output contains dielectric constant and Born
+effective charges, the following script can generate `BORN` format
+text.
 
-<span class="n">primcell_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">q2r_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_pwscf</span><span class="p">(</span><span class="n">primcell_filename</span><span class="p">)</span>
-<span class="n">q2r</span> <span class="o">=</span> <span class="n">PH_Q2R</span><span class="p">(</span><span class="n">q2r_filename</span><span class="p">)</span>
-<span class="n">q2r</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">parse_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">q2r</span><span class="o">.</span><span class="n">epsilon</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">borns</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">elaborate_borns_and_epsilon</span><span class="p">(</span>
-        <span class="n">cell</span><span class="p">,</span>
-        <span class="n">q2r</span><span class="o">.</span><span class="n">borns</span><span class="p">,</span>
-        <span class="n">q2r</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span>
-        <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">q2r</span><span class="o">.</span><span class="n">dimension</span><span class="p">),</span>
-        <span class="n">symmetrize_tensors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%13.8f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">9</span><span class="p">)</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">epsilon</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
-    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">borns</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%13.8f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">9</span><span class="p">)</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
-</pre></div>
-</div>
-<p>Saving this script as <code class="docutils literal notranslate"><span class="pre">make_born_q2r.py</span></code>,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>make_born_q2r.py<span class="w"> </span>NaCl.in<span class="w"> </span>NaCl.fc<span class="w"> </span>&gt;<span class="w"> </span>BORN
-</pre></div>
-</div>
-</section>
+```python
+#!/usr/bin/env python
+
+import sys
+import numpy as np
+from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+primcell_filename = sys.argv[1]
+q2r_filename = sys.argv[2]
+cell, _ = read_pwscf(primcell_filename)
+q2r = PH_Q2R(q2r_filename)
+q2r.run(cell, parse_fc=False)
+if q2r.epsilon is not None:
+    borns, epsilon, _ = elaborate_borns_and_epsilon(
+        cell,
+        q2r.borns,
+        q2r.epsilon,
+        supercell_matrix=np.diag(q2r.dimension),
+        symmetrize_tensors=True)
+    print("default")
+    print(("%13.8f" * 9) % tuple(epsilon.ravel()))
+    for z in borns:
+        print(("%13.8f" * 9) % tuple(z.ravel()))
+```
+
+Saving this script as `make_born_q2r.py`,
+
+```bash
+% python make_born_q2r.py NaCl.in NaCl.fc > BORN
+``` -->
 <section id="nacl-example">
 <h4>NaCl example<a class="headerlink" href="#nacl-example" title="Link to this heading">#</a></h4>
 <p>NaCl example is found at
@@ -725,7 +834,6 @@ text.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-q2r-x-to-create-phonopy-force-constants-file">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-born-file">Creating BORN file</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#nacl-example">NaCl example</a></li>
 </ul>
 </li>
