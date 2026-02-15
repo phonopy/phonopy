@@ -46,8 +46,8 @@ from numpy.typing import NDArray
 
 import phonopy.cui.load_helper as load_helper
 from phonopy.api_phonopy import Phonopy
-from phonopy.interface.calculator import get_calculator_physical_units
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.physical_units import get_calculator_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.dataset import forces_in_dataset
 
@@ -302,7 +302,7 @@ def load(
             nac_params=_nac_params,
             born_filename=born_filename,
             is_nac=is_nac,
-            nac_factor=units["nac_factor"],
+            nac_factor=units.nac_factor,
             log_level=log_level,
         )
         if ret_nac_params is not None:

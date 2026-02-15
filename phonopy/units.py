@@ -40,7 +40,8 @@ from math import pi, sqrt
 from phonopy.physical_units import get_physical_units
 
 warnings.warn(
-    "phonopy.units.* is deprecated. Use phonopy.physical_units.physical_units instead.",
+    "phonopy.units.* is deprecated. "
+    "Use phonopy.physical_units.get_physical_units() instead.",
     DeprecationWarning,
     stacklevel=2,
 )

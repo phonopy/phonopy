@@ -51,7 +51,8 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
 )
 from phonopy.physical_units import get_physical_units
-from phonopy.structure.atoms import PhonopyAtoms, atom_data
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -105,6 +106,7 @@ def read_abinit(filename: str | os.PathLike | typing.IO):
         positions = tags["xred"]
 
     numbers = [tags["znucl"][x - 1] for x in tags["typat"]]
+    atom_data = get_atomic_data().atom_data
     symbols = [atom_data[n][1] for n in numbers]
 
     return PhonopyAtoms(symbols=symbols, cell=lattice.T, scaled_positions=positions)

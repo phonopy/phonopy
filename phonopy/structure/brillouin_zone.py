@@ -40,6 +40,7 @@ from collections.abc import Sequence
 from typing import Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.structure.cells import get_reduced_bases
 
@@ -78,11 +79,11 @@ search_space = np.array(
 
 
 def get_qpoints_in_Brillouin_zone(
-    reciprocal_lattice: Union[Sequence, np.ndarray],
-    qpoints: Union[Sequence, np.ndarray],
+    reciprocal_lattice: Union[Sequence, NDArray],
+    qpoints: Union[Sequence, NDArray],
     only_unique: bool = False,
     tolerance: float = 0.01,
-) -> Union[np.ndarray, list]:
+) -> Union[NDArray, list]:
     """Move qpoints to first Brillouin zone by lattice translation.
 
     Parameters
@@ -101,6 +102,7 @@ def get_qpoints_in_Brillouin_zone(
     """
     bz = BrillouinZone(reciprocal_lattice, tolerance=tolerance)
     bz.run(qpoints)
+    assert bz.shortest_qpoints is not None
     if only_unique:
         return np.array(
             [pts[0] for pts in bz.shortest_qpoints], dtype="double", order="C"
@@ -166,6 +168,8 @@ class BrillouinZone:
             )
 
     @property
-    def shortest_qpoints(self):
+    def shortest_qpoints(self) -> list[NDArray]:
         """Return shortest qpoints including equivalents."""
+        if self._shortest_qpoints is None:
+            raise RuntimeError("run method has not been called yet.")
         return self._shortest_qpoints

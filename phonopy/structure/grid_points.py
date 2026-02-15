@@ -40,13 +40,14 @@ from collections.abc import Sequence
 from types import SimpleNamespace
 
 import numpy as np
+import spglib
+
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
+
 from numpy.typing import ArrayLike, NDArray
-from spglib import (
-    get_pointgroup,  # type: ignore[import-untyped]
-    get_stabilized_reciprocal_mesh,  # type: ignore[import-untyped]
-    get_symmetry_dataset,  # type: ignore[import-untyped]
-    relocate_BZ_grid_address,  # type: ignore[import-untyped]
-)
 
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.cells import (
@@ -355,13 +356,13 @@ class GridPoints:
         self._ir_qpoints = qpoints_in_BZ
 
     def _set_ir_qpoints(self, rotations, is_time_reversal=True):
-        grid_mapping_table, grid_address = get_stabilized_reciprocal_mesh(
+        grid_mapping_table, grid_address = spglib.get_stabilized_reciprocal_mesh(
             self._mesh,
             rotations,
             is_shift=self._is_shift,
             is_time_reversal=is_time_reversal,
             is_dense=True,
-        )
+        )  # type: ignore
         # uintp to long
         grid_mapping_table = np.array(grid_mapping_table, dtype="int64")
 
@@ -372,13 +373,13 @@ class GridPoints:
             dtype = "int64"
 
         if self._fit_in_BZ:
-            grid_address, _ = relocate_BZ_grid_address(
+            grid_address, _ = spglib.relocate_BZ_grid_address(
                 grid_address,
                 self._mesh,
                 self._rec_lat,
                 is_shift=self._is_shift,
                 is_dense=True,
-            )
+            )  # type: ignore
             self._grid_address = np.array(
                 grid_address[: np.prod(self._mesh)], dtype=dtype, order="C"
             )
@@ -535,7 +536,7 @@ class GeneralizedRegularGridPoints:
     def _prepare(self, cell, length, symprec):
         """Define grid generating matrix and run the SNF."""
         self._sym_dataset = get_dot_access_dataset(
-            get_symmetry_dataset(cell.totuple(), symprec=symprec)
+            spglib.get_symmetry_dataset(cell.totuple(), symprec=symprec)
         )  # type: ignore
         if self._suggest:
             self._set_grid_matrix_by_std_primitive_cell(cell, length)
@@ -570,7 +571,7 @@ class GeneralizedRegularGridPoints:
 
     def _set_grid_matrix_by_input_cell(self, input_cell, length):
         """Grid generating matrix based on input cell."""
-        pointgroup = get_pointgroup(self._sym_dataset.rotations)
+        pointgroup = spglib.get_pointgroup(self._sym_dataset.rotations)
         # tmat: From input lattice to point group preserving lattice
         tmat = pointgroup[2]  # type: ignore
         lattice = np.dot(input_cell.cell.T, tmat).T

@@ -53,3 +53,6 @@ _sources
 
 # jupyter notebooks
 .ipynb_checkpoints
+
+# uv
+uv.lock

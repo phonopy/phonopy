@@ -45,7 +45,8 @@ import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms, symbol_map
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atomic_data import get_atomic_data
 
 
 def cp2kver(forces_filename):
@@ -283,7 +284,7 @@ def read_cp2k(filename):
     for coordline in cp2k_coord["*"]:
         # coordinates are a series of strings according to the CP2K schema
         fields = coordline.split()
-        numbers += [symbol_map[fields[0]]]
+        numbers += [get_atomic_data().symbol_map[fields[0]]]
         # positions can also be fractions
         positions += [[float(Fraction(f)) for f in fields[1:4]]]
 

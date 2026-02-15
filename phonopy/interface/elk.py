@@ -45,7 +45,8 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
     sort_positions_by_symbols,
 )
-from phonopy.structure.atoms import PhonopyAtoms, symbol_map
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -83,7 +84,7 @@ def read_elk(filename):
     numbers = []
     for s in symbols:
         if s in symbols:
-            numbers.append(symbol_map[s])
+            numbers.append(get_atomic_data().symbol_map[s])
         else:
             numbers.append(0)
 
