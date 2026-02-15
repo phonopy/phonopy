@@ -2,6 +2,10 @@
 
 # Change Log
 
+# Feb-15-2026: Version 2.48.0
+
+- Maintenance release with refactoring of calculator interface base.
+
 # Jan-05-2026: Version 2.47.1
 
 - Just for releasing pypi package.

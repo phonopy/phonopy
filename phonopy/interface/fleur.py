@@ -34,12 +34,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import itertools
-import math
-import sys
+from __future__ import annotations
+
+import os
 import warnings
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import (
     get_drift_forces,
@@ -48,62 +50,65 @@ from phonopy.interface.vasp import (
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
-    """Parse forces from output files (special format: data line + 'force' line)."""
-    hook = "1 #"
-    is_parsed = True
-    force_sets = []
-
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray]:
+    """Parse forces from force output files."""
+    force_sets: list[NDArray] = []
     for i, filename in enumerate(forces_filenames):
         if verbose:
-            sys.stdout.write("%d. " % (i + 1))
-        try:
-            with open(filename) as f:
-                lines = f.readlines()
+            print(f"{i + 1}. ", end="")
 
-            start = next(i for i, line in enumerate(lines) if hook in line) + 1
-
-            forces = []
-            i = start
-            while i + 1 < len(lines) and len(forces) < num_atoms:
-                vec_line = lines[i].strip()
-                tag_line = lines[i + 1].strip()
-                if "force" in tag_line:
-                    vec = [float(x) for x in vec_line.split()[:3]]
+        forces: list[list[float]] = []
+        previous_line = ""
+        with open(filename) as f:
+            for line in f:
+                if "force" in line:
+                    if previous_line == "":
+                        break
+                    vec = [float(x) for x in previous_line.split()[:3]]
                     forces.append(vec)
-                    i += 2
-                else:
-                    i += 1
+                previous_line = line
 
-            if len(forces) != num_atoms:
-                if verbose:
-                    print(
-                        f"Force count mismatch in {filename}: "
-                        f"{len(forces)} vs {num_atoms}"
-                    )
-                is_parsed = False
-                continue
-
-            drift_force = get_drift_forces(forces, filename=filename, verbose=verbose)
-            force_sets.append(np.array(forces) - drift_force)
+        if len(forces) != num_atoms:
             if verbose:
-                print("Parsed")
+                print(
+                    f"Force count mismatch in {filename}: {len(forces)} vs {num_atoms}"
+                )
+            return []
 
-        except Exception as e:
-            if verbose:
-                print(f"Error parsing {filename}: {e}")
-            is_parsed = False
+        forces_array = np.array(forces)
+        drift_force = get_drift_forces(forces_array, filename=filename, verbose=verbose)
+        force_sets.append(forces_array - drift_force)
 
-    return force_sets if is_parsed else []
+    return force_sets
 
 
-def read_fleur(filename):
-    """Read crystal structure."""
-    fleur_in = FleurIn(open(filename).readlines())
+def read_fleur(
+    filename: str | os.PathLike,
+) -> tuple[PhonopyAtoms, list[str], list[str]]:
+    """Read crystal structure from a Fleur input file.
+
+    Parameters
+    ----------
+    filename : str or os.PathLike
+        Path to the Fleur input file.
+
+    Returns
+    -------
+    tuple
+        (PhonopyAtoms, speci, restlines) where speci is a list of species
+        identifiers and restlines contains extra lines from the input file.
+
+    """
+    with open(filename) as f:
+        fleur_in = FleurIn(f.readlines())
     tags = fleur_in.get_variables()
-    avec = [tags["avec"][i] for i in range(3)]
+    avec = tags["avec"]
     speci = tags["atoms"]["speci"]
-    numbers = [math.floor(float(x)) for x in speci]
+    numbers = [int(x.split(".")[0]) for x in speci]
 
     for i, n in enumerate(numbers):
         if n == 0:
@@ -111,177 +116,216 @@ def read_fleur(filename):
                 if j not in numbers:
                     numbers[i] = j
                     break
-    pos_all = []
-    for _, pos in zip(numbers, tags["atoms"]["positions"], strict=True):
-        pos_all += pos
+
+    positions = tags["atoms"]["positions"]
+
     return (
-        PhonopyAtoms(numbers=numbers, cell=avec, scaled_positions=pos_all),
+        PhonopyAtoms(numbers=numbers, cell=avec, scaled_positions=positions),
         speci,
-        fleur_in._restlines,
+        fleur_in.restlines,
     )
 
 
-def write_fleur(filename, cell, speci, N, restlines):
-    """Write crystal structure to file."""
-    f = open(filename, "w")
-    f.write(get_fleur_structure(cell, speci, N, restlines))
+def write_fleur(
+    filename: str | os.PathLike,
+    cell: PhonopyAtoms,
+    speci: list[str],
+    restlines: list[str] | None,
+) -> None:
+    """Write crystal structure to a Fleur input file."""
+    with open(filename, "w") as f:
+        f.write(get_fleur_structure(cell, speci, restlines))
 
 
 def write_supercells_with_displacements(
-    supercell,
-    cells_with_displacements,
-    ids,
-    speci,
-    N,
-    restlines,
-    pre_filename="supercell",
-    width=3,
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: Sequence[int] | NDArray,
+    speci: list[str],
+    n_repeat: int,
+    restlines: list[str] | None,
+    pre_filename: str = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
-    write_fleur("%s.in" % pre_filename, supercell, speci, N, restlines)
+    supercell_repci = []
+    for _speci in speci:
+        supercell_repci += [_speci] * n_repeat
+    write_fleur(f"{pre_filename}.in", supercell, supercell_repci, restlines)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
-        filename = "{pre_filename}-{0:0{width}}.in".format(
-            i, pre_filename=pre_filename, width=width
-        )
-        write_fleur(filename, cell, speci, N, restlines)
+        filename = f"{pre_filename}-{i:0{width}}.in"
+        write_fleur(filename, cell, supercell_repci, restlines)
 
 
-def get_fleur_structure(cell, speci, N, restlines):
-    """Return Fleur structure in text."""
+def get_fleur_structure(
+    cell: PhonopyAtoms,
+    speci: Sequence[str],
+    restlines: list[str] | None,
+) -> str:
+    """Return Fleur structure in text.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Crystal structure.
+    speci : sequence or None
+        Species identifiers for all atoms.
+    restlines : list of str or None
+        Additional lines to append (title, job info, etc.).
+
+    Returns
+    -------
+    str
+        Fleur input file content as a string.
+
+    """
     lattice = cell.cell
-    (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
-        cell.symbols, cell.scaled_positions
+
+    num_atoms, reduced_speci, scaled_positions, sort_list = sort_positions_by_symbols(
+        speci, cell.scaled_positions
     )
+    assert scaled_positions is not None
     if restlines is None:
         restlines = [
-            "Title line (Generated by phonopy)",
-            "\nAdditional job info here\n",
+            "\n".join(
+                ["Title line (Generated by phonopy)", "Additional job info here", ""]
+            )
         ]
         warnings.warn(
             "No additional job info given. Writing minimal file.",
             UserWarning,
             stacklevel=2,
         )
-    if speci is None:
-        speci = cell.numbers
-        warnings.warn(
-            "Atomic symbols not given. Using atomic numbers instead."
-            " If you would like to uniquely identify atoms, please populate `speci`.",
-            UserWarning,
-            stacklevel=2,
-        )
-    specilong = list(
-        itertools.chain.from_iterable(itertools.repeat(x, N) for x in speci)
-    )
-    lines = restlines[0] + "\n"
-    lines += ((" %21.16f" * 3 + "\n") * 3) % tuple(lattice.ravel())
-    lines += "1.0 \n"
-    lines += "1.0 1.0 1.0 \n \n"
-    lines += str(sum(num_atoms)) + "\n"
-    for i in range(sum(num_atoms)):
-        lines += str(specilong[i]).ljust(6)
-        currentpos = str(scaled_positions[i]).replace("[", "")
-        currentpos = currentpos.replace("]", "").split()
 
+    total_atoms = sum(num_atoms)
+    all_speci = []
+    for n, v in zip(num_atoms, reduced_speci, strict=True):
+        all_speci += [v] * n
+
+    lines = [restlines[0]]
+    for vec in lattice:
+        lines.append(" %21.16f %21.16f %21.16f" % tuple(vec))
+    lines.append("1.0")
+    lines.append("1.0 1.0 1.0")
+    lines.append("")
+    lines.append(str(total_atoms))
+    for i in range(total_atoms):
+        line = str(all_speci[i]).ljust(6)
         for j in range(3):
-            lines += " " + "{:.10f}".format(float(currentpos[j]))
-        if i < sum(num_atoms) - 1:
-            lines += "\n"
-    for x in range(1, len(restlines)):
-        if len(restlines[x]) == 0:
-            lines += "\n"
-            continue
-        lines += restlines[x]
-        if x != len(restlines) - 1:
-            lines += "\n"
-    return lines
+            line += f" {scaled_positions[i][j]:.10f}"
+        lines.append(line)
+    lines.append("")
+    lines += restlines[1:]
+    return "\n".join(lines)
 
 
 class FleurIn:
-    """Class to generate Fleur crystal structure."""
+    """Parser for Fleur crystal structure input files.
 
-    def __init__(self, lines):
-        """Init method."""
-        self._set_methods = {"a1": self._set_avec, "atoms": self._set_atoms}
-        self._tags = {"atoms": None, "a1": None}
+    Attributes
+    ----------
+    restlines : list of str
+        Extra lines from the input (title, job directives, etc.).
+
+    """
+
+    def __init__(self, lines: list[str]) -> None:
+        """Init method.
+
+        Parameters
+        ----------
+        lines : list of str
+            Lines read from a Fleur input file.
+
+        """
+        self._tags: dict[str, list[list[float]] | dict | None] = {
+            "atoms": None,
+            "avec": None,
+        }
         self._lines = lines[:]
-        self._restlines = []
-        self._collect()
+        self.restlines: list[str] = []
+        self._parse()
 
-    def get_variables(self):
-        """Return variables."""
+    def get_variables(self) -> dict:
+        """Return parsed tags dictionary."""
         return self._tags
 
-    def _collect(self):
-        firstline = True
-        while True:
-            try:
-                line_str = self._lines.pop(0).strip()
-            except IndexError:
+    def _parse(self) -> None:
+        """Parse Fleur input file lines."""
+        # Store title line as first rest line
+        if self._lines and self._lines[0].strip():
+            self.restlines.append(self._lines[0].strip())
+
+        i = 0
+        while i < len(self._lines):
+            line = self._lines[i].strip()
+
+            if not line or line.startswith("!"):
+                i += 1
+                continue
+            if i == 0:
+                i += 1
+                continue
+            if line.startswith("&input") or line.startswith("&end"):
+                i += 1
+                continue
+
+            # Detect lattice vectors: 3 consecutive lines each containing ≥3 floats
+            if (
+                i + 2 < len(self._lines)
+                and self._is_vector_line(line)
+                and self._is_vector_line(self._lines[i + 1].strip())
+                and self._is_vector_line(self._lines[i + 2].strip())
+            ):
+                i = self._parse_lattice(i)
+                continue
+
+            # Detect atom count line followed by atom data
+            if self._try_parse_atoms(i):
                 break
 
-            if firstline is True:
-                self._restlines.append(line_str)
-                firstline = False
-                continue
-            if len(line_str) == 0:
-                continue
-            if line_str[0] == "!":
-                continue
+            i += 1
 
-            elems = line_str.split()
-            if elems[-1] in self._set_methods:
-                self._lines.insert(0, line_str)
-                self._set_methods[elems[-1]]()
+    def _parse_lattice(self, start: int) -> int:
+        """Parse lattice vectors, lattice constant, and scale factors.
 
-    def _set_atoms(self):
-        natoms = int(self._lines.pop(0).split()[0][0])
-        speci = []
-        positions = []
-        positions1 = []
-        for _ in range(natoms):
-            currentline = self._lines.pop(0).split()
-            speci.append(currentline[0])
-            currentspeci = [float(x) for x in currentline[1:4]]
-            positions1.append(currentspeci)
-        positions.append(positions1)
+        Parameters
+        ----------
+        start : int
+            Index of the first lattice vector line.
 
-        factors = [1.0, 1.0, 1.0]
-        shifts = [0.0, 0.0, 0.0]
+        Returns
+        -------
+        int
+            Index of the next unparsed line.
 
-        for count, line in enumerate(self._lines):
-            if "&factor" in line:
-                currentline = self._lines.pop(count).split()
-                factors = [
-                    float(currentline[1]),
-                    float(currentline[2]),
-                    float(currentline[3]),
-                ]
+        """
+        avec: list[list[float]] = []
+        for j in range(3):
+            avec.append([float(x) for x in self._lines[start + j].split()[:3]])
+        i = start + 3
 
-        for count, line in enumerate(self._lines):
-            if "&shift" in line:
-                currentline = self._lines.pop(count).split()
-                shifts = [
-                    float(currentline[1]),
-                    float(currentline[2]),
-                    float(currentline[3]),
-                ]
+        # Lattice constant
+        lattcon = 1.0
+        if i < len(self._lines):
+            try:
+                lattcon = float(self._lines[i].split()[0])
+                i += 1
+            except (ValueError, IndexError):
+                pass
 
-        for x in positions[0]:
-            x[0] = x[0] / factors[0] + shifts[0]
-            x[1] = x[1] / factors[1] + shifts[1]
-            x[2] = x[2] / factors[2] + shifts[2]
+        # Scale factors
+        scale = [1.0, 1.0, 1.0]
+        if i < len(self._lines):
+            try:
+                parts = self._lines[i].split()
+                if len(parts) >= 3:
+                    scale = [float(parts[j]) for j in range(3)]
+                    i += 1
+            except (ValueError, IndexError):
+                pass
 
-        self._tags["atoms"] = {"speci": speci, "positions": positions}
-        for j in range(len(self._lines)):
-            self._restlines.append(self._lines[j])
-
-    def _set_avec(self):
-        avec = []
-        for _ in range(3):
-            avec.append([float(x) for x in self._lines.pop(0).split()[:3]])
-        lattcon = float(self._lines.pop(0).split()[0])
-        scale = [float(x) for x in self._lines.pop(0).split()[:3]]
+        # Apply lattice constant and scale factors
         for j in range(3):
             for k in range(3):
                 if scale[k] < 0:
@@ -289,13 +333,79 @@ class FleurIn:
                 if scale[k] == 0.0:
                     scale[k] = 1.0
                 avec[j][k] = lattcon * avec[j][k] * scale[k]
+
         self._tags["avec"] = avec
+        return i
 
+    def _try_parse_atoms(self, start: int) -> bool:
+        """Try to parse atom count and atomic positions starting at *start*.
 
-if __name__ == "__main__":
-    from phonopy.structure.symmetry import Symmetry
+        Parameters
+        ----------
+        start : int
+            Index of the candidate atom-count line.
 
-    cell, speci, restlines = read_fleur(sys.argv[1])
-    symmetry = Symmetry(cell)
-    print("# %s" % symmetry.get_international_table())
-    print(get_fleur_structure(cell, speci, 1, restlines))
+        Returns
+        -------
+        bool
+            True if atoms were successfully parsed.
+
+        """
+        line = self._lines[start].strip()
+        try:
+            natoms = int(line.split()[0])
+        except (ValueError, IndexError):
+            return False
+
+        if natoms <= 0 or start + natoms >= len(self._lines):
+            return False
+
+        # Validate that following lines look like atom data
+        for j in range(1, natoms + 1):
+            if not self._is_atom_line(self._lines[start + j]):
+                return False
+
+        # Parse atom data
+        speci: list[str] = []
+        positions: list[list[float]] = []
+        for j in range(1, natoms + 1):
+            tokens = self._lines[start + j].split()
+            speci.append(tokens[0])
+            positions.append([float(tokens[k]) for k in range(1, 4)])
+
+        # Collect remaining lines after atom block
+        atom_end = start + natoms + 1
+        for j in range(atom_end, len(self._lines)):
+            rest = self._lines[j].strip()
+            if rest and not rest.startswith("&end"):
+                self.restlines.append(rest)
+
+        self._tags["atoms"] = {"speci": speci, "positions": positions}
+        return True
+
+    @staticmethod
+    def _is_vector_line(line: str) -> bool:
+        """Return True if *line* contains at least 3 float-parseable tokens."""
+        parts = line.split()
+        if len(parts) < 3:
+            return False
+        try:
+            for k in range(3):
+                float(parts[k])
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _is_atom_line(line: str) -> bool:
+        """Return True if *line* looks like an atom data line (id + 3 coords)."""
+        parts = line.split()
+        if len(parts) < 4:
+            return False
+        try:
+            float(parts[0])
+            for k in range(1, 4):
+                float(parts[k])
+            return True
+        except (ValueError, IndexError):
+            return False

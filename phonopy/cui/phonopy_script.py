@@ -45,6 +45,11 @@ from typing import Literal
 import numpy as np
 import spglib
 
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
+
 from phonopy import Phonopy, __version__
 from phonopy.cui.collect_cell_info import PhonopyCellInfoResult, get_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
@@ -84,7 +89,6 @@ from phonopy.file_IO import (
 )
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
 from phonopy.interface.calculator import (
-    get_calculator_physical_units,
     get_default_displacement_distance,
     write_supercells_with_displacements,
 )
@@ -98,9 +102,16 @@ from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import get_pdos_indices
 from phonopy.phonon.mesh import Mesh
-from phonopy.physical_units import get_physical_units
+from phonopy.physical_units import (
+    CalculatorPhysicalUnits,
+    get_calculator_physical_units,
+    get_physical_units,
+)
 from phonopy.sscha.core import MLPSSCHA
-from phonopy.structure.atoms import atom_data, symbol_map
+from phonopy.structure.atomic_data import (
+    get_atomic_data,
+    set_ASE_atomic_masses_iupac2016,
+)
 from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.cells import print_cell
 from phonopy.structure.dataset import forces_in_dataset
@@ -384,7 +395,7 @@ def _print_settings(
     ):
         print(f'("{settings.cell_filename}" was not used though specified.)')
     units = get_calculator_physical_units(interface_mode)
-    print("Unit of length: %s" % units["length_unit"])
+    print("Unit of length: %s" % units.length_unit)
     if _is_band_auto(settings) and not is_primitive_axes_auto:
         print(
             "Automatic band structure mode forced automatic choice of primitive axes."
@@ -621,13 +632,15 @@ def _create_FORCE_SETS_from_settings(
         if phpy_yaml.calculator is not None:
             interface_mode = phpy_yaml.calculator  # overwrite interface_mode
         units = get_calculator_physical_units(interface_mode)
-        if phpy_yaml.physical_units is None or all(
-            [
-                units.get(key, None) == val
-                for key, val in phpy_yaml.physical_units.items()
-            ]
-        ):
+        if phpy_yaml.physical_units is None:
             phpy_yaml.physical_units = units
+        else:
+            unit_keys = CalculatorPhysicalUnits.field_names()
+            if all(
+                getattr(units, key) == getattr(phpy_yaml.physical_units, key)
+                for key in unit_keys
+            ):
+                phpy_yaml.physical_units = units
 
     files_exist(filenames, log_level=log_level)
     create_FORCE_SETS(
@@ -771,7 +784,7 @@ def _post_process_force_constants(
 
     units = get_calculator_physical_units(phonon.calculator)
     p2s_map = phonon.primitive.p2s_map
-    fc_unit = units["force_constants_unit"]
+    fc_unit = units.force_constants_unit
 
     # Impose cutoff radius on force constants
     cutoff_radius = settings.cutoff_radius
@@ -810,7 +823,7 @@ def _post_process_force_constants(
     # Write FORCE_CONSTANTS
     if settings.write_force_constants:
         if settings.is_hdf5 or settings.writefc_format == "hdf5":
-            fc_unit = units["force_constants_unit"]
+            fc_unit = units.force_constants_unit
             write_force_constants_to_hdf5(
                 phonon.force_constants,
                 p2s_map=p2s_map,
@@ -928,7 +941,7 @@ def store_nac_params(
     """Calculate or read NAC params."""
     if nac_factor is None:
         units = get_calculator_physical_units(phonon.calculator)
-        _nac_factor = units["nac_factor"]
+        _nac_factor = units.nac_factor
     else:
         _nac_factor = nac_factor
 
@@ -1088,7 +1101,7 @@ def _run_calculation(
         else:
             comment = {
                 "calculator": interface_mode,
-                "length_unit": units["length_unit"],
+                "length_unit": units.length_unit,
             }
 
         if settings.is_hdf5 or settings.band_format == "hdf5":
@@ -1610,10 +1623,7 @@ def _start_phonopy(**argparse_control):
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
-        try:  # spglib.get_version() is deprecated.
-            print(f"Spglib version {spglib.spg_get_version()}")  # type: ignore
-        except AttributeError:
-            print("Spglib version %d.%d.%d" % spglib.get_version())  # type: ignore
+        print(f"Spglib version {spglib.spg_get_version()}")  # type: ignore
 
         print("")
 
@@ -1817,11 +1827,12 @@ def _init_phonopy(
 
         _check_supercell_in_yaml(cell_info, phonon, log_level)
 
-    # Set atomic masses of primitive cell
     if settings.masses is not None:
         phonon.masses = settings.masses
 
     # Atomic species without mass case
+    atom_data = get_atomic_data().atom_data
+    symbol_map = get_atomic_data().symbol_map
     symbols_with_no_mass = []
     if phonon.primitive.masses is None:
         for s in phonon.primitive.symbols:
@@ -1893,6 +1904,20 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     settings, confs, cell_filename = _read_phonopy_settings(
         args, load_phonopy_yaml, log_level
     )
+
+    # Import masses from ASE based on IUPAC 2016
+    if settings.import_ase_masses_iupac2016:
+        set_ASE_atomic_masses_iupac2016()
+        if log_level > 0:
+            print("Atomic weights were imported from ASE based on IUPAC 2016.")
+            print("https://ase-lib.org/ase/data.html#ase.data.atomic_masses_iupac2016")
+            print(
+                "ASE citation is found in "
+                "https://ase-lib.org/faq.html#how-should-i-cite-ase"
+            )
+            print("IUPAC 2016: Meija, J., Coplen, T., Berglund, M., et al.,")
+            print("Pure and Applied Chemistry, 88(3), 265-291 (2016).")
+            print("")
 
     # phonopy --symmetry
     run_symmetry_info = args.is_check_symmetry

@@ -493,6 +493,13 @@ def get_parser(
         "--mass", nargs="+", dest="masses", default=None, help="Same as MASS tag"
     )
     parser.add_argument(
+        "--mass-ase-iupac2016",
+        dest="import_ase_masses_iupac2016",
+        action="store_true",
+        default=None,
+        help="Import atomic weights from ASE according to IUPAC 2016",
+    )
+    parser.add_argument(
         "--magmom", nargs="+", dest="magmoms", default=None, help="Same as MAGMOM tag"
     )
     parser.add_argument(
@@ -962,6 +969,7 @@ class PhonopyMockArgs:
     filename: Sequence[os.PathLike | str] | None = None
     frequency_conversion_factor: float | None = None
     hdf5_compression: str | None = None
+    import_ase_masses_iupac2016: bool | None = None
     is_check_symmetry: bool | None = None
     is_eigenvectors: bool | None = None
     is_graph_plot: bool | None = None
@@ -972,6 +980,7 @@ class PhonopyMockArgs:
     log_level: int | None = None
     magmoms: str | None = None
     mesh_numbers: str | None = None
+    primitive_axes: str | None = None
     qpoints: str | None = None
     save_params: bool | None = None
     supercell_dimension: str | None = None

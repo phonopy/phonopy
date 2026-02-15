@@ -42,7 +42,8 @@ from collections import Counter
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms
 
 _re_float = r"[-+]?\d+\.*\d*(?:[Ee][-+]\d+)?"
 
@@ -264,6 +265,8 @@ def get_abacus_structure(atoms, pps=None, orbitals=None, abfs=None):
         pps = {elem: elem + "_pp_filename_here" for elem in elements}
 
     for _, elem in enumerate(elements):
+        atom_data = get_atomic_data().atom_data
+        symbol_map = get_atomic_data().symbol_map
         line.append(f"{elem}\t{atom_data[symbol_map[elem]][3]}\t{pps[elem]}")
     line.append(empty_line)
 

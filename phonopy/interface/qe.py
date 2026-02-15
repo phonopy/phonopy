@@ -60,7 +60,8 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
 )
 from phonopy.physical_units import get_physical_units
-from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index, symbol_map
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index
 from phonopy.structure.cells import Primitive, get_primitive, get_supercell
 
 
@@ -92,7 +93,7 @@ def parse_set_of_forces(
         return []
 
 
-def read_pwscf(filename):
+def read_pwscf(filename: str | os.PathLike) -> tuple[PhonopyAtoms, dict]:
     """Read crystal structure."""
     with open(filename) as f:
         pwscf_in = PwscfIn(f.readlines())
@@ -115,6 +116,7 @@ def read_pwscf(filename):
     pp_all_filenames = [pp_map[x] for x in species]
 
     use_given_masses = False
+    symbol_map = get_atomic_data().symbol_map
     for symnum in species:  # symnum is like 'H', 'H1', 'H2', ...
         symbol, num = split_symbol_and_index(symnum)
         if symbol not in symbol_map:
@@ -148,7 +150,11 @@ def read_pwscf(filename):
     return cell, pp_filenames
 
 
-def write_pwscf(filename, cell, pp_filenames):
+def write_pwscf(
+    filename: str | os.PathLike,
+    cell: PhonopyAtoms,
+    pp_filenames: str | os.PathLike | None,
+):
     """Write cell to file."""
     f = open(filename, "w")
     f.write(get_pwscf_structure(cell, pp_filenames=pp_filenames))
@@ -583,7 +589,7 @@ class PH_Q2R:
         for _ in range(ntype + natom):
             line = f.readline()
         line = f.readline()
-        if line.strip() == "T":
+        if line.strip().startswith("T"):
             epsilon, borns = self._parse_born(f, natom)
         else:
             epsilon = None

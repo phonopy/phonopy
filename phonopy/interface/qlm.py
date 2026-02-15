@@ -8,7 +8,8 @@ import sys
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms, symbol_map
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -93,7 +94,9 @@ class QlmFl:
         self.symbols_sfxn = []
         self.positions = np.array([])
 
-        self._lsorted_els = sorted(symbol_map.keys(), key=len, reverse=True)
+        self._lsorted_els = sorted(
+            get_atomic_data().symbol_map.keys(), key=len, reverse=True
+        )
 
         self._sq2sp = dict()
         self._sp2sq = dict()

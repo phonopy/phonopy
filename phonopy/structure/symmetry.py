@@ -42,6 +42,12 @@ from collections.abc import Sequence
 
 import numpy as np
 import spglib
+
+try:
+    spglib.error.OLD_ERROR_HANDLING = False
+except AttributeError:
+    pass
+
 from numpy.typing import ArrayLike, NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 

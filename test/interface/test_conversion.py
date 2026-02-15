@@ -1,6 +1,5 @@
 """Test Conversion between calculator formats."""
 
-import os
 import pathlib
 import sys
 import tempfile
@@ -12,29 +11,42 @@ from phonopy.scripts.phonopy_calc_convert import run
 
 cwd = pathlib.Path(__file__).parent
 
+require_extra_info = ["wien2k", "cp2k", "fleur"]
 
-def test_conversion():
+
+def test_conversion_turbomole():
+    """Conversion test for Turbomole."""
+    poscar_file = cwd / ".." / "POSCAR_NaCl"
+    with tempfile.TemporaryDirectory() as td:
+        convert_crystal_structure(poscar_file, "vasp", td, "turbomole")
+
+
+@pytest.mark.parametrize("calc", require_extra_info)
+def test_conversion_require_extra_info(calc):
     """Calcs that can use extra info are below."""
-    poscar_file = cwd / "../POSCAR_NaCl"
-    calcs = calculator_info.keys()
-    require_extra_info = ["wien2k", "cp2k"]
+    poscar_file = cwd / ".." / "POSCAR_NaCl"
+    with tempfile.TemporaryDirectory() as td:
+        name = str(pathlib.Path(td) / f"crystal_structure_{calc}")
+        with pytest.raises(RuntimeError):
+            # These calcs need additional info to write their input files
+            convert_crystal_structure(poscar_file, "vasp", name, calc)
+
+
+def test_conversion_expected_warnings():
+    """Calcs that can use extra info are below."""
+    poscar_file = cwd / ".." / "POSCAR_NaCl"
     expected_warnings = ["qe", "abacus", "crystal", "fleur", "wien2k"]
+    calcs = calculator_info.keys()
     for calc in calcs:
+        if calc in require_extra_info:
+            continue
         with tempfile.TemporaryDirectory() as td:
-            if calc == "turbomole":
-                convert_crystal_structure(poscar_file, "vasp", td, calc)
+            name = str(pathlib.Path(td) / f"crystal_structure_{calc}")
+            if calc in expected_warnings:
+                with pytest.warns(UserWarning):
+                    convert_crystal_structure(poscar_file, "vasp", name, calc)
             else:
-                name = str(pathlib.Path(td) / f"crystal_structure_{calc}")
-                if calc in require_extra_info:
-                    with pytest.raises(RuntimeError):
-                        # These calcs need additional info to write their input files
-                        convert_crystal_structure(poscar_file, "vasp", name, calc)
-                else:
-                    if calc in expected_warnings:
-                        with pytest.warns(UserWarning):
-                            convert_crystal_structure(poscar_file, "vasp", name, calc)
-                    else:
-                        convert_crystal_structure(poscar_file, "vasp", name, calc)
+                convert_crystal_structure(poscar_file, "vasp", name, calc)
 
 
 def simulate_calc_convert_script(
@@ -82,7 +94,7 @@ def test_calc_convert():
     additional info into phonopy-calc-convert script.
     """
     # Simulate command-line arguments
-    xtra_inps = {
+    extra_inps = {
         "qe": [
             "Na",
             "Na.pbe-spn-kjpaw_psl.0.2.UPF",
@@ -92,10 +104,10 @@ def test_calc_convert():
         "wien2k": ["781 781 781", "1e-05 5e-05 5e-05", "2.5 2.28 2.28"],
         "elk": ["alternate_si_file.in"],
         "crystal": [14, 14],
-        "fleur": [13.0, 13.0, 13.1, "Title \n other stuff"],
+        "fleur": [13.1, "Title \n other stuff"],
         "abacus": ["Al", "Al.PD04.PBE.UPF"],
     }
-    xtra_files = {
+    extra_files = {
         "qe": cwd / "NaCl-pwscf.in",
         "wien2k": cwd / "BaGa2.struct",
         "elk": cwd / "elk.in",
@@ -104,12 +116,12 @@ def test_calc_convert():
         "abacus": cwd / "STRU.in",
     }
 
-    for calc in xtra_inps.keys():
+    for calc in extra_inps.keys():
         with tempfile.TemporaryDirectory() as temp_dir:
-            vasp_tmp = os.path.join(temp_dir, "vasp_tmp_file")
-            simulate_calc_convert_script(xtra_files[calc], vasp_tmp, calc, "vasp")
+            vasp_tmp = pathlib.Path(temp_dir) / "vasp_tmp_file"
+            simulate_calc_convert_script(extra_files[calc], vasp_tmp, calc, "vasp")
             with tempfile.TemporaryDirectory() as temp2:
-                name = os.path.join(temp2, calc + "_tmp_file")
+                name = pathlib.Path(temp2) / (calc + "_tmp_file")
                 simulate_calc_convert_script(
-                    vasp_tmp, name, "vasp", calc, addinfo=xtra_inps[calc]
+                    vasp_tmp, name, "vasp", calc, addinfo=extra_inps[calc]
                 )

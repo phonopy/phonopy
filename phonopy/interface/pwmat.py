@@ -40,7 +40,8 @@ import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms, atom_data
+from phonopy.structure.atomic_data import get_atomic_data
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -107,6 +108,7 @@ def read_atom_config(filename):
             except ValueError:
                 read_position = False
 
+    atom_data = get_atomic_data().atom_data
     cell_args = {
         "symbols": [atom_data[n][1] for n in element_index],
         "cell": lattice_vectors,
