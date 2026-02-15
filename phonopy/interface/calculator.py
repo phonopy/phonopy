@@ -525,34 +525,6 @@ def _write_supercells_abacus(
     )
 
 
-def _write_supercells_abinit(
-    config: SupercellWriterConfig,
-    structure_info: StructureInfo,
-) -> None:
-    """Write supercells for Abinit interface."""
-    import phonopy.interface.abinit as abinit
-
-    pre_filename = None
-    if config.additional_info is not None:
-        pre_filename = config.additional_info.get("pre_filename")
-
-    if pre_filename is None:
-        abinit.write_supercells_with_displacements(
-            config.supercell,
-            config.cells_with_disps,
-            config.displacement_ids,
-            width=config.zfill_width,
-        )
-    else:
-        abinit.write_supercells_with_displacements(
-            config.supercell,
-            config.cells_with_disps,
-            config.displacement_ids,
-            width=config.zfill_width,
-            pre_filename=pre_filename,
-        )
-
-
 def _write_supercells_qlm(
     config: SupercellWriterConfig,
     structure_info: QlmStructureInfo,
@@ -604,6 +576,10 @@ def _write_supercells_generic(
         import phonopy.interface.pwmat as pwmat
 
         writer = pwmat.write_supercells_with_displacements
+    elif interface_mode == "abinit":
+        import phonopy.interface.abinit as abinit
+
+        writer = abinit.write_supercells_with_displacements
     else:
         msg = f"No handler found for calculator interface: {interface_mode}"
         raise RuntimeError(msg)
@@ -757,7 +733,6 @@ def _get_writer_handler(
     handlers: dict[str | None, Callable] = {
         None: _write_supercells_vasp,  # VASP is default
         "vasp": _write_supercells_vasp,
-        "abinit": _write_supercells_abinit,
         "qe": _write_supercells_qe,
         "wien2k": _write_supercells_wien2k,
         "elk": _write_supercells_elk,
