@@ -2,15 +2,15 @@
 
 # Change Log
 
-# Feb-15-2026: Version 2.48.0
+## Feb-15-2026: Version 2.48.0
 
 - Maintenance release with refactoring of calculator interface base.
 
-# Jan-05-2026: Version 2.47.1
+## Jan-05-2026: Version 2.47.1
 
 - Just for releasing pypi package.
 
-# Jan-05-2026: Version 2.47.0
+## Jan-05-2026: Version 2.47.0
 
 - Bug fix for the `--save-params` option when used with the `--fz` option to
   write energies in `phonopy_params.yaml` for the VASP interface. This bug
