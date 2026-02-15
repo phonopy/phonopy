@@ -672,6 +672,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         if self._with_full_terms:
             dd_q0 = np.zeros((len(pos), 3, 3), dtype=self._dtype_complex, order="C")
         else:
+            assert self._dd_q0 is not None
             dd_q0 = self._dd_q0
 
         if q_dir_cart is None:
@@ -1083,7 +1084,7 @@ def run_dynamical_matrix_solver_c(
 
     use_Wang_NAC = False
     if _is_nac:
-        if dm.nac_method == "gonze":
+        if isinstance(dm, DynamicalMatrixGL):
             gonze_nac_dataset = dm.Gonze_nac_dataset
             if gonze_nac_dataset[0] is None:
                 dm.make_Gonze_nac_dataset()
@@ -1096,7 +1097,7 @@ def run_dynamical_matrix_solver_c(
                 Lambda,
             ) = gonze_nac_dataset  # Convergence parameter
             fc = gonze_fc
-        if dm.nac_method == "wang":
+        elif isinstance(dm, DynamicalMatrixWang):
             use_Wang_NAC = True
             dd_q0 = np.zeros((len(positions), 3, 3), dtype="double", order="C")
             G_list = np.zeros((1, 3), dtype="double", order="C")  # dummy value
