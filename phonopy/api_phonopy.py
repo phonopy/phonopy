@@ -67,7 +67,6 @@ from phonopy.harmonic.force_constants import (
     symmetrize_compact_force_constants,
     symmetrize_force_constants,
 )
-from phonopy.interface.calculator import get_calculator_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -88,7 +87,7 @@ from phonopy.phonon.thermal_displacement import (
     ThermalDisplacements,
 )
 from phonopy.phonon.thermal_properties import ThermalProperties
-from phonopy.physical_units import get_physical_units
+from phonopy.physical_units import get_calculator_physical_units, get_physical_units
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -309,7 +308,7 @@ class Phonopy:
         if self._calculator is not None and set_factor_by_calculator:
             self._unit_conversion_factor = get_calculator_physical_units(
                 interface_mode=self._calculator
-            )["factor"]
+            ).factor
         elif factor is None:
             self._unit_conversion_factor = get_physical_units().DefaultToTHz
         else:
@@ -3131,7 +3130,7 @@ class Phonopy:
         )
         units = get_calculator_physical_units(self._calculator)
         d = np.array(
-            self._random_displacements.u / units["distance_to_A"],
+            self._random_displacements.u / units.distance_to_A,
             dtype="double",
             order="C",
         )

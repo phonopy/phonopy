@@ -458,7 +458,7 @@ def get_vasp_structure_lines(
 def write_supercells_with_displacements(
     supercell: PhonopyAtoms,
     cells_with_displacements: Sequence[PhonopyAtoms],
-    ids: Sequence[int],
+    ids: NDArray | Sequence[int],
     pre_filename: str | os.PathLike = "POSCAR",
     width: int = 3,
 ):
