@@ -111,7 +111,7 @@ class PhonopyYamlLoaderBase(ABC):
         yaml_data: dict,
         configuration: dict | None = None,
         calculator: str | None = None,
-        physical_units: "CalculatorPhysicalUnits | dict | None" = None,
+        physical_units: CalculatorPhysicalUnits | None = None,
     ):
         """Init method.
 
@@ -906,7 +906,7 @@ class PhonopyYaml:
         return self._data.physical_units
 
     @physical_units.setter
-    def physical_units(self, value: "CalculatorPhysicalUnits | dict | None"):
+    def physical_units(self, value: CalculatorPhysicalUnits | dict | None):
         """Set physical units of phonopy calculation."""
         self._data.physical_units = _as_physical_units(value)
 
@@ -1065,7 +1065,7 @@ def read_phonopy_yaml(
     filename: str | os.PathLike | typing.IO,
     configuration: dict | None = None,
     calculator: str | None = None,
-    physical_units: "CalculatorPhysicalUnits | dict | None" = None,
+    physical_units: CalculatorPhysicalUnits | None = None,
 ) -> PhonopyYamlData:
     """Read phonopy.yaml like file."""
     yaml_data = load_yaml(filename)

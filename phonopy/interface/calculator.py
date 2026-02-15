@@ -1205,7 +1205,7 @@ def get_force_constant_conversion_factor(
     """Return unit conversion factor of force constants."""
     _unit = unit.replace("Angstrom", "angstrom")  # for backward compatibility
     interface_default_units = get_calculator_physical_units(interface_mode)
-    default_unit = interface_default_units["force_constants_unit"]
+    default_unit = interface_default_units.force_constants_unit
     physical_units = get_physical_units()
     factor_to_eVperA2 = {
         "eV/angstrom^2": 1,
