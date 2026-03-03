@@ -184,7 +184,7 @@ class PhonopyYamlLoaderBase(ABC):
     def _parse_transformation_matrices(self):
         if "supercell_matrix" in self._yaml:
             self._data.supercell_matrix = np.array(
-                self._yaml["supercell_matrix"], dtype="intc", order="C"
+                self._yaml["supercell_matrix"], dtype="int64", order="C"
             )
         if "primitive_matrix" in self._yaml:
             self._data.primitive_matrix = np.array(
@@ -958,7 +958,7 @@ class PhonopyYaml:
     @supercell_matrix.setter
     def supercell_matrix(self, value: ArrayLike):
         """Set supercell matrix of phonopy calculation."""
-        self._data.supercell_matrix = np.array(value, dtype="intc", order="C")
+        self._data.supercell_matrix = np.array(value, dtype="int64", order="C")
 
     @property
     def primitive_matrix(self) -> NDArray | None:

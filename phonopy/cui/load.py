@@ -255,7 +255,7 @@ def load(
         cell = phpy_yaml.unitcell
         smat = phpy_yaml.supercell_matrix
         if smat is None:
-            smat = np.eye(3, dtype="intc", order="C")
+            smat = np.eye(3, dtype="int64", order="C")
         if primitive_matrix is None:
             pmat = phpy_yaml.primitive_matrix
         else:

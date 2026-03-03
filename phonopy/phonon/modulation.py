@@ -175,10 +175,10 @@ class Modulation:
         else:
             dim = np.array(self._dimension)
         if dim.shape == (3, 3):
-            dim = np.array(dim, dtype="intc")
+            dim = np.array(dim, dtype="int64")
         else:
             print("Dimension is incorrectly set. Unit cell is used.")
-            dim = np.eye(3, dtype="intc")
+            dim = np.eye(3, dtype="int64")
 
         return dim
 

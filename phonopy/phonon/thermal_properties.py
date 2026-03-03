@@ -231,7 +231,7 @@ class ThermalPropertiesBase:
             self._cutoff_frequency = cutoff_frequency * get_physical_units().THzToEv
 
         if band_indices is not None:
-            bi = np.hstack(band_indices).astype("intc")
+            bi = np.hstack(band_indices).astype("int64")
             self._band_indices = bi
             self._frequencies = np.array(
                 mesh.frequencies[:, bi], dtype="double", order="C"
@@ -639,7 +639,7 @@ class ThermalProperties(ThermalPropertiesBase):
         #         props,
         #         self._temperatures,
         #         np.array(f, dtype='double', order='C')[None, :],
-        #         np.array([w], dtype='intc'),
+        #         np.array([w], dtype='int64'),
         #         cutoff_frequency)
 
         props /= np.sum(self._weights)

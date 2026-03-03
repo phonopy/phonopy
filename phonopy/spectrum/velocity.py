@@ -132,7 +132,7 @@ class VelocityQpoints:
         """Set commensurate points."""
         supercell_matrix = np.rint(
             np.linalg.inv(self._primitive.primitive_matrix)
-        ).astype("intc")
+        ).astype("int64")
         self.set_qpoints(get_commensurate_points(supercell_matrix))
 
     def get_qpoints(self):

@@ -37,7 +37,7 @@ def _testBrillouinZone(direct_lat, mesh, is_shift):
     _, grid_address = spglib.get_stabilized_reciprocal_mesh(  # type: ignore
         mesh,
         rotations=[
-            np.eye(3, dtype="intc"),
+            np.eye(3, dtype="int64"),
         ],
         is_shift=is_shift,
     )

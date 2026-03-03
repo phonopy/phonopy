@@ -91,7 +91,7 @@ def get_commensurate_points_in_integers(supercell_matrix):
     supercell_matrix : array_like
         Supercell matrix with respect to primitive cell basis vectors.
         shape=(3, 3)
-        dtype=intc
+        dtype=int64
 
     Returns
     -------
@@ -110,7 +110,7 @@ def get_commensurate_points_in_integers(supercell_matrix):
         ],
         snf.Q.T,
     )
-    lattice_points = np.array(lattice_points % np.prod(D), dtype="intc", order="C")
+    lattice_points = np.array(lattice_points % np.prod(D), dtype="int64", order="C")
     return lattice_points
 
 
@@ -271,7 +271,7 @@ class DynmatToForceConstants:
         self._pcell = primitive
         self._scell = supercell
         supercell_matrix = np.linalg.inv(self._pcell.primitive_matrix)
-        supercell_matrix = np.rint(supercell_matrix).astype("intc")
+        supercell_matrix = np.rint(supercell_matrix).astype("int64")
         if commensurate_points is None:
             self._commensurate_points = get_commensurate_points(supercell_matrix)
         else:
