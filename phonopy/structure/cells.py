@@ -111,7 +111,7 @@ class Supercell(PhonopyAtoms):
         self._s2u_map: NDArray
         self._u2s_map: NDArray
         self._u2u_map: dict[int, int]
-        self._supercell_matrix = np.array(supercell_matrix, dtype="intc", order="C")
+        self._supercell_matrix = np.array(supercell_matrix, dtype="int64", order="C")
         self._create_supercell(unitcell, symprec)
 
     @property
@@ -122,7 +122,7 @@ class Supercell(PhonopyAtoms):
         -------
         ndarray
             Supercell matrix.
-            shape=(3, 3), dtype='intc'
+            shape=(3, 3), dtype='int64'
 
         """
         return self._supercell_matrix
@@ -377,7 +377,7 @@ class Primitive(PhonopyAtoms):
         ndarray
             Mapping table from atoms in primitive cell to those in supercell.
             Supercell atomic indices are used.
-            shape=(num_atoms_in_primitive_cell,), dtype='intc'
+            shape=(num_atoms_in_primitive_cell,), dtype='int64'
 
         """
         return self._p2s_map
@@ -391,7 +391,7 @@ class Primitive(PhonopyAtoms):
         ndarray
             Mapping table from atoms in supercell cell to those in primitive
             cell.  Supercell atomic indices are used.
-            shape=(num_atoms_in_supercell, ), dtype='intc'
+            shape=(num_atoms_in_supercell, ), dtype='int64'
 
         """
         return self._s2p_map
@@ -433,7 +433,7 @@ class Primitive(PhonopyAtoms):
                 and primitive cell, and [1] integral of multiplicities to this
                 pair, i.e., which indicates address used in `shortest_vectors`.
                 In the dense format, shape=(size_super, size_prim, 2),
-                dtype='int64' dtype='intc', order='C'.
+                dtype='int64', order='C'.
 
         """
         return self._smallest_vectors, self._multiplicity
@@ -447,7 +447,7 @@ class Primitive(PhonopyAtoms):
         ndarray
             Atomic position permutation by pure translations is represented by
             changes of indices.
-            dtype='intc'
+            dtype='int64'
             shape=(num_trans, num_atoms_in_supercell)
             ex.       supercell atomic indices
                      [[0, 1, 2, 3, 4, 5, 6, 7],
@@ -524,7 +524,7 @@ class Primitive(PhonopyAtoms):
             assert len(indices) == 1
             s2p_map.append(self._p2s_map[indices[0]])
 
-        s2p_map = np.array(s2p_map, dtype="intc")
+        s2p_map = np.array(s2p_map, dtype="int64")
         p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
         return s2p_map, p2p_map
@@ -538,7 +538,7 @@ class Primitive(PhonopyAtoms):
             order="C",
         )
         rotations = np.array(
-            [np.eye(3, dtype="intc")] * len(trans), dtype="intc", order="C"
+            [np.eye(3, dtype="int64")] * len(trans), dtype="int64", order="C"
         )
         atomic_permutations = compute_all_sg_permutations(
             positions,
@@ -635,7 +635,7 @@ class TrimmedCell(PhonopyAtoms):
         mapping_table : ndarray
             The atomic indices of 'extracted_atom's of all atoms in the input
             cell.
-            shape=(len(cell), ), dtype='intc'
+            shape=(len(cell), ), dtype='int64'
 
         """
         return self._mapping_table
@@ -649,7 +649,7 @@ class TrimmedCell(PhonopyAtoms):
         extracted_atoms : ndarray
             Indices of atomic indices of input cell that are in the trimmed
             cell.
-            shape=(len(trimmed_cell), ), dtype='intc'
+            shape=(len(trimmed_cell), ), dtype='int64'
 
         """
         return self._extracted_atoms
@@ -707,7 +707,7 @@ class TrimmedCell(PhonopyAtoms):
                 scaled_positions=trimmed_positions,
                 cell=trimmed_lattice,
             )
-            self._extracted_atoms = np.array(extracted_atoms, dtype="intc")
+            self._extracted_atoms = np.array(extracted_atoms, dtype="int64")
             self._mapping_table = mapping_table
         else:
             raise RuntimeError("Remapping of atoms by TrimmedCell failed.")
@@ -724,7 +724,7 @@ class TrimmedCell(PhonopyAtoms):
     ):
         num_atoms = 0
         extracted_atoms = []
-        mapping_table = np.arange(len(positions_in_new_lattice), dtype="intc")
+        mapping_table = np.arange(len(positions_in_new_lattice), dtype="int64")
         trimmed_positions = np.zeros_like(positions_in_new_lattice)
         trimmed_symbols = []
         if masses is None:
@@ -771,7 +771,7 @@ class TrimmedCell(PhonopyAtoms):
             trimmed_symbols,
             trimmed_masses,
             trimmed_magmoms,
-            np.array(extracted_atoms, dtype="intc"),
+            np.array(extracted_atoms, dtype="int64"),
             mapping_table,
         )
 
@@ -945,7 +945,7 @@ def is_primitive_cell(rotations: NDArray) -> bool:
 
     """
     num_identity = 0
-    identity = np.eye(3, dtype="intc")
+    identity = np.eye(3, dtype="int64")
     for r in rotations:
         if (r == identity).all():
             num_identity += 1
@@ -1198,7 +1198,7 @@ class ShortestPairs:
             shape=(size_super, size_prim, 27, 3), dtype='double'
         multiplicities : ndarray
             Number of equidistance shortest vectors
-            shape=(size_super, size_prim), dtype='intc'
+            shape=(size_super, size_prim), dtype='int64'
 
         """
         (
@@ -1207,7 +1207,7 @@ class ShortestPairs:
             primitive_fracs,
             trans_mat_inv,
             reduced_bases,
-        ) = self._transform_cell_basis("intc")
+        ) = self._transform_cell_basis("int64")
 
         # This shortest_vectors is already used at many locations.
         # Therefore the constant number 27 = 3*3*3 can not be easily changed.
@@ -1217,7 +1217,7 @@ class ShortestPairs:
             order="C",
         )
         multiplicity = np.zeros(
-            (len(supercell_fracs), len(primitive_fracs)), dtype="intc", order="C"
+            (len(supercell_fracs), len(primitive_fracs)), dtype="int64", order="C"
         )
         import phonopy._phonopy as phonoc  # type: ignore
 
@@ -1228,7 +1228,7 @@ class ShortestPairs:
             primitive_fracs,
             lattice_points,
             np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="intc", order="C"),
+            np.array(trans_mat_inv.T, dtype="int64", order="C"),
             self._symprec,
         )
 
@@ -1310,7 +1310,7 @@ def dense_to_sparse_svecs(svecs: NDArray, multi: NDArray) -> tuple[NDArray, NDAr
         dtype="double",
         order="C",
     )
-    smulti = np.zeros(multi.shape[:2], dtype="intc", order="C")
+    smulti = np.zeros(multi.shape[:2], dtype="int64", order="C")
     smulti[:, :] = multi[:, :, 0]
     for s_i in range(multi.shape[0]):
         for p_i in range(multi.shape[1]):
@@ -1337,7 +1337,7 @@ def compute_all_sg_permutations(
         the space group operation
     rotations : ndarray
         Matrix (rotation) parts of space group operations
-        shape=(len(operations), 3, 3), dtype='intc'
+        shape=(len(operations), 3, 3), dtype='int64'
     translations : ndarray
         Vector (translation) parts of space group operations
         shape=(len(operations), 3), dtype='double'
@@ -1349,7 +1349,7 @@ def compute_all_sg_permutations(
     Returns
     -------
     perms : ndarray
-        shape=(len(operations), len(positions)), dtype='intc', order='C'
+        shape=(len(operations), len(positions)), dtype='int64', order='C'
 
     """
     out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
@@ -1360,7 +1360,7 @@ def compute_all_sg_permutations(
                 positions, rotated_positions, lattice, symprec
             )
         )
-    return np.array(out, dtype="intc", order="C")
+    return np.array(out, dtype="int64", order="C")
 
 
 def compute_permutation_for_rotation(
@@ -1447,7 +1447,7 @@ def _compute_permutation_c(
     structures.
 
     """
-    permutation = np.zeros(shape=(len(positions_a),), dtype="intc")
+    permutation = np.zeros(shape=(len(positions_a),), dtype="int64")
 
     def permutation_error():
         raise ValueError(
@@ -1763,7 +1763,7 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDA
 def shape_supercell_matrix(smat: NDArray | Sequence | None) -> NDArray:
     """Reshape supercell matrix."""
     if smat is None:
-        _smat = np.eye(3, dtype="intc", order="C")
+        _smat = np.eye(3, dtype="int64", order="C")
     elif len(np.ravel(smat)) == 3:
         _smat = np.diag(smat)
     elif len(np.ravel(smat)) == 9:

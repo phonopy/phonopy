@@ -336,9 +336,9 @@ def test_get_primitive_convcell_nacl_svecs(
 def test_TrimmedCell(nacl_unitcell_order1: PhonopyAtoms, helper_methods: Callable):
     """Test TrimmedCell by NaCl."""
     pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
-    smat2 = np.eye(3, dtype="intc") * 2
+    smat2 = np.eye(3, dtype="int64") * 2
     pmat2 = np.dot(np.linalg.inv(smat2), pmat)
-    smat3 = np.eye(3, dtype="intc") * 3
+    smat3 = np.eye(3, dtype="int64") * 3
     pmat3 = np.dot(np.linalg.inv(smat3), pmat)
 
     cell = nacl_unitcell_order1

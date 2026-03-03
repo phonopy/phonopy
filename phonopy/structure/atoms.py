@@ -104,7 +104,7 @@ class PhonopyAtoms:
         List of chemical symbols of atoms. Chemical symbol + natural number is
         allowed, e.g., "Cl1".
     numbers : np.ndarray
-        Atomic numbers. Numbers cannot exceed 118. shape=(natom,), dtype='intc'
+        Atomic numbers. Numbers cannot exceed 118. shape=(natom,), dtype='int64'
     masses : np.ndarray, optional
         Atomic masses. shape=(natom,), dtype='double'
     magnetic_moments : np.ndarray, optional
@@ -211,7 +211,7 @@ class PhonopyAtoms:
         if numbers is not None:
             if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
                 raise RuntimeError("Atomic numbers cannot be larger than 118.")
-            self._numbers_with_shifts = np.array(numbers, dtype="intc")
+            self._numbers_with_shifts = np.array(numbers, dtype="int64")
         if symbols is None:
             self._numbers_to_symbols()
         else:
@@ -297,7 +297,7 @@ class PhonopyAtoms:
 
         """
         return np.array(
-            [n % self._MOD_DIVISOR for n in self._numbers_with_shifts], dtype="intc"
+            [n % self._MOD_DIVISOR for n in self._numbers_with_shifts], dtype="int64"
         )
 
     @numbers.setter
@@ -309,7 +309,7 @@ class PhonopyAtoms:
             DeprecationWarning,
             stacklevel=2,
         )
-        self._numbers_with_shifts = np.array(numbers, dtype="intc")
+        self._numbers_with_shifts = np.array(numbers, dtype="int64")
         self._check()
         self._numbers_to_symbols()
         self._symbols_to_masses()
@@ -433,7 +433,7 @@ class PhonopyAtoms:
             symbol, index = split_symbol_and_index(symnum)
             numbers.append(_symbol_map[symbol] + self._MOD_DIVISOR * index)
 
-        self._numbers_with_shifts = np.array(numbers, dtype="intc")
+        self._numbers_with_shifts = np.array(numbers, dtype="int64")
 
     def _symbols_to_masses(self):
         _symbol_map = get_atomic_data().symbol_map

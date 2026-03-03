@@ -119,7 +119,7 @@ class Phonopy:
     primitive_symmetry : Symmetry
         Symmetry of primitive cell.
     supercell_matrix : ndarray
-        shape=(3,) or (3, 3), dtype='intc', order='C'.
+        shape=(3,) or (3, 3), dtype='int64', order='C'.
     primitive_matrix : ndarray
         shape=(3, 3), dtype='double', order='C'.
     unit_conversion_factor : float
@@ -431,7 +431,7 @@ class Phonopy:
 
         ndarray
             Supercell matrix with respect to unit cell.
-            shape=(3, 3), dtype='intc', order='C'.
+            shape=(3, 3), dtype='int64', order='C'.
 
         """
         return self._supercell_matrix
@@ -1617,7 +1617,7 @@ class Phonopy:
         ----------
         mesh: array_like or float, optional
             Mesh numbers along a, b, c axes when array_like object is given.
-            dtype='intc', shape=(3,)
+            dtype='int64', shape=(3,)
             When float value is given, uniform mesh is generated following
             VASP convention by
                 N = max(1, nint(l * |a|^*))
@@ -1751,7 +1751,7 @@ class Phonopy:
             weights: ndarray
                 Geometric q-point weights. Its sum is the number of grid
                 points.
-                dtype='intc'
+                dtype='int64'
                 shape=(ir-grid points,)
             frequencies: ndarray
                 Phonon frequencies at ir-grid points. Imaginary frequenies are
@@ -2771,7 +2771,7 @@ class Phonopy:
         ----------
         dimension : array_like
             Supercell dimension with respect to the primitive cell.
-            dtype='intc', shape=(3, ), (3, 3), (9, )
+            dtype='int64', shape=(3, ), (3, 3), (9, )
         phonon_modes : list of phonon mode settings
             Each element of the outer list gives one phonon mode information:
 

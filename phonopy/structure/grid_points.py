@@ -64,7 +64,6 @@ from phonopy.structure.symmetry import (
     get_pointgroup_operations,
 )
 from phonopy.utils import get_dot_access_dataset, similarity_transformation
-from phonopy.version import __version__
 
 
 def length2mesh(length, lattice, rotations=None):
@@ -159,26 +158,26 @@ class GridPoints:
     Attributes
     ----------
     mesh_numbers: ndarray
-       Mesh numbers along a, b, c axes.
-       dtype='intc'
-       shape=(3,)
+        Mesh numbers along a, b, c axes.
+        dtype='int64'
+        shape=(3,)
     reciprocal_lattice: ndarray
         Basis vectors in reciprocal space. a*, b*, c* are given in column
         vectors.
         dtype='double'
         shape=(3, 3)
     qpoints: ndarray
-       q-points in reduced coordinates of reciprocal lattice
-       dtype='double'
-       shape=(ir-grid points, 3)
+        q-points in reduced coordinates of reciprocal lattice
+        dtype='double'
+        shape=(ir-grid points, 3)
     weights: ndarray
-       Geometric q-point weights. Its sum is the number of grid points.
-       dtype='int64'
-       shape=(ir-grid points,)
+        Geometric q-point weights. Its sum is the number of grid points.
+        dtype='int64'
+        shape=(ir-grid points,)
     grid_address: ndarray
-       Addresses of all grid points represented by integers.
-       dtype='intc'
-       shape=(prod(mesh_numbers), 3)
+        Addresses of all grid points represented by integers.
+        dtype='int64'
+        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
         Indices of irreducible grid points in grid_address.
         dtype='int64', shape=(ir-grid points,)
@@ -241,7 +240,7 @@ class GridPoints:
             Wheather symmetry search is done or not.
 
         """
-        self._mesh = np.array(mesh_numbers, dtype="intc")
+        self._mesh = np.array(mesh_numbers, dtype="int64")
         self._rec_lat = np.array(reciprocal_lattice, dtype="double", order="C")
         self._is_shift = self._shift2boolean(
             q_mesh_shift, is_gamma_center=is_gamma_center
@@ -308,7 +307,7 @@ class GridPoints:
             )
         else:
             self._set_ir_qpoints(
-                [np.eye(3, dtype="intc")], is_time_reversal=self._is_time_reversal
+                [np.eye(3, dtype="int64")], is_time_reversal=self._is_time_reversal
             )
 
     def _shift2boolean(self, q_mesh_shift, is_gamma_center=False, tolerance=1e-5):
@@ -366,11 +365,7 @@ class GridPoints:
         # uintp to long
         grid_mapping_table = np.array(grid_mapping_table, dtype="int64")
 
-        # Currently 'intc', but will be 'int64' in next major version.
-        if int(__version__.split(".")[0]) < 3:
-            dtype = "intc"
-        else:
-            dtype = "int64"
+        dtype = "int64"
 
         if self._fit_in_BZ:
             grid_address, _ = spglib.relocate_BZ_grid_address(

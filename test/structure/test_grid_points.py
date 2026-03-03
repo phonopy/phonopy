@@ -51,8 +51,8 @@ def test_GridPoints():
     assert gp.ir_grid_points.dtype == np.dtype("int64")
     assert gp.weights.dtype == np.dtype("int64")
     assert gp.grid_mapping_table.dtype == np.dtype("int64")
-    assert gp.grid_address.dtype == np.dtype("intc")
-    assert gp.mesh_numbers.dtype == np.dtype("intc")
+    assert gp.grid_address.dtype == np.dtype("int64")
+    assert gp.mesh_numbers.dtype == np.dtype("int64")
     assert gp.reciprocal_lattice.dtype == np.dtype("double")
     assert gp.qpoints.dtype == np.dtype("double")
 
