@@ -87,10 +87,6 @@ void phpy_get_derivative_dynmat_at_q(
     const int64_t *s2p_map, const int64_t *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
     const int64_t is_nac, const int64_t use_openmp);
-void phpy_get_neighboring_grid_points(
-    size_t neighboring_grid_points[], const size_t grid_point,
-    const int relative_grid_address[][3], const int num_relative_grid_address,
-    const int mesh[3], const int bz_grid_address[][3], const size_t bz_map[]);
 void phpy_get_relative_grid_address(int64_t relative_grid_address[24][4][3],
                                     const double reciprocal_lattice[3][3]);
 void phpy_get_all_relative_grid_address(

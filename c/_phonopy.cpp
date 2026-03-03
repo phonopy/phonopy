@@ -361,7 +361,7 @@ bool py_compute_permutation(nb::ndarray<> permutation, nb::ndarray<> lattice,
     double (*rot_pos)[3];
     int64_t num_pos;
 
-    int is_found;
+    int64_t is_found;
 
     rot_atoms = (int64_t *)permutation.data();
     lat = (double (*)[3])lattice.data();

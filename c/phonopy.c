@@ -213,9 +213,9 @@ void phpy_tetrahedron_method_dos(
     ir_grid_points = NULL;
     weights = NULL;
 
-    gp2ir = (int64_t *)malloc(sizeof(int64_t) * num_gp);
-    ir_grid_points = (int64_t *)malloc(sizeof(int64_t) * num_ir_gp);
-    weights = (int64_t *)malloc(sizeof(int64_t) * num_ir_gp);
+    gp2ir = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_gp);
+    ir_grid_points = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_ir_gp);
+    weights = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_ir_gp);
 
     count = 0;
     for (i = 0; i < num_gp; i++) {
@@ -289,7 +289,8 @@ void phpy_get_thermal_properties(
     double f;
     double *tp;
 
-    tp = (double *)malloc(sizeof(double) * num_qpoints * num_temp * 3);
+    tp = (double *)malloc(sizeof(double) * (size_t)num_qpoints *
+                          (size_t)num_temp * 3);
     for (i = 0; i < num_qpoints * num_temp * 3; i++) {
         tp[i] = 0;
     }
@@ -408,8 +409,8 @@ void phpy_set_smallest_vectors_sparse(
     double *length;
     double (*vec)[3];
 
-    length = (double *)malloc(sizeof(double) * num_lattice_points);
-    vec = (double (*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+    length = (double *)malloc(sizeof(double) * (size_t)num_lattice_points);
+    vec = (double (*)[3])malloc(sizeof(double[3]) * (size_t)num_lattice_points);
 
     for (i = 0; i < num_pos_to; i++) {
         for (j = 0; j < num_pos_from; j++) {
@@ -477,8 +478,8 @@ void phpy_set_smallest_vectors_dense(
     double *length;
     double (*vec)[3];
 
-    length = (double *)malloc(sizeof(double) * num_lattice_points);
-    vec = (double (*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+    length = (double *)malloc(sizeof(double) * (size_t)num_lattice_points);
+    vec = (double (*)[3])malloc(sizeof(double[3]) * (size_t)num_lattice_points);
 
     adrs = 0;
 
@@ -620,7 +621,7 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     char *done;
 
     done = NULL;
-    done = (char *)malloc(sizeof(char) * n_satom * n_patom);
+    done = (char *)malloc(sizeof(char) * (size_t)n_satom * (size_t)n_patom);
     for (i = 0; i < n_satom * n_patom; i++) {
         done[i] = 0;
     }
@@ -839,7 +840,7 @@ static void distribute_fc2(
     const int64_t *permutation;
 
     atom_list_reverse = NULL;
-    atom_list_reverse = (int64_t *)malloc(sizeof(int64_t) * num_pos);
+    atom_list_reverse = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_pos);
     /* atom_list_reverse[!atom_done] is undefined. */
     for (i = 0; i < len_atom_list; i++) {
         atom_done = map_atoms[atom_list[i]];

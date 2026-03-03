@@ -2,6 +2,12 @@
 
 # Change Log
 
+## Mar-03-2026: Development
+
+- Internal integer index arrays were migrated from `numpy.intc` to
+  `numpy.int64`, and corresponding C-extension interfaces were aligned to
+  `int64_t`.
+
 ## Feb-15-2026: Version 2.48.0
 
 - Maintenance release with refactoring of calculator interface base.

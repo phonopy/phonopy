@@ -318,10 +318,10 @@ def symmetrize_compact_force_constants(force_constants, primitive: Primitive, le
 
         phonoc.perm_trans_symmetrize_compact_fc(
             force_constants,
-            np.array(permutations, dtype="int64", order="C"),
-            np.array(s2pp_map, dtype="int64", order="C"),
-            np.array(p2s_map, dtype="int64", order="C"),
-            np.array(nsym_list, dtype="int64", order="C"),
+            permutations,
+            s2pp_map,
+            p2s_map,
+            nsym_list,
             level,
         )
     except ImportError as exc:
@@ -345,6 +345,9 @@ def distribute_force_constants(
 
     atom_list : ndarray
         Indices of target atoms.
+    permutations : ndarray
+        Atomic index permutation table by symmetry operations.
+        shape=(num_rot, num_pos), dtype='int64', order='C'
     fc_indices_of_atom_list : ndarray
         First fc3 indices corresponding to indices of target atoms. Unless
         specified, `range(len(atom_list))` is used.
@@ -383,9 +386,9 @@ def distribute_force_constants(
         targets,
         _fc_indices_of_atom_list,
         rots_cartesian,
-        np.array(permutations, dtype="int64", order="C"),
-        np.array(map_atoms, dtype="int64", order="C"),
-        np.array(map_syms, dtype="int64", order="C"),
+        permutations,
+        map_atoms,
+        map_syms,
     )
 
 
@@ -624,18 +627,18 @@ def get_drift_force_constants(
 
             phonoc.transpose_compact_fc(
                 force_constants,
-                np.array(permutations, dtype="int64", order="C"),
-                np.array(s2pp_map, dtype="int64", order="C"),
-                np.array(p2s_map, dtype="int64", order="C"),
-                np.array(nsym_list, dtype="int64", order="C"),
+                permutations,
+                s2pp_map,
+                p2s_map,
+                nsym_list,
             )
             maxval1, xy1 = _get_drift_per_index(force_constants)
             phonoc.transpose_compact_fc(
                 force_constants,
-                np.array(permutations, dtype="int64", order="C"),
-                np.array(s2pp_map, dtype="int64", order="C"),
-                np.array(p2s_map, dtype="int64", order="C"),
-                np.array(nsym_list, dtype="int64", order="C"),
+                permutations,
+                s2pp_map,
+                p2s_map,
+                nsym_list,
             )
             maxval2, xy2 = _get_drift_per_index(force_constants)
 
