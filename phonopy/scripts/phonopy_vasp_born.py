@@ -125,14 +125,14 @@ def run():
     if args.supercell_matrix:
         vals = [int(x) for x in args.supercell_matrix.split()]
         if len(vals) == 9:
-            supercell_matrix = np.reshape(np.array(vals, dtype="intc"), (3, 3))
+            supercell_matrix = np.reshape(np.array(vals, dtype="int64"), (3, 3))
         elif len(vals) == 3:
-            supercell_matrix = np.diag(np.array(vals, dtype="intc"))
+            supercell_matrix = np.diag(np.array(vals, dtype="int64"))
         else:
             print("Supercell matrix is incorrectly set.")
             sys.exit(1)
     else:
-        supercell_matrix = np.eye(3, dtype="intc")
+        supercell_matrix = np.eye(3, dtype="int64")
 
     with warnings.catch_warnings():
         # To catch warnings as error, set warnings.simplefilter("error")

@@ -359,7 +359,7 @@ def _print_cells(phonon: Phonopy):
     unitcell = phonon.unitcell
     primitive = phonon.primitive
     p2p_map = primitive.p2p_map
-    mapping = np.array([p2p_map[x] for x in primitive.s2p_map], dtype="intc")
+    mapping = np.array([p2p_map[x] for x in primitive.s2p_map], dtype="int64")
     s_indep_atoms = phonon.symmetry.get_independent_atoms()
     p_indep_atoms = mapping[s_indep_atoms]
     u2s_map = supercell.u2s_map

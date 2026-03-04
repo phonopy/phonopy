@@ -102,7 +102,7 @@ class Unfolding:
         supercell_matrix : array_like
             Matrix that represents the virtual primitive translation enforced
             inside the supercell. This works like an inverse primitive matrix.
-            shape=(3, 3), dtype='intc'
+            shape=(3, 3), dtype='int64'
         ideal_positions : array_like
             Positions of atomic sites in supercell. This corresponds to those
             in a set of virtual primitive cells in the supercell.
@@ -117,7 +117,7 @@ class Unfolding:
 
         """
         self._phonon = self._get_supercell_phonon(phonon)
-        self._supercell_matrix = np.array(supercell_matrix, dtype="intc")
+        self._supercell_matrix = np.array(supercell_matrix, dtype="int64")
         self._ideal_positions = np.array(ideal_positions, dtype="double")
         self._qpoints_p = qpoints  # in PBZ
         self._qpoints_s = self._get_qpoints_in_SBZ()  # in SBZ
@@ -273,12 +273,12 @@ class Unfolding:
 
             The indices are used to select eigenvectors, by which T(r_i)|KJ> is
             represented.
-            shape=(num_trans, num_sites), dtype='intc'
+            shape=(num_trans, num_sites), dtype='int64'
 
         """
         lattice = self._phonon.supercell.cell
         natom = len(self._ideal_positions)
-        index_map_inv = np.zeros((self._N, natom), dtype="intc")
+        index_map_inv = np.zeros((self._N, natom), dtype="int64")
         for i, shift in enumerate(self._trans_s):
             for j, p in enumerate(self._ideal_positions - shift):  # minus r_i
                 diff = self._ideal_positions - p

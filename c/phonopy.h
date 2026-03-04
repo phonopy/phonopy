@@ -87,10 +87,6 @@ void phpy_get_derivative_dynmat_at_q(
     const int64_t *s2p_map, const int64_t *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
     const int64_t is_nac, const int64_t use_openmp);
-void phpy_get_neighboring_grid_points(
-    size_t neighboring_grid_points[], const size_t grid_point,
-    const int relative_grid_address[][3], const int num_relative_grid_address,
-    const int mesh[3], const int bz_grid_address[][3], const size_t bz_map[]);
 void phpy_get_relative_grid_address(int64_t relative_grid_address[24][4][3],
                                     const double reciprocal_lattice[3][3]);
 void phpy_get_all_relative_grid_address(
@@ -115,21 +111,23 @@ void phpy_get_thermal_properties(
     const int64_t *weights, const int64_t num_temp, const int64_t num_qpoints,
     const int64_t num_bands, const double cutoff_frequency, const double KB,
     const int classical);
-void phpy_distribute_fc2(double (*fc2)[3][3], const int *atom_list,
-                         const int len_atom_list,
-                         const int *fc_indices_of_atom_list,
-                         const double (*r_carts)[3][3], const int *permutations,
-                         const int *map_atoms, const int *map_syms,
-                         const int num_rot, const int num_pos);
-int phpy_compute_permutation(int *rot_atom, const double lat[3][3],
-                             const double (*pos)[3], const double (*rot_pos)[3],
-                             const int num_pos, const double symprec);
+void phpy_distribute_fc2(double (*fc2)[3][3], const int64_t *atom_list,
+                         const int64_t len_atom_list,
+                         const int64_t *fc_indices_of_atom_list,
+                         const double (*r_carts)[3][3],
+                         const int64_t *permutations, const int64_t *map_atoms,
+                         const int64_t *map_syms, const int64_t num_rot,
+                         const int64_t num_pos);
+int64_t phpy_compute_permutation(int64_t *rot_atom, const double lat[3][3],
+                                 const double (*pos)[3],
+                                 const double (*rot_pos)[3],
+                                 const int64_t num_pos, const double symprec);
 void phpy_set_smallest_vectors_sparse(
-    double (*smallest_vectors)[27][3], int *multiplicity,
-    const double (*pos_to)[3], const int num_pos_to,
-    const double (*pos_from)[3], const int num_pos_from,
-    const int (*lattice_points)[3], const int num_lattice_points,
-    const double reduced_basis[3][3], const int trans_mat[3][3],
+    double (*smallest_vectors)[27][3], int64_t *multiplicity,
+    const double (*pos_to)[3], const int64_t num_pos_to,
+    const double (*pos_from)[3], const int64_t num_pos_from,
+    const int64_t (*lattice_points)[3], const int64_t num_lattice_points,
+    const double reduced_basis[3][3], const int64_t trans_mat[3][3],
     const double symprec);
 void phpy_set_smallest_vectors_dense(
     double (*smallest_vectors)[3], int64_t (*multiplicity)[2],
@@ -139,17 +137,16 @@ void phpy_set_smallest_vectors_dense(
     const double reduced_basis[3][3], const int64_t trans_mat[3][3],
     const int64_t initialize, const double symprec);
 
-void phpy_perm_trans_symmetrize_fc(double *fc, const int nsatom,
-                                   const int level);
-void phpy_perm_trans_symmetrize_compact_fc(double *fc, const int p2s[],
-                                           const int s2pp[],
-                                           const int nsym_list[],
-                                           const int perms[], const int n_satom,
-                                           const int n_patom, const int level);
+void phpy_perm_trans_symmetrize_fc(double *fc, const int64_t nsatom,
+                                   const int64_t level);
+void phpy_perm_trans_symmetrize_compact_fc(
+    double *fc, const int64_t p2s[], const int64_t s2pp[],
+    const int64_t nsym_list[], const int64_t perms[], const int64_t n_satom,
+    const int64_t n_patom, const int64_t level);
 void phpy_set_index_permutation_symmetry_compact_fc(
-    double *fc, const int p2s[], const int s2pp[], const int nsym_list[],
-    const int perms[], const int n_satom, const int n_patom,
-    const int is_transpose);
+    double *fc, const int64_t p2s[], const int64_t s2pp[],
+    const int64_t nsym_list[], const int64_t perms[], const int64_t n_satom,
+    const int64_t n_patom, const int64_t is_transpose);
 int64_t phpy_use_openmp(void);
 int64_t phpy_get_max_threads(void);
 

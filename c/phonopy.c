@@ -49,11 +49,12 @@
 #include <omp.h>
 #endif
 
-static void set_index_permutation_symmetry_fc(double *fc, const int natom);
-static void set_translational_symmetry_fc(double *fc, const int natom);
-static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
-                                                  const int n_satom,
-                                                  const int n_patom);
+static void set_index_permutation_symmetry_fc(double *fc, const int64_t natom);
+static void set_translational_symmetry_fc(double *fc, const int64_t natom);
+static void set_translational_symmetry_compact_fc(double *fc,
+                                                  const int64_t p2s[],
+                                                  const int64_t n_satom,
+                                                  const int64_t n_patom);
 static double get_free_energy(const double temperature, const double f,
                               const double KB, const int classical);
 static double get_entropy(const double temperature, const double f,
@@ -61,13 +62,13 @@ static double get_entropy(const double temperature, const double f,
 static double get_heat_capacity(const double temperature, const double f,
                                 const double KB, const int classical);
 /* static double get_energy(double temperature, double f); */
-static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
-                           const int len_atom_list,
-                           const int *fc_indices_of_atom_list,
+static void distribute_fc2(double (*fc2)[3][3], const int64_t *atom_list,
+                           const int64_t len_atom_list,
+                           const int64_t *fc_indices_of_atom_list,
                            const double (*r_carts)[3][3],
-                           const int *permutations, const int *map_atoms,
-                           const int *map_syms, const int num_rot,
-                           const int num_pos);
+                           const int64_t *permutations,
+                           const int64_t *map_atoms, const int64_t *map_syms,
+                           const int64_t num_rot, const int64_t num_pos);
 static int nint(const double a);
 
 void phpy_transform_dynmat_to_fc(
@@ -212,9 +213,9 @@ void phpy_tetrahedron_method_dos(
     ir_grid_points = NULL;
     weights = NULL;
 
-    gp2ir = (int64_t *)malloc(sizeof(int64_t) * num_gp);
-    ir_grid_points = (int64_t *)malloc(sizeof(int64_t) * num_ir_gp);
-    weights = (int64_t *)malloc(sizeof(int64_t) * num_ir_gp);
+    gp2ir = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_gp);
+    ir_grid_points = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_ir_gp);
+    weights = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_ir_gp);
 
     count = 0;
     for (i = 0; i < num_gp; i++) {
@@ -288,7 +289,8 @@ void phpy_get_thermal_properties(
     double f;
     double *tp;
 
-    tp = (double *)malloc(sizeof(double) * num_qpoints * num_temp * 3);
+    tp = (double *)malloc(sizeof(double) * (size_t)num_qpoints *
+                          (size_t)num_temp * 3);
     for (i = 0; i < num_qpoints * num_temp * 3; i++) {
         tp[i] = 0;
     }
@@ -325,22 +327,24 @@ void phpy_get_thermal_properties(
     tp = NULL;
 }
 
-void phpy_distribute_fc2(double (*fc2)[3][3], const int *atom_list,
-                         const int len_atom_list,
-                         const int *fc_indices_of_atom_list,
-                         const double (*r_carts)[3][3], const int *permutations,
-                         const int *map_atoms, const int *map_syms,
-                         const int num_rot, const int num_pos) {
+void phpy_distribute_fc2(double (*fc2)[3][3], const int64_t *atom_list,
+                         const int64_t len_atom_list,
+                         const int64_t *fc_indices_of_atom_list,
+                         const double (*r_carts)[3][3],
+                         const int64_t *permutations, const int64_t *map_atoms,
+                         const int64_t *map_syms, const int64_t num_rot,
+                         const int64_t num_pos) {
     distribute_fc2(fc2, atom_list, len_atom_list, fc_indices_of_atom_list,
                    r_carts, permutations, map_atoms, map_syms, num_rot,
                    num_pos);
 }
 
-int phpy_compute_permutation(int *rot_atom, const double lat[3][3],
-                             const double (*pos)[3], const double (*rot_pos)[3],
-                             const int num_pos, const double symprec) {
-    int i, j, k, l;
-    int search_start;
+int64_t phpy_compute_permutation(int64_t *rot_atom, const double lat[3][3],
+                                 const double (*pos)[3],
+                                 const double (*rot_pos)[3],
+                                 const int64_t num_pos, const double symprec) {
+    int64_t i, j, k, l;
+    int64_t search_start;
     double distance2, diff_cart;
     double diff[3];
 
@@ -394,19 +398,19 @@ int phpy_compute_permutation(int *rot_atom, const double lat[3][3],
 }
 
 void phpy_set_smallest_vectors_sparse(
-    double (*smallest_vectors)[27][3], int *multiplicity,
-    const double (*pos_to)[3], const int num_pos_to,
-    const double (*pos_from)[3], const int num_pos_from,
-    const int (*lattice_points)[3], const int num_lattice_points,
-    const double reduced_basis[3][3], const int trans_mat[3][3],
+    double (*smallest_vectors)[27][3], int64_t *multiplicity,
+    const double (*pos_to)[3], const int64_t num_pos_to,
+    const double (*pos_from)[3], const int64_t num_pos_from,
+    const int64_t (*lattice_points)[3], const int64_t num_lattice_points,
+    const double reduced_basis[3][3], const int64_t trans_mat[3][3],
     const double symprec) {
-    int i, j, k, l, count;
+    int64_t i, j, k, l, count;
     double length_tmp, minimum, vec_xyz;
     double *length;
     double (*vec)[3];
 
-    length = (double *)malloc(sizeof(double) * num_lattice_points);
-    vec = (double (*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+    length = (double *)malloc(sizeof(double) * (size_t)num_lattice_points);
+    vec = (double (*)[3])malloc(sizeof(double[3]) * (size_t)num_lattice_points);
 
     for (i = 0; i < num_pos_to; i++) {
         for (j = 0; j < num_pos_from; j++) {
@@ -474,8 +478,8 @@ void phpy_set_smallest_vectors_dense(
     double *length;
     double (*vec)[3];
 
-    length = (double *)malloc(sizeof(double) * num_lattice_points);
-    vec = (double (*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+    length = (double *)malloc(sizeof(double) * (size_t)num_lattice_points);
+    vec = (double (*)[3])malloc(sizeof(double[3]) * (size_t)num_lattice_points);
 
     adrs = 0;
 
@@ -532,9 +536,9 @@ void phpy_set_smallest_vectors_dense(
     vec = NULL;
 }
 
-void phpy_perm_trans_symmetrize_fc(double *fc, const int n_satom,
-                                   const int level) {
-    int i, j, k, l, iter;
+void phpy_perm_trans_symmetrize_fc(double *fc, const int64_t n_satom,
+                                   const int64_t level) {
+    int64_t i, j, k, l, iter;
     double sum;
 
     for (iter = 0; iter < level; iter++) {
@@ -573,12 +577,11 @@ void phpy_perm_trans_symmetrize_fc(double *fc, const int n_satom,
     set_translational_symmetry_fc(fc, n_satom);
 }
 
-void phpy_perm_trans_symmetrize_compact_fc(double *fc, const int p2s[],
-                                           const int s2pp[],
-                                           const int nsym_list[],
-                                           const int perms[], const int n_satom,
-                                           const int n_patom, const int level) {
-    int i, j, k, l, n, iter;
+void phpy_perm_trans_symmetrize_compact_fc(
+    double *fc, const int64_t p2s[], const int64_t s2pp[],
+    const int64_t nsym_list[], const int64_t perms[], const int64_t n_satom,
+    const int64_t n_patom, const int64_t level) {
+    int64_t i, j, k, l, n, iter;
     double sum;
 
     for (iter = 0; iter < level; iter++) {
@@ -610,15 +613,15 @@ void phpy_perm_trans_symmetrize_compact_fc(double *fc, const int p2s[],
 }
 
 void phpy_set_index_permutation_symmetry_compact_fc(
-    double *fc, const int p2s[], const int s2pp[], const int nsym_list[],
-    const int perms[], const int n_satom, const int n_patom,
-    const int is_transpose) {
-    int i, j, k, l, m, n, i_p, j_p, i_trans;
+    double *fc, const int64_t p2s[], const int64_t s2pp[],
+    const int64_t nsym_list[], const int64_t perms[], const int64_t n_satom,
+    const int64_t n_patom, const int64_t is_transpose) {
+    int64_t i, j, k, l, m, n, i_p, j_p, i_trans;
     double fc_elem;
     char *done;
 
     done = NULL;
-    done = (char *)malloc(sizeof(char) * n_satom * n_patom);
+    done = (char *)malloc(sizeof(char) * (size_t)n_satom * (size_t)n_patom);
     for (i = 0; i < n_satom * n_patom; i++) {
         done[i] = 0;
     }
@@ -692,8 +695,8 @@ int64_t phpy_get_max_threads(void) {
 #endif
 }
 
-static void set_index_permutation_symmetry_fc(double *fc, const int natom) {
-    int i, j, k, l, m, n;
+static void set_index_permutation_symmetry_fc(double *fc, const int64_t natom) {
+    int64_t i, j, k, l, m, n;
 
     for (i = 0; i < natom; i++) {
         /* non diagonal part */
@@ -722,8 +725,8 @@ static void set_index_permutation_symmetry_fc(double *fc, const int natom) {
     }
 }
 
-static void set_translational_symmetry_fc(double *fc, const int natom) {
-    int i, j, k, l, m;
+static void set_translational_symmetry_fc(double *fc, const int64_t natom) {
+    int64_t i, j, k, l, m;
     double sums[3][3];
 
     for (i = 0; i < natom; i++) {
@@ -748,10 +751,11 @@ static void set_translational_symmetry_fc(double *fc, const int natom) {
     }
 }
 
-static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
-                                                  const int n_satom,
-                                                  const int n_patom) {
-    int j, k, l, m, i_p;
+static void set_translational_symmetry_compact_fc(double *fc,
+                                                  const int64_t p2s[],
+                                                  const int64_t n_satom,
+                                                  const int64_t n_patom) {
+    int64_t j, k, l, m, i_p;
     double sums[3][3];
 
     for (i_p = 0; i_p < n_patom; i_p++) {
@@ -817,25 +821,26 @@ static double get_heat_capacity(const double temperature, const double f,
     }
 }
 
-static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
-                           const int *atom_list, const int len_atom_list,
-                           const int *fc_indices_of_atom_list,
-                           const double (*r_carts)[3][3], /* shape[n_rot] */
-                           const int *permutations, /* shape[n_rot][n_pos] */
-                           const int *map_atoms,    /* shape [n_pos] */
-                           const int *map_syms,     /* shape [n_pos] */
-                           const int num_rot, const int num_pos) {
-    int i, j, k, l, m;
-    int atom_todo, atom_done, atom_other;
-    int sym_index;
-    int *atom_list_reverse;
+static void distribute_fc2(
+    double (*fc2)[3][3], /* shape[n_pos][n_pos] */
+    const int64_t *atom_list, const int64_t len_atom_list,
+    const int64_t *fc_indices_of_atom_list,
+    const double (*r_carts)[3][3], /* shape[n_rot] */
+    const int64_t *permutations,   /* shape[n_rot][n_pos] */
+    const int64_t *map_atoms,      /* shape [n_pos] */
+    const int64_t *map_syms,       /* shape [n_pos] */
+    const int64_t num_rot, const int64_t num_pos) {
+    int64_t i, j, k, l, m;
+    int64_t atom_todo, atom_done, atom_other;
+    int64_t sym_index;
+    int64_t *atom_list_reverse;
     double (*fc2_done)[3];
     double (*fc2_todo)[3];
     const double (*r_cart)[3];
-    const int *permutation;
+    const int64_t *permutation;
 
     atom_list_reverse = NULL;
-    atom_list_reverse = (int *)malloc(sizeof(int) * num_pos);
+    atom_list_reverse = (int64_t *)malloc(sizeof(int64_t) * (size_t)num_pos);
     /* atom_list_reverse[!atom_done] is undefined. */
     for (i = 0; i < len_atom_list; i++) {
         atom_done = map_atoms[atom_list[i]];

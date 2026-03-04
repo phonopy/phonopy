@@ -64,7 +64,7 @@ from phonopy.utils import similarity_transformation
 class NosymDataset:
     """Dataset for no symmetry case."""
 
-    rotations: NDArray[np.intc]
+    rotations: NDArray[np.int64]
     translations: NDArray[np.double]
 
 
@@ -136,7 +136,7 @@ class Symmetry:
         dict
             'rotations': ndarray
                 Matrix parts.
-                shape(num_operations, 3, 3), dtype='intc',
+                shape(num_operations, 3, 3), dtype='int64',
              'translations': ndarray
                 Vector parts.
                 shape(num_operations, 3), dtype='double',
@@ -205,7 +205,7 @@ class Symmetry:
             equivalent atoms. For each atom, only one of those symmetry
             operations is stored. When all symmetry mapping information
             is needed, ``atomic_permulations`` is used.
-            shape=(atoms,), dtype='intc'
+            shape=(atoms,), dtype='int64'
 
         """
         return self._map_operations
@@ -276,7 +276,7 @@ class Symmetry:
             if np.linalg.norm(diff) < symprec:
                 site_symmetries.append(r)
 
-        return np.array(site_symmetries, dtype="intc")
+        return np.array(site_symmetries, dtype="int64")
 
     def _set_symmetry_dataset(self):
         _dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
@@ -313,7 +313,7 @@ class Symmetry:
         for i, atom_map in enumerate(self._map_atoms):
             if i == atom_map:
                 indep_atoms.append(i)
-        self._independent_atoms = np.array(indep_atoms, dtype="intc")
+        self._independent_atoms = np.array(indep_atoms, dtype="int64")
 
     def _set_map_operations(self):
         warnings.warn(
@@ -327,7 +327,7 @@ class Symmetry:
         ops = self._symmetry_operations
         pos = self._cell.scaled_positions
         lattice = self._cell.cell
-        map_operations = np.zeros(len(pos), dtype="intc")
+        map_operations = np.zeros(len(pos), dtype="int64")
 
         for i, eq_atom in enumerate(self._map_atoms):
             for j, (r, t) in enumerate(
@@ -343,7 +343,7 @@ class Symmetry:
 
     def _get_map_operations_from_permutations(self) -> NDArray:
         perm = self._atomic_permutations
-        map_operations = np.zeros(perm.shape[1], dtype="intc")
+        map_operations = np.zeros(perm.shape[1], dtype="int64")
         for i, eq_atom in enumerate(self._map_atoms):
             match = np.where(perm[:, i] == eq_atom)[0]
             assert len(match) != 0
@@ -355,9 +355,9 @@ class Symmetry:
         rotations = []
 
         if s2p_map is None:
-            rotations.append(np.eye(3, dtype="intc"))
+            rotations.append(np.eye(3, dtype="int64"))
             translations.append(np.zeros(3, dtype="double"))
-            self._map_atoms = np.arange(len(self._cell), dtype="intc")
+            self._map_atoms = np.arange(len(self._cell), dtype="int64")
         else:
             positions = self._cell.scaled_positions
             for i, j in enumerate(s2p_map):
@@ -369,10 +369,10 @@ class Symmetry:
                     trans = p - positions[ipos0]
                     trans -= np.floor(trans)
                     translations.append(trans)
-                    rotations.append(np.eye(3, dtype="intc"))
+                    rotations.append(np.eye(3, dtype="int64"))
             self._map_atoms = s2p_map
         self._symmetry_operations = {
-            "rotations": np.array(rotations, dtype="intc"),
+            "rotations": np.array(rotations, dtype="int64"),
             "translations": np.array(translations, dtype="double"),
         }
         self._international_table = "P1 (1)"
@@ -393,15 +393,15 @@ def get_pointgroup_operations(
     if is_time_reversal:
         exist_r_inv = False
         for rot in ptg_ops:
-            if (rot == -np.eye(3, dtype="intc")).all():
+            if (rot == -np.eye(3, dtype="int64")).all():
                 exist_r_inv = True
                 break
         if not exist_r_inv:
             reciprocal_rotations += [-rot.T for rot in ptg_ops]
 
     return (
-        np.array(ptg_ops, dtype="intc"),
-        np.array(reciprocal_rotations, dtype="intc"),
+        np.array(ptg_ops, dtype="int64"),
+        np.array(reciprocal_rotations, dtype="int64"),
     )
 
 
@@ -699,7 +699,7 @@ def _get_supercell_and_primitive(
     else:
         pmat = primitive_matrix
     if supercell_matrix is None:
-        smat = np.eye(3, dtype="intc")
+        smat = np.eye(3, dtype="int64")
     else:
         smat = supercell_matrix
 

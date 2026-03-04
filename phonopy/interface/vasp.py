@@ -1044,7 +1044,7 @@ class VasprunxmlExpat:
     @property
     def k_mesh(self) -> NDArray:
         """Return k_mesh."""
-        return np.array(self._k_mesh, dtype="intc")
+        return np.array(self._k_mesh, dtype="int64")
 
     @property
     def kpointlist(self) -> NDArray:
@@ -1074,15 +1074,15 @@ class VasprunxmlExpat:
         -------
         ndarray
             Geometric k-point weights (number of arms of k-star in BZ).
-            dtype='intc'
+            dtype='int64'
             shape=(irreducible_kpoints,)
 
         """
         nk = np.prod(self.k_mesh)
         _weights = self.k_weights * nk
-        weights = np.rint(_weights).astype("intc")
+        weights = np.rint(_weights).astype("int64")
         assert (np.abs(weights - _weights) < 1e-7 * nk).all()
-        return np.array(weights, dtype="intc")
+        return np.array(weights, dtype="int64")
 
     @property
     def eigenvalues(self) -> NDArray:
@@ -1644,7 +1644,7 @@ def _read_XDATCAR_fileptr(f: typing.IO) -> tuple[NDArray, NDArray]:
     lattice = np.transpose([a, b, c]) * scale
     symbols = f.readline().split()
     numbers_of_atoms = np.array(
-        [int(x) for x in f.readline().split()[: len(symbols)]], dtype="intc"
+        [int(x) for x in f.readline().split()[: len(symbols)]], dtype="int64"
     )
     return lattice, numbers_of_atoms
 

@@ -116,7 +116,7 @@ def get_cell_settings(
         cell, optional_structure_info = read_crystal_structure(
             filename=supercell_filename, interface_mode=calculator
         )
-        smat = np.eye(3, dtype="intc", order="C")
+        smat = np.eye(3, dtype="int64", order="C")
         if log_level:
             print(
                 'Supercell structure was read from "%s".' % optional_structure_info[0]
@@ -126,7 +126,7 @@ def get_cell_settings(
         smat = supercell_matrix
     elif supercell is not None:
         cell = supercell.copy()
-        smat = np.eye(3, dtype="intc", order="C")
+        smat = np.eye(3, dtype="int64", order="C")
     else:
         raise RuntimeError("Cell has to be specified.")
 
