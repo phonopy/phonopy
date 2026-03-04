@@ -378,7 +378,7 @@ class Xgcd:
 
     def __init__(self, vals):
         """Init method."""
-        self._vals = np.array(vals, dtype="intc")
+        self._vals = np.array(vals, dtype="int64")
 
     def run(self):
         """Calculate extended GCD."""
@@ -394,7 +394,7 @@ class Xgcd:
 
         assert r0 == self._vals[0] * s0 + self._vals[1] * t0
 
-        self._rst = np.array([r0, s0, t0], dtype="intc")
+        self._rst = np.array([r0, s0, t0], dtype="int64")
 
         return self._rst
 

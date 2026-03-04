@@ -2,15 +2,21 @@
 
 # Change Log
 
-# Feb-15-2026: Version 2.48.0
+## Mar-04-2026: Version 3.0.0
+
+- Most of integer numpy arrays were migrated from `numpy.intc` to `numpy.int64`,
+  and corresponding C-extension interfaces were aligned to `int64_t`. Basically
+  no big change from version 2.48.0 except for this.
+
+## Feb-15-2026: Version 2.48.0
 
 - Maintenance release with refactoring of calculator interface base.
 
-# Jan-05-2026: Version 2.47.1
+## Jan-05-2026: Version 2.47.1
 
 - Just for releasing pypi package.
 
-# Jan-05-2026: Version 2.47.0
+## Jan-05-2026: Version 2.47.0
 
 - Bug fix for the `--save-params` option when used with the `--fz` option to
   write energies in `phonopy_params.yaml` for the VASP interface. This bug

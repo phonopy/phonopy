@@ -317,7 +317,12 @@ def symmetrize_compact_force_constants(force_constants, primitive: Primitive, le
         import phonopy._phonopy as phonoc  # type: ignore
 
         phonoc.perm_trans_symmetrize_compact_fc(
-            force_constants, permutations, s2pp_map, p2s_map, nsym_list, level
+            force_constants,
+            permutations,
+            s2pp_map,
+            p2s_map,
+            nsym_list,
+            level,
         )
     except ImportError as exc:
         text = (
@@ -340,6 +345,9 @@ def distribute_force_constants(
 
     atom_list : ndarray
         Indices of target atoms.
+    permutations : ndarray
+        Atomic index permutation table by symmetry operations.
+        shape=(num_rot, num_pos), dtype='int64', order='C'
     fc_indices_of_atom_list : ndarray
         First fc3 indices corresponding to indices of target atoms. Unless
         specified, `range(len(atom_list))` is used.
@@ -354,13 +362,13 @@ def distribute_force_constants(
         order="C",
     )
     if atom_list is None:
-        targets = np.arange(force_constants.shape[1], dtype="intc")
+        targets = np.arange(force_constants.shape[1], dtype="int64")
     else:
-        targets = np.array(atom_list, dtype="intc")
+        targets = np.array(atom_list, dtype="int64")
     if fc_indices_of_atom_list is None:
-        _fc_indices_of_atom_list = np.arange(len(targets), dtype="intc")
+        _fc_indices_of_atom_list = np.arange(len(targets), dtype="int64")
     else:
-        _fc_indices_of_atom_list = np.array(fc_indices_of_atom_list, dtype="intc")
+        _fc_indices_of_atom_list = np.array(fc_indices_of_atom_list, dtype="int64")
 
     if map_atoms.ndim != 1 or map_atoms.shape[0] != permutations.shape[1]:
         raise ValueError("wrong shape for map_atoms")
@@ -379,8 +387,8 @@ def distribute_force_constants(
         _fc_indices_of_atom_list,
         rots_cartesian,
         permutations,
-        np.array(map_atoms, dtype="intc"),
-        np.array(map_syms, dtype="intc"),
+        map_atoms,
+        map_syms,
     )
 
 
@@ -399,7 +407,9 @@ def distribute_force_constants_by_translations(fc: np.ndarray, primitive: Primit
     permutations = primitive.atomic_permutations
     lattice = primitive.cell.T @ np.linalg.inv(primitive.primitive_matrix)
     rotations = np.array(
-        [np.eye(3, dtype="intc")] * permutations.shape[0], dtype="intc", order="C"
+        [np.eye(3, dtype="int64")] * permutations.shape[0],
+        dtype="int64",
+        order="C",
     )
     distribute_force_constants(fc, p2s, lattice, rotations, permutations)
 
@@ -469,7 +479,7 @@ def get_positions_sent_by_rot_inv(
         )
         rot_map_syms.append(rot_map)
 
-    return np.array(rot_map_syms, dtype="intc", order="C")
+    return np.array(rot_map_syms, dtype="int64", order="C")
 
 
 def get_rotated_displacement(displacements, site_sym_cart):
@@ -616,11 +626,19 @@ def get_drift_force_constants(
             import phonopy._phonopy as phonoc  # type: ignore
 
             phonoc.transpose_compact_fc(
-                force_constants, permutations, s2pp_map, p2s_map, nsym_list
+                force_constants,
+                permutations,
+                s2pp_map,
+                p2s_map,
+                nsym_list,
             )
             maxval1, xy1 = _get_drift_per_index(force_constants)
             phonoc.transpose_compact_fc(
-                force_constants, permutations, s2pp_map, p2s_map, nsym_list
+                force_constants,
+                permutations,
+                s2pp_map,
+                p2s_map,
+                nsym_list,
             )
             maxval2, xy2 = _get_drift_per_index(force_constants)
 
@@ -671,24 +689,24 @@ def get_nsym_list_and_s2pp(s2p_map, p2p_map, permutations):
     -------
     s2pp : ndarray
         Atom indices in primitive cell that correspond to supercell atoms.
-        shape=(num_atoms_in_supercell, ), dtype='intc'
+        shape=(num_atoms_in_supercell, ), dtype='int64'
     nsym_list : ndarray
         Pure translation indices that map atoms in supercell to those in
         primitive cell.
-        shape=(num_pure_translation, ), dtype='intc'
+        shape=(num_pure_translation, ), dtype='int64'
 
     Note
     ----
     This method is public because of being used by phono3py.
 
     """
-    s2pp = np.array([p2p_map[i] for i in s2p_map], dtype="intc")
+    s2pp = np.array([p2p_map[i] for i in s2p_map], dtype="int64")
     nsym_list = np.array(
         [
             np.where(permutations[:, i] == target)[0][0]
             for i, target in enumerate(s2p_map)
         ],
-        dtype="intc",
+        dtype="int64",
     )
     return s2pp, nsym_list
 
@@ -856,7 +874,7 @@ def _get_atom_indices_by_symmetry(lattice, positions, rotations, translations, s
     # m[N, K(1), K(2)]
     m = np.sqrt(np.sum(diff**2, axis=3)) < symprec
     # index_array[K(1), K(2)]
-    index_array = np.tile(np.arange(K, dtype="intc"), (K, 1))
+    index_array = np.tile(np.arange(K, dtype="int64"), (K, 1))
     # Understanding numpy boolean array indexing (extract True elements)
     # mapa[N, K(1)]
     mapa = np.array([index_array[mr] for mr in m])
@@ -885,21 +903,21 @@ def _get_sym_mappings_from_permutations(permutations, atom_list_done):
         Maps each atom in the full structure to its equivalent atom in
         atom_list_done.  (each entry will be an integer found in
         atom_list_done)
-        shape=(positions, ), dtype='intc'
+        shape=(positions, ), dtype='int64'
     map_syms : ndarray
         For each atom, provides the index of a rotation that maps it
         into atom_list_done.  (there might be more than one such
         rotation, but only one will be returned) (each entry will be
         an integer 0 <= i < num_rot)
-        shape=(positions, ), dtype='intc'
+        shape=(positions, ), dtype='int64'
 
     """
     assert permutations.ndim == 2
     num_pos = permutations.shape[1]
 
     # filled with -1
-    map_atoms = np.zeros((num_pos,), dtype="intc") - 1
-    map_syms = np.zeros((num_pos,), dtype="intc") - 1
+    map_atoms = np.zeros((num_pos,), dtype="int64") - 1
+    map_syms = np.zeros((num_pos,), dtype="int64") - 1
 
     atom_list_done = set(atom_list_done)
     for atom_todo in range(num_pos):

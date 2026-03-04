@@ -355,7 +355,7 @@ def write_FORCE_CONSTANTS(
         Filename to be saved
     p2s_map: ndarray
         Primitive atom indices in supercell index system
-        dtype=intc
+        dtype=int64
 
     """
     lines = get_FORCE_CONSTANTS_lines(force_constants, p2s_map=p2s_map)
@@ -374,7 +374,7 @@ def get_FORCE_CONSTANTS_lines(
     if p2s_map is not None and len(p2s_map) == force_constants.shape[0]:
         indices = p2s_map
     else:
-        indices = np.arange(force_constants.shape[0], dtype="intc")
+        indices = np.arange(force_constants.shape[0], dtype="int64")
 
     lines = []
     fc_shape = force_constants.shape
@@ -408,7 +408,7 @@ def write_force_constants_to_hdf5(
     p2s_map: ndarray
         Primitive atom indices in supercell index system
         shape=(n_patom,)
-        dtype=intc
+        dtype=int64
     physical_unit : str, optional
         Physical unit used for force contants. Default is None.
     compression : str or int, optional

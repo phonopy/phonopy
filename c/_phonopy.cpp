@@ -41,7 +41,7 @@ void py_transform_dynmat_to_fc(
 void py_perm_trans_symmetrize_fc(nb::ndarray<> py_force_constants,
                                  int64_t level) {
     double *fc;
-    int n_satom;
+    int64_t n_satom;
 
     fc = (double *)py_force_constants.data();
     n_satom = py_force_constants.shape(0);
@@ -56,17 +56,17 @@ void py_perm_trans_symmetrize_compact_fc(nb::ndarray<> py_force_constants,
                                          nb::ndarray<> py_nsym_list,
                                          int64_t level) {
     double *fc;
-    int *perms;
-    int *s2pp;
-    int *p2s;
-    int *nsym_list;
-    int n_patom, n_satom;
+    int64_t *perms;
+    int64_t *s2pp;
+    int64_t *p2s;
+    int64_t *nsym_list;
+    int64_t n_patom, n_satom;
 
     fc = (double *)py_force_constants.data();
-    perms = (int *)py_permutations.data();
-    s2pp = (int *)py_s2pp_map.data();
-    p2s = (int *)py_p2s_map.data();
-    nsym_list = (int *)py_nsym_list.data();
+    perms = (int64_t *)py_permutations.data();
+    s2pp = (int64_t *)py_s2pp_map.data();
+    p2s = (int64_t *)py_p2s_map.data();
+    nsym_list = (int64_t *)py_nsym_list.data();
     n_patom = py_force_constants.shape(0);
     n_satom = py_force_constants.shape(1);
 
@@ -80,17 +80,17 @@ void py_transpose_compact_fc(nb::ndarray<> py_force_constants,
                              nb::ndarray<> py_p2s_map,
                              nb::ndarray<> py_nsym_list) {
     double *fc;
-    int *s2pp;
-    int *p2s;
-    int *nsym_list;
-    int *perms;
-    int n_patom, n_satom;
+    int64_t *s2pp;
+    int64_t *p2s;
+    int64_t *nsym_list;
+    int64_t *perms;
+    int64_t n_patom, n_satom;
 
     fc = (double *)py_force_constants.data();
-    perms = (int *)py_permutations.data();
-    s2pp = (int *)py_s2pp_map.data();
-    p2s = (int *)py_p2s_map.data();
-    nsym_list = (int *)py_nsym_list.data();
+    perms = (int64_t *)py_permutations.data();
+    s2pp = (int64_t *)py_s2pp_map.data();
+    p2s = (int64_t *)py_p2s_map.data();
+    nsym_list = (int64_t *)py_nsym_list.data();
     n_patom = py_force_constants.shape(0);
     n_satom = py_force_constants.shape(1);
 
@@ -329,20 +329,20 @@ void py_distribute_fc2(nb::ndarray<> py_force_constants,
                        nb::ndarray<> py_map_atoms, nb::ndarray<> py_map_syms) {
     double (*r_carts)[3][3];
     double (*fc2)[3][3];
-    int *permutations;
-    int *map_atoms;
-    int *map_syms;
-    int *atom_list;
-    int *fc_indices_of_atom_list;
+    int64_t *permutations;
+    int64_t *map_atoms;
+    int64_t *map_syms;
+    int64_t *atom_list;
+    int64_t *fc_indices_of_atom_list;
     int64_t num_pos, num_rot, len_atom_list;
 
     fc2 = (double (*)[3][3])py_force_constants.data();
-    atom_list = (int *)py_atom_list.data();
+    atom_list = (int64_t *)py_atom_list.data();
     len_atom_list = py_atom_list.shape(0);
-    fc_indices_of_atom_list = (int *)py_fc_indices_of_atom_list.data();
-    permutations = (int *)py_permutations.data();
-    map_atoms = (int *)py_map_atoms.data();
-    map_syms = (int *)py_map_syms.data();
+    fc_indices_of_atom_list = (int64_t *)py_fc_indices_of_atom_list.data();
+    permutations = (int64_t *)py_permutations.data();
+    map_atoms = (int64_t *)py_map_atoms.data();
+    map_syms = (int64_t *)py_map_syms.data();
     r_carts = (double (*)[3][3])py_rotations_cart.data();
     num_rot = py_permutations.shape(0);
     num_pos = py_permutations.shape(1);
@@ -355,15 +355,15 @@ void py_distribute_fc2(nb::ndarray<> py_force_constants,
 bool py_compute_permutation(nb::ndarray<> permutation, nb::ndarray<> lattice,
                             nb::ndarray<> positions,
                             nb::ndarray<> permuted_positions, double symprec) {
-    int *rot_atoms;
+    int64_t *rot_atoms;
     double (*lat)[3];
     double (*pos)[3];
     double (*rot_pos)[3];
-    int num_pos;
+    int64_t num_pos;
 
-    int is_found;
+    int64_t is_found;
 
-    rot_atoms = (int *)permutation.data();
+    rot_atoms = (int64_t *)permutation.data();
     lat = (double (*)[3])lattice.data();
     pos = (double (*)[3])positions.data();
     rot_pos = (double (*)[3])permuted_positions.data();
@@ -385,24 +385,24 @@ void py_gsv_set_smallest_vectors_sparse(
     nb::ndarray<> py_lattice_points, nb::ndarray<> py_reduced_basis,
     nb::ndarray<> py_trans_mat, double symprec) {
     double (*smallest_vectors)[27][3];
-    int *multiplicity;
+    int64_t *multiplicity;
     double (*pos_to)[3];
     double (*pos_from)[3];
-    int (*lattice_points)[3];
+    int64_t (*lattice_points)[3];
     double (*reduced_basis)[3];
-    int (*trans_mat)[3];
-    int num_pos_to, num_pos_from, num_lattice_points;
+    int64_t (*trans_mat)[3];
+    int64_t num_pos_to, num_pos_from, num_lattice_points;
 
     smallest_vectors = (double (*)[27][3])py_smallest_vectors.data();
-    multiplicity = (int *)py_multiplicity.data();
+    multiplicity = (int64_t *)py_multiplicity.data();
     pos_to = (double (*)[3])py_pos_to.data();
     pos_from = (double (*)[3])py_pos_from.data();
     num_pos_to = py_pos_to.shape(0);
     num_pos_from = py_pos_from.shape(0);
-    lattice_points = (int (*)[3])py_lattice_points.data();
+    lattice_points = (int64_t (*)[3])py_lattice_points.data();
     num_lattice_points = py_lattice_points.shape(0);
     reduced_basis = (double (*)[3])py_reduced_basis.data();
-    trans_mat = (int (*)[3])py_trans_mat.data();
+    trans_mat = (int64_t (*)[3])py_trans_mat.data();
 
     phpy_set_smallest_vectors_sparse(smallest_vectors, multiplicity, pos_to,
                                      num_pos_to, pos_from, num_pos_from,

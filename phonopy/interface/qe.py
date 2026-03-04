@@ -473,7 +473,7 @@ class PH_Q2R:
               (natom_super, natom_super, 3, 3) for full fc
     dimension : ndarray
         Supercell dimensions (not matrix)
-        dtype='intc'
+        dtype='int64'
         shape=(3,)
     epsilon : ndarray
         Dielectric constant tensor
@@ -595,7 +595,7 @@ class PH_Q2R:
             epsilon = None
             borns = None
         line = f.readline()
-        dim = np.array([int(x) for x in line.split()], dtype="intc")
+        dim = np.array([int(x) for x in line.split()], dtype="int64")
 
         return natom, dim, epsilon, borns
 

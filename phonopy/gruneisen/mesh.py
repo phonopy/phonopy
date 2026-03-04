@@ -69,7 +69,7 @@ class GruneisenMesh(GruneisenBase):
     ):
         """Init method."""
         super().__init__(dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain)
-        self._mesh = np.array(mesh, dtype="intc")
+        self._mesh = np.array(mesh, dtype="int64")
         if factor is None:
             self._factor = get_physical_units().DefaultToTHz
         else:
