@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-05-2026: Version 3.0.1
+
+- Fix `isotope_data` in `atomic_data.py` (#737).
+
 ## Mar-04-2026: Version 3.0.0
 
 - Most of integer numpy arrays were migrated from `numpy.intc` to `numpy.int64`,
