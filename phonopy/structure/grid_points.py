@@ -247,7 +247,9 @@ class GridPoints:
         )
         self._is_time_reversal = is_time_reversal
         self._fit_in_BZ = fit_in_BZ
-        self._rotations = rotations
+        self._rotations = (
+            np.array(rotations, dtype="int64") if rotations is not None else None
+        )
         self._is_mesh_symmetry = is_mesh_symmetry
 
         self._ir_qpoints: NDArray
