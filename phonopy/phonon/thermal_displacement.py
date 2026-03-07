@@ -36,10 +36,13 @@
 
 from __future__ import annotations
 
+import os
 import warnings
-from typing import Union
+from collections.abc import Sequence
+from typing import Any, Literal
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
@@ -49,7 +52,12 @@ from phonopy.physical_units import get_physical_units
 class ThermalMotion:
     """Base class of thermal displacement calculation classes."""
 
-    def __init__(self, iter_mesh: IterMesh | Mesh, freq_min=None, freq_max=None):
+    def __init__(
+        self,
+        iter_mesh: IterMesh | Mesh,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+    ) -> None:
         """Init method."""
         self._iter_mesh = iter_mesh
         if freq_min is None:
@@ -62,13 +70,16 @@ class ThermalMotion:
             self._fmax = freq_max
 
         masses = iter_mesh.dynamical_matrix.primitive.masses
+        assert masses is not None
         self._masses = masses * get_physical_units().AMU
         self._masses3 = (
             np.array([[m] * 3 for m in masses]).ravel() * get_physical_units().AMU
         )
-        self._temperatures = None
+        self._temperatures: NDArray[np.double] | None = None
 
-    def _get_Q2(self, freq, t):  # freq in THz
+    def _get_Q2(
+        self, freq: float | NDArray[np.double], t: NDArray[np.double]
+    ) -> NDArray[np.double]:  # freq in THz
         return (
             get_physical_units().Hbar
             * get_physical_units().EV
@@ -77,17 +88,17 @@ class ThermalMotion:
         )
 
     @property
-    def temperatures(self):
+    def temperatures(self) -> NDArray[np.double] | None:
         """Setter and getter of temperatures."""
         return self._temperatures
 
     @temperatures.setter
-    def temperatures(self, temperatures):
-        t_array = np.array(temperatures)
+    def temperatures(self, temperatures: NDArray[np.double]) -> None:
+        t_array = np.array(temperatures, dtype="double")
         condition = np.logical_not(t_array < 0)
-        self._temperatures = np.extract(condition, t_array)
+        self._temperatures = np.extract(condition, t_array).astype("double")
 
-    def get_temperatures(self):
+    def get_temperatures(self) -> NDArray[np.double] | None:
         """Return temperatures."""
         warnings.warn(
             "ThermalMotion.get_temperatures() is deprecated. "
@@ -97,7 +108,7 @@ class ThermalMotion:
         )
         return self.temperatures
 
-    def set_temperatures(self, temperatures):
+    def set_temperatures(self, temperatures: NDArray[np.double]) -> None:
         """Set temperatures."""
         warnings.warn(
             "ThermalMotion.set_temperatures() is deprecated. "
@@ -107,7 +118,12 @@ class ThermalMotion:
         )
         self.temperatures = temperatures
 
-    def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
+    def set_temperature_range(
+        self,
+        t_min: float | None = None,
+        t_max: float | None = None,
+        t_step: float | None = None,
+    ) -> None:
         """Set temperatures by range."""
         if t_min is None:
             _t_min = 10
@@ -134,7 +150,9 @@ class ThermalMotion:
             _t_min, _t_max + _t_step / 2.0, _t_step, dtype="double"
         )
 
-    def _get_population(self, freq, t):  # freq in THz
+    def _get_population(
+        self, freq: float | NDArray[np.double], t: NDArray[np.double]
+    ) -> NDArray[np.double]:  # freq in THz
         """Return phonon population number.
 
         Three types of combinations of array inputs are possible.
@@ -143,31 +161,18 @@ class ThermalMotion:
         - len(freq) > 1 and single t
 
         """
-        condition = t > 1.0
-        # Avoid using isinstance with bool to distinguish from int.
-        if isinstance(condition, (bool, np.bool_)):
-            if condition:
-                return 1.0 / (
-                    np.exp(
-                        freq
-                        * get_physical_units().THzToEv
-                        / (get_physical_units().KB * t)
-                    )
-                    - 1
-                )
-            else:
-                return 0.0
-        else:
-            vals = np.zeros(len(t), dtype="double")
-            vals[condition] = 1.0 / (
-                np.exp(
-                    freq
-                    * get_physical_units().THzToEv
-                    / (get_physical_units().KB * t[condition])
-                )
-                - 1
+        t_array = np.array(t, dtype="double")
+        vals = np.zeros_like(t_array, dtype="double")
+        condition = t_array > 1.0
+        vals[condition] = 1.0 / (
+            np.exp(
+                freq
+                * get_physical_units().THzToEv
+                / (get_physical_units().KB * t_array[condition])
             )
-            return vals
+            - 1
+        )
+        return vals
 
 
 class ThermalDisplacements(ThermalMotion):
@@ -186,10 +191,10 @@ class ThermalDisplacements(ThermalMotion):
     def __init__(
         self,
         iter_mesh: IterMesh | Mesh,
-        projection_direction=None,
-        freq_min=None,
-        freq_max=None,
-    ):
+        projection_direction: NDArray[np.double] | Sequence[float] | None = None,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -211,17 +216,22 @@ class ThermalDisplacements(ThermalMotion):
         if projection_direction is None:
             self._projection_direction = None
         else:
+            projection_direction = np.array(projection_direction, dtype="double")
             self._projection_direction = projection_direction / np.linalg.norm(
                 projection_direction
             )
-        self._displacements = None
+        self._displacements: NDArray[np.double] | None = None
+        self._eigenvectors: NDArray[np.cdouble] | None = None
+        self._p_eigenvectors: NDArray[np.cdouble] | None = None
 
     @property
-    def thermal_displacements(self):
+    def thermal_displacements(self) -> NDArray[np.double] | None:
         """Return thermal displacements."""
         return self._displacements
 
-    def get_thermal_displacements(self):
+    def get_thermal_displacements(
+        self,
+    ) -> tuple[NDArray[np.double] | None, NDArray[np.double] | None]:
         """Return thermal displacements and temperatures."""
         warnings.warn(
             "ThermalDisplacements.get_thermal_displacements() is deprecated. "
@@ -231,16 +241,18 @@ class ThermalDisplacements(ThermalMotion):
         )
         return (self._temperatures, self._displacements)
 
-    def run(self):
+    def run(self) -> None:
         """Calculate thermal displacements."""
         if self._projection_direction is not None:
             masses = self._masses
         else:
             masses = self._masses3
         temps = self._temperatures
+        assert temps is not None
         disps = np.zeros((len(temps), len(masses)), dtype=float)
 
         for count, (fs, vecs) in enumerate(self._iter_mesh):  # noqa B007
+            assert vecs is not None
             if self._projection_direction is not None:
                 p_vecs = np.dot(
                     vecs.T.reshape(-1, 3), self._projection_direction
@@ -253,18 +265,18 @@ class ThermalDisplacements(ThermalMotion):
             if self._fmax is not None:
                 valid_indices *= fs < self._fmax
 
-            if len(temps) == 1:
-                Q2 = self._get_Q2(fs[valid_indices], temps[0])
-                disps[0] += np.dot(Q2, vecs2[valid_indices])
-            else:
-                for f, v2 in zip(fs[valid_indices], vecs2[valid_indices], strict=True):
-                    disps += np.outer(self._get_Q2(f, temps), v2)
+            for f, v2 in zip(fs[valid_indices], vecs2[valid_indices], strict=True):
+                disps += np.outer(self._get_Q2(f, temps), v2)
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._displacements = disps / (count + 1)
 
-    def write_yaml(self, filename="thermal_displacements.yaml"):
+    def write_yaml(
+        self, filename: str | os.PathLike = "thermal_displacements.yaml"
+    ) -> None:
         """Write results to file in yaml."""
+        assert self._temperatures is not None
+        assert self._displacements is not None
         natom = len(self._masses)
         lines = []
         lines.append("# Thermal displacements")
@@ -285,8 +297,10 @@ class ThermalDisplacements(ThermalMotion):
         with open(filename, "w") as w:
             w.write("\n".join(lines))
 
-    def plot(self, pyplot, is_legend=False):
+    def plot(self, pyplot: Any, is_legend: bool = False) -> None:
         """Return pyplot of thermal displacements calculation result."""
+        assert self._displacements is not None
+        assert self._temperatures is not None
         xyz = ["x", "y", "z"]
         for i, u in enumerate(self._displacements.transpose()):
             pyplot.plot(
@@ -296,19 +310,21 @@ class ThermalDisplacements(ThermalMotion):
         if is_legend:
             pyplot.legend(loc="upper left")
 
-    def _project_eigenvectors(self):
+    def _project_eigenvectors(self) -> None:
         """Project eigenvectors to specific direction.
 
         Eigenvectors are projected along Cartesian direction.
 
         """
-        self._p_eigenvectors = []
+        assert self._eigenvectors is not None
+        assert self._projection_direction is not None
+        p_eigenvectors: list[NDArray[np.cdouble]] = []
         for vecs_q in self._eigenvectors:
             p_vecs_q = []
             for vecs in vecs_q.T:
                 p_vecs_q.append(np.dot(vecs.reshape(-1, 3), self._projection_direction))
-            self._p_eigenvectors.append(np.transpose(p_vecs_q))
-        self._p_eigenvectors = np.array(self._p_eigenvectors)
+            p_eigenvectors.append(np.transpose(p_vecs_q))
+        self._p_eigenvectors = np.array(p_eigenvectors)
 
 
 class ThermalDisplacementMatrices(ThermalMotion):
@@ -316,11 +332,11 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
     def __init__(
         self,
-        iter_mesh: Union[IterMesh, Mesh],
-        freq_min=None,
-        freq_max=None,
-        lattice=None,
-    ):
+        iter_mesh: IterMesh | Mesh,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+        lattice: NDArray[np.double] | None = None,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -339,27 +355,29 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
         """
         super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
-        self._disp_matrices = None
-        self._disp_matrices_cif = None
+        self._disp_matrices: NDArray[np.double] | None = None
+        self._disp_matrices_cif: NDArray[np.double] | None = None
 
         if lattice is not None:
-            A = lattice
+            A = np.array(lattice, dtype="double")
             N = np.diag([np.linalg.norm(x) for x in np.linalg.inv(A)])
             self._ANinv = np.linalg.inv(np.dot(A, N))
         else:
             self._ANinv = None
 
     @property
-    def thermal_displacement_matrices(self):
+    def thermal_displacement_matrices(self) -> NDArray[np.double] | None:
         """Return thermal displacement matrices."""
         return self._disp_matrices
 
     @property
-    def thermal_displacement_matrices_cif(self):
+    def thermal_displacement_matrices_cif(self) -> NDArray[np.double] | None:
         """Return thermal displacement matrices in cif definition."""
         return self._disp_matrices_cif
 
-    def get_thermal_displacement_matrices(self):
+    def get_thermal_displacement_matrices(
+        self,
+    ) -> tuple[NDArray[np.double] | None, NDArray[np.double] | None]:
         """Return thermal displacement matrices."""
         warnings.warn(
             "ThermalDisplacementMatrices.get_thermal_displacement_matrices() is "
@@ -370,7 +388,11 @@ class ThermalDisplacementMatrices(ThermalMotion):
         )
         return (self._temperatures, self._disp_matrices)
 
-    def run(self, np_overflow=None):
+    def run(
+        self,
+        np_overflow: Literal["ignore", "warn", "raise", "call", "print", "log"]
+        | None = None,
+    ) -> None:
         """Calculate thermal displacement matrices.
 
         Parameters
@@ -384,6 +406,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
         np.seterr(over=None)
 
         if self._ANinv is not None:
+            assert self._disp_matrices is not None
             self._disp_matrices_cif = np.zeros(
                 self._disp_matrices.shape, dtype="double"
             )
@@ -394,12 +417,14 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
         self._get_disp_matrices()
 
-    def _get_disp_matrices(self):
-        dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
+    def _get_disp_matrices(self) -> None:
+        dtype_complex = np.cdouble
+        assert self._temperatures is not None
         disps = np.zeros(
             (len(self._temperatures), len(self._masses), 3, 3), dtype=dtype_complex
         )
         for count, (freqs, eigvecs) in enumerate(self._iter_mesh):  # noqa B007
+            assert eigvecs is not None
             valid_indices = freqs > self._fmin
             if self._fmax is not None:
                 valid_indices *= freqs < self._fmax
@@ -420,7 +445,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 #         print("%s: T=%.1f freq=%.2f (band #%d)" %
                 #               (e, t, f, i_band))
                 try:
-                    Q2 = self._get_Q2(f, self._temperatures)
+                    Q2 = np.array(self._get_Q2(f, self._temperatures), dtype="double")
                     disps += Q2[:, None, None, None] * c[None, :, :, :]
                 except FloatingPointError as e:
                     # Probably, overflow in exp(freq / (KB * T))
@@ -430,16 +455,26 @@ class ThermalDisplacementMatrices(ThermalMotion):
         assert (abs(disps.imag) < 1e-10).all()
         self._disp_matrices = disps.real / (count + 1)
 
-    def write_cif(self, cell, temperature_index, filename="tdispmat.cif"):
+    def write_cif(
+        self,
+        cell: Any,
+        temperature_index: int,
+        filename: str | os.PathLike = "tdispmat.cif",
+    ) -> None:
         """Write results to file in P1 symmetry CIF format."""
+        assert self._disp_matrices_cif is not None
         write_cif_P1(
             cell,
             U_cif=self._disp_matrices_cif[temperature_index],
             filename=filename,
         )
 
-    def write_yaml(self, filename="thermal_displacement_matrices.yaml"):
+    def write_yaml(
+        self, filename: str | os.PathLike = "thermal_displacement_matrices.yaml"
+    ) -> None:
         """Write results to file in yaml."""
+        assert self._temperatures is not None
+        assert self._disp_matrices is not None
         natom = len(self._masses)
         lines = []
 
@@ -464,6 +499,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                     % (m[0, 0], m[1, 1], m[2, 2], m[1, 2], m[0, 2], m[0, 1], j + 1)
                 )
             if self._ANinv is not None:
+                assert self._disp_matrices_cif is not None
                 matrices_cif = self._disp_matrices_cif[i]
                 lines.append("  displacement_matrices_cif:")
                 for j, mat_cif in enumerate(matrices_cif):

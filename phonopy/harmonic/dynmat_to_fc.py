@@ -37,9 +37,11 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
@@ -50,7 +52,9 @@ if TYPE_CHECKING:
     from phonopy import Phonopy
 
 
-def get_commensurate_points(supercell_matrix):  # wrt primitive cell
+def get_commensurate_points(
+    supercell_matrix: NDArray[np.int64] | Sequence[Sequence[int]],
+) -> NDArray[np.double]:  # wrt primitive cell
     """Commensurate q-points are returned.
 
     Parameters
@@ -67,7 +71,7 @@ def get_commensurate_points(supercell_matrix):  # wrt primitive cell
         where N = det(supercell_matrix)
 
     """
-    smat = np.array(supercell_matrix, dtype=int)
+    smat = np.array(supercell_matrix, dtype="int64")
     rec_primitive = PhonopyAtoms(
         symbols=["H"], scaled_positions=[[0, 0, 0]], cell=np.diag([1, 1, 1])
     )
@@ -78,7 +82,9 @@ def get_commensurate_points(supercell_matrix):  # wrt primitive cell
     )
 
 
-def get_commensurate_points_in_integers(supercell_matrix):
+def get_commensurate_points_in_integers(
+    supercell_matrix: NDArray[np.int64] | Sequence[Sequence[int]],
+) -> NDArray[np.int64]:
     """Commensurate q-points in integer representation are returned.
 
     A set of integer representation of lattice points is transformed to
@@ -100,7 +106,7 @@ def get_commensurate_points_in_integers(supercell_matrix):
         shape=(N, 3)
 
     """
-    smat = np.array(supercell_matrix, dtype=int)
+    smat = np.array(supercell_matrix, dtype="int64")
     snf = SNF3x3(smat.T)
     D = snf.D.diagonal()
     b, c, a = np.meshgrid(range(D[1]), range(D[2]), range(D[0]))
@@ -114,7 +120,9 @@ def get_commensurate_points_in_integers(supercell_matrix):
     return lattice_points
 
 
-def categorize_commensurate_points(comm_points):
+def categorize_commensurate_points(
+    comm_points: NDArray[np.int64],
+) -> tuple[list[int], list[int]]:
     """Categorize integer commensurate points.
 
     Points are sorted by either q = -q + G or q != -q + G.
@@ -137,7 +145,9 @@ def categorize_commensurate_points(comm_points):
     return ii, ij
 
 
-def ph2fc(ph_orig: "Phonopy", supercell_matrix, with_nac=True):
+def ph2fc(
+    ph_orig: Phonopy, supercell_matrix: NDArray[np.int64], with_nac: bool = True
+) -> NDArray[np.double] | None:
     """Transform force constants in Phonopy instance to other shape.
 
     This function is deprecated. Use ph2ph or Phonopy.ph2ph.
@@ -164,7 +174,11 @@ def ph2fc(ph_orig: "Phonopy", supercell_matrix, with_nac=True):
     return ph2ph(ph_orig, supercell_matrix, with_nac=with_nac).force_constants
 
 
-def ph2ph(ph_orig: "Phonopy", supercell_matrix, with_nac=False) -> "Phonopy":
+def ph2ph(
+    ph_orig: Phonopy,
+    supercell_matrix: NDArray[np.int64] | Sequence[Sequence[int]],
+    with_nac: bool = False,
+) -> Phonopy:
     """Transform force constants in Phonopy instance to other shape.
 
     Parameters
@@ -244,13 +258,13 @@ class DynmatToForceConstants:
         self,
         primitive: Primitive,
         supercell: PhonopyAtoms,
-        eigenvalues=None,
-        eigenvectors=None,
-        dynamical_matrices=None,
-        commensurate_points=None,
-        is_full_fc=True,
-        use_openmp=False,
-    ):
+        eigenvalues: NDArray[np.double] | None = None,
+        eigenvectors: NDArray[np.cdouble] | None = None,
+        dynamical_matrices: NDArray[np.cdouble] | None = None,
+        commensurate_points: NDArray[np.double] | None = None,
+        is_full_fc: bool = True,
+        use_openmp: bool = False,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -275,7 +289,9 @@ class DynmatToForceConstants:
         if commensurate_points is None:
             self._commensurate_points = get_commensurate_points(supercell_matrix)
         else:
-            self._commensurate_points = commensurate_points
+            self._commensurate_points = np.array(
+                commensurate_points, dtype="double", order="C"
+            )
 
         svecs, multi = self._pcell.get_smallest_vectors()
         if self._pcell.store_dense_svecs:
@@ -286,8 +302,8 @@ class DynmatToForceConstants:
 
         self._use_openmp = use_openmp
 
-        self._dynmat = None
-        self._fc = None
+        self._dynmat: NDArray[np.cdouble] | None = None
+        self._fc: NDArray[np.double] | None = None
 
         n_s = len(self._scell)
         n_p = len(self._pcell)
@@ -296,7 +312,7 @@ class DynmatToForceConstants:
         else:
             self._fc_shape = (n_p, n_s, 3, 3)
 
-        self._dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
+        self._dtype_complex = np.cdouble
 
         if dynamical_matrices is not None or commensurate_points is not None:
             warnings.warn(
@@ -323,17 +339,17 @@ class DynmatToForceConstants:
         elif dynamical_matrices is not None:
             self.dynamical_matrices = dynamical_matrices
 
-    def run(self, lang="C"):
+    def run(self, lang: str = "C") -> None:
         """Run."""
         self._fc = np.zeros(self._fc_shape, dtype="double", order="C")
         self._inverse_transformation(lang=lang)
 
     @property
-    def force_constants(self):
+    def force_constants(self) -> NDArray[np.double] | None:
         """Return force constants."""
         return self._fc
 
-    def get_force_constants(self):
+    def get_force_constants(self) -> NDArray[np.double] | None:
         """Return force constants."""
         warnings.warn(
             "Use attribute, force_constants.", DeprecationWarning, stacklevel=2
@@ -341,7 +357,7 @@ class DynmatToForceConstants:
         return self.force_constants
 
     @property
-    def commensurate_points(self):
+    def commensurate_points(self) -> NDArray[np.double]:
         """Getter and setter of commensurate points.
 
         Returns for getter and Parameters for setter
@@ -357,10 +373,10 @@ class DynmatToForceConstants:
         return self._commensurate_points
 
     @commensurate_points.setter
-    def commensurate_points(self, comm_points):
+    def commensurate_points(self, comm_points: NDArray[np.double]) -> None:
         self._commensurate_points = np.array(comm_points, dtype="double", order="C")
 
-    def get_commensurate_points(self):
+    def get_commensurate_points(self) -> NDArray[np.double]:
         """Commensurate points in supercell with respect to primitive cell."""
         warnings.warn(
             "Use attribute, commensurate_points.", DeprecationWarning, stacklevel=2
@@ -368,7 +384,7 @@ class DynmatToForceConstants:
         return self.commensurate_points
 
     @property
-    def dynamical_matrices(self):
+    def dynamical_matrices(self) -> NDArray[np.cdouble] | None:
         """Getter and setter of numerical matrices of dynamical matrices.
 
         dynamical_matrices : ndarray (array_like for setter)
@@ -382,24 +398,28 @@ class DynmatToForceConstants:
         return self._dynmat
 
     @dynamical_matrices.setter
-    def dynamical_matrices(self, dynmat):
+    def dynamical_matrices(self, dynmat: NDArray[np.cdouble]) -> None:
         self._dynmat = np.array(dynmat, dtype=self._dtype_complex, order="C")
 
-    def get_dynamical_matrices(self):
+    def get_dynamical_matrices(self) -> NDArray[np.cdouble] | None:
         """Return numerical matrices of dynamical matrices."""
         warnings.warn(
             "Use attribute, dynamical_matrix.", DeprecationWarning, stacklevel=2
         )
         return self.dynamical_matrices
 
-    def set_dynamical_matrices(self, dynmat):
+    def set_dynamical_matrices(self, dynmat: NDArray[np.cdouble]) -> None:
         """Set numerical matrices of dynamical matrices."""
         warnings.warn(
             "Use attribute, dynamical_matrix.", DeprecationWarning, stacklevel=2
         )
         self.dynamical_matrices = dynmat
 
-    def create_dynamical_matrices(self, eigenvalues, eigenvectors):
+    def create_dynamical_matrices(
+        self,
+        eigenvalues: NDArray[np.double],
+        eigenvectors: NDArray[np.cdouble],
+    ) -> None:
         """Create dynamcial matrices from eigenvalues and eigenvectors pairs.
 
         Parameters
@@ -418,22 +438,26 @@ class DynmatToForceConstants:
             where ``num_band`` is 3 x number of atoms in primitive cell.
 
         """
-        dm = []
+        dm: list[NDArray[np.cdouble]] = []
         for eigvals, eigvecs in zip(eigenvalues, eigenvectors, strict=True):
             dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
-        self.dynamical_matrices = dm
+        self.dynamical_matrices = np.array(dm, dtype=self._dtype_complex, order="C")
 
-    def _inverse_transformation(self, lang="C"):
+    def _inverse_transformation(self, lang: str = "C") -> None:
         if lang == "C":
             self._c_inverse_transformation()
         else:
             self._py_inverse_transformation()
 
+        assert self._fc is not None
         if self._fc.shape[0] == self._fc.shape[1]:
             distribute_force_constants_by_translations(self._fc, self._pcell)
 
-    def _c_inverse_transformation(self):
+    def _c_inverse_transformation(self) -> None:
         import phonopy._phonopy as phonoc
+
+        assert self._fc is not None
+        assert self._dynmat is not None
 
         s2p = np.array(self._pcell.s2p_map, dtype="int64")
         p2p = self._pcell.p2p_map
@@ -456,12 +480,14 @@ class DynmatToForceConstants:
             self._use_openmp * 1,
         )
 
-    def _py_inverse_transformation(self):
+    def _py_inverse_transformation(self) -> None:
+        assert self._fc is not None
         s2p = self._pcell.s2p_map
         p2s = self._pcell.p2s_map
         p2p = self._pcell.p2p_map
 
         m = self._pcell.masses
+        assert m is not None
         N = len(self._scell) / len(self._pcell)
 
         for p_i, s_i in enumerate(p2s):
@@ -473,13 +499,16 @@ class DynmatToForceConstants:
                 else:
                     self._fc[p_i, s_j] = fc_elem
 
-    def _sum_q(self, p_i, s_j, p_j):
+    def _sum_q(self, p_i: int, s_j: int, p_j: int) -> NDArray[np.double]:
         """Sum over commensurate q-points for a pair of atoms."""
+        assert self._dynmat is not None
         multi, adrs = self._multi[s_j, p_i]
-        pos = self._svecs[adrs : (adrs + multi)]
+        multi_i = int(multi)
+        adrs_i = int(adrs)
+        pos = self._svecs[adrs_i : (adrs_i + multi_i)]
         sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order="C")
         phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
-        phase_factors = np.exp(phases).sum(axis=1) / multi
+        phase_factors = np.exp(phases).sum(axis=1) / multi_i
         for i, coef in enumerate(phase_factors):
             sum_q += (
                 self._dynmat[i, (p_i * 3) : (p_i * 3 + 3), (p_j * 3) : (p_j * 3 + 3)]
