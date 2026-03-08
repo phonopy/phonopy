@@ -34,9 +34,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy import Phonopy
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
@@ -91,8 +94,13 @@ class Unfolding:
     """
 
     def __init__(
-        self, phonon: Phonopy, supercell_matrix, ideal_positions, atom_mapping, qpoints
-    ):
+        self,
+        phonon: Phonopy,
+        supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64],
+        ideal_positions: Sequence[Sequence[float]] | NDArray[np.double],
+        atom_mapping: Sequence[int | None],
+        qpoints: Sequence[Sequence[float]] | NDArray[np.double],
+    ) -> None:
         """Init method.
 
         Parameters
@@ -140,17 +148,17 @@ class Unfolding:
         self._index_map_inv = None
         self._set_index_map(atom_mapping)
 
-    def __iter__(self):
+    def __iter__(self) -> Unfolding:
         """Define iterator over q-points."""
         return self
 
-    def run(self):
+    def run(self) -> None:
         """Calculate band unfolding at all q-points."""
         self.prepare()
         for _ in self:
             pass
 
-    def __next__(self):
+    def __next__(self) -> NDArray[np.double]:
         """Calculate band unfolding at a q-point."""
         if self._q_count == len(self._qpoints_s):
             self._eigvecs = None
@@ -161,7 +169,7 @@ class Unfolding:
         self._q_count += 1
         return self._unfolding_weights[self._q_count - 1]
 
-    def prepare(self):
+    def prepare(self) -> None:
         """Set up calculation."""
         self._q_count = 0
         self._unfolding_weights = np.zeros(
@@ -170,7 +178,7 @@ class Unfolding:
         self._frequencies = np.zeros_like(self._unfolding_weights)
 
     @property
-    def commensurate_points(self):
+    def commensurate_points(self) -> NDArray[np.double]:
         """Return commensurate points.
 
         See details in Attributes.
@@ -178,18 +186,8 @@ class Unfolding:
         """
         return self._comm_points
 
-    def get_commensurate_points(self):
-        """Return commensurate points."""
-        warnings.warn(
-            "Unfolding.get_commensurate_points() is deprecated. "
-            "Use commensurate_points attribute instaed.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.commensurate_points
-
     @property
-    def unfolding_weights(self):
+    def unfolding_weights(self) -> NDArray[np.double] | None:
         """Return unfolding weights.
 
         See details in Attributes.
@@ -197,18 +195,8 @@ class Unfolding:
         """
         return self._unfolding_weights
 
-    def get_unfolding_weights(self):
-        """Return unfolding weights."""
-        warnings.warn(
-            "Unfolding.get_unfolding_weights() is deprecated. "
-            "Use unfolding_weights attribute instaed.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.unfolding_weights
-
     @property
-    def frequencies(self):
+    def frequencies(self) -> NDArray[np.double] | None:
         """Return phonon frequencies.
 
         See details in Attributes.
@@ -216,18 +204,8 @@ class Unfolding:
         """
         return self._frequencies
 
-    def get_frequencies(self):
-        """Return phonon frequencies."""
-        warnings.warn(
-            "Unfolding.get_frequencies() is deprecated. "
-            "Use frequencies attribute instaed.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.frequencies
-
     @property
-    def qpoints(self):
+    def qpoints(self) -> NDArray[np.double]:
         """Return q-points in supercell BZ.
 
         See details in Attributes.
@@ -235,12 +213,12 @@ class Unfolding:
         """
         return self._qpoints_s
 
-    def _get_qpoints_in_SBZ(self):
+    def _get_qpoints_in_SBZ(self) -> NDArray[np.double]:
         qpoints = np.dot(self._qpoints_p, self._supercell_matrix)
         qpoints -= np.rint(qpoints)
         return qpoints
 
-    def _set_translations(self):
+    def _set_translations(self) -> None:
         """Set primitive translations in supercell.
 
         _trans_s
@@ -259,7 +237,7 @@ class Unfolding:
         self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
         self._N = len(self._trans_s)
 
-    def _set_index_map(self, atom_mapping):
+    def _set_index_map(self, atom_mapping: Sequence[int | None]) -> None:
         """Set atomic site index mapping.
 
         T(r_i)^-1 in Eq.(3) is given as permutation of atom indices.
@@ -296,7 +274,7 @@ class Unfolding:
             else:
                 self._atom_mapping[i] = idx
 
-    def _solve_phonon(self):
+    def _solve_phonon(self) -> None:
         self._phonon.run_qpoints(self._qpoints_s[self._q_count], with_eigenvectors=True)
         qpt = self._phonon.get_qpoints_dict()
         self._frequencies[self._q_count] = qpt["frequencies"][0]
@@ -310,7 +288,7 @@ class Unfolding:
         else:
             self._eigvecs = eigvecs
 
-    def _get_unfolding_weights(self):
+    def _get_unfolding_weights(self) -> NDArray[np.double]:
         """Calculate Eq. (7).
 
         k = K + G + g
