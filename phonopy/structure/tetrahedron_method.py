@@ -34,12 +34,18 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 
-def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
+def get_tetrahedra_relative_grid_address(
+    microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
+    lang: str = "C",
+) -> NDArray[np.int64]:
     """Return relative (differences of) grid addresses from the central.
 
     Parameter
@@ -65,12 +71,12 @@ def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
         )
     else:
         relative_grid_address = _get_relative_grid_addresses_from_microzone_lattice(
-            microzone_lattice
+            microzone_lattice  # type: ignore[arg-type]
         )[0]
     return relative_grid_address
 
 
-def get_all_tetrahedra_relative_grid_address(lang="C"):
+def get_all_tetrahedra_relative_grid_address(lang: str = "C") -> NDArray[np.int64]:
     """Return relative grid addresses dataset.
 
     This exists only for the test.
@@ -96,7 +102,11 @@ def get_all_tetrahedra_relative_grid_address(lang="C"):
     return relative_grid_address
 
 
-def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
+def get_tetrahedra_integration_weight(
+    omegas: float | Sequence[float] | NDArray[np.double],
+    tetrahedra_omegas: Sequence[Sequence[float]] | NDArray[np.double],
+    function: str = "I",
+) -> float | NDArray[np.double]:
     """Return integration weights.
 
     Parameters
@@ -119,9 +129,11 @@ def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
         print("Phonopy C-extension has to be built properly.")
         sys.exit(1)
 
-    if isinstance(omegas, float):
+    if isinstance(omegas, (float, int, np.generic)):
         return phonoc.tetrahedra_integration_weight(
-            omegas, np.array(tetrahedra_omegas, dtype="double", order="C"), function
+            float(omegas),
+            np.array(tetrahedra_omegas, dtype="double", order="C"),
+            function,
         )
     else:
         integration_weights = np.zeros(len(omegas), dtype="double")
@@ -137,7 +149,12 @@ def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
 class TetrahedronMethod:
     """Class to perform linear tetrahedron method on regular grid locally."""
 
-    def __init__(self, primitive_vectors, mesh=None, lang="C"):
+    def __init__(
+        self,
+        primitive_vectors: Sequence[Sequence[float]] | NDArray[np.double] | None,
+        mesh: Sequence[int] | NDArray[np.double] | None = None,
+        lang: str = "C",
+    ) -> None:
         """Init method.
 
         Parameters
@@ -169,7 +186,11 @@ class TetrahedronMethod:
         self._integration_weight = None
         self._set_relative_grid_addresses(lang=self._lang)
 
-    def run(self, omegas, value="I"):
+    def run(
+        self,
+        omegas: float | Sequence[float] | NDArray[np.double],
+        value: str = "I",
+    ) -> None:
         """Perform tetrahedron method.
 
         Parameters
@@ -190,23 +211,11 @@ class TetrahedronMethod:
             self._run_py(omegas, value=value)
 
     @property
-    def tetrahedra(self):
+    def tetrahedra(self) -> NDArray[np.int64] | None:
         """Return relative grid addresses at vertices of tetrahedra."""
         return self._relative_grid_addresses
 
-    def get_tetrahedra(self):
-        """Return relative grid addresses at vertices of tetrahedra."""
-        warnings.warn(
-            (
-                "TetrahedronMethod.get_tetrahedra() is deprecated. "
-                "Use TetrahedronMethod.tetrahedra attribute instead."
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.tetrahedra
-
-    def get_unique_tetrahedra_vertices(self):
+    def get_unique_tetrahedra_vertices(self) -> NDArray[np.int64]:
         """Return unique grid indices in neighboring tetrahedra."""
         unique_vertices = []
         for adrs in self._relative_grid_addresses.reshape(-1, 3):
@@ -219,7 +228,9 @@ class TetrahedronMethod:
                 unique_vertices.append(adrs)
         return np.array(unique_vertices, dtype="int64", order="C")
 
-    def set_tetrahedra_omegas(self, tetrahedra_omegas):
+    def set_tetrahedra_omegas(
+        self, tetrahedra_omegas: Sequence[Sequence[float]] | NDArray[np.double]
+    ) -> None:
         """Set values on vertices of tetrahedra.
 
         tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
@@ -227,11 +238,11 @@ class TetrahedronMethod:
         """
         self._tetrahedra_omegas = tetrahedra_omegas
 
-    def get_integration_weight(self):
+    def get_integration_weight(self) -> float | NDArray[np.double] | None:
         """Return integration weights."""
         return self._integration_weight
 
-    def _set_relative_grid_addresses(self, lang="C"):
+    def _set_relative_grid_addresses(self, lang: str = "C") -> None:
         """Set dataset of relative grid addresses."""
         if lang == "C":
             if self._primitive_vectors is None:
@@ -259,13 +270,21 @@ class TetrahedronMethod:
             self._relative_grid_addresses = relative_grid_addresses
             self._central_indices = central_indices
 
-    def _run_c(self, omegas, value="I"):
+    def _run_c(
+        self,
+        omegas: float | Sequence[float] | NDArray[np.double],
+        value: str = "I",
+    ) -> None:
         self._integration_weight = get_tetrahedra_integration_weight(
             omegas, self._tetrahedra_omegas, function=value
         )
 
-    def _run_py(self, omegas, value="I"):
-        if isinstance(omegas, float) or isinstance(omegas, int):
+    def _run_py(
+        self,
+        omegas: float | Sequence[float] | NDArray[np.double],
+        value: str = "I",
+    ) -> None:
+        if isinstance(omegas, (float, int, np.generic)):
             iw = self._get_integration_weight_py(omegas, value=value)
         else:
             iw = np.zeros(len(omegas), dtype="double")
@@ -273,7 +292,7 @@ class TetrahedronMethod:
                 iw[i] = self._get_integration_weight_py(omega, value=value)
         self._integration_weight = iw
 
-    def _get_integration_weight_py(self, omega, value="I"):
+    def _get_integration_weight_py(self, omega: float, value: str = "I") -> float:
         if value == "I":
             IJ = self._I
             gn = self._g
@@ -310,12 +329,12 @@ class TetrahedronMethod:
 
         return sum_value / 6
 
-    def _f(self, n, m):
+    def _f(self, n: int, m: int) -> float:
         return (self._omega - self._vertices_omegas[m]) / (
             self._vertices_omegas[n] - self._vertices_omegas[m]
         )
 
-    def _J(self, i, ci):
+    def _J(self, i: int, ci: int) -> float:
         if i == 0:
             return self._J_0()
         elif i == 1:
@@ -356,7 +375,7 @@ class TetrahedronMethod:
         else:
             raise RuntimeError("Unexpected condition encountered.")
 
-    def _I(self, i, ci):
+    def _I(self, i: int, ci: int) -> float:
         if i == 0:
             return self._I_0()
         elif i == 1:
@@ -397,7 +416,7 @@ class TetrahedronMethod:
         else:
             raise RuntimeError("Unexpected condition encountered.")
 
-    def _n(self, i):
+    def _n(self, i: int) -> float:
         if i == 0:
             return self._n_0()
         elif i == 1:
@@ -411,7 +430,7 @@ class TetrahedronMethod:
         else:
             raise RuntimeError("Unexpected condition encountered.")
 
-    def _g(self, i):
+    def _g(self, i: int) -> float:
         if i == 0:
             return self._g_0()
         elif i == 1:
@@ -425,7 +444,7 @@ class TetrahedronMethod:
         else:
             raise RuntimeError("Unexpected condition encountered.")
 
-    def _n_0(self):
+    def _n_0(self) -> float:
         """n0.
 
         omega < omega1
@@ -433,7 +452,7 @@ class TetrahedronMethod:
         """
         return 0.0
 
-    def _n_1(self):
+    def _n_1(self) -> float:
         """n1.
 
         omega1 < omega < omega2
@@ -441,7 +460,7 @@ class TetrahedronMethod:
         """
         return self._f(1, 0) * self._f(2, 0) * self._f(3, 0)
 
-    def _n_2(self):
+    def _n_2(self) -> float:
         """n2.
 
         omega2 < omega < omega3
@@ -453,7 +472,7 @@ class TetrahedronMethod:
             + self._f(3, 0) * self._f(2, 0) * self._f(1, 2)
         )
 
-    def _n_3(self):
+    def _n_3(self) -> float:
         """n3.
 
         omega2 < omega < omega3
@@ -461,7 +480,7 @@ class TetrahedronMethod:
         """
         return 1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3)
 
-    def _n_4(self):
+    def _n_4(self) -> float:
         """n4.
 
         omega4 < omega
@@ -469,7 +488,7 @@ class TetrahedronMethod:
         """
         return 1.0
 
-    def _g_0(self):
+    def _g_0(self) -> float:
         """g0.
 
         omega < omega1
@@ -477,7 +496,7 @@ class TetrahedronMethod:
         """
         return 0.0
 
-    def _g_1(self):
+    def _g_1(self) -> float:
         """g1.
 
         omega1 < omega < omega2
@@ -491,7 +510,7 @@ class TetrahedronMethod:
             / (self._vertices_omegas[3] - self._vertices_omegas[0])
         )
 
-    def _g_2(self):
+    def _g_2(self) -> float:
         """g2.
 
         omega2 < omega < omega3
@@ -503,7 +522,7 @@ class TetrahedronMethod:
             * (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
         )
 
-    def _g_3(self):
+    def _g_3(self) -> float:
         """g3.
 
         omega3 < omega < omega4
@@ -517,7 +536,7 @@ class TetrahedronMethod:
             / (self._vertices_omegas[3] - self._vertices_omegas[0])
         )
 
-    def _g_4(self):
+    def _g_4(self) -> float:
         """g4.
 
         omega4 < omega
@@ -525,22 +544,22 @@ class TetrahedronMethod:
         """
         return 0.0
 
-    def _J_0(self):
+    def _J_0(self) -> float:
         return 0.0
 
-    def _J_10(self):
+    def _J_10(self) -> float:
         return (1.0 + self._f(0, 1) + self._f(0, 2) + self._f(0, 3)) / 4
 
-    def _J_11(self):
+    def _J_11(self) -> float:
         return self._f(1, 0) / 4
 
-    def _J_12(self):
+    def _J_12(self) -> float:
         return self._f(2, 0) / 4
 
-    def _J_13(self):
+    def _J_13(self) -> float:
         return self._f(3, 0) / 4
 
-    def _J_20(self):
+    def _J_20(self) -> float:
         return (
             (
                 self._f(3, 1) * self._f(2, 1)
@@ -554,7 +573,7 @@ class TetrahedronMethod:
             / self._n_2()
         )
 
-    def _J_21(self):
+    def _J_21(self) -> float:
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * (1.0 + self._f(1, 3) + self._f(1, 2))
@@ -568,7 +587,7 @@ class TetrahedronMethod:
             / self._n_2()
         )
 
-    def _J_22(self):
+    def _J_22(self) -> float:
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * self._f(2, 1)
@@ -582,7 +601,7 @@ class TetrahedronMethod:
             / self._n_2()
         )
 
-    def _J_23(self):
+    def _J_23(self) -> float:
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * self._f(3, 1)
@@ -596,22 +615,22 @@ class TetrahedronMethod:
             / self._n_2()
         )
 
-    def _J_30(self):
+    def _J_30(self) -> float:
         return (
             (1.0 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) / 4 / self._n_3()
         )
 
-    def _J_31(self):
+    def _J_31(self) -> float:
         return (
             (1.0 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) / 4 / self._n_3()
         )
 
-    def _J_32(self):
+    def _J_32(self) -> float:
         return (
             (1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) / 4 / self._n_3()
         )
 
-    def _J_33(self):
+    def _J_33(self) -> float:
         return (
             (
                 1.0
@@ -624,25 +643,25 @@ class TetrahedronMethod:
             / self._n_3()
         )
 
-    def _J_4(self):
+    def _J_4(self) -> float:
         return 0.25
 
-    def _I_0(self):
+    def _I_0(self) -> float:
         return 0.0
 
-    def _I_10(self):
+    def _I_10(self) -> float:
         return (self._f(0, 1) + self._f(0, 2) + self._f(0, 3)) / 3
 
-    def _I_11(self):
+    def _I_11(self) -> float:
         return self._f(1, 0) / 3
 
-    def _I_12(self):
+    def _I_12(self) -> float:
         return self._f(2, 0) / 3
 
-    def _I_13(self):
+    def _I_13(self) -> float:
         return self._f(3, 0) / 3
 
-    def _I_20(self):
+    def _I_20(self) -> float:
         return (
             self._f(0, 3)
             + self._f(0, 2)
@@ -651,7 +670,7 @@ class TetrahedronMethod:
             / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
         ) / 3
 
-    def _I_21(self):
+    def _I_21(self) -> float:
         return (
             self._f(1, 2)
             + self._f(1, 3) ** 2
@@ -659,7 +678,7 @@ class TetrahedronMethod:
             / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
         ) / 3
 
-    def _I_22(self):
+    def _I_22(self) -> float:
         return (
             self._f(2, 1)
             + self._f(2, 0) ** 2
@@ -667,7 +686,7 @@ class TetrahedronMethod:
             / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
         ) / 3
 
-    def _I_23(self):
+    def _I_23(self) -> float:
         return (
             self._f(3, 0)
             + self._f(3, 1)
@@ -676,28 +695,28 @@ class TetrahedronMethod:
             / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
         ) / 3
 
-    def _I_30(self):
+    def _I_30(self) -> float:
         return self._f(0, 3) / 3
 
-    def _I_31(self):
+    def _I_31(self) -> float:
         return self._f(1, 3) / 3
 
-    def _I_32(self):
+    def _I_32(self) -> float:
         return self._f(2, 3) / 3
 
-    def _I_33(self):
+    def _I_33(self) -> float:
         return (self._f(3, 0) + self._f(3, 1) + self._f(3, 2)) / 3
 
-    def _I_4(self):
+    def _I_4(self) -> float:
         return 0.0
 
 
-def _create_tetrahedra(shortest_main_diagonal):
+def _create_tetrahedra(shortest_main_diagonal: int) -> NDArray[np.int64]:
     """Create dataset of six vertices.
 
-        6-------7
-        /|      /|
-        / |     / |
+           6-------7
+          /|      /|
+         / |     / |
         4-------5  |
         |  2----|--3
         | /     | /
@@ -735,7 +754,9 @@ def _create_tetrahedra(shortest_main_diagonal):
     return six_tetras
 
 
-def _get_relative_grid_addresses_from_six_tetrahedra(six_tetras):
+def _get_relative_grid_addresses_from_six_tetrahedra(
+    six_tetras: NDArray[np.int64],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     parallelepiped_vertices = np.array(
         [
             [0, 0, 0],
@@ -763,7 +784,9 @@ def _get_relative_grid_addresses_from_six_tetrahedra(six_tetras):
     return relative_grid_addresses, central_indices
 
 
-def _get_relative_grid_addresses_from_microzone_lattice(microzone_lattice):
+def _get_relative_grid_addresses_from_microzone_lattice(
+    microzone_lattice: NDArray[np.double],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Return relative grid addresses of given microzone lattice.
 
     microzone lattice is given by column vectors.
@@ -771,11 +794,13 @@ def _get_relative_grid_addresses_from_microzone_lattice(microzone_lattice):
     """
     a, b, c = microzone_lattice.T
     main_diagonals = np.array([a + b + c, -a + b + c, a - b + c, a + b - c])
-    shortest_main_diagonal = np.argmin(np.sum(main_diagonals**2, axis=1))
+    shortest_main_diagonal = int(np.argmin(np.sum(main_diagonals**2, axis=1)))
     return _get_relative_grid_addresses_from_main_diagonal(shortest_main_diagonal)
 
 
-def _get_relative_grid_addresses_from_main_diagonal(main_diagonal):
+def _get_relative_grid_addresses_from_main_diagonal(
+    main_diagonal: int,
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Return relative grid addresses of given main diagonal."""
     six_tetras = _create_tetrahedra(main_diagonal)
     return _get_relative_grid_addresses_from_six_tetrahedra(six_tetras)
