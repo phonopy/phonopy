@@ -67,7 +67,13 @@ class Supercell(PhonopyAtoms):
 
     """
 
-    def __init__(self, unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
+    def __init__(
+        self,
+        unitcell: PhonopyAtoms,
+        supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64],
+        is_old_style: bool = True,
+        symprec: float = 1e-5,
+    ) -> None:
         """Init method.
 
         Note
@@ -115,7 +121,7 @@ class Supercell(PhonopyAtoms):
         self._create_supercell(unitcell, symprec)
 
     @property
-    def supercell_matrix(self) -> NDArray:
+    def supercell_matrix(self) -> NDArray[np.int64]:
         """Return supercell_matrix.
 
         Returns
@@ -128,7 +134,7 @@ class Supercell(PhonopyAtoms):
         return self._supercell_matrix
 
     @property
-    def s2u_map(self) -> NDArray:
+    def s2u_map(self) -> NDArray[np.int64]:
         """Return atomic index mapping table from supercell to unit cell.
 
         Each array index and the stored value correspond to the supercell atom
@@ -143,7 +149,7 @@ class Supercell(PhonopyAtoms):
         return self._s2u_map
 
     @property
-    def u2s_map(self) -> NDArray:
+    def u2s_map(self) -> NDArray[np.int64]:
         """Return atomic index mapping table from unit cell to supercell.
 
         Each array index and the stored value correspond to the unit cell atom
@@ -170,7 +176,7 @@ class Supercell(PhonopyAtoms):
         """
         return self._u2u_map
 
-    def _create_supercell(self, unitcell: PhonopyAtoms, symprec):
+    def _create_supercell(self, unitcell: PhonopyAtoms, symprec: float) -> None:
         mat = self._supercell_matrix
         if self._is_old_style:
             P = None
@@ -224,7 +230,12 @@ class Supercell(PhonopyAtoms):
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
             self._s2u_map = np.array(u2sur_map[sur2s_map] * N, dtype="int64")
 
-    def _get_simple_supercell(self, unitcell: PhonopyAtoms, multi, P):
+    def _get_simple_supercell(
+        self,
+        unitcell: PhonopyAtoms,
+        multi: list[int] | NDArray[np.int64],
+        P: NDArray[np.int64] | None,
+    ) -> tuple[PhonopyAtoms, NDArray[np.int64]]:
         if self._is_old_style:
             mat = np.diag(multi)
         else:
@@ -284,7 +295,7 @@ class Supercell(PhonopyAtoms):
 
         return simple_supercell, atom_map
 
-    def _get_surrounding_frame(self, supercell_matrix):
+    def _get_surrounding_frame(self, supercell_matrix: NDArray[np.int64]) -> list[int]:
         # Build a frame surrounding supercell lattice
         # For example,
         #  [2,0,0]
@@ -317,8 +328,8 @@ class Primitive(PhonopyAtoms):
         primitive_matrix: Sequence[Sequence[float]] | NDArray,
         symprec: float = 1e-5,
         store_dense_svecs: bool = True,
-        positions_to_reorder: Sequence | None = None,
-    ):
+        positions_to_reorder: NDArray[np.double] | None = None,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -336,7 +347,7 @@ class Primitive(PhonopyAtoms):
         store_dense_svecs : bool, optional
             Shortest vectors are stored in a dense array. Default is True. See
             `ShortestPairs`.
-        positions_to_reorder : array_like, optional
+        positions_to_reorder : NDArray[np.double], optional
             If atomic positions in a created primitive cell is known and the
             order of atoms is expected to be sure, these positions with the
             specific order is used after position matching between this data and
@@ -355,7 +366,7 @@ class Primitive(PhonopyAtoms):
         self._run(supercell, positions_to_reorder=positions_to_reorder)
 
     @property
-    def primitive_matrix(self) -> NDArray:
+    def primitive_matrix(self) -> NDArray[np.double]:
         """Return primitive_matrix.
 
         Returns
@@ -369,7 +380,7 @@ class Primitive(PhonopyAtoms):
         return self._primitive_matrix
 
     @property
-    def p2s_map(self) -> NDArray:
+    def p2s_map(self) -> NDArray[np.int64]:
         """Return mapping table of atoms from primitive cell to supercell.
 
         Returns
@@ -383,7 +394,7 @@ class Primitive(PhonopyAtoms):
         return self._p2s_map
 
     @property
-    def s2p_map(self) -> NDArray:
+    def s2p_map(self) -> NDArray[np.int64]:
         """Return mapping table of atoms from supercell to primitive cells.
 
         Returns
@@ -410,7 +421,7 @@ class Primitive(PhonopyAtoms):
         """
         return self._p2p_map
 
-    def get_smallest_vectors(self) -> tuple[NDArray, NDArray]:
+    def get_smallest_vectors(self) -> tuple[NDArray[np.double], NDArray[np.int64]]:
         """Return shortest vectors and multiplicities.
 
         See also the docstring of `ShortestPairs`. The older less densen format
@@ -439,7 +450,7 @@ class Primitive(PhonopyAtoms):
         return self._smallest_vectors, self._multiplicity
 
     @property
-    def atomic_permutations(self) -> NDArray:
+    def atomic_permutations(self) -> NDArray[np.int64]:
         """Return atomic index permutations by pure translations.
 
         Returns
@@ -463,7 +474,11 @@ class Primitive(PhonopyAtoms):
         """Return whether shortest vectors are stored in dense array or not."""
         return self._store_dense_svecs
 
-    def _run(self, supercell: PhonopyAtoms, positions_to_reorder=None):
+    def _run(
+        self,
+        supercell: PhonopyAtoms,
+        positions_to_reorder: NDArray[np.double] | None = None,
+    ) -> None:
         self._p2s_map = self._create_primitive_cell(
             supercell, positions_to_reorder=positions_to_reorder
         )
@@ -476,8 +491,10 @@ class Primitive(PhonopyAtoms):
         self._atomic_permutations = self._get_atomic_permutations(supercell)
 
     def _create_primitive_cell(
-        self, supercell: PhonopyAtoms, positions_to_reorder=None
-    ):
+        self,
+        supercell: PhonopyAtoms,
+        positions_to_reorder: NDArray[np.double] | None = None,
+    ) -> NDArray[np.int64]:
         trimmed_cell, p2s_map, mapping_table = _trim_cell(
             self._primitive_matrix,
             supercell,
@@ -509,7 +526,9 @@ class Primitive(PhonopyAtoms):
         )
         return p2s_map
 
-    def _map_atomic_indices(self, s_pos_orig):
+    def _map_atomic_indices(
+        self, s_pos_orig: NDArray[np.double]
+    ) -> tuple[NDArray[np.int64], dict[int, int]]:
         frac_pos = np.dot(s_pos_orig, np.linalg.inv(self._primitive_matrix).T)
 
         p2s_positions = frac_pos[self._p2s_map]
@@ -529,7 +548,7 @@ class Primitive(PhonopyAtoms):
 
         return s2p_map, p2p_map
 
-    def _get_atomic_permutations(self, supercell: PhonopyAtoms):
+    def _get_atomic_permutations(self, supercell: PhonopyAtoms) -> NDArray[np.int64]:
         positions = supercell.scaled_positions
         diff = positions - positions[self._p2s_map[0]]
         trans = np.array(
@@ -552,7 +571,7 @@ class Primitive(PhonopyAtoms):
 
     def _get_smallest_vectors(
         self, supercell: PhonopyAtoms
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
         """Find shortest vectors.
 
         See the docstring of `ShortestPairs`.
@@ -597,12 +616,12 @@ class TrimmedCell(PhonopyAtoms):
 
     def __init__(
         self,
-        relative_axes,
+        relative_axes: NDArray[np.double],
         cell: PhonopyAtoms,
-        positions_to_reorder=None,
-        check_overlap=True,
-        symprec=1e-5,
-    ):
+        positions_to_reorder: NDArray[np.double] | None = None,
+        check_overlap: bool = True,
+        symprec: float = 1e-5,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -614,7 +633,7 @@ class TrimmedCell(PhonopyAtoms):
             shape=(3,3)
         cell: PhonopyAtoms
             Supercell.
-        positions_to_reorder : array_like
+        positions_to_reorder : NDArray[np.double] | None
             Expected positions after trimming. This is used to fix the order
             of atoms in trimmed cell. This may be used to get the same
             primitive cell generated from supercells having different shapes.
@@ -629,7 +648,7 @@ class TrimmedCell(PhonopyAtoms):
         self._run(cell, relative_axes, positions_to_reorder, check_overlap, symprec)
 
     @property
-    def mapping_table(self):
+    def mapping_table(self) -> NDArray[np.int64]:
         """Return mappping table.
 
         mapping_table : ndarray
@@ -641,7 +660,7 @@ class TrimmedCell(PhonopyAtoms):
         return self._mapping_table
 
     @property
-    def extracted_atoms(self):
+    def extracted_atoms(self) -> NDArray[np.int64]:
         """Return extracted atoms.
 
         Returns
@@ -657,11 +676,11 @@ class TrimmedCell(PhonopyAtoms):
     def _run(
         self,
         cell: PhonopyAtoms,
-        relative_axes,
-        positions_to_reorder,
-        check_overlap,
-        symprec,
-    ):
+        relative_axes: NDArray[np.double],
+        positions_to_reorder: NDArray[np.double] | None,
+        check_overlap: bool,
+        symprec: float,
+    ) -> None:
         trimmed_lattice = np.dot(relative_axes.T, cell.cell)
         positions_in_new_lattice = np.dot(
             cell.scaled_positions, np.linalg.inv(relative_axes).T
@@ -714,14 +733,21 @@ class TrimmedCell(PhonopyAtoms):
 
     def _extract(
         self,
-        positions_in_new_lattice,
-        trimmed_lattice,
-        symbols,
-        masses,
-        magmoms,
-        check_overlap,
-        symprec,
-    ):
+        positions_in_new_lattice: NDArray[np.double],
+        trimmed_lattice: NDArray[np.double],
+        symbols: list[str],
+        masses: NDArray[np.double] | None,
+        magmoms: NDArray[np.double] | None,
+        check_overlap: bool,
+        symprec: float,
+    ) -> tuple[
+        NDArray[np.double],
+        list[str],
+        NDArray[np.double] | None,
+        NDArray[np.double] | None,
+        NDArray[np.int64],
+        NDArray[np.int64],
+    ]:
         num_atoms = 0
         extracted_atoms = []
         mapping_table = np.arange(len(positions_in_new_lattice), dtype="int64")
@@ -776,8 +802,12 @@ class TrimmedCell(PhonopyAtoms):
         )
 
     def _get_reorder_indices(
-        self, positions, trimmed_positions, trimmed_lattice, symprec
-    ):
+        self,
+        positions: NDArray[np.double],
+        trimmed_positions: NDArray[np.double],
+        trimmed_lattice: NDArray[np.double],
+        symprec: float,
+    ) -> list[int]:
         """Reorder trimmed cell by input primitive cell positions."""
         reorder_indices = []
         for pos in positions:
@@ -792,7 +822,7 @@ class TrimmedCell(PhonopyAtoms):
 
 def get_supercell(
     unitcell: PhonopyAtoms,
-    supercell_matrix: Sequence[Sequence[int]] | NDArray,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64],
     is_old_style: bool = True,
     symprec: float = 1e-5,
 ) -> Supercell:
@@ -806,10 +836,10 @@ def get_primitive(
     supercell: PhonopyAtoms,
     primitive_matrix: Literal["P", "F", "I", "A", "C", "R"]
     | Sequence[Sequence[float]]
-    | NDArray,
+    | NDArray[np.double],
     symprec: float = 1e-5,
     store_dense_svecs: bool = True,
-    positions_to_reorder: Sequence | None = None,
+    positions_to_reorder: NDArray[np.double] | None = None,
 ) -> Primitive:
     """Create primitive cell."""
     pmat = get_primitive_matrix(primitive_matrix)
@@ -823,13 +853,21 @@ def get_primitive(
     )
 
 
-def print_cell(cell: PhonopyAtoms, mapping=None, stars=None):
+def print_cell(
+    cell: PhonopyAtoms,
+    mapping: NDArray[np.int64] | None = None,
+    stars: Sequence[int] | None = None,
+) -> None:
     """Show cell information."""
     lines = get_cell_lines(cell, mapping=mapping, stars=stars)
     print("\n".join(lines))
 
 
-def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
+def get_cell_lines(
+    cell: PhonopyAtoms,
+    mapping: NDArray[np.int64] | None = None,
+    stars: Sequence[int] | None = None,
+) -> list[str]:
     """Return cell information text lines."""
     symbols = cell.symbols
     masses = cell.masses
@@ -938,7 +976,7 @@ def isclose(
     return True
 
 
-def is_primitive_cell(rotations: NDArray) -> bool:
+def is_primitive_cell(rotations: NDArray[np.int64] | NDArray[np.int32]) -> bool:
     """Check if single identity operation exists in rotations or not.
 
     This is used for checking a cell is a primitive cell or not.
@@ -970,12 +1008,12 @@ def convert_to_phonopy_primitive(
 
 
 def _trim_cell(
-    relative_axes,
+    relative_axes: NDArray[np.double],
     cell: PhonopyAtoms,
-    check_overlap=True,
-    symprec=1e-5,
-    positions_to_reorder=None,
-):
+    check_overlap: bool = True,
+    symprec: float = 1e-5,
+    positions_to_reorder: NDArray[np.double] | None = None,
+) -> tuple[PhonopyAtoms, NDArray[np.int64], NDArray[np.int64]]:
     """Trim overlapping atoms."""
     tcell = TrimmedCell(
         relative_axes,
@@ -984,13 +1022,17 @@ def _trim_cell(
         symprec=symprec,
         positions_to_reorder=positions_to_reorder,
     )
-    return (tcell.copy(), tcell.extracted_atoms, tcell.mapping_table)
+    return tcell.copy(), tcell.extracted_atoms, tcell.mapping_table
 
 
 #
 # Delaunay and Niggli reductions
 #
-def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray:
+def get_reduced_bases(
+    lattice: NDArray[np.double],
+    method: Literal["niggli", "delaunay"] = "niggli",
+    tolerance: float = 1e-5,
+) -> NDArray[np.double]:
     """Search kinds of shortest basis vectors.
 
     Parameters
@@ -998,7 +1040,7 @@ def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray:
     lattice : ndarray or list of list
         Basis vectors by row vectors, [a, b, c]^T
         shape=(3, 3)
-    method : str
+    method : Literal["niggli", "delaunay"]
         delaunay: Delaunay reduction
         niggli: Niggli reduction
     tolerance : float
@@ -1022,8 +1064,12 @@ def get_reduced_bases(lattice, method="niggli", tolerance=1e-5) -> NDArray:
 
 
 def get_smallest_vectors(
-    supercell_bases, supercell_pos, primitive_pos, store_dense_svecs=False, symprec=1e-5
-):
+    supercell_bases: NDArray[np.double],
+    supercell_pos: NDArray[np.double],
+    primitive_pos: NDArray[np.double],
+    store_dense_svecs: bool = False,
+    symprec: float = 1e-5,
+) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return shortest vectors and multiplicities.
 
     See the details at `ShortestPairs`.
@@ -1063,12 +1109,12 @@ class ShortestPairs:
 
     def __init__(
         self,
-        supercell_bases,
-        supercell_pos,
-        primitive_pos,
-        store_dense_svecs=True,
-        symprec=1e-5,
-    ):
+        supercell_bases: NDArray[np.double],
+        supercell_pos: NDArray[np.double],
+        primitive_pos: NDArray[np.double],
+        store_dense_svecs: bool = True,
+        symprec: float = 1e-5,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -1105,7 +1151,7 @@ class ShortestPairs:
             self._multiplicities = multi
 
     @property
-    def shortest_vectors(self):
+    def shortest_vectors(self) -> NDArray[np.double]:
         """Return shortest_vectors.
 
         See details in `ShortestPairs_run_sparse()` (`store_dense_svecs=True`)
@@ -1115,7 +1161,7 @@ class ShortestPairs:
         return self._smallest_vectors
 
     @property
-    def multiplicities(self):
+    def multiplicities(self) -> NDArray[np.int64]:
         """Return multiplicities.
 
         See details in `ShortestPairs_run_sparse()` (`store_dense_svecs=True`)
@@ -1124,7 +1170,7 @@ class ShortestPairs:
         """
         return self._multiplicities
 
-    def _run_dense(self):
+    def _run_dense(self) -> tuple[NDArray[np.double], NDArray[np.int64]]:
         """Find shortest atomic pair vectors.
 
         Returns
@@ -1147,7 +1193,7 @@ class ShortestPairs:
             primitive_fracs,
             trans_mat_inv,
             reduced_bases,
-        ) = self._transform_cell_basis("int64")
+        ) = self._transform_cell_basis()
 
         # Phase1 : Set multiplicity.
         # shortest_vectors is a dummy array.
@@ -1187,7 +1233,7 @@ class ShortestPairs:
 
         return shortest_vectors, multiplicity
 
-    def _run_sparse(self):
+    def _run_sparse(self) -> tuple[NDArray[np.double], NDArray[np.int64]]:
         """Find shortest atomic pair vectors.
 
         Returns
@@ -1207,7 +1253,7 @@ class ShortestPairs:
             primitive_fracs,
             trans_mat_inv,
             reduced_bases,
-        ) = self._transform_cell_basis("int64")
+        ) = self._transform_cell_basis()
 
         # This shortest_vectors is already used at many locations.
         # Therefore the constant number 27 = 3*3*3 can not be easily changed.
@@ -1235,8 +1281,14 @@ class ShortestPairs:
         return shortest_vectors, multiplicity
 
     def _transform_cell_basis(
-        self, longdtype: np.dtype
-    ) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
+        self,
+    ) -> tuple[
+        NDArray[np.int64],
+        NDArray[np.double],
+        NDArray[np.double],
+        NDArray[np.int64],
+        NDArray[np.double],
+    ]:
         reduced_cell_method = "niggli"
         reduced_bases = get_reduced_bases(
             self._supercell_bases, method=reduced_cell_method, tolerance=self._symprec
@@ -1270,13 +1322,13 @@ class ShortestPairs:
                 for k in lattice_1D
                 for ll in lattice_1D
             ],
-            dtype=longdtype,
+            dtype="int64",
             order="C",
         )
         bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
         lattice_points = np.dot(lattice_4D, bases)
         lattice_points = np.array(
-            np.unique(lattice_points, axis=0), dtype=longdtype, order="C"
+            np.unique(lattice_points, axis=0), dtype="int64", order="C"
         )
 
         return (
@@ -1288,7 +1340,9 @@ class ShortestPairs:
         )
 
 
-def sparse_to_dense_svecs(svecs: NDArray, multi: NDArray) -> tuple[NDArray, NDArray]:
+def sparse_to_dense_svecs(
+    svecs: NDArray[np.double], multi: NDArray[np.int64]
+) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Convert sparse svecs to dense svecs."""
     dmulti = np.zeros(multi.shape + (2,), dtype="int64", order="C")
     dmulti[:, :, 0] = multi
@@ -1303,7 +1357,9 @@ def sparse_to_dense_svecs(svecs: NDArray, multi: NDArray) -> tuple[NDArray, NDAr
     return dsvecs, dmulti
 
 
-def dense_to_sparse_svecs(svecs: NDArray, multi: NDArray) -> tuple[NDArray, NDArray]:
+def dense_to_sparse_svecs(
+    svecs: NDArray[np.double], multi: NDArray[np.int64]
+) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Convert dense svecs to sparse svecs."""
     ssvecs = np.zeros(
         (multi.shape[0], multi.shape[1], 27, 3),
@@ -1320,10 +1376,10 @@ def dense_to_sparse_svecs(svecs: NDArray, multi: NDArray) -> tuple[NDArray, NDAr
 
 
 def compute_all_sg_permutations(
-    positions: NDArray,  # scaled positions
-    rotations: NDArray,  # scaled
-    translations: NDArray,  # scaled
-    lattice: NDArray,  # column vectors
+    positions: NDArray[np.double],  # scaled positions
+    rotations: NDArray[np.int64],  # scaled
+    translations: NDArray[np.double],  # scaled
+    lattice: NDArray[np.double],  # column vectors
     symprec: float,
 ) -> NDArray:
     """Compute permutations for space group operations.
@@ -1364,11 +1420,11 @@ def compute_all_sg_permutations(
 
 
 def compute_permutation_for_rotation(
-    positions_a: np.ndarray,
-    positions_b: np.ndarray,
-    lattice: np.ndarray,
+    positions_a: NDArray[np.double],
+    positions_b: NDArray[np.double],
+    lattice: NDArray[np.double],
     symprec: float,
-) -> NDArray:
+) -> NDArray[np.int64]:
     """Get the overall permutation such that.
 
         positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
@@ -1402,7 +1458,9 @@ def compute_permutation_for_rotation(
 
     """
 
-    def sort_by_lattice_distance(fracs):
+    def sort_by_lattice_distance(
+        fracs: NDArray[np.double],
+    ) -> tuple[NDArray[np.int64], NDArray[np.double]]:
         """Sort atoms by distance.
 
         Sort both sides by some measure which is likely to produce a small
@@ -1418,8 +1476,8 @@ def compute_permutation_for_rotation(
         sorted_fracs = np.array(fracs[perm], dtype="double", order="C")
         return perm, sorted_fracs
 
-    (perm_a, sorted_a) = sort_by_lattice_distance(positions_a)
-    (perm_b, sorted_b) = sort_by_lattice_distance(positions_b)
+    perm_a, sorted_a = sort_by_lattice_distance(positions_a)
+    perm_b, sorted_b = sort_by_lattice_distance(positions_b)
 
     # Call the C code on our conditioned inputs.
     perm_between = _compute_permutation_c(sorted_a, sorted_b, lattice, symprec)
@@ -1434,11 +1492,11 @@ def compute_permutation_for_rotation(
 
 
 def _compute_permutation_c(
-    positions_a: NDArray,
-    positions_b: NDArray,
-    lattice: NDArray,
+    positions_a: NDArray[np.double],
+    positions_b: NDArray[np.double],
+    lattice: NDArray[np.double],
     symprec: float,  # scaled positions  # column vectors
-) -> NDArray:
+) -> NDArray[np.int64]:
     """Return mapping defined by positions_a[perm[i]] == positions_b[i].
 
     Version of `_compute_permutation_for_rotation` which just directly
@@ -1504,7 +1562,7 @@ def _compute_permutation_c(
 # Other tiny tools
 #
 def get_angles(
-    lattice: NDArray | Sequence[Sequence[float]], is_radian: bool = False
+    lattice: NDArray[np.double] | Sequence[Sequence[float]], is_radian: bool = False
 ) -> tuple[float, float, float]:
     """Return angles between basis vectors.
 
@@ -1532,7 +1590,9 @@ def get_angles(
         return alpha / np.pi * 180, beta / np.pi * 180, gamma / np.pi * 180
 
 
-def get_cell_parameters(lattice: NDArray | Sequence[Sequence[float]]) -> NDArray:
+def get_cell_parameters(
+    lattice: NDArray[np.double] | Sequence[Sequence[float]],
+) -> NDArray[np.double]:
     """Return basis vector lengths.
 
     Parameters
@@ -1594,8 +1654,8 @@ def get_cell_matrix(
 
 
 def get_cell_matrix_from_lattice(
-    lattice: NDArray | Sequence[Sequence[float]],
-) -> NDArray:
+    lattice: NDArray[np.double] | Sequence[Sequence[float]],
+) -> NDArray[np.double]:
     """Return basis vectors in another orientation.
 
     Parameters
@@ -1619,7 +1679,10 @@ def get_cell_matrix_from_lattice(
 
 
 def determinant(
-    m: Sequence[Sequence[int]] | Sequence[Sequence[float]] | NDArray,
+    m: Sequence[Sequence[int]]
+    | Sequence[Sequence[float]]
+    | NDArray[np.double]
+    | NDArray[np.int64],
 ) -> float | int:
     """Compute determinant."""
     return (
@@ -1636,10 +1699,10 @@ def get_primitive_matrix_with_auto(
     unitcell: PhonopyAtoms,
     primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
     | Sequence[Sequence[float]]
-    | NDArray
+    | NDArray[np.double]
     | None,
     symprec: float = 1e-5,
-) -> NDArray | None:
+) -> NDArray[np.double] | None:
     """Return primitive matrix that supports 'auto' option."""
     if primitive_matrix is None:
         return None
@@ -1655,10 +1718,10 @@ def get_primitive_matrix_with_auto(
 def get_primitive_matrix(
     pmat: Literal["P", "F", "I", "A", "C", "R"]
     | Sequence[Sequence[float]]
-    | NDArray
+    | NDArray[np.double]
     | None = None,
     symprec: float = 1e-5,
-) -> NDArray | None:
+) -> NDArray[np.double] | None:
     """Find primitive matrix from primitive cell.
 
     None is equivalent to "P" but None is returned.
@@ -1699,7 +1762,7 @@ def get_primitive_matrix(
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring: str) -> NDArray:
+def get_primitive_matrix_by_centring(centring: str) -> NDArray[np.double]:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
         return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double", order="C")
@@ -1745,7 +1808,9 @@ def get_primitive_matrix_by_centring(centring: str) -> NDArray:
         raise RuntimeError(msg)
 
 
-def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDArray:
+def guess_primitive_matrix(
+    unitcell: PhonopyAtoms, symprec: float = 1e-5
+) -> NDArray[np.double]:
     """Guess primitive matrix from crystal symmetry."""
     if unitcell.magnetic_moments is not None:
         msg = "Can not be used with the unit cell having magnetic moments."
@@ -1760,7 +1825,9 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDA
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat: NDArray | Sequence | None) -> NDArray:
+def shape_supercell_matrix(
+    smat: NDArray[np.int64] | Sequence[int] | Sequence[Sequence[int]] | None,
+) -> NDArray[np.int64]:
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="int64", order="C")
@@ -1862,7 +1929,10 @@ def estimate_supercell_matrix_from_pointgroup(
 
 
 def _get_multiplicity_abc(
-    num_atoms: int, lengths: Sequence[float], max_num_atoms: int, max_iter: int = 20
+    num_atoms: int,
+    lengths: NDArray[np.double] | Sequence[float],
+    max_num_atoms: int,
+    max_iter: int = 20,
 ) -> list[int]:
     multi = [1, 1, 1]
 
@@ -1877,7 +1947,10 @@ def _get_multiplicity_abc(
 
 
 def _get_multiplicity_ac(
-    num_atoms: int, lengths: Sequence[float], max_num_atoms: int, max_iter: int = 20
+    num_atoms: int,
+    lengths: NDArray[np.double] | Sequence[float],
+    max_num_atoms: int,
+    max_iter: int = 20,
 ) -> list[int]:
     multi = [1, 1]
     a = lengths[0]
@@ -1894,7 +1967,10 @@ def _get_multiplicity_ac(
 
 
 def _get_multiplicity_a(
-    num_atoms: int, lengths: Sequence[float], max_num_atoms: int, max_iter: int = 20
+    num_atoms: int,
+    lengths: NDArray[np.double] | Sequence[float],
+    max_num_atoms: int,
+    max_iter: int = 20,
 ) -> list[int]:
     multi = 1
     for _ in range(max_iter):

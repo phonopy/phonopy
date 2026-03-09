@@ -284,16 +284,18 @@ class Symmetry:
         self._dataset = _dataset
 
         self._symmetry_operations = {
-            "rotations": self._dataset.rotations,
-            "translations": self._dataset.translations,
+            "rotations": np.asarray(self._dataset.rotations, dtype="int64", order="C"),
+            "translations": np.asarray(
+                self._dataset.translations, dtype="double", order="C"
+            ),
         }
         self._international_table = "%s (%d)" % (
             self._dataset.international,
             self._dataset.number,
         )
-        self._wyckoff_letters = self._dataset.wyckoffs
+        self._wyckoff_letters = self._dataset.wyckoffs[:]
 
-        self._map_atoms = self._dataset.equivalent_atoms
+        self._map_atoms = np.asarray(self._dataset.equivalent_atoms, dtype="int64")
 
     def _set_symmetry_operations_with_magmoms(self):
         _dataset = spglib.get_magnetic_symmetry_dataset(
@@ -303,10 +305,12 @@ class Symmetry:
         self._dataset = _dataset
 
         self._symmetry_operations = {
-            "rotations": self._dataset.rotations,
-            "translations": self._dataset.translations,
+            "rotations": np.asarray(self._dataset.rotations, dtype="int64", order="C"),
+            "translations": np.asarray(
+                self._dataset.translations, dtype="double", order="C"
+            ),
         }
-        self._map_atoms = self._dataset.equivalent_atoms
+        self._map_atoms = np.asarray(self._dataset.equivalent_atoms, dtype="int64")
 
     def _set_independent_atoms(self):
         indep_atoms = []
@@ -372,8 +376,8 @@ class Symmetry:
                     rotations.append(np.eye(3, dtype="int64"))
             self._map_atoms = s2p_map
         self._symmetry_operations = {
-            "rotations": np.array(rotations, dtype="int64"),
-            "translations": np.array(translations, dtype="double"),
+            "rotations": np.asarray(rotations, dtype="int64", order="C"),
+            "translations": np.asarray(translations, dtype="double", order="C"),
         }
         self._international_table = "P1 (1)"
         self._wyckoff_letters = ["a"] * len(self._cell)
