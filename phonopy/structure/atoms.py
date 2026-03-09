@@ -235,7 +235,7 @@ class PhonopyAtoms:
         return len(self.numbers)
 
     @property
-    def cell(self) -> NDArray:
+    def cell(self) -> NDArray[np.double]:
         """Setter and getter of basis vectors. For getter, copy is returned."""
         return self._cell.copy()
 

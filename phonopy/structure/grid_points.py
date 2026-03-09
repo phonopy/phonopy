@@ -37,10 +37,11 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from types import SimpleNamespace
 
 import numpy as np
 import spglib
+
+from phonopy.structure.atoms import PhonopyAtoms
 
 try:
     spglib.error.OLD_ERROR_HANDLING = False
@@ -59,11 +60,13 @@ from phonopy.structure.cells import (
 )
 from phonopy.structure.snf import SNF3x3
 from phonopy.structure.symmetry import (
+    NosymDataset,
+    Symmetry,
     collect_unique_rotations,
     get_lattice_vector_equivalence,
     get_pointgroup_operations,
 )
-from phonopy.utils import get_dot_access_dataset, similarity_transformation
+from phonopy.utils import similarity_transformation
 
 
 def length2mesh(length, lattice, rotations=None):
@@ -483,12 +486,12 @@ class GeneralizedRegularGridPoints:
         self._transformation_matrix: NDArray
         self._grid_matrix: NDArray
         self._reciprocal_operations: NDArray
-        self._sym_dataset: SimpleNamespace
+        self._symmetry: Symmetry
         self._prepare(cell, length, symprec)
         self._generate_grid_points()
         self._generate_q_points()
         self._reciprocal_operations = get_reciprocal_operations(
-            self._sym_dataset.rotations,
+            self._symmetry.symmetry_operations["rotations"],
             self._transformation_matrix,
             self._snf.D,
             self._snf.Q,
@@ -530,11 +533,13 @@ class GeneralizedRegularGridPoints:
         """Return reciprocal point group operations."""
         return self._reciprocal_operations
 
-    def _prepare(self, cell, length, symprec):
+    def _prepare(self, cell: PhonopyAtoms, length, symprec):
         """Define grid generating matrix and run the SNF."""
-        self._sym_dataset = get_dot_access_dataset(
-            spglib.get_symmetry_dataset(cell.totuple(), symprec=symprec)
-        )  # type: ignore
+        # fsg_cell = cell.copy()
+        # magmoms = fsg_cell.magnetic_moments
+        # if magmoms is not None:
+        #     fsg_cell.magnetic_moments = np.abs(magmoms)
+        self._symmetry = Symmetry(cell, symprec=symprec)
         if self._suggest:
             self._set_grid_matrix_by_std_primitive_cell(cell, length)
         else:
@@ -543,14 +548,16 @@ class GeneralizedRegularGridPoints:
 
     def _set_grid_matrix_by_std_primitive_cell(self, cell, length):
         """Grid generating matrix based on standardized primitive cell."""
-        tmat = self._sym_dataset.transformation_matrix
-        centring = self._sym_dataset.international[0]
+        assert not isinstance(self._symmetry.dataset, NosymDataset)
+        tmat = self._symmetry.dataset.transformation_matrix
+        spg_type = spglib.get_spacegroup_type(self._symmetry.dataset.hall_number)
+        centring = spg_type.international[0]
         pmat = get_primitive_matrix_by_centring(centring)
         conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
         num_cells = np.prod(length2mesh(length, conv_lat))
         self._mesh_numbers = estimate_supercell_matrix(
-            self._sym_dataset,
-            max_num_atoms=num_cells * len(self._sym_dataset.std_types),  # type: ignore
+            self._symmetry.dataset,
+            max_num_atoms=num_cells * len(self._symmetry.dataset.std_types),  # type: ignore
         )
         inv_pmat = np.linalg.inv(pmat)  # type: ignore
         inv_pmat_int = np.rint(inv_pmat).astype(int)
@@ -568,7 +575,9 @@ class GeneralizedRegularGridPoints:
 
     def _set_grid_matrix_by_input_cell(self, input_cell, length):
         """Grid generating matrix based on input cell."""
-        pointgroup = spglib.get_pointgroup(self._sym_dataset.rotations)
+        pointgroup = spglib.get_pointgroup(
+            self._symmetry.symmetry_operations["rotations"]
+        )
         # tmat: From input lattice to point group preserving lattice
         tmat = pointgroup[2]  # type: ignore
         lattice = np.dot(input_cell.cell.T, tmat).T

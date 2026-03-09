@@ -37,7 +37,6 @@
 from __future__ import annotations
 
 import dataclasses
-import warnings
 from collections.abc import Sequence
 
 import numpy as np
@@ -53,6 +52,8 @@ from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    Primitive,
+    Supercell,
     compute_all_sg_permutations,
     get_primitive,
     get_supercell,
@@ -128,7 +129,7 @@ class Symmetry:
         self._map_operations = self._get_map_operations_from_permutations()
 
     @property
-    def symmetry_operations(self):
+    def symmetry_operations(self) -> dict[str, NDArray]:
         """Return symmetry operations.
 
         Returns
@@ -144,7 +145,7 @@ class Symmetry:
         """
         return self._symmetry_operations
 
-    def get_symmetry_operation(self, operation_number):
+    def get_symmetry_operation(self, operation_number: int) -> dict[str, NDArray]:
         """Return one symmetry operation."""
         operation = self._symmetry_operations
         return {
@@ -153,20 +154,20 @@ class Symmetry:
         }
 
     @property
-    def pointgroup_operations(self):
+    def pointgroup_operations(self) -> NDArray[np.int64]:
         """Return crystallographic point group operations."""
         return self._pointgroup_operations
 
     @property
-    def pointgroup_symbol(self):
+    def pointgroup_symbol(self) -> str | None:
         """Return symbol of crystallographic point group."""
         return self._pointgroup
 
-    def get_international_table(self):
+    def get_international_table(self) -> str | None:
         """Return international symbol of space group."""
         return self._international_table
 
-    def get_Wyckoff_letters(self):
+    def get_Wyckoff_letters(self) -> list[str] | None:
         """Return Wycloff letters."""
         return self._wyckoff_letters
 
@@ -179,11 +180,11 @@ class Symmetry:
         """
         return self._dataset
 
-    def get_independent_atoms(self) -> NDArray:
+    def get_independent_atoms(self) -> NDArray[np.int64]:
         """Return symmetrically unique atoms."""
         return self._independent_atoms
 
-    def get_map_atoms(self) -> NDArray:
+    def get_map_atoms(self) -> NDArray[np.int64]:
         """Return equivalent_atoms of spglib dataset.
 
         Returns
@@ -195,7 +196,7 @@ class Symmetry:
         """
         return self._map_atoms
 
-    def get_map_operations(self):
+    def get_map_operations(self) -> NDArray[np.int64]:
         """Return symmetry operation indices that map to respective equivalent atoms.
 
         Returns
@@ -210,7 +211,7 @@ class Symmetry:
         """
         return self._map_operations
 
-    def get_site_symmetry(self, atom_number):
+    def get_site_symmetry(self, atom_number: int) -> NDArray[np.int64]:
         """Return matrix parts of site symmetry operations."""
         positions = self._cell.scaled_positions
         lattice = self._cell.cell
@@ -222,12 +223,12 @@ class Symmetry:
         )
 
     @property
-    def tolerance(self):
+    def tolerance(self) -> float:
         """Return symmetry tolerance."""
         return self._symprec
 
     @property
-    def reciprocal_operations(self):
+    def reciprocal_operations(self) -> NDArray[np.int64]:
         """Return reciprocal space point group operations.
 
         Definition of operation:
@@ -239,7 +240,7 @@ class Symmetry:
         return self._reciprocal_operations
 
     @property
-    def atomic_permutations(self) -> NDArray:
+    def atomic_permutations(self) -> NDArray[np.int64]:
         """Return atomic index permutations by space group operations.
 
         shape=(operations, positions)
@@ -249,7 +250,7 @@ class Symmetry:
         """
         return self._atomic_permutations
 
-    def _set_atomic_permutations(self):
+    def _set_atomic_permutations(self) -> None:
         positions = self._cell.scaled_positions
         lattice = np.array(self._cell.cell.T, dtype="double", order="C")
         rotations = self._symmetry_operations["rotations"]
@@ -263,8 +264,14 @@ class Symmetry:
         )
 
     def _get_site_symmetry(
-        self, atom_number, lattice, positions, rotations, translations, symprec
-    ):
+        self,
+        atom_number: int,
+        lattice: NDArray[np.double],
+        positions: NDArray[np.double],
+        rotations: NDArray[np.int64],
+        translations: NDArray[np.double],
+        symprec: float,
+    ) -> NDArray[np.int64]:
         pos = positions[atom_number]
         site_symmetries = []
 
@@ -278,7 +285,7 @@ class Symmetry:
 
         return np.array(site_symmetries, dtype="int64")
 
-    def _set_symmetry_dataset(self):
+    def _set_symmetry_dataset(self) -> None:
         _dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
         assert _dataset is not None
         self._dataset = _dataset
@@ -297,7 +304,7 @@ class Symmetry:
 
         self._map_atoms = np.asarray(self._dataset.equivalent_atoms, dtype="int64")
 
-    def _set_symmetry_operations_with_magmoms(self):
+    def _set_symmetry_operations_with_magmoms(self) -> None:
         _dataset = spglib.get_magnetic_symmetry_dataset(
             self._cell.totuple(), symprec=self._symprec
         )
@@ -312,40 +319,14 @@ class Symmetry:
         }
         self._map_atoms = np.asarray(self._dataset.equivalent_atoms, dtype="int64")
 
-    def _set_independent_atoms(self):
+    def _set_independent_atoms(self) -> None:
         indep_atoms = []
         for i, atom_map in enumerate(self._map_atoms):
             if i == atom_map:
                 indep_atoms.append(i)
         self._independent_atoms = np.array(indep_atoms, dtype="int64")
 
-    def _set_map_operations(self):
-        warnings.warn(
-            "Symmetry._set_map_operations is deprecated."
-            "This was replaced by "
-            "_get_map_operations_from_permutations.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        ops = self._symmetry_operations
-        pos = self._cell.scaled_positions
-        lattice = self._cell.cell
-        map_operations = np.zeros(len(pos), dtype="int64")
-
-        for i, eq_atom in enumerate(self._map_atoms):
-            for j, (r, t) in enumerate(
-                zip(ops["rotations"], ops["translations"], strict=True)
-            ):
-                diff = np.dot(pos[i], r.T) + t - pos[eq_atom]
-                diff -= np.rint(diff)
-                dist = np.linalg.norm(np.dot(diff, lattice))
-                if dist < self._symprec:
-                    map_operations[i] = j
-                    break
-        self._map_operations = map_operations
-
-    def _get_map_operations_from_permutations(self) -> NDArray:
+    def _get_map_operations_from_permutations(self) -> NDArray[np.int64]:
         perm = self._atomic_permutations
         map_operations = np.zeros(perm.shape[1], dtype="int64")
         for i, eq_atom in enumerate(self._map_atoms):
@@ -354,7 +335,7 @@ class Symmetry:
             map_operations[i] = match[0]
         return map_operations
 
-    def _set_nosym(self, s2p_map):
+    def _set_nosym(self, s2p_map: NDArray[np.int64] | None) -> None:
         translations = []
         rotations = []
 
@@ -388,8 +369,8 @@ class Symmetry:
 
 
 def get_pointgroup_operations(
-    rotations, is_time_reversal=True
-) -> tuple[NDArray, NDArray]:
+    rotations: NDArray[np.int64], is_time_reversal: bool = True
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Return direct and reciprocal point group operations."""
     ptg_ops = collect_unique_rotations(rotations)
     reciprocal_rotations = [rot.T for rot in ptg_ops]
@@ -409,7 +390,9 @@ def get_pointgroup_operations(
     )
 
 
-def collect_unique_rotations(rotations):
+def collect_unique_rotations(
+    rotations: NDArray[np.int64],
+) -> list[NDArray[np.int64]]:
     """Collect unique rotations in input rotation matrices."""
     ptg_ops = []
     for rot in rotations:
@@ -424,7 +407,9 @@ def collect_unique_rotations(rotations):
     return ptg_ops
 
 
-def get_lattice_vector_equivalence(point_symmetry):
+def get_lattice_vector_equivalence(
+    point_symmetry: NDArray[np.int64],
+) -> list[bool]:
     """Return equivalences of basis vector length pairs, (b==c, c==a, a==b).
 
     Change of basis is defined by
@@ -623,12 +608,12 @@ def symmetrize_borns_and_epsilon(
 
 
 def _take_average_of_borns(
-    borns: Sequence | NDArray,
-    rotations: NDArray,
-    translations: NDArray,
+    borns: Sequence | NDArray[np.double],
+    rotations: NDArray[np.int64],
+    translations: NDArray[np.double],
     cell: PhonopyAtoms,
     symprec: float,
-) -> NDArray:
+) -> NDArray[np.double]:
     lattice = cell.cell
     positions = cell.scaled_positions
     borns_ = np.zeros_like(borns)
@@ -650,7 +635,7 @@ def _take_average_of_borns(
 
 def _get_mapping_between_cells(
     cell_from: PhonopyAtoms, cell_to: PhonopyAtoms, symprec: float = 1e-5
-):
+) -> list[int]:
     indices = []
     lattice = cell_from.cell
     pos_from = cell_from.scaled_positions
@@ -667,7 +652,11 @@ def _get_mapping_between_cells(
     return indices
 
 
-def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
+def _symmetrize_2nd_rank_tensor(
+    tensor: NDArray[np.double],
+    symmetry_operations: NDArray[np.int64],
+    lattice: NDArray[np.double],
+) -> NDArray[np.double]:
     sym_cart = [similarity_transformation(lattice.T, r) for r in symmetry_operations]
     sum_tensor = np.zeros_like(tensor)
     for sym in sym_cart:
@@ -696,8 +685,11 @@ def _extract_independent_atoms(
 
 
 def _get_supercell_and_primitive(
-    ucell, primitive_matrix=None, supercell_matrix=None, symprec=1e-5
-):
+    ucell: PhonopyAtoms,
+    primitive_matrix: ArrayLike | None = None,
+    supercell_matrix: ArrayLike | None = None,
+    symprec: float = 1e-5,
+) -> tuple[Supercell, Primitive]:
     if primitive_matrix is None:
         pmat = np.eye(3)
     else:
