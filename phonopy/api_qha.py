@@ -36,7 +36,12 @@
 
 from __future__ import annotations
 
-import warnings
+import os
+from collections.abc import Sequence
+from typing import Any
+
+import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.qha.core import QHA, BulkModulus
 
@@ -46,18 +51,21 @@ class PhonopyQHA:
 
     def __init__(
         self,
-        volumes=None,
-        electronic_energies=None,
-        temperatures=None,
-        free_energy=None,
-        cv=None,
-        entropy=None,
-        pressure=None,
-        eos="vinet",
-        t_max=None,
-        energy_plot_factor=None,
-        verbose=False,
-    ):
+        volumes: Sequence[float] | NDArray[np.double] | None = None,
+        electronic_energies: Sequence[float]
+        | Sequence[Sequence[float]]
+        | NDArray[np.double]
+        | None = None,
+        temperatures: Sequence[float] | NDArray[np.double] | None = None,
+        free_energy: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+        cv: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+        entropy: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+        pressure: float | None = None,
+        eos: str = "vinet",
+        t_max: float | None = None,
+        energy_plot_factor: float | None = None,
+        verbose: bool = False,
+    ) -> None:
         """Init method.
 
         Notes
@@ -130,7 +138,7 @@ class PhonopyQHA:
             self._qha.run(verbose=verbose)
 
     @property
-    def bulk_modulus(self):
+    def bulk_modulus(self) -> float | NDArray[np.double]:
         """Return bulk modulus computed without phonon contribution.
 
         Returns
@@ -142,7 +150,7 @@ class PhonopyQHA:
         return self._bulk_modulus.bulk_modulus
 
     @property
-    def thermal_expansion(self):
+    def thermal_expansion(self) -> NDArray[np.double]:
         """Return thermal expansion coefficients at temperatures.
 
         Returns
@@ -155,7 +163,7 @@ class PhonopyQHA:
         return self._qha.thermal_expansion
 
     @property
-    def helmholtz_volume(self):
+    def helmholtz_volume(self) -> NDArray[np.double]:
         """Return free_energies at volumes.
 
         Returns
@@ -168,7 +176,7 @@ class PhonopyQHA:
         return self._qha.helmholtz_volume
 
     @property
-    def volume_temperature(self):
+    def volume_temperature(self) -> NDArray[np.double]:
         """Return volumes at temperatures.
 
         Returns
@@ -181,7 +189,7 @@ class PhonopyQHA:
         return self._qha.volume_temperature
 
     @property
-    def gibbs_temperature(self):
+    def gibbs_temperature(self) -> NDArray[np.double]:
         """Return Gibbs free energies at temperatures.
 
         Returns
@@ -194,7 +202,7 @@ class PhonopyQHA:
         return self._qha.gibbs_temperature
 
     @property
-    def bulk_modulus_temperature(self):
+    def bulk_modulus_temperature(self) -> NDArray[np.double]:
         """Return bulk modulus at temperatures.
 
         Returns
@@ -207,7 +215,7 @@ class PhonopyQHA:
         return self._qha.bulk_modulus_temperature
 
     @property
-    def heat_capacity_P_numerical(self):
+    def heat_capacity_P_numerical(self) -> NDArray[np.double]:
         """Return heat capacities at constant pressure at temperatures.
 
         These values are calculated by -T*d^2G/dT^2.
@@ -222,7 +230,7 @@ class PhonopyQHA:
         return self._qha.get_heat_capacity_P_numerical()
 
     @property
-    def heat_capacity_P_polyfit(self):
+    def heat_capacity_P_polyfit(self) -> NDArray[np.double]:
         """Return heat capacities at constant pressure at temperatures.
 
         Note
@@ -243,7 +251,7 @@ class PhonopyQHA:
         return self._qha.heat_capacity_P_polyfit
 
     @property
-    def gruneisen_temperature(self):
+    def gruneisen_temperature(self) -> NDArray[np.double]:
         """Return Gruneisen parameters at temperatures.
 
         Returns
@@ -255,7 +263,9 @@ class PhonopyQHA:
         """
         return self._qha.gruneisen_temperature
 
-    def get_bulk_modulus_parameters(self):
+    def get_bulk_modulus_parameters(
+        self,
+    ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
         """Return temperature independent bulk modulus EOS fitting parameters.
 
         These values are those computed without phonon free energy.
@@ -265,127 +275,175 @@ class PhonopyQHA:
         """
         return self._bulk_modulus.get_parameters()
 
-    def write_helmholtz_volume(self, filename="helmholtz-volume.dat"):
+    def write_helmholtz_volume(
+        self, filename: str | os.PathLike = "helmholtz-volume.dat"
+    ) -> None:
         """Write Helmholtz free energy vs volume in file."""
         self._qha.write_helmholtz_volume(filename=filename)
 
     def write_helmholtz_volume_fitted(
-        self, thin_number, filename="helmholtz-volume_fitted.dat"
-    ):
+        self,
+        thin_number: int,
+        filename: str | os.PathLike = "helmholtz-volume_fitted.dat",
+    ) -> None:
         """Write Helmholtz free energy (fitted) vs volume in file."""
         self._qha.write_helmholtz_volume_fitted(thin_number, filename=filename)
 
-    def write_volume_temperature(self, filename="volume-temperature.dat"):
+    def write_volume_temperature(
+        self, filename: str | os.PathLike = "volume-temperature.dat"
+    ) -> None:
         """Write volume vs temperature in file."""
         self._qha.write_volume_temperature(filename=filename)
 
-    def write_thermal_expansion(self, filename="thermal_expansion.dat"):
+    def write_thermal_expansion(
+        self, filename: str | os.PathLike = "thermal_expansion.dat"
+    ) -> None:
         """Write thermal expansion vs temperature in file."""
         self._qha.write_thermal_expansion(filename=filename)
 
-    def write_gibbs_temperature(self, filename="gibbs-temperature.dat"):
+    def write_gibbs_temperature(
+        self, filename: str | os.PathLike = "gibbs-temperature.dat"
+    ) -> None:
         """Write Gibbs free energy vs temperature in file."""
         self._qha.write_gibbs_temperature(filename=filename)
 
-    def write_bulk_modulus_temperature(self, filename="bulk_modulus-temperature.dat"):
+    def write_bulk_modulus_temperature(
+        self, filename: str | os.PathLike = "bulk_modulus-temperature.dat"
+    ) -> None:
         """Write bulk modulus vs temperature in file."""
         self._qha.write_bulk_modulus_temperature(filename=filename)
 
-    def plot_bulk_modulus(self, thin_number=10):
+    def plot_bulk_modulus(self, thin_number: int = 10) -> Any:
         """Return pyplot of bulk modulus fitting curve."""
         return self._bulk_modulus.plot(thin_number=thin_number)
 
-    def plot_qha(self, thin_number=10, volume_temp_exp=None):
+    def plot_qha(
+        self,
+        thin_number: int = 10,
+        volume_temp_exp: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+    ) -> Any:
         """Return pyplot of QHA fitting curves at temperatures."""
         return self._qha.plot(thin_number=thin_number, volume_temp_exp=volume_temp_exp)
 
     def plot_helmholtz_volume(
-        self, thin_number=10, xlabel=r"Volume $(\AA^3)$", ylabel="Free energy"
-    ):
+        self,
+        thin_number: int = 10,
+        xlabel: str = r"Volume $(\AA^3)$",
+        ylabel: str = "Free energy",
+    ) -> Any:
         """Return pyplot of Helmholtz free energes vs volume at temperatures."""
         return self._qha.plot_helmholtz_volume(
             thin_number=thin_number, xlabel=xlabel, ylabel=ylabel
         )
 
     def plot_pdf_helmholtz_volume(
-        self, thin_number=10, filename="helmholtz-volume.pdf"
-    ):
+        self,
+        thin_number: int = 10,
+        filename: str | os.PathLike = "helmholtz-volume.pdf",
+    ) -> None:
         """Plot Helmholtz free energes vs volume at temperatures in pdf."""
         self._qha.plot_pdf_helmholtz_volume(thin_number=thin_number, filename=filename)
 
-    def plot_volume_temperature(self, exp_data=None):
+    def plot_volume_temperature(
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+    ) -> Any:
         """Return pyplot of volume vs temperature."""
         return self._qha.plot_volume_temperature(exp_data=exp_data)
 
     def plot_pdf_volume_temperature(
-        self, exp_data=None, filename="volume-temperature.pdf"
-    ):
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        filename: str | os.PathLike = "volume-temperature.pdf",
+    ) -> None:
         """Plot volume vs temperature in pdf."""
         self._qha.plot_pdf_volume_temperature(exp_data=exp_data, filename=filename)
 
-    def plot_thermal_expansion(self):
+    def plot_thermal_expansion(self) -> Any:
         """Return pyplot of thermal expansion vs temperature."""
         return self._qha.plot_thermal_expansion()
 
-    def plot_pdf_thermal_expansion(self, filename="thermal_expansion.pdf"):
+    def plot_pdf_thermal_expansion(
+        self, filename: str | os.PathLike = "thermal_expansion.pdf"
+    ) -> None:
         """Plot thermal expansion vs temperature in pdf."""
         self._qha.plot_pdf_thermal_expansion(filename=filename)
 
     def plot_gibbs_temperature(
-        self, xlabel="Temperature (K)", ylabel="Gibbs free energy"
-    ):
+        self,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = "Gibbs free energy",
+    ) -> Any:
         """Return pyplot of Gibbs free energy vs temperature."""
         return self._qha.plot_gibbs_temperature(xlabel=xlabel, ylabel=ylabel)
 
-    def plot_pdf_gibbs_temperature(self, filename="gibbs-temperature.pdf"):
+    def plot_pdf_gibbs_temperature(
+        self, filename: str | os.PathLike = "gibbs-temperature.pdf"
+    ) -> None:
         """Plot Gibbs free energy vs temperature in pdf."""
         self._qha.plot_pdf_gibbs_temperature(filename=filename)
 
     def plot_bulk_modulus_temperature(
-        self, xlabel="Temperature (K)", ylabel="Bulk modulus"
-    ):
+        self,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = "Bulk modulus",
+    ) -> Any:
         """Return pyplot of bulk modulus vs temperature."""
         return self._qha.plot_bulk_modulus_temperature(xlabel=xlabel, ylabel=ylabel)
 
     def plot_pdf_bulk_modulus_temperature(
-        self, filename="bulk_modulus-temperature.pdf"
-    ):
+        self, filename: str | os.PathLike = "bulk_modulus-temperature.pdf"
+    ) -> None:
         """Plot bulk modulus vs temperature in pdf."""
         self._qha.plot_pdf_bulk_modulus_temperature(filename=filename)
 
-    def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None):
+    def plot_heat_capacity_P_numerical(
+        self,
+        Z: int = 1,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+    ) -> Any:
         """Return pyplot of C_P by numerical difference vs temperature."""
         return self._qha.plot_heat_capacity_P_numerical(Z=Z, exp_data=exp_data)
 
     def plot_pdf_heat_capacity_P_numerical(
-        self, exp_data=None, filename="Cp-temperature.pdf"
-    ):
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        filename: str | os.PathLike = "Cp-temperature.pdf",
+    ) -> None:
         """Plot C_P by numerical difference vs temperature in pdf."""
         self._qha.plot_pdf_heat_capacity_P_numerical(
             exp_data=exp_data, filename=filename
         )
 
-    def write_heat_capacity_P_numerical(self, filename="Cp-temperature.dat"):
+    def write_heat_capacity_P_numerical(
+        self, filename: str | os.PathLike = "Cp-temperature.dat"
+    ) -> None:
         """Write C_P by numerical difference vs temperature in file."""
         self._qha.write_heat_capacity_P_numerical(filename=filename)
 
-    def plot_heat_capacity_P_polyfit(self, exp_data=None, Z=1):
+    def plot_heat_capacity_P_polyfit(
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        Z: int = 1,
+    ) -> Any:
         """Return pyplot of C_P by fittings vs temperature."""
         return self._qha.plot_heat_capacity_P_polyfit(Z=Z, exp_data=exp_data)
 
     def plot_pdf_heat_capacity_P_polyfit(
-        self, exp_data=None, filename="Cp-temperature_polyfit.pdf"
-    ):
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        filename: str | os.PathLike = "Cp-temperature_polyfit.pdf",
+    ) -> None:
         """Plot C_P by fittings vs temperature in pdf."""
         self._qha.plot_pdf_heat_capacity_P_polyfit(exp_data=exp_data, filename=filename)
 
     def write_heat_capacity_P_polyfit(
         self,
-        filename="Cp-temperature_polyfit.dat",
-        filename_ev="entropy-volume.dat",
-        filename_cvv="Cv-volume.dat",
-        filename_dsdvt="dsdv-temperature.dat",
-    ):
+        filename: str | os.PathLike = "Cp-temperature_polyfit.dat",
+        filename_ev: str | os.PathLike = "entropy-volume.dat",
+        filename_cvv: str | os.PathLike = "Cv-volume.dat",
+        filename_dsdvt: str | os.PathLike = "dsdv-temperature.dat",
+    ) -> None:
         """Write C_P by fittings vs temperature in file."""
         self._qha.write_heat_capacity_P_polyfit(
             filename=filename,
@@ -394,103 +452,18 @@ class PhonopyQHA:
             filename_dsdvt=filename_dsdvt,
         )
 
-    def plot_gruneisen_temperature(self):
+    def plot_gruneisen_temperature(self) -> Any:
         """Return pyplot of Grueneisen parameter vs temperature."""
         return self._qha.plot_gruneisen_temperature()
 
-    def plot_pdf_gruneisen_temperature(self, filename="gruneisen-temperature.pdf"):
+    def plot_pdf_gruneisen_temperature(
+        self, filename: str | os.PathLike = "gruneisen-temperature.pdf"
+    ) -> None:
         """Plot Grueneisen parameter vs temperature in pdf."""
         self._qha.plot_pdf_gruneisen_temperature(filename=filename)
 
-    def write_gruneisen_temperature(self, filename="gruneisen-temperature.dat"):
+    def write_gruneisen_temperature(
+        self, filename: str | os.PathLike = "gruneisen-temperature.dat"
+    ) -> None:
         """Write Grueneisen parameter vs temperature in file."""
         self._qha.write_gruneisen_temperature(filename=filename)
-
-    def get_bulk_modulus(self):
-        """Return bulk moduli with no phonon contribution."""
-        warnings.warn(
-            "PhonopyQHA.get_bulk_modulus() is deprecated.Use bulk_modulus attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.bulk_modulus
-
-    def get_helmholtz_volume(self):
-        """Return Helmholtz free energies at temperatures and volumes."""
-        warnings.warn(
-            "PhonopyQHA.get_helmholtz_volume() is deprecated."
-            "Use helmholtz_volume attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.helmholtz_volume
-
-    def get_volume_temperature(self):
-        """Return equilibrium volumes at temperatures."""
-        warnings.warn(
-            "PhonopyQHA.get_volume_temperature() is deprecated."
-            "Use volume_temperature attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.volume_temperature
-
-    def get_thermal_expansion(self):
-        """Return thermal expansion coefficients at temperatures."""
-        warnings.warn(
-            "PhonopyQHA.get_thermal_expansion() is deprecated."
-            "Use thermal_expansion attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.thermal_expansion
-
-    def get_gibbs_temperature(self):
-        """Return Gibbs free energies at temperatures."""
-        warnings.warn(
-            "PhonopyQHA.get_gibbs_temperature() is deprecated."
-            "Use gibbs_temperature attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.gibbs_temperature
-
-    def get_bulk_modulus_temperature(self):
-        """Return bulk moduli at temperatures."""
-        warnings.warn(
-            "PhonopyQHA.get_bulk_modulus_temperature() is deprecated."
-            "Use bulk_modulus_temperature attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.bulk_modulus_temperature
-
-    def get_heat_capacity_P_numerical(self):
-        """Return C_P calculated by numerical differentiation."""
-        warnings.warn(
-            "PhonopyQHA.get_heat_capacity_P_numerical() is deprecated."
-            "Use heat_capacity_P_numerical attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.heat_capacity_P_numerical
-
-    def get_heat_capacity_P_polyfit(self):
-        """Return C_P calculated by fittings."""
-        warnings.warn(
-            "PhonopyQHA.get_heat_capacity_P_polyfit() is deprecated."
-            "Use heat_capacity_P_polyfit attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.heat_capacity_P_polyfit
-
-    def get_gruneisen_temperature(self):
-        """Return Grueneisen paramters at temperatures."""
-        warnings.warn(
-            "PhonopyQHA.get_gruneisen_temperature() is deprecated."
-            "Use gruneisen_temperature attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.gruneisen_temperature

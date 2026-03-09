@@ -398,7 +398,9 @@ class DynmatToForceConstants:
         return self._dynmat
 
     @dynamical_matrices.setter
-    def dynamical_matrices(self, dynmat: NDArray[np.cdouble]) -> None:
+    def dynamical_matrices(
+        self, dynmat: NDArray[np.cdouble] | Sequence[NDArray[np.cdouble]]
+    ) -> None:
         self._dynmat = np.array(dynmat, dtype=self._dtype_complex, order="C")
 
     def get_dynamical_matrices(self) -> NDArray[np.cdouble] | None:

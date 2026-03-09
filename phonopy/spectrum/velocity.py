@@ -43,6 +43,8 @@ from numpy.typing import NDArray
 
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.physical_units import get_physical_units
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive
 from phonopy.structure.grid_points import get_qpoints
 from phonopy.structure.symmetry import Symmetry
 
@@ -52,17 +54,17 @@ class Velocity:
 
     def __init__(
         self,
-        lattice: NDArray | None = None,  # column vectors, in angstrom
-        positions: NDArray | None = None,  # fractional coordinates
+        lattice: NDArray[np.double] | None = None,  # column vectors, in angstrom
+        positions: NDArray[np.double] | None = None,  # fractional coordinates
         timestep: float | None = None,  # in femtosecond
-    ):
+    ) -> None:
         """Init method."""
         self._lattice = lattice
         self._positions = positions
         self._timestep = timestep
-        self._velocities = None  # in m/s [timestep, atom, 3]
+        self._velocities: NDArray[np.double] | None = None  # in m/s [timestep, atom, 3]
 
-    def run(self, skip_steps=0):
+    def run(self, skip_steps: int = 0) -> None:
         """Calculate velocities."""
         pos = self._positions
         assert pos is not None
@@ -72,11 +74,11 @@ class Velocity:
         assert self._lattice is not None
         self._velocities = np.dot(diff, self._lattice.T * 1e5) / self._timestep
 
-    def get_velocities(self):
+    def get_velocities(self) -> NDArray[np.double] | None:
         """Return velocities."""
         return self._velocities
 
-    def get_timestep(self):
+    def get_timestep(self) -> float | None:
         """Return time step."""
         return self._timestep
 
@@ -86,11 +88,12 @@ class VelocityQpoints:
 
     def __init__(
         self,
-        supercell,
-        primitive,
-        velocities,  # in m/s either real or reciprocal
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
+        velocities: NDArray[np.double]
+        | NDArray[np.cdouble],  # in m/s either real or reciprocal
         symmetry: Symmetry | None = None,
-    ):
+    ) -> None:
         """Init method."""
         if symmetry is not None:
             self._polonggroup_opts = symmetry.pointgroup_operations
@@ -106,40 +109,44 @@ class VelocityQpoints:
         self._qpoints = None
         self._weights = None
 
-        self._velocities_q = None  # [timestep, p_atom, qpoitns, 3]
+        self._velocities_q: NDArray[np.cdouble] | None = (
+            None  # [timestep, p_atom, qpoitns, 3]
+        )
 
-    def run(self):
+    def run(self) -> None:
         """Calculate q-point projected velocities."""
         self._velocities_q = self._transform(self._qpoints)
 
-    def get_velocities(self):
+    def get_velocities(self) -> NDArray[np.cdouble] | None:
         """Return q-point projected velocities."""
         return self._velocities_q
 
-    def set_mesh(self, mesh):
+    def set_mesh(self, mesh: list[int] | NDArray[np.int64]) -> None:
         """Set mesh."""
         rec_lat = np.linalg.inv(self._primitive.cell)
         self._qpoints, self._weights = get_qpoints(
             mesh, rec_lat, is_gamma_center=True, rotations=self._polonggroup_opts
         )
 
-    def set_qpoints(self, qpoints):
+    def set_qpoints(self, qpoints: NDArray[np.double]) -> None:
         """Set q-points."""
         self._weights = np.ones(len(qpoints), dtype="int64")
         self._qpoints = qpoints
 
-    def set_commensurate_points(self):
+    def set_commensurate_points(self) -> None:
         """Set commensurate points."""
         supercell_matrix = np.rint(
             np.linalg.inv(self._primitive.primitive_matrix)
         ).astype("int64")
         self.set_qpoints(get_commensurate_points(supercell_matrix))
 
-    def get_qpoints(self):
+    def get_qpoints(
+        self,
+    ) -> tuple[NDArray[np.double] | None, NDArray[np.int64] | None]:
         """Return irreducible q-points and weights."""
         return self._qpoints, self._weights
 
-    def _transform(self, q):
+    def _transform(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
         """Calculate projection.
 
         exp(i q.r(i)) v(i)
@@ -162,7 +169,9 @@ class VelocityQpoints:
                         v_q[:, p_i, q_i, :] += pf * v[:, s_j, :]
         return v_q
 
-    def _get_phase_factor(self, p_i, s_j, q_array):
+    def _get_phase_factor(
+        self, p_i: int, s_j: int, q_array: NDArray[np.double]
+    ) -> NDArray[np.cdouble]:
         multi = self._multiplicity[s_j, p_i]
         pos = self._shortest_vectors[s_j, p_i, :multi]
         return np.exp(-2j * np.pi * np.dot(q_array, pos.T)).sum(axis=1) / multi
@@ -171,7 +180,12 @@ class VelocityQpoints:
 class AutoCorrelation:
     """Class to calculate autocorrelation."""
 
-    def __init__(self, velocities, masses=None, temperature=None):  # in m/s, AMU, K
+    def __init__(
+        self,
+        velocities: NDArray[np.double] | NDArray[np.cdouble],  # in m/s, AMU, K
+        masses: NDArray[np.double] | None = None,
+        temperature: float | None = None,
+    ) -> None:
         """Init method."""
         self._velocities = velocities
         self._masses = masses
@@ -180,7 +194,7 @@ class AutoCorrelation:
         self._vv = None
         self._n_elements = 0
 
-    def run(self, num_frequency_points, verbose=False):
+    def run(self, num_frequency_points: int, verbose: bool = False) -> bool:
         """Calculate autocorrelation."""
         v = self._velocities
         max_lag = num_frequency_points * 2
@@ -222,10 +236,10 @@ class AutoCorrelation:
 
         return True
 
-    def get_autocorrelation(self):
+    def get_autocorrelation(self) -> NDArray[np.double] | NDArray[np.cdouble] | None:
         """Return autocorrelation."""
         return self._vv
 
-    def get_number_of_elements(self):
+    def get_number_of_elements(self) -> int:
         """Return number of elements of autocorrelation array."""
         return self._n_elements

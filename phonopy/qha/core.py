@@ -57,8 +57,8 @@ class BulkModulus:
 
     def __init__(
         self,
-        volumes: Sequence[float],
-        energies: Sequence[float] | Sequence[Sequence[float]],
+        volumes: Sequence[float] | NDArray[np.double],
+        energies: Sequence[float] | Sequence[Sequence[float]] | NDArray[np.double],
         pressure: float | None = None,
         eos: str = "vinet",
     ) -> None:
@@ -76,8 +76,8 @@ class BulkModulus:
             Identifier of equation of states function.
 
         """
-        self._volumes = np.array(volumes)
-        self._energies = np.array(energies)
+        self._volumes = np.array(volumes, dtype="double")
+        self._energies = np.array(energies, dtype="double", order="C")
         self._eos_name = eos
         self._eos = get_eos(self._eos_name)
 
@@ -127,26 +127,28 @@ class BulkModulus:
             raise RuntimeError("\n".join(msg)) from exc
 
     @property
-    def bulk_modulus(self) -> NDArray:
+    def bulk_modulus(self) -> float | NDArray[np.double]:
         """Return bulk modulus."""
         return self._bulk_modulus
 
     @property
-    def equilibrium_volume(self) -> NDArray:
+    def equilibrium_volume(self) -> float | NDArray[np.double]:
         """Return volume at equilibrium."""
         return self._equiv_volume
 
     @property
-    def b_prime(self) -> NDArray:
+    def b_prime(self) -> float | NDArray[np.double]:
         """Return fitted parameter B'."""
         return self._b_prime
 
     @property
-    def energy(self) -> NDArray:
+    def energy(self) -> float | NDArray[np.double]:
         """Return fitted parameter of energy."""
         return self._energy
 
-    def get_parameters(self) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+    def get_parameters(
+        self,
+    ) -> tuple[NDArray, NDArray, NDArray, NDArray] | tuple[float, float, float, float]:
         """Return fitted parameters."""
         return self._energy, self._bulk_modulus, self._b_prime, self._equiv_volume
 
@@ -244,61 +246,73 @@ class QHA:
         self._t_max = t_max
         self._energy_plot_factor = energy_plot_factor
 
-        self._temperatures = None
-        self._equiv_volumes = None
-        self._equiv_energies = None
-        self._equiv_bulk_modulus = None
-        self._equiv_parameters = None
-        self._free_energies = None
-        self._num_elems = None
+        self._temperatures: NDArray[np.double] | None = None
+        self._equiv_volumes: NDArray[np.double] | None = None
+        self._equiv_energies: NDArray[np.double] | None = None
+        self._equiv_bulk_modulus: NDArray[np.double] | None = None
+        self._equiv_parameters: NDArray[np.double] | None = None
+        self._free_energies: NDArray[np.double] | None = None
+        self._num_elems: int | None = None
 
-        self._thermal_expansions = None
-        self._cp_numerical = None
-        self._volume_entropy_parameters = None
-        self._volume_cv_parameters = None
-        self._volume_entropy = None
-        self._volume_cv = None
-        self._cp_polyfit = None
-        self._dsdv = None
-        self._gruneisen_parameters = None
-        self._len = None
+        self._thermal_expansions: list[float] | None = None
+        self._cp_numerical: list[float] | None = None
+        self._volume_entropy_parameters: list[NDArray[np.double]] | None = None
+        self._volume_cv_parameters: list[NDArray[np.double]] | None = None
+        self._volume_entropy: list[NDArray[np.double]] | None = None
+        self._volume_cv: list[NDArray[np.double]] | None = None
+        self._cp_polyfit: list[float] | None = None
+        self._dsdv: list[float] | None = None
+        self._gruneisen_parameters: list[float] | None = None
+        self._len: int | None = None
 
     @property
-    def thermal_expansion(self) -> NDArray[np.double]:
+    def thermal_expansion(self) -> list[float]:
         """Return volumetric thermal expansion coefficients at temperatures."""
+        if self._thermal_expansions is None:
+            raise RuntimeError("Run QHA.run() to compute thermal expansion.")
         return self._thermal_expansions[: self._len]
 
     @property
     def helmholtz_volume(self) -> NDArray[np.double]:
         """Return Helmholtz free energies at temperatures and volumes."""
+        if self._free_energies is None:
+            raise RuntimeError("Run QHA.run() to compute free energies.")
         return self._free_energies[: self._len]
 
     @property
     def volume_temperature(self) -> NDArray[np.double]:
         """Return equilibrium volumes at temperatures."""
+        if self._equiv_volumes is None:
+            raise RuntimeError("Run QHA.run() to compute equilibrium volumes.")
         return self._equiv_volumes[: self._len]
 
     @property
     def gibbs_temperature(self) -> NDArray[np.double]:
         """Return Gibbs free energies at temperatures."""
+        if self._equiv_energies is None:
+            raise RuntimeError("Run QHA.run() to compute Gibbs free energies.")
         return self._equiv_energies[: self._len]
 
     @property
     def bulk_modulus_temperature(self) -> NDArray[np.double]:
         """Return bulk modulus vs temperature data."""
+        if self._equiv_bulk_modulus is None:
+            raise RuntimeError("Run QHA.run() to compute bulk modulus.")
         return self._equiv_bulk_modulus[: self._len]
 
     @property
-    def heat_capacity_P_numerical(self) -> NDArray[np.double]:
+    def heat_capacity_P_numerical(self) -> list[float]:
         """Return heat capacities at constant pressure at temperatures.
 
         Values are computed by numerical derivative of Gibbs free energy.
 
         """
+        if self._cp_numerical is None:
+            raise RuntimeError("Run QHA.run() to compute heat capacity.")
         return self._cp_numerical[: self._len]
 
     @property
-    def heat_capacity_P_polyfit(self) -> NDArray[np.double]:
+    def heat_capacity_P_polyfit(self) -> list[float]:
         """Return heat capacities at constant pressure at temperatures.
 
         Volumes are computed in another way to heat_capacity_P_numerical
@@ -307,6 +321,8 @@ class QHA:
 
         """
         if self._electronic_energies.ndim == 1:
+            if self._cp_polyfit is None:
+                raise RuntimeError("Run QHA.run() to compute heat capacity.")
             return self._cp_polyfit[: self._len]
         else:
             raise NotImplementedError(
@@ -314,8 +330,10 @@ class QHA:
             )
 
     @property
-    def gruneisen_temperature(self) -> NDArray[np.double]:
+    def gruneisen_temperature(self) -> list[float]:
         """Return Gruneisen parameters at temperatures."""
+        if self._gruneisen_parameters is None:
+            raise RuntimeError("Run QHA.run() to compute Gruneisen parameters.")
         return self._gruneisen_parameters[: self._len]
 
     def run(self, verbose: bool = False) -> None:
