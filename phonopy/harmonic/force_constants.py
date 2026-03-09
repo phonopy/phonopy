@@ -71,7 +71,7 @@ class FDFCSolver:
         if is_compact_fc and primitive:
             atom_list = primitive.p2s_map
         else:
-            atom_list = list(range(len(supercell)))
+            atom_list = np.arange(len(supercell), dtype="int64")
 
         self._fc2 = self._run(
             supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
@@ -93,10 +93,10 @@ class FDFCSolver:
         self,
         supercell: PhonopyAtoms,
         symmetry: Symmetry,
-        dataset,
-        atom_list: Sequence[int] | NDArray | None = None,
+        dataset: dict,
+        atom_list: NDArray[np.int64] | None = None,
         primitive: Primitive | None = None,
-    ) -> np.ndarray:
+    ) -> NDArray[np.double]:
         """Force constants are computed.
 
         Force constants, Phi, are calculated from sets for forces, F, and
@@ -159,8 +159,8 @@ class FDFCSolver:
 
 
 def compact_fc_to_full_fc(
-    primitive: Primitive, compact_fc: np.ndarray, log_level: int = 0
-) -> NDArray:
+    primitive: Primitive, compact_fc: NDArray[np.double], log_level: int = 0
+) -> NDArray[np.double]:
     """Transform compact fc to full fc."""
     fc = np.zeros(
         (compact_fc.shape[1], compact_fc.shape[1], 3, 3), dtype="double", order="C"
@@ -174,8 +174,8 @@ def compact_fc_to_full_fc(
 
 
 def full_fc_to_compact_fc(
-    primitive: Primitive, full_fc: np.ndarray, log_level: int = 0
-) -> NDArray:
+    primitive: Primitive, full_fc: NDArray[np.double], log_level: int = 0
+) -> NDArray[np.double]:
     """Transform full fc to compact fc."""
     p2s_map = primitive.p2s_map
     fc = np.zeros((len(p2s_map), full_fc.shape[1], 3, 3), dtype="double", order="C")
@@ -187,8 +187,8 @@ def full_fc_to_compact_fc(
 
 
 def rearrange_force_constants_array(
-    full_fc: np.ndarray, a: PhonopyAtoms, b: PhonopyAtoms
-) -> tuple[np.ndarray, list]:
+    full_fc: NDArray[np.double], a: PhonopyAtoms, b: PhonopyAtoms
+) -> tuple[NDArray[np.double], list[int]]:
     """Rearrange force constants array of cell-a to those of cell-b.
 
     Parameters
@@ -216,12 +216,12 @@ def rearrange_force_constants_array(
 
 
 def cutoff_force_constants(
-    force_constants: NDArray,
+    force_constants: NDArray[np.double],
     supercell: PhonopyAtoms,
     primitive: Primitive,
     cutoff_radius: float,
-    symprec=1e-5,
-):
+    symprec: float = 1e-5,
+) -> None:
     """Set zero to force constants outside of cutoff distance.
 
     Note
@@ -257,7 +257,9 @@ def cutoff_force_constants(
                 force_constants[i, j] = 0.0
 
 
-def symmetrize_force_constants(force_constants: np.ndarray, level: int = 1):
+def symmetrize_force_constants(
+    force_constants: NDArray[np.double], level: int = 1
+) -> None:
     """Symmetry force constants by translational and permutation symmetries.
 
     Note
@@ -291,7 +293,9 @@ def symmetrize_force_constants(force_constants: np.ndarray, level: int = 1):
         set_translational_invariance(force_constants)
 
 
-def symmetrize_compact_force_constants(force_constants, primitive: Primitive, level=1):
+def symmetrize_compact_force_constants(
+    force_constants: NDArray[np.double], primitive: Primitive, level: int = 1
+) -> None:
     """Symmetry force constants by translational and permutation symmetries.
 
     Parameters
@@ -333,14 +337,14 @@ def symmetrize_compact_force_constants(force_constants, primitive: Primitive, le
 
 
 def distribute_force_constants(
-    force_constants,
-    atom_list_done,
-    lattice,  # column vectors
-    rotations,  # scaled (fractional)
-    permutations: np.ndarray,
-    atom_list=None,
-    fc_indices_of_atom_list=None,
-):
+    force_constants: NDArray[np.double],
+    atom_list_done: NDArray[np.int64],
+    lattice: NDArray[np.double],  # column vectors
+    rotations: NDArray[np.int64],  # scaled (fractional)
+    permutations: NDArray[np.int64],
+    atom_list: Sequence[int] | NDArray[np.int64] | None = None,
+    fc_indices_of_atom_list: Sequence[int] | NDArray[np.int64] | None = None,
+) -> None:
     """Fill force constants elements by symmetry.
 
     atom_list : ndarray
@@ -392,7 +396,9 @@ def distribute_force_constants(
     )
 
 
-def distribute_force_constants_by_translations(fc: np.ndarray, primitive: Primitive):
+def distribute_force_constants_by_translations(
+    fc: NDArray[np.double], primitive: Primitive
+) -> None:
     """Distribute compact fc data to full fc by pure translations.
 
     For example, the input fc has to be prepared in the following way
@@ -415,15 +421,15 @@ def distribute_force_constants_by_translations(fc: np.ndarray, primitive: Primit
 
 
 def solve_force_constants(
-    force_constants,
-    disp_atom_number,
-    displacements,
-    sets_of_forces,
-    supercell,
-    site_symmetry,
-    symprec,
-    atom_list=None,
-):
+    force_constants: NDArray[np.double],
+    disp_atom_number: int,
+    displacements: Sequence[NDArray[np.double]] | Sequence[Sequence[float]],
+    sets_of_forces: Sequence[NDArray[np.double]] | NDArray[np.double],
+    supercell: PhonopyAtoms,
+    site_symmetry: NDArray[np.int64],
+    symprec: float,
+    atom_list: NDArray[np.int64] | None = None,
+) -> None:
     """Calculate force constants elements of pairs from an atom."""
     if atom_list is None:
         fc_index = disp_atom_number
@@ -447,11 +453,11 @@ def solve_force_constants(
 
 
 def get_positions_sent_by_rot_inv(
-    lattice: np.ndarray,
-    positions: np.ndarray,
-    site_symmetry: np.ndarray,
+    lattice: NDArray[np.double],
+    positions: NDArray[np.double],
+    site_symmetry: NDArray[np.int64],
     symprec: float,
-):
+) -> NDArray[np.int64]:
     """Return atom indices of positions sent by inverse site symmetries.
 
     Rotated_positions[rot_map] == positions.
@@ -482,7 +488,10 @@ def get_positions_sent_by_rot_inv(
     return np.array(rot_map_syms, dtype="int64", order="C")
 
 
-def get_rotated_displacement(displacements, site_sym_cart):
+def get_rotated_displacement(
+    displacements: Sequence[NDArray[np.double]] | Sequence[Sequence[float]],
+    site_sym_cart: Sequence[NDArray[np.double]],
+) -> NDArray[np.double]:
     """Rotate displacements by site symmetry.
 
     Note
@@ -497,11 +506,11 @@ def get_rotated_displacement(displacements, site_sym_cart):
 
 
 def set_tensor_symmetry_PJ(
-    force_constants: NDArray,
-    lattice: NDArray,
-    positions: NDArray,
+    force_constants: NDArray[np.double],
+    lattice: NDArray[np.double],
+    positions: NDArray[np.double],
     symmetry: Symmetry,
-):
+) -> None:
     """Full force constants are symmetrized using crystal symmetry.
 
     This method extracts symmetrically equivalent sets of atomic pairs and
@@ -547,7 +556,7 @@ def set_tensor_symmetry_PJ(
     force_constants[:] = np.array(np.average(s, axis=0), dtype="double", order="C")
 
 
-def set_translational_invariance(force_constants):
+def set_translational_invariance(force_constants: NDArray[np.double]) -> None:
     """Impose translational invariance (Python version).
 
     The type1 is quite simple implementation, which is just taking sum of the
@@ -560,7 +569,9 @@ def set_translational_invariance(force_constants):
         set_translational_invariance_per_index(force_constants, index=i)
 
 
-def set_translational_invariance_per_index(fc2, index=0):
+def set_translational_invariance_per_index(
+    fc2: NDArray[np.double], index: int = 0
+) -> None:
     """Impose translational invariance per index (Python version)."""
     for i in range(fc2.shape[1 - index]):
         for j, k in list(np.ndindex(3, 3)):
@@ -570,7 +581,7 @@ def set_translational_invariance_per_index(fc2, index=0):
                 fc2[i, :, j, k] -= np.sum(fc2[i, :, j, k]) / fc2.shape[1]
 
 
-def set_permutation_symmetry(force_constants):
+def set_permutation_symmetry(force_constants: NDArray[np.double]) -> None:
     """Enforce permutation symmetry to force constants (Python version).
 
     This is done by
@@ -592,7 +603,7 @@ def set_permutation_symmetry(force_constants):
 
 
 def get_drift_force_constants(
-    force_constants: NDArray,
+    force_constants: NDArray[np.double],
     primitive: Primitive | None = None,
 ) -> tuple[float, float, list[int], list[int]]:
     """Get max drift of force constants."""
@@ -653,7 +664,7 @@ def get_drift_force_constants(
 
 
 def show_drift_force_constants(
-    force_constants: NDArray,
+    force_constants: NDArray[np.double],
     primitive: Primitive | None = None,
     name: str = "force constants",
     values_only: bool = False,
@@ -673,7 +684,11 @@ def show_drift_force_constants(
     print(text)
 
 
-def get_nsym_list_and_s2pp(s2p_map, p2p_map, permutations):
+def get_nsym_list_and_s2pp(
+    s2p_map: NDArray[np.int64],
+    p2p_map: dict[int, int],
+    permutations: NDArray[np.int64],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Find lattice points corresponding to atoms in s2p_map.
 
     Parameters
@@ -711,7 +726,10 @@ def get_nsym_list_and_s2pp(s2p_map, p2p_map, permutations):
     return s2pp, nsym_list
 
 
-def get_harmonic_potential_energy(force_constants, displacements):
+def get_harmonic_potential_energy(
+    force_constants: NDArray[np.double],
+    displacements: NDArray[np.double],
+) -> float | list[float]:
     """Calculate harmonic potential energy of displacements.
 
     Parameters
@@ -752,7 +770,10 @@ def get_harmonic_potential_energy(force_constants, displacements):
         raise RuntimeError("Array shape of displacements is wrong.")
 
 
-def _get_rotated_forces(forces_syms, site_sym_cart):
+def _get_rotated_forces(
+    forces_syms: NDArray[np.double],
+    site_sym_cart: list[NDArray[np.double]],
+) -> list[NDArray[np.double]]:
     rot_forces = []
     for forces, sym_cart in zip(forces_syms, site_sym_cart, strict=True):
         rot_forces.append(np.dot(forces, sym_cart.T))
@@ -760,7 +781,9 @@ def _get_rotated_forces(forces_syms, site_sym_cart):
     return rot_forces
 
 
-def _get_drift_per_index(force_constants):
+def _get_drift_per_index(
+    force_constants: NDArray[np.double],
+) -> tuple[float, list[int]]:
     num_atom = force_constants.shape[0]
     maxval = 0
     jk = [0, 0]
@@ -773,13 +796,13 @@ def _get_drift_per_index(force_constants):
 
 
 def _solve_force_constants_svd(
-    disp_atom_number,
-    displacements,
-    sets_of_forces,
+    disp_atom_number: int,
+    displacements: Sequence[NDArray[np.double]] | Sequence[Sequence[float]],
+    sets_of_forces: Sequence[NDArray[np.double]] | NDArray[np.double],
     supercell: PhonopyAtoms,
-    site_symmetry,
-    symprec,
-):
+    site_symmetry: NDArray[np.int64],
+    symprec: float,
+) -> NDArray[np.double]:
     lattice = supercell.cell.T
     positions = supercell.scaled_positions
     pos_center = positions[disp_atom_number]
@@ -805,8 +828,12 @@ def _solve_force_constants_svd(
 
 
 def _get_force_constants_disps(
-    force_constants, supercell, dataset, symmetry: Symmetry, atom_list=None
-):
+    force_constants: NDArray[np.double],
+    supercell: PhonopyAtoms,
+    dataset: dict,
+    symmetry: Symmetry,
+    atom_list: NDArray[np.int64] | None = None,
+) -> NDArray[np.int64]:
     """Calculate force constants Phi = -F / d.
 
     Force constants are obtained by one of the following algorithm.
@@ -820,10 +847,10 @@ def _get_force_constants_disps(
     supercell: PhonopyAtoms
         Supercell
     dataset: dict
-        Distplacement dataset. Forces are also stored.
+        Type-1 distplacement dataset. Forces are also stored.
     symmetry: Symmetry
         Symmetry information of supercell
-    atom_list: list
+    atom_list: ndarray or None
         List of atom indices corresponding to the first index of force
         constants. None assigns all atoms in supercell.
 
@@ -856,7 +883,13 @@ def _get_force_constants_disps(
     return disp_atom_list
 
 
-def _get_atom_indices_by_symmetry(lattice, positions, rotations, translations, symprec):
+def _get_atom_indices_by_symmetry(
+    lattice: NDArray[np.double],
+    positions: NDArray[np.double],
+    rotations: NDArray[np.int64],
+    translations: NDArray[np.double],
+    symprec: float,
+) -> NDArray[np.int64]:
     # To understand this method, understanding numpy broadcasting is mandatory.
 
     K = len(positions)
@@ -877,11 +910,14 @@ def _get_atom_indices_by_symmetry(lattice, positions, rotations, translations, s
     index_array = np.tile(np.arange(K, dtype="int64"), (K, 1))
     # Understanding numpy boolean array indexing (extract True elements)
     # mapa[N, K(1)]
-    mapa = np.array([index_array[mr] for mr in m])
+    mapa = np.array([index_array[mr] for mr in m], dtype="int64")
     return mapa
 
 
-def _get_sym_mappings_from_permutations(permutations, atom_list_done):
+def _get_sym_mappings_from_permutations(
+    permutations: NDArray[np.int64],
+    atom_list_done: NDArray[np.int64] | Sequence[int],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Find atomic indices where force constants have not yet calculated.
 
     This can be thought of as computing 'map_atom_disp' and 'map_sym'
@@ -919,10 +955,10 @@ def _get_sym_mappings_from_permutations(permutations, atom_list_done):
     map_atoms = np.zeros((num_pos,), dtype="int64") - 1
     map_syms = np.zeros((num_pos,), dtype="int64") - 1
 
-    atom_list_done = set(atom_list_done)
+    atom_list_done_set = set(atom_list_done)
     for atom_todo in range(num_pos):
         for sym_index, permutation in enumerate(permutations):
-            if permutation[atom_todo] in atom_list_done:
+            if permutation[atom_todo] in atom_list_done_set:
                 map_atoms[atom_todo] = permutation[atom_todo]
                 map_syms[atom_todo] = sym_index
                 break
@@ -934,7 +970,7 @@ def _get_sym_mappings_from_permutations(permutations, atom_list_done):
             )
             raise ValueError(text)
 
-    assert set(map_atoms) & set(atom_list_done) == set(map_atoms)
+    assert set(map_atoms) & atom_list_done_set == set(map_atoms)
     assert -1 not in map_atoms
     assert -1 not in map_syms
     return map_atoms, map_syms

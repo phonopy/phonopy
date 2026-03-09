@@ -52,7 +52,6 @@ from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
-from phonopy.utils import get_dot_access_dataset
 
 
 class Supercell(PhonopyAtoms):
@@ -1381,7 +1380,7 @@ def compute_all_sg_permutations(
     translations: NDArray[np.double],  # scaled
     lattice: NDArray[np.double],  # column vectors
     symprec: float,
-) -> NDArray:
+) -> NDArray[np.int64]:
     """Compute permutations for space group operations.
 
     See 'compute_permutation_for_rotation' for more info.
@@ -1809,20 +1808,45 @@ def get_primitive_matrix_by_centring(centring: str) -> NDArray[np.double]:
 
 
 def guess_primitive_matrix(
-    unitcell: PhonopyAtoms, symprec: float = 1e-5
+    unitcell: PhonopyAtoms, symprec: float = 1e-5, skip_exception: bool = False
 ) -> NDArray[np.double]:
-    """Guess primitive matrix from crystal symmetry."""
-    if unitcell.magnetic_moments is not None:
+    """Guess primitive matrix from crystal symmetry.
+
+    Note
+    ----
+    Type-IV magnetic structures are not supported.
+
+    Parameters
+    ----------
+    unitcell : PhonopyAtoms
+        Unit cell.
+    symprec : float
+        Tolerance to find symmetry operations.
+    skip_exception : bool
+        Only effective for magnetic structures. If True, family space group is
+        used to guess primitive matrix, otherwise, exception is raised.
+
+    """
+    if unitcell.magnetic_moments is not None and not skip_exception:
         msg = "Can not be used with the unit cell having magnetic moments."
         raise RuntimeError(msg)
 
-    dataset = get_dot_access_dataset(
-        spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
-    )
-    tmat = dataset.transformation_matrix
-    centring = dataset.international[0]
-    pmat = get_primitive_matrix_by_centring(centring)
-    return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
+    if unitcell.magnetic_moments is None:
+        dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
+    else:
+        dataset = spglib.get_magnetic_symmetry_dataset(
+            unitcell.totuple(), symprec=symprec
+        )
+
+    if isinstance(dataset, (SpglibDataset, SpglibMagneticDataset)):
+        tmat = dataset.transformation_matrix
+        spg_type = spglib.get_spacegroup_type(dataset.hall_number)
+        assert spg_type is not None
+        centring = spg_type.international[0]
+        pmat = get_primitive_matrix_by_centring(centring)
+        return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
+    else:
+        return np.eye(3, dtype="double", order="C")
 
 
 def shape_supercell_matrix(
