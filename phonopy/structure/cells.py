@@ -1812,6 +1812,16 @@ def guess_primitive_matrix(
 ) -> NDArray[np.double]:
     """Guess primitive matrix from crystal symmetry.
 
+    Note
+    ----
+    Type-IV magnetic structures are not supported.
+
+    Parameters
+    ----------
+    unitcell : PhonopyAtoms
+        Unit cell.
+    symprec : float
+        Tolerance to find symmetry operations.
     skip_exception : bool
         Only effective for magnetic structures. If True, family space group is
         used to guess primitive matrix, otherwise, exception is raised.
@@ -1827,11 +1837,6 @@ def guess_primitive_matrix(
         dataset = spglib.get_magnetic_symmetry_dataset(
             unitcell.totuple(), symprec=symprec
         )
-        assert dataset is not None
-        if dataset.msg_type == 4:
-            magcell = unitcell.totuple()
-            magcell[3][:] = np.abs(magcell[3])
-            dataset = spglib.get_magnetic_symmetry_dataset(magcell, symprec=symprec)
 
     if isinstance(dataset, (SpglibDataset, SpglibMagneticDataset)):
         tmat = dataset.transformation_matrix
