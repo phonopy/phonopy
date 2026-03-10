@@ -381,7 +381,7 @@ def _write_supercells_vasp(
         config.supercell,
         config.cells_with_disps,
         config.displacement_ids,
-        width=config.zfill_width,
+        **_get_filename_writer_kwargs(config),
     )
     write_magnetic_moments(config.supercell, sort_by_elements=True)
 
@@ -398,7 +398,7 @@ def _write_supercells_qe(
         config.cells_with_disps,
         config.displacement_ids,
         structure_info.pp_filenames,
-        width=config.zfill_width,
+        **_get_filename_writer_kwargs(config),
     )
     write_magnetic_moments(config.supercell, sort_by_elements=False)
 
@@ -413,8 +413,6 @@ def _write_supercells_wien2k(
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for wien2k.")
 
-    width = config.zfill_width
-    pre_filename = structure_info.unitcell_filename
     N = int(determinant(config.additional_info["supercell_matrix"]))
     wien2k.write_supercells_with_displacements(
         config.supercell,
@@ -424,8 +422,7 @@ def _write_supercells_wien2k(
         structure_info.r0s,
         structure_info.rmts,
         N,
-        width=width,
-        pre_filename=pre_filename,
+        **_get_filename_writer_kwargs(config),
     )
 
 
@@ -441,7 +438,7 @@ def _write_supercells_elk(
         config.cells_with_disps,
         config.displacement_ids,
         structure_info.sp_filenames,
-        width=config.zfill_width,
+        **_get_filename_writer_kwargs(config),
     )
 
 
@@ -457,7 +454,7 @@ def _write_supercells_cp2k(
         config.cells_with_disps,
         config.displacement_ids,
         (structure_info.unitcell_filename, structure_info.config_tree),
-        width=config.zfill_width,
+        **_get_filename_writer_kwargs(config),
     )
 
 
@@ -471,7 +468,6 @@ def _write_supercells_crystal(
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for crystal.")
 
-    width = config.zfill_width
     template_file = config.additional_info.get("template_file", "TEMPLATE")
     N = abs(determinant(config.additional_info["supercell_matrix"]))
     crystal.write_supercells_with_displacements(
@@ -480,8 +476,8 @@ def _write_supercells_crystal(
         config.displacement_ids,
         structure_info.conv_numbers,
         N,
-        width=width,
         template_file=template_file,
+        **_get_filename_writer_kwargs(config),
     )
 
 
@@ -503,7 +499,7 @@ def _write_supercells_fleur(
         structure_info.speci,
         N,
         structure_info.restlines,
-        width=config.zfill_width,
+        **_get_filename_writer_kwargs(config),
     )
 
 
@@ -521,7 +517,7 @@ def _write_supercells_abacus(
         structure_info.pps,
         structure_info.orbitals,
         structure_info.abfs,
-        width=config.zfill_width,
+        **_get_filename_writer_kwargs(config),
     )
 
 
@@ -537,7 +533,7 @@ def _write_supercells_qlm(
         config.cells_with_disps,
         config.displacement_ids,
         structure_info.qlm_ctx,
-        width=config.zfill_width,
+        **_get_filename_writer_kwargs(config),
     )
 
 
@@ -545,8 +541,6 @@ def _write_supercells_generic(
     config: SupercellWriterConfig, structure_info: StructureInfo, interface_mode: str
 ) -> None:
     """Write supercells for generic interfaces (no special handling)."""
-    width = config.zfill_width
-
     writer = None
     if interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
@@ -584,16 +578,19 @@ def _write_supercells_generic(
         msg = f"No handler found for calculator interface: {interface_mode}"
         raise RuntimeError(msg)
 
-    writer_kwargs: dict[str, Any] = {"width": width}
-    if config.additional_info and "pre_filename" in config.additional_info:
-        writer_kwargs["pre_filename"] = config.additional_info["pre_filename"]
-
     writer(
         config.supercell,
         config.cells_with_disps,
         config.displacement_ids,
-        **writer_kwargs,
+        **_get_filename_writer_kwargs(config),
     )
+
+
+def _get_filename_writer_kwargs(config: SupercellWriterConfig) -> dict[str, Any]:
+    writer_kwargs: dict[str, Any] = {"width": config.zfill_width}
+    if config.additional_info and "pre_filename" in config.additional_info:
+        writer_kwargs["pre_filename"] = config.additional_info["pre_filename"]
+    return writer_kwargs
 
 
 def _parse_optional_structure_info(

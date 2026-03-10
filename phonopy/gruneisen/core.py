@@ -34,9 +34,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Union
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.band_structure import estimate_band_connection
@@ -48,13 +51,13 @@ class GruneisenBase:
 
     def __init__(
         self,
-        dynmat: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        dynmat_plus: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        dynmat_minus: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        delta_strain=None,
-        qpoints=None,
-        is_band_connection=False,
-    ):
+        dynmat: DynamicalMatrix | DynamicalMatrixNAC,
+        dynmat_plus: DynamicalMatrix | DynamicalMatrixNAC,
+        dynmat_minus: DynamicalMatrix | DynamicalMatrixNAC,
+        delta_strain: float | None = None,
+        qpoints: NDArray[np.double] | None = None,
+        is_band_connection: bool = False,
+    ) -> None:
         """Init method."""
         self._dynmat = dynmat
         self._dynmat_plus = dynmat_plus
@@ -70,33 +73,36 @@ class GruneisenBase:
         self._is_band_connection = is_band_connection
         self._qpoints = qpoints
 
-        self._gruneisen = None
-        self._eigenvalues = None
+        self._gruneisen: NDArray[np.double] | None = None
+        self._eigenvalues: NDArray[np.double] | None = None
+        self._eigenvectors: NDArray[np.cdouble] | None = None
+        self._q_direction: NDArray[np.double] | None = None
         if qpoints is not None:
             self._set_gruneisen()
 
-    def set_qpoints(self, qpoints):
+    def set_qpoints(self, qpoints: NDArray[np.double]) -> None:
         """Set q-points."""
         self._qpoints = qpoints
         self._set_gruneisen()
 
-    def get_gruneisen(self):
+    def get_gruneisen(self) -> NDArray[np.double] | None:
         """Return mode Grueneisen parameters."""
         return self._gruneisen
 
-    def get_eigenvalues(self):
+    def get_eigenvalues(self) -> NDArray[np.double] | None:
         """Return eigenvalues."""
         return self._eigenvalues
 
-    def get_eigenvectors(self):
+    def get_eigenvectors(self) -> NDArray[np.cdouble] | None:
         """Return eigenvectors."""
         return self._eigenvectors
 
-    def _set_gruneisen(self):
+    def _set_gruneisen(self) -> None:
+        assert self._qpoints is not None
         if self._is_band_connection:
             self._q_direction = self._qpoints[0] - self._qpoints[-1]
-            band_order = range(len(self._dynmat.primitive) * 3)
-            prev_eigvecs = None
+            band_order: Sequence[int] = list(range(len(self._dynmat.primitive) * 3))
+            prev_eigvecs: NDArray[np.cdouble] | None = None
 
         edDe = []  # <e|dD|e>
         eigvals = []
@@ -110,8 +116,9 @@ class GruneisenBase:
                 self._dynmat.run(q)
 
             dm = self._dynmat.dynamical_matrix
+            assert dm is not None
             evals, evecs = np.linalg.eigh(dm)
-            evals_at_q = evals.real
+            evals_at_q = np.array(evals, dtype="double")
             dD = self._get_dD(q, self._dynmat_minus, self._dynmat_plus)
             evecs_at_q, edDe_at_q = rotate_eigenvectors(evals_at_q, evecs, dD)
 
@@ -131,18 +138,15 @@ class GruneisenBase:
 
         edDe = np.array(edDe, dtype="double", order="C")
         self._eigenvalues = np.array(eigvals, dtype="double", order="C")
-        itemsize = self._eigenvalues.itemsize
-        self._eigenvectors = np.array(
-            eigvecs, dtype=("c%d" % (itemsize * 2)), order="C"
-        )
+        self._eigenvectors = np.array(eigvecs, dtype=np.cdouble, order="C")
         self._gruneisen = -edDe / self._delta_strain / self._eigenvalues / 2
 
     def _get_dD(
         self,
-        q,
-        d_a: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        d_b: Union[DynamicalMatrix, DynamicalMatrixNAC],
-    ):
+        q: NDArray[np.double],
+        d_a: DynamicalMatrix | DynamicalMatrixNAC,
+        d_b: DynamicalMatrix | DynamicalMatrixNAC,
+    ) -> NDArray[np.cdouble]:
         if (
             self._is_band_connection
             and isinstance(d_a, DynamicalMatrixNAC)
@@ -155,4 +159,6 @@ class GruneisenBase:
             d_b.run(q)
         dm_a = d_a.dynamical_matrix
         dm_b = d_b.dynamical_matrix
+        assert dm_a is not None
+        assert dm_b is not None
         return dm_b - dm_a

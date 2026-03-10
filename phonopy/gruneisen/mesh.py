@@ -38,8 +38,10 @@ from __future__ import annotations
 
 import gzip
 import lzma
+import os
 import sys
 from collections.abc import Sequence
+from typing import Any, BinaryIO, Literal, TextIO
 
 import numpy as np
 from numpy.typing import NDArray
@@ -58,15 +60,15 @@ class GruneisenMesh(GruneisenBase):
         dynmat: DynamicalMatrix,
         dynmat_plus: DynamicalMatrix,
         dynmat_minus: DynamicalMatrix,
-        mesh: Sequence[int] | NDArray,
+        mesh: Sequence[int] | NDArray[np.int64],
         delta_strain: float | None = None,
-        shift: Sequence[float] | NDArray | None = None,
+        shift: Sequence[float] | NDArray[np.double] | None = None,
         is_time_reversal: bool = True,
         is_gamma_center: bool = False,
         is_mesh_symmetry: bool = True,
-        rotations: Sequence | NDArray | None = None,
+        rotations: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
         factor: float | None = None,
-    ):
+    ) -> None:
         """Init method."""
         super().__init__(dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain)
         self._mesh = np.array(mesh, dtype="int64")
@@ -90,35 +92,40 @@ class GruneisenMesh(GruneisenBase):
             np.sqrt(abs(self._eigenvalues)) * np.sign(self._eigenvalues) * self._factor
         )
 
-    def get_gruneisen(self):
+    def get_gruneisen(self) -> NDArray[np.double]:
         """Return mode Grueneisen parameters."""
         return self._gamma
 
-    def get_mesh_numbers(self):
+    def get_mesh_numbers(self) -> NDArray[np.int64]:
         """Return mesh numbers."""
         return self._mesh
 
-    def get_qpoints(self):
+    def get_qpoints(self) -> NDArray[np.double]:
         """Return (irreducible) q-points."""
         return self._qpoints
 
-    def get_weights(self):
+    def get_weights(self) -> NDArray[np.int64]:
         """Return weights of (irreducible) q-points."""
         return self._weights
 
-    def get_eigenvalues(self):
+    def get_eigenvalues(self) -> NDArray[np.double]:
         """Return eigenvalues of dynamical matrices."""
         return self._eigenvalues
 
-    def get_eigenvectors(self):
+    def get_eigenvectors(self) -> NDArray[np.cdouble]:
         """Return phonon eigenvectors."""
         return self._eigenvectors
 
-    def get_frequencies(self):
+    def get_frequencies(self) -> NDArray[np.double]:
         """Return phonon frequencies."""
         return self._frequencies
 
-    def write_yaml(self, comment=None, filename=None, compression=None):
+    def write_yaml(
+        self,
+        comment: Any = None,
+        filename: str | os.PathLike | None = None,
+        compression: Literal["gzip", "lzma"] | None = None,
+    ) -> None:
         """Write results in yaml file."""
         if filename is not None:
             _filename = filename
@@ -139,7 +146,12 @@ class GruneisenMesh(GruneisenBase):
             with lzma.open(_filename, "w") as w:
                 self._write_yaml(w, comment, is_binary=True)
 
-    def _write_yaml(self, w, comment, is_binary=False):
+    def _write_yaml(
+        self,
+        w: TextIO | BinaryIO,
+        comment: Any,
+        is_binary: bool = False,
+    ) -> None:
         natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vectors
         text = []
@@ -166,7 +178,9 @@ class GruneisenMesh(GruneisenBase):
 
         self._write_lines(w, text, is_binary)
 
-    def _write_lines(self, w, lines, is_binary):
+    def _write_lines(
+        self, w: TextIO | BinaryIO, lines: list[str], is_binary: bool
+    ) -> None:
         text = "\n".join(lines)
         if is_binary:
             if sys.version_info < (3, 0):
@@ -176,7 +190,7 @@ class GruneisenMesh(GruneisenBase):
         else:
             w.write(text)
 
-    def write_hdf5(self, filename="gruneisen.hdf5"):
+    def write_hdf5(self, filename: str | os.PathLike = "gruneisen.hdf5") -> None:
         """Write results in hdf5 file."""
         import h5py
 
@@ -189,8 +203,13 @@ class GruneisenMesh(GruneisenBase):
         w.close()
 
     def plot(
-        self, plt, cutoff_frequency=None, color_scheme=None, marker="o", markersize=None
-    ):
+        self,
+        plt: Any,
+        cutoff_frequency: float | None = None,
+        color_scheme: str | None = None,
+        marker: str = "o",
+        markersize: float | None = None,
+    ) -> None:
         """Return pyplot of calculation results."""
         n = len(self._gamma.T) - 1
         for i, (g, freqs) in enumerate(
