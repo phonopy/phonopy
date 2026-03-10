@@ -37,15 +37,20 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 
+EosFunc = Callable[[NDArray[np.double], NDArray[np.double]], NDArray[np.double]]
 
-def get_eos(eos):
+
+def get_eos(eos: str) -> EosFunc:
     """Return equation of states."""
 
-    def birch_murnaghan(v, *p):
+    def birch_murnaghan(
+        v: NDArray[np.double], p: NDArray[np.double]
+    ) -> NDArray[np.double]:
         """Return Third-order Birch-Murnaghan EOS.
 
         p[0] = E_0
@@ -59,7 +64,7 @@ def get_eos(eos):
             + ((p[3] / v) ** (2.0 / 3) - 1) ** 2 * (6 - 4 * (p[3] / v) ** (2.0 / 3))
         )
 
-    def murnaghan(v, *p):
+    def murnaghan(v: NDArray[np.double], p: NDArray[np.double]) -> NDArray[np.double]:
         """Return Murnaghan EOS.
 
         p[0] = E_0
@@ -74,7 +79,7 @@ def get_eos(eos):
             - p[1] * p[3] / (p[2] - 1)
         )
 
-    def vinet(v, *p):
+    def vinet(v: NDArray[np.double], p: NDArray[np.double]) -> NDArray[np.double]:
         """Return Vinet EOS.
 
         p[0] = E_0
@@ -97,12 +102,16 @@ def get_eos(eos):
         return vinet
 
 
-def fit_to_eos(volumes, fe, eos) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+def fit_to_eos(
+    volumes: NDArray[np.double],
+    fe: NDArray[np.double],
+    eos: EosFunc,
+) -> NDArray[np.double]:
     """Fit volume-energy data to EOS."""
     fit = EOSFit(volumes, fe, eos)
     fit.fit([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
 
-    return fit.parameters  # type: ignore
+    return fit.parameters
 
 
 class EOSFit:
@@ -117,7 +126,12 @@ class EOSFit:
 
     """
 
-    def __init__(self, volume, energy, eos):
+    def __init__(
+        self,
+        volume: Sequence[float] | NDArray[np.double],
+        energy: Sequence[float] | NDArray[np.double],
+        eos: EosFunc,
+    ) -> None:
         """Init method."""
         self._energy = np.array(energy)
         self._volume = np.array(volume)
@@ -125,7 +139,7 @@ class EOSFit:
 
         self.parameters = None
 
-    def fit(self, initial_parameters):
+    def fit(self, initial_parameters: Sequence[float] | NDArray[np.double]) -> None:
         """Fit."""
         try:
             import scipy
@@ -136,9 +150,14 @@ class EOSFit:
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
 
-            def residuals(p, eos, v, e):
+            def residuals(
+                p: NDArray[np.double],
+                eos: EosFunc,
+                v: NDArray[np.double],
+                e: NDArray[np.double],
+            ) -> NDArray[np.double]:
                 """Return residuals."""
-                return eos(v, *p) - e
+                return eos(v, p) - e
 
             try:
                 result = leastsq(

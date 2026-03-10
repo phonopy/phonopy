@@ -36,8 +36,9 @@
 
 from __future__ import annotations
 
-import warnings
+import os
 from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -56,11 +57,11 @@ class BulkModulus:
 
     def __init__(
         self,
-        volumes: Sequence[float],
-        energies: Sequence[float] | Sequence[Sequence[float]],
+        volumes: Sequence[float] | NDArray[np.double],
+        energies: Sequence[float] | Sequence[Sequence[float]] | NDArray[np.double],
         pressure: float | None = None,
         eos: str = "vinet",
-    ):
+    ) -> None:
         """Init method.
 
         volumes : array_like
@@ -75,8 +76,8 @@ class BulkModulus:
             Identifier of equation of states function.
 
         """
-        self._volumes = np.array(volumes)
-        self._energies = np.array(energies)
+        self._volumes = np.array(volumes, dtype="double")
+        self._energies = np.array(energies, dtype="double", order="C")
         self._eos_name = eos
         self._eos = get_eos(self._eos_name)
 
@@ -106,43 +107,52 @@ class BulkModulus:
         else:
             raise TypeError("Array shape of energies is wrong.")
 
-    def fit_to_eos(self, energies) -> tuple[NDArray, NDArray, NDArray, NDArray]:
-        """Fit energy-volume to EOS."""
+    def fit_to_eos(self, energies: NDArray[np.double]) -> NDArray[np.double]:
+        """Fit energy-volume to EOS.
+
+        Returns
+        -------
+        NDArray[np.double]
+            Fitting parameters [e, b, bp, ev] corresponding to
+            [energy, bulk modulus, B', equilibrium volume].
+
+        """
         try:
-            e, b, bp, ev = fit_to_eos(self._volumes, energies, self._eos)
+            return fit_to_eos(self._volumes, energies, self._eos)
         except TypeError as exc:
             msg = ['Failed to fit to "%s" equation of states.' % self._eos_name]
             if len(self._volumes) < 4:
                 msg += ["At least 4 volume points are needed for the fitting."]
             msg += ["Careful choice of volume points is recommended."]
             raise RuntimeError("\n".join(msg)) from exc
-        return e, b, bp, ev
 
     @property
-    def bulk_modulus(self) -> NDArray:
+    def bulk_modulus(self) -> float | NDArray[np.double]:
         """Return bulk modulus."""
         return self._bulk_modulus
 
     @property
-    def equilibrium_volume(self) -> NDArray:
+    def equilibrium_volume(self) -> float | NDArray[np.double]:
         """Return volume at equilibrium."""
         return self._equiv_volume
 
     @property
-    def b_prime(self) -> NDArray:
+    def b_prime(self) -> float | NDArray[np.double]:
         """Return fitted parameter B'."""
         return self._b_prime
 
     @property
-    def energy(self) -> NDArray:
+    def energy(self) -> float | NDArray[np.double]:
         """Return fitted parameter of energy."""
         return self._energy
 
-    def get_parameters(self) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+    def get_parameters(
+        self,
+    ) -> tuple[NDArray, NDArray, NDArray, NDArray] | tuple[float, float, float, float]:
         """Return fitted parameters."""
         return self._energy, self._bulk_modulus, self._b_prime, self._equiv_volume
 
-    def plot(self, thin_number=10):
+    def plot(self, thin_number: int = 10) -> Any:
         """Plot fitted EOS curve."""
         import matplotlib.pyplot as plt
 
@@ -151,13 +161,13 @@ class BulkModulus:
         _, ax = plt.subplots()
         parameters = self.get_parameters()
         if self._energies.ndim == 1:
-            ax.plot(volume_points, self._eos(volume_points, *parameters), "r-")
+            ax.plot(volume_points, self._eos(volume_points, np.array(parameters)), "r-")
             ax.plot(vols, self._energies, "bo", markersize=4)
         elif self._energies.ndim == 2:
             for i, (e_t, b_t, bp_t, ev_t) in enumerate(zip(*parameters, strict=True)):
                 if i % thin_number == 0:
                     ep = (e_t, b_t, bp_t, ev_t)
-                    ax.plot(volume_points, self._eos(volume_points, *ep), "-")
+                    ax.plot(volume_points, self._eos(volume_points, np.array(ep)), "-")
                     ax.plot(vols, self._energies[i], "bo", markersize=4)
         return plt
 
@@ -177,7 +187,7 @@ class QHA:
         eos: str = "vinet",
         t_max: float | None = None,
         energy_plot_factor: float | None = None,
-    ):
+    ) -> None:
         """Init method.
 
         Parameters
@@ -236,61 +246,73 @@ class QHA:
         self._t_max = t_max
         self._energy_plot_factor = energy_plot_factor
 
-        self._temperatures = None
-        self._equiv_volumes = None
-        self._equiv_energies = None
-        self._equiv_bulk_modulus = None
-        self._equiv_parameters = None
-        self._free_energies = None
-        self._num_elems = None
+        self._temperatures: NDArray[np.double] | None = None
+        self._equiv_volumes: NDArray[np.double] | None = None
+        self._equiv_energies: NDArray[np.double] | None = None
+        self._equiv_bulk_modulus: NDArray[np.double] | None = None
+        self._equiv_parameters: NDArray[np.double] | None = None
+        self._free_energies: NDArray[np.double] | None = None
+        self._num_elems: int | None = None
 
-        self._thermal_expansions = None
-        self._cp_numerical = None
-        self._volume_entropy_parameters = None
-        self._volume_cv_parameters = None
-        self._volume_entropy = None
-        self._volume_cv = None
-        self._cp_polyfit = None
-        self._dsdv = None
-        self._gruneisen_parameters = None
-        self._len = None
+        self._thermal_expansions: list[float] | None = None
+        self._cp_numerical: list[float] | None = None
+        self._volume_entropy_parameters: list[NDArray[np.double]] | None = None
+        self._volume_cv_parameters: list[NDArray[np.double]] | None = None
+        self._volume_entropy: list[NDArray[np.double]] | None = None
+        self._volume_cv: list[NDArray[np.double]] | None = None
+        self._cp_polyfit: list[float] | None = None
+        self._dsdv: list[float] | None = None
+        self._gruneisen_parameters: list[float] | None = None
+        self._len: int | None = None
 
     @property
-    def thermal_expansion(self):
+    def thermal_expansion(self) -> list[float]:
         """Return volumetric thermal expansion coefficients at temperatures."""
+        if self._thermal_expansions is None:
+            raise RuntimeError("Run QHA.run() to compute thermal expansion.")
         return self._thermal_expansions[: self._len]
 
     @property
-    def helmholtz_volume(self):
+    def helmholtz_volume(self) -> NDArray[np.double]:
         """Return Helmholtz free energies at temperatures and volumes."""
+        if self._free_energies is None:
+            raise RuntimeError("Run QHA.run() to compute free energies.")
         return self._free_energies[: self._len]
 
     @property
-    def volume_temperature(self):
+    def volume_temperature(self) -> NDArray[np.double]:
         """Return equilibrium volumes at temperatures."""
+        if self._equiv_volumes is None:
+            raise RuntimeError("Run QHA.run() to compute equilibrium volumes.")
         return self._equiv_volumes[: self._len]
 
     @property
-    def gibbs_temperature(self):
+    def gibbs_temperature(self) -> NDArray[np.double]:
         """Return Gibbs free energies at temperatures."""
+        if self._equiv_energies is None:
+            raise RuntimeError("Run QHA.run() to compute Gibbs free energies.")
         return self._equiv_energies[: self._len]
 
     @property
-    def bulk_modulus_temperature(self):
+    def bulk_modulus_temperature(self) -> NDArray[np.double]:
         """Return bulk modulus vs temperature data."""
+        if self._equiv_bulk_modulus is None:
+            raise RuntimeError("Run QHA.run() to compute bulk modulus.")
         return self._equiv_bulk_modulus[: self._len]
 
     @property
-    def heat_capacity_P_numerical(self):
+    def heat_capacity_P_numerical(self) -> list[float]:
         """Return heat capacities at constant pressure at temperatures.
 
         Values are computed by numerical derivative of Gibbs free energy.
 
         """
+        if self._cp_numerical is None:
+            raise RuntimeError("Run QHA.run() to compute heat capacity.")
         return self._cp_numerical[: self._len]
 
     @property
-    def heat_capacity_P_polyfit(self):
+    def heat_capacity_P_polyfit(self) -> list[float]:
         """Return heat capacities at constant pressure at temperatures.
 
         Volumes are computed in another way to heat_capacity_P_numerical
@@ -299,6 +321,8 @@ class QHA:
 
         """
         if self._electronic_energies.ndim == 1:
+            if self._cp_polyfit is None:
+                raise RuntimeError("Run QHA.run() to compute heat capacity.")
             return self._cp_polyfit[: self._len]
         else:
             raise NotImplementedError(
@@ -306,11 +330,13 @@ class QHA:
             )
 
     @property
-    def gruneisen_temperature(self):
+    def gruneisen_temperature(self) -> list[float]:
         """Return Gruneisen parameters at temperatures."""
+        if self._gruneisen_parameters is None:
+            raise RuntimeError("Run QHA.run() to compute Gruneisen parameters.")
         return self._gruneisen_parameters[: self._len]
 
-    def run(self, verbose=False):
+    def run(self, verbose: bool = False) -> None:
         """Fit parameters to EOS at temperatures.
 
         Even if fitting failed, simply omit the volume point. In this case,
@@ -389,7 +415,11 @@ class QHA:
         self._len = len(self._thermal_expansions)
         assert self._len + 1 == self._num_elems
 
-    def plot(self, thin_number=10, volume_temp_exp=None):
+    def plot(
+        self,
+        thin_number: int = 10,
+        volume_temp_exp: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+    ) -> Any:
         """Plot three figures.
 
         - Helmholtz free energy at volumes and temperatures.
@@ -421,18 +451,12 @@ class QHA:
         plt.tight_layout()
         return plt
 
-    def get_helmholtz_volume(self):
-        """Return Helmholtz free energy at volumes and temperatures."""
-        warnings.warn(
-            "QHA.get_helmholtz_volume() is deprecated.Use helmholtz_volume attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.helmholtz_volume
-
     def plot_helmholtz_volume(
-        self, thin_number=10, xlabel=r"Volume $(\AA^3)$", ylabel="Free energy"
-    ):
+        self,
+        thin_number: int = 10,
+        xlabel: str = r"Volume $(\AA^3)$",
+        ylabel: str = "Free energy",
+    ) -> Any:
         """Return pyplot of Helmholtz free energes vs volume at temperatures."""
         import matplotlib.pyplot as plt
 
@@ -443,8 +467,10 @@ class QHA:
         return plt
 
     def plot_pdf_helmholtz_volume(
-        self, thin_number=10, filename="helmholtz-volume.pdf"
-    ):
+        self,
+        thin_number: int = 10,
+        filename: str | os.PathLike = "helmholtz-volume.pdf",
+    ) -> None:
         """Plot Helmholtz free energes vs volume at temperatures in pdf."""
         import matplotlib.pyplot as plt
 
@@ -460,7 +486,9 @@ class QHA:
         plt.savefig(filename)
         plt.close()
 
-    def write_helmholtz_volume(self, filename="helmholtz-volume.dat"):
+    def write_helmholtz_volume(
+        self, filename: str | os.PathLike = "helmholtz-volume.dat"
+    ) -> None:
         """Write Helmholtz free energy vs volume in file."""
         w = open(filename, "w")
         for i, (t, ep, fe) in enumerate(
@@ -482,8 +510,10 @@ class QHA:
         w.close()
 
     def write_helmholtz_volume_fitted(
-        self, thin_number, filename="helholtz-volume_fitted.dat"
-    ):
+        self,
+        thin_number: int,
+        filename: str | os.PathLike = "helholtz-volume_fitted.dat",
+    ) -> None:
         """Write Helmholtz free energy (fitted) vs volume in file."""
         if self._energy_plot_factor is None:
             _energy_plot_factor = 1
@@ -520,7 +550,7 @@ class QHA:
                     np.array(self._free_energies[i]) * _energy_plot_factor - e0
                 )
                 _data_eos.append(
-                    self._eos(volume_points, *self._equiv_parameters[i])
+                    self._eos(volume_points, self._equiv_parameters[i])
                     * _energy_plot_factor
                     - e0
                 )
@@ -548,17 +578,10 @@ class QHA:
                 w.write("%10.5f %10.5f %s" % (a, b, "\n"))
             w.write("\n")
 
-    def get_volume_temperature(self):
-        """Return equilibrium volumes at temperatures."""
-        warnings.warn(
-            "QHA.get_volume_temperature() is deprecated."
-            "Use volume_temperature attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.volume_temperature
-
-    def plot_volume_temperature(self, exp_data=None):
+    def plot_volume_temperature(
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+    ) -> Any:
         """Return pyplot of volume vs temperature."""
         import matplotlib.pyplot as plt
 
@@ -568,8 +591,10 @@ class QHA:
         return plt
 
     def plot_pdf_volume_temperature(
-        self, exp_data=None, filename="volume-temperature.pdf"
-    ):
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        filename: str | os.PathLike = "volume-temperature.pdf",
+    ) -> None:
         """Plot volume vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
@@ -585,7 +610,9 @@ class QHA:
         plt.savefig(filename)
         plt.close()
 
-    def write_volume_temperature(self, filename="volume-temperature.dat"):
+    def write_volume_temperature(
+        self, filename: str | os.PathLike = "volume-temperature.dat"
+    ) -> None:
         """Write volume vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
@@ -594,17 +621,7 @@ class QHA:
             )
         w.close()
 
-    def get_thermal_expansion(self):
-        """Return thermal expansion coefficients at temperatures."""
-        warnings.warn(
-            "QHA.get_thermal_expansion() is deprecated."
-            "Use thermal_expansion attribute.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.thermal_expansion
-
-    def plot_thermal_expansion(self):
+    def plot_thermal_expansion(self) -> Any:
         """Return pyplot of thermal expansion vs temperature."""
         import matplotlib.pyplot as plt
 
@@ -613,7 +630,9 @@ class QHA:
 
         return plt
 
-    def plot_pdf_thermal_expansion(self, filename="thermal_expansion.pdf"):
+    def plot_pdf_thermal_expansion(
+        self, filename: str | os.PathLike = "thermal_expansion.pdf"
+    ) -> None:
         """Plot thermal expansion vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
@@ -629,7 +648,9 @@ class QHA:
         plt.savefig(filename)
         plt.close()
 
-    def write_thermal_expansion(self, filename="thermal_expansion.dat"):
+    def write_thermal_expansion(
+        self, filename: str | os.PathLike = "thermal_expansion.dat"
+    ) -> None:
         """Write thermal expansion vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
@@ -639,13 +660,15 @@ class QHA:
             )
         w.close()
 
-    def get_gibbs_temperature(self):
+    def get_gibbs_temperature(self) -> NDArray[np.double]:
         """Return Gibbs free energies at temperatures."""
         return self.gibbs_temperature
 
     def plot_gibbs_temperature(
-        self, xlabel="Temperature (K)", ylabel="Gibbs free energy"
-    ):
+        self,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = "Gibbs free energy",
+    ) -> Any:
         """Return pyplot Gibbs free energy vs temperature."""
         import matplotlib.pyplot as plt
 
@@ -654,7 +677,9 @@ class QHA:
 
         return plt
 
-    def plot_pdf_gibbs_temperature(self, filename="gibbs-temperature.pdf"):
+    def plot_pdf_gibbs_temperature(
+        self, filename: str | os.PathLike = "gibbs-temperature.pdf"
+    ) -> None:
         """Plot Gibbs free energy vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
@@ -670,7 +695,9 @@ class QHA:
         plt.savefig(filename)
         plt.close()
 
-    def write_gibbs_temperature(self, filename="gibbs-temperature.dat"):
+    def write_gibbs_temperature(
+        self, filename: str | os.PathLike = "gibbs-temperature.dat"
+    ) -> None:
         """Write Gibbs free energy vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
@@ -679,13 +706,15 @@ class QHA:
             )
         w.close()
 
-    def get_bulk_modulus_temperature(self):
+    def get_bulk_modulus_temperature(self) -> NDArray[np.double]:
         """Return bulk moduli at temperatures."""
         return self.bulk_modulus_temperature
 
     def plot_bulk_modulus_temperature(
-        self, xlabel="Temperature (K)", ylabel="Bulk modulus"
-    ):
+        self,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = "Bulk modulus",
+    ) -> Any:
         """Return pyplot of bulk modulus vs temperature."""
         import matplotlib.pyplot as plt
 
@@ -694,8 +723,8 @@ class QHA:
         return plt
 
     def plot_pdf_bulk_modulus_temperature(
-        self, filename="bulk_modulus-temperature.pdf"
-    ):
+        self, filename: str | os.PathLike = "bulk_modulus-temperature.pdf"
+    ) -> None:
         """Plot bulk modulus vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
@@ -711,7 +740,9 @@ class QHA:
         plt.savefig(filename)
         plt.close()
 
-    def write_bulk_modulus_temperature(self, filename="bulk_modulus-temperature.dat"):
+    def write_bulk_modulus_temperature(
+        self, filename: str | os.PathLike = "bulk_modulus-temperature.dat"
+    ) -> None:
         """Write bulk modulus vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
@@ -721,11 +752,15 @@ class QHA:
             )
         w.close()
 
-    def get_heat_capacity_P_numerical(self):
+    def get_heat_capacity_P_numerical(self) -> NDArray[np.double]:
         """Return C_P by numerical differenciation at temperatures."""
         return self.heat_capacity_P_numerical
 
-    def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None):
+    def plot_heat_capacity_P_numerical(
+        self,
+        Z: int = 1,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+    ) -> Any:
         """Return pyplot of C_P by numerical difference vs temperature."""
         import matplotlib.pyplot as plt
 
@@ -735,8 +770,10 @@ class QHA:
         return plt
 
     def plot_pdf_heat_capacity_P_numerical(
-        self, exp_data=None, filename="Cp-temperature.pdf"
-    ):
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        filename: str | os.PathLike = "Cp-temperature.pdf",
+    ) -> None:
         """Plot C_P by numerical difference vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
@@ -752,7 +789,9 @@ class QHA:
         plt.savefig(filename)
         plt.close()
 
-    def write_heat_capacity_P_numerical(self, filename="Cp-temperature.dat"):
+    def write_heat_capacity_P_numerical(
+        self, filename: str | os.PathLike = "Cp-temperature.dat"
+    ) -> None:
         """Write C_P by numerical difference vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
@@ -761,11 +800,15 @@ class QHA:
             )
         w.close()
 
-    def get_heat_capacity_P_polyfit(self):
+    def get_heat_capacity_P_polyfit(self) -> NDArray[np.double]:
         """Return C_P by fitting at temperatures."""
         return self.heat_capacity_P_polyfit
 
-    def plot_heat_capacity_P_polyfit(self, Z=1, exp_data=None):
+    def plot_heat_capacity_P_polyfit(
+        self,
+        Z: int = 1,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+    ) -> Any:
         """Return pyplot of C_P by fittings vs temperature."""
         import matplotlib.pyplot as plt
 
@@ -775,8 +818,10 @@ class QHA:
         return plt
 
     def plot_pdf_heat_capacity_P_polyfit(
-        self, exp_data=None, filename="Cp-temperature_polyfit.pdf"
-    ):
+        self,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        filename: str | os.PathLike = "Cp-temperature_polyfit.pdf",
+    ) -> None:
         """Plot C_P by fittings vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
@@ -794,11 +839,11 @@ class QHA:
 
     def write_heat_capacity_P_polyfit(
         self,
-        filename="Cp-temperature_polyfit.dat",
-        filename_ev="entropy-volume.dat",
-        filename_cvv="Cv-volume.dat",
-        filename_dsdvt="dsdv-temperature.dat",
-    ):
+        filename: str | os.PathLike = "Cp-temperature_polyfit.dat",
+        filename_ev: str | os.PathLike = "entropy-volume.dat",
+        filename_cvv: str | os.PathLike = "Cv-volume.dat",
+        filename_dsdvt: str | os.PathLike = "dsdv-temperature.dat",
+    ) -> None:
         """Write C_P by fittings vs temperature in file."""
         wve = open(filename_ev, "w")
         wvcv = open(filename_cvv, "w")
@@ -840,11 +885,11 @@ class QHA:
             )
         w.close()
 
-    def get_gruneisen_temperature(self):
+    def get_gruneisen_temperature(self) -> NDArray[np.double]:
         """Return Grueneisen parameters at temperatures."""
         return self.gruneisen_temperature
 
-    def plot_gruneisen_temperature(self):
+    def plot_gruneisen_temperature(self) -> Any:
         """Return pyplot of Grueneisen parameter vs temperature."""
         import matplotlib.pyplot as plt
 
@@ -853,7 +898,9 @@ class QHA:
 
         return plt
 
-    def plot_pdf_gruneisen_temperature(self, filename="gruneisen-temperature.pdf"):
+    def plot_pdf_gruneisen_temperature(
+        self, filename: str | os.PathLike = "gruneisen-temperature.pdf"
+    ) -> None:
         """Plot Grueneisen parameter vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
@@ -869,7 +916,9 @@ class QHA:
         plt.savefig(filename)
         plt.close()
 
-    def write_gruneisen_temperature(self, filename="gruneisen-temperature.dat"):
+    def write_gruneisen_temperature(
+        self, filename: str | os.PathLike = "gruneisen-temperature.dat"
+    ) -> None:
         """Write Grueneisen parameter vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
@@ -880,8 +929,12 @@ class QHA:
         w.close()
 
     def _plot_helmholtz_volume(
-        self, ax, thin_number=10, xlabel=r"Volume $(\AA^3)$", ylabel="Free energy"
-    ):
+        self,
+        ax: Any,
+        thin_number: int = 10,
+        xlabel: str = r"Volume $(\AA^3)$",
+        ylabel: str = "Free energy",
+    ) -> None:
         if self._energy_plot_factor is None:
             _energy_plot_factor = 1
             _ylabel = ylabel + " (eV)"
@@ -924,7 +977,7 @@ class QHA:
                 )
                 ax.plot(
                     volume_points,
-                    self._eos(volume_points, *self._equiv_parameters[i])
+                    self._eos(volume_points, self._equiv_parameters[i])
                     * _energy_plot_factor
                     - e0,
                     "b-",
@@ -952,8 +1005,12 @@ class QHA:
         ax.set_ylabel(_ylabel)
 
     def _plot_volume_temperature(
-        self, ax, exp_data=None, xlabel="Temperature (K)", ylabel=r"Volume $(\AA^3)$"
-    ):
+        self,
+        ax: Any,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = r"Volume $(\AA^3)$",
+    ) -> None:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.plot(self._temperatures[: self._len], self._equiv_volumes[: self._len], "r-")
@@ -964,17 +1021,17 @@ class QHA:
 
     def _plot_thermal_expansion(
         self,
-        ax,
-        xlabel="Temperature (K)",
-        ylabel=r"Thermal expansion $(\mathrm{K}^{-1})$",
-    ):
+        ax: Any,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = r"Thermal expansion $(\mathrm{K}^{-1})$",
+    ) -> None:
         from matplotlib.ticker import ScalarFormatter
 
         class FixedScaledFormatter(ScalarFormatter):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__(useMathText=True)
 
-            def _set_orderOfMagnitude(self, range):
+            def _set_orderOfMagnitude(self, range: float) -> None:
                 self.orderOfMagnitude = -6
 
         ax.yaxis.set_major_formatter(FixedScaledFormatter())
@@ -987,8 +1044,11 @@ class QHA:
         ax.set_ylabel(ylabel)
 
     def _plot_gibbs_temperature(
-        self, ax, xlabel="Temperature (K)", ylabel="Gibbs free energy (eV)"
-    ):
+        self,
+        ax: Any,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = "Gibbs free energy (eV)",
+    ) -> None:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.plot(
@@ -997,8 +1057,11 @@ class QHA:
         ax.set_xlim(self._temperatures[0], self._temperatures[self._len - 1])
 
     def _plot_bulk_modulus_temperature(
-        self, ax, xlabel="Temperature (K)", ylabel="Bulk modulus (GPa)"
-    ):
+        self,
+        ax: Any,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = "Bulk modulus (GPa)",
+    ) -> None:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.plot(
@@ -1008,12 +1071,12 @@ class QHA:
 
     def _plot_heat_capacity_P_numerical(
         self,
-        ax,
-        Z=1,
-        exp_data=None,
-        xlabel="Temperature (K)",
-        ylabel=r"$C\mathrm{_P}$ $\mathrm{(J/mol\cdot K)}$",
-    ):
+        ax: Any,
+        Z: int = 1,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = r"$C\mathrm{_P}$ $\mathrm{(J/mol\cdot K)}$",
+    ) -> None:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.plot(
@@ -1030,12 +1093,12 @@ class QHA:
 
     def _plot_heat_capacity_P_polyfit(
         self,
-        ax,
-        Z=1,
-        exp_data=None,
-        xlabel="Temperature (K)",
-        ylabel=r"$C\mathrm{_P}$ $\mathrm{(J/mol\cdot K)}$",
-    ):
+        ax: Any,
+        Z: int = 1,
+        exp_data: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = r"$C\mathrm{_P}$ $\mathrm{(J/mol\cdot K)}$",
+    ) -> None:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.plot(
@@ -1051,8 +1114,11 @@ class QHA:
         ax.set_xlim(self._temperatures[0], self._temperatures[self._len - 1])
 
     def _plot_gruneisen_temperature(
-        self, ax, xlabel="Temperature (K)", ylabel="Gruneisen parameter"
-    ):
+        self,
+        ax: Any,
+        xlabel: str = "Temperature (K)",
+        ylabel: str = "Gruneisen parameter",
+    ) -> None:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.plot(
@@ -1062,7 +1128,7 @@ class QHA:
         )
         ax.set_xlim(self._temperatures[0], self._temperatures[self._len - 1])
 
-    def _set_thermal_expansion(self):
+    def _set_thermal_expansion(self) -> None:
         beta = [0.0]
         for i in range(1, self._num_elems - 1):
             dt = self._temperatures[i + 1] - self._temperatures[i - 1]
@@ -1071,7 +1137,7 @@ class QHA:
 
         self._thermal_expansions = beta
 
-    def _set_heat_capacity_P_numerical(self):
+    def _set_heat_capacity_P_numerical(self) -> None:
         cp = []
         g = np.array(self._equiv_energies) * get_physical_units().EvTokJmol * 1000
         cp.append(0.0)
@@ -1085,7 +1151,7 @@ class QHA:
 
         self._cp_numerical = cp
 
-    def _set_heat_capacity_P_polyfit(self):
+    def _set_heat_capacity_P_polyfit(self) -> None:
         cp = [0.0]
         dsdv = [0.0]
         self._volume_entropy_parameters = []
@@ -1141,7 +1207,7 @@ class QHA:
         self._cp_polyfit = cp
         self._dsdv = dsdv
 
-    def _set_gruneisen_parameter(self):
+    def _set_gruneisen_parameter(self) -> None:
         gamma = [0]
         for i in range(1, self._num_elems - 1):
             v = self._equiv_volumes[i]
@@ -1167,14 +1233,14 @@ class QHA:
                 gamma.append(beta * kt / cv)
         self._gruneisen_parameters = gamma
 
-    def _get_num_elems(self, temperatures):
+    def _get_num_elems(self, temperatures: NDArray[np.double]) -> int:
         if self._t_max is None:
             return len(temperatures)
         else:
             i = np.argmin(np.abs(temperatures - self._t_max))
-            return i + 1
+            return int(i) + 1
 
-    def _set_rcParams(self, plt):
+    def _set_rcParams(self, plt: Any) -> None:
         plt.rcParams["backend"] = "PDF"
         plt.rcParams["pdf.fonttype"] = 42
         plt.rcParams["font.family"] = "serif"

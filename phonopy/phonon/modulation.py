@@ -36,9 +36,12 @@
 
 from __future__ import annotations
 
-from typing import Union
+import os
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
@@ -48,6 +51,7 @@ from phonopy.interface.calculator import (
 )
 from phonopy.phonon.degeneracy import get_eigenvectors
 from phonopy.physical_units import get_physical_units
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 
 
@@ -56,20 +60,20 @@ class Modulation:
 
     def __init__(
         self,
-        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        dimension,
-        phonon_modes,
-        delta_q=None,
-        derivative_order=None,
-        nac_q_direction=None,
-        factor=None,
-    ):
+        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
+        dimension: Sequence[int] | Sequence[Sequence[int]] | NDArray[np.int64],
+        phonon_modes: Sequence[tuple[NDArray[np.double], int, float, float]],
+        delta_q: NDArray[np.double] | Sequence[float] | None = None,
+        derivative_order: int | None = None,
+        nac_q_direction: NDArray[np.double] | None = None,
+        factor: float | None = None,
+    ) -> None:
         """Init method."""
         self._dm = dynamical_matrix
         self._primitive = dynamical_matrix.primitive
         self._phonon_modes = phonon_modes
-        self._dimension = np.array(dimension).ravel()
-        self._delta_q = delta_q  # 1st/2nd order perturbation direction
+        self._dimension = np.array(dimension, dtype="int64").ravel()
+        self._delta_q = delta_q
         self._nac_q_direction = nac_q_direction
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         self._derivative_order = derivative_order
@@ -80,7 +84,7 @@ class Modulation:
             self._factor = factor
         dim = self._get_dimension_3x3()
         self._supercell = get_supercell(self._primitive, dim)
-        complex_dtype = "c%d" % (np.dtype("double").itemsize * 2)
+        complex_dtype = np.cdouble
         self._u = np.zeros(
             (len(self._phonon_modes), len(self._supercell), 3),
             dtype=complex_dtype,
@@ -91,7 +95,7 @@ class Modulation:
             (len(self._phonon_modes), len(self._primitive) * 3), dtype=complex_dtype
         )
 
-    def run(self):
+    def run(self) -> None:
         """Calculate modulations."""
         for i, ph_mode in enumerate(self._phonon_modes):
             q, band_index, amplitude, argument = ph_mode
@@ -108,18 +112,24 @@ class Modulation:
             self._eigvecs[i] = eigvecs[:, band_index]
             self._eigvals[i] = eigvals[band_index]
 
-    def get_modulated_supercells(self):
+    def get_modulated_supercells(self) -> list[PhonopyAtoms]:
         """Return modulations."""
         modulations = []
         for u in self._u:
             modulations.append(self._get_cell_with_modulation(u))
         return modulations
 
-    def get_modulations_and_supercell(self):
+    def get_modulations_and_supercell(
+        self,
+    ) -> tuple[NDArray[np.cdouble], PhonopyAtoms]:
         """Return modulations and perfect supercell."""
         return self._u, self._supercell
 
-    def write(self, interface_mode=None, optional_structure_info=None):
+    def write(
+        self,
+        interface_mode: str | None = None,
+        optional_structure_info: Any | None = None,
+    ) -> None:
         """Write supercells with modulations."""
         base_fname = get_default_cell_filename(interface_mode)
 
@@ -151,11 +161,13 @@ class Modulation:
             optional_structure_info=optional_structure_info,
         )
 
-    def write_yaml(self, filename="modulation.yaml"):
+    def write_yaml(self, filename: str | os.PathLike = "modulation.yaml") -> None:
         """Write modulations to file in yaml."""
         self._write_yaml(filename=filename)
 
-    def _get_cell_with_modulation(self, modulation):
+    def _get_cell_with_modulation(
+        self, modulation: NDArray[np.cdouble]
+    ) -> PhonopyAtoms:
         lattice = self._supercell.cell
         positions = self._supercell.positions
         positions += modulation.real
@@ -167,7 +179,7 @@ class Modulation:
 
         return cell
 
-    def _get_dimension_3x3(self):
+    def _get_dimension_3x3(self) -> NDArray[np.int64]:
         if len(self._dimension) == 3:
             dim = np.diag(self._dimension)
         elif len(self._dimension) == 9:
@@ -182,8 +194,15 @@ class Modulation:
 
         return dim
 
-    def _get_displacements(self, eigvec, q, amplitude, argument):
+    def _get_displacements(
+        self,
+        eigvec: NDArray[np.cdouble],
+        q: NDArray[np.double],
+        amplitude: float,
+        argument: float,
+    ) -> NDArray[np.cdouble]:
         m = self._supercell.masses
+        assert m is not None
         s2u_map = self._supercell.s2u_map
         u2u_map = self._supercell.u2u_map
         s2uu_map = [u2u_map[x] for x in s2u_map]
@@ -201,7 +220,9 @@ class Modulation:
 
         return u
 
-    def _get_phase_factor(self, modulation, argument):
+    def _get_phase_factor(
+        self, modulation: NDArray[np.cdouble], argument: float
+    ) -> np.cdouble:
         u = np.ravel(modulation)
         index_max_elem = np.argmax(abs(u))
         max_elem = u[index_max_elem]
@@ -210,11 +231,13 @@ class Modulation:
 
         return phase_factor
 
-    def _eigvals_to_frequencies(self, eigvals):
-        e = np.array(eigvals).real
+    def _eigvals_to_frequencies(
+        self, eigvals: NDArray[np.double]
+    ) -> NDArray[np.double]:
+        e = np.array(eigvals, dtype="double")
         return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
 
-    def _write_yaml(self, filename="modulation.yaml"):
+    def _write_yaml(self, filename: str | os.PathLike = "modulation.yaml") -> None:
         w = open(filename, "w")
         primitive = self._dm.primitive
         num_atom = len(primitive)
@@ -282,10 +305,11 @@ class Modulation:
                         % (val.real, val.imag, np.angle(val, deg=True))
                     )
 
-    def _write_cell_yaml(self, cell, w):
+    def _write_cell_yaml(self, cell: PhonopyAtoms, w) -> None:
         lattice = cell.cell
         positions = cell.scaled_positions
         masses = cell.masses
+        assert masses is not None
         symbols = cell.symbols
         w.write("  atom_info:\n")
         for m, s in zip(masses, symbols, strict=True):

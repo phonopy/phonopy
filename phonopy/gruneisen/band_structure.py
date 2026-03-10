@@ -38,13 +38,28 @@ from __future__ import annotations
 
 import gzip
 import lzma
+import os
 import sys
+from collections.abc import Sequence
+from typing import IO, Any, Literal, cast
 
 import numpy as np
 import yaml
+from numpy.typing import NDArray
 
 from phonopy.gruneisen.core import GruneisenBase
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.physical_units import get_physical_units
+
+BandPath = tuple[
+    NDArray[np.double],
+    NDArray[np.double],
+    NDArray[np.double],
+    NDArray[np.double],
+    NDArray[np.cdouble],
+    NDArray[np.double],
+    NDArray[np.double],
+]
 
 
 class GruneisenBandStructure(GruneisenBase):
@@ -52,15 +67,15 @@ class GruneisenBandStructure(GruneisenBase):
 
     def __init__(
         self,
-        paths,
-        dynmat,
-        dynmat_plus,
-        dynmat_minus,
-        delta_strain=None,
-        path_connections=None,
-        labels=None,
-        factor=None,
-    ):
+        paths: Sequence[Sequence[Sequence[float]]] | Sequence[NDArray[np.double]],
+        dynmat: DynamicalMatrix,
+        dynmat_plus: DynamicalMatrix,
+        dynmat_minus: DynamicalMatrix,
+        delta_strain: float | None = None,
+        path_connections: list[bool] | None = None,
+        labels: Sequence[str] | None = None,
+        factor: float | None = None,
+    ) -> None:
         """Init method."""
         super().__init__(
             dynmat,
@@ -78,9 +93,10 @@ class GruneisenBandStructure(GruneisenBase):
         else:
             _factor = factor
 
-        self._paths = []
-        for qpoints_ in paths:
-            qpoints = np.array(qpoints_)
+        self._paths: list[BandPath] = []
+        self._is_legacy_plot = False
+        for _qpoints in paths:
+            qpoints = np.array(_qpoints, dtype="double")
             distances = np.zeros(len(qpoints))
             delta_qpoints = qpoints[1:] - qpoints[:-1]
             delta_distances = np.sqrt(
@@ -91,11 +107,14 @@ class GruneisenBandStructure(GruneisenBase):
 
             self.set_qpoints(qpoints)
             eigenvalues = self._eigenvalues
+            assert eigenvalues is not None
+            assert self._gruneisen is not None
+            assert self._eigenvectors is not None
             frequencies = np.sqrt(abs(eigenvalues)) * np.sign(eigenvalues) * _factor
             distances_with_shift = distances + distance_shift
 
             self._paths.append(
-                [
+                (
                     qpoints,
                     distances,
                     self._gruneisen,
@@ -103,12 +122,12 @@ class GruneisenBandStructure(GruneisenBase):
                     self._eigenvectors,
                     frequencies,
                     distances_with_shift,
-                ]
+                )
             )
 
             distance_shift = distances_with_shift[-1]
-        self._labels = None
-        self._path_connections = None
+        self._labels: Sequence[str] | None = None
+        self._path_connections: list[bool] | None = None
         if path_connections is None:
             self._path_connections = [
                 True,
@@ -122,31 +141,36 @@ class GruneisenBandStructure(GruneisenBase):
         ):
             self._labels = labels
 
-    def get_qpoints(self):
+    def get_qpoints(self) -> list[NDArray[np.double]]:
         """Return q-points."""
         return [path[0] for path in self._paths]
 
-    def get_distances(self):
+    def get_distances(self) -> list[NDArray[np.double]]:
         """Return distances."""
         return [path[6] for path in self._paths]
 
-    def get_gruneisen(self):
+    def get_gruneisen(self) -> list[NDArray[np.double]]:
         """Return mode Gruneisen parameters."""
         return [path[2] for path in self._paths]
 
-    def get_eigenvalues(self):
+    def get_eigenvalues(self) -> list[NDArray[np.double]]:
         """Return eigenvalues."""
         return [path[3] for path in self._paths]
 
-    def get_eigenvectors(self):
+    def get_eigenvectors(self) -> list[NDArray[np.cdouble]]:
         """Return eigenvectors."""
         return [path[4] for path in self._paths]
 
-    def get_frequencies(self):
+    def get_frequencies(self) -> list[NDArray[np.double]]:
         """Return frequencies."""
         return [path[5] for path in self._paths]
 
-    def write_yaml(self, comment=None, filename=None, compression=None):
+    def write_yaml(
+        self,
+        comment: Any = None,
+        filename: str | os.PathLike | None = None,
+        compression: Literal["gzip", "lzma"] | None = None,
+    ) -> None:
         """Write results to file in yaml."""
         if filename is not None:
             _filename = filename
@@ -160,19 +184,24 @@ class GruneisenBandStructure(GruneisenBase):
             if filename is None:
                 _filename = "gruneisen.yaml.gz"
             with gzip.open(_filename, "wb") as w:
-                self._write_yaml(w, comment, is_binary=True)
+                self._write_yaml(cast(IO[bytes], w), comment, is_binary=True)
         elif compression == "lzma":
             if filename is None:
                 _filename = "gruneisen.yaml.xz"
-            with lzma.open(_filename, "w") as w:
-                self._write_yaml(w, comment, is_binary=True)
+            with lzma.open(_filename, "wb") as w:
+                self._write_yaml(cast(IO[bytes], w), comment, is_binary=True)
 
-    def _write_yaml(self, w, comment, is_binary=False):
+    def _write_yaml(
+        self,
+        w: IO[str] | IO[bytes],
+        comment: Any,
+        is_binary: bool = False,
+    ) -> None:
         natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
         nq_paths = []
-        for qpoints in self._paths:
-            nq_paths.append(len(qpoints))
+        for path in self._paths:
+            nq_paths.append(len(path[0]))
         text = []
         if comment is not None:
             text.append(yaml.dump(comment, default_flow_style=False).rstrip())
@@ -188,6 +217,7 @@ class GruneisenBandStructure(GruneisenBase):
                         "- [ '%s', '%s' ]" % (self._labels[i], self._labels[i + 1])
                     )
             else:
+                assert self._path_connections is not None
                 i = 0
                 for c in self._path_connections:
                     text.append(
@@ -233,22 +263,32 @@ class GruneisenBandStructure(GruneisenBase):
 
         self._write_lines(w, text, is_binary)
 
-    def _write_lines(self, w, lines, is_binary):
+    def _write_lines(
+        self, w: IO[str] | IO[bytes], lines: list[str], is_binary: bool
+    ) -> None:
         text = "\n".join(lines)
         if is_binary:
             if sys.version_info < (3, 0):
-                w.write(bytes(text))
+                cast(IO[bytes], w).write(bytes(text))
             else:
-                w.write(bytes(text, "utf8"))
+                cast(IO[bytes], w).write(bytes(text, "utf8"))
         else:
-            w.write(text)
+            cast(IO[str], w).write(text)
 
-    def plot(self, axarr, epsilon: float | None = None, color_scheme=None):
+    def plot(
+        self, axarr: Any, epsilon: float | None = None, color_scheme: str | None = None
+    ) -> None:
         """Return pyplot of band structure calculation results."""
         for band_structure in self._paths:
             self._plot(axarr, band_structure, epsilon, color_scheme)
 
-    def _plot(self, axarr, band_structure, epsilon, color_scheme):
+    def _plot(
+        self,
+        axarr: Any,
+        band_structure: BandPath,
+        epsilon: float | None,
+        color_scheme: str | None,
+    ) -> None:
         (
             qpoints,
             distances,
@@ -296,7 +336,15 @@ class GruneisenBandStructure(GruneisenBase):
             self._plot_a_band(ax2, freqs, distances_with_shift, i, n, color_scheme)
         ax2.set_xlim(0, distances_with_shift[-1])
 
-    def _plot_a_band(self, ax, curve, distances_with_shift, i, n, color_scheme):
+    def _plot_a_band(
+        self,
+        ax: Any,
+        curve: NDArray[np.double],
+        distances_with_shift: NDArray[np.double],
+        i: int,
+        n: int,
+        color_scheme: str | None,
+    ) -> None:
         color = None
         if color_scheme == "RB":
             color = (1.0 / n * i, 0, 1.0 / n * (n - i))

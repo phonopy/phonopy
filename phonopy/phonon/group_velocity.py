@@ -34,10 +34,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
-from typing import Optional, Union
+from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import (
@@ -79,12 +79,12 @@ class GroupVelocity:
 
     def __init__(
         self,
-        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        q_length: Optional[float] = None,
-        symmetry: Optional[Symmetry] = None,
-        frequency_factor_to_THz: Optional[float] = None,
+        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
+        q_length: float | None = None,
+        symmetry: Symmetry | None = None,
+        frequency_factor_to_THz: float | None = None,
         cutoff_frequency: float = 1e-4,
-    ):
+    ) -> None:
         """Init method.
 
         dynamical_matrix : DynamicalMatrix or DynamicalMatrixNAC
@@ -111,7 +111,7 @@ class GroupVelocity:
             if self._q_length is None:
                 self._q_length = self.Default_q_length
 
-        self._ddm: Optional[DerivativeOfDynamicalMatrix]
+        self._ddm: DerivativeOfDynamicalMatrix | None
         if self._q_length is None:
             self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         else:
@@ -129,11 +129,15 @@ class GroupVelocity:
         )
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
-        self._q_points = None
-        self._group_velocities = None
-        self._perturbation = None
+        self._q_points: NDArray[np.double] | None = None
+        self._group_velocities: NDArray[np.double] | None = None
+        self._perturbation: NDArray[np.double] | None = None
 
-    def run(self, q_points, perturbation=None):
+    def run(
+        self,
+        q_points: NDArray[np.double],
+        perturbation: NDArray[np.double] | None = None,
+    ) -> None:
         """Group velocities are computed at q-points.
 
         Calculated group velocities are stored in self._group_velocities.
@@ -159,50 +163,22 @@ class GroupVelocity:
         self._group_velocities = np.array(gv, dtype="double", order="C")
 
     @property
-    def q_length(self):
+    def q_length(self) -> float | None:
         """Setter an getter of q_length."""
         return self._q_length
 
     @q_length.setter
-    def q_length(self, q_length):
+    def q_length(self, q_length: float | None) -> None:
         self._q_length = q_length
 
-    def get_q_length(self):
-        """Return q_length."""
-        warnings.warn(
-            "GroupVelocity.get_q_length() is deprecated. "
-            "Use q_length attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.q_length
-
-    def set_q_length(self, q_length):
-        """Set q_length."""
-        warnings.warn(
-            "GroupVelocity.set_q_length() is deprecated. "
-            "Use q_length attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.q_length = q_length
-
     @property
-    def group_velocities(self) -> Optional[np.ndarray]:
+    def group_velocities(self) -> NDArray[np.double] | None:
         """Return group velocities."""
         return self._group_velocities
 
-    def get_group_velocity(self):
-        """Return group velocities."""
-        warnings.warn(
-            "GroupVelocity.get_group_velocity() is deprecated. "
-            "Use group_velocities attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.group_velocities
-
-    def _calculate_group_velocity_at_q(self, q):
+    def _calculate_group_velocity_at_q(
+        self, q: NDArray[np.double]
+    ) -> NDArray[np.double]:
         self._dynmat.run(q)
         dm = self._dynmat.dynamical_matrix
         eigvals, eigvecs = np.linalg.eigh(dm)
@@ -231,7 +207,9 @@ class GroupVelocity:
         else:
             return gv
 
-    def _symmetrize_group_velocity(self, gv, q):
+    def _symmetrize_group_velocity(
+        self, gv: NDArray[np.double], q: NDArray[np.double]
+    ) -> NDArray[np.double]:
         """Symmetrize obtained group velocities using site symmetries."""
         rotations = []
         for r in self._symmetry.reciprocal_operations:
@@ -247,14 +225,14 @@ class GroupVelocity:
 
         return gv_sym / len(rotations)
 
-    def _get_dD(self, q):
+    def _get_dD(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
         """Compute derivative or finite difference of dynamcial matrices."""
         if self._q_length is None:
             return self._get_dD_analytical(q)
         else:
             return self._get_dD_FD(q)
 
-    def _get_dD_FD(self, q):
+    def _get_dD_FD(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
         """Compute finite difference of dynamcial matrices."""
         ddm = []
         for dqc in self._directions * self._q_length:
@@ -264,7 +242,7 @@ class GroupVelocity:
             )
         return np.array(ddm)
 
-    def _get_dD_analytical(self, q):
+    def _get_dD_analytical(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
         """Compute derivative of dynamcial matrices."""
         self._ddm.run(q)
         ddm = self._ddm.d_dynamical_matrix
@@ -275,7 +253,9 @@ class GroupVelocity:
                 ddm_dirs[i] += dq[j] * ddm[j]
         return ddm_dirs
 
-    def _perturb_D(self, ddms, eigsets):
+    def _perturb_D(
+        self, ddms: NDArray[np.cdouble], eigsets: NDArray[np.cdouble]
+    ) -> NDArray[np.double]:
         """Treat degeneracy.
 
         Group velocities are calculated using analytical continuation using
@@ -301,12 +281,12 @@ class GroupVelocity:
 
 
 def get_group_velocity(
-    q,  # q-point
-    dynamical_matrix,
-    q_length=None,  # finite distance in q
-    symmetry=None,
-    frequency_factor_to_THz=None,
-):
+    q: NDArray[np.double],
+    dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
+    q_length: float | None = None,
+    symmetry: Symmetry | None = None,
+    frequency_factor_to_THz: float | None = None,
+) -> NDArray[np.double]:
     """Return group velocity at a q-point."""
     if frequency_factor_to_THz is None:
         _factor = get_physical_units().DefaultToTHz
@@ -322,7 +302,11 @@ def get_group_velocity(
     return gv.group_velocity[0]
 
 
-def _delta_dynamical_matrix(q, delta_q, dynmat):
+def _delta_dynamical_matrix(
+    q: NDArray[np.double],
+    delta_q: NDArray[np.double],
+    dynmat: DynamicalMatrix | DynamicalMatrixNAC,
+) -> NDArray[np.cdouble]:
     dynmat.run(q - delta_q)
     dm1 = dynmat.dynamical_matrix
     dynmat.run(q + delta_q)
