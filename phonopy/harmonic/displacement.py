@@ -36,15 +36,21 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from collections.abc import Sequence
+from typing import Literal, TypeAlias, TypedDict
 
 import numpy as np
+from numpy.typing import NDArray
 
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import determinant
 from phonopy.structure.symmetry import Symmetry
 
-directions_axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+directions_axis: NDArray[np.int64] = np.array(
+    [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="int64", order="C"
+)
 
-directions_diag = np.array(
+directions_diag: NDArray[np.int64] = np.array(
     [
         [1, 0, 0],
         [0, 1, 0],
@@ -59,22 +65,74 @@ directions_diag = np.array(
         [1, 1, -1],
         [1, -1, 1],
         [-1, 1, 1],
-    ]
+    ],
+    dtype="int64",
+    order="C",
 )
 
 
-def directions_to_displacement_dataset(displacement_directions, distance, supercell):
+DisplacementDirection: TypeAlias = Sequence[int] | NDArray[np.int64]
+
+
+class FirstAtomDisplacement(TypedDict):
+    """Displacement information of one displaced atom."""
+
+    number: int
+    displacement: list[float]
+
+
+class FirstAtomDisplacementWithForces(FirstAtomDisplacement, total=False):
+    """Type-1 displacement entry optionally containing forces and energy."""
+
+    forces: NDArray[np.double]
+    supercell_energy: float
+
+
+class Type1DisplacementDataset(TypedDict):
+    """Displacement dataset in the type-1 format."""
+
+    natom: int
+    first_atoms: list[FirstAtomDisplacementWithForces]
+
+
+class Type2DisplacementDataset(TypedDict):
+    """Displacement dataset in the type-2 format."""
+
+    displacements: NDArray[np.double]
+
+
+class Type2DisplacementDatasetWithOptionalData(Type2DisplacementDataset, total=False):
+    """Type-2 displacement dataset with optional accompanying properties."""
+
+    forces: NDArray[np.double]
+    supercell_energies: NDArray[np.double]
+    random_seed: int
+
+
+DisplacementDataset: TypeAlias = (
+    Type1DisplacementDataset | Type2DisplacementDatasetWithOptionalData
+)
+
+
+def directions_to_displacement_dataset(
+    displacement_directions: Sequence[DisplacementDirection] | NDArray[np.int64],
+    distance: float,
+    supercell: PhonopyAtoms,
+) -> Type1DisplacementDataset:
     """Transform displacement directions to displacements in Cartesian coordinates."""
     lattice = supercell.cell
-    first_atoms = []
+    first_atoms: list[FirstAtomDisplacementWithForces] = []
     for disp in displacement_directions:
         direction = disp[1:]
         disp_cartesian = np.dot(direction, lattice)
         disp_cartesian *= distance / np.linalg.norm(disp_cartesian)
         first_atoms.append(
-            {"number": int(disp[0]), "displacement": disp_cartesian.tolist()}
+            {
+                "number": int(disp[0]),
+                "displacement": [float(x) for x in disp_cartesian],
+            }
         )
-    displacement_dataset = {
+    displacement_dataset: Type1DisplacementDataset = {
         "natom": len(supercell),
         "first_atoms": first_atoms,
     }
@@ -88,7 +146,7 @@ def get_least_displacements(
     is_diagonal: bool = True,
     is_trigonal: bool = False,
     log_level: int = 0,
-):
+) -> list[list[int]]:
     """Return a set of displacements.
 
     Returns
@@ -135,8 +193,11 @@ def get_least_displacements(
 
 
 def get_displacement(
-    site_symmetry, directions=directions_diag, is_trigonal=False, log_level=0
-):
+    site_symmetry: NDArray[np.int64],
+    directions: NDArray[np.int64] = directions_diag,
+    is_trigonal: bool = False,
+    log_level: int = 0,
+) -> list[NDArray[np.int64]]:
     """Return displacement directions for one atom."""
     # One
     sitesym_num, disp = _get_displacement_one(site_symmetry, directions)
@@ -169,7 +230,10 @@ def get_displacement(
     return [directions[0], directions[1], directions[2]]
 
 
-def _get_displacement_one(site_symmetry, directions=directions_diag):
+def _get_displacement_one(
+    site_symmetry: NDArray[np.int64],
+    directions: NDArray[np.int64] = directions_diag,
+) -> tuple[int, list[NDArray[np.int64]]] | tuple[None, None]:
     """Return one displacement.
 
     This method tries to find three linearly independent displacements by
@@ -183,13 +247,16 @@ def _get_displacement_one(site_symmetry, directions=directions_diag):
         num_sitesym = len(site_symmetry)
         for i in range(num_sitesym):
             for j in range(i + 1, num_sitesym):
-                det = _determinant(direction, rot_directions[i], rot_directions[j])
+                det = determinant([direction, rot_directions[i], rot_directions[j]])
                 if det != 0:
                     return i, [direction]
     return None, None
 
 
-def _get_displacement_two(site_symmetry, directions=directions_diag):
+def _get_displacement_two(
+    site_symmetry: NDArray[np.int64],
+    directions: NDArray[np.int64] = directions_diag,
+) -> tuple[int, list[NDArray[np.int64]]] | tuple[None, None]:
     """Return one displacement.
 
     This method tries to find three linearly independent displacements by
@@ -203,13 +270,15 @@ def _get_displacement_two(site_symmetry, directions=directions_diag):
         num_sitesym = len(site_symmetry)
         for i in range(num_sitesym):
             for second_direction in directions:
-                det = _determinant(direction, rot_directions[i], second_direction)
+                det = determinant([direction, rot_directions[i], second_direction])
                 if det != 0:
                     return i, [direction, second_direction]
     return None, None
 
 
-def is_minus_displacement(direction, site_symmetry):
+def is_minus_displacement(
+    direction: NDArray[np.int64], site_symmetry: NDArray[np.int64]
+) -> bool:
     """Symmetrically check if minus displacement is necessary or not."""
     is_minus = True
     for r in site_symmetry:
@@ -222,7 +291,7 @@ def is_minus_displacement(direction, site_symmetry):
     return is_minus
 
 
-def _is_trigonal_axis(r):
+def _is_trigonal_axis(r: NDArray[np.int64]) -> bool:
     """Check three folded rotation.
 
     True if r^3 = identity.
@@ -235,19 +304,6 @@ def _is_trigonal_axis(r):
         return False
 
 
-def _determinant(a, b, c):
-    """Return determinant of 3x3 matrix of [a, b, c]."""
-    det = (
-        a[0] * b[1] * c[2]
-        - a[0] * b[2] * c[1]
-        + a[1] * b[2] * c[0]
-        - a[1] * b[0] * c[2]
-        + a[2] * b[0] * c[1]
-        - a[2] * b[1] * c[0]
-    )
-    return det
-
-
 def get_random_displacements_dataset(
     number_of_snapshots: int,
     num_atoms: int,
@@ -255,7 +311,7 @@ def get_random_displacements_dataset(
     random_seed: int | None = None,
     is_plusminus: bool = False,
     max_distance: float | None = None,
-) -> np.ndarray:
+) -> NDArray[np.double]:
     """Return random displacements at constant displacement distance.
 
     number_of_snapshots : int,
@@ -322,7 +378,9 @@ def get_random_displacements_dataset(
     return supercell_disps
 
 
-def _get_random_directions(num_atoms: int, rng: np.random.Generator) -> np.ndarray:
+def _get_random_directions(
+    num_atoms: int, rng: np.random.Generator
+) -> NDArray[np.double]:
     """Return random directions in sphere with radius 1."""
     xy = rng.standard_normal(size=(3, num_atoms * 2))
     r = np.linalg.norm(xy, axis=0)

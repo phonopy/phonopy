@@ -42,7 +42,7 @@ from numpy.typing import NDArray
 
 def get_displacements_and_forces(
     disp_dataset: dict,
-) -> tuple[NDArray, NDArray | None]:
+) -> tuple[NDArray[np.double], NDArray[np.double] | None]:
     """Return displacements and forces of all atoms from displacement dataset.
 
     This is used to extract displacements and forces from displacement dataset.
@@ -88,7 +88,7 @@ def get_displacements_and_forces(
         raise RuntimeError("Unknown dataset format.")
 
 
-def forces_in_dataset(dataset):
+def forces_in_dataset(dataset: dict) -> bool:
     """Check if forces in displacement dataset."""
     if dataset is None:
         return False

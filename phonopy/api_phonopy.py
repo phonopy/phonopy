@@ -50,6 +50,8 @@ from numpy.typing import ArrayLike, NDArray
 
 from phonopy.exception import ForcesetsNotFoundError
 from phonopy.harmonic.displacement import (
+    DisplacementDataset,
+    Type2DisplacementDatasetWithOptionalData,
     directions_to_displacement_dataset,
     get_least_displacements,
     get_random_displacements_dataset,
@@ -959,7 +961,7 @@ class Phonopy:
             sets this factor to 8 when `max_distance` is specified, otherwise 4.
 
         """
-        displacement_dataset: dict[str, Any]
+        displacement_dataset: DisplacementDataset
         if number_of_snapshots is not None and (
             number_of_snapshots == "auto" or number_of_snapshots > 0
         ):
@@ -982,10 +984,8 @@ class Phonopy:
 
             if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
                 _random_seed = random_seed
-                displacement_dataset = {"random_seed": _random_seed}
             else:
                 _random_seed = None
-                displacement_dataset = {}
             if temperature is None:
                 if distance is None:
                     _distance = 0.01
@@ -999,7 +999,6 @@ class Phonopy:
                     is_plusminus=(is_plusminus is True),
                     max_distance=max_distance,
                 )
-                displacement_dataset["displacements"] = d
             else:
                 self.init_random_displacements(
                     cutoff_frequency=cutoff_frequency, max_distance=max_distance
@@ -1010,7 +1009,12 @@ class Phonopy:
                     is_plusminus=(is_plusminus is True),
                     random_seed=_random_seed,
                 )
-                displacement_dataset["displacements"] = d
+            displacement_dataset_type2: Type2DisplacementDatasetWithOptionalData = {
+                "displacements": d
+            }
+            if _random_seed is not None:
+                displacement_dataset_type2["random_seed"] = _random_seed
+            displacement_dataset = displacement_dataset_type2
         else:
             if distance is None:
                 _distance = 0.01

@@ -1832,10 +1832,11 @@ def guess_primitive_matrix(
         raise RuntimeError(msg)
 
     if unitcell.magnetic_moments is None:
-        dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
+        dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)  # type: ignore
     else:
         dataset = spglib.get_magnetic_symmetry_dataset(
-            unitcell.totuple(), symprec=symprec
+            unitcell.totuple(),  # type: ignore
+            symprec=symprec,
         )
 
     if isinstance(dataset, (SpglibDataset, SpglibMagneticDataset)):
