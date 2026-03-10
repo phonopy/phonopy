@@ -205,7 +205,10 @@ class GridPoints:
         is_gamma_center: bool = True,
         is_time_reversal: bool = True,
         fit_in_BZ: bool = True,
-        rotations: Sequence[Sequence[Sequence[int]]] | NDArray[np.int64] | None = None,
+        rotations: Sequence[Sequence[Sequence[int]]]
+        | Sequence[NDArray[np.int64]]
+        | NDArray[np.int64]
+        | None = None,
         is_mesh_symmetry: bool = True,
     ) -> None:  # Except for time reversal symmetry
         """Init method.

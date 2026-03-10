@@ -45,6 +45,8 @@ from typing import Literal
 import numpy as np
 import spglib
 
+from phonopy.structure.symmetry import Symmetry
+
 try:
     spglib.error.OLD_ERROR_HANDLING = False
 except AttributeError:
@@ -100,7 +102,6 @@ from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.pypolymlp import get_change_in_positions, relax_atomic_positions
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
-from phonopy.phonon.dos import get_pdos_indices
 from phonopy.phonon.mesh import Mesh
 from phonopy.physical_units import (
     CalculatorPhysicalUnits,
@@ -547,6 +548,12 @@ def _print_settings(
         print("  Primitive matrix:")
         for v in primitive_matrix:
             print("    %s" % v)
+
+
+def _get_pdos_indices(symmetry: Symmetry) -> list[list[int]]:
+    """Return atomic indieces grouped by symmetry."""
+    mapping = symmetry.get_map_atoms()
+    return [list(np.where(mapping == i)[0]) for i in symmetry.get_independent_atoms()]
 
 
 def _write_displacements_files_then_exit(
@@ -1717,7 +1724,7 @@ def _get_pdos_indices_and_legend(
     if settings.xyz_projection:
         legend = []
         if _is_pdos_auto(settings):
-            pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
+            pdos_indices = _get_pdos_indices(phonon.primitive_symmetry)
         _pdos_indices = []
         for index_set in pdos_indices:
             xyz_set = []
@@ -1727,7 +1734,7 @@ def _get_pdos_indices_and_legend(
             legend.append(xyz_set + 1)
             _pdos_indices.append(xyz_set)
     elif _is_pdos_auto(settings):
-        _pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
+        _pdos_indices = _get_pdos_indices(phonon.primitive_symmetry)
         legend = [phonon.primitive.symbols[x[0]] for x in _pdos_indices]
     else:
         legend = [np.array(x) + 1 for x in pdos_indices]

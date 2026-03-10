@@ -36,6 +36,8 @@
 
 from __future__ import annotations
 
+import os
+from collections.abc import Sequence
 from typing import Literal
 
 import numpy as np
@@ -45,6 +47,7 @@ from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     run_dynamical_matrix_solver_c,
 )
+from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.grid_points import GridPoints
 
@@ -86,15 +89,18 @@ class MeshBase:
     def __init__(
         self,
         dynamical_matrix: DynamicalMatrix,
-        mesh,
-        shift=None,
-        is_time_reversal=True,
-        is_mesh_symmetry=True,
-        with_eigenvectors=False,
-        is_gamma_center=False,
-        rotations=None,  # Point group operations in real space
-        factor=None,
-    ):
+        mesh: Sequence[int] | NDArray[np.int64],
+        shift: Sequence[float] | NDArray[np.double] | None = None,
+        is_time_reversal: bool = True,
+        is_mesh_symmetry: bool = True,
+        with_eigenvectors: bool = False,
+        is_gamma_center: bool = False,
+        rotations: Sequence[Sequence[Sequence[int]]]
+        | Sequence[NDArray[np.int64]]
+        | NDArray[np.int64]
+        | None = None,  # Point group operations in real space
+        factor: float | None = None,
+    ) -> None:
         """Init method."""
         self._mesh = np.array(mesh, dtype="int64")
         self._with_eigenvectors = with_eigenvectors
@@ -124,32 +130,32 @@ class MeshBase:
         self._q_count = 0
 
     @property
-    def mesh_numbers(self) -> NDArray:
+    def mesh_numbers(self) -> NDArray[np.int64]:
         """Return mesh numbers."""
         return self._mesh
 
     @property
-    def qpoints(self) -> NDArray:
+    def qpoints(self) -> NDArray[np.double]:
         """Return (irreducible) q-points."""
         return self._qpoints
 
     @property
-    def weights(self) -> NDArray:
+    def weights(self) -> NDArray[np.int64]:
         """Return (irreducible) weights of q-points."""
         return self._weights
 
     @property
-    def grid_address(self) -> NDArray:
+    def grid_address(self) -> NDArray[np.int64]:
         """Return mesh grid addresses."""
         return self._gp.grid_address
 
     @property
-    def ir_grid_points(self) -> NDArray:
+    def ir_grid_points(self) -> NDArray[np.int64]:
         """Return irreducible grid indices."""
         return self._gp.ir_grid_points
 
     @property
-    def grid_mapping_table(self) -> NDArray:
+    def grid_mapping_table(self) -> NDArray[np.int64]:
         """Return grid index mapping table."""
         return self._gp.grid_mapping_table
 
@@ -193,17 +199,20 @@ class Mesh(MeshBase):
 
     def __init__(
         self,
-        dynamical_matrix,
-        mesh,
-        shift=None,
-        is_time_reversal=True,
-        is_mesh_symmetry=True,
-        with_eigenvectors=False,
-        is_gamma_center=False,
-        group_velocity=None,
-        rotations=None,  # Point group operations in real space
-        factor=None,
-    ):
+        dynamical_matrix: DynamicalMatrix,
+        mesh: Sequence[int] | NDArray[np.int64],
+        shift: Sequence[float] | NDArray[np.double] | None = None,
+        is_time_reversal: bool = True,
+        is_mesh_symmetry: bool = True,
+        with_eigenvectors: bool = False,
+        is_gamma_center: bool = False,
+        group_velocity: GroupVelocity | None = None,
+        rotations: Sequence[Sequence[Sequence[int]]]
+        | Sequence[NDArray[np.int64]]
+        | NDArray[np.int64]
+        | None = None,  # Point group operations in real space
+        factor: float | None = None,
+    ) -> None:
         """Init method."""
         super().__init__(
             dynamical_matrix,
@@ -218,9 +227,9 @@ class Mesh(MeshBase):
         )
 
         self._group_velocity = group_velocity
-        self._group_velocities = None
+        self._group_velocities: NDArray[np.double] | None = None
 
-    def __iter__(self):
+    def __iter__(self) -> Mesh:
         """Define iterator over q-points.
 
         Initially, all phonons are computed and stored in arrays.
@@ -232,7 +241,9 @@ class Mesh(MeshBase):
             self.run()
         return self
 
-    def __next__(self):
+    def __next__(
+        self,
+    ) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
         """Return phonon frequencies and eigenvectors at each q-point."""
         if self._q_count == len(self._qpoints):
             self._q_count = 0
@@ -245,21 +256,21 @@ class Mesh(MeshBase):
             else:
                 return self._frequencies[i], self._eigenvectors[i]
 
-    def run(self):
+    def run(self) -> None:
         """Calculate phonons at all required q-points."""
         self._set_phonon()
         if self._group_velocity is not None:
             self._set_group_velocities(self._group_velocity)
 
     @property
-    def frequencies(self):
+    def frequencies(self) -> NDArray[np.double]:
         """Return phonon frequencies."""
         if self._frequencies is None:
             self.run()
-        return self._frequencies
+        return self._frequencies  # type: ignore[return-value]
 
     @property
-    def eigenvectors(self):
+    def eigenvectors(self) -> NDArray[np.cdouble] | None:
         """Return eigenvectors.
 
         Eigenvectors is a numpy array of three dimension.
@@ -276,7 +287,7 @@ class Mesh(MeshBase):
         return self._eigenvectors
 
     @property
-    def group_velocities(self):
+    def group_velocities(self) -> NDArray[np.double] | None:
         """Return group velocities."""
         if self._frequencies is None:
             self.run()
@@ -284,9 +295,9 @@ class Mesh(MeshBase):
 
     def write_hdf5(
         self,
-        filename="mesh.hdf5",
+        filename: str | os.PathLike = "mesh.hdf5",
         compression: Literal["gzip", "lzf"] | int | None = None,
-    ):
+    ) -> None:
         """Write results to hdf5 file."""
         import h5py
 
@@ -308,7 +319,7 @@ class Mesh(MeshBase):
                     compression=compression,
                 )
 
-    def write_yaml(self, filename="mesh.yaml"):
+    def write_yaml(self, filename: str | os.PathLike = "mesh.yaml") -> None:
         """Write results to yaml file."""
         natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vectors
@@ -360,7 +371,7 @@ class Mesh(MeshBase):
         with open(filename, "w") as w:
             w.write("\n".join(lines))
 
-    def _set_phonon(self):
+    def _set_phonon(self) -> None:
         import phonopy._phonopy as phonoc
 
         num_band = len(self._cell) * 3
@@ -407,7 +418,7 @@ class Mesh(MeshBase):
         if self._with_eigenvectors:
             self._eigenvectors = eigenvectors
 
-    def _set_group_velocities(self, group_velocity):
+    def _set_group_velocities(self, group_velocity: GroupVelocity) -> None:
         group_velocity.run(self._qpoints)
         self._group_velocities = group_velocity.group_velocities
 
@@ -427,16 +438,19 @@ class IterMesh(MeshBase):
 
     def __init__(
         self,
-        dynamical_matrix,
-        mesh,
-        shift=None,
-        is_time_reversal=True,
-        is_mesh_symmetry=True,
-        with_eigenvectors=False,
-        is_gamma_center=False,
-        rotations=None,  # Point group operations in real space
-        factor=None,
-    ):
+        dynamical_matrix: DynamicalMatrix,
+        mesh: Sequence[int] | NDArray[np.int64],
+        shift: Sequence[float] | NDArray[np.double] | None = None,
+        is_time_reversal: bool = True,
+        is_mesh_symmetry: bool = True,
+        with_eigenvectors: bool = False,
+        is_gamma_center: bool = False,
+        rotations: Sequence[Sequence[Sequence[int]]]
+        | Sequence[NDArray[np.int64]]
+        | NDArray[np.int64]
+        | None = None,  # Point group operations in real space
+        factor: float | None = None,
+    ) -> None:
         """Init method."""
         super().__init__(
             dynamical_matrix,
@@ -450,11 +464,13 @@ class IterMesh(MeshBase):
             factor=factor,
         )
 
-    def __iter__(self):
+    def __iter__(self) -> IterMesh:
         """Define iterator over q-points."""
         return self
 
-    def __next__(self):
+    def __next__(
+        self,
+    ) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
         """Calculate phonons at a q-point."""
         if self._q_count == len(self._qpoints):
             self._q_count = 0

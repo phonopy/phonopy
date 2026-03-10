@@ -3,7 +3,7 @@
 import numpy as np
 
 from phonopy import Phonopy
-from phonopy.phonon.dos import get_pdos_indices
+from phonopy.cui.phonopy_script import _get_pdos_indices
 
 tp_str = """0.000000 100.000000 200.000000 300.000000 400.000000
 500.000000 600.000000 700.000000 800.000000 900.000000
@@ -109,6 +109,6 @@ def testPartialDOSTetrahedron(ph_nacl_nofcsym: Phonopy):
 
 def test_get_pdos_indices(ph_tio2: Phonopy):
     """Test get_pdos_indices by TiO2."""
-    indices = get_pdos_indices(ph_tio2.primitive_symmetry)
+    indices = _get_pdos_indices(ph_tio2.primitive_symmetry)
     np.testing.assert_array_equal(indices[0], [0, 1, 2, 3])
     np.testing.assert_array_equal(indices[1], [4, 5])
