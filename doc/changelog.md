@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-10-2026: Version 3.1.0
+
+- Fix the handler for writing supercell files across various calculators.
+
 ## Mar-05-2026: Version 3.0.1
 
 - Fix `isotope_data` in `atomic_data.py` (#737).
