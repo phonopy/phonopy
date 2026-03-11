@@ -73,6 +73,8 @@ class NosymDataset:
 
     rotations: NDArray[np.int64]
     translations: NDArray[np.double]
+    transformation_matrix: NDArray[np.double]
+    pointgroup: str
 
 
 class Symmetry:
@@ -110,7 +112,7 @@ class Symmetry:
         self._atomic_permutations: NDArray
         self._pointgroup_operations: NDArray
         self._reciprocal_operations: NDArray
-        self._pointgroup = None
+        self._pointgroup_symbol: str
         self._independent_atoms: NDArray
         self._map_operations: NDArray
 
@@ -129,7 +131,7 @@ class Symmetry:
         _ptg = spglib.get_pointgroup(self._pointgroup_operations)
         assert _ptg is not None
         ptg_symbol = _ptg[0]
-        self._pointgroup = ptg_symbol.strip()
+        self._pointgroup_symbol = ptg_symbol.strip()
         self._set_atomic_permutations()
         self._set_independent_atoms()
         self._map_operations = self._get_map_operations_from_permutations()
@@ -165,9 +167,9 @@ class Symmetry:
         return self._pointgroup_operations
 
     @property
-    def pointgroup_symbol(self) -> str | None:
+    def pointgroup_symbol(self) -> str:
         """Return symbol of crystallographic point group."""
-        return self._pointgroup
+        return self._pointgroup_symbol
 
     def get_international_table(self) -> str | None:
         """Return international symbol of space group."""
@@ -373,6 +375,8 @@ class Symmetry:
         self._dataset = NosymDataset(
             rotations=self._symmetry_operations["rotations"],
             translations=self._symmetry_operations["translations"],
+            transformation_matrix=np.eye(3, dtype="double", order="C"),
+            pointgroup="1",
         )
 
 

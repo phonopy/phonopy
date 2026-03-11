@@ -64,7 +64,7 @@ class DerivativeOfDynamicalMatrix:
 
     Q_DIRECTION_TOLERANCE = 1e-5
 
-    def __init__(self, dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC) -> None:
+    def __init__(self, dynamical_matrix: DynamicalMatrix) -> None:
         """Init method.
 
         Parameters
