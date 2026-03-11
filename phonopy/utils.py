@@ -36,11 +36,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from types import SimpleNamespace
 
 import numpy as np
 import spglib
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 try:
     spglib.error.OLD_ERROR_HANDLING = False
@@ -48,7 +49,16 @@ except AttributeError:
     pass
 
 
-def similarity_transformation(rot: ArrayLike, mat: ArrayLike) -> NDArray:
+def similarity_transformation(
+    rot: Sequence[Sequence[float]]
+    | NDArray[np.double]
+    | Sequence[Sequence[int]]
+    | NDArray[np.int64],
+    mat: Sequence[Sequence[float]]
+    | NDArray[np.double]
+    | Sequence[Sequence[int]]
+    | NDArray[np.int64],
+) -> NDArray[np.double]:
     """Similarity transformation by R x M x R^-1."""
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))  # type: ignore
 
