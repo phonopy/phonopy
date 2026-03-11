@@ -39,17 +39,17 @@ from __future__ import annotations
 import gzip
 import lzma
 import os
-import sys
-from typing import Literal, Sequence
+from typing import IO, Any, Literal, Sequence
 
 import h5py
 import numpy as np
 import yaml
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 class BandPlot:
@@ -67,7 +67,7 @@ class BandPlot:
 
     """
 
-    def __init__(self, axs):
+    def __init__(self, axs: Any):
         """Init method.
 
         Parameters
@@ -92,7 +92,14 @@ class BandPlot:
         """Set xscale."""
         self._xscale = value
 
-    def plot(self, distances, frequencies, path_connections, fmt=None, label=None):
+    def plot(
+        self,
+        distances: list[NDArray[np.double]],
+        frequencies: list[NDArray[np.double]],
+        path_connections: list[bool],
+        fmt: str | None = None,
+        label: str | None = None,
+    ) -> None:
         """Plot one band structure.
 
         If ``labels`` is given, decoration such as horizontal line at freq=0,
@@ -121,6 +128,7 @@ class BandPlot:
 
         if self._xscale is None:
             self.set_xscale_from_data(frequencies, distances)
+        assert self._xscale is not None
 
         count = 0
         distances_scaled = [d * self._xscale for d in distances]
@@ -137,7 +145,11 @@ class BandPlot:
             if not c:
                 count += 1
 
-    def set_xscale_from_data(self, frequencies: Sequence, distances: Sequence):
+    def set_xscale_from_data(
+        self,
+        frequencies: Sequence[NDArray[np.double]],
+        distances: Sequence[NDArray[np.double]],
+    ) -> None:
         """Set xscale from data."""
         max_freq = max([np.max(fq) for fq in frequencies])
         max_dist = distances[-1][-1]
@@ -147,10 +159,10 @@ class BandPlot:
         self,
         labels: Sequence[str] | None,
         path_connections: Sequence[bool],
-        frequencies: Sequence,
-        distances: Sequence,
+        frequencies: Sequence[NDArray[np.double]],
+        distances: Sequence[NDArray[np.double]],
         ylabel: str | None = None,
-    ):
+    ) -> None:
         """Decorate plots.
 
         Parameters
@@ -167,6 +179,7 @@ class BandPlot:
 
         if self._xscale is None:
             self.set_xscale_from_data(frequencies, distances)
+        assert self._xscale is not None
 
         distances_scaled = [d * self._xscale for d in distances]
 
@@ -277,7 +290,7 @@ class BandStructure:
 
     def __init__(
         self,
-        paths: Sequence[ArrayLike],
+        paths: Sequence[NDArray[np.double]] | Sequence[Sequence[float]],
         dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
         with_eigenvectors: bool = False,
         is_band_connection: bool = False,
@@ -320,7 +333,9 @@ class BandStructure:
         """
         self._dynamical_matrix = dynamical_matrix
         self._cell = dynamical_matrix.primitive
-        self._rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
+        self._rec_lattice = np.array(
+            np.linalg.inv(self._cell.cell), dtype="double", order="C"
+        )  # column vecs
         self._supercell = dynamical_matrix.supercell
         if factor is None:
             self._factor = get_physical_units().DefaultToTHz
@@ -332,7 +347,7 @@ class BandStructure:
             self._with_eigenvectors = True
         self._group_velocity = group_velocity
 
-        self._paths = [np.array(path) for path in paths]
+        self._paths = [np.array(path, dtype="double") for path in paths]
         self._is_legacy_plot = is_legacy_plot
         self._labels = None
         self._path_connections: list[bool]
@@ -352,13 +367,13 @@ class BandStructure:
                 and len(labels) == (2 - np.array(self._path_connections)).sum()
             ):
                 self._labels = list(labels)
-        self._distances: list
+        self._distances: list[NDArray[np.double]]
         self._distance: float = 0.0
         self._special_points: list[float] = [0.0]
-        self._eigenvalues: list
-        self._eigenvectors: list | None = None
-        self._frequencies: list
-        self._group_velocities: list | None = None
+        self._eigenvalues: list[NDArray[np.cdouble]]
+        self._eigenvectors: list[NDArray[np.cdouble]] | None = None
+        self._frequencies: list[NDArray[np.double]]
+        self._group_velocities: list[NDArray[np.double]] | None = None
         self._set_band()
 
     @property
@@ -401,7 +416,7 @@ class BandStructure:
         """Identify legacy plot or not."""
         return self._is_legacy_plot
 
-    def plot(self, ax):
+    def plot(self, ax: Any) -> None:
         """Plot band structure.
 
         Parameters
@@ -414,7 +429,7 @@ class BandStructure:
         else:
             self._plot(ax)
 
-    def _plot(self, axs):
+    def _plot(self, axs: Any) -> None:
         if self._is_band_connection:
             fmt = "-"
         else:
@@ -428,7 +443,7 @@ class BandStructure:
             fmt=fmt,
         )
 
-    def _plot_legacy(self, axs):
+    def _plot_legacy(self, axs: Any) -> None:
         _plot_legacy(
             axs,
             self._distances,
@@ -443,7 +458,7 @@ class BandStructure:
         comment: dict | None = None,
         filename: str | os.PathLike = "band.hdf5",
         compression: Literal["gzip", "lzf"] | int | None = None,
-    ):
+    ) -> None:
         """Write band structure in hdf5 format.
 
         When the number of sampling points in each segment is not uniform,
@@ -453,7 +468,7 @@ class BandStructure:
 
         """
 
-        def pad_array(array: Sequence[NDArray], nq: int):
+        def pad_array(array: Sequence[NDArray], nq: int) -> list[NDArray]:
             ret = []
             shape = array[0].shape[1:]
             for vals in array:
@@ -546,7 +561,12 @@ class BandStructure:
                             i += 2
             w.create_dataset("label", data=path_labels)
 
-    def write_yaml(self, comment=None, filename=None, compression=None):
+    def write_yaml(
+        self,
+        comment: dict | None = None,
+        filename: str | os.PathLike | None = None,
+        compression: Literal["gzip", "lzma"] | None = None,
+    ) -> None:
         """Write band structure in yaml format.
 
         Parameters
@@ -563,26 +583,29 @@ class BandStructure:
             text in respective compression methods.
 
         """
-        if filename is not None:
-            _filename = filename
-
         if compression is None:
-            if filename is None:
-                _filename = "band.yaml"
+            _filename = filename if filename is not None else "band.yaml"
             with open(_filename, "w") as w:
                 self._write_yaml(w, comment)
         elif compression == "gzip":
-            if filename is None:
-                _filename = "band.yaml.gz"
-            with gzip.open(_filename, "wb") as w:
-                self._write_yaml(w, comment, is_binary=True)
+            _filename = filename if filename is not None else "band.yaml.gz"
+            with gzip.open(_filename, "wt") as w:
+                self._write_yaml(w, comment)
         elif compression == "lzma":
-            if filename is None:
-                _filename = "band.yaml.xz"
-            with lzma.open(_filename, "w") as w:
-                self._write_yaml(w, comment, is_binary=True)
+            _filename = filename if filename is not None else "band.yaml.xz"
+            with lzma.open(_filename, "wt") as w:
+                self._write_yaml(w, comment)
 
-    def _write_yaml(self, w, comment, is_binary=False):
+    def _write_yaml(self, w: IO[str], comment: dict | None) -> None:
+        """Write band structure in yaml format.
+
+        w is typed as IO[Any] because this method handles both text (open) and
+        binary (gzip.open, lzma.open) file objects. IO[str] | IO[bytes] causes
+        type errors on w.write() calls due to union narrowing, and gzip.GzipFile
+        is not recognized as IO[bytes] by pyright. The gzip call site uses
+        # type: ignore[arg-type] to suppress the GzipFile incompatibility.
+
+        """
         natom = len(self._cell)
         nq_paths = []
         for qpoints in self._paths:
@@ -615,7 +638,7 @@ class BandStructure:
         text.append("")
         text.append("phonon:")
         text.append("")
-        self._write_lines(w, text, is_binary)
+        self._write_lines(w, text)
 
         for i in range(len(self._paths)):
             qpoints = self._paths[i]
@@ -633,11 +656,16 @@ class BandStructure:
             text = self._get_q_segment_yaml(
                 qpoints, distances, frequencies, eigenvectors, group_velocities
             )
-            self._write_lines(w, text, is_binary)
+            self._write_lines(w, text)
 
     def _get_q_segment_yaml(
-        self, qpoints, distances, frequencies, eigenvectors, group_velocities
-    ):
+        self,
+        qpoints: NDArray[np.double],
+        distances: NDArray[np.double],
+        frequencies: NDArray[np.double],
+        eigenvectors: NDArray[np.cdouble] | None,
+        group_velocities: NDArray[np.double] | None,
+    ) -> list[str]:
         natom = len(self._cell)
         text = []
         for j in range(len(qpoints)):
@@ -672,20 +700,14 @@ class BandStructure:
 
         return text
 
-    def _write_lines(self, w, lines, is_binary):
+    def _write_lines(self, w: IO[str], lines: list[str]) -> None:
         text = "\n".join(lines)
-        if is_binary:
-            if sys.version_info < (3, 0):
-                w.write(bytes(text))
-            else:
-                w.write(bytes(text, "utf8"))
-        else:
-            w.write(text)
+        w.write(text)
 
-    def _set_initial_point(self, qpoint):
+    def _set_initial_point(self, qpoint: NDArray[np.double]) -> None:
         self._lastq = qpoint.copy()
 
-    def _shift_point(self, qpoint):
+    def _shift_point(self, qpoint: NDArray[np.double]) -> None:
         self._distance += float(
             np.linalg.norm(
                 np.dot(qpoint - self._lastq, np.linalg.inv(self._cell.cell).T)
@@ -693,7 +715,7 @@ class BandStructure:
         )
         self._lastq = qpoint.copy()
 
-    def _set_band(self):
+    def _set_band(self) -> None:
         eigvals = []
         eigvecs = []
         group_velocities = []
@@ -709,12 +731,12 @@ class BandStructure:
                 gv_on_path,
             ) = self._solve_dm_on_path(path)
 
-            eigvals.append(np.array(eigvals_on_path))
+            eigvals.append(np.array(eigvals_on_path, dtype="double"))
             if self._with_eigenvectors:
-                eigvecs.append(np.array(eigvecs_on_path))
+                eigvecs.append(np.array(eigvecs_on_path, dtype="cdouble"))
             if self._group_velocity is not None:
-                group_velocities.append(np.array(gv_on_path))
-            distances.append(np.array(distances_on_path))
+                group_velocities.append(np.array(gv_on_path, dtype="double"))
+            distances.append(np.array(distances_on_path, dtype="double"))
             self._special_points.append(self._distance)
 
         self._eigenvalues = eigvals
@@ -726,19 +748,29 @@ class BandStructure:
 
         self._set_frequencies()
 
-    def _solve_dm_on_path(self, path):
-        distances_on_path = []
-        eigvals_on_path = []
-        eigvecs_on_path = []
-        gv_on_path = []
-        prev_eigvecs = None
+    def _solve_dm_on_path(
+        self, path: NDArray[np.double]
+    ) -> tuple[
+        list[float],
+        list[NDArray[np.double]],
+        list[NDArray[np.cdouble]],
+        list[NDArray[np.double]],
+    ]:
+        distances_on_path: list[float] = []
+        eigvals_on_path: list[NDArray[np.double]] = []
+        eigvecs_on_path: list[NDArray[np.cdouble]] = []
+        gv_on_path: list[NDArray[np.double]] = []
+        prev_eigvecs: NDArray[np.cdouble] | None = None
+        eigvecs: NDArray[np.cdouble] = np.empty(0, dtype=np.cdouble)
+        band_order: Sequence[int] = range(0)
+        gv: NDArray[np.double] | None = None
+        q_direction: NDArray[np.double] | None = None
 
         if self._group_velocity is not None:
             self._group_velocity.run(path)
             gv = self._group_velocity.group_velocities
 
         if isinstance(self._dynamical_matrix, DynamicalMatrixNAC):
-            q_direction = None
             # A cross product close to 0 indicates a path crossing or ending at Gamma
             rec_lat = np.linalg.inv(self._dynamical_matrix.primitive.cell)
             dist_from_Gamma = np.linalg.norm(
@@ -767,6 +799,7 @@ class BandStructure:
                 if i == 0:
                     band_order = range(len(eigvals))
                 else:
+                    assert prev_eigvecs is not None
                     band_order = estimate_band_connection(
                         prev_eigvecs, eigvecs, band_order
                     )
@@ -787,7 +820,7 @@ class BandStructure:
 
         return distances_on_path, eigvals_on_path, eigvecs_on_path, gv_on_path
 
-    def _set_frequencies(self):
+    def _set_frequencies(self) -> None:
         frequencies = []
         for eigs_path in self._eigenvalues:
             frequencies.append(
@@ -796,12 +829,17 @@ class BandStructure:
         self._frequencies = frequencies
 
 
-def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
+def estimate_band_connection(
+    prev_eigvecs: NDArray[np.cdouble],
+    eigvecs: NDArray[np.cdouble],
+    prev_band_order: Sequence[int],
+) -> list[int]:
     """Connect neighboring qpoints by eigenvector similarity."""
     metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
     connection_order = []
     for overlaps in metric:
         maxval = 0
+        maxindex = 0
         for i in reversed(range(len(metric))):
             val = overlaps[i]
             if i in connection_order:
@@ -816,7 +854,12 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     return band_order
 
 
-def get_band_qpoints_and_path_connections(band_paths, npoints=51, rec_lattice=None):
+def get_band_qpoints_and_path_connections(
+    band_paths: Sequence[Sequence[Sequence[float]]]
+    | Sequence[Sequence[NDArray[np.double]]],
+    npoints: int = 51,
+    rec_lattice: NDArray[np.double] | None = None,
+) -> tuple[list[NDArray[np.double]], list[bool]]:
     """Return qpoints and connections of paths."""
     path_connections = []
     for paths in band_paths:
@@ -831,10 +874,11 @@ def get_band_qpoints_and_path_connections(band_paths, npoints=51, rec_lattice=No
 
 
 def get_band_qpoints(
-    band_paths: Sequence | NDArray,
+    band_paths: Sequence[Sequence[Sequence[float]]]
+    | Sequence[Sequence[NDArray[np.double]]],
     npoints: int = 51,
-    rec_lattice: NDArray | None = None,
-) -> list[NDArray]:
+    rec_lattice: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+) -> list[NDArray[np.double]]:
     """Generate qpoints for band structure path.
 
     Note
@@ -878,7 +922,11 @@ def get_band_qpoints(
     return qpoints_of_paths
 
 
-def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
+def get_band_qpoints_by_seekpath(
+    primitive: PhonopyAtoms,
+    npoints: int,
+    is_const_interval: bool = False,
+) -> tuple[list, list[str], list[bool]]:
     """q-points along BZ high symmetry paths are generated using seekpath.
 
     Parameters
@@ -914,7 +962,7 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     point_coords = band_path["point_coords"]
     qpoints_of_paths = []
     if is_const_interval:
-        reclat = np.linalg.inv(primitive.cell)
+        reclat = np.array(np.linalg.inv(primitive.cell), dtype="double", order="C")
     else:
         reclat = None
     band_paths = [
@@ -932,8 +980,13 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
 
 
 def band_plot(
-    axs, frequencies, distances, path_connections, labels, fmt: str | None = "r-"
-):
+    axs: Any,
+    frequencies: list[NDArray[np.double]],
+    distances: list[NDArray[np.double]],
+    path_connections: list[bool],
+    labels: list[str] | None,
+    fmt: str | None = "r-",
+) -> None:
     """Return band structure plot."""
     bp = BandPlot(axs)
     bp.decorate(labels, path_connections, frequencies, distances)
@@ -941,8 +994,13 @@ def band_plot(
 
 
 def _plot_legacy(
-    ax, all_distances, all_frequencies, labels, special_points, is_band_connection
-):
+    ax: Any,
+    all_distances: list[NDArray[np.double]],
+    all_frequencies: list[NDArray[np.double]],
+    labels: list[str] | None,
+    special_points: list[float],
+    is_band_connection: bool,
+) -> None:
     """Plot band structure in legacy style."""
     ax.xaxis.set_ticks_position("both")
     ax.yaxis.set_ticks_position("both")
@@ -975,8 +1033,14 @@ def _plot_legacy(
     ax.axhline(y=0, linestyle=":", linewidth=0.5, color="b")
 
 
-def _get_npts(band_paths, npoints, rec_lattice):
+def _get_npts(
+    band_paths: Sequence[Sequence[Sequence[float]]]
+    | Sequence[Sequence[NDArray[np.double]]],
+    npoints: int,
+    rec_lattice: Sequence[Sequence[float]] | NDArray[np.double] | None,
+) -> list[int]:
     """Return numbers of qpoints of band segments."""
+    npts: list[int]
     if rec_lattice is not None:
         path_lengths = []
         for band_path in band_paths:
@@ -986,11 +1050,9 @@ def _get_npts(band_paths, npoints, rec_lattice):
                 length = np.linalg.norm(np.dot(rec_lattice, vector))
                 path_lengths.append(length)
         max_length = max(path_lengths)
-        npts = [np.rint(pl / max_length * npoints).astype(int) for pl in path_lengths]
+        npts = [int(np.rint(pl / max_length * npoints)) for pl in path_lengths]
     else:
-        npts = [
-            npoints,
-        ] * np.sum([len(paths) for paths in band_paths])
+        npts = [npoints] * int(np.sum([len(paths) for paths in band_paths]))
 
     for i, npt in enumerate(npts):
         if npt < 2:
@@ -999,7 +1061,9 @@ def _get_npts(band_paths, npoints, rec_lattice):
     return npts
 
 
-def _get_labels(pairs_of_symbols):
+def _get_labels(
+    pairs_of_symbols: Sequence[Sequence[str]],
+) -> tuple[list[str], list[bool]]:
     path_connections = []
     labels = []
 

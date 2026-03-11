@@ -39,9 +39,8 @@ from __future__ import annotations
 import gzip
 import lzma
 import os
-import sys
 from collections.abc import Sequence
-from typing import IO, Any, Literal, cast
+from typing import IO, Any, Literal
 
 import numpy as np
 import yaml
@@ -183,20 +182,15 @@ class GruneisenBandStructure(GruneisenBase):
         elif compression == "gzip":
             if filename is None:
                 _filename = "gruneisen.yaml.gz"
-            with gzip.open(_filename, "wb") as w:
-                self._write_yaml(cast(IO[bytes], w), comment, is_binary=True)
+            with gzip.open(_filename, "wt") as w:
+                self._write_yaml(w, comment)
         elif compression == "lzma":
             if filename is None:
                 _filename = "gruneisen.yaml.xz"
-            with lzma.open(_filename, "wb") as w:
-                self._write_yaml(cast(IO[bytes], w), comment, is_binary=True)
+            with lzma.open(_filename, "wt") as w:
+                self._write_yaml(w, comment)
 
-    def _write_yaml(
-        self,
-        w: IO[str] | IO[bytes],
-        comment: Any,
-        is_binary: bool = False,
-    ) -> None:
+    def _write_yaml(self, w: IO[str], comment: Any) -> None:
         natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
         nq_paths = []
@@ -261,19 +255,11 @@ class GruneisenBandStructure(GruneisenBase):
                     text.append("      frequency: %15.10f" % freq)
                 text.append("")
 
-        self._write_lines(w, text, is_binary)
+        self._write_lines(w, text)
 
-    def _write_lines(
-        self, w: IO[str] | IO[bytes], lines: list[str], is_binary: bool
-    ) -> None:
+    def _write_lines(self, w: IO[str], lines: list[str]) -> None:
         text = "\n".join(lines)
-        if is_binary:
-            if sys.version_info < (3, 0):
-                cast(IO[bytes], w).write(bytes(text))
-            else:
-                cast(IO[bytes], w).write(bytes(text, "utf8"))
-        else:
-            cast(IO[str], w).write(text)
+        w.write(text)
 
     def plot(
         self, axarr: Any, epsilon: float | None = None, color_scheme: str | None = None

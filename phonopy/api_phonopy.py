@@ -1575,7 +1575,10 @@ class Phonopy:
         )
 
     def write_yaml_band_structure(
-        self, comment=None, filename=None, compression=None
+        self,
+        comment: dict | None = None,
+        filename: str | os.PathLike | None = None,
+        compression: Literal["gzip", "lzma"] | None = None,
     ) -> None:
         """Write band structure in yaml.
 
