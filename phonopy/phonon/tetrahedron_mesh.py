@@ -100,7 +100,7 @@ class TetrahedronMesh:
         self._mesh = np.array(mesh, dtype="int64")
         self._grid_address = grid_address
         self._grid_mapping_table = grid_mapping_table
-        self._lang = lang
+        self._lang: Literal["C", "Python"] = lang
         if lang == "C":
             self._grid_order = None
         else:
@@ -110,15 +110,12 @@ class TetrahedronMesh:
                 self._grid_order = grid_order
         self._ir_grid_points = ir_grid_points
 
-        self._gp_ir_index = None
-
-        self._tm = None
-        self._tetrahedra_frequencies = None
-        self._integration_weights: NDArray[np.double] | None = None
-        self._relative_grid_address = None
-
-        self._frequency_points: NDArray[np.double] | None = None
-        self._value = None
+        self._tm: TetrahedronMethod | None = None
+        self._gp_ir_index: NDArray[np.int64]
+        self._integration_weights: NDArray[np.double]
+        self._relative_grid_address: NDArray[np.int64]
+        self._frequency_points: NDArray[np.double]
+        self._value: Literal["I", "J"]
 
         self._grid_point_count = 0
 
@@ -130,12 +127,23 @@ class TetrahedronMesh:
 
     def __next__(self) -> NDArray[np.double]:
         """Peform linear tetrahedron method at a grid point."""
+        if self._tm is None:
+            raise RuntimeError("Tetrahedron method is not set yet.")
         if self._grid_point_count == len(self._ir_grid_points):
             raise StopIteration
         else:
             gp = self._ir_grid_points[self._grid_point_count]
-            self._set_tetrahedra_frequencies(gp)
-            for ib, frequencies in enumerate(self._tetrahedra_frequencies):
+            tetrahedra_frequencies = get_tetrahedra_frequencies(
+                gp,
+                self._mesh,
+                self._grid_address,
+                self._relative_grid_address,
+                self._gp_ir_index,
+                self._frequencies,
+                grid_order=self._grid_order,
+                lang=self._lang,
+            )
+            for ib, frequencies in enumerate(tetrahedra_frequencies):
                 self._tm.set_tetrahedra_omegas(frequencies)
                 self._tm.run(self._frequency_points, value=self._value)
                 iw = self._tm.get_integration_weight()
@@ -144,24 +152,28 @@ class TetrahedronMesh:
             self._grid_point_count += 1
             return self._integration_weights
 
-    def get_integration_weights(self) -> NDArray[np.double] | None:
+    def get_integration_weights(self) -> NDArray[np.double]:
         """Return integration weights."""
+        if self._integration_weights is None:
+            raise RuntimeError("Integration weights are not calculated yet.")
         return self._integration_weights
 
-    def get_frequency_points(self) -> NDArray[np.double] | None:
+    def get_frequency_points(self) -> NDArray[np.double]:
         """Return frequency points."""
+        if self._frequency_points is None:
+            raise RuntimeError("Frequency points are not set yet.")
         return self._frequency_points
 
     def set(
         self,
-        value: str = "I",
+        value: Literal["I", "J"] = "I",
         division_number: int = 201,
         frequency_points: NDArray[np.double] | None = None,
         lang: Literal["C", "Python"] = "C",
     ) -> None:
         """Prepare environment to peform linear tetrahedron method."""
         self._grid_point_count = 0
-        self._value = value
+        self._value: Literal["I", "J"] = value
         if frequency_points is None:
             max_frequency = np.amax(self._frequencies)
             min_frequency = np.amin(self._frequencies)
@@ -174,8 +186,9 @@ class TetrahedronMesh:
         num_band = self._frequencies.shape[1]
         num_freqs = len(self._frequency_points)
         self._integration_weights = np.zeros((num_freqs, num_band), dtype="double")
-        reciprocal_lattice = np.linalg.inv(self._cell.cell)
-        self._tm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh, lang=lang)
+        self._tm = TetrahedronMethod(
+            np.linalg.inv(self._cell.cell), mesh=self._mesh, lang=lang
+        )
         self._relative_grid_address = self._tm.tetrahedra
 
     def _prepare(self) -> None:
@@ -186,18 +199,6 @@ class TetrahedronMesh:
         self._gp_ir_index = np.zeros_like(self._grid_mapping_table)
         for i, gp in enumerate(self._grid_mapping_table):
             self._gp_ir_index[i] = ir_gp_indices[gp]
-
-    def _set_tetrahedra_frequencies(self, gp: int) -> None:
-        self._tetrahedra_frequencies = get_tetrahedra_frequencies(
-            gp,
-            self._mesh,
-            self._grid_address,
-            self._relative_grid_address,
-            self._gp_ir_index,
-            self._frequencies,
-            grid_order=self._grid_order,
-            lang=self._lang,
-        )
 
 
 def get_tetrahedra_frequencies(
@@ -256,6 +257,7 @@ def get_tetrahedra_frequencies(
                 gp, mesh, grid_address, relative_grid_address, gp_ir_index, frequencies
             )
         except ImportError:
+            assert grid_order is not None
             return _get_tetrahedra_frequencies_Py(
                 gp,
                 mesh,
@@ -266,6 +268,7 @@ def get_tetrahedra_frequencies(
                 grid_order,
             )
     else:
+        assert grid_order is not None
         return _get_tetrahedra_frequencies_Py(
             gp,
             mesh,
@@ -307,7 +310,7 @@ def _get_tetrahedra_frequencies_Py(
     relative_grid_address: NDArray[np.int64],
     gp_ir_index: NDArray[np.int64],
     frequencies: NDArray[np.double],
-    grid_order: list[int] | None,
+    grid_order: list[int],
 ) -> NDArray[np.double]:
     t_frequencies = np.zeros((frequencies.shape[1], 24, 4), dtype="double")
     for i, t in enumerate(relative_grid_address):
