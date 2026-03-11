@@ -105,6 +105,7 @@ class Dos:
         self._sigma = sigma
 
         if use_tetrahedron_method:
+            self.set_draw_area()
             self._tetrahedron_mesh = TetrahedronMesh(
                 mesh_object.dynamical_matrix.primitive,
                 self._frequencies,
@@ -113,7 +114,6 @@ class Dos:
                 mesh_object.grid_mapping_table,
                 mesh_object.ir_grid_points,
             )
-            self.set_draw_area()
         else:
             self._sigma = self.set_draw_area()
             self.set_smearing_function("Normal")
