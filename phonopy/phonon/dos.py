@@ -37,11 +37,13 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.phonon.mesh import IterMesh, Mesh
+from phonopy.phonon.mesh import Mesh
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
@@ -49,11 +51,11 @@ from phonopy.structure.tetrahedron_method import TetrahedronMethod
 class NormalDistribution:
     """Class to represent normal distribution."""
 
-    def __init__(self, sigma):
+    def __init__(self, sigma: float) -> None:
         """Init method."""
         self._sigma = sigma
 
-    def calc(self, x):
+    def calc(self, x: NDArray[np.double]) -> NDArray[np.double]:
         """Return normal distribution."""
         return (
             1.0
@@ -66,11 +68,11 @@ class NormalDistribution:
 class CauchyDistribution:
     """Class to represent Cauchy distribution."""
 
-    def __init__(self, gamma):
+    def __init__(self, gamma: float) -> None:
         """Init method."""
         self._gamma = gamma
 
-    def calc(self, x):
+    def calc(self, x: NDArray[np.double]) -> NDArray[np.double]:
         """Return Cauchy distribution."""
         return self._gamma / np.pi / (x**2 + self._gamma**2)
 
@@ -78,13 +80,31 @@ class CauchyDistribution:
 class Dos:
     """Base class to calculate density of states."""
 
-    def __init__(self, mesh_object: Mesh, sigma=None, use_tetrahedron_method=False):
-        """Init method."""
+    def __init__(
+        self,
+        mesh_object: Mesh,
+        sigma: float | None = None,
+        use_tetrahedron_method: bool = False,
+    ) -> None:
+        """Init method.
+
+        Parameters
+        ----------
+        mesh_object : Mesh
+            Mesh object. IterMesh object cannot be used currently since
+            pre-computed frequencies and weights are used.
+        sigma : float, optional
+            Sigma for smearing method. If None, tetrahedron method is used.
+
+        """
         self._mesh_object = mesh_object
         self._frequencies = mesh_object.frequencies
         self._weights = mesh_object.weights
         self._tetrahedron_mesh = None
-        if use_tetrahedron_method and sigma is None:
+        self._frequency_points: NDArray[np.double]
+        self._sigma = sigma
+
+        if use_tetrahedron_method:
             self._tetrahedron_mesh = TetrahedronMesh(
                 mesh_object.dynamical_matrix.primitive,
                 self._frequencies,
@@ -93,17 +113,17 @@ class Dos:
                 mesh_object.grid_mapping_table,
                 mesh_object.ir_grid_points,
             )
-        self._frequency_points = None
-        self._sigma = sigma
-        self.set_draw_area()
-        self.set_smearing_function("Normal")
+            self.set_draw_area()
+        else:
+            self._sigma = self.set_draw_area()
+            self.set_smearing_function("Normal")
 
     @property
-    def frequency_points(self) -> NDArray | None:
+    def frequency_points(self) -> NDArray[np.double]:
         """Return frequency points."""
         return self._frequency_points
 
-    def set_smearing_function(self, function_name):
+    def set_smearing_function(self, function_name: Literal["Normal", "Cauchy"]) -> None:
         """Set function form for smearing method.
 
         Parameters
@@ -113,30 +133,37 @@ class Dos:
             'Cauchy': smearing is done by Cauchy distribution.
 
         """
+        assert self._sigma is not None
         if function_name == "Cauchy":
             self._smearing_function = CauchyDistribution(self._sigma)
         else:
             self._smearing_function = NormalDistribution(self._sigma)
 
-    def set_sigma(self, sigma):
+    def set_sigma(self, sigma: float) -> None:
         """Set sigma."""
         self._sigma = sigma
 
-    def set_draw_area(self, freq_min=None, freq_max=None, freq_pitch=None):
+    def set_draw_area(
+        self,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+        freq_pitch: float | None = None,
+    ) -> float:
         """Set frequency points."""
         f_min = self._frequencies.min()
         f_max = self._frequencies.max()
 
-        if self._sigma is None:
-            self._sigma = (f_max - f_min) / 100.0
+        sigma = self._sigma
+        if sigma is None:
+            sigma = (f_max - f_min) / 100.0
 
         if freq_min is None:
-            f_min -= self._sigma * 10
+            f_min -= sigma * 10
         else:
             f_min = freq_min
 
         if freq_max is None:
-            f_max += self._sigma * 10
+            f_max += sigma * 10
         else:
             f_max = freq_max
 
@@ -144,33 +171,41 @@ class Dos:
             f_delta = (f_max - f_min) / 200.0
         else:
             f_delta = freq_pitch
-        self._frequency_points = np.arange(f_min, f_max + f_delta * 0.1, f_delta)
+        self._frequency_points = np.arange(
+            f_min, f_max + f_delta * 0.1, f_delta, dtype="double"
+        )
+
+        return sigma
 
 
 class TotalDos(Dos):
     """Class to calculate total DOS."""
 
     def __init__(
-        self, mesh_object: Mesh | IterMesh, sigma=None, use_tetrahedron_method=False
-    ):
+        self,
+        mesh_object: Mesh,
+        sigma: float | None = None,
+        use_tetrahedron_method: bool = False,
+    ) -> None:
         """Init method."""
         super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
         )
-        self._dos = None
+        self._dos: NDArray[np.double] | None = None
         self._freq_Debye: float | None = None
         self._Debye_fit_coef = None
         self._openmp_thm = True
 
-    def run(self):
+    def run(self) -> None:
         """Calculate total DOS."""
-        if self._tetrahedron_mesh is None:
+        if self._sigma is not None:
             self._dos = np.array(
                 [self._get_density_of_states_at_freq(f) for f in self._frequency_points]
             )
         else:
+            assert self._tetrahedron_mesh is not None
             if self._openmp_thm:
                 self._run_tetrahedron_method_dos()
             else:
@@ -181,7 +216,7 @@ class TotalDos(Dos):
                     self._dos += np.sum(iw * self._weights[i], axis=1)
 
     @property
-    def dos(self):
+    def dos(self) -> NDArray[np.double] | None:
         """Return total DOS."""
         return self._dos
 
@@ -189,12 +224,17 @@ class TotalDos(Dos):
         """Return a kind of Debye frequency."""
         return self._freq_Debye
 
-    def set_Debye_frequency(self, num_atoms, freq_max_fit=None):
+    def set_Debye_frequency(
+        self, num_atoms: int, freq_max_fit: float | None = None
+    ) -> None:
         """Calculate a kind of Debye frequency."""
         try:
             from scipy.optimize import curve_fit
         except ImportError as exc:
             raise ModuleNotFoundError("You need to install python-scipy.") from exc
+
+        if self._dos is None:
+            raise RuntimeError("Run total DOS calculation first.")
 
         def Debye_dos(freq, a):
             return a * freq**2
@@ -215,8 +255,18 @@ class TotalDos(Dos):
         self._freq_Debye = (3 * 3 * num_atoms / a2) ** (1.0 / 3)
         self._Debye_fit_coef = a2
 
-    def plot(self, ax, xlabel=None, ylabel=None, draw_grid=True, flip_xy=False):
+    def plot(
+        self,
+        ax,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
+        draw_grid: bool = True,
+        flip_xy: bool = False,
+    ) -> None:
         """Plot total DOS."""
+        if self._dos is None:
+            raise RuntimeError("Run total DOS calculation first.")
+
         if flip_xy:
             _xlabel = "Density of states"
             _ylabel = "Frequency"
@@ -241,8 +291,11 @@ class TotalDos(Dos):
             flip_xy=flip_xy,
         )
 
-    def write(self, filename: str | os.PathLike = "total_dos.dat"):
+    def write(self, filename: str | os.PathLike = "total_dos.dat") -> None:
         """Write total DOS to total_dos.dat."""
+        if self._dos is None:
+            raise RuntimeError("Run total DOS calculation first.")
+
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma
         else:
@@ -252,7 +305,7 @@ class TotalDos(Dos):
             self._frequency_points, self._dos, comment=comment, filename=filename
         )
 
-    def _run_tetrahedron_method_dos(self):
+    def _run_tetrahedron_method_dos(self) -> None:
         mesh_numbers = self._mesh_object.mesh_numbers
         cell = self._mesh_object.dynamical_matrix.primitive
         reciprocal_lattice = np.linalg.inv(cell.cell)
@@ -266,7 +319,7 @@ class TotalDos(Dos):
             tm.tetrahedra,
         )
 
-    def _get_density_of_states_at_freq(self, f):
+    def _get_density_of_states_at_freq(self, f: float) -> np.double:
         return np.sum(
             np.dot(self._weights, self._smearing_function.calc(self._frequencies - f))
         ) / np.sum(self._weights)
@@ -289,17 +342,19 @@ class ProjectedDos(Dos):
     def __init__(
         self,
         mesh_object: Mesh,
-        sigma=None,
-        use_tetrahedron_method=False,
-        direction=None,
-        xyz_projection=False,
-    ):
+        sigma: float | None = None,
+        use_tetrahedron_method: bool = False,
+        direction: Sequence[float] | NDArray[np.double] | None = None,
+        xyz_projection: bool = False,
+    ) -> None:
         """Init method."""
         super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
         )
+        if self._mesh_object.eigenvectors is None:
+            raise ValueError("Mesh object does not have eigenvectors.")
         self._eigenvectors = self._mesh_object.eigenvectors
         self._projected_dos = None
 
@@ -325,11 +380,11 @@ class ProjectedDos(Dos):
         self._openmp_thm = True
 
     @property
-    def projected_dos(self):
+    def projected_dos(self) -> NDArray[np.double] | None:
         """Return projected DOS."""
         return self._projected_dos
 
-    def run(self):
+    def run(self) -> None:
         """Calculate projected DOS."""
         if self._tetrahedron_mesh is None:
             if self._frequency_points is None:
@@ -344,16 +399,19 @@ class ProjectedDos(Dos):
     def plot(
         self,
         ax,
-        indices=None,
-        legend=None,
-        legend_prop=None,
-        legend_frameon=True,
-        xlabel=None,
-        ylabel=None,
-        draw_grid=True,
-        flip_xy=False,
-    ):
+        indices: list[list[int]] | None = None,
+        legend: list[str] | None = None,
+        legend_prop: dict | None = None,
+        legend_frameon: bool = True,
+        xlabel: str | None = None,
+        ylabel: str | None = None,
+        draw_grid: bool = True,
+        flip_xy: bool = False,
+    ) -> None:
         """Plot projected DOS."""
+        if self._projected_dos is None:
+            raise RuntimeError("Run projected DOS calculation first.")
+
         if flip_xy:
             _xlabel = "Partial density of states"
             _ylabel = "Frequency"
@@ -380,7 +438,7 @@ class ProjectedDos(Dos):
             flip_xy=flip_xy,
         )
 
-    def write(self, filename: str | os.PathLike = "projected_dos.dat"):
+    def write(self, filename: str | os.PathLike = "projected_dos.dat") -> None:
         """Write projected DOS to projected_dos.dat."""
         if self._frequency_points is None or self._projected_dos is None:
             raise RuntimeError("Run projected DOS calculation first.")
@@ -397,7 +455,7 @@ class ProjectedDos(Dos):
             filename=filename,
         )
 
-    def _run_smearing_method(self):
+    def _run_smearing_method(self) -> None:
         assert self._frequency_points is not None
         num_pdos = self._eigvecs2.shape[1]
         num_freqs = len(self._frequency_points)
@@ -410,7 +468,9 @@ class ProjectedDos(Dos):
                     weights, self._eigvecs2[:, j, :] * amplitudes
                 ).sum()
 
-    def _run_tetrahedron_method(self):
+    def _run_tetrahedron_method(self) -> None:
+        assert self._tetrahedron_mesh is not None
+
         num_pdos = self._eigvecs2.shape[1]
         num_freqs = len(self._frequency_points)
         self._projected_dos = np.zeros((num_pdos, num_freqs), dtype="double")
@@ -420,7 +480,7 @@ class ProjectedDos(Dos):
             w = self._weights[i]
             self._projected_dos += np.dot(iw * w, self._eigvecs2[i].T).T
 
-    def _run_tetrahedron_method_dos(self):
+    def _run_tetrahedron_method_dos(self) -> None:
         mesh_numbers = self._mesh_object.mesh_numbers
         cell = self._mesh_object.dynamical_matrix.primitive
         reciprocal_lattice = np.linalg.inv(cell.cell)
@@ -437,15 +497,12 @@ class ProjectedDos(Dos):
         self._projected_dos = pdos.T
 
 
-def get_pdos_indices(symmetry):
-    """Return atomic indieces grouped by symmetry."""
-    mapping = symmetry.get_map_atoms()
-    return [list(np.where(mapping == i)[0]) for i in symmetry.get_independent_atoms()]
-
-
 def write_total_dos(
-    frequency_points, total_dos, comment=None, filename="total_dos.dat"
-):
+    frequency_points: NDArray[np.double],
+    total_dos: NDArray[np.double],
+    comment: str | None = None,
+    filename: str | os.PathLike = "total_dos.dat",
+) -> None:
     """Write total_dos.dat."""
     with open(filename, "w") as fp:
         if comment is not None:
@@ -456,11 +513,11 @@ def write_total_dos(
 
 
 def write_projected_dos(
-    frequency_points: NDArray,
-    projected_dos: NDArray,
+    frequency_points: NDArray[np.double],
+    projected_dos: NDArray[np.double],
     comment: str | None = None,
     filename: str | os.PathLike = "projected_dos.dat",
-):
+) -> None:
     """Write projected_dos.dat."""
     with open(filename, "w") as fp:
         if comment is not None:
@@ -474,20 +531,20 @@ def write_projected_dos(
 
 def plot_total_dos(
     ax,
-    frequency_points,
-    total_dos,
-    freq_Debye=None,
-    Debye_fit_coef=None,
-    xlabel=None,
-    ylabel=None,
-    draw_grid=True,
-    flip_xy=False,
+    frequency_points: NDArray[np.double],
+    total_dos: NDArray[np.double],
+    freq_Debye: float | None = None,
+    Debye_fit_coef: float | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    draw_grid: bool = True,
+    flip_xy: bool = False,
     linestyle: str = "solid",
     color: str = "red",
     linewidth: float = 1.0,
     linestyle_Debye: str = "solid",
     color_Debye: str = "blue",
-):
+) -> None:
     """Plot total DOS."""
     ax.xaxis.set_ticks_position("both")
     ax.yaxis.set_ticks_position("both")
@@ -507,7 +564,7 @@ def plot_total_dos(
             color=color,
             linewidth=linewidth,
         )
-        if freq_Debye:
+        if freq_Debye is not None and Debye_fit_coef is not None:
             ax.plot(
                 np.append(Debye_fit_coef * freqs**2, 0),
                 np.append(freqs, freq_Debye),
@@ -523,7 +580,7 @@ def plot_total_dos(
             color=color,
             linewidth=linewidth,
         )
-        if freq_Debye:
+        if freq_Debye is not None and Debye_fit_coef is not None:
             ax.plot(
                 np.append(freqs, freq_Debye),
                 np.append(Debye_fit_coef * freqs**2, 0),
@@ -542,17 +599,17 @@ def plot_total_dos(
 
 def plot_projected_dos(
     ax,
-    frequency_points,
-    projected_dos,
-    indices=None,
-    legend=None,
-    legend_prop=None,
-    legend_frameon=True,
-    xlabel=None,
-    ylabel=None,
-    draw_grid=True,
-    flip_xy=False,
-):
+    frequency_points: NDArray[np.double],
+    projected_dos: NDArray[np.double],
+    indices: list[list[int]] | None = None,
+    legend: list[str] | None = None,
+    legend_prop: dict | None = None,
+    legend_frameon: bool = True,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    draw_grid: bool = True,
+    flip_xy: bool = False,
+) -> None:
     """Plot projected DOS."""
     ax.xaxis.set_ticks_position("both")
     ax.yaxis.set_ticks_position("both")
@@ -597,14 +654,14 @@ def plot_projected_dos(
 
 
 def run_tetrahedron_method_dos(
-    mesh,
-    frequency_points,
-    frequencies,
-    grid_address,
-    grid_mapping_table,
-    relative_grid_address,
-    coef=None,
-):
+    mesh: NDArray[np.int64],
+    frequency_points: NDArray[np.double],
+    frequencies: NDArray[np.double],
+    grid_address: NDArray[np.int64],
+    grid_mapping_table: NDArray[np.int64],
+    relative_grid_address: NDArray[np.int64],
+    coef: NDArray[np.double] | None = None,
+) -> NDArray[np.double]:
     """Return (P)DOS calculated by tetrahedron method in C."""
     try:
         import phonopy._phonopy as phonoc
@@ -634,7 +691,9 @@ def run_tetrahedron_method_dos(
         return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
 
 
-def get_dos_frequency_range(freqs, dos):
+def get_dos_frequency_range(
+    freqs: NDArray[np.double], dos: NDArray[np.double]
+) -> tuple[float, float]:
     """Return reasonable frequency range."""
     i_min = 0
     i_max = 1000

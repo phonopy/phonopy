@@ -37,10 +37,11 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
 from typing import Literal
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
@@ -79,15 +80,40 @@ class QpointsPhonon:
 
     def __init__(
         self,
-        qpoints,
+        qpoints: Sequence[Sequence[float]]
+        | Sequence[NDArray[np.double]]
+        | NDArray[np.double],
         dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
-        nac_q_direction: ArrayLike | None = None,
+        nac_q_direction: NDArray[np.double] | None = None,
         with_eigenvectors: bool = False,
         group_velocity: GroupVelocity | None = None,
         with_dynamical_matrices: bool = False,
         factor: float | None = None,
-    ):
-        """Init method."""
+    ) -> None:
+        """Init method.
+
+        Parameters
+        ----------
+        qpoints : ndarray
+            q-points in reduced coordinates of reciprocal lattice.
+            shape=(N, 3), dtype='double'
+        dynamical_matrix : DynamicalMatrix or DynamicalMatrixNAC
+            Dynamical matrix calculator.
+        nac_q_direction : ndarray, optional
+            Direction of q-vector approaching to Gamma point in reduced
+            coordinates of reciprocal lattice. Used for NAC correction.
+            shape=(3,), dtype='double'. Default is None.
+        with_eigenvectors : bool, optional
+            Flag whether eigenvectors are calculated or not. Default is False.
+        group_velocity : GroupVelocity, optional
+            Group velocity calculator. Default is None.
+        with_dynamical_matrices : bool, optional
+            Flag whether dynamical matrices are stored or not. Default is False.
+        factor : float, optional
+            Unit conversion factor for phonon frequencies. Default is
+            DefaultToTHz of the physical units.
+
+        """
         primitive: Primitive = dynamical_matrix.primitive
         self._natom = len(primitive)
         self._masses = primitive.masses
@@ -95,7 +121,7 @@ class QpointsPhonon:
         self._positions = primitive.scaled_positions
         self._lattice = primitive.cell
 
-        self._qpoints = qpoints
+        self._qpoints = np.asarray(qpoints, dtype="double", order="C")
         self._dynamical_matrix = dynamical_matrix
         self._nac_q_direction = nac_q_direction
         self._with_eigenvectors = with_eigenvectors
@@ -106,36 +132,36 @@ class QpointsPhonon:
         else:
             self._factor = factor
 
-        self._group_velocities: NDArray | None = None
-        self._eigenvectors: NDArray | None = None
-        self._eigenvalues: NDArray
-        self._frequencies: NDArray
-        self._dynamical_matrices: NDArray | None = None
+        self._group_velocities: NDArray[np.double] | None = None
+        self._eigenvectors: NDArray[np.cdouble] | None = None
+        self._eigenvalues: NDArray[np.double]
+        self._frequencies: NDArray[np.double]
+        self._dynamical_matrices: NDArray[np.cdouble] | None = None
 
         self._run()
 
     @property
-    def frequencies(self) -> NDArray:
+    def frequencies(self) -> NDArray[np.double]:
         """Return frequencies."""
         return self._frequencies
 
     @property
-    def eigenvalues(self) -> NDArray:
+    def eigenvalues(self) -> NDArray[np.double]:
         """Return eigenvalues."""
         return self._eigenvalues
 
     @property
-    def eigenvectors(self) -> NDArray | None:
+    def eigenvectors(self) -> NDArray[np.cdouble] | None:
         """Return eigenvectors."""
         return self._eigenvectors
 
     @property
-    def group_velocities(self) -> NDArray | None:
+    def group_velocities(self) -> NDArray[np.double] | None:
         """Return group velocities."""
         return self._group_velocities
 
     @property
-    def dynamical_matrices(self):
+    def dynamical_matrices(self) -> NDArray[np.cdouble] | None:
         """Return DynamicalMatrix class instance."""
         return self._dynamical_matrices
 
@@ -143,7 +169,7 @@ class QpointsPhonon:
         self,
         filename: str | os.PathLike = "qpoints.hdf5",
         compression: Literal["gzip", "lzf"] | int | None = None,
-    ):
+    ) -> None:
         """Write results in hdf5."""
         import h5py
 
@@ -171,7 +197,7 @@ class QpointsPhonon:
                     compression=compression,
                 )
 
-    def write_yaml(self, filename: str | os.PathLike = "qpoints.yaml"):
+    def write_yaml(self, filename: str | os.PathLike = "qpoints.yaml") -> None:
         """Write results in yaml."""
         w = open(filename, "w")
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
@@ -222,7 +248,7 @@ class QpointsPhonon:
                             )
             w.write("\n")
 
-    def _run(self):
+    def _run(self) -> None:
         if self._gv_obj is not None:
             self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._gv_obj.group_velocities
@@ -257,19 +283,7 @@ class QpointsPhonon:
         if self._with_eigenvectors:
             self._eigenvectors = eigenvectors
 
-        dtype = "c%d" % (np.dtype("double").itemsize * 2)
         if self._with_dynamical_matrices:
             self._dynamical_matrices = np.array(
-                dynamical_matrices, dtype=dtype, order="C"
+                dynamical_matrices, dtype="cdouble", order="C"
             )
-
-    def _get_dynamical_matrix(self, q):
-        if (
-            isinstance(self._dynamical_matrix, DynamicalMatrixNAC)
-            and self._nac_q_direction is not None
-            and (np.abs(q) < 1e-5).all()
-        ):
-            self._dynamical_matrix.run(q, q_direction=self._nac_q_direction)
-        else:
-            self._dynamical_matrix.run(q)
-        return self._dynamical_matrix.dynamical_matrix

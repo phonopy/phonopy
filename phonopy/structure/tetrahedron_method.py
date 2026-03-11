@@ -152,7 +152,7 @@ class TetrahedronMethod:
     def __init__(
         self,
         primitive_vectors: Sequence[Sequence[float]] | NDArray[np.double] | None,
-        mesh: Sequence[int] | NDArray[np.double] | None = None,
+        mesh: Sequence[int] | NDArray[np.int64] | None = None,
         lang: str = "C",
     ) -> None:
         """Init method.
@@ -178,7 +178,7 @@ class TetrahedronMethod:
             )
         self._lang = lang
         self._vertices = None
-        self._relative_grid_addresses = None
+        self._relative_grid_addresses: NDArray[np.int64]
         self._central_indices = None
         self._tetrahedra_omegas = None
         self._sort_indices = None
@@ -211,7 +211,7 @@ class TetrahedronMethod:
             self._run_py(omegas, value=value)
 
     @property
-    def tetrahedra(self) -> NDArray[np.int64] | None:
+    def tetrahedra(self) -> NDArray[np.int64]:
         """Return relative grid addresses at vertices of tetrahedra."""
         return self._relative_grid_addresses
 

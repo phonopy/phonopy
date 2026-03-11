@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -339,7 +339,7 @@ class DynmatToForceConstants:
         elif dynamical_matrices is not None:
             self.dynamical_matrices = dynamical_matrices
 
-    def run(self, lang: str = "C") -> None:
+    def run(self, lang: Literal["C", "Python"] = "C") -> None:
         """Run."""
         self._fc = np.zeros(self._fc_shape, dtype="double", order="C")
         self._inverse_transformation(lang=lang)
@@ -445,7 +445,7 @@ class DynmatToForceConstants:
             dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
         self.dynamical_matrices = np.array(dm, dtype=self._dtype_complex, order="C")
 
-    def _inverse_transformation(self, lang: str = "C") -> None:
+    def _inverse_transformation(self, lang: Literal["C", "Python"] = "C") -> None:
         if lang == "C":
             self._c_inverse_transformation()
         else:
