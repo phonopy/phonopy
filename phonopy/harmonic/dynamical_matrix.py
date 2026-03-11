@@ -312,7 +312,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             use_openmp=use_openmp,
         )
         self._log_level = log_level
-        self._rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
+        self._rec_lat = np.array(
+            np.linalg.inv(self._pcell.cell), dtype="double", order="C"
+        )  # column vectors
 
     def run(
         self,

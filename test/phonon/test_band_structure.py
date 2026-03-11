@@ -11,9 +11,16 @@ from typing import Literal, cast
 import h5py
 import numpy as np
 import pytest
+import yaml
 from numpy.typing import NDArray
 
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+
 from phonopy import Phonopy
+from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.phonon.band_structure import get_band_qpoints
 
 cwd_called = pathlib.Path.cwd()
@@ -204,6 +211,113 @@ def _assert_band_structure_hdf5_arrays(
         )  # type: ignore
 
 
+@pytest.mark.parametrize(
+    "compression,is_band_const_interval,with_eigenvectors,with_group_velocities",
+    itertools.product(
+        ["gzip", "lzma", None],
+        [False, True],
+        [False, True],
+        [False, True],
+    ),
+)
+def test_write_yaml_band_structure(
+    ph_nacl: Phonopy,
+    compression: Literal["gzip", "lzma"] | None,
+    is_band_const_interval: bool,
+    with_group_velocities: bool,
+    with_eigenvectors: bool,
+):
+    """Test band structure calculation by NaCl.
+
+    G -> L  False
+    X -> G  True
+    G -> W  False (last one has to be False)
+
+    """
+    _test_write_yaml_band_structure(
+        ph_nacl,
+        labels=["G", "L", "X", "G", "W"],
+        compression=compression,
+        is_band_const_interval=is_band_const_interval,
+        with_eigenvectors=with_eigenvectors,
+        with_group_velocities=with_group_velocities,
+    )
+
+
+def _test_write_yaml_band_structure(
+    ph_nacl: Phonopy,
+    labels: list[str],
+    compression: Literal["gzip", "lzma"] | None = None,
+    is_band_const_interval: bool = False,
+    with_eigenvectors: bool = False,
+    with_group_velocities: bool = False,
+):
+    """Test writing hdf5 of band structure calculation by NaCl."""
+    if is_band_const_interval:
+        qpoints = _get_band_qpoints(np.linalg.inv(ph_nacl.primitive.cell))
+    else:
+        qpoints = _get_band_qpoints()
+    ph_nacl.run_band_structure(
+        qpoints,
+        path_connections=[False, True, False],
+        with_group_velocities=with_group_velocities,
+        with_eigenvectors=with_eigenvectors,
+        is_band_connection=False,
+        is_legacy_plot=False,
+        labels=labels,
+    )
+    assert ph_nacl.band_structure is not None
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        ph_nacl.band_structure.write_yaml(compression=compression)
+        band_filename = "band.yaml"
+        if compression == "gzip":
+            band_filename = "band.yaml.gz"
+        elif compression == "lzma":
+            band_filename = "band.yaml.xz"
+
+        for created_filename in [band_filename]:
+            file_path = pathlib.Path(created_filename)
+            assert file_path.exists()
+
+            if created_filename == band_filename:
+                yaml_keys = [
+                    "nqpoint",
+                    "npath",
+                    "segment_nqpoint",
+                    "labels",
+                    "reciprocal_lattice",
+                    "natom",
+                    "lattice",
+                    "points",
+                    "phonon",
+                ]
+                myio = get_io_module_to_decompress(band_filename)
+                with myio.open(file_path, "rt") as f:
+                    data = yaml.load(f, Loader=Loader)
+
+                assert set(data.keys()) == set(yaml_keys)
+
+                data_q = data["phonon"][0]
+                assert set(["q-position", "distance", "band"]) == set(data_q.keys())
+
+                band_keys = ["frequency"]
+                if with_eigenvectors:
+                    band_keys.append("eigenvector")
+                if with_group_velocities:
+                    band_keys.append("group_velocity")
+                assert set(band_keys) == set(data_q["band"][0].keys())
+
+            file_path.unlink()
+
+        _check_no_files()
+
+        os.chdir(original_cwd)
+
+
 def _get_band_qpoints(reclat: NDArray | None = None):
     band_paths = [
         [[0, 0, 0], [0.5, 0.5, 0.5]],
@@ -215,3 +329,9 @@ def _get_band_qpoints(reclat: NDArray | None = None):
 
 def _check_no_files():
     assert not list(pathlib.Path(".").iterdir())
+
+
+def _ls():
+    current_dir = pathlib.Path(".")
+    for file in current_dir.iterdir():
+        print(file.name)
