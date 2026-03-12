@@ -679,7 +679,7 @@ def get_reciprocal_operations(
 
     """
     unique_rots: list[NDArray[np.int64]] = []
-    tmat_inv = np.linalg.inv(transformation_matrix)  # type: ignore
+    tmat_inv: NDArray[np.double] = np.linalg.inv(transformation_matrix)  # type: ignore
     for r in collect_unique_rotations(rotations):
         _r = similarity_transformation(tmat_inv, r)
         _r_int = np.array(np.rint(_r), dtype="int64")

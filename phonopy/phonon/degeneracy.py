@@ -89,7 +89,7 @@ def degenerate_sets(freqs: NDArray[np.double], cutoff: float = 1e-4) -> list[lis
 
 def get_eigenvectors(
     q: NDArray[np.double],
-    dm: DynamicalMatrix | DynamicalMatrixNAC,
+    dm: DynamicalMatrix,
     ddm: DerivativeOfDynamicalMatrix,
     perturbation: Sequence[float] | NDArray[np.double] | None = None,
     derivative_order: int | None = None,
