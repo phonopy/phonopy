@@ -1616,7 +1616,7 @@ def get_cell_matrix(
     beta: float,
     gamma: float,
     is_radian: bool = False,
-) -> NDArray:
+) -> NDArray[np.double]:
     """Return basis vectors in another orientation.
 
     Parameters

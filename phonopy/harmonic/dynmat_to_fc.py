@@ -312,8 +312,6 @@ class DynmatToForceConstants:
         else:
             self._fc_shape = (n_p, n_s, 3, 3)
 
-        self._dtype_complex = np.cdouble
-
         if dynamical_matrices is not None or commensurate_points is not None:
             warnings.warn(
                 "Instanciation init parameters of dynamical_matrices"
@@ -401,7 +399,7 @@ class DynmatToForceConstants:
     def dynamical_matrices(
         self, dynmat: NDArray[np.cdouble] | Sequence[NDArray[np.cdouble]]
     ) -> None:
-        self._dynmat = np.array(dynmat, dtype=self._dtype_complex, order="C")
+        self._dynmat = np.array(dynmat, dtype="cdouble", order="C")
 
     def get_dynamical_matrices(self) -> NDArray[np.cdouble] | None:
         """Return numerical matrices of dynamical matrices."""
@@ -419,19 +417,22 @@ class DynmatToForceConstants:
 
     def create_dynamical_matrices(
         self,
-        eigenvalues: NDArray[np.double],
-        eigenvectors: NDArray[np.cdouble],
+        eigenvalues: NDArray[np.double] | list[NDArray[np.double]],
+        eigenvectors: NDArray[np.cdouble]
+        | NDArray[np.double]
+        | list[NDArray[np.cdouble]]
+        | list[NDArray[np.double]],
     ) -> None:
         """Create dynamcial matrices from eigenvalues and eigenvectors pairs.
 
         Parameters
         ----------
-        eigenvalues : ndarray
+        eigenvalues : list of ndarray
             Phonon eigenvalues as the solution of dynamical matrices at
             commensurate q-points.
             shape=(det(supercell_matrix), num_band), dtype='double', order='C'
             where ``num_band`` is 3 x number of atoms in primitive cell.
-        eigenvectors : ndarray
+        eigenvectors : list of ndarray
             Phonon eigenvectors as the solution of dynamical matrices at
             commensurate q-points.
             shape=(det(supercell_matrix), num_band, num_band)
@@ -443,7 +444,7 @@ class DynmatToForceConstants:
         dm: list[NDArray[np.cdouble]] = []
         for eigvals, eigvecs in zip(eigenvalues, eigenvectors, strict=True):
             dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
-        self.dynamical_matrices = np.array(dm, dtype=self._dtype_complex, order="C")
+        self.dynamical_matrices = np.array(dm, dtype="cdouble", order="C")
 
     def _inverse_transformation(self, lang: Literal["C", "Python"] = "C") -> None:
         if lang == "C":
@@ -456,7 +457,7 @@ class DynmatToForceConstants:
             distribute_force_constants_by_translations(self._fc, self._pcell)
 
     def _c_inverse_transformation(self) -> None:
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
 
         assert self._fc is not None
         assert self._dynmat is not None
@@ -508,7 +509,7 @@ class DynmatToForceConstants:
         multi_i = int(multi)
         adrs_i = int(adrs)
         pos = self._svecs[adrs_i : (adrs_i + multi_i)]
-        sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order="C")
+        sum_q = np.zeros((3, 3), dtype="cdouble", order="C")
         phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
         phase_factors = np.exp(phases).sum(axis=1) / multi_i
         for i, coef in enumerate(phase_factors):
@@ -516,4 +517,4 @@ class DynmatToForceConstants:
                 self._dynmat[i, (p_i * 3) : (p_i * 3 + 3), (p_j * 3) : (p_j * 3 + 3)]
                 * coef
             )
-        return sum_q.real
+        return sum_q.real  # type: ignore

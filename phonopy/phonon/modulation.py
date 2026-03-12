@@ -44,7 +44,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.interface.calculator import (
     get_default_cell_filename,
     write_crystal_structure,
@@ -60,7 +60,7 @@ class Modulation:
 
     def __init__(
         self,
-        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
+        dynamical_matrix: DynamicalMatrix,
         dimension: Sequence[int] | Sequence[Sequence[int]] | NDArray[np.int64],
         phonon_modes: Sequence[tuple[NDArray[np.double], int, float, float]],
         delta_q: NDArray[np.double] | Sequence[float] | None = None,

@@ -3063,8 +3063,8 @@ class Phonopy:
             )
             raise RuntimeError(msg)
         return (
-            self._dynamic_structure_factor.qpoints,
-            self._dynamic_structure_factor.dynamic_structure_factors,
+            self._dynamic_structure_factor._qpoints_1bz,
+            self._dynamic_structure_factor._dynamic_structure_factors,
         )
 
     def init_random_displacements(
