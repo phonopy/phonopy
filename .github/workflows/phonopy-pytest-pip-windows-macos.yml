@@ -32,13 +32,26 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
+    - uses: conda-incubator/setup-miniconda@v3
       with:
-        python-version: '3.13'
+        miniforge-version: latest
+    - name: Install dependencies
+      run: |
+        conda activate test
+        conda install --yes -c conda-forge python=3.13
+        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler cxx-compiler cmake pypolymlp ase
+    - name: Setup symfc
+      run: |
+        conda activate test
+        git clone --depth 1 https://github.com/symfc/symfc.git
+        cd symfc
+        pip install -e . -vvv
+        cd ..
     - name: Setup phonopy
       run: |
-        pip install -e . -v
+        conda activate test
+        pip install -e . -vvv
     - name: Test with pytest
       run: |
-        pip install pytest
+        conda activate test
         pytest -v test

@@ -39,9 +39,8 @@ from __future__ import annotations
 import gzip
 import lzma
 import os
-import sys
 from collections.abc import Sequence
-from typing import Any, BinaryIO, Literal, TextIO
+from typing import Any, Literal, TextIO
 
 import numpy as np
 from numpy.typing import NDArray
@@ -66,7 +65,7 @@ class GruneisenMesh(GruneisenBase):
         is_time_reversal: bool = True,
         is_gamma_center: bool = False,
         is_mesh_symmetry: bool = True,
-        rotations: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
+        rotations: Sequence[Sequence[Sequence[int]]] | NDArray[np.int64] | None = None,
         factor: float | None = None,
     ) -> None:
         """Init method."""
@@ -79,7 +78,7 @@ class GruneisenMesh(GruneisenBase):
         self._cell = dynmat.primitive
         self._qpoints, self._weights = get_qpoints(
             self._mesh,
-            np.linalg.inv(self._cell.cell),
+            np.linalg.inv(self._cell.cell),  # type: ignore[arg-type]
             q_mesh_shift=shift,
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
@@ -87,8 +86,10 @@ class GruneisenMesh(GruneisenBase):
             is_mesh_symmetry=is_mesh_symmetry,
         )
         self.set_qpoints(self._qpoints)
-        self._gamma = self._gruneisen
-        self._frequencies = (
+        assert self._gruneisen is not None
+        assert self._eigenvalues is not None
+        self._gamma: NDArray[np.double] = self._gruneisen
+        self._frequencies: NDArray[np.double] = (
             np.sqrt(abs(self._eigenvalues)) * np.sign(self._eigenvalues) * self._factor
         )
 
@@ -102,6 +103,7 @@ class GruneisenMesh(GruneisenBase):
 
     def get_qpoints(self) -> NDArray[np.double]:
         """Return (irreducible) q-points."""
+        assert self._qpoints is not None
         return self._qpoints
 
     def get_weights(self) -> NDArray[np.int64]:
@@ -110,10 +112,12 @@ class GruneisenMesh(GruneisenBase):
 
     def get_eigenvalues(self) -> NDArray[np.double]:
         """Return eigenvalues of dynamical matrices."""
+        assert self._eigenvalues is not None
         return self._eigenvalues
 
     def get_eigenvectors(self) -> NDArray[np.cdouble]:
         """Return phonon eigenvectors."""
+        assert self._eigenvectors is not None
         return self._eigenvectors
 
     def get_frequencies(self) -> NDArray[np.double]:
@@ -127,6 +131,7 @@ class GruneisenMesh(GruneisenBase):
         compression: Literal["gzip", "lzma"] | None = None,
     ) -> None:
         """Write results in yaml file."""
+        _filename: str | os.PathLike = ""
         if filename is not None:
             _filename = filename
 
@@ -138,20 +143,21 @@ class GruneisenMesh(GruneisenBase):
         elif compression == "gzip":
             if filename is None:
                 _filename = "gruneisen.yaml.gz"
-            with gzip.open(_filename, "wb") as w:
-                self._write_yaml(w, comment, is_binary=True)
+            with gzip.open(_filename, "wt") as w:
+                self._write_yaml(w, comment)
         elif compression == "lzma":
             if filename is None:
                 _filename = "gruneisen.yaml.xz"
-            with lzma.open(_filename, "w") as w:
-                self._write_yaml(w, comment, is_binary=True)
+            with lzma.open(_filename, "wt") as w:
+                self._write_yaml(w, comment)
 
     def _write_yaml(
         self,
-        w: TextIO | BinaryIO,
+        w: TextIO,
         comment: Any,
-        is_binary: bool = False,
     ) -> None:
+        assert self._qpoints is not None
+        assert self._weights is not None
         natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vectors
         text = []
@@ -176,23 +182,14 @@ class GruneisenMesh(GruneisenBase):
                 text.append("    frequency: %15.10f" % freq)
             text.append("")
 
-        self._write_lines(w, text, is_binary)
+        self._write_lines(w, text)
 
-    def _write_lines(
-        self, w: TextIO | BinaryIO, lines: list[str], is_binary: bool
-    ) -> None:
-        text = "\n".join(lines)
-        if is_binary:
-            if sys.version_info < (3, 0):
-                w.write(bytes(text))
-            else:
-                w.write(bytes(text, "utf8"))
-        else:
-            w.write(text)
+    def _write_lines(self, w: TextIO, lines: list[str]) -> None:
+        w.write("\n".join(lines))
 
     def write_hdf5(self, filename: str | os.PathLike = "gruneisen.hdf5") -> None:
         """Write results in hdf5 file."""
-        import h5py
+        import h5py  # type: ignore[import-untyped]
 
         w = h5py.File(filename, "w")
         w.create_dataset("mesh", data=self._mesh)
@@ -220,13 +217,13 @@ class GruneisenMesh(GruneisenBase):
                 freqs = np.extract(freqs > cutoff_frequency, freqs)
 
             if color_scheme == "RB":
-                color = (1.0 / n * i, 0, 1.0 / n * (n - i))
+                color = (1.0 / n * i, 0.0, 1.0 / n * (n - i))
                 if markersize:
                     plt.plot(freqs, g, marker, color=color, markersize=markersize)
                 else:
                     plt.plot(freqs, g, marker, color=color)
             elif color_scheme == "RG":
-                color = (1.0 / n * i, 1.0 / n * (n - i), 0)
+                color = (1.0 / n * i, 1.0 / n * (n - i), 0.0)
                 if markersize:
                     plt.plot(freqs, g, marker, color=color, markersize=markersize)
                 else:

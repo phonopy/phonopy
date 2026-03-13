@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -44,7 +45,7 @@ from numpy.typing import NDArray
 
 def get_tetrahedra_relative_grid_address(
     microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
-    lang: str = "C",
+    lang: Literal["C", "Python"] = "C",
 ) -> NDArray[np.int64]:
     """Return relative (differences of) grid addresses from the central.
 
@@ -56,7 +57,7 @@ def get_tetrahedra_relative_grid_address(
 
     """
     try:
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
     except ImportError:
         import sys
 
@@ -76,14 +77,16 @@ def get_tetrahedra_relative_grid_address(
     return relative_grid_address
 
 
-def get_all_tetrahedra_relative_grid_address(lang: str = "C") -> NDArray[np.int64]:
+def get_all_tetrahedra_relative_grid_address(
+    lang: Literal["C", "Python"] = "C",
+) -> NDArray[np.int64]:
     """Return relative grid addresses dataset.
 
     This exists only for the test.
 
     """
     try:
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
     except ImportError:
         import sys
 
@@ -122,7 +125,7 @@ def get_tetrahedra_integration_weight(
 
     """
     try:
-        import phonopy._phonopy as phonoc
+        import phonopy._phonopy as phonoc  # type: ignore
     except ImportError:
         import sys
 
@@ -153,7 +156,7 @@ class TetrahedronMethod:
         self,
         primitive_vectors: Sequence[Sequence[float]] | NDArray[np.double] | None,
         mesh: Sequence[int] | NDArray[np.int64] | None = None,
-        lang: str = "C",
+        lang: Literal["C", "Python"] = "C",
     ) -> None:
         """Init method.
 
@@ -177,13 +180,15 @@ class TetrahedronMethod:
                 np.array(primitive_vectors, dtype="double", order="C") / mesh
             )
         self._lang = lang
-        self._vertices = None
+        self._vertices: NDArray[np.int64] | None = None
         self._relative_grid_addresses: NDArray[np.int64]
-        self._central_indices = None
-        self._tetrahedra_omegas = None
-        self._sort_indices = None
-        self._omegas = None
-        self._integration_weight = None
+        self._central_indices: NDArray[np.int64] | None = None
+        self._tetrahedra_omegas: (
+            Sequence[Sequence[float]] | NDArray[np.double] | None
+        ) = None
+        self._sort_indices: NDArray[np.intp] | None = None
+        self._omegas: float | NDArray[np.double] | None = None
+        self._integration_weight: float | NDArray[np.double] | None = None
         self._set_relative_grid_addresses(lang=self._lang)
 
     def run(
@@ -217,7 +222,7 @@ class TetrahedronMethod:
 
     def get_unique_tetrahedra_vertices(self) -> NDArray[np.int64]:
         """Return unique grid indices in neighboring tetrahedra."""
-        unique_vertices = []
+        unique_vertices: list[NDArray[np.int64]] = []
         for adrs in self._relative_grid_addresses.reshape(-1, 3):
             found = False
             for uadrs in unique_vertices:
@@ -242,7 +247,7 @@ class TetrahedronMethod:
         """Return integration weights."""
         return self._integration_weight
 
-    def _set_relative_grid_addresses(self, lang: str = "C") -> None:
+    def _set_relative_grid_addresses(self, lang: Literal["C", "Python"] = "C") -> None:
         """Set dataset of relative grid addresses."""
         if lang == "C":
             if self._primitive_vectors is None:
@@ -275,6 +280,7 @@ class TetrahedronMethod:
         omegas: float | Sequence[float] | NDArray[np.double],
         value: str = "I",
     ) -> None:
+        assert self._tetrahedra_omegas is not None
         self._integration_weight = get_tetrahedra_integration_weight(
             omegas, self._tetrahedra_omegas, function=value
         )
@@ -285,12 +291,14 @@ class TetrahedronMethod:
         value: str = "I",
     ) -> None:
         if isinstance(omegas, (float, int, np.generic)):
-            iw = self._get_integration_weight_py(omegas, value=value)
+            self._integration_weight = self._get_integration_weight_py(
+                omegas, value=value
+            )
         else:
             iw = np.zeros(len(omegas), dtype="double")
             for i, omega in enumerate(omegas):
                 iw[i] = self._get_integration_weight_py(omega, value=value)
-        self._integration_weight = iw
+            self._integration_weight = iw
 
     def _get_integration_weight_py(self, omega: float, value: str = "I") -> float:
         if value == "I":
@@ -300,13 +308,17 @@ class TetrahedronMethod:
             IJ = self._J
             gn = self._n
 
-        self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
+        assert self._tetrahedra_omegas is not None
+        assert self._central_indices is not None
+        tetrahedra_omegas = self._tetrahedra_omegas
+        central_indices = self._central_indices
+        self._sort_indices = np.argsort(tetrahedra_omegas, axis=1)
         sum_value = 0.0
         self._omega = omega
         for omegas, indices, ci in zip(
-            self._tetrahedra_omegas,
+            tetrahedra_omegas,
             self._sort_indices,
-            self._central_indices,
+            central_indices,
             strict=True,
         ):
             self._vertices_omegas = omegas[indices]
