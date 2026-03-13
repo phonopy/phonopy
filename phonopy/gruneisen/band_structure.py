@@ -43,7 +43,7 @@ from collections.abc import Sequence
 from typing import IO, Any, Literal
 
 import numpy as np
-import yaml
+import yaml  # type: ignore[import-untyped]
 from numpy.typing import NDArray
 
 from phonopy.gruneisen.core import GruneisenBase
@@ -148,15 +148,15 @@ class GruneisenBandStructure(GruneisenBase):
         """Return distances."""
         return [path[6] for path in self._paths]
 
-    def get_gruneisen(self) -> list[NDArray[np.double]]:
+    def get_gruneisen(self) -> list[NDArray[np.double]]:  # type: ignore[override]
         """Return mode Gruneisen parameters."""
         return [path[2] for path in self._paths]
 
-    def get_eigenvalues(self) -> list[NDArray[np.double]]:
+    def get_eigenvalues(self) -> list[NDArray[np.double]]:  # type: ignore[override]
         """Return eigenvalues."""
         return [path[3] for path in self._paths]
 
-    def get_eigenvectors(self) -> list[NDArray[np.cdouble]]:
+    def get_eigenvectors(self) -> list[NDArray[np.cdouble]]:  # type: ignore[override]
         """Return eigenvectors."""
         return [path[4] for path in self._paths]
 
@@ -171,6 +171,7 @@ class GruneisenBandStructure(GruneisenBase):
         compression: Literal["gzip", "lzma"] | None = None,
     ) -> None:
         """Write results to file in yaml."""
+        _filename: str | os.PathLike = ""
         if filename is not None:
             _filename = filename
 
@@ -333,9 +334,9 @@ class GruneisenBandStructure(GruneisenBase):
     ) -> None:
         color = None
         if color_scheme == "RB":
-            color = (1.0 / n * i, 0, 1.0 / n * (n - i))
+            color = (1.0 / n * i, 0.0, 1.0 / n * (n - i))
         elif color_scheme == "RG":
-            color = (1.0 / n * i, 1.0 / n * (n - i), 0)
+            color = (1.0 / n * i, 1.0 / n * (n - i), 0.0)
         elif color_scheme == "RGB":
             color = (
                 max(2.0 / n * (i - n / 2.0), 0),

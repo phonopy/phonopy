@@ -36,12 +36,20 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.harmonic.displacement import (
+    DisplacementDataset,
+    Type1DisplacementDataset,
+    Type2DisplacementDatasetWithOptionalData,
+)
+
 
 def get_displacements_and_forces(
-    disp_dataset: dict,
+    disp_dataset: DisplacementDataset,
 ) -> tuple[NDArray[np.double], NDArray[np.double] | None]:
     """Return displacements and forces of all atoms from displacement dataset.
 
@@ -66,12 +74,11 @@ def get_displacements_and_forces(
 
     """
     if "first_atoms" in disp_dataset:
-        natom = disp_dataset["natom"]
-        disps = np.zeros(
-            (len(disp_dataset["first_atoms"]), natom, 3), dtype="double", order="C"
-        )
+        d1 = cast(Type1DisplacementDataset, disp_dataset)
+        natom = d1["natom"]
+        disps = np.zeros((len(d1["first_atoms"]), natom, 3), dtype="double", order="C")
         forces = None
-        for i, disp1 in enumerate(disp_dataset["first_atoms"]):
+        for i, disp1 in enumerate(d1["first_atoms"]):
             disps[i, disp1["number"]] = disp1["displacement"]
             if "forces" in disp1:
                 if forces is None:
@@ -79,25 +86,24 @@ def get_displacements_and_forces(
                 forces[i] = disp1["forces"]
         return disps, forces
     elif "displacements" in disp_dataset:
-        if "forces" in disp_dataset:
-            forces = disp_dataset["forces"]
+        d2 = cast(Type2DisplacementDatasetWithOptionalData, disp_dataset)
+        if "forces" in d2:
+            forces = d2["forces"]
         else:
             forces = None
-        return disp_dataset["displacements"], forces
+        return d2["displacements"], forces
     else:
         raise RuntimeError("Unknown dataset format.")
 
 
-def forces_in_dataset(dataset: dict) -> bool:
+def forces_in_dataset(dataset: DisplacementDataset | None) -> bool:
     """Check if forces in displacement dataset."""
     if dataset is None:
         return False
 
-    if not isinstance(dataset, dict):
-        raise RuntimeError("dataset is wrongly made.")
-
     if "first_atoms" in dataset:  # type-1
-        for d in dataset["first_atoms"]:
+        d1 = cast(Type1DisplacementDataset, dataset)
+        for d in d1["first_atoms"]:
             if "forces" not in d:
                 return False
         return True

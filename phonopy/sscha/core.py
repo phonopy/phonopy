@@ -40,6 +40,7 @@ import copy
 from typing import Literal
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy import Phonopy
 from phonopy.interface.mlp import PhonopyMLP
@@ -58,8 +59,9 @@ class MLPSSCHA:
         max_iterations: int | None = None,
         distance: float | None = None,
         fc_calculator: str | None = None,
+        random_seed: int | None = None,
         log_level: int = 0,
-    ):
+    ) -> None:
         """Init method.
 
         ph : Phonopy
@@ -76,6 +78,9 @@ class MLPSSCHA:
             Distance of displacements, by default is None, which gives 0.01.
         fc_calculator : str, optional
             Force constants calculator. The default is None, which means "symfc".
+        random_seed : int or None, optional
+            Seed for random number generator passed to generate_displacements.
+            The default is None.
         log_level : int, optional
             Log level, by default 0.
 
@@ -87,6 +92,7 @@ class MLPSSCHA:
             self._temperature = 300.0
         else:
             self._temperature = temperature
+        self._number_of_snapshots: int | Literal["auto"]
         if number_of_snapshots is None:
             self._number_of_snapshots = 1000
         else:
@@ -95,7 +101,6 @@ class MLPSSCHA:
             self._max_iterations = 10
         else:
             self._max_iterations = max_iterations
-        self._max_iterations = max_iterations
         if distance is None:
             self._distance = 0.01
         else:
@@ -104,6 +109,7 @@ class MLPSSCHA:
             self._fc_calculator = "symfc"
         else:
             self._fc_calculator = fc_calculator
+        self._random_seed = random_seed
         self._log_level = log_level
 
         self._ph = ph.copy()
@@ -136,23 +142,26 @@ class MLPSSCHA:
         return self._free_energy
 
     @property
-    def force_constants(self) -> np.ndarray:
+    def force_constants(self) -> NDArray[np.double]:
         """Return force constants."""
-        return self._ph.force_constants
+        fc = self._ph.force_constants
+        assert fc is not None
+        return fc
 
     @property
     def harmonic_potential_energy(self) -> float:
         """Return supercell energies."""
         d = self._ph.displacements
+        assert isinstance(d, np.ndarray)
         pe = np.einsum("ijkl,mik,mjl", self.force_constants, d, d) / len(d) / 2
-        return pe
+        return float(pe)
 
     @property
     def potential_energy(self) -> float:
         """Return potential energy."""
-        return np.average(self._ph.supercell_energies - self._supercell_energy)
+        return float(np.average(self._ph.supercell_energies - self._supercell_energy))
 
-    def calculate_free_energy(self, mesh: float = 100.0) -> float:
+    def calculate_free_energy(self, mesh: float = 100.0) -> None:
         """Calculate SSCHA free energy."""
         self._ph.run_mesh(mesh=mesh)
         self._ph.run_thermal_properties(temperatures=[self._temperature])
@@ -165,14 +174,14 @@ class MLPSSCHA:
         hpe = self.harmonic_potential_energy / n_cell
         self._free_energy = hfe + pe - hpe
 
-    def run(self) -> "MLPSSCHA":
+    def run(self) -> MLPSSCHA:
         """Run through all iterations."""
         for _ in self:
             if self._log_level:
                 print("")
         return self
 
-    def __iter__(self) -> "MLPSSCHA":
+    def __iter__(self) -> MLPSSCHA:
         """Iterate over force constants calculations."""
         return self
 
@@ -185,7 +194,7 @@ class MLPSSCHA:
         self._iter_counter += 1
         return self._iter_counter - 1
 
-    def _run(self) -> Phonopy:
+    def _run(self) -> None:
         if self._log_level and self._iter_counter == 0:
             print(
                 f"[ SSCHA initialization (rd={self._distance}, "
@@ -202,19 +211,24 @@ class MLPSSCHA:
 
         if self._iter_counter == 0:
             self._ph.generate_displacements(
-                distance=self._distance, number_of_snapshots=self._number_of_snapshots
+                distance=self._distance,
+                number_of_snapshots=self._number_of_snapshots,
+                random_seed=self._random_seed,
             )
         else:
             self._ph.generate_displacements(
                 number_of_snapshots=self._number_of_snapshots,
                 temperature=self._temperature,
+                random_seed=self._random_seed,
             )
+            displacements = self._ph.displacements
+            assert isinstance(displacements, np.ndarray)
             hist, bin_edges = np.histogram(
-                np.linalg.norm(self._ph.displacements, axis=2), bins=10
+                np.linalg.norm(displacements, axis=2), bins=10
             )
 
             if self._log_level:
-                size = np.prod(self._ph.displacements.shape[0:2])
+                size = np.prod(displacements.shape[0:2])
                 for i, h in enumerate(hist):
                     length = round(h / size * 100)
                     print(
