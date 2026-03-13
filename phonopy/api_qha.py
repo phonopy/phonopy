@@ -265,8 +265,16 @@ class PhonopyQHA:
 
     def get_bulk_modulus_parameters(
         self,
-    ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
-        """Return temperature independent bulk modulus EOS fitting parameters.
+    ) -> (
+        tuple[
+            NDArray[np.double],
+            NDArray[np.double],
+            NDArray[np.double],
+            NDArray[np.double],
+        ]
+        | tuple[float, float, float, float]
+    ):
+        """Return electronic only bulk modulus EOS fitting parameters.
 
         These values are those computed without phonon free energy.
 

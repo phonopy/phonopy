@@ -46,18 +46,18 @@ def get_free_energy_at_T(
     tmin: float,
     tmax: float,
     tstep: float,
-    eigenvalues: NDArray,
-    weights: NDArray,
-    n_electrons: float | None,
-) -> tuple[NDArray, NDArray]:
+    eigenvalues: NDArray[np.double],
+    weights: NDArray[np.int64],
+    n_electrons: float,
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return free energies at given temperatures."""
     free_energies = []
     efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
-    temperatures = np.arange(tmin, tmax + 1e-8, tstep)
+    temperatures = np.arange(tmin, tmax + 1e-8, tstep, dtype="double")
     for temp in temperatures:
         efe.run(float(temp))
         free_energies.append(efe.free_energy)
-    return temperatures, np.array(free_energies)
+    return temperatures, np.array(free_energies, dtype="double")
 
 
 class ElectronFreeEnergy:
@@ -104,7 +104,12 @@ class ElectronFreeEnergy:
 
     """
 
-    def __init__(self, eigenvalues, weights, n_electrons):
+    def __init__(
+        self,
+        eigenvalues: NDArray[np.double],
+        weights: NDArray[np.int64],
+        n_electrons: float,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -138,12 +143,12 @@ class ElectronFreeEnergy:
             raise RuntimeError
 
         self._T: float
-        self._f: NDArray
+        self._f: NDArray[np.double]
         self._mu = None
         self._entropy = None
         self._energy = None
 
-    def run(self, temp: float):
+    def run(self, temp: float) -> None:
         """Calculate free energies.
 
         Parameters
@@ -232,7 +237,9 @@ class ElectronFreeEnergy:
         )
         return float(n)
 
-    def _occupation_number(self, e: NDArray, mu: float) -> NDArray:
+    def _occupation_number(
+        self, e: NDArray[np.double], mu: float
+    ) -> NDArray[np.double]:
         de = (e - mu) / self._T
         de = np.where(de < 100, de, 100.0)  # To avoid overflow
         de = np.where(de > -100, de, -100.0)  # To avoid underflow
