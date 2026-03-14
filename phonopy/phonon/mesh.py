@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -50,6 +50,23 @@ from phonopy.harmonic.dynamical_matrix import (
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.grid_points import GridPoints
+
+
+class MeshDict(TypedDict):
+    """Return type of Phonopy.get_mesh_dict for Mesh."""
+
+    qpoints: NDArray[np.double]
+    weights: NDArray[np.int64]
+    frequencies: NDArray[np.double]
+    eigenvectors: NDArray[np.cdouble] | None
+    group_velocities: NDArray[np.double] | None
+
+
+class IterMeshDict(TypedDict):
+    """Return type of Phonopy.get_mesh_dict for IterMesh."""
+
+    qpoints: NDArray[np.double]
+    weights: NDArray[np.int64]
 
 
 class MeshBase:

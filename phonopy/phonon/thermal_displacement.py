@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -47,6 +47,14 @@ from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
+
+
+class ThermalDisplacementMatricesDict(TypedDict):
+    """Return type of Phonopy.get_thermal_displacement_matrices_dict."""
+
+    temperatures: NDArray[np.double] | None
+    thermal_displacement_matrices: NDArray[np.double] | None
+    thermal_displacement_matrices_cif: NDArray[np.double] | None
 
 
 class ThermalMotion:

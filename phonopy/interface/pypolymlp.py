@@ -45,6 +45,7 @@ from numpy.typing import NDArray
 
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpRelaxationError
 from phonopy.file_IO import get_io_module_to_decompress
+from phonopy.harmonic.displacement import Type2DisplacementDatasetWithOptionalData
 from phonopy.structure.atoms import PhonopyAtoms
 
 try:
@@ -311,7 +312,7 @@ def load_pypolymlp(filename: str | os.PathLike | None) -> Pypolymlp:  # type: ig
 
 
 def develop_mlp_by_pypolymlp(
-    mlp_dataset: dict,
+    mlp_dataset: Type2DisplacementDatasetWithOptionalData,
     supercell: PhonopyAtoms,
     params: PypolymlpParams | dict | str | None = None,
     test_size: float = 0.1,
@@ -327,8 +328,8 @@ def develop_mlp_by_pypolymlp(
         ntrain = _params.ntrain
         ntest = _params.ntest
         disps = mlp_dataset["displacements"]
-        forces = mlp_dataset["forces"]
-        energies = mlp_dataset["supercell_energies"]
+        forces = mlp_dataset["forces"]  # type: ignore[typeddict-item]
+        energies = mlp_dataset["supercell_energies"]  # type: ignore[typeddict-item]
         train_data = PypolymlpData(
             displacements=disps[:ntrain],
             forces=forces[:ntrain],
@@ -341,8 +342,8 @@ def develop_mlp_by_pypolymlp(
         )
     else:
         disps = mlp_dataset["displacements"]
-        forces = mlp_dataset["forces"]
-        energies = mlp_dataset["supercell_energies"]
+        forces = mlp_dataset["forces"]  # type: ignore[typeddict-item]
+        energies = mlp_dataset["supercell_energies"]  # type: ignore[typeddict-item]
         n = int(len(disps) * (1 - test_size))
         train_data = PypolymlpData(
             displacements=disps[:n],
