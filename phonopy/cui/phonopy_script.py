@@ -332,7 +332,7 @@ def _finalize_phonopy(
         }
         _filename = filename
 
-    phpy_yaml = phonon.get_phonon_yaml(confs=confs, settings=yaml_settings)
+    phpy_yaml = phonon.get_phonopy_yaml(confs=confs, settings=yaml_settings)
     with open(_filename, "w") as w:
         w.write(str(phpy_yaml))
 
