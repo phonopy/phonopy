@@ -85,7 +85,7 @@ def test_read_cell_yaml_with_stream(helper_methods):
 def test_write_phonopy_yaml(ph_nacl_nofcsym: Phonopy, helper_methods):
     """Test PhonopyYaml.set_phonon_info, __str__, yaml_data, parse."""
     phonon = ph_nacl_nofcsym
-    phpy_yaml = phonon.get_phonopy_yaml()
+    phpy_yaml = phonon.get_yaml()
     phpy_yaml_test = PhonopyYaml()
     phpy_yaml_test._data = load_phonopy_yaml(
         yaml.safe_load(io.StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
@@ -121,7 +121,7 @@ def test_write_phonopy_yaml_extra(ph_nacl_nofcsym: Phonopy):
         "born_effective_charge": True,
         "dielectric_constant": True,
     }
-    phpy_yaml = phonon.get_phonopy_yaml(settings=settings)
+    phpy_yaml = phonon.get_yaml(settings=settings)
     phpy_yaml_test = PhonopyYaml()
     phpy_yaml_test._data = load_phonopy_yaml(
         yaml.safe_load(io.StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
@@ -187,7 +187,7 @@ def test_phonopy_yaml_extended_symbol(nacl_unitcell_order1: PhonopyAtoms):
     assert ph.supercell.symbols[-32:-8] == ["Cl"] * 24
     assert ph.supercell.symbols[-8:] == ["Cl1"] * 8
 
-    ph_load = phonopy.load(io.StringIO(str(ph.get_phonopy_yaml())))
+    ph_load = phonopy.load(io.StringIO(str(ph.get_yaml())))
     assert ph_load.primitive.symbols[:4] == ["Na"] * 4
     assert ph_load.primitive.symbols[4:7] == ["Cl"] * 3
     assert ph_load.primitive.symbols[-1] == "Cl1"
