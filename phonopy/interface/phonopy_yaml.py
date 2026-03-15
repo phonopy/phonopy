@@ -43,7 +43,7 @@ import typing
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Literal, cast
+from typing import Literal, cast
 
 import numpy as np
 import yaml
@@ -56,9 +56,6 @@ try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
-
-if TYPE_CHECKING:
-    pass
 
 from spglib import SpglibDataset, SpglibMagneticDataset
 
@@ -822,8 +819,6 @@ class PhonopyYaml:
         Return a list of string lines of phonopy.yaml.
     read
         Read specific properties written in phonopy.yaml.
-    set_phonon_info
-        Copy specific properties in Phonopy instance to self.
 
     Attributes
     ----------
