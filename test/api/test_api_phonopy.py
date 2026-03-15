@@ -312,14 +312,8 @@ def test_Phonopy_calculator():
     assert ph.calculator is None
     assert ph.unit_conversion_factor == pytest.approx(15.6333023)
 
-    with pytest.warns(DeprecationWarning):
-        ph = Phonopy(
-            unitcell=ph_orig.unitcell,
-            supercell_matrix=ph_orig.supercell_matrix,
-            primitive_matrix=ph_orig.primitive_matrix,
-            factor=100,
-        )
-        assert ph.unit_conversion_factor == pytest.approx(100)
+    ph.unit_conversion_factor = 200
+    assert ph.unit_conversion_factor == pytest.approx(200)
 
 
 def test_Phonopy_calculator_QE():
@@ -332,16 +326,5 @@ def test_Phonopy_calculator_QE():
         supercell_matrix=ph_orig.supercell_matrix,
         primitive_matrix=ph_orig.primitive_matrix,
         calculator="qe",
-        set_factor_by_calculator=False,
-    )
-    assert ph.calculator == "qe"
-    assert ph.unit_conversion_factor == pytest.approx(15.6333023)
-
-    ph = Phonopy(
-        unitcell=ph_orig.unitcell,
-        supercell_matrix=ph_orig.supercell_matrix,
-        primitive_matrix=ph_orig.primitive_matrix,
-        calculator="qe",
-        set_factor_by_calculator=True,
     )
     assert ph.unit_conversion_factor == pytest.approx(108.9707718)

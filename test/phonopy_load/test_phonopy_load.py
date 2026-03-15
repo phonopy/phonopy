@@ -17,14 +17,13 @@ def test_unit_conversion_factor():
     assert ph.calculator is None
     assert ph.unit_conversion_factor == pytest.approx(15.6333023)
 
-    with pytest.warns(DeprecationWarning):
-        ph = phonopy.load(
-            cwd / ".." / "phonopy_params_NaCl-fd.yaml.xz",
-            factor=100,
-            produce_fc=False,
-            log_level=2,
-        )
-        assert ph.unit_conversion_factor == pytest.approx(100)
+    ph = phonopy.load(
+        cwd / ".." / "phonopy_params_NaCl-fd.yaml.xz",
+        produce_fc=False,
+        log_level=2,
+    )
+    ph.unit_conversion_factor = 100
+    assert ph.unit_conversion_factor == pytest.approx(100)
 
 
 def test_unit_conversion_factor_QE():

@@ -40,12 +40,49 @@ import re
 import warnings
 from collections.abc import Sequence
 from math import gcd
-from typing import Any
+from typing import TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.structure.atomic_data import get_atomic_data
+
+
+class _PointEntry(TypedDict, total=False):
+    coordinates: list[float]
+    symbol: str
+    extended_symbol: str
+    mass: float
+    magnetic_moment: float | list[float]
+
+
+class _LegacyAtomEntry(TypedDict, total=False):
+    """Legacy format (phonopy < v1.10.9)."""
+
+    position: list[float]
+    coordinates: list[float]
+    symbol: str
+    mass: float
+
+
+class _CellDictBase(TypedDict):
+    """Base class holding the required field of CellDict.
+
+    Separated from CellDict because TypedDict does not support mixing required
+    and optional fields in a single class (Python < 3.11). Required fields are
+    defined here with the default total=True, while optional fields are added
+    in the subclass with total=False.
+
+    """
+
+    lattice: list[list[float]]
+
+
+class CellDict(_CellDictBase, total=False):
+    """Dict representation of a crystal cell as parsed from phonopy YAML."""
+
+    points: list[_PointEntry]
+    atoms: list[_LegacyAtomEntry]
 
 
 def Atoms(*args, **kwargs) -> "PhonopyAtoms":
@@ -634,7 +671,7 @@ class PhonopyAtoms:
         return "".join(formula_parts)
 
 
-def parse_cell_dict(cell_dict: dict[str, Any]) -> PhonopyAtoms | None:
+def parse_cell_dict(cell_dict: CellDict) -> PhonopyAtoms | None:
     """Parse cell dict."""
     lattice = None
     if "lattice" in cell_dict:
@@ -659,6 +696,11 @@ def parse_cell_dict(cell_dict: dict[str, Any]) -> PhonopyAtoms | None:
                 magnetic_moments.append(x["magnetic_moment"])
     # For version < 1.10.9
     elif "atoms" in cell_dict:
+        warnings.warn(
+            'Cell dict key "atoms" is deprecated. Use "points" instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
         for x in cell_dict["atoms"]:
             if "coordinates" not in x and "position" in x:
                 points.append(x["position"])

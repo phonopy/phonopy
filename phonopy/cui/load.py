@@ -81,7 +81,6 @@ def load(
     is_compact_fc: bool = True,
     use_pypolymlp: bool = False,
     mlp_params: dict | None = None,
-    store_dense_svecs: bool = True,
     use_SNF_supercell: bool = False,
     symprec: float = 1e-5,
     log_level: int = 0,
@@ -207,11 +206,6 @@ def load(
         Use pypolymlp for generating force constants. Default is False.
     mlp_params : dict, optional
         A set of parameters used by machine learning potentials.
-    store_dense_svecs : bool, optional
-        Deprected. Dataset of shortest vectors between atoms in primitive
-        cell and supercell is stored in the dense format when this is True.
-        Default is True. In phonopy v3 or later version, False will not be
-        supported.
     use_SNF_supercell : bool, optional
         Supercell is built by SNF algorithm when True. Default is False. SNF
         algorithm is faster than the original one, but the order of atoms in the
@@ -287,10 +281,8 @@ def load(
         factor=factor,
         symprec=symprec,
         is_symmetry=is_symmetry,
-        store_dense_svecs=store_dense_svecs,
         use_SNF_supercell=use_SNF_supercell,
         calculator=_calculator,
-        set_factor_by_calculator=True,
         log_level=log_level,
     )
 
