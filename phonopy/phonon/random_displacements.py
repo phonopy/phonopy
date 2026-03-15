@@ -36,6 +36,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -129,7 +131,7 @@ class RandomDisplacements:
         supercell: PhonopyAtoms,
         primitive: Primitive,
         force_constants: NDArray[np.double],
-        dist_func: str | None = None,
+        dist_func: Literal["quantum", "classical"] | None = None,
         cutoff_frequency: float | None = None,
         max_distance: float | None = None,
         factor: float | None = None,

@@ -42,6 +42,7 @@ from typing import Any
 
 import numpy as np
 
+from phonopy.harmonic.displacement import Type2DisplacementDatasetWithOptionalData
 from phonopy.interface.pypolymlp import (
     PypolymlpParams,
     develop_mlp_by_pypolymlp,
@@ -89,7 +90,7 @@ class PhonopyMLP:
 
     def develop(
         self,
-        mlp_dataset: dict,
+        mlp_dataset: Type2DisplacementDatasetWithOptionalData,
         supercell: PhonopyAtoms,
         params: PypolymlpParams | dict | str | None = None,
         test_size: float = 0.1,

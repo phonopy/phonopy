@@ -36,6 +36,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -125,18 +127,16 @@ class GroupVelocity:
         self._cutoff_frequency = cutoff_frequency
 
         self._directions = np.array(
-            [[1, 2, 3], [1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double"
+            [[1, 2, 3], [1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double", order="C"
         )
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
-        self._q_points: NDArray[np.double] | None = None
         self._group_velocities: NDArray[np.double] | None = None
-        self._perturbation: NDArray[np.double] | None = None
 
     def run(
         self,
-        q_points: NDArray[np.double],
-        perturbation: NDArray[np.double] | None = None,
+        q_points: Sequence[Sequence[float]] | NDArray[np.double],
+        perturbation: Sequence[float] | NDArray[np.double] | None = None,
     ) -> None:
         """Group velocities are computed at q-points.
 
@@ -150,16 +150,17 @@ class GroupVelocity:
             Direction in fractional coordinates of reciprocal space.
 
         """
-        self._q_points = q_points
-        self._perturbation = perturbation
         if perturbation is None:
             # Give an random direction to break symmetry
-            self._directions[0] = np.array([1, 2, 3])
+            self._directions[0] = np.array([1, 2, 3], dtype="double")
         else:
             self._directions[0] = np.dot(self._reciprocal_lattice, perturbation)
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
-        gv = [self._calculate_group_velocity_at_q(q) for q in self._q_points]
+        gv = [
+            self._calculate_group_velocity_at_q(q)
+            for q in np.array(q_points, dtype="double")
+        ]
         self._group_velocities = np.array(gv, dtype="double", order="C")
 
     @property
@@ -200,13 +201,10 @@ class GroupVelocity:
             else:
                 gv[i, :] = 0
 
-        if self._perturbation is None:
-            if self._symmetry is None:
-                return gv
-            else:
-                return self._symmetrize_group_velocity(gv, q)
-        else:
+        if self._symmetry is None:
             return gv
+        else:
+            return self._symmetrize_group_velocity(gv, q)
 
     def _symmetrize_group_velocity(
         self, gv: NDArray[np.double], q: NDArray[np.double]

@@ -39,13 +39,22 @@ from __future__ import annotations
 import os
 import warnings
 from collections.abc import Callable, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.phonon.mesh import Mesh
 from phonopy.physical_units import get_physical_units
+
+
+class ThermalPropertiesDict(TypedDict):
+    """Return type of Phonopy.get_thermal_properties_dict."""
+
+    temperatures: NDArray[np.double]
+    free_energy: NDArray[np.double]
+    entropy: NDArray[np.double]
+    heat_capacity: NDArray[np.double]
 
 
 def mode_cv(
@@ -216,7 +225,7 @@ class ThermalPropertiesBase:
         mesh: Mesh,
         cutoff_frequency: float | None = None,
         pretend_real: bool = False,
-        band_indices: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
+        band_indices: Sequence[Sequence[int]] | None = None,
         is_projection: bool = False,
         classical: bool = False,
     ) -> None:
@@ -347,7 +356,7 @@ class ThermalProperties(ThermalPropertiesBase):
         mesh: Mesh,
         cutoff_frequency: float | None = None,
         pretend_real: bool = False,
-        band_indices: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
+        band_indices: Sequence[Sequence[int]] | None = None,
         is_projection: bool = False,
         classical: bool = False,
     ) -> None:

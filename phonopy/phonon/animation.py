@@ -56,7 +56,7 @@ def write_animation(
     band_index: int | None = None,
     amplitude: float | None = None,
     num_div: int | None = None,
-    shift: NDArray[np.double] | None = None,
+    shift: Sequence[float] | NDArray[np.double] | None = None,
     factor: float | None = None,
     filename: str | os.PathLike | None = None,
 ) -> str | os.PathLike:

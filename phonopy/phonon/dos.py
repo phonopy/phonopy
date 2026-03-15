@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -46,6 +46,20 @@ from numpy.typing import NDArray
 from phonopy.phonon.mesh import Mesh
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
+
+
+class TotalDosDict(TypedDict):
+    """Return type of Phonopy.get_total_dos_dict."""
+
+    frequency_points: NDArray[np.double]
+    total_dos: NDArray[np.double]
+
+
+class ProjectedDosDict(TypedDict):
+    """Return type of Phonopy.get_projected_dos_dict."""
+
+    frequency_points: NDArray[np.double]
+    projected_dos: NDArray[np.double] | None
 
 
 class NormalDistribution:

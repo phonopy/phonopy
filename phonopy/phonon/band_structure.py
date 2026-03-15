@@ -39,7 +39,7 @@ from __future__ import annotations
 import gzip
 import lzma
 import os
-from typing import IO, Any, Literal, Sequence
+from typing import IO, Any, Literal, Sequence, TypedDict
 
 import h5py
 import numpy as np
@@ -50,6 +50,16 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
+
+
+class BandStructureDict(TypedDict):
+    """Return type of Phonopy.get_band_structure_dict."""
+
+    qpoints: list[NDArray[np.double]]
+    distances: list[NDArray[np.double]]
+    frequencies: list[NDArray[np.double]] | None
+    eigenvectors: list[NDArray[np.cdouble]] | None
+    group_velocities: list[NDArray[np.double]] | None
 
 
 class BandPlot:
@@ -291,7 +301,7 @@ class BandStructure:
     def __init__(
         self,
         paths: Sequence[NDArray[np.double]] | Sequence[Sequence[float]],
-        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
+        dynamical_matrix: DynamicalMatrix,
         with_eigenvectors: bool = False,
         is_band_connection: bool = False,
         group_velocity: GroupVelocity | None = None,
