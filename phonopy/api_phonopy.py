@@ -3182,7 +3182,7 @@ class Phonopy:
             pass
         elif not forces_in_dataset(self.dataset) and self.force_constants is not None:
             _settings.update({"force_constants": True})
-        phpy_yaml = self.get_phonopy_yaml(settings=_settings)
+        phpy_yaml = self.get_yaml(settings=_settings)
 
         if compression == "xz" or compression is True:
             out_filename = f"{filename}.xz"
@@ -3277,28 +3277,19 @@ class Phonopy:
         """
         return self._copy(log_level=log_level)
 
-    def get_phonopy_yaml(
-        self, confs: dict | None = None, settings: dict | None = None
+    def get_yaml(
+        self, configuration: dict | None = None, settings: dict | None = None
     ) -> PhonopyYaml:
-        """Collect data from Phonopy instance."""
-        units = get_calculator_physical_units(self.calculator)
-        phpy_yaml = PhonopyYaml(
-            configuration=confs, physical_units=units, settings=settings
-        )
-        phpy_yaml.unitcell = self.unitcell
-        phpy_yaml.primitive = self.primitive
-        phpy_yaml.supercell = self.supercell
-        phpy_yaml.version = self.version
-        phpy_yaml.supercell_matrix = self.supercell_matrix
-        phpy_yaml.symmetry = self.symmetry
-        phpy_yaml.primitive_matrix = self.primitive_matrix
-        phpy_yaml.nac_params = self.nac_params
-        phpy_yaml.frequency_unit_conversion_factor = self.unit_conversion_factor
-        phpy_yaml.calculator = self.calculator
-        if self.force_constants is not None:
-            phpy_yaml.force_constants = self.force_constants
-        if self.dataset is not None:
-            phpy_yaml.dataset = self.dataset
+        """Return PhonopyYaml class instance with this data."""
+        if self._unit_conversion_factor_overridden:
+            phpy_yaml = PhonopyYaml(configuration=configuration, settings=settings)
+        else:
+            units = get_calculator_physical_units(self.calculator)
+            phpy_yaml = PhonopyYaml(
+                configuration=configuration, physical_units=units, settings=settings
+            )
+        phpy_yaml.frequency_unit_conversion_factor = self._unit_conversion_factor
+        set_yaml(phpy_yaml, self)
         return phpy_yaml
 
     ###################
@@ -3583,3 +3574,21 @@ class Phonopy:
             self._dataset[target] = _values
         else:
             raise RuntimeError("Set of displacements is not available.")
+
+
+def set_yaml(phpy_yaml: PhonopyYaml, self: Phonopy) -> None:
+    """Set data to PhonopyYaml instance."""
+    phpy_yaml.unitcell = self.unitcell
+    phpy_yaml.primitive = self.primitive
+    phpy_yaml.supercell = self.supercell
+    phpy_yaml.version = self.version
+    phpy_yaml.supercell_matrix = self.supercell_matrix
+    phpy_yaml.symmetry = self.symmetry
+    phpy_yaml.primitive_matrix = self.primitive_matrix
+    phpy_yaml.nac_params = self.nac_params
+    phpy_yaml.frequency_unit_conversion_factor = self.unit_conversion_factor
+    phpy_yaml.calculator = self.calculator
+    if self.force_constants is not None:
+        phpy_yaml.force_constants = self.force_constants
+    if self.dataset is not None:
+        phpy_yaml.dataset = self.dataset

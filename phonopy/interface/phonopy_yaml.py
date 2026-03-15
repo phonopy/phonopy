@@ -60,6 +60,11 @@ except ImportError:
 from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy.file_IO import get_io_module_to_decompress
+from phonopy.harmonic.displacement import (
+    DisplacementDataset,
+    Type1DisplacementDataset,
+    Type2DisplacementDatasetWithOptionalData,
+)
 from phonopy.physical_units import (
     CalculatorPhysicalUnits,
     get_calculator_physical_units,
@@ -78,7 +83,7 @@ class PhonopyYamlData:
     unitcell: PhonopyAtoms | None = None
     primitive: Primitive | PhonopyAtoms | None = None
     supercell: Supercell | PhonopyAtoms | None = None
-    dataset: dict | None = None
+    dataset: DisplacementDataset | None = None
     supercell_matrix: NDArray[np.int64] | None = None
     primitive_matrix: NDArray[np.double] | None = None
     nac_params: dict | None = None
@@ -211,7 +216,7 @@ class PhonopyYamlLoaderBase(ABC):
 
     def _get_dataset(
         self, supercell: PhonopyAtoms | None, key_prefix: str = ""
-    ) -> dict | None:
+    ) -> DisplacementDataset | None:
         dataset = None
         if f"{key_prefix}displacements" in self._yaml:
             if supercell is not None:
@@ -233,15 +238,14 @@ class PhonopyYamlLoaderBase(ABC):
 
     def _parse_force_sets_type1(
         self, natom: int | None = None, key_prefix: str = ""
-    ) -> dict:
-        dataset: dict
+    ) -> Type1DisplacementDataset:
         key = f"{key_prefix}displacements"
         if "forces" in self._yaml[key][0]:
-            dataset = {"natom": len(self._yaml[key][0]["forces"])}
+            _natom = len(self._yaml[key][0]["forces"])
         elif natom is not None:
-            dataset = {"natom": natom}
+            _natom = natom
         elif "natom" in self._yaml:
-            dataset = {"natom": self._yaml["natom"]}
+            _natom = self._yaml["natom"]
         else:
             raise RuntimeError("Number of atoms in supercell could not be found.")
 
@@ -256,11 +260,14 @@ class PhonopyYamlLoaderBase(ABC):
             if "supercell_energy" in d:
                 data["supercell_energy"] = d["supercell_energy"]
             first_atoms.append(data)
-        dataset["first_atoms"] = first_atoms
 
-        return dataset
+        dataset = {"first_atoms": first_atoms, "natom": _natom}
 
-    def _parse_force_sets_type2(self, key_prefix: str = "") -> dict:
+        return Type1DisplacementDataset(**dataset)
+
+    def _parse_force_sets_type2(
+        self, key_prefix: str = ""
+    ) -> Type2DisplacementDatasetWithOptionalData:
         """Parse displacements, forces and energies in type2 format.
 
         This is the format >= v2.24.0 as follows:
@@ -288,9 +295,12 @@ class PhonopyYamlLoaderBase(ABC):
             dataset["supercell_energies"] = np.array(
                 self._yaml[key]["supercell_energies"], dtype="double"
             )
-        return dataset
 
-    def _parse_force_sets_type2_v223(self, key_prefix: str = "") -> dict:
+        return Type2DisplacementDatasetWithOptionalData(**dataset)
+
+    def _parse_force_sets_type2_v223(
+        self, key_prefix: str = ""
+    ) -> Type2DisplacementDatasetWithOptionalData:
         """Parse displacements, forces and energies in type2 legacy format.
 
         This is the format < v2.24 as follows:
@@ -335,7 +345,7 @@ class PhonopyYamlLoaderBase(ABC):
                 self._yaml[f"{key_prefix}supercell_energies"], dtype="double"
             )
 
-        return dataset
+        return Type2DisplacementDatasetWithOptionalData(**dataset)
 
     def _parse_nac(self) -> None:
         """Parse NAC parameters.
@@ -640,7 +650,7 @@ class PhonopyYamlDumperBase(ABC):
 
     def _displacements_yaml_lines_2types(
         self,
-        dataset: dict | None,
+        dataset: DisplacementDataset | None,
         with_forces: bool = False,
         key_prefix: str = "",
         v223_mode: bool = False,
@@ -673,12 +683,18 @@ class PhonopyYamlDumperBase(ABC):
 
     @abstractmethod
     def _displacements_yaml_lines_type1(
-        self, dataset: dict, with_forces: bool = False, key_prefix: str = ""
+        self,
+        dataset: Type1DisplacementDataset,
+        with_forces: bool = False,
+        key_prefix: str = "",
     ) -> list[str]:
         pass
 
     def _displacements_yaml_lines_type2(
-        self, dataset: dict, with_forces: bool = False, key_prefix: str = ""
+        self,
+        dataset: Type2DisplacementDatasetWithOptionalData,
+        with_forces: bool = False,
+        key_prefix: str = "",
     ) -> list[str]:
         """Return type2 dataset in yaml.
 
@@ -698,7 +714,7 @@ class PhonopyYamlDumperBase(ABC):
             if key == "forces" and not with_forces:
                 continue
             lines.append(f"  {key}:")
-            for i, dset in enumerate(dataset[key]):
+            for i, dset in enumerate(dataset[key]):  # type: ignore
                 lines.append(f"  - # {i + 1}")
                 for _, d in enumerate(dset):
                     lines.append("    - [ %21.16f, %21.16f, %21.16f ]" % tuple(d))
@@ -712,7 +728,10 @@ class PhonopyYamlDumperBase(ABC):
         return lines
 
     def _displacements_yaml_lines_type2_v223(
-        self, dataset: dict, with_forces: bool = False, key_prefix: str = ""
+        self,
+        dataset: Type2DisplacementDatasetWithOptionalData,
+        with_forces: bool = False,
+        key_prefix: str = "",
     ) -> list[str]:
         """Return type2 dataset in old stype yaml.
 
@@ -943,12 +962,12 @@ class PhonopyYaml:
         self._data.supercell = value
 
     @property
-    def dataset(self) -> dict | None:
+    def dataset(self) -> DisplacementDataset | None:
         """Return dataset of phonopy calculation."""
         return self._data.dataset
 
     @dataset.setter
-    def dataset(self, value: dict) -> None:
+    def dataset(self, value: DisplacementDataset) -> None:
         """Set dataset of phonopy calculation."""
         self._data.dataset = value
 
