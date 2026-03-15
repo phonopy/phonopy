@@ -310,8 +310,6 @@ def _finalize_phonopy(
     filename: str = "phonopy.yaml",
 ):
     """Finalize phonopy."""
-    units = get_calculator_physical_units(phonon.calculator)
-
     if settings.save_params:
         exists_fc_only = (
             not forces_in_dataset(phonon.dataset) and phonon.force_constants is not None
@@ -334,10 +332,7 @@ def _finalize_phonopy(
         }
         _filename = filename
 
-    phpy_yaml = PhonopyYaml(
-        configuration=confs, physical_units=units, settings=yaml_settings
-    )
-    phpy_yaml.set_phonon_info(phonon)
+    phpy_yaml = phonon.get_phonon_yaml(confs=confs, settings=yaml_settings)
     with open(_filename, "w") as w:
         w.write(str(phpy_yaml))
 
@@ -1810,7 +1805,6 @@ def _init_phonopy(
             primitive_matrix=cell_info.primitive_matrix,
             symprec=symprec,
             is_symmetry=settings.is_symmetry,
-            store_dense_svecs=settings.store_dense_svecs,
             calculator=cell_info.interface_mode,
             log_level=log_level,
         )
@@ -1819,18 +1813,14 @@ def _init_phonopy(
             cell_info.unitcell,
             cell_info.supercell_matrix,
             primitive_matrix=cell_info.primitive_matrix,
-            factor=settings.frequency_conversion_factor,
-            frequency_scale_factor=settings.frequency_scale_factor,
-            dynamical_matrix_decimals=settings.dm_decimals,
-            force_constants_decimals=settings.fc_decimals,
             group_velocity_delta_q=settings.group_velocity_delta_q,
             symprec=symprec,
             is_symmetry=settings.is_symmetry,
-            store_dense_svecs=settings.store_dense_svecs,
             calculator=cell_info.interface_mode,
-            set_factor_by_calculator=(settings.frequency_conversion_factor is None),
             log_level=log_level,
         )
+        if settings.frequency_conversion_factor is not None:
+            phonon.unit_conversion_factor = settings.frequency_conversion_factor
 
         _check_supercell_in_yaml(cell_info, phonon, log_level)
 

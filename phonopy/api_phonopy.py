@@ -100,7 +100,7 @@ from phonopy.phonon.thermal_displacement import (
     ThermalDisplacements,
 )
 from phonopy.phonon.thermal_properties import ThermalProperties, ThermalPropertiesDict
-from phonopy.physical_units import get_calculator_physical_units, get_physical_units
+from phonopy.physical_units import get_calculator_physical_units
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -171,19 +171,13 @@ class Phonopy:
         | Sequence[Sequence[float]]
         | NDArray
         | None = None,
-        nac_params: dict | None = None,
         factor: float | None = None,
-        frequency_scale_factor: float | None = None,
-        dynamical_matrix_decimals: int | None = None,
-        force_constants_decimals: int | None = None,
         group_velocity_delta_q: float | None = None,
         symprec: float = 1e-5,
         is_symmetry: bool = True,
-        store_dense_svecs: bool = True,
         use_SNF_supercell: bool = False,
         hermitianize_dynamical_matrix: bool = True,
         calculator: str | None = None,
-        set_factor_by_calculator: bool = False,
         log_level: int = 0,
     ):
         """Init method.
@@ -220,113 +214,26 @@ class Phonopy:
             i.e., D <- (D+D^H)/2.
         calculator : str, optional
             Calculator name such as 'vasp', 'qe', etc. Default is None.
-        set_factor_by_calculator : bool, optional
-            Whether to set factor by calculator. Default is False.
         log_level : int, optional
             Log level. Default is 0.
-        store_dense_svecs : bool, optional
-            Deprecated. Dataset of shortest vectors between atoms in primitive
-            cell and supercell is stored in the dense format when this is True.
-            Default is True. In phonopy v3 or later version, False will not be
-            supported.
-        frequency_scale_factor : None
-            Deprecated.
-        dynamical_matrix_decimals : None
-            Deprecated.
-        force_constants_decimals : None
-            Deprecated.
 
         """
-        if not store_dense_svecs:
-            warnings.warn(
-                (
-                    "store_dense_svecs=False is deprecated and will not be supported "
-                    "in Phonopy v3 and later versions."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if int(self.version.split(".")[0]) > 2:
-            self._store_dense_svecs = True
-        else:
-            self._store_dense_svecs = store_dense_svecs
-
-        if nac_params is not None:
-            warnings.warn(
-                (
-                    "Phonopy class instantiation with nac_params is deprecated. "
-                    "Use Phonopy.nac_params attribute instead."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        self._nac_params = nac_params
-
-        if frequency_scale_factor is not None:
-            warnings.warn(
-                (
-                    "Phonopy class instantiation with frequency_scale_factor is "
-                    "deprecated."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        self._frequency_scale_factor = frequency_scale_factor
-
-        if dynamical_matrix_decimals is not None:
-            warnings.warn(
-                (
-                    "Phonopy class instantiation with dynamical_matrix_decimals is "
-                    "deprecated."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        self._dynamical_matrix_decimals = dynamical_matrix_decimals
-
-        if force_constants_decimals is not None:
-            warnings.warn(
-                (
-                    "Phonopy class instantiation with force_constants_decimals is "
-                    "deprecated."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        self._force_constants_decimals = force_constants_decimals
-
         self._symprec = symprec
         self._is_symmetry = is_symmetry
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
 
-        # Only used in Phonopy._copy()
-        self._set_factor_by_calculator = set_factor_by_calculator
-        self._factor = factor
-
         if factor is not None:
-            warnings.warn(
-                (
-                    "Phonopy class instantiation with factor is deprecated. "
-                    "The frequency conversion factor now automatically "
-                    "corresponds to the calculator keyword argument if "
-                    "set_factor_by_calculator is True. The default frequency "
-                    "conversion factor is that to THz for given displacements "
-                    "in Angstroms and forces in eV/Angstrom."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
+            msg = (
+                "Phonopy class instantiation with factor was removed. "
+                "Use unit_conversion_factor attribute instead."
             )
+            raise RuntimeError(textwrap.fill(msg, width=70))
 
-        if self._calculator is not None and set_factor_by_calculator:
-            self._unit_conversion_factor = get_calculator_physical_units(
-                interface_mode=self._calculator
-            ).factor
-        elif factor is None:
-            self._unit_conversion_factor = get_physical_units().DefaultToTHz
-        else:
-            self._unit_conversion_factor = factor
-
+        self._unit_conversion_factor = get_calculator_physical_units(
+            interface_mode=self._calculator
+        ).factor
+        self._unit_conversion_factor_overridden = False
         self._use_SNF_supercell = use_SNF_supercell
         self._log_level = log_level
 
@@ -356,6 +263,9 @@ class Phonopy:
 
         # set_dynamical_matrix
         self._dynamical_matrix = None
+
+        # NAC parameters
+        self._nac_params: dict | None = None
 
         # MLP
         self._mlp = None
@@ -480,6 +390,7 @@ class Phonopy:
     @unit_conversion_factor.setter
     def unit_conversion_factor(self, unit_conversion_factor: float):
         self._unit_conversion_factor = unit_conversion_factor
+        self._unit_conversion_factor_overridden = True
 
     @property
     def calculator(self) -> str | None:
@@ -1125,7 +1036,6 @@ class Phonopy:
             is_compact_fc=not calculate_full_force_constants,
             fc_calculator=fc_calculator,
             fc_calculator_options=fc_calculator_options,
-            decimals=self._force_constants_decimals,
             log_level=fc_log_level,
         )
 
@@ -3272,8 +3182,7 @@ class Phonopy:
             pass
         elif not forces_in_dataset(self.dataset) and self.force_constants is not None:
             _settings.update({"force_constants": True})
-        phpy_yaml = PhonopyYaml(settings=_settings)
-        phpy_yaml.set_phonon_info(self)
+        phpy_yaml = self.get_phonon_yaml(settings=_settings)
 
         if compression == "xz" or compression is True:
             out_filename = f"{filename}.xz"
@@ -3368,6 +3277,30 @@ class Phonopy:
         """
         return self._copy(log_level=log_level)
 
+    def get_phonon_yaml(
+        self, confs: dict | None = None, settings: dict | None = None
+    ) -> PhonopyYaml:
+        """Collect data from Phonopy instance."""
+        units = get_calculator_physical_units(self.calculator)
+        phpy_yaml = PhonopyYaml(
+            configuration=confs, physical_units=units, settings=settings
+        )
+        phpy_yaml.unitcell = self.unitcell
+        phpy_yaml.primitive = self.primitive
+        phpy_yaml.supercell = self.supercell
+        phpy_yaml.version = self.version
+        phpy_yaml.supercell_matrix = self.supercell_matrix
+        phpy_yaml.symmetry = self.symmetry
+        phpy_yaml.primitive_matrix = self.primitive_matrix
+        phpy_yaml.nac_params = self.nac_params
+        phpy_yaml.frequency_unit_conversion_factor = self.unit_conversion_factor
+        phpy_yaml.calculator = self.calculator
+        if self.force_constants is not None:
+            phpy_yaml.force_constants = self.force_constants
+        if self.dataset is not None:
+            phpy_yaml.dataset = self.dataset
+        return phpy_yaml
+
     ###################
     # private methods #
     ###################
@@ -3398,23 +3331,20 @@ class Phonopy:
             _log_level = log_level
         else:
             _log_level = self._log_level
-        return Phonopy(
+        ph = Phonopy(
             self._unitcell,
             supercell_matrix=smat,
             primitive_matrix=self._primitive_matrix,
-            factor=self._factor,
-            frequency_scale_factor=self._frequency_scale_factor,
-            dynamical_matrix_decimals=self._dynamical_matrix_decimals,
-            force_constants_decimals=self._force_constants_decimals,
             group_velocity_delta_q=self._gv_delta_q,
             symprec=self._symprec,
             is_symmetry=self._is_symmetry,
-            store_dense_svecs=self._store_dense_svecs,
             use_SNF_supercell=self._use_SNF_supercell,
             calculator=self._calculator,
-            set_factor_by_calculator=self._set_factor_by_calculator,
             log_level=_log_level,
         )
+        if self._unit_conversion_factor_overridden:
+            ph.unit_conversion_factor = self._unit_conversion_factor
+        return ph
 
     def _run_force_constants_from_forces(
         self,
@@ -3473,8 +3403,6 @@ class Phonopy:
             self._supercell,
             self._primitive,
             nac_params=nac_params,
-            frequency_scale_factor=self._frequency_scale_factor,
-            decimals=self._dynamical_matrix_decimals,
             hermitianize=self._hermitianize_dynamical_matrix,
             log_level=self._log_level,
             use_openmp=phonoc.use_openmp(),
@@ -3594,7 +3522,6 @@ class Phonopy:
                 self._supercell,
                 trans_mat,
                 self._symprec,
-                store_dense_svecs=self._store_dense_svecs,
             )
         except ValueError as exc:
             msg = (
