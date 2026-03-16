@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import io
 import os
+import pathlib
 import sys
 import typing
 import warnings
@@ -468,12 +469,10 @@ def write_supercells_with_displacements(
     width: int = 3,
 ) -> None:
     """Write supercells with displacements to files."""
-    write_vasp("S%s" % pre_filename, supercell, direct=True)
+    pre = pathlib.Path(pre_filename)
+    write_vasp(pre.parent / ("S" + pre.name), supercell, direct=True)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
-        filename = "{pre_filename}-{0:0{width}}".format(
-            i, pre_filename=pre_filename, width=width
-        )
-        write_vasp(filename, cell, direct=True)
+        write_vasp(pre.parent / f"{pre.name}-{i:0{width}}", cell, direct=True)
 
 
 def _get_vasp_structure_header_lines(
