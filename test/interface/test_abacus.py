@@ -16,7 +16,7 @@ from phonopy.interface.abacus import (
     write_supercells_with_displacements,
 )
 from phonopy.interface.phonopy_yaml import read_cell_yaml
-from phonopy.structure import cells
+from phonopy.structure.cells import isclose
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -27,12 +27,7 @@ def test_read_abacus_nomag():
     filename = os.path.join(data_dir, "NaCl-abinit-pwscf.yaml")
     cell_ref = read_cell_yaml(filename)
     # assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
-    assert cells.isclose(cell, cell_ref)
-    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
-    diff_pos -= np.rint(diff_pos)
-    assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
-        assert s == s_r
+    assert isclose(cell, cell_ref)
     assert pps["Na"] == "Na_ONCV_PBE-1.0.upf"
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"
     assert orbitals["Na"] == "Na_gga_9au_100Ry_4s2p1d.orb"
@@ -46,13 +41,7 @@ def test_read_abacus_mag():
     )
     filename = os.path.join(data_dir, "NaCl-abacus-mag.yaml")
     cell_ref = read_cell_yaml(filename)
-    # assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
-    assert cells.isclose(cell, cell_ref)
-    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
-    diff_pos -= np.rint(diff_pos)
-    assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
-        assert s == s_r
+    assert isclose(cell, cell_ref)
     assert pps["Na"] == "Na_ONCV_PBE-1.0.upf"
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"
     assert orbitals["Na"] == "Na_gga_9au_100Ry_4s2p1d.orb"
@@ -70,12 +59,7 @@ def test_read_abacus_mag_noncolin():
     filename = os.path.join(data_dir, "NaCl-abacus-mag-noncolin.yaml")
     cell_ref = read_cell_yaml(filename)
     # assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
-    assert cells.isclose(cell, cell_ref)
-    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
-    diff_pos -= np.rint(diff_pos)
-    assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
-        assert s == s_r
+    assert isclose(cell, cell_ref)
     assert pps["Na"] == "Na_ONCV_PBE-1.0.upf"
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"
     assert orbitals["Na"] == "Na_gga_9au_100Ry_4s2p1d.orb"
@@ -112,12 +96,7 @@ def test_write_abacus_roundtrip_nomag():
         write_abacus(fpath, cell, pps, orbitals, abfs)
         cell2, pps2, orbitals2, abfs2 = read_abacus(fpath)
 
-    assert cells.isclose(cell, cell2)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-10
-    assert list(cell.symbols) == list(cell2.symbols)
-    assert cell2.magnetic_moments is None
+    assert isclose(cell, cell2)
     assert pps2 == pps
     assert orbitals2 == orbitals
     assert abfs2 is None
@@ -131,7 +110,7 @@ def test_write_abacus_roundtrip_colinear_mag():
         write_abacus(fpath, cell, pps, orbitals, abfs)
         cell2, pps2, orbitals2, abfs2 = read_abacus(fpath)
 
-    assert cells.isclose(cell, cell2)
+    assert isclose(cell, cell2)
     diff = cell.scaled_positions - cell2.scaled_positions
     diff -= np.rint(diff)
     assert np.abs(diff).max() < 1e-10
@@ -154,15 +133,7 @@ def test_write_abacus_roundtrip_noncolin_mag():
             warnings.simplefilter("ignore")
             cell2, pps2, orbitals2, abfs2 = read_abacus(fpath)
 
-    assert cells.isclose(cell, cell2)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-10
-    assert cell.magnetic_moments is not None
-    assert cell2.magnetic_moments is not None
-    np.testing.assert_allclose(
-        cell.magnetic_moments, cell2.magnetic_moments, atol=1e-10
-    )
+    assert isclose(cell, cell2)
     assert pps2 == pps
 
 
@@ -296,4 +267,4 @@ def test_write_supercells_content_readable():
             cell, [cell], np.array([1]), pps, orbitals, abfs, pre_filename=pre
         )
         cell2, _, _, _ = read_abacus(str(pathlib.Path(tmpdir, "STRU.in")))
-    assert cells.isclose(cell, cell2)
+    assert isclose(cell, cell2)

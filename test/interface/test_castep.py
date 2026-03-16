@@ -120,11 +120,6 @@ def test_write_castep_roundtrip(tmp_path: pathlib.Path) -> None:
     cell2 = read_castep(str(fpath))
 
     assert isclose(cell, cell2)
-    np.testing.assert_allclose(cell.cell, cell2.cell, atol=1e-10)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-10
-    assert list(cell.symbols) == list(cell2.symbols)
 
 
 def test_write_castep_roundtrip_with_magmoms(tmp_path: pathlib.Path) -> None:

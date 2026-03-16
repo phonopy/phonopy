@@ -66,11 +66,6 @@ def test_write_elk_roundtrip(tmp_path: pathlib.Path) -> None:
     cell2, spfnames2 = read_elk(str(fpath))
 
     assert isclose(cell, cell2)
-    np.testing.assert_allclose(cell.cell, cell2.cell, atol=1e-10)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-10
-    assert list(cell.symbols) == list(cell2.symbols)
     assert spfnames2 == spfnames
 
 

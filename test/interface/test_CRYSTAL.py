@@ -13,6 +13,7 @@ from phonopy.interface.crystal import (
 )
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import isclose
 
 cwd = pathlib.Path(__file__).parent
 
@@ -21,12 +22,7 @@ def test_read_crystal() -> None:
     """Test of read_crystal."""
     cell, conv_numbers = read_crystal(cwd / "Si-CRYSTAL.o")
     cell_ref = read_cell_yaml(cwd / "Si-CRYSTAL.yaml")
-    assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
-    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
-    diff_pos -= np.rint(diff_pos)
-    assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
-        assert s == s_r
+    assert isclose(cell, cell_ref)
 
 
 def test_read_crystal_conv_numbers() -> None:

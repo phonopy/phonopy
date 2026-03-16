@@ -31,11 +31,6 @@ def test_read_aims() -> None:
     cell = read_aims(cwd / "NaCl-aims.in")
     cell_ref = read_cell_yaml(cwd / "NaCl-abinit-pwscf.yaml")
     assert isclose(cell, cell_ref)
-    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
-    diff_pos -= np.rint(diff_pos)
-    assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols, strict=True):
-        assert s == s_r
 
 
 def test_read_aims_no_magnetic_moments() -> None:
@@ -120,11 +115,6 @@ def test_write_aims_roundtrip() -> None:
         cell2 = read_aims(str(fpath))
 
     assert isclose(cell, cell2)
-    np.testing.assert_allclose(cell.cell, cell2.cell, atol=1e-10)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-10
-    assert list(cell.symbols) == list(cell2.symbols)
 
 
 def test_write_aims_content_keywords() -> None:

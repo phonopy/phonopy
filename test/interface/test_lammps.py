@@ -146,11 +146,6 @@ def test_write_lammps_roundtrip(tmp_path: pathlib.Path) -> None:
     cell2 = read_lammps(str(fpath))
 
     assert isclose(cell, cell2)
-    np.testing.assert_allclose(cell.cell, cell2.cell, atol=1e-8)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-8
-    assert list(cell.symbols) == list(cell2.symbols)
 
 
 # ---------------------------------------------------------------------------

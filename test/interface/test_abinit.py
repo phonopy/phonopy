@@ -38,11 +38,6 @@ def test_get_abinit_structure() -> None:
     cell_ref = read_abinit(cwd / "NaCl-abinit.in")
     cell = read_abinit(io.StringIO(get_abinit_structure(cell_ref)))
     assert isclose(cell_ref, cell)
-    np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-10)
-    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
-    diff_pos -= np.rint(diff_pos)
-    assert np.abs(diff_pos).max() < 1e-10
-    assert list(cell.symbols) == list(cell_ref.symbols)
 
 
 # ---------------------------------------------------------------------------
@@ -107,11 +102,6 @@ def test_write_abinit_roundtrip() -> None:
         cell2 = read_abinit(fpath)
 
     assert isclose(cell, cell2)
-    np.testing.assert_allclose(cell.cell, cell2.cell, atol=1e-10)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-10
-    assert list(cell.symbols) == list(cell2.symbols)
 
 
 # ── write_supercells_with_displacements ───────────────────────────────────

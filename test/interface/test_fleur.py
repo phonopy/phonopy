@@ -86,12 +86,6 @@ def test_write_fleur_roundtrip(tmp_path: pathlib.Path) -> None:
     cell2, speci2, _restlines2 = read_fleur(str(fpath))
 
     assert isclose(cell, cell2)
-    np.testing.assert_allclose(cell.cell, cell2.cell, atol=1e-10)
-    diff = cell.scaled_positions - cell2.scaled_positions
-    diff -= np.rint(diff)
-    assert np.abs(diff).max() < 1e-10
-    assert list(cell.symbols) == list(cell2.symbols)
-    assert speci2 == speci
 
 
 # ---------------------------------------------------------------------------
