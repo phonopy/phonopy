@@ -955,24 +955,55 @@ def isclose(
             if len(matches) != 1:
                 return False
             indices.append(matches[0])
-        if (np.sort(indices) == np.arange(len(indices))).all() and (
-            a.numbers[indices] == b.numbers
-        ).all():
-            if return_order:
-                return indices
-            return True
-        else:
+        if (np.sort(indices) != np.arange(len(indices))).all():
             return False
+        if (a.numbers[indices] != b.numbers).all():
+            return False
+        if not _magnetic_moments_all_close(
+            a.magnetic_moments,
+            b.magnetic_moments,
+            indices=indices,
+            rtol=rtol,
+            atol=atol,
+        ):
+            return False
+        if return_order:
+            return indices
+        return True
     else:
         if (a.numbers != b.numbers).any():
             return False
-
+        if not _magnetic_moments_all_close(
+            a.magnetic_moments, b.magnetic_moments, rtol=rtol, atol=atol
+        ):
+            return False
         diff = a.scaled_positions - b.scaled_positions
         diff -= np.rint(diff)
         dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
         if (dist > atol).any():
             return False
     return True
+
+
+def _magnetic_moments_all_close(
+    a: NDArray[np.double] | None,
+    b: NDArray[np.double] | None,
+    indices: list[int] | None = None,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+) -> bool:
+    if indices is None or a is None:
+        _a = a
+    else:
+        _a = a[indices]
+    if _a is None and b is not None:
+        return False
+    if b is None and _a is not None:
+        return False
+    if _a is None and b is None:
+        return True
+    assert _a is not None and b is not None
+    return np.allclose(_a, b, rtol=rtol, atol=atol)
 
 
 def is_primitive_cell(rotations: NDArray[np.int64] | NDArray[np.int32]) -> bool:
