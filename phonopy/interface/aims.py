@@ -104,7 +104,7 @@ def read_aims(filename):
         atoms = PhonopyAtoms(cell=cell, symbols=symbols, positions=positions)
     else:
         atoms = PhonopyAtoms(
-            cell=cell, symbols=symbols, positions=positions, magmoms=magmoms
+            cell=cell, symbols=symbols, positions=positions, magnetic_moments=magmoms
         )
 
     return atoms

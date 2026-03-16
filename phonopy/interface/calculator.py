@@ -48,6 +48,7 @@ import yaml
 from numpy.typing import NDArray
 
 from phonopy.file_IO import get_supported_file_extensions_for_compression
+from phonopy.harmonic.displacement import DisplacementDataset
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import sort_positions_by_symbols
 from phonopy.physical_units import (
@@ -848,12 +849,13 @@ def write_magnetic_moments(cell: PhonopyAtoms, sort_by_elements: bool = False) -
     """
     magmoms = cell.magnetic_moments
     if magmoms is not None:
+        sort_list: list[int]
         if sort_by_elements:
-            (_, _, _, sort_list) = sort_positions_by_symbols(
+            _, _, _, sort_list = sort_positions_by_symbols(
                 cell.symbols, cell.scaled_positions
             )
         else:
-            sort_list = np.arange(len(cell))
+            sort_list = list(range(len(cell)))
 
         text = " MAGMOM = "
         text += " ".join([f"{v}" for v in magmoms[sort_list].ravel()])
@@ -899,6 +901,7 @@ def read_crystal_structure(
     if interface_mode == "phonopy_yaml":
         return _read_phonopy_yaml(filename, phonopy_yaml_cls)
 
+    cell_filename: str | os.PathLike
     if filename is None:
         cell_filename = get_default_cell_filename(interface_mode)
         if not pathlib.Path(cell_filename).is_file():
@@ -1130,6 +1133,7 @@ def get_calc_dataset(
         "supercell_energies": Set of supercell energies.
 
     """
+    parse_set_of_forces: Callable[..., Any]
     if interface_mode is None or interface_mode == "vasp":
         from phonopy.interface.vasp import parse_set_of_forces
     elif interface_mode == "abinit":
@@ -1174,13 +1178,13 @@ def get_calc_dataset(
 
 
 def get_calc_dataset_wien2k(
-    force_filenames,
-    supercell,
-    disp_dataset,
-    wien2k_P1_mode=False,
-    symmetry_tolerance=None,
-    verbose=False,
-):
+    force_filenames: list[str] | list[os.PathLike],
+    supercell: PhonopyAtoms,
+    disp_dataset: DisplacementDataset,
+    wien2k_P1_mode: bool = False,
+    symmetry_tolerance: float | None = None,
+    verbose: bool = False,
+) -> dict:
     """Read Wien2k output files and parse force sets."""
     from phonopy.interface.wien2k import parse_set_of_forces
 
@@ -1247,17 +1251,18 @@ def _read_phonopy_yaml(
 def _get_cell_filename(
     filename: str | os.PathLike | None, phonopy_yaml_cls: type[PhonopyYaml] | None
 ) -> os.PathLike | None:
-    cell_filename = None
+    cell_filename: str | os.PathLike | None = None
 
-    default_filenames = []
+    default_filenames: list[str] = []
     if phonopy_yaml_cls is not None:
         for fname in phonopy_yaml_cls.default_filenames:
             for ext in get_supported_file_extensions_for_compression():
                 default_filenames.append(f"{fname}{ext}")
 
-    for fname in [filename] + default_filenames:
-        if fname and pathlib.Path(fname).is_file():
-            cell_filename = fname
+    candidates: list[str | os.PathLike | None] = [filename, *default_filenames]
+    for candidate in candidates:
+        if candidate and pathlib.Path(candidate).is_file():
+            cell_filename = candidate
             break
 
     if cell_filename is None:
