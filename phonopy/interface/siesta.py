@@ -125,14 +125,15 @@ def get_siesta_structure(cell):
 
     lines = ""
 
-    lines += "NumberOfSpecies %d\n" % len(set(chemical_symbols))
+    species = {}  # {symbol: num} in first-occurrence order
+    for symbol, num in zip(chemical_symbols, nums, strict=True):
+        if symbol not in species:
+            species[symbol] = num
+
+    lines += "NumberOfSpecies %d\n" % len(species)
     lines += "%block ChemicalSpeciesLabel\n"
-    unique_nums = set(nums)
-    unique_symbols = set(chemical_symbols)
     atypes = {}
-    for i, (num, symbol) in enumerate(
-        zip(unique_nums, unique_symbols, strict=True), start=1
-    ):
+    for i, (symbol, num) in enumerate(species.items(), start=1):
         atypes[symbol] = i
         lines += "%4d %4d %s\n" % (i, num, symbol)
     lines += "%endblock ChemicalSpeciesLabel\n\n"

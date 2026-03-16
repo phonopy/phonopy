@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import io
 import os
+import pathlib
 import sys
 import typing
 import warnings
@@ -63,7 +64,7 @@ from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
 def check_forces(
-    forces: Sequence,
+    forces: Sequence | NDArray[np.double],
     num_atom: int,
     filename: str | os.PathLike | typing.IO,
     verbose: bool = True,
@@ -86,10 +87,10 @@ def check_forces(
 
 
 def get_drift_forces(
-    forces: NDArray | Sequence[Sequence],
+    forces: NDArray[np.double] | Sequence[Sequence],
     filename: str | os.PathLike | None = None,
     verbose: bool = True,
-) -> NDArray:
+) -> NDArray[np.double]:
     """Calculate drift force and show it."""
     drift_force = np.sum(forces, axis=0) / len(forces)
 
@@ -107,14 +108,15 @@ def get_drift_forces(
     return drift_force
 
 
-def get_scaled_positions_lines(scaled_positions: NDArray) -> str:
+def get_scaled_positions_lines(scaled_positions: NDArray[np.double]) -> str:
     """Return text lines of scaled positions."""
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 
 def sort_positions_by_symbols(
-    symbols: Sequence[str | int] | NDArray, positions: NDArray | None = None
-) -> tuple[list[int], list[str | int], NDArray | None, list[int]]:
+    symbols: Sequence[str | int] | NDArray[np.int64],
+    positions: NDArray[np.double] | None = None,
+) -> tuple[list[int], list[str | int], NDArray[np.double] | None, list[int]]:
     """Sort atomic positions by symbols.
 
     Sort positions by symbols (using the order defined by reduced_symbols)
@@ -129,10 +131,10 @@ def sort_positions_by_symbols(
 
     Parameters
     ----------
-    symbols : list[str] or list[int] or np.ndarray[int]
+    symbols : list[str] or list[int] or NDArray[np.int64]
         Sequence of hashable objects. This may be a list of chemical symbols
         or numbers.
-    positions : np.ndarray or None, optional
+    positions : NDArray[np.double] or None, optional
         Atomic positions. When None, sorted_positions is also None.
 
     Returns
@@ -172,7 +174,7 @@ def _get_forces_points_and_energy(
     fp: typing.IO,
     use_expat: bool = True,
     filename: str | os.PathLike | None = None,
-) -> tuple[np.ndarray, np.ndarray | None, float | None]:
+) -> tuple[NDArray[np.double], NDArray[np.double] | None, float | None]:
     vasprun = Vasprun(fp, use_expat=use_expat)
     try:
         forces = vasprun.read_forces()
@@ -270,7 +272,9 @@ def create_FORCE_CONSTANTS(
     return 0
 
 
-def parse_force_constants(filename: str | os.PathLike) -> tuple[np.ndarray, list[str]]:
+def parse_force_constants(
+    filename: str | os.PathLike,
+) -> tuple[NDArray[np.double], list[str]]:
     """Return force constants and chemical elements.
 
     Parameters
@@ -319,10 +323,10 @@ def _get_atoms_from_poscar(
 
     scale = float(lines[1])
 
-    cell = []
+    cell_rows: list[list[float]] = []
     for i in range(2, 5):
-        cell.append([float(x) for x in lines[i].split()[:3]])
-    cell = np.array(cell) * scale
+        cell_rows.append([float(x) for x in lines[i].split()[:3]])
+    cell = np.array(cell_rows) * scale
 
     try:
         num_atoms = np.array([int(x) for x in lines[5].split()])
@@ -365,7 +369,7 @@ def _is_exist_symbols(symbols: Sequence[str]) -> bool:
 
 
 def _expand_symbols(
-    num_atoms: Sequence[int] | NDArray, symbols: Sequence[str] | None = None
+    num_atoms: Sequence[int] | NDArray[np.int64], symbols: Sequence[str] | None = None
 ) -> list[str]:
     symbol_map = get_atomic_data().symbol_map
     atom_data = get_atomic_data().atom_data
@@ -396,7 +400,9 @@ def _expand_symbols(
 #
 # write vasp POSCAR
 #
-def write_vasp(filename: str | os.PathLike, cell: PhonopyAtoms, direct: bool = True):
+def write_vasp(
+    filename: str | os.PathLike, cell: PhonopyAtoms, direct: bool = True
+) -> None:
     """Write crystal structure to a VASP POSCAR style file.
 
     Parameters
@@ -458,22 +464,20 @@ def get_vasp_structure_lines(
 def write_supercells_with_displacements(
     supercell: PhonopyAtoms,
     cells_with_displacements: Sequence[PhonopyAtoms],
-    ids: NDArray | Sequence[int],
+    ids: NDArray[np.int64] | Sequence[int],
     pre_filename: str | os.PathLike = "POSCAR",
     width: int = 3,
-):
+) -> None:
     """Write supercells with displacements to files."""
-    write_vasp("S%s" % pre_filename, supercell, direct=True)
+    pre = pathlib.Path(pre_filename)
+    write_vasp(pre.parent / ("S" + pre.name), supercell, direct=True)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
-        filename = "{pre_filename}-{0:0{width}}".format(
-            i, pre_filename=pre_filename, width=width
-        )
-        write_vasp(filename, cell, direct=True)
+        write_vasp(pre.parent / f"{pre.name}-{i:0{width}}", cell, direct=True)
 
 
 def _get_vasp_structure_header_lines(
     cell: PhonopyAtoms, is_vasp4: bool = False, first_line_str: str | None = None
-) -> tuple[list[str], NDArray]:
+) -> tuple[list[str], NDArray[np.double]]:
     num_atoms, symbols, scaled_positions, _ = sort_positions_by_symbols(
         cell.symbols, cell.scaled_positions
     )
@@ -495,7 +499,7 @@ def _get_vasp_structure_header_lines(
     return lines, scaled_positions
 
 
-def _get_scaled_positions_lines(scaled_positions: NDArray) -> list[str]:
+def _get_scaled_positions_lines(scaled_positions: NDArray[np.double]) -> list[str]:
     # map into 0 <= x < 1.
     # (the purpose of the second '% 1' is to handle a surprising
     #  edge case for small negative numbers: '-1e-30 % 1 == 1.0')
@@ -509,12 +513,12 @@ def _get_scaled_positions_lines(scaled_positions: NDArray) -> list[str]:
 #
 def get_born_vasprunxml(
     filename: str | os.PathLike = "vasprun.xml",
-    primitive_matrix: Sequence[Sequence[float]] | NDArray | None = None,
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     is_symmetry: bool = True,
     symmetrize_tensors: bool = False,
     symprec: float = 1e-5,
-) -> tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.int64]]:
     """Parse vasprun.xml to get NAC parameters.
 
     In phonopy, primitive cell is created through the path of
@@ -556,12 +560,12 @@ def get_born_vasprunxml(
 def get_born_OUTCAR(
     poscar_filename: str | os.PathLike = "POSCAR",
     outcar_filename: str | os.PathLike | None = None,
-    primitive_matrix: Sequence[Sequence[float]] | NDArray | None = None,
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     is_symmetry: bool = True,
     symmetrize_tensors: bool = False,
     symprec: float = 1e-5,
-) -> tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.int64]]:
     """Parse OUTCAR to get NAC parameters.
 
     Returns
@@ -569,6 +573,7 @@ def get_born_OUTCAR(
     See elaborate_borns_and_epsilon.
 
     """
+    filename: str | os.PathLike
     if outcar_filename is None:
         filename = "OUTCAR"
     else:
@@ -593,11 +598,11 @@ def get_born_OUTCAR(
 
 def _read_born_and_epsilon_from_OUTCAR(
     filename: str | os.PathLike,
-) -> tuple[NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
     myio = get_io_module_to_decompress(filename)
     with myio.open(filename, mode="rt") as outcar:
-        borns = []
-        epsilon = []
+        borns: list[list[list[float]]] = []
+        epsilon: list[list[float]] = []
 
         while True:
             line = outcar.readline()
@@ -626,10 +631,10 @@ def _read_born_and_epsilon_from_OUTCAR(
                         outcar.readline()
                         borns.append(born)
 
-        borns = np.array(borns, dtype="double")
-        epsilon = np.array(epsilon, dtype="double")
+        borns_array = np.array(borns, dtype="double", order="C")
+        epsilon_array = np.array(epsilon, dtype="double", order="C")
 
-    return borns, epsilon
+    return borns_array, epsilon_array
 
 
 #
@@ -642,11 +647,11 @@ class VasprunWrapper:
 
     """
 
-    def __init__(self, fileptr: typing.IO):
+    def __init__(self, fileptr: typing.IO) -> None:
         """Init method."""
         self._fileptr = fileptr
 
-    def read(self, size: int | None = None):
+    def read(self, size: int | None = None) -> str:
         """Replace broken PRECFOCK."""
         element = next(self._fileptr)
         if element.find("PRECFOCK") == -1:
@@ -658,13 +663,13 @@ class VasprunWrapper:
 class Vasprun:
     """vasprun.xml parser class."""
 
-    def __init__(self, fileptr: typing.IO, use_expat: bool = False):
+    def __init__(self, fileptr: typing.IO, use_expat: bool = False) -> None:
         """Init method."""
         self._fileptr = fileptr
         self._use_expat = use_expat
         self._vasprun_expat: VasprunxmlExpat | None = None
 
-    def read_forces(self) -> NDArray:
+    def read_forces(self) -> NDArray[np.double]:
         """Read forces either using expat or etree."""
         if self._use_expat:
             forces = self._parse_expat_vasprun_xml(target="forces")
@@ -674,7 +679,7 @@ class Vasprun:
             vasprun_etree = self._parse_etree_vasprun_xml(tag="varray")
             return self._get_forces(vasprun_etree)
 
-    def read_points(self) -> NDArray | None:
+    def read_points(self) -> NDArray[np.double] | None:
         """Read forces either using expat or etree."""
         if self._use_expat:
             points = self._parse_expat_vasprun_xml(target="points")
@@ -692,7 +697,7 @@ class Vasprun:
         else:
             return None
 
-    def read_force_constants(self) -> tuple[NDArray, list[str]]:
+    def read_force_constants(self) -> tuple[NDArray[np.double], list[str]]:
         """Read force constants using etree.
 
         Returns
@@ -706,7 +711,7 @@ class Vasprun:
 
     def _get_forces(
         self, vasprun_etree: Iterator[tuple[str, xml.etree.ElementTree.Element]]
-    ) -> NDArray:
+    ) -> NDArray[np.double]:
         """Return forces using etree.
 
         vasprun_etree = etree.iterparse(fileptr, tag='varray')
@@ -722,7 +727,7 @@ class Vasprun:
 
     def _get_force_constants(
         self, vasprun_etree: Iterator[tuple[str, xml.etree.ElementTree.Element]]
-    ) -> tuple[NDArray, list[str]]:
+    ) -> tuple[NDArray[np.double], list[str]]:
         """Read hessian and calculate force constants.
 
         Hessian elements include sqrt(mass_a * mass_b) of two atoms a and b.
@@ -752,11 +757,11 @@ class Vasprun:
                 # Get Hessian matrix (normalized by masses)
                 v_elements = element.findall("./varray[@name='hessian']/v")
                 if v_elements is not None:
-                    fc_tmp = []
+                    fc_rows: list[list[float]] = []
                     for v in v_elements:
                         assert v.text is not None
-                        fc_tmp.append([float(x) for x in v.text.strip().split()])
-                    fc_tmp = np.array(fc_tmp, dtype="double")
+                        fc_rows.append([float(x) for x in v.text.strip().split()])
+                    fc_tmp = np.array(fc_rows, dtype="double")
 
                 # Get physical units of Hessian
                 unit_element = element.find("./i[@name='unit']")
@@ -837,7 +842,7 @@ class Vasprun:
 
     def _parse_expat_vasprun_xml(
         self, target: Literal["forces", "points", "energy"] = "forces"
-    ) -> NDArray | float:
+    ) -> NDArray[np.double] | float:
         if self._is_version528():
             return self._parse_by_expat(
                 cast(typing.IO, VasprunWrapper(self._fileptr)), target=target
@@ -849,7 +854,7 @@ class Vasprun:
         self,
         fileptr: typing.IO,
         target: Literal["forces", "points", "energy"] = "forces",
-    ) -> NDArray | float:
+    ) -> NDArray[np.double] | float:
         if self._vasprun_expat is None:
             self._vasprun_expat = VasprunxmlExpat(fileptr)
             try:
@@ -888,7 +893,7 @@ class Vasprun:
 class VasprunxmlExpat:
     """Class to parse vasprun.xml by Expat."""
 
-    def __init__(self, fileptr: typing.IO):
+    def __init__(self, fileptr: typing.IO) -> None:
         """Init method.
 
         Parameters
@@ -936,35 +941,35 @@ class VasprunxmlExpat:
         self._is_field_string = False
         self._is_pseudopotential = False
 
-        self._all_forces = []
-        self._all_stress = []
-        self._all_points = []
-        self._all_lattice = []
-        self._all_energies = []
-        self._all_volumes = []
-        self._born = []
-        self._forces = None
-        self._stress = None
-        self._points = None
-        self._lattice = None
-        self._energies = None
-        self._epsilon = None
-        self._born_atom = None
-        self._k_weights = None
-        self._kpointlist = None
-        self._k_mesh = None
-        self._eigenvalues = None
+        self._all_forces: list[list[list[float]]] = []
+        self._all_stress: list[list[list[float]]] = []
+        self._all_points: list[list[list[float]]] = []
+        self._all_lattice: list[list[list[float]]] = []
+        self._all_energies: list[list[float]] = []
+        self._all_volumes: list[float] = []
+        self._born: list[list[list[float]]] = []
+        self._forces: list[list[float]] | None = None
+        self._stress: list[list[float]] | None = None
+        self._points: list[list[float]] | None = None
+        self._lattice: list[list[float]] | None = None
+        self._energies: list[float] | None = None
+        self._epsilon: list[list[float]] | None = None
+        self._born_atom: list[list[float]] | None = None
+        self._k_weights: list[float] | None = None
+        self._kpointlist: list[list[float]] | None = None
+        self._k_mesh: list[int] | None = None
+        self._eigenvalues: list | None = None
         self._eig_state = [0, 0]
-        self._projectors = None
+        self._projectors: list | None = None
         self._proj_state = [0, 0, 0]
-        self._field_val = None
-        self._pseudopotentials = []
-        self._ps_atom = None
+        self._field_val: str | None = None
+        self._pseudopotentials: list = []
+        self._ps_atom: list | None = None
         self._fft_grid = [0, 0, 0]
         self._fft_fine_grid = [0, 0, 0]
-        self._efermi = None
-        self._symbols = None
-        self._NELECT = None
+        self._efermi: float | None = None
+        self._symbols: list[str] | None = None
+        self._NELECT: float | None = None
 
         self._p = xml.parsers.expat.ParserCreate()
         self._p.buffer_text = True
@@ -972,24 +977,24 @@ class VasprunxmlExpat:
         self._p.EndElementHandler = self._end_element
         self._p.CharacterDataHandler = self._char_data
 
-        self._cbuf = None
+        self._cbuf: str | None = None
 
-    def parse(self):
+    def parse(self) -> None:
         """Parse file pointer of vasprun.xml."""
         self._p.ParseFile(self._fileptr)
 
     @property
-    def forces(self) -> NDArray:
+    def forces(self) -> NDArray[np.double]:
         """Return forces."""
         return np.array(self._all_forces, dtype="double", order="C")
 
     @property
-    def stress(self) -> NDArray:
+    def stress(self) -> NDArray[np.double]:
         """Return stress tensor."""
         return np.array(self._all_stress, dtype="double", order="C")
 
     @property
-    def epsilon(self) -> NDArray:
+    def epsilon(self) -> NDArray[np.double]:
         """Return dielectric constant tensor."""
         return np.array(self._epsilon, dtype="double", order="C")
 
@@ -999,17 +1004,17 @@ class VasprunxmlExpat:
         return self._efermi
 
     @property
-    def born(self) -> NDArray:
+    def born(self) -> NDArray[np.double]:
         """Return Born effective charges."""
         return np.array(self._born, dtype="double", order="C")
 
     @property
-    def points(self) -> NDArray:
+    def points(self) -> NDArray[np.double]:
         """Return all atomic positions of structure optimization steps."""
         return np.array(self._all_points, dtype="double", order="C")
 
     @property
-    def lattice(self) -> NDArray:
+    def lattice(self) -> NDArray[np.double]:
         """Return all basis vectors of structure optimization steps.
 
         Each basis vectors are in row vectors (a, b, c)
@@ -1018,7 +1023,7 @@ class VasprunxmlExpat:
         return np.array(self._all_lattice, dtype="double", order="C")
 
     @property
-    def volume(self) -> NDArray:
+    def volume(self) -> NDArray[np.double]:
         """Return all cell volumes of structure optimization steps."""
         return np.array(self._all_volumes, dtype="double")
 
@@ -1028,7 +1033,7 @@ class VasprunxmlExpat:
         return self._symbols
 
     @property
-    def energies(self) -> NDArray:
+    def energies(self) -> NDArray[np.double]:
         """Return energies.
 
         Returns
@@ -1042,17 +1047,17 @@ class VasprunxmlExpat:
         return np.array(self._all_energies, dtype="double", order="C")
 
     @property
-    def k_mesh(self) -> NDArray:
+    def k_mesh(self) -> NDArray[np.int64]:
         """Return k_mesh."""
         return np.array(self._k_mesh, dtype="int64")
 
     @property
-    def kpointlist(self) -> NDArray:
+    def kpointlist(self) -> NDArray[np.double]:
         """Return kpoint list."""
         return np.array(self._kpointlist, dtype="double")
 
     @property
-    def k_weights(self) -> NDArray:
+    def k_weights(self) -> NDArray[np.double]:
         """Return k_weights.
 
         Returns
@@ -1067,7 +1072,7 @@ class VasprunxmlExpat:
         return np.array(self._k_weights, dtype="double")
 
     @property
-    def k_weights_int(self) -> NDArray:
+    def k_weights_int(self) -> NDArray[np.int64]:
         """Return k_weights in integers.
 
         Returns
@@ -1085,7 +1090,7 @@ class VasprunxmlExpat:
         return np.array(weights, dtype="int64")
 
     @property
-    def eigenvalues(self) -> NDArray:
+    def eigenvalues(self) -> NDArray[np.double]:
         """Return eigenvalues.
 
         Returns
@@ -1138,7 +1143,7 @@ class VasprunxmlExpat:
         """Return number of electrons, NELECT."""
         return self._NELECT
 
-    def _start_element(self, name: str, attrs: dict):
+    def _start_element(self, name: str, attrs: dict) -> None:
         # Used not to collect energies in <scstep>
         if name == "scstep":
             self._is_scstep = True
@@ -1336,7 +1341,7 @@ class VasprunxmlExpat:
             if attrs["name"] == "grids":
                 self._is_grids = True
 
-    def _end_element(self, name: str):
+    def _end_element(self, name: str) -> None:
         if name == "scstep":
             self._is_scstep = False
 
@@ -1346,10 +1351,12 @@ class VasprunxmlExpat:
         if name == "varray":
             if self._is_forces:
                 self._is_forces = False
+                assert self._forces is not None
                 self._all_forces.append(self._forces)
 
             if self._is_stress:
                 self._is_stress = False
+                assert self._stress is not None
                 self._all_stress.append(self._stress)
 
             if self._is_k_weights:
@@ -1360,10 +1367,12 @@ class VasprunxmlExpat:
 
             if self._is_positions:
                 self._is_positions = False
+                assert self._points is not None
                 self._all_points.append(self._points)
 
             if self._is_basis:
                 self._is_basis = False
+                assert self._lattice is not None
                 self._all_lattice.append(self._lattice)
 
             if self._is_epsilon:
@@ -1386,6 +1395,7 @@ class VasprunxmlExpat:
 
         if name == "energy" and (not self._is_scstep):
             self._is_energy = False
+            assert self._energies is not None
             self._all_energies.append(self._energies)
 
         if name == "v":
@@ -1423,6 +1433,7 @@ class VasprunxmlExpat:
         if name == "set":
             self._is_set = False
             if self._is_born:
+                assert self._born_atom is not None
                 self._born.append(self._born_atom)
                 self._born_atom = None
 
@@ -1446,7 +1457,7 @@ class VasprunxmlExpat:
                 self._is_grids = False
             self._is_separator = False
 
-    def _run_v(self):
+    def _run_v(self) -> None:
         if self._is_v:
             assert self._cbuf is not None
             if self._is_forces:
@@ -1481,7 +1492,7 @@ class VasprunxmlExpat:
                         self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
             self._cbuf = None
 
-    def _run_i(self):
+    def _run_i(self) -> None:
         if self._is_i:
             assert self._cbuf is not None
             if self._is_energy:
@@ -1507,7 +1518,7 @@ class VasprunxmlExpat:
                         self._is_NGXYZF[i] = False
             self._cbuf = None
 
-    def _run_c(self):
+    def _run_c(self) -> None:
         if self._is_c:
             assert self._cbuf is not None
             if self._is_symbols:
@@ -1527,7 +1538,7 @@ class VasprunxmlExpat:
                     self._ps_atom.append(self._cbuf.strip())
             self._cbuf = None
 
-    def _run_r(self):
+    def _run_r(self) -> None:
         if self._is_r:
             assert self._cbuf is not None
             if self._is_projected and not self._is_proj_eig:
@@ -1542,24 +1553,24 @@ class VasprunxmlExpat:
                 self._eigenvalues[s][k].append(vals)
             self._cbuf = None
 
-    def _run_field_string(self):
+    def _run_field_string(self) -> None:
         if self._is_field_string:
             assert self._cbuf is not None
             self._field_val = self._cbuf.strip()
             self._cbuf = None
 
-    def _char_data(self, data):
+    def _char_data(self, data: str) -> None:
         if self._cbuf is not None:
             self._cbuf += data
 
-    def _to_float(self, x):
+    def _to_float(self, x: str) -> float:
         try:
             val = float(x)
             return val
         except ValueError:
             raise
 
-    def _to_int(self, x):
+    def _to_int(self, x: str) -> int:
         try:
             val = int(x)
             return val
@@ -1590,7 +1601,7 @@ def parse_vasprunxml(filename: str | os.PathLike) -> VasprunxmlExpat:
 #
 def read_XDATCAR(
     filename: str | os.PathLike = "XDATCAR", fileptr: typing.IO | None = None
-) -> tuple[NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Read XDATCAR.
 
     filename : str, optional
@@ -1622,6 +1633,7 @@ def read_XDATCAR(
         lattice, numbers_of_atoms = _read_XDATCAR_fileptr(fileptr)
 
     if lattice is not None:
+        _file: str | os.PathLike | typing.IO
         if fileptr is None:
             _file = filename
         else:
@@ -1635,7 +1647,7 @@ def read_XDATCAR(
         raise ValueError("Lattice could not be read.")
 
 
-def _read_XDATCAR_fileptr(f: typing.IO) -> tuple[NDArray, NDArray]:
+def _read_XDATCAR_fileptr(f: typing.IO) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     f.readline()
     scale = float(f.readline())
     a = [float(x) for x in f.readline().split()[:3]]
@@ -1652,7 +1664,7 @@ def _read_XDATCAR_fileptr(f: typing.IO) -> tuple[NDArray, NDArray]:
 def get_XDATCAR_lines_from_vasprunxml(
     vasprunxml_filename: str | os.PathLike = "vasprun.xml",
     vasprunxml_expat: VasprunxmlExpat | None = None,
-    shift: Sequence | NDArray | None = None,
+    shift: Sequence | NDArray[np.double] | None = None,
 ) -> list[str]:
     """Return XDATCAR lines from vasprun.xml or VasprunxmlExpat instance.
 
@@ -1693,8 +1705,8 @@ def write_XDATCAR(
     vasprunxml_expat: VasprunxmlExpat | None = None,
     filename: str = "XDATCAR",
     fileptr: typing.IO | None = None,
-    shift: Sequence | NDArray | None = None,
-):
+    shift: Sequence | NDArray[np.double] | None = None,
+) -> None:
     """Write XDATCAR from vasprun.xml or VasprunxmlExpat instance.
 
     See get_XDATCAR_lines_from_vasprunxml.
@@ -1715,12 +1727,12 @@ def write_XDATCAR(
 #
 # OUTCAR handling (obsolete)
 #
-def read_force_constants_OUTCAR(filename: str | os.PathLike) -> NDArray:
+def read_force_constants_OUTCAR(filename: str | os.PathLike) -> NDArray[np.double]:
     """Read force constants from OUTCAR."""
     return get_force_constants_OUTCAR(filename)
 
 
-def get_force_constants_OUTCAR(filename: str | os.PathLike) -> NDArray:
+def get_force_constants_OUTCAR(filename: str | os.PathLike) -> NDArray[np.double]:
     """Read force constants from OUTCAR."""
     found_hook = False
     with open(filename) as file:
@@ -1736,11 +1748,11 @@ def get_force_constants_OUTCAR(filename: str | os.PathLike) -> NDArray:
         file.readline()
         num_atom = int(((file.readline().split())[-1].strip())[:-1])
 
-        fc_tmp = []
+        fc_rows: list[list[float]] = []
         for _ in range(num_atom * 3):
-            fc_tmp.append([float(x) for x in (file.readline().split())[1:]])
+            fc_rows.append([float(x) for x in (file.readline().split())[1:]])
 
-        fc_tmp = np.array(fc_tmp)
+        fc_tmp = np.array(fc_rows)
 
         force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype=float)
         for i in range(num_atom):
