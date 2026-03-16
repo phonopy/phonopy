@@ -155,9 +155,9 @@ def parse_fleur(opts):
     r"""Parse additional info used in fleur.
 
     fleur:
-        additional_info is a list of atom lables. They are either Z or Z.x,
+        additional_info is a list of atom labels. They are either Z or Z.x,
         where Z is the atomic number and x is any number of decimal places.
-        After this list of lables, A single string of additional lines
+        After this list of labels, A single string of additional lines
         (separated by \n) with job information can be given to be added to output file.
 
         eg. '13.0 13.0 13.1 "Title \n Additional job info here \n"'

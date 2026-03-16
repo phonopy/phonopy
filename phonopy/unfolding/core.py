@@ -117,7 +117,7 @@ class Unfolding:
             shape=(3, 3), dtype='double'
         atom_mapping : list
             Atomic index mapping from ``ideal_positions`` to supercell atoms
-            in ``phonon``. The elements of this list are intergers for atoms
+            in ``phonon``. The elements of this list are integers for atoms
             and None for vacancies.
         qpoints : array_like
             q-points in reciprocal virtual-primitive-cell coordinates

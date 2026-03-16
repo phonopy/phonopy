@@ -64,7 +64,7 @@ def get_options():
         "--eos",
         dest="eos",
         default=default_vals.eos,
-        help="Choise of EOS among vinet, birch_murnaghan, and murnaghan",
+        help="Choice of EOS among vinet, birch_murnaghan, and murnaghan",
     )
     parser.add_argument(
         "--exclude_imaginary",
@@ -186,7 +186,7 @@ def main(**argparse_control: PhonopyQHAMockArgs):
     # Show bulk modulus of v-e data
     if args.is_bulk_modulus_only:
         # if args.efe_file:
-        #     print("--efe optin can't be used with -b option")
+        #     print("--efe option can't be used with -b option")
         #     sys.exit(1)
         bulk_modulus = PhonopyQHA(
             volumes,
@@ -236,7 +236,7 @@ def main(**argparse_control: PhonopyQHAMockArgs):
     if len(volumes) != len(args.filenames[1:]):
         print(
             "The number of thermal_properites.yaml files (%d) "
-            "is inconsisten with" % len(args.filenames[1:])
+            "is inconsistent with" % len(args.filenames[1:])
         )
         print("the number of e-v data (%d)." % len(volumes))
         sys.exit(1)

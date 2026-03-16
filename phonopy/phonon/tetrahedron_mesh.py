@@ -67,7 +67,7 @@ class TetrahedronMesh:
         cell : PhonopyAtoms
             Primitive cell used to calculate frequencies
         frequencies: ndarray
-            Phonon frequences on ir-grid points
+            Phonon frequencies on ir-grid points
             shape=(num_ir_grid_points, num_band)
             dtype='double'
         mesh : ndarray or list of int
@@ -84,7 +84,7 @@ class TetrahedronMesh:
             shape=(prod(mesh),)
             dtype='int64'
         ir_grid_points : ndarray
-            Irreducible gird points given by GridPoints class.
+            Irreducible grid points given by GridPoints class.
             shape=(len(np.unique(grid_mapping_table)),)
             dtype='int64'
         grid_order : list of int, optional
@@ -126,7 +126,7 @@ class TetrahedronMesh:
         return self
 
     def __next__(self) -> NDArray[np.double]:
-        """Peform linear tetrahedron method at a grid point."""
+        """Perform linear tetrahedron method at a grid point."""
         if self._tm is None:
             raise RuntimeError("Tetrahedron method is not set yet.")
         if self._grid_point_count == len(self._ir_grid_points):
@@ -171,7 +171,7 @@ class TetrahedronMesh:
         frequency_points: NDArray[np.double] | None = None,
         lang: Literal["C", "Python"] = "C",
     ) -> None:
-        """Prepare environment to peform linear tetrahedron method."""
+        """Prepare environment to perform linear tetrahedron method."""
         self._grid_point_count = 0
         self._value: Literal["I", "J"] = value
         if frequency_points is None:
@@ -233,7 +233,7 @@ def get_tetrahedra_frequencies(
         dimension of frequencies. The ir-grid index is
         range(len(ir-grid-points)). shape=(prod(mesh), ), dtype='int64'
     frequencies : ndarray
-        Phonon frequences on ir-grid points. shape=(ir-grid-points, num_band)
+        Phonon frequencies on ir-grid points. shape=(ir-grid-points, num_band)
         dtype='double'
     grid_order : list of int, optional
         This controls how grid addresses are stored either C style or Fortran

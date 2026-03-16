@@ -260,7 +260,7 @@ class BandStructure:
             dtype='double'
             shape=(qpoints on a path, 3)
     frequencies: list of ndarray
-        Phonon frequencies. Imaginary frequenies are represented by negative
+        Phonon frequencies. Imaginary frequencies are represented by negative
         real numbers.
         Each ndarray corresponding to each q-path has
             dtype='double'
@@ -324,7 +324,7 @@ class BandStructure:
             Flag whether eigenvectors are calculated or not. Default is False.
         is_band_connection : bool, optional
             Flag whether each band is connected or not. This is achieved by
-            comparing similarity of eigenvectors of neghboring poins. Sometimes
+            comparing similarity of eigenvectors of neghboring points. Sometimes
             this fails. Default is False.
         group_velocity : GroupVelocity, optional
             Group velocity calculator. Default is None.
@@ -583,10 +583,10 @@ class BandStructure:
         ----------
         comment : dict
             Data structure dumped in YAML and the dumped YAML text is put
-            at the beggining of the file.
+            at the beginning of the file.
         filename : str
             Default filename is 'band.yaml' when compression=None.
-            With compression, an extention of filename is added such as
+            With compression, an extension of filename is added such as
             'band.yaml.xz'.
         compression : None, 'gzip', or 'lzma'
             None gives usual text file. 'gzip and 'lzma' compresse yaml

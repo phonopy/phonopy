@@ -106,7 +106,7 @@ class Supercell(PhonopyAtoms):
             elements have to be integers.
             shape=(3,3)
         is_old_stype: bool
-            This swithes the algorithms. See Note.
+            This switches the algorithms. See Note.
         symprec: float, optional
             Tolerance to find overlapping atoms in supercell cell. The default
             values is 1e-5.
@@ -424,7 +424,7 @@ class Primitive(PhonopyAtoms):
         """Return shortest vectors and multiplicities.
 
         See also the docstring of `ShortestPairs`. The older less densen format
-        is deprecated. The detailed explaination is found in `ShortestPairs`
+        is deprecated. The detailed explanation is found in `ShortestPairs`
         class.
 
         Returns
@@ -648,7 +648,7 @@ class TrimmedCell(PhonopyAtoms):
 
     @property
     def mapping_table(self) -> NDArray[np.int64]:
-        """Return mappping table.
+        """Return mapping table.
 
         mapping_table : ndarray
             The atomic indices of 'extracted_atom's of all atoms in the input
@@ -1074,7 +1074,7 @@ def get_reduced_bases(
         delaunay: Delaunay reduction
         niggli: Niggli reduction
     tolerance : float
-        Tolerance to find shortest basis vecotrs
+        Tolerance to find shortest basis vectors
 
     Returns
     -------
@@ -1157,7 +1157,7 @@ class ShortestPairs:
             dtype='double', shape=(size_super, 3)
         primitive_pos : array_like
             Atomic positions in fractional coordinates of supercell. Note that
-            not in fractional coodinates of primitive cell.  dtype='double',
+            not in fractional coordinates of primitive cell.  dtype='double',
             shape=(size_prim, 3)
         store_dense_svecs_: bool, optional
             ``shortest_vectors`` are stored in the dense data structure.

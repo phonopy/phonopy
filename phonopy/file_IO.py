@@ -410,7 +410,7 @@ def write_force_constants_to_hdf5(
         shape=(n_patom,)
         dtype=int64
     physical_unit : str, optional
-        Physical unit used for force contants. Default is None.
+        Physical unit used for force constants. Default is None.
     compression : str or int, optional
         h5py's lossless compression filters (e.g., "gzip", "lzf").
         See the detail at docstring of h5py.Group.create_dataset. Default is
@@ -538,7 +538,7 @@ def parse_disp_yaml(
 
     This method was originally made for parsing disp.yaml. Later this
     started to work for phonopy_disp.yaml, too. But now this method is not
-    allowed to read phonopy_disp.yaml because of existance of PhonopyYaml
+    allowed to read phonopy_disp.yaml because of existence of PhonopyYaml
     class.
 
     """
@@ -689,7 +689,7 @@ def parse_QPOINTS(filename="QPOINTS"):
 # BORN
 #
 def write_BORN(primitive, borns, epsilon, filename="BORN"):
-    """Write BORN from NAC paramters."""
+    """Write BORN from NAC parameters."""
     lines = get_BORN_lines(primitive, borns, epsilon)
     with open(filename, "w") as w:
         w.write("\n".join(lines))

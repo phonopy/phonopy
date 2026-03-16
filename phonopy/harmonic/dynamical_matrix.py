@@ -54,7 +54,7 @@ from phonopy.structure.cells import Primitive, sparse_to_dense_svecs
 class DynamicalMatrix:
     """Dynamical matrix base class.
 
-    When prmitive and supercell lattices are L_p and L_s, respectively,
+    When primitive and supercell lattices are L_p and L_s, respectively,
     frame F is defined by
     L_p = dot(F, L_s), then L_s = dot(F^-1, L_p).
     where lattice matrix is defined by axies a,b,c in Cartesian:
@@ -449,7 +449,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             default and the reasonable choice.
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
-        log_levelc : int, optional, defualt=0
+        log_levelc : int, optional, default=0
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
@@ -818,7 +818,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         return g_rad
 
     def _get_G_vec_list(self, g_rad: int) -> NDArray[np.double]:
-        """Return reciprocal lattice point vectors withing g_rad cutoff.
+        """Return reciprocal lattice point vectors within g_rad cutoff.
 
         With g_rad = 2,
         grid.T = [[-2, -2, -2],
@@ -830,7 +830,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                   [-1, -2, -1],
                   ...]
 
-        The implmentation using meshgrid may be unstable at numpy 2.0.
+        The implementation using meshgrid may be unstable at numpy 2.0.
         Therefore, another way is used although it can be slower.
 
         """
@@ -911,7 +911,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             dtype='double'
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
-        log_levelc : int, optional, defualt=0
+        log_levelc : int, optional, default=0
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
@@ -1002,7 +1002,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         N = len(self._scell) // len(self._pcell)
         for s1 in range(len(self._scell)):
             # This if-statement is the trick.
-            # In contructing dynamical matrix in phonopy
+            # In constructing dynamical matrix in phonopy
             # fc of left indices with s1 == self._s2p_map[ s1 ] are
             # only used.
             if s1 != self._s2p_map[s1]:
@@ -1027,7 +1027,7 @@ def get_dynamical_matrix(
     """Return dynamical matrix.
 
     The instance of a class inherited from DynamicalMatrix will be returned
-    depending on paramters.
+    depending on parameters.
 
     """
     if frequency_scale_factor is None:
@@ -1075,7 +1075,7 @@ def run_dynamical_matrix_solver_c(
     is_nac: bool | None = None,
     hermitianize: bool = True,
 ) -> NDArray[np.cdouble]:
-    """Bulid and solve dynamical matrices on grid in C-API.
+    """Build and solve dynamical matrices on grid in C-API.
 
     If dynamical matrices at many qpoints are calculated, it is recommended not
     to use this function one qpoint by one qpoint to avoid overhead in the

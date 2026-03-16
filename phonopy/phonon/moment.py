@@ -77,7 +77,7 @@ class PhononMoment:
         freq_max: float | None = None,
         tolerance: float = 1e-8,
     ) -> None:
-        """Set frequeny range where moment is computed."""
+        """Set frequency range where moment is computed."""
         if freq_min is None:
             self._fmin = tolerance
         else:

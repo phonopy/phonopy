@@ -68,14 +68,14 @@ class QpointsPhonon:
     Attributes
     ----------
     frequencies : ndarray
-        Phonon frequencies. Imaginary frequenies are represented by
-        negative real numbers. Unit conversion factor is multipled.
+        Phonon frequencies. Imaginary frequencies are represented by
+        negative real numbers. Unit conversion factor is multiplied.
         shape=(qpoints, bands), dtype='double'
     eigenvectors : ndarray
         Phonon eigenvectors. None when with_eigenvectors=False.
         shape=(qpoints, bands, bands), dtype='complex'
     eigenvalues : ndarray
-        Phonon eigenvvalues. Unit conversion factor is not multipled.
+        Phonon eigenvvalues. Unit conversion factor is not multiplied.
         shape=(qpoints, bands), dtype='double'
     group_velocities : ndarray
         Phonon group velocities. None if group velocities are not

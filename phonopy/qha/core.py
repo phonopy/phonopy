@@ -377,7 +377,7 @@ class QHA:
         parameters = []
         free_energies = []
 
-        for i in range(num_elems):  # loop over temperaturs
+        for i in range(num_elems):  # loop over temperatures
             if self._electronic_energies.ndim == 1:
                 el_energy = self._electronic_energies
             else:
@@ -430,7 +430,7 @@ class QHA:
 
         # For computing following values at temperatures, finite difference
         # method is used. Therefore number of temperature points are needed
-        # larger than self._num_elems that nearly equals to the temparature
+        # larger than self._num_elems that nearly equals to the temperature
         # point we expect.
         self._set_thermal_expansion()
         self._set_heat_capacity_P_numerical()
@@ -805,7 +805,7 @@ class QHA:
                 )
 
     def get_heat_capacity_P_numerical(self) -> NDArray[np.double]:
-        """Return C_P by numerical differenciation at temperatures."""
+        """Return C_P by numerical differentiation at temperatures."""
         return self.heat_capacity_P_numerical
 
     def plot_heat_capacity_P_numerical(

@@ -87,7 +87,7 @@ class DynamicStructureFactor:
     Neutron scattering length
     -------------------------
     https://www.ncnr.nist.gov/resources/n-lengths/
-    Exmple: {'Na': 3.63,
+    Example: {'Na': 3.63,
              'Cl': 9.5770}
 
     Attributes
@@ -145,9 +145,9 @@ class DynamicStructureFactor:
             Coherent scattering lengths averaged over isotopes and spins.
             Supposed for INS. For example, {'Na': 3.63, 'Cl': 9.5770}.
         freq_min: float
-            Minimum phonon frequency to determine wheather include or not.
+            Minimum phonon frequency to determine whether include or not.
         freq_max: float
-            Maximum phonon frequency to determine wheather include or not. Only
+            Maximum phonon frequency to determine whether include or not. Only
             for Debye-Waller factor.
 
         """
@@ -293,7 +293,7 @@ class DynamicStructureFactor:
         """Return F(Q, q nu).
 
         The phase factor is different by exp(iq.r) from that of the book
-        "Thermal neutron scattering" because of different difinition of
+        "Thermal neutron scattering" because of different definition of
         dynamical matrix.
 
         """

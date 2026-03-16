@@ -196,7 +196,7 @@ class Mesh(MeshBase):
     Attributes
     ----------
     frequencies: ndarray
-        Phonon frequencies at ir-grid points. Imaginary frequenies are
+        Phonon frequencies at ir-grid points. Imaginary frequencies are
         represented by negative real numbers.
         dtype='double'
         shape=(ir-grid points, bands)
@@ -250,7 +250,7 @@ class Mesh(MeshBase):
         """Define iterator over q-points.
 
         Initially, all phonons are computed and stored in arrays.
-        Then this is just used as an iterator to return exisiting results.
+        Then this is just used as an iterator to return existing results.
         The purpose of this iterator is compatible use of IterMesh.
 
         """

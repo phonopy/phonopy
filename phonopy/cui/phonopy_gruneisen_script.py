@@ -298,7 +298,7 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
 
     if len(args.dirnames) != 3:
         sys.stderr.write(
-            "Three directory names (original, plus, minus) have to be spefied.\n"
+            "Three directory names (original, plus, minus) have to be specified.\n"
         )
         sys.exit(1)
 
