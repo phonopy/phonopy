@@ -36,9 +36,14 @@
 
 from __future__ import annotations
 
+import os
 import sys
+import typing
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.physical_units import get_physical_units
@@ -49,13 +54,13 @@ from phonopy.utils import similarity_transformation
 
 
 def parse_set_of_forces(
-    disps,
-    forces_filenames,
-    supercell,
-    wien2k_P1_mode=False,  # Only for the test
-    symmetry_tolerance=None,
-    verbose=True,
-):
+    disps: Sequence[NDArray[np.double]],
+    forces_filenames: Sequence[str | os.PathLike],
+    supercell: PhonopyAtoms,
+    wien2k_P1_mode: bool = False,  # Only for the test
+    symmetry_tolerance: float | None = None,
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     if symmetry_tolerance is None:
         symprec = 1e-5
@@ -83,8 +88,8 @@ def parse_set_of_forces(
             else:
                 forces = wien2k_forces
 
-        if check_forces(forces, num_atoms, filename, verbose=verbose):
-            drift_force = get_drift_forces(forces, filename=filename, verbose=verbose)
+        if check_forces(forces, num_atoms, filename, verbose=verbose):  # type: ignore[arg-type]
+            drift_force = get_drift_forces(forces, filename=filename, verbose=verbose)  # type: ignore[arg-type]
             force_sets.append(np.array(forces) - drift_force)
         else:
             is_parsed = False
@@ -95,7 +100,9 @@ def parse_set_of_forces(
         return []
 
 
-def parse_wien2k_struct(filename):
+def parse_wien2k_struct(
+    filename: str | os.PathLike,
+) -> tuple[PhonopyAtoms, list[int], list[float], list[float]]:
     """Read crystal structure."""
     with open(filename) as f:
         # 1
@@ -166,16 +173,16 @@ def parse_wien2k_struct(filename):
 
 
 def write_supercells_with_displacements(
-    supercell,
-    cells_with_displacements,
-    ids,
-    npts,
-    r0s,
-    rmts,
-    num_unitcells_in_supercell,
-    pre_filename="wien2k",
-    width=3,
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    npts: list[int],
+    r0s: list[float],
+    rmts: list[float],
+    num_unitcells_in_supercell: int,
+    pre_filename: str = "wien2k",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     npts_super = []
     r0s_super = []
@@ -201,13 +208,24 @@ def write_supercells_with_displacements(
         write_wein2k(filename, cell, npts_super, r0s_super, rmts_super)
 
 
-def write_wein2k(filename, cell, npts, r0s, rmts):
+def write_wein2k(
+    filename: str | os.PathLike,
+    cell: PhonopyAtoms,
+    npts: list[int],
+    r0s: list[float],
+    rmts: list[float],
+) -> None:
     """Write cell to file."""
     with open(filename, "w") as w:
         w.write(_get_wien2k_struct(cell, npts, r0s, rmts))
 
 
-def _get_wien2k_struct(cell, npts, r0s, rmts):
+def _get_wien2k_struct(
+    cell: PhonopyAtoms,
+    npts: list[int],
+    r0s: list[float],
+    rmts: list[float],
+) -> str:
     num_atom = len(cell)
     lattice = cell.cell
     a, b, c = get_cell_parameters(lattice)
@@ -278,7 +296,14 @@ def _get_wien2k_struct(cell, npts, r0s, rmts):
     return text
 
 
-def _transform_axis(alpha, beta, gamma, a, b, c):
+def _transform_axis(
+    alpha: float,
+    beta: float,
+    gamma: float,
+    a: float,
+    b: float,
+    c: float,
+) -> tuple[list[Any], list[Any], list[Any]]:
     alpha = alpha / 180 * np.pi
     beta = beta / 180 * np.pi
     gamma = gamma / 180 * np.pi
@@ -295,7 +320,9 @@ def _transform_axis(alpha, beta, gamma, a, b, c):
     return [ax, ay, az], [0, by, bz], [0, 0, cz]
 
 
-def _parse_core_param(file):
+def _parse_core_param(
+    file: typing.IO,
+) -> tuple[list[int], list[float], list[float]]:
     npts = []
     r0s = []
     rmts = []
@@ -312,7 +339,10 @@ def _parse_core_param(file):
     return npts, r0s, rmts
 
 
-def _get_forces_wien2k(filename, lattice):
+def _get_forces_wien2k(
+    filename: str | os.PathLike,
+    lattice: NDArray[np.double],
+) -> list[NDArray[np.double]]:
     forces = []
     red_lattice = []
 
@@ -332,7 +362,13 @@ def _get_forces_wien2k(filename, lattice):
     return forces[-num_atom:]
 
 
-def _distribute_forces(supercell, disp, forces, filename, symprec):
+def _distribute_forces(
+    supercell: PhonopyAtoms,
+    disp: NDArray[np.double],
+    forces: list[NDArray[np.double]],
+    filename: str | os.PathLike,
+    symprec: float,
+) -> list[Any] | bool:
     natom = len(supercell)
     lattice = supercell.cell
     symbols = supercell.symbols
@@ -394,7 +430,9 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
     return force_set
 
 
-def _get_independent_atoms_in_dot_scf(filename):
+def _get_independent_atoms_in_dot_scf(
+    filename: str | os.PathLike,
+) -> NDArray[np.double]:
     positions = []
     for line in open(filename):
         if line[:4] == ":POS":

@@ -34,8 +34,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import os
 import sys
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -49,7 +52,7 @@ dftbpToBohr = 0.188972598857892e01
 
 def parse_set_of_forces(
     num_atoms: int,
-    forces_filenames: list[str | os.PathLike],
+    forces_filenames: Sequence[str | os.PathLike],
     verbose: bool = True,
 ) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
@@ -226,8 +229,8 @@ def write_dftbp(filename: str | os.PathLike, atoms: PhonopyAtoms) -> None:
 
 def write_supercells_with_displacements(
     supercell: PhonopyAtoms,
-    cells_with_disps: list[PhonopyAtoms],
-    ids: NDArray[np.int64],
+    cells_with_disps: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
     pre_filename: str | os.PathLike = "geo.gen",
     width: int = 3,
 ) -> None:

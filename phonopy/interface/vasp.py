@@ -255,7 +255,7 @@ def create_FORCE_CONSTANTS(
 
     if is_hdf5:
         try:
-            import h5py  # noqa F401
+            import h5py  # type: ignore[import-untyped]  # noqa: F401
         except ImportError as exc:
             raise ModuleNotFoundError("You need to install python-h5py.") from exc
 

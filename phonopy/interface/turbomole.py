@@ -34,16 +34,25 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import os
 import sys
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     # Filenames = subdirectories supercell-001, supercell-002, ...
     force_sets = []
@@ -60,7 +69,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         # coordinates (num_atoms lines)
         # gradients (num_atoms lines)
         # $end
-        turbomole_forces = []
+        turbomole_forces: Any = []
         for line in lines[2 + num_atoms : 2 + 2 * num_atoms]:
             # Replace D with E in double precision floats
             turbomole_forces.append([float(x.replace("D", "E")) for x in line.split()])
@@ -84,7 +93,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_turbomole(filename):
+def read_turbomole(filename: str | os.PathLike) -> PhonopyAtoms:
     """Read crystal structure."""
     # filename is typically "control"
     f_turbomole = open(filename)
@@ -100,7 +109,7 @@ def read_turbomole(filename):
     return cell
 
 
-def write_turbomole(filename, cell):
+def write_turbomole(filename: str, cell: PhonopyAtoms) -> None:
     """Write cell to file."""
     # Write geometry in a new directory
     # Check if directory exists (directory supercell will already exist for phono3py)
@@ -137,8 +146,12 @@ def write_turbomole(filename, cell):
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_turbomole(pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -151,22 +164,21 @@ def write_supercells_with_displacements(
 class TurbomoleIn:
     """Class to create TURBOMOLE input file."""
 
-    def __init__(self, lines):
+    def __init__(self, lines: list[str]) -> None:
         """Init method."""
-        self._tags = {
+        self._tags: dict[str, Any] = {
             "lattice_vectors": None,
             "atomic_species": None,
             "coordinates": None,
         }
 
-        self._values = None
         self._collect(lines)
 
-    def get_tags(self):
+    def get_tags(self) -> dict[str, Any]:
         """Return tags."""
         return self._tags
 
-    def _collect(self, lines):
+    def _collect(self, lines: list[str]) -> None:
         # Reads TURBOMOLE control and coord files
         #  (lattice vectors, cartesian atomic positions).
         ll = 0

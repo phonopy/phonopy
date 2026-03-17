@@ -37,9 +37,10 @@
 from __future__ import annotations
 
 import sys
-from typing import Optional
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
@@ -48,13 +49,13 @@ from phonopy.structure.cells import Primitive
 def run_alm(
     supercell: PhonopyAtoms,
     primitive: Primitive,
-    displacements: np.ndarray,
-    forces: np.ndarray,
+    displacements: NDArray[np.double],
+    forces: NDArray[np.double],
     maxorder: int,
     is_compact_fc: bool = False,
-    options: Optional[str] = None,
+    options: str | None = None,
     log_level: int = 0,
-) -> list[np.ndarray]:
+) -> dict[int, NDArray[np.double]]:
     """Calculate force constants using ALM.
 
     The details of the parameters are found in the ALMFCSolver class.
@@ -101,13 +102,13 @@ class ALMFCSolver:
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        displacements: np.ndarray,
-        forces: np.ndarray,
+        displacements: NDArray[np.double],
+        forces: NDArray[np.double],
         maxorder: int,
         is_compact_fc: bool = False,
-        options: Optional[str] = None,
+        options: str | None = None,
         log_level: int = 0,
-    ):
+    ) -> None:
         """Init method.
 
         Parameters
@@ -144,7 +145,7 @@ class ALMFCSolver:
         self._fc = {i + 2: fc for i, fc in enumerate(fcs)}
 
     @property
-    def force_constants(self) -> dict[int, np.ndarray]:
+    def force_constants(self) -> dict[int, NDArray[np.double]]:
         """Return force constants.
 
         Returns
@@ -159,13 +160,13 @@ class ALMFCSolver:
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        displacements: np.ndarray,
-        forces: np.ndarray,
+        displacements: NDArray[np.double],
+        forces: NDArray[np.double],
         maxorder: int,
         is_compact_fc: bool = False,
-        options: Optional[str] = None,
+        options: str | None = None,
         log_level: int = 0,
-    ) -> list[np.ndarray]:
+    ) -> list[NDArray[np.double]]:
         """Calculate force constants of arbitrary-order using ALM."""
         fcs = None  # This is returned.
 
@@ -222,7 +223,10 @@ class ALMFCSolver:
             log_level_alm = 0
 
         try:
-            from alm import ALM, optimizer_control_data_types
+            from alm import (  # type: ignore[import-untyped]
+                ALM,
+                optimizer_control_data_types,
+            )
         except ImportError as exc:
             raise ModuleNotFoundError("ALM python module was not found.") from exc
 
@@ -288,7 +292,7 @@ class ALMFCSolver:
         return fcs
 
 
-def _update_options(fc_calculator_options):
+def _update_options(fc_calculator_options: str | None) -> dict[str, Any]:
     """Set ALM options with appropriate data types.
 
     fc_calculator_options : str
@@ -302,7 +306,7 @@ def _update_options(fc_calculator_options):
 
     """
     try:
-        from alm import optimizer_control_data_types
+        from alm import optimizer_control_data_types  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ModuleNotFoundError("ALM python module was not found.") from exc
 
@@ -346,12 +350,18 @@ def _update_options(fc_calculator_options):
                         [int(x) for x in val.split()], dtype="int64"
                     )
                 else:
-                    option_value = alm_option_types[key.lower()](val)
-                alm_options[key] = option_value
+                    option_value = alm_option_types[key.lower()](val)  # type: ignore[operator]
+                alm_options[key] = option_value  # type: ignore[assignment]
     return alm_options
 
 
-def _slice_displacements_and_forces(d, f, ndata, nstart, nend):
+def _slice_displacements_and_forces(
+    d: NDArray[np.double],
+    f: NDArray[np.double],
+    ndata: int | None,
+    nstart: int | None,
+    nend: int | None,
+) -> tuple[NDArray[np.double], NDArray[np.double], str | None]:
     msg = None
     if ndata is not None:
         _d = d[:ndata]
@@ -372,8 +382,13 @@ def _slice_displacements_and_forces(d, f, ndata, nstart, nend):
 
 
 def _extract_fc_from_alm(
-    alm, natom, maxorder, is_compact_fc, p2s_map=None, p2p_map=None
-) -> list[np.ndarray]:
+    alm: Any,
+    natom: int,
+    maxorder: int,
+    is_compact_fc: bool,
+    p2s_map: NDArray[np.int64] | None = None,
+    p2p_map: dict[int, int] | None = None,
+) -> list[NDArray[np.double]]:
     # Harmonic: order=1, 3rd: order=2, ...
     fcs = []
     for order in range(1, maxorder + 1):
@@ -381,17 +396,17 @@ def _extract_fc_from_alm(
         p2s_map_alm = alm.getmap_primitive_to_supercell()[0]
         if (
             is_compact_fc
-            and len(p2s_map_alm) == len(p2s_map)
+            and len(p2s_map_alm) == len(p2s_map)  # type: ignore[arg-type]
             and (p2s_map_alm == p2s_map).all()
         ):
-            fc_shape = (len(p2s_map),) + (natom,) * order + (3,) * (order + 1)
+            fc_shape = (len(p2s_map),) + (natom,) * order + (3,) * (order + 1)  # type: ignore[arg-type]
             fc = np.zeros(fc_shape, dtype="double", order="C")
             for fc_elem, indices in zip(
                 *alm.get_fc(order, mode="origin", permutation=1), strict=True
             ):
                 v = indices // 3
                 c = indices % 3
-                selection = (p2p_map[v[0]],) + tuple(v[1:]) + tuple(c)
+                selection = (p2p_map[v[0]],) + tuple(v[1:]) + tuple(c)  # type: ignore[index]
                 fc[selection] = fc_elem
 
         if fc is None:
@@ -399,7 +414,7 @@ def _extract_fc_from_alm(
                 atom_list = p2s_map
             else:
                 atom_list = np.arange(natom, dtype=int)
-            fc_shape = (len(atom_list),) + (natom,) * order + (3,) * (order + 1)
+            fc_shape = (len(atom_list),) + (natom,) * order + (3,) * (order + 1)  # type: ignore[arg-type]
             fc = np.zeros(fc_shape, dtype="double", order="C")
             for fc_elem, indices in zip(
                 *alm.get_fc(order, mode="all", permutation=1), strict=True

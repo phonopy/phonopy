@@ -40,8 +40,11 @@ import io
 import os
 import sys
 import typing
+from collections.abc import Callable, Sequence
+from typing import Any, Literal
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.cui.settings import fracval
 from phonopy.file_IO import collect_forces
@@ -55,7 +58,11 @@ from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     hook = "cartesian forces (eV/Angstrom)"
     is_parsed = True
@@ -80,12 +87,12 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_abinit(filename: str | os.PathLike | typing.IO):
+def read_abinit(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
     """Read crystal structure."""
     if isinstance(filename, io.IOBase):
-        abinit_in = AbinitIn(filename.readlines())
+        abinit_in = AbinitIn(filename.readlines())  # type: ignore[arg-type]
     else:
-        with open(filename) as f:
+        with open(filename) as f:  # type: ignore[arg-type]
             abinit_in = AbinitIn(f.readlines())
     tags = abinit_in.get_variables()
     acell = tags["acell"]
@@ -112,15 +119,19 @@ def read_abinit(filename: str | os.PathLike | typing.IO):
     return PhonopyAtoms(symbols=symbols, cell=lattice.T, scaled_positions=positions)
 
 
-def write_abinit(filename, cell):
+def write_abinit(filename: str | os.PathLike, cell: PhonopyAtoms) -> None:
     """Write cell to file."""
     with open(filename, "w") as f:
         f.write(get_abinit_structure(cell))
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str | os.PathLike = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_abinit("%s.in" % pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -130,7 +141,7 @@ def write_supercells_with_displacements(
         write_abinit(filename, cell)
 
 
-def get_abinit_structure(cell: PhonopyAtoms):
+def get_abinit_structure(cell: PhonopyAtoms) -> str:
     """Return abinit structure in text."""
     znucl = []
     numbers = cell.numbers
@@ -159,9 +170,9 @@ def get_abinit_structure(cell: PhonopyAtoms):
 class AbinitIn:
     """Class to create Abinit input file."""
 
-    def __init__(self, lines):
+    def __init__(self, lines: list[str]) -> None:
         """Init method."""
-        self._set_methods = {
+        self._set_methods: dict[str, Callable[[], None]] = {
             "acell": self._set_acell,
             "natom": self._set_natom,
             "ntypat": self._set_ntypat,
@@ -173,7 +184,7 @@ class AbinitIn:
             "xred": self._set_xred,
             "znucl": self._set_znucl,
         }
-        self._tags = {
+        self._tags: dict[str, Any] = {
             "acell": None,
             "natom": None,
             "ntypat": None,
@@ -186,15 +197,15 @@ class AbinitIn:
             "znucl": None,
         }
 
-        self._values = None
+        self._values: list[str] | None = None
         self._collect(lines)
 
-    def get_variables(self):
+    def get_variables(self) -> dict[str, Any]:
         """Return tags."""
         return self._tags
 
-    def _collect(self, lines):
-        elements = {}
+    def _collect(self, lines: list[str]) -> None:
+        elements: dict[str, list[str]] = {}
         tag = None
         for line_tmp in lines:
             line = line_tmp.replace("!", "#").split("#")[0]
@@ -220,7 +231,9 @@ class AbinitIn:
             if tag != "natom" and tag != "ntypat":
                 self._set_methods[tag]()
 
-    def _get_numerical_values(self, char_string, num_type="float"):
+    def _get_numerical_values(
+        self, char_string: str, num_type: Literal["float", "int"] = "float"
+    ) -> list[float] | list[int]:
         m = 1
 
         if "*" in char_string:
@@ -237,9 +250,9 @@ class AbinitIn:
 
         return [a] * m
 
-    def _set_acell(self):
-        acell = []
-        for val in self._values:
+    def _set_acell(self) -> None:
+        acell: list[float] = []
+        for val in self._values:  # type: ignore[union-attr]
             if len(acell) >= 3:
                 if len(val) >= 6:
                     if val[:6] == "angstr":
@@ -251,64 +264,64 @@ class AbinitIn:
 
         self._tags["acell"] = acell[:3]
 
-    def _set_natom(self):
-        self._tags["natom"] = int(self._values[0])
+    def _set_natom(self) -> None:
+        self._tags["natom"] = int(self._values[0])  # type: ignore[index]
 
-    def _set_ntypat(self):
-        self._tags["ntypat"] = int(self._values[0])
+    def _set_ntypat(self) -> None:
+        self._tags["ntypat"] = int(self._values[0])  # type: ignore[index]
 
-    def _set_rprim(self):
-        rprim = []
-        for val in self._values:
+    def _set_rprim(self) -> None:
+        rprim: list[float] = []
+        for val in self._values:  # type: ignore[union-attr]
             rprim += self._get_numerical_values(val)
             if len(rprim) >= 9:
                 break
 
         self._tags["rprim"] = np.reshape(rprim[:9], (3, 3))
 
-    def _set_scalecart(self):
-        scalecart = []
-        for val in self._values:
+    def _set_scalecart(self) -> None:
+        scalecart: list[float] = []
+        for val in self._values:  # type: ignore[union-attr]
             scalecart += self._get_numerical_values(val)
             if len(scalecart) >= 3:
                 break
 
         self._tags["scalecart"] = np.array(scalecart[:3])
 
-    def _set_typat(self):
-        typat = []
+    def _set_typat(self) -> None:
+        typat: list[int] = []
         natom = self._tags["natom"]
-        for val in self._values:
-            typat += self._get_numerical_values(val, num_type="int")
+        for val in self._values:  # type: ignore[union-attr]
+            typat += self._get_numerical_values(val, num_type="int")  # type: ignore[arg-type]
             if len(typat) >= natom:
                 break
 
         self._tags["typat"] = typat[:natom]
 
-    def _set_xangst(self):
+    def _set_xangst(self) -> None:
         self._set_x_tags("xangst")
 
-    def _set_xcart(self):
+    def _set_xcart(self) -> None:
         self._set_x_tags("xcart")
 
-    def _set_xred(self):
+    def _set_xred(self) -> None:
         self._set_x_tags("xred")
 
-    def _set_x_tags(self, tagname):
-        xtag = []
+    def _set_x_tags(self, tagname: str) -> None:
+        xtag: list[float] = []
         natom = self._tags["natom"]
-        for val in self._values:
+        for val in self._values:  # type: ignore[union-attr]
             xtag += self._get_numerical_values(val)
             if len(xtag) >= natom * 3:
                 break
 
         self._tags[tagname] = np.reshape(xtag[: natom * 3], (-1, 3))
 
-    def _set_znucl(self):
-        znucl = []
+    def _set_znucl(self) -> None:
+        znucl: list[int] = []
         ntypat = self._tags["ntypat"]
-        for val in self._values:
-            znucl += self._get_numerical_values(val, num_type="int")
+        for val in self._values:  # type: ignore[union-attr]
+            znucl += self._get_numerical_values(val, num_type="int")  # type: ignore[arg-type]
             if len(znucl) >= ntypat:
                 break
 
