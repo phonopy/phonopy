@@ -155,7 +155,7 @@ def load(
         Input unit cell. Default is None.
     supercell : PhonopyAtoms, optional
         Input supercell. With given, default value of primitive_matrix is set to
-        'auto' (can be overwitten). supercell_matrix is ignored. Default is
+        'auto' (can be overwritten). supercell_matrix is ignored. Default is
         None.
     nac_params : dict, optional
         Parameters required for non-analytical term correction. Default is None.
@@ -184,7 +184,7 @@ def load(
     fc_calculator_options : str, optional
         Optional parameters that are passed to the external fc-calculator. This
         is given as one text string. How to parse this depends on the
-        fc-calculator. For alm, each parameter is splitted by comma ',', and
+        fc-calculator. For alm, each parameter is split by comma ',', and
         each set of key and value pair is written in 'key = value'.
     factor : float, optional
         Deprecated. Conversion factor is selected based off of `calculator`

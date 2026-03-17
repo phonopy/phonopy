@@ -58,7 +58,7 @@ except ImportError:
 class PypolymlpParams:
     """Parameters for pypolymlp.
 
-    cutoff : flaot, optional
+    cutoff : float, optional
         Cutoff radius. Default is 8.0.
     model_type : int, optional
         Polynomial function type. Default is 3. model_type = 1: Linear

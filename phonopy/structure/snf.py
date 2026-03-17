@@ -183,7 +183,7 @@ class SNF3x3:
         return -1
 
     def _first_finalize(self) -> None:
-        """Set zeros along the first colomn except for A[0, 0].
+        """Set zeros along the first column except for A[0, 0].
 
         This is possible only when A[1,0] and A[2,0] are dividable by A[0,0].
 

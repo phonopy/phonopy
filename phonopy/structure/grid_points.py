@@ -250,7 +250,7 @@ class GridPoints:
             dtype='int64'
             shape=(rotations, 3, 3)
         is_mesh_symmetry: bool, optional, default True
-            Wheather symmetry search is done or not.
+            Whether symmetry search is done or not.
 
         """
         self._mesh = np.array(mesh_numbers, dtype="int64")
@@ -337,7 +337,7 @@ class GridPoints:
         Parameters
         ----------
         tolerance : float
-            This is used to judge zero/half gird shift.
+            This is used to judge zero/half grid shift.
 
         """
         if q_mesh_shift is None:

@@ -1130,12 +1130,12 @@ class VasprunxmlExpat:
 
     @property
     def fft_grid(self) -> list[int]:
-        """Return FFT gird [NGX, NGY, NGZ]."""
+        """Return FFT grid [NGX, NGY, NGZ]."""
         return self._fft_grid
 
     @property
     def fft_fine_grid(self) -> list[int]:
-        """Return fine FFT gird [NGXF, NGYF, NGZF]."""
+        """Return fine FFT grid [NGXF, NGYF, NGZF]."""
         return self._fft_fine_grid
 
     @property

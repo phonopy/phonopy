@@ -169,7 +169,7 @@ def get_parser(
         nargs="+",
         dest="band_indices",
         default=None,
-        help=("Band indices to be included to calcualte thermal properties"),
+        help=("Band indices to be included to calculate thermal properties"),
     )
     if not load_phonopy_yaml:
         parser.add_argument(

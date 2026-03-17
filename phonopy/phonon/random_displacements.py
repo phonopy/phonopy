@@ -240,7 +240,7 @@ class RandomDisplacements:
         self._uu: NDArray[np.double] | None = None
         self._uu_inv: NDArray[np.double] | None = None
 
-        # Phonon bands included in integration of dispalcements.
+        # Phonon bands included in integration of displacements.
         self._conditions_ii: NDArray[np.bool_] | None = None
         self._conditions_ij: NDArray[np.bool_] | None = None
 
@@ -336,8 +336,8 @@ class RandomDisplacements:
     def frequencies(self) -> NDArray[np.double]:
         """Setter and getter of phonon frequencies.
 
-        Phonon frequences themselves are not stored in this instance, but are
-        stored in a way of eigenvalues. The eigenvalues can be stored vai
+        Phonon frequencies themselves are not stored in this instance, but are
+        stored in a way of eigenvalues. The eigenvalues can be stored via
         frequencies setter attributed.
 
         """

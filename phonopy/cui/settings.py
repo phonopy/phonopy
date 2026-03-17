@@ -369,7 +369,7 @@ class ConfParser:
             if opt_num_freqs:
                 self._confs["num_frequency_points"] = opt_num_freqs
 
-        # For backword compatibility
+        # For backward compatibility
         if "primitive_axis" in arg_list:
             if args.primitive_axis is not None:
                 if isinstance(args.primitive_axis, list):
@@ -1018,7 +1018,7 @@ class ConfParser:
         if "supercell_matrix" in params:
             settings.supercell_matrix = params["supercell_matrix"]
 
-        # Temperatures or temerature range
+        # Temperatures or temperature range
         if "tmax" in params:
             settings.max_temperature = params["tmax"]
         if "tmin" in params:
