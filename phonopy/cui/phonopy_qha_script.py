@@ -34,6 +34,7 @@
 
 from __future__ import annotations
 
+import argparse
 import dataclasses
 import os
 import sys
@@ -46,10 +47,8 @@ from phonopy.file_IO import read_efe, read_thermal_properties_yaml, read_v_e
 from phonopy.physical_units import get_physical_units
 
 
-def get_options():
+def get_options() -> argparse.Namespace:
     """Parse command-line options."""
-    import argparse
-
     parser = argparse.ArgumentParser(description="Phonopy-QHA command-line-tool")
     default_vals = PhonopyQHAMockArgs()
 
@@ -67,7 +66,7 @@ def get_options():
         help="Choice of EOS among vinet, birch_murnaghan, and murnaghan",
     )
     parser.add_argument(
-        "--exclude_imaginary",
+        "--exclude-imaginary",
         dest="exclude_imaginary",
         action="store_true",
         default=default_vals.exclude_imaginary,
@@ -144,17 +143,10 @@ class PhonopyQHAMockArgs:
     tmax: float = 1000.0
     filenames: Sequence[str | os.PathLike] = ()
 
-    def __iter__(self):
-        """Make self iterable to support in."""
-        return (getattr(self, field.name) for field in dataclasses.fields(self))
 
-    def __contains__(self, item):
-        """Implement in operator."""
-        return item in (field.name for field in dataclasses.fields(self))
-
-
-def main(**argparse_control: PhonopyQHAMockArgs):
+def main(**argparse_control: PhonopyQHAMockArgs) -> None:
     """Run phonopy-qha."""
+    args: PhonopyQHAMockArgs | argparse.Namespace
     if argparse_control:
         args = argparse_control["args"]
     else:
@@ -288,7 +280,7 @@ def main(**argparse_control: PhonopyQHAMockArgs):
             if nim < 4:
                 indices.append(i)
     else:
-        indices = range(len(volumes))
+        indices = list(range(len(volumes)))
 
     if args.efe_file:
         electronic_energies = electronic_energies[:, indices]

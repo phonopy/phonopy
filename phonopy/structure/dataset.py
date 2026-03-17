@@ -44,7 +44,7 @@ from numpy.typing import NDArray
 from phonopy.harmonic.displacement import (
     DisplacementDataset,
     Type1DisplacementDataset,
-    Type2DisplacementDatasetWithOptionalData,
+    Type2DisplacementDataset,
 )
 
 
@@ -86,7 +86,7 @@ def get_displacements_and_forces(
                 forces[i] = disp1["forces"]
         return disps, forces
     elif "displacements" in disp_dataset:
-        d2 = cast(Type2DisplacementDatasetWithOptionalData, disp_dataset)
+        d2 = cast(Type2DisplacementDataset, disp_dataset)
         if "forces" in d2:
             forces = d2["forces"]
         else:

@@ -39,7 +39,7 @@ from __future__ import annotations
 import math
 import warnings
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -59,14 +59,14 @@ class SymfcFCSolver:
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        displacements: NDArray | None = None,
-        forces: NDArray | None = None,
+        displacements: NDArray[np.double] | None = None,
+        forces: NDArray[np.double] | None = None,
         symmetry: Symmetry | None = None,
         orders: Sequence[int] | None = None,
-        options: dict | None = None,
+        options: dict[str, Any] | None = None,
         is_compact_fc: bool = False,
         log_level: int = 0,
-    ):
+    ) -> None:
         """Init method.
 
         Parameters
@@ -102,7 +102,7 @@ class SymfcFCSolver:
         self._orders = orders
         self._is_compact_fc = is_compact_fc
 
-        import symfc
+        import symfc  # type: ignore[import-untyped]
 
         self._symfc: symfc.Symfc
 
@@ -119,7 +119,7 @@ class SymfcFCSolver:
         return self._supercell
 
     @property
-    def force_constants(self) -> dict[int, NDArray]:
+    def force_constants(self) -> dict[int, NDArray[np.double]]:
         """Return force constants.
 
         Returns
@@ -132,7 +132,7 @@ class SymfcFCSolver:
             raise RuntimeError("Run SymfcFCSolver.run() first.")
         return self._symfc.force_constants
 
-    def run(self, orders: Sequence[int]):
+    def run(self, orders: Sequence[int]) -> None:
         """Run symfc."""
         if self._log_level:
             print(
@@ -168,16 +168,16 @@ class SymfcFCSolver:
         return symfc.__version__
 
     @property
-    def p2s_map(self) -> NDArray | None:
+    def p2s_map(self) -> NDArray[np.int64] | None:
         """Return indices of translationally independent atoms."""
         return self._symfc.p2s_map
 
     @property
-    def basis_set(self) -> dict:
+    def basis_set(self) -> dict[int, Any]:
         """Return basis set."""
         return self._symfc.basis_set
 
-    def show_credit(self):
+    def show_credit(self) -> None:
         """Show credit."""
         print(f"Symfc version {self.version} (https://github.com/symfc/symfc)")
         print("Citation: A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024)")
@@ -185,8 +185,8 @@ class SymfcFCSolver:
     def estimate_basis_size(
         self,
         max_order: int | None = None,
-        orders: list | None = None,
-    ) -> dict:
+        orders: list[int] | None = None,
+    ) -> dict[int, int]:
         """Estimate basis size."""
         basis_sizes = self._symfc.estimate_basis_size(
             orders=orders, max_order=max_order
@@ -196,8 +196,8 @@ class SymfcFCSolver:
     def estimate_numbers_of_supercells(
         self,
         max_order: int | None = None,
-        orders: list | None = None,
-    ) -> dict:
+        orders: list[int] | None = None,
+    ) -> dict[int, int]:
         """Estimate numbers of supercells."""
         basis_sizes = self.estimate_basis_size(max_order=max_order, orders=orders)
         n_scells = {}
@@ -208,8 +208,8 @@ class SymfcFCSolver:
     def compute_basis_set(
         self,
         max_order: int | None = None,
-        orders: list | None = None,
-    ) -> dict:
+        orders: list[int] | None = None,
+    ) -> dict[int, Any]:
         """Run basis set calculations and return basis sets.
 
         Parameters
@@ -228,7 +228,7 @@ class SymfcFCSolver:
         self._symfc.compute_basis_set(max_order=max_order, orders=orders)
         return self._symfc.basis_set
 
-    def get_nonzero_atomic_indices_fc3(self) -> NDArray[np.bool] | None:
+    def get_nonzero_atomic_indices_fc3(self) -> NDArray[np.bool_] | None:
         """Get nonzero atomic indices for fc3.
 
         Returns
@@ -253,19 +253,19 @@ class SymfcFCSolver:
         return fc3_nonzero_elems.reshape((N, N, N))
 
     @property
-    def options(self) -> dict | None:
+    def options(self) -> dict[str, Any]:
         """Return options."""
         return self._options
 
     def _initialize(
         self,
-        displacements: NDArray | None = None,
-        forces: NDArray | None = None,
-    ):
+        displacements: NDArray[np.double] | None = None,
+        forces: NDArray[np.double] | None = None,
+    ) -> None:
         """Calculate force constants."""
         try:
-            from symfc import Symfc
-            from symfc.utils.utils import SymfcAtoms
+            from symfc import Symfc  # type: ignore[import-untyped]
+            from symfc.utils.utils import SymfcAtoms  # type: ignore[import-untyped]
         except ImportError as exc:
             raise ModuleNotFoundError("Symfc python module was not found.") from exc
 
@@ -290,7 +290,9 @@ class SymfcFCSolver:
             self._symfc.forces = forces
 
 
-def parse_symfc_options(options: Optional[Union[str, dict]], order: int) -> dict:
+def parse_symfc_options(
+    options: str | dict[str, Any] | None, order: int
+) -> dict[str, Any]:
     """Parse symfc options.
 
     Parameters
@@ -316,7 +318,7 @@ def parse_symfc_options(options: Optional[Union[str, dict]], order: int) -> dict
     if isinstance(options, dict):
         return options
     elif isinstance(options, str):
-        options_dict = {}
+        options_dict: dict[str, Any] = {}
         for option in options.split(","):
             key_val = [v.strip().lower() for v in option.split("=")]
             if len(key_val) != 2:
@@ -346,7 +348,7 @@ def estimate_symfc_memory_usage(
     order: int,
     cutoff: float | None = None,
     batch_size: int = 100,
-):
+) -> tuple[float, float]:
     """Estimate memory usage to run symfc for fc with cutoff.
 
     Total memory usage is memsize + memsize2. These are separated because
@@ -372,9 +374,9 @@ def estimate_symfc_cutoff_from_memsize(
     primitive: Primitive,
     symmetry: Symmetry,
     order: int,
-    max_memsize: Optional[float] = None,
+    max_memsize: float | None = None,
     verbose: bool = False,
-) -> Optional[float]:
+) -> float | None:
     """Estimate cutoff from max memory size."""
     vecs, _ = primitive.get_smallest_vectors()
     dists = (
@@ -402,12 +404,12 @@ def estimate_symfc_cutoff_from_memsize(
 
 
 def update_symfc_cutoff_by_memsize(
-    options: dict,
+    options: dict[str, Any],
     supercell: PhonopyAtoms,
     primitive: Primitive,
     symmetry: Symmetry,
     verbose: bool = False,
-):
+) -> None:
     """Update cutoff in options following max memsize.
 
     Note
@@ -451,13 +453,13 @@ def update_symfc_cutoff_by_memsize(
 
 def symmetrize_by_projector(
     supercell: PhonopyAtoms,
-    fc: NDArray,
+    fc: NDArray[np.double],
     order: int,
     primitive: Primitive | None = None,
-    options: dict | None = None,
+    options: dict[str, Any] | None = None,
     log_level: int = 0,
     show_credit: bool = False,
-) -> NDArray:
+) -> NDArray[np.double]:
     """Symmetrize force constants by projector method.
 
     Parameters
@@ -522,11 +524,11 @@ def symmetrize_by_projector(
 
 def _convert_compact_fc(
     primitive: Primitive,
-    compact_fc: NDArray,
+    compact_fc: NDArray[np.double],
     supercell: PhonopyAtoms,
     order: int,
     log_level: int = 0,
-) -> NDArray:
+) -> NDArray[np.double]:
     full_fc = compact_fc_to_full_fc(
         primitive,
         compact_fc,
