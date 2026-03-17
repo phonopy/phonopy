@@ -40,7 +40,7 @@
 # The axis resolved PDOS is summed up with the successive
 # indices separated by ",". In this example, indices 1 and
 # 2, 3 and 4 are summed respectively, and then they are
-# ploted respectively.
+# plotted respectively.
 #
 # The indices are defined like:
 # 1 2 3 : X Y Z of the 1st atom,

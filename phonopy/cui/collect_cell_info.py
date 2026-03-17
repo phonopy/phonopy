@@ -179,7 +179,7 @@ def collect_cell_info(
     When srystal structure search explained above failed, phonopy.yaml like file
     is searched in the current directory. phonopy.yaml like file name can be
     specified as the input crystal structure. Since phonopy.yaml like file
-    contains supercell and primitive cell matricies information, these
+    contains supercell and primitive cell matrices information, these
     parameter inputs of this function are ignored.
 
     Parameters
@@ -357,7 +357,7 @@ def _validate_cell(
                 '"%s"' % name for name in phonopy_yaml_cls.default_filenames[:-1]
             ]
             err_msg += [
-                '"%s" was read being prefered to files such as ' % unitcell_filename,
+                '"%s" was read being preferred to files such as ' % unitcell_filename,
                 '%s, or "%s".'
                 % (", ".join(filenames), phonopy_yaml_cls.default_filenames[-1]),
             ]

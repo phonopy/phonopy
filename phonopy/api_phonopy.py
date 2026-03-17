@@ -1059,7 +1059,7 @@ class Phonopy:
         level : int, optional
             Application of translational and permulation symmetries is
             repeated by this number. Default is 1.
-        show_drift : bool, optioanl
+        show_drift : bool, optional
             Drift forces are displayed when True. Default is True.
         use_symfc_projector : bool, optional
             If True, the force constants are symmetrized by symfc projector
@@ -1107,7 +1107,7 @@ class Phonopy:
 
         Parameters
         ----------
-        show_drift : bool, optioanl
+        show_drift : bool, optional
             Drift forces are displayed when True. Default is True.
 
         """
@@ -1144,7 +1144,7 @@ class Phonopy:
             Parameters for developing MLP. Default is None. When dict is given,
             PypolymlpParams instance is created from the dict.
         test_size : float, optional
-            Training and test data are splitted by this ratio. test_size=0.1
+            Training and test data are split by this ratio. test_size=0.1
             means the first 90% of the data is used for training and the rest
             is used for test. Default is 0.1.
 
@@ -1246,7 +1246,7 @@ class Phonopy:
         Returns
         -------
         frequencies: ndarray
-            Phonon frequencies. Imaginary frequenies are represented by
+            Phonon frequencies. Imaginary frequencies are represented by
             negative real numbers.
             shape=(bands, ), dtype='double'
 
@@ -1286,7 +1286,7 @@ class Phonopy:
         (frequencies, eigenvectors)
 
         frequencies: ndarray
-            Phonon frequencies. Imaginary frequenies are represented by
+            Phonon frequencies. Imaginary frequencies are represented by
             negative real numbers.
             shape=(bands, ), dtype='double', order='C'
         eigenvectors: ndarray
@@ -1342,7 +1342,7 @@ class Phonopy:
             False.
         is_band_connection : bool, optional
             Flag whether each band is connected or not. This is achieved by
-            comparing similarity of eigenvectors of neghboring poins. Sometimes
+            comparing similarity of eigenvectors of neighboring points. Sometimes
             this fails. Default is False.
         path_connections : List of bool, optional
             This is only used in graphical plot of band structure and gives
@@ -1401,7 +1401,7 @@ class Phonopy:
                 Distances in reciprocal space along paths.
                 shape=(q-points,), dtype='double'
             frequencies[i]: ndarray
-                Phonon frequencies. Imaginary frequenies are represented by
+                Phonon frequencies. Imaginary frequencies are represented by
                 negative real numbers.
                 shape=(q-points, bands), dtype='double'
             eigenvectors[i]: ndarray
@@ -1445,7 +1445,7 @@ class Phonopy:
         (default is False).
 
         npoints : int, optional
-            Number of q-points in each segment of band struture paths.
+            Number of q-points in each segment of band structure paths.
             The number includes end points. Default is 101.
         plot : Bool, optional
             With setting True, band structure is plotted using matplotlib and
@@ -1539,10 +1539,10 @@ class Phonopy:
         ----------
         comment : dict
             Data structure dumped in YAML and the dumped YAML text is put
-            at the beggining of the file.
+            at the beginning of the file.
         filename : str
             Default filename is 'band.yaml' when compression=None.
-            With compression, an extention of filename is added such as
+            With compression, an extension of filename is added such as
             'band.yaml.xz'.
         compression : None, 'gzip', or 'lzma'
             None gives usual text file. 'gzip and 'lzma' compresse yaml
@@ -1595,7 +1595,7 @@ class Phonopy:
             Time reversal symmetry is considered in symmetry search. By this,
             inversion symmetry is always included. Default is True.
         is_mesh_symmetry: bool, optional
-            Wheather symmetry search is done or not. Default is True
+            Whether symmetry search is done or not. Default is True
         with_eigenvectors: bool, optional
             Eigenvectors are stored by setting True. Default False.
         with_group_velocities : bool, optional
@@ -1718,7 +1718,7 @@ class Phonopy:
                 dtype='int64'
                 shape=(ir-grid points,)
             frequencies: ndarray
-                Phonon frequencies at ir-grid points. Imaginary frequenies are
+                Phonon frequencies at ir-grid points. Imaginary frequencies are
                 represented by negative real numbers.
                 dtype='double'
                 shape=(ir-grid points, bands)
@@ -1908,7 +1908,7 @@ class Phonopy:
             keys: frequencies, eigenvectors, and dynamical_matrices
 
             frequencies : ndarray
-                Phonon frequencies. Imaginary frequenies are represented by
+                Phonon frequencies. Imaginary frequencies are represented by
                 negative real numbers.
                 shape=(qpoints, bands), dtype='double'
             eigenvectors : ndarray
@@ -2267,7 +2267,7 @@ class Phonopy:
         ----------
         pdos_indices : list of list, optional
             Sets of indices of atoms whose projected DOS are summed over.
-            The indices start with 0. An example is as follwos:
+            The indices start with 0. An example is as follows:
                 pdos_indices=[[0, 1], [2, 3, 4, 5]]
             Default is None, which means
                 pdos_indices=[[i] for i in range(natom)]
@@ -2742,7 +2742,7 @@ class Phonopy:
         """Generate atomic displacements of phonon modes.
 
         The design of this feature is not very satisfactory, and thus API.
-        Therefore it should be reconsidered someday in the fugure.
+        Therefore it should be reconsidered someday in the future.
 
         Parameters
         ----------
@@ -2838,7 +2838,7 @@ class Phonopy:
     ) -> None:
         """Identify ir-reps of phonon modes.
 
-        The design of this API is not very satisfactory and is expceted
+        The design of this API is not very satisfactory and is expected
         to be redesined in the next major versions once the use case
         of the API for ir-reps feature becomes clearer.
 
@@ -3219,7 +3219,7 @@ class Phonopy:
             This specifies array shape of the force constants.
         with_nac : bool, optional
             Non-analytical term correction (NAC) is used under the Fourier
-            interpolation, i.e., dynamical matricies at commensurate points
+            interpolation, i.e., dynamical matrices at commensurate points
             are computed with NAC, then they are Fourier transform back to
             force constants of supercell_matrix. NAC parameters are not
             copied to returned Phonopy class instance.
@@ -3272,7 +3272,7 @@ class Phonopy:
         Returns
         -------
         ph : Phonopy
-            Copied phonopy class instace.
+            Copied phonopy class instance.
 
         """
         return self._copy(log_level=log_level)

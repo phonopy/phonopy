@@ -62,7 +62,7 @@ class IrReps:
     - Group theory with applications in chemical physics by Patrick Jacobs
     - Symmetry and condensed matter physics by M. El-Batanouny and F. Wooten
 
-    Magnetic space group is not supportd.
+    Magnetic space group is not supported.
 
     """
 

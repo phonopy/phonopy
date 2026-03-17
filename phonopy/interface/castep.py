@@ -250,7 +250,7 @@ class CastepIn:
                     if "ENDBLOCK" in lines[i].upper():
                         break
                     if "BOHR" in lines[i].upper():
-                        # The lattice vector units is Bohr. Convertion needed.
+                        # The lattice vector units is Bohr. Conversion needed.
                         units = 0.529177211
                     elif len(lines[i].split()) >= 3:
                         lattvecs.append(

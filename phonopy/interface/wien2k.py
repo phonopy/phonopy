@@ -418,7 +418,7 @@ def _distribute_forces(
         if len(forces_remap) != len(forces):
             print("Atomic position mapping between Wien2k and phonopy failed.")
             print("If you think this is caused by a bug of phonopy")
-            print("please report it in the phonopy mainling list.")
+            print("please report it in the phonopy mailing list.")
             return False
 
         # 2. Distribute forces from independent to dependent atoms.

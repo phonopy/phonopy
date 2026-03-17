@@ -1395,7 +1395,7 @@ def _run_calculation(
                     plot.show()
 
         #
-        # Momemt
+        # Moment
         #
         elif settings.is_moment and run_mode in ("mesh", "band_mesh"):
             freq_min = settings.min_frequency

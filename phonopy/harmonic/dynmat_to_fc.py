@@ -157,7 +157,7 @@ def ph2fc(
     supercell_matrix : array_like
         This specifies array shape of the force constants.
     with_nac : bool, optional
-        Use non-analytical term correction if NAC paramerters exist. Default is
+        Use non-analytical term correction if NAC parameters exist. Default is
         True.
 
     Returns
@@ -314,16 +314,16 @@ class DynmatToForceConstants:
 
         if dynamical_matrices is not None or commensurate_points is not None:
             warnings.warn(
-                "Instanciation init parameters of dynamical_matrices"
+                "Instantiation init parameters of dynamical_matrices"
                 " and commensurate_points are deprecated. Use "
-                "respecitve attributes.",
+                "respective attributes.",
                 DeprecationWarning,
                 stacklevel=2,
             )
 
         if eigenvalues is not None or eigenvectors is not None:
             warnings.warn(
-                "Instanciation init parameters of eigenvalues and "
+                "Instantiation init parameters of eigenvalues and "
                 "eigenvectors are deprecated. Use "
                 "create_dynamical_matrices method.",
                 DeprecationWarning,

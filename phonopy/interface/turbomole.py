@@ -201,7 +201,7 @@ class TurbomoleIn:
             #      2.58949092075      2.58949092075      2.58949092075      si
             elif "$coord" in line:
                 if line.strip() == "$coord":
-                    # Embdedded coordinates.
+                    # Embedded coordinates.
                     ll += 1
                     while ll < len(lines):
                         atom = lines[ll].split()

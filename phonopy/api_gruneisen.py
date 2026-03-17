@@ -63,7 +63,7 @@ class PhonopyGruneisen:
         Parameters
         ----------
         phonon, phonon_plus, phonon_minus : Phonopy
-            Phonopy instances of the same crystal with differet volumes,
+            Phonopy instances of the same crystal with different volumes,
             V_0, V_0 + dV, V_0 - dV.
         delta_strain : float, optional
             Default is None, which gives dV / V_0.

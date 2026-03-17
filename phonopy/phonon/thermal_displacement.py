@@ -190,9 +190,9 @@ class ThermalDisplacements(ThermalMotion):
             Eigenvector projection direction in Cartesian
             coordinates. If None, eigenvector is not projected.
         freq_min:
-            Minimum phonon frequency to determine wheather include or not.
+            Minimum phonon frequency to determine whether include or not.
         freq_max:
-            Maximum phonon frequency to determine wheather include or not.
+            Maximum phonon frequency to determine whether include or not.
 
         """
         super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
@@ -318,9 +318,9 @@ class ThermalDisplacementMatrices(ThermalMotion):
             symmetry, i.e., IterMesh instance has to be create
             ``is_mesh_symmetry=False``.
         freq_min: float
-            Minimum phonon frequency to determine wheather include or not.
+            Minimum phonon frequency to determine whether include or not.
         freq_max: float
-            Maximum phonon frequency to determine wheather include or not.
+            Maximum phonon frequency to determine whether include or not.
         lattice: array_like
             Lattice parameters (column vectors) in real space
             dtype='double', shape=(3, 3)

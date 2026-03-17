@@ -557,20 +557,20 @@ def symmetrize_borns_and_epsilon(
     primitive : PhonopyAtoms
         This is an alternative of giving primitive_matrix (Mp). Mp is given as
             Mp = (a_u, b_u, c_u)^-1 * (a_p, b_p, c_p).
-        In addition, the order of atoms is alined to those of atoms in this
+        In addition, the order of atoms is aligned to those of atoms in this
         primitive cell for Born effective charges. No rigid rotation of
         crystal structure is assumed.
     supercell_matrix: array_like, optional
         Supercell matrix. This is used to select Born effective charges in
         **primitive cell**. Supercell matrix is needed because primitive
         cell is created first creating supercell from unit cell, then
-        the primitive cell is created from the supercell. If None (defautl),
+        the primitive cell is created from the supercell. If None (default),
         1x1x1 supercell is created.
         shape=(3, 3)
         dtype='int'
     symprec: float, optional
         Symmetry tolerance. Default is 1e-5
-    is_symmetry: bool, optinal
+    is_symmetry: bool, optional
         By setting False, symmetrization can be switched off. Default is True.
 
     """
