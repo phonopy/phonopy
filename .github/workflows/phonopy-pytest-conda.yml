@@ -40,6 +40,7 @@ jobs:
         conda activate test
         pytest --cov=./ --cov-report=xml test
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
