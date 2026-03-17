@@ -34,9 +34,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import os
 import sys
+import typing
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms
@@ -48,7 +54,14 @@ from phonopy.structure.symmetry import Symmetry
 # Below is the reimplementation of the collect_forces() function for Castep with
 # only one new variable skipafterhook. Setting this variable to zero (default value)
 # is equivalent to original collect_forces() function.
-def collect_forces_castep(f, num_atom, hook, force_pos, word=None, skipafterhook=0):
+def collect_forces_castep(
+    f: typing.IO[str],
+    num_atom: int,
+    hook: str,
+    force_pos: Sequence[int],
+    word: str | None = None,
+    skipafterhook: int = 0,
+) -> list[list[float]] | bool:
     """Collect forces from CASTEP output."""
     for line in f:
         if hook in line:
@@ -81,7 +94,11 @@ def collect_forces_castep(f, num_atom, hook, force_pos, word=None, skipafterhook
     return forces
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     hook = "Cartesian components (eV/A)"
     # skipafterhook = 3
@@ -96,9 +113,11 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
             f, num_atoms, hook, [3, 4, 5], skipafterhook=3
         )
 
-        if check_forces(castep_forces, num_atoms, filename, verbose=verbose):
+        if check_forces(castep_forces, num_atoms, filename, verbose=verbose):  # type: ignore[arg-type]
             drift_force = get_drift_forces(
-                castep_forces, filename=filename, verbose=verbose
+                castep_forces,
+                filename=filename,
+                verbose=verbose,  # type: ignore[arg-type]
             )
             force_sets.append(np.array(castep_forces) - drift_force)
         else:
@@ -110,7 +129,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_castep(filename):
+def read_castep(filename: str | os.PathLike) -> PhonopyAtoms:
     """Read crystal structure."""
     f_castep = open(filename)
     castep_in = CastepIn(f_castep.readlines())
@@ -149,15 +168,19 @@ def read_castep(filename):
     return cell
 
 
-def write_castep(filename, cell):
+def write_castep(filename: str | os.PathLike, cell: PhonopyAtoms) -> None:
     """Write cell to file."""
     with open(filename, "w") as f:
         f.write(get_castep_structure(cell))
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str | os.PathLike = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_castep("%s.cell" % pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -167,7 +190,7 @@ def write_supercells_with_displacements(
         write_castep(filename, cell)
 
 
-def get_castep_structure(cell):
+def get_castep_structure(cell: PhonopyAtoms) -> str:
     """Return CASTEP structure in text."""
     lines = ""
     lines += "%BLOCK LATTICE_CART\n"
@@ -194,7 +217,7 @@ def get_castep_structure(cell):
 class CastepIn:
     """Class to create CASTEP input file."""
 
-    def __init__(self, lines):
+    def __init__(self, lines: list[str]) -> None:
         """Init method."""
         self._tags: dict[str, list | None] = {
             "lattice_vectors": None,
@@ -203,14 +226,14 @@ class CastepIn:
             "magnetic_moments": None,
         }
 
-        self._values = None
+        self._values: list[str] | None = None
         self._collect(lines)
 
-    def get_tags(self):
+    def get_tags(self) -> dict[str, list | None]:
         """Return tags."""
         return self._tags
 
-    def _collect(self, lines):
+    def _collect(self, lines: list[str]) -> None:
         magmoms = []
 
         # numspins = 0

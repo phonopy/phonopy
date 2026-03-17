@@ -34,12 +34,18 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import os
 import re
 import sys
 import warnings
 from collections import Counter
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atomic_data import get_atomic_data
@@ -52,7 +58,11 @@ _re_float = r"[-+]?\d+\.*\d*(?:[Ee][-+]\d+)?"
 #
 
 
-def read_abacus(filename):
+def read_abacus(
+    filename: str | os.PathLike,
+) -> tuple[
+    PhonopyAtoms, dict[str, str] | None, dict[str, str] | None, dict[str, str] | None
+]:
     """Read structure information, distance in unit au (bohr)."""
     fd = open(filename, "r")
     contents = fd.read()
@@ -68,7 +78,7 @@ def read_abacus(filename):
     # specie, mass, pps
     specie_pattern = re.compile(rf"ATOMIC_SPECIES\s*\n([\s\S]+?)\s*\n{title_str}")
     specie_lines = np.array(
-        [line.split() for line in specie_pattern.search(contents).group(1).split("\n")]
+        [line.split() for line in specie_pattern.search(contents).group(1).split("\n")]  # type: ignore[union-attr]
     )
     symbols = specie_lines[:, 0]
     ntype = len(symbols)
@@ -104,7 +114,7 @@ def read_abacus(filename):
     aim_title_sub = title_str.replace("|" + aim_title, "")
     a0_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     a0_lines = a0_pattern.search(contents)
-    atom_lattice_scale = float(a0_lines.group(1))
+    atom_lattice_scale = float(a0_lines.group(1))  # type: ignore[union-attr]
 
     # lattice vector
     aim_title = "LATTICE_VECTORS"
@@ -113,34 +123,34 @@ def read_abacus(filename):
     vec_lines = vec_pattern.search(contents)
     if vec_lines:
         atom_lattice = np.array(
-            [line.split() for line in vec_pattern.search(contents).group(1).split("\n")]
+            [line.split() for line in vec_pattern.search(contents).group(1).split("\n")]  # type: ignore[union-attr]
         ).astype(float)
     atom_lattice = atom_lattice * atom_lattice_scale
 
     aim_title = "ATOMIC_POSITIONS"
     type_pattern = re.compile(rf"{aim_title}\s*\n(\w+)\s*\n")
     # type of coordinates
-    atom_pos_type = type_pattern.search(contents).group(1)
+    atom_pos_type = type_pattern.search(contents).group(1)  # type: ignore[union-attr]
     assert atom_pos_type in [
         "Direct",
         "Cartesian",
     ], "Only two type of atomic coordinates are supported: 'Direct' or 'Cartesian'."
 
     block_pattern = re.compile(rf"{atom_pos_type}\s*\n([\s\S]+)")
-    block = block_pattern.search(contents).group()
+    block = block_pattern.search(contents).group()  # type: ignore[union-attr]
     if block[-1] != "\n":
         block += "\n"
-    atom_magnetism = []
-    atom_symbol = []
-    atom_block = []
+    atom_magnetism: Any = []
+    atom_symbol: list[str] = []
+    atom_block: Any = []
     for i, symbol in enumerate(symbols):
         pattern = re.compile(rf"{symbol}\s*\n({_re_float})\s*\n(\d+)")
         sub_block = pattern.search(block)
-        number = int(sub_block.group(2))
+        number = int(sub_block.group(2))  # type: ignore[union-attr]
 
         # symbols, magnetism
         sym = [symbol] * number
-        atom_mags = [float(sub_block.group(1))] * number
+        atom_mags = [float(sub_block.group(1))] * number  # type: ignore[union-attr]
         for j in range(number):
             atom_symbol.append(sym[j])
             # atom_mass.append(masses[j])
@@ -156,7 +166,7 @@ def read_abacus(filename):
                 + rf"\s*\n\w+\s*\n{_re_float}"
             )
         lines = lines_pattern.search(block)
-        for j in [line.split() for line in lines.group(1).split("\n")]:
+        for j in [line.split() for line in lines.group(1).split("\n")]:  # type: ignore[union-attr,assignment]
             atom_block.append(j)
     atom_block = np.array(atom_block)
     atom_magnetism = np.array(atom_magnetism)
@@ -164,12 +174,14 @@ def read_abacus(filename):
     # position
     atom_positions = atom_block[:, 0:3].astype(float)
 
-    def _get_index(labels, num):
-        index = None
-        res = []
+    def _get_index(
+        labels: list[str], num: int
+    ) -> tuple[NDArray[np.double] | list, int | None]:
+        index: int | None = None
+        res: NDArray[np.double] | list = []
         for label in labels:
             if label in atom_block:
-                index = np.where(atom_block == label)[-1][0]
+                index = int(np.where(atom_block == label)[-1][0])
         if index is not None:
             res = atom_block[:, index + 1 : index + 1 + num].astype(float)
 
@@ -190,7 +202,7 @@ def read_abacus(filename):
             atom_magnetism = atom_block[:, m_index + 1 : m_index + 4].astype(float)
     except IndexError:  # colinear
         if m_index:
-            atom_magnetism = mags
+            atom_magnetism = mags  # type: ignore[assignment]
 
     magnetic_moments = atom_magnetism if atom_magnetism.flatten().any() else None
 
@@ -224,22 +236,28 @@ def read_abacus(filename):
 #
 
 
-def write_abacus(filename, atoms, pps, orbitals=None, abfs=None):
+def write_abacus(
+    filename: str | os.PathLike,
+    atoms: PhonopyAtoms,
+    pps: dict[str, str],
+    orbitals: dict[str, str] | None = None,
+    abfs: dict[str, str] | None = None,
+) -> None:
     """Write structure to file."""
     with open(filename, "w") as f:
         f.write(get_abacus_structure(atoms, pps, orbitals, abfs))
 
 
 def write_supercells_with_displacements(
-    supercell,
-    cells_with_displacements,
-    ids,
-    pps,
-    orbitals=None,
-    abfs=None,
-    pre_filename="STRU",
-    width=3,
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pps: dict[str, str],
+    orbitals: dict[str, str] | None = None,
+    abfs: dict[str, str] | None = None,
+    pre_filename: str | os.PathLike = "STRU",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_abacus("%s.in" % pre_filename, supercell, pps, orbitals, abfs)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -249,7 +267,12 @@ def write_supercells_with_displacements(
         write_abacus(filename, cell, pps, orbitals, abfs)
 
 
-def get_abacus_structure(atoms, pps=None, orbitals=None, abfs=None):
+def get_abacus_structure(
+    atoms: PhonopyAtoms,
+    pps: dict[str, str] | None = None,
+    orbitals: dict[str, str] | None = None,
+    abfs: dict[str, str] | None = None,
+) -> str:
     """Return ABACUS structure in text."""
     empty_line = ""
     line = []
@@ -326,13 +349,13 @@ def get_abacus_structure(atoms, pps=None, orbitals=None, abfs=None):
 #
 # set Force
 #
-def read_abacus_output(filename):
+def read_abacus_output(filename: str | os.PathLike) -> NDArray[np.double]:
     """Read ABACUS forces from last self-consistency iteration."""
     force = None
     with open(filename, "r") as file:
         for line in file:
             if re.search(r"TOTAL ATOM NUMBER = [0-9]+", line):
-                natom = int(re.search("[0-9]+", line).group())
+                natom = int(re.search("[0-9]+", line).group())  # type: ignore[union-attr]
             if re.search(r"TOTAL-FORCE \(eV/Angstrom\)", line):
                 force = np.zeros((natom, 3))
                 _match_pattern = r"^(\s*)([A-Za-z]*[0-9]+)((\s*[+-]?"
@@ -359,7 +382,11 @@ def read_abacus_output(filename):
     return force
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     is_parsed = True
     force_sets = []
@@ -388,10 +415,10 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 #
 
 
-def _list_elem2str(a):
+def _list_elem2str(a: NDArray[np.double] | Sequence[float]) -> list[str]:
     """Convert type of list element to str."""
 
-    def f_str(x):
+    def f_str(x: float) -> str:
         return f"{x:0<16.12f}"
 
     return list(map(f_str, a))
