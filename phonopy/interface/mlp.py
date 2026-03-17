@@ -41,8 +41,9 @@ from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
-from phonopy.harmonic.displacement import Type2DisplacementDatasetWithOptionalData
+from phonopy.harmonic.displacement import Type2DisplacementDataset
 from phonopy.interface.pypolymlp import (
     PypolymlpParams,
     develop_mlp_by_pypolymlp,
@@ -56,7 +57,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 class PhonopyMLP:
     """PhonopyMLP class."""
 
-    def __init__(self, mlp: Any | None = None, log_level: int = 0):
+    def __init__(self, mlp: Any | None = None, log_level: int = 0) -> None:
         self._mlp = mlp
         self._log_level = log_level
 
@@ -65,16 +66,18 @@ class PhonopyMLP:
         """Return MLP instance."""
         return self._mlp
 
-    def save(self, filename: str | os.PathLike | None = None):
+    def save(self, filename: str | os.PathLike | None = None) -> None:
         """Save MLP."""
+        _filename: str | os.PathLike
         if filename is None:
             _filename = "polymlp.yaml"
         else:
             _filename = filename
-        save_pypolymlp(self._mlp, _filename)
+        save_pypolymlp(self._mlp, _filename)  # type: ignore[arg-type]
 
     def load(self, filename: str | os.PathLike | None = None) -> PhonopyMLP:
         """Load MLP."""
+        _filename: str | os.PathLike
         if filename is None:
             _filename = "polymlp.yaml"
         else:
@@ -84,17 +87,17 @@ class PhonopyMLP:
 
     def evaluate(
         self, supercells_with_displacements: Sequence[PhonopyAtoms | None]
-    ) -> list[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
         """Evaluate MLP."""
-        return evalulate_pypolymlp(self._mlp, supercells_with_displacements)
+        return evalulate_pypolymlp(self._mlp, supercells_with_displacements)  # type: ignore[arg-type]
 
     def develop(
         self,
-        mlp_dataset: Type2DisplacementDatasetWithOptionalData,
+        mlp_dataset: Type2DisplacementDataset,
         supercell: PhonopyAtoms,
         params: PypolymlpParams | dict | str | None = None,
         test_size: float = 0.1,
-    ):
+    ) -> None:
         """Develop MLP."""
         self._mlp = develop_mlp_by_pypolymlp(
             mlp_dataset,

@@ -51,7 +51,7 @@ from numpy.typing import NDArray
 from phonopy.exception import ForcesetsNotFoundError
 from phonopy.harmonic.displacement import (
     DisplacementDataset,
-    Type2DisplacementDatasetWithOptionalData,
+    Type2DisplacementDataset,
     directions_to_displacement_dataset,
     get_least_displacements,
     get_random_displacements_dataset,
@@ -458,7 +458,7 @@ class Phonopy:
         self._supercells_with_displacements = None
 
     @property
-    def mlp_dataset(self) -> Type2DisplacementDatasetWithOptionalData | None:
+    def mlp_dataset(self) -> Type2DisplacementDataset | None:
         """Return displacement-force dataset.
 
         The supercell matrix is equal to that of usual displacement-force
@@ -469,9 +469,7 @@ class Phonopy:
         return self._mlp_dataset
 
     @mlp_dataset.setter
-    def mlp_dataset(
-        self, mlp_dataset: Type2DisplacementDatasetWithOptionalData | None
-    ) -> None:
+    def mlp_dataset(self, mlp_dataset: Type2DisplacementDataset | None) -> None:
         if mlp_dataset is None:
             self._mlp_dataset = None
             return
@@ -943,9 +941,7 @@ class Phonopy:
                     is_plusminus=(is_plusminus is True),
                     random_seed=_random_seed,
                 )
-            displacement_dataset_type2: Type2DisplacementDatasetWithOptionalData = {
-                "displacements": d
-            }
+            displacement_dataset_type2: Type2DisplacementDataset = {"displacements": d}
             if _random_seed is not None:
                 displacement_dataset_type2["random_seed"] = _random_seed
             displacement_dataset = displacement_dataset_type2

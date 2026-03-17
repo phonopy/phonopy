@@ -39,13 +39,13 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from typing import Literal, Sequence
+from typing import Any, Generic, Literal, NoReturn, Sequence, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
 
-def fracval(frac):
+def fracval(frac: str) -> float:
     """Return floating point value from rational."""
     if frac.find("/") == -1:
         return float(frac)
@@ -62,7 +62,7 @@ class Settings:
 
     """
 
-    def __init__(self, load_phonopy_yaml: bool = False):
+    def __init__(self, load_phonopy_yaml: bool = False) -> None:
         """Init method."""
         self.band_indices: list | None = None
         self.band_paths: list[NDArray] | Literal["auto"] | None = None
@@ -70,82 +70,79 @@ class Settings:
         self.cell_filename: str | None = None
         self.chemical_symbols: list[str] | None = None
         self.classical: bool = False
-        self.cutoff_frequency = None
-        self.displacement_distance = None
-        self.displacement_distance_max = None
+        self.cutoff_frequency: float | None = None
+        self.displacement_distance: float | None = None
+        self.displacement_distance_max: float | None = None
         self.dm_decimals: int | None = None
-        self.calculator = None
-        self.create_displacements = False
-        self.fc_calculator = None
-        self.fc_calculator_options = None
+        self.calculator: str | None = None
+        self.create_displacements: bool = False
+        self.fc_calculator: str | None = None
+        self.fc_calculator_options: str | None = None
         self.fc_decimals: int | None = None
-        if load_phonopy_yaml:
-            self.fc_symmetry = True
-        else:
-            self.fc_symmetry = False
-        self.frequency_pitch = None
-        self.frequency_conversion_factor = None
-        self.frequency_scale_factor = None
-        self.group_velocity_delta_q = None
+        self.fc_symmetry: bool = load_phonopy_yaml
+        self.frequency_pitch: float | None = None
+        self.frequency_conversion_factor: float | None = None
+        self.frequency_scale_factor: float | None = None
+        self.group_velocity_delta_q: float | None = None
         self.hdf5_compression: Literal["gzip", "lzf"] | int | None = "gzip"
-        self.is_band_const_interval = False
-        self.is_diagonal_displacement = True
-        self.is_eigenvectors = False
-        self.is_mesh_symmetry = True
-        if load_phonopy_yaml:
-            self.is_nac = True
-        else:
-            self.is_nac = False
+        self.is_band_const_interval: bool = False
+        self.is_diagonal_displacement: bool = True
+        self.is_eigenvectors: bool = False
+        self.is_mesh_symmetry: bool = True
+        self.is_nac: bool = load_phonopy_yaml
         self.is_plusminus_displacement: Literal["auto"] | bool = "auto"
-        self.is_symmetry = True
-        self.is_tetrahedron_method = True
-        self.is_time_reversal_symmetry = True
-        self.is_trigonal_displacement = False
-        self.magnetic_moments = None
-        self.masses = None
-        self.mesh_numbers = None
-        self.mlp_params = None
-        self.nac_method = None
-        self.nac_q_direction = None
-        self.num_frequency_points = None
-        self.relax_atomic_positions = False
-        self.primitive_matrix = None
+        self.is_symmetry: bool = True
+        self.is_tetrahedron_method: bool = True
+        self.is_time_reversal_symmetry: bool = True
+        self.is_trigonal_displacement: bool = False
+        self.magnetic_moments: list[float] | None = None
+        self.masses: list[float] | None = None
+        self.mesh_numbers: float | list[int] | list[list[int]] | None = None
+        self.mlp_params: str | None = None
+        self.nac_method: str | None = None
+        self.nac_q_direction: list[float] | None = None
+        self.num_frequency_points: int | None = None
+        self.relax_atomic_positions: bool = False
+        self.primitive_matrix: NDArray[np.double] | str | None = None
         self.qpoints: list | None = None
         self.random_displacements: Literal["auto"] | int | None = None
-        self.random_seed = None
-        self.rd_number_estimation_factor = None
-        self.read_qpoints = False
-        self.save_params = False
-        self.sigma = None
-        self.supercell_matrix = None
-        self.symmetry_tolerance = None
-        self.max_temperature = 1000
-        self.min_temperature = 0
-        self.temperature_step = 10
-        self.use_pypolymlp = False
+        self.random_seed: int | None = None
+        self.rd_number_estimation_factor: float | None = None
+        self.read_qpoints: bool = False
+        self.save_params: bool = False
+        self.sigma: float | list[float] | None = None
+        self.supercell_matrix: NDArray[np.int64] | None = None
+        self.symmetry_tolerance: float | None = None
+        self.max_temperature: float = 1000
+        self.min_temperature: float = 0
+        self.temperature_step: float = 10
+        self.use_pypolymlp: bool = False
 
 
 # Parse phonopy setting filen
-class ConfParser:
+TSettings = TypeVar("TSettings", bound="Settings")
+
+
+class ConfParser(Generic[TSettings]):
     """Phonopy conf file parser."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init method."""
-        self._confs = {}
-        self._parameters = {}
+        self._confs: dict[str, Any] = {}
+        self._parameters: dict[str, Any] = {}
 
     @property
-    def confs(self):
+    def confs(self) -> dict[str, Any]:
         """Return configuration dict."""
         return self._confs
 
-    def setting_error(self, message):
+    def setting_error(self, message: str) -> NoReturn:
         """Show error message."""
         print(message)
         print("Please check the setting tags and options.")
         sys.exit(1)
 
-    def _read_file(self, filename: str | os.PathLike):
+    def _read_file(self, filename: str | os.PathLike) -> None:
         """Read conf file."""
         with open(filename, "r") as file:
             is_continue = False
@@ -172,7 +169,7 @@ class ConfParser:
                 if line.find("+++") != -1:
                     is_continue = True
 
-    def _read_options(self, args: argparse.Namespace):
+    def _read_options(self, args: argparse.Namespace) -> None:
         """Read options from ArgumentParser class instance.
 
         This is the interface layer to make settings from command options to be
@@ -477,7 +474,7 @@ class ConfParser:
             if args.use_pypolymlp:
                 self._confs["use_pypolymlp"] = ".true."
 
-    def _parse_conf(self):
+    def _parse_conf(self) -> None:
         """Add treatments to settings from conf file or command options.
 
         The results are stored in ``self._parameters[key] = val``.
@@ -511,10 +508,10 @@ class ConfParser:
                     self._set_parameter("is_band_const_interval", True)
 
             if conf_key == "band_indices":
-                vals = []
+                band_vals: list[list[int]] = []
                 for sum_set in confs["band_indices"].split(","):
-                    vals.append([int(x) - 1 for x in sum_set.split()])
-                self._set_parameter("band_indices", vals)
+                    band_vals.append([int(x) - 1 for x in sum_set.split()])
+                self._set_parameter("band_indices", band_vals)
 
             if conf_key == "band_points":
                 self._set_parameter("band_points", int(confs["band_points"]))
@@ -548,11 +545,11 @@ class ConfParser:
                     self._set_parameter("diag", True)
 
             if conf_key == "dim":
-                matrix = [int(x) for x in confs["dim"].split()]
-                if len(matrix) == 9:
-                    matrix = np.array(matrix).reshape(3, 3)
-                elif len(matrix) == 3:
-                    matrix = np.diag(matrix)
+                matrix_elems = [int(x) for x in confs["dim"].split()]
+                if len(matrix_elems) == 9:
+                    matrix = np.array(matrix_elems).reshape(3, 3)
+                elif len(matrix_elems) == 3:
+                    matrix = np.diag(matrix_elems)
                 else:
                     self.setting_error(
                         "Number of elements of DIM tag has to be 3 or 9."
@@ -697,10 +694,10 @@ class ConfParser:
                         "Number of elements in %s has to be 9." % conf_key.upper()
                     )
                 else:
-                    p_axis = []
+                    p_axis_elems: list[float] = []
                     for x in confs[conf_key].split():
-                        p_axis.append(fracval(x))
-                    p_axis = np.array(p_axis).reshape(3, 3)
+                        p_axis_elems.append(fracval(x))
+                    p_axis = np.array(p_axis_elems).reshape(3, 3)
                     if np.linalg.det(p_axis) < 1e-8:
                         self.setting_error(
                             "%s has to have positive determinant." % conf_key.upper()
@@ -822,11 +819,11 @@ class ConfParser:
                 elif confs["use_pypolymlp"].lower() == ".false.":
                     self._set_parameter("use_pypolymlp", False)
 
-    def _set_parameter(self, key, val):
+    def _set_parameter(self, key: str, val: object) -> None:
         """Pass to another data structure."""
         self._parameters[key] = val
 
-    def _set_settings(self, settings: Settings):
+    def _set_settings(self, settings: TSettings) -> None:
         """Store parameters in Settings class instance."""
         params = self._parameters
 
@@ -1048,7 +1045,7 @@ class PhonopySettings(Settings):
 
     """
 
-    def __init__(self, load_phonopy_yaml: bool = False):
+    def __init__(self, load_phonopy_yaml: bool = False) -> None:
         """Init method."""
         super().__init__(load_phonopy_yaml=load_phonopy_yaml)
         self.anime_band_index: int | None = None
@@ -1056,68 +1053,65 @@ class PhonopySettings(Settings):
         self.anime_division: int | None = None
         self.anime_qpoint: list | None = None
         self.anime_shift: Sequence[float] | None = None
-        self.anime_type = "v_sim"
-        self.band_format = "yaml"
-        self.band_labels = None
-        self.create_force_sets = None
-        self.create_force_sets_zero = None
-        self.create_force_constants = None
-        self.cutoff_radius = None
-        self.dos = None
-        self.fc_spg_symmetry = False
-        self.fits_Debye_model = False
-        self.max_frequency = None
-        self.min_frequency = None
-        self.import_ase_masses_iupac2016 = False
+        self.anime_type: str = "v_sim"
+        self.band_format: str = "yaml"
+        self.band_labels: list[str] | None = None
+        self.create_force_sets: list[str] | None = None
+        self.create_force_sets_zero: list[str] | None = None
+        self.create_force_constants: str | None = None
+        self.cutoff_radius: float | None = None
+        self.dos: bool | None = None
+        self.fc_spg_symmetry: bool = False
+        self.fits_Debye_model: bool = False
+        self.max_frequency: float | None = None
+        self.min_frequency: float | None = None
+        self.import_ase_masses_iupac2016: bool = False
         self.irreps_q_point: list | None = None
         self.irreps_tolerance: float | None = None
-        self.is_band_connection = False
-        self.is_dos_mode = False
-        self.is_full_fc = False
-        self.is_group_velocity = False
-        self.is_gamma_center = False
-        self.is_hdf5 = False
-        self.is_legacy_plot = False
-        self.is_little_cogroup = False
-        self.is_moment = False
-        self.is_thermal_displacements = False
-        self.is_thermal_displacement_matrices = False
-        self.is_thermal_distances = False
-        self.is_thermal_properties = False
-        self.is_projected_thermal_properties = False
-        self.include_force_constants = False
-        self.include_force_sets = False
-        self.include_nac_params = True
-        self.include_displacements = False
-        self.lapack_solver = False
-        self.mesh_shift = None
-        self.mesh_format = "yaml"
+        self.is_band_connection: bool = False
+        self.is_dos_mode: bool = False
+        self.is_full_fc: bool = False
+        self.is_group_velocity: bool = False
+        self.is_gamma_center: bool = False
+        self.is_hdf5: bool = False
+        self.is_legacy_plot: bool = False
+        self.is_little_cogroup: bool = False
+        self.is_moment: bool = False
+        self.is_thermal_displacements: bool = False
+        self.is_thermal_displacement_matrices: bool = False
+        self.is_thermal_distances: bool = False
+        self.is_thermal_properties: bool = False
+        self.is_projected_thermal_properties: bool = False
+        self.include_force_constants: bool = False
+        self.include_force_sets: bool = False
+        self.include_nac_params: bool = True
+        self.include_displacements: bool = False
+        self.lapack_solver: bool = False
+        self.mesh_shift: list[float] | None = None
+        self.mesh_format: str = "yaml"
         self.modulation: dict | None = None
-        self.moment_order = None
+        self.moment_order: int | None = None
         self.pdos_indices: list | None = None
-        self.pretend_real = False
-        self.projection_direction = None
-        self.qpoints_format = "yaml"
-        self.random_displacement_temperature = None
-        if load_phonopy_yaml:
-            self.read_force_constants = True
-        else:
-            self.read_force_constants = False
-        self.readfc_format = "text"
+        self.pretend_real: bool = False
+        self.projection_direction: list[float] | None = None
+        self.qpoints_format: str = "yaml"
+        self.random_displacement_temperature: float | None = None
+        self.read_force_constants: bool = load_phonopy_yaml
+        self.readfc_format: str = "text"
         self.run_mode: str | None = None
-        self.show_irreps = False
-        self.sscha_iterations = None
-        self.store_dense_svecs = True
-        self.thermal_atom_pairs = None
-        self.thermal_displacement_matrix_temperature = None
-        self.write_dynamical_matrices = False
-        self.write_mesh = True
-        self.write_force_constants = False
-        self.writefc_format = "text"
-        self.xyz_projection = False
+        self.show_irreps: bool = False
+        self.sscha_iterations: int | None = None
+        self.store_dense_svecs: bool = True
+        self.thermal_atom_pairs: list[list[int]] | None = None
+        self.thermal_displacement_matrix_temperature: float | None = None
+        self.write_dynamical_matrices: bool = False
+        self.write_mesh: bool = True
+        self.write_force_constants: bool = False
+        self.writefc_format: str = "text"
+        self.xyz_projection: bool = False
 
 
-class PhonopyConfParser(ConfParser):
+class PhonopyConfParser(ConfParser[PhonopySettings]):
     """Phonopy conf parser.
 
     Attributes
@@ -1134,7 +1128,7 @@ class PhonopyConfParser(ConfParser):
         filename: str | os.PathLike | None = None,
         args: argparse.Namespace | None = None,
         load_phonopy_yaml: bool = False,
-    ):
+    ) -> None:
         """Init method."""
         super().__init__()
         if filename is not None:
@@ -1145,7 +1139,7 @@ class PhonopyConfParser(ConfParser):
         self.settings = PhonopySettings(load_phonopy_yaml=load_phonopy_yaml)
         self._set_settings(self.settings)
 
-    def _read_options(self, args: argparse.Namespace):
+    def _read_options(self, args: argparse.Namespace) -> None:
         super()._read_options(args)  # store data in self._confs
         arg_list = vars(args)
         if "band_format" in arg_list:
@@ -1386,7 +1380,7 @@ class PhonopyConfParser(ConfParser):
             if args.sscha_iterations:
                 self._confs["sscha_iterations"] = args.sscha_iterations
 
-    def _parse_conf(self):
+    def _parse_conf(self) -> None:
         super()._parse_conf()
         confs = self._confs
 
@@ -1554,10 +1548,10 @@ class PhonopyConfParser(ConfParser):
                 if confs["pdos"].strip().lower() == "auto":
                     self._set_parameter("pdos", "auto")
                 else:
-                    vals = []
+                    pdos_vals: list[list[int]] = []
                     for index_set in confs["pdos"].split(","):
-                        vals.append([int(x) - 1 for x in index_set.split()])
-                    self._set_parameter("pdos", vals)
+                        pdos_vals.append([int(x) - 1 for x in index_set.split()])
+                    self._set_parameter("pdos", pdos_vals)
 
             if conf_key == "xyz_projection":
                 if confs["xyz_projection"].lower() == ".true.":
@@ -1726,8 +1720,8 @@ class PhonopyConfParser(ConfParser):
                 elif confs["import_ase_masses_iupac2016"].lower() == ".false.":
                     self._set_parameter("import_ase_masses_iupac2016", False)
 
-    def _parse_conf_modulation(self, conf_modulation):
-        modulation = {}
+    def _parse_conf_modulation(self, conf_modulation: str) -> None:
+        modulation: dict[str, Any] = {}
         modulation["dimension"] = [1, 1, 1]
         modulation["order"] = None
         mod_list = conf_modulation.split(",")
@@ -1778,7 +1772,7 @@ class PhonopyConfParser(ConfParser):
         else:
             self.setting_error("MODULATION tag is wrongly set.")
 
-    def _set_settings(self, settings: PhonopySettings):
+    def _set_settings(self, settings: PhonopySettings) -> None:
         super()._set_settings(settings)
         params = self._parameters
 

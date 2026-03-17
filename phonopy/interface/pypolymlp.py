@@ -45,11 +45,11 @@ from numpy.typing import NDArray
 
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpRelaxationError
 from phonopy.file_IO import get_io_module_to_decompress
-from phonopy.harmonic.displacement import Type2DisplacementDatasetWithOptionalData
+from phonopy.harmonic.displacement import Type2DisplacementDataset
 from phonopy.structure.atoms import PhonopyAtoms
 
 try:
-    from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
+    from pypolymlp.mlp_dev.pypolymlp import Pypolymlp  # type: ignore[import-untyped]
 except ImportError:
     Pypolymlp = Any
 
@@ -146,8 +146,12 @@ def develop_pypolymlp(
 
     """
     try:
-        from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
-        from pypolymlp.utils.phonopy_utils import phonopy_cell_to_structure
+        from pypolymlp.mlp_dev.pypolymlp import (
+            Pypolymlp,  # type: ignore[import-untyped]
+        )
+        from pypolymlp.utils.phonopy_utils import (
+            phonopy_cell_to_structure,  # type: ignore[import-untyped]
+        )
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
@@ -196,7 +200,7 @@ def develop_pypolymlp(
 def evalulate_pypolymlp(
     polymlp: Pypolymlp,  # type: ignore
     supercells_with_displacements: list[PhonopyAtoms],
-) -> tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Run force calculation using pypolymlp.
 
     Parameters
@@ -217,8 +221,12 @@ def evalulate_pypolymlp(
 
     """
     try:
-        from pypolymlp.calculator.properties import Properties
-        from pypolymlp.utils.phonopy_utils import phonopy_cell_to_structure
+        from pypolymlp.calculator.properties import (
+            Properties,  # type: ignore[import-untyped]
+        )
+        from pypolymlp.utils.phonopy_utils import (
+            phonopy_cell_to_structure,  # type: ignore[import-untyped]
+        )
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
@@ -267,7 +275,7 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
     elif isinstance(params, PypolymlpParams):
         return params
     elif isinstance(params, str):
-        params_dict = {}
+        params_dict: dict[str, Any] = {}
         for param in params.split(","):
             key_val = [v.strip().lower() for v in param.split("=")]
             if len(key_val) != 2:
@@ -297,7 +305,7 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
         raise RuntimeError("params has to be dict, str, or PypolymlpParams.")
 
 
-def save_pypolymlp(mlp: Pypolymlp, filename: str):  # type: ignore
+def save_pypolymlp(mlp: Pypolymlp, filename: str) -> None:  # type: ignore
     """Save MLP data to file."""
     mlp.save_mlp(filename=filename)
 
@@ -312,17 +320,18 @@ def load_pypolymlp(filename: str | os.PathLike | None) -> Pypolymlp:  # type: ig
 
 
 def develop_mlp_by_pypolymlp(
-    mlp_dataset: Type2DisplacementDatasetWithOptionalData,
+    mlp_dataset: Type2DisplacementDataset,
     supercell: PhonopyAtoms,
     params: PypolymlpParams | dict | str | None = None,
     test_size: float = 0.1,
     log_level: int = 0,
 ) -> Pypolymlp:  # type: ignore
     """Develop MLPs by pypolymlp."""
+    _params: PypolymlpParams | None
     if params is not None:
         _params = parse_mlp_params(params)
     else:
-        _params = params
+        _params = None
 
     if _params is not None and _params.ntrain is not None and _params.ntest is not None:
         ntrain = _params.ntrain
@@ -394,8 +403,12 @@ def relax_atomic_positions(
 
     """
     try:
-        from pypolymlp.api.pypolymlp_calc import PypolymlpCalc
-        from pypolymlp.utils.phonopy_utils import structure_to_phonopy_cell
+        from pypolymlp.api.pypolymlp_calc import (
+            PypolymlpCalc,  # type: ignore[import-untyped]
+        )
+        from pypolymlp.utils.phonopy_utils import (
+            structure_to_phonopy_cell,  # type: ignore[import-untyped]
+        )
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
@@ -425,7 +438,7 @@ def relax_atomic_positions(
 
 def get_change_in_positions(
     relaxed_cell: PhonopyAtoms, original_cell: PhonopyAtoms, verbose: bool = False
-) -> NDArray:
+) -> NDArray[np.double]:
     """Show change by relaxation."""
     diffs = relaxed_cell.scaled_positions - original_cell.scaled_positions
     diffs -= np.rint(diffs)

@@ -95,13 +95,13 @@ class Type1DisplacementDataset(TypedDict):
     first_atoms: list[FirstAtomDisplacementWithForces]
 
 
-class Type2DisplacementDataset(TypedDict):
+class Type2DisplacementDatasetBase(TypedDict):
     """Displacement dataset in the type-2 format."""
 
     displacements: NDArray[np.double]
 
 
-class Type2DisplacementDatasetWithOptionalData(Type2DisplacementDataset, total=False):
+class Type2DisplacementDataset(Type2DisplacementDatasetBase, total=False):
     """Type-2 displacement dataset with optional accompanying properties."""
 
     forces: NDArray[np.double]
@@ -109,9 +109,7 @@ class Type2DisplacementDatasetWithOptionalData(Type2DisplacementDataset, total=F
     random_seed: int
 
 
-DisplacementDataset: TypeAlias = (
-    Type1DisplacementDataset | Type2DisplacementDatasetWithOptionalData
-)
+DisplacementDataset: TypeAlias = Type1DisplacementDataset | Type2DisplacementDataset
 
 
 def directions_to_displacement_dataset(

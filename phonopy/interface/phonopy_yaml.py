@@ -63,7 +63,7 @@ from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.harmonic.displacement import (
     DisplacementDataset,
     Type1DisplacementDataset,
-    Type2DisplacementDatasetWithOptionalData,
+    Type2DisplacementDataset,
 )
 from phonopy.physical_units import (
     CalculatorPhysicalUnits,
@@ -265,9 +265,7 @@ class PhonopyYamlLoaderBase(ABC):
 
         return Type1DisplacementDataset(**dataset)
 
-    def _parse_force_sets_type2(
-        self, key_prefix: str = ""
-    ) -> Type2DisplacementDatasetWithOptionalData:
+    def _parse_force_sets_type2(self, key_prefix: str = "") -> Type2DisplacementDataset:
         """Parse displacements, forces and energies in type2 format.
 
         This is the format >= v2.24.0 as follows:
@@ -296,11 +294,11 @@ class PhonopyYamlLoaderBase(ABC):
                 self._yaml[key]["supercell_energies"], dtype="double"
             )
 
-        return Type2DisplacementDatasetWithOptionalData(**dataset)
+        return Type2DisplacementDataset(**dataset)
 
     def _parse_force_sets_type2_v223(
         self, key_prefix: str = ""
-    ) -> Type2DisplacementDatasetWithOptionalData:
+    ) -> Type2DisplacementDataset:
         """Parse displacements, forces and energies in type2 legacy format.
 
         This is the format < v2.24 as follows:
@@ -345,7 +343,7 @@ class PhonopyYamlLoaderBase(ABC):
                 self._yaml[f"{key_prefix}supercell_energies"], dtype="double"
             )
 
-        return Type2DisplacementDatasetWithOptionalData(**dataset)
+        return Type2DisplacementDataset(**dataset)
 
     def _parse_nac(self) -> None:
         """Parse NAC parameters.
@@ -692,7 +690,7 @@ class PhonopyYamlDumperBase(ABC):
 
     def _displacements_yaml_lines_type2(
         self,
-        dataset: Type2DisplacementDatasetWithOptionalData,
+        dataset: Type2DisplacementDataset,
         with_forces: bool = False,
         key_prefix: str = "",
     ) -> list[str]:
@@ -729,7 +727,7 @@ class PhonopyYamlDumperBase(ABC):
 
     def _displacements_yaml_lines_type2_v223(
         self,
-        dataset: Type2DisplacementDatasetWithOptionalData,
+        dataset: Type2DisplacementDataset,
         with_forces: bool = False,
         key_prefix: str = "",
     ) -> list[str]:

@@ -37,9 +37,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal, Optional, cast
+from typing import Literal, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.exception import (
     ForceCalculatorRequiredError,
@@ -77,12 +78,12 @@ def check_and_cast_fc_calculator_name(
 def get_fc_solver(
     supercell: PhonopyAtoms,
     dataset: dict,
-    primitive: Optional[Primitive] = None,
-    fc_calculator: Optional[Literal["traditional", "symfc", "alm"]] = None,
-    fc_calculator_options: Optional[str] = None,
-    orders: Optional[Sequence[int]] = None,
+    primitive: Primitive | None = None,
+    fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
+    fc_calculator_options: str | None = None,
+    orders: Sequence[int] | None = None,
     is_compact_fc: bool = False,
-    symmetry: Optional[Symmetry] = None,
+    symmetry: Symmetry | None = None,
     log_level: int = 0,
 ) -> FCSolver:
     """Return force constants solver class instance.
@@ -135,13 +136,13 @@ def get_fc_solver(
 def get_fc2(
     supercell: PhonopyAtoms,
     dataset: dict,
-    primitive: Optional[Primitive] = None,
-    fc_calculator: Optional[Literal["traditional", "symfc", "alm"]] = None,
-    fc_calculator_options: Optional[str] = None,
+    primitive: Primitive | None = None,
+    fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
+    fc_calculator_options: str | None = None,
     is_compact_fc: bool = False,
-    symmetry: Optional[Symmetry] = None,
+    symmetry: Symmetry | None = None,
     log_level: int = 0,
-):
+) -> NDArray[np.double]:
     """Supercell 2nd order force constants (fc2) are calculated.
 
     The expected shape of supercell fc2 to be returned is
@@ -204,7 +205,7 @@ class FCSolver:
         orders: Sequence[int] | None = None,
         options: str | None = None,
         log_level: int = 0,
-    ):
+    ) -> None:
         """Init method.
 
         Force constants are calculated if necessary data are provided.
@@ -255,7 +256,7 @@ class FCSolver:
         return self._fc_solver
 
     @property
-    def force_constants(self) -> dict[int, np.ndarray]:
+    def force_constants(self) -> dict[int, NDArray[np.double]]:
         """Return force constants."""
         return self._fc_solver.force_constants
 
@@ -271,7 +272,7 @@ class FCSolver:
         raise ValueError(f"Unknown fc_calculator_name: {fc_calculator_name}")
 
     def _set_traditional_solver(
-        self, solver_class: Optional[type] = FDFCSolver
+        self, solver_class: type[FDFCSolver] | None = FDFCSolver
     ) -> FDFCSolver:
         if self._primitive is None:
             raise RuntimeError(
@@ -292,10 +293,12 @@ class FCSolver:
             ]
             raise ForceCalculatorRequiredError("\n".join(lines))
 
+        if solver_class is None:
+            solver_class = FDFCSolver
         return solver_class(
             self._supercell,
             self._primitive,
-            self._symmetry,
+            self._symmetry,  # type: ignore[arg-type]
             self._dataset,
             is_compact_fc=self._is_compact_fc,
             log_level=self._log_level,
@@ -339,17 +342,21 @@ class FCSolver:
             )
         displacements, forces = self._get_displacements_and_forces()
 
+        if self._orders is None:
+            raise RuntimeError("Orders are required for ALM FC solver.")
         return ALMFCSolver(
             self._supercell,
             self._primitive,
             displacements,
-            forces,
+            forces,  # type: ignore[arg-type]
             max(self._orders) - 1,
             is_compact_fc=self._is_compact_fc,
             options=self._options,
             log_level=self._log_level,
         )
 
-    def _get_displacements_and_forces(self):
+    def _get_displacements_and_forces(
+        self,
+    ) -> tuple[NDArray[np.double], NDArray[np.double] | None]:
         """Return displacements and forces for fc2."""
-        return get_displacements_and_forces(self._dataset)
+        return get_displacements_and_forces(self._dataset)  # type: ignore[arg-type]
