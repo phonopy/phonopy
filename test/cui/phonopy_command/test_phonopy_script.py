@@ -718,6 +718,177 @@ def test_import_masses_from_ASE():
             os.chdir(original_cwd)
 
 
+def test_thermal_properties():
+    """Test phonopy --tprop command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=cwd / "tprop.conf",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in (
+                "phonopy.yaml",
+                "mesh.yaml",
+                "thermal_properties.yaml",
+            ):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_total_dos():
+    """Test phonopy --dos command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=cwd / "dos.conf",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in ("phonopy.yaml", "mesh.yaml", "total_dos.dat"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_pdos():
+    """Test phonopy --pdos command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=cwd / "pdos.conf",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in ("phonopy.yaml", "mesh.yaml", "projected_dos.dat"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_irreps():
+    """Test phonopy --irreps command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=cwd / "irreps.conf",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in ("phonopy.yaml", "irreps.yaml"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_thermal_displacements():
+    """Test phonopy --thermal-displacements command."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=cwd / "td.conf",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in ("phonopy.yaml", "thermal_displacements.yaml"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists(), f"{created_filename} was not created"
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_band_mesh():
+    """Test phonopy band+mesh (band_mesh) mode."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=cwd / "band_mesh.conf",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            for created_filename in (
+                "phonopy.yaml",
+                "band.yaml",
+                "mesh.yaml",
+                "total_dos.dat",
+            ):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def _ls():
     current_dir = pathlib.Path(".")
     for file in current_dir.iterdir():
