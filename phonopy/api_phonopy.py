@@ -3179,7 +3179,7 @@ class Phonopy:
             pass
         elif not forces_in_dataset(self.dataset) and self.force_constants is not None:
             _settings.update({"force_constants": True})
-        phpy_yaml = self.get_yaml(settings=_settings)
+        phpy_yaml = self.to_phonopy_yaml(settings=_settings)
 
         if compression == "xz" or compression is True:
             out_filename = f"{filename}.xz"
@@ -3274,7 +3274,7 @@ class Phonopy:
         """
         return self._copy(log_level=log_level)
 
-    def get_yaml(
+    def to_phonopy_yaml(
         self, configuration: dict | None = None, settings: dict | None = None
     ) -> PhonopyYaml:
         """Return PhonopyYaml class instance with this data."""
