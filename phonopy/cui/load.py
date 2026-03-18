@@ -57,10 +57,12 @@ def load(
     | os.PathLike
     | typing.IO
     | None = None,  # phonopy.yaml-like must be the first argument.
-    supercell_matrix: Sequence[int] | Sequence[Sequence[int]] | NDArray | None = None,
+    supercell_matrix: (
+        Sequence[int] | Sequence[Sequence[int]] | NDArray[np.int64] | None
+    ) = None,
     primitive_matrix: Sequence[Sequence[float]]
     | Literal["P", "F", "I", "A", "C", "R", "auto"]
-    | NDArray
+    | NDArray[np.double]
     | None = None,
     is_nac: bool = True,
     calculator: str | None = None,

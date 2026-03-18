@@ -55,6 +55,13 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive_matrix_with_auto
 
+_FallbackReason = Literal[
+    "load_phonopy_yaml mode",
+    "read_vasp parsing failed",
+    "default file not found",
+    "no supercell matrix given",
+]
+
 
 @dataclasses.dataclass
 class CellInfoResult:
@@ -62,10 +69,10 @@ class CellInfoResult:
 
     unitcell: PhonopyAtoms
     optional_structure_info: tuple
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None
     primitive_matrix: (
         Sequence[Sequence[float]]
-        | NDArray
+        | NDArray[np.double]
         | Literal["P", "F", "I", "A", "C", "R", "auto"]
         | None
     ) = None
@@ -143,10 +150,10 @@ def get_cell_info(
 
 
 def collect_cell_info(
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
     | Sequence[Sequence[float]]
-    | NDArray
+    | NDArray[np.double]
     | None = None,
     interface_mode: str | None = None,
     cell_filename: str | os.PathLike | None = None,
@@ -206,12 +213,11 @@ def collect_cell_info(
         True means phonopy-load mode.
 
     """
-    _interface_mode, _cell_filename = _decide_interface_mode_and_filename(
-        supercell_matrix,
-        interface_mode,
-        cell_filename,
-        phonopy_yaml_cls,
-        load_phonopy_yaml,
+    fallback_reason = _compute_fallback_reason(
+        supercell_matrix, interface_mode, cell_filename, load_phonopy_yaml
+    )
+    _interface_mode, _cell_filename = _resolve_interface_and_filename(
+        fallback_reason, interface_mode, cell_filename, phonopy_yaml_cls
     )
 
     unitcell, optional_structure_info = read_crystal_structure(
@@ -224,14 +230,14 @@ def collect_cell_info(
     if unitcell is None:
         err_msg = _get_error_message(
             optional_structure_info,
-            load_phonopy_yaml,
+            fallback_reason,
             cell_filename,
             phonopy_yaml_cls,
         )
         raise CellNotFoundError(err_msg)
 
     interface_mode_out, supercell_matrix_out, primitive_matrix_out = (
-        _collect_cells_info(
+        _resolve_cell_parameters(
             _interface_mode,
             optional_structure_info,
             interface_mode,
@@ -240,7 +246,7 @@ def collect_cell_info(
         )
     )
 
-    err_msg = _validate_cell(
+    _validate_cell(
         unitcell,
         supercell_matrix_out,
         _interface_mode,
@@ -249,9 +255,6 @@ def collect_cell_info(
         _cell_filename,
         interface_mode_out,
     )
-
-    if err_msg:
-        raise CellNotFoundError(err_msg)
 
     if enforce_primitive_matrix_auto:
         primitive_matrix_out = "auto"
@@ -272,7 +275,7 @@ def collect_cell_info(
 
 def set_magnetic_moments(
     unitcell: PhonopyAtoms, magnetic_moments: Sequence | None, log_level: int
-):
+) -> None:
     """Set magnetic moments to unitcell."""
     # Set magnetic moments
     magmoms = magnetic_moments
@@ -283,61 +286,63 @@ def set_magnetic_moments(
             raise MagmomValueError("Invalid MAGMOM setting")
 
 
-def _decide_interface_mode_and_filename(
+def _compute_fallback_reason(
     supercell_matrix: Sequence[Sequence[int]] | NDArray | None,
     interface_mode: str | None,
     cell_filename: str | os.PathLike | None,
-    phonopy_yaml_cls: type[PhonopyYaml],
     load_phonopy_yaml: bool,
-) -> tuple[str | None, str | os.PathLike | None]:
-    """Decide interface mode and filename for crystal structure input."""
-    # In some cases, interface mode falls back to phonopy_yaml mode.
+) -> _FallbackReason | None:
+    """Return the reason for falling back to phonopy_yaml mode, or None."""
     if load_phonopy_yaml:
-        fallback_reason = "load_phonopy_yaml mode"
-    else:
-        fallback_reason = _fallback_to_phonopy_yaml(
-            supercell_matrix,
-            interface_mode,
-            cell_filename,
-        )
+        return "load_phonopy_yaml mode"
+    return _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename)
 
-    _cell_filename = cell_filename
-    if load_phonopy_yaml or fallback_reason:
+
+def _resolve_interface_and_filename(
+    fallback_reason: _FallbackReason | None,
+    interface_mode: str | None,
+    cell_filename: str | os.PathLike | None,
+    phonopy_yaml_cls: type[PhonopyYaml],
+) -> tuple[str | None, str | os.PathLike | None]:
+    """Resolve interface mode and cell filename from fallback state."""
+    if fallback_reason is not None:
         _interface_mode = "phonopy_yaml"
         keyword = phonopy_yaml_cls.command_name
-        if _cell_filename is None:
-            pass
-        elif is_file_phonopy_yaml(_cell_filename, yaml_dict_keys=[keyword]):
+        if cell_filename is None:
+            _cell_filename = None
+        elif is_file_phonopy_yaml(cell_filename, yaml_dict_keys=[keyword]):
             # Readable as a phonopy.yaml
-            pass
-        elif is_file_phonopy_yaml(_cell_filename):
+            _cell_filename = cell_filename
+        elif is_file_phonopy_yaml(cell_filename):
             # Readable as yaml
-            pass
+            _cell_filename = cell_filename
         else:
             # Not readable as yaml. Proceed to look for default file names.
             _cell_filename = None
     elif interface_mode is None:
         _interface_mode = None
+        _cell_filename = cell_filename
     else:
         _interface_mode = interface_mode.lower()
+        _cell_filename = cell_filename
 
     return _interface_mode, _cell_filename
 
 
 def _validate_cell(
-    unitcell,
-    supercell_matrix_out,
-    _interface_mode,
-    optional_structure_info,
-    phonopy_yaml_cls,
-    _cell_filename,
-    interface_mode_out,
-):
-    """Validate the crystal cell parameters and return error messages if any."""
+    unitcell: PhonopyAtoms,
+    supercell_matrix_out: Sequence[Sequence[int]] | NDArray[np.int64] | None,
+    resolved_interface_mode: str | None,
+    optional_structure_info: tuple,
+    phonopy_yaml_cls: type[PhonopyYaml],
+    _cell_filename: str | os.PathLike | None,
+    interface_mode_out: str | None,
+) -> None:
+    """Validate the crystal cell parameters and raise CellNotFoundError if invalid."""
     err_msg = []
     unitcell_filename = optional_structure_info[0]
     if supercell_matrix_out is None:
-        if _interface_mode == "phonopy_yaml":
+        if resolved_interface_mode == "phonopy_yaml":
             err_msg.append(f"'supercell_matrix' not found  in \"{unitcell_filename}\".")
         else:
             err_msg.append("Supercell matrix information (DIM or --dim) was not found.")
@@ -368,16 +373,18 @@ def _validate_cell(
             ]
     if np.linalg.det(unitcell.cell) < 0.0:
         err_msg.append("Lattice vectors have to follow the right-hand rule.")
-    if len(err_msg) > 0:
-        err_msg = [
-            'Crystal structure was read from "%s".' % unitcell_filename
-        ] + err_msg
-        return "\n".join(err_msg)
-
-    return None
+    if err_msg:
+        raise CellNotFoundError(
+            'Crystal structure was read from "%s".\n' % unitcell_filename
+            + "\n".join(err_msg)
+        )
 
 
-def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
+def _fallback_to_phonopy_yaml(
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None,
+    interface_mode: str | None,
+    cell_filename: str | os.PathLike | None,
+) -> _FallbackReason | None:
     """Find possibility to fallback to phonopy.yaml mode.
 
     Fallback happens in any of the following cases.
@@ -403,7 +410,7 @@ def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
         None means fallback to phonopy.yaml mode will not happen.
 
     """
-    fallback_reason = None
+    fallback_reason: _FallbackReason | None = None
 
     if interface_mode is None:
         fallback_reason = _poscar_failed(cell_filename)
@@ -415,7 +422,7 @@ def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
     return fallback_reason
 
 
-def _poscar_failed(cell_filename):
+def _poscar_failed(cell_filename: str | os.PathLike | None) -> _FallbackReason | None:
     """Determine if fall back happens.
 
     1) read_vasp (parsing POSCAR-style file) is failed. --> fallback
@@ -438,7 +445,7 @@ def _poscar_failed(cell_filename):
     handled properly (read_crystal_structure).
 
     """
-    fallback_reason = None
+    fallback_reason: _FallbackReason | None = None
     try:
         if cell_filename is None:
             read_vasp(get_default_cell_filename("vasp"))
@@ -457,56 +464,53 @@ def _poscar_failed(cell_filename):
     return fallback_reason
 
 
-def _collect_cells_info(
-    _interface_mode: str | None,
+def _resolve_cell_parameters(
+    resolved_interface_mode: str | None,
     optional_structure_info: tuple,
     interface_mode: str | None,
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None,
     primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
     | Sequence[Sequence[float]]
-    | NDArray
+    | NDArray[np.double]
     | None = None,
 ) -> tuple[
     str | None,
-    Sequence[Sequence[int]] | NDArray | None,
+    Sequence[Sequence[int]] | NDArray[np.int64] | None,
     Literal["P", "F", "I", "A", "C", "R", "auto"]
     | Sequence[Sequence[float]]
-    | NDArray
+    | NDArray[np.double]
     | None,
 ]:
-    if _interface_mode == "phonopy_yaml" and optional_structure_info[1] is not None:
+    if (
+        resolved_interface_mode == "phonopy_yaml"
+        and optional_structure_info[1] is not None
+    ):
         phpy: PhonopyYaml = optional_structure_info[1]
-        if phpy.calculator is None:
-            interface_mode_out = interface_mode
-        else:
-            interface_mode_out = phpy.calculator
-        if phpy.supercell_matrix is None:
-            _supercell_matrix = supercell_matrix
-        else:
-            _supercell_matrix = phpy.supercell_matrix
-        if primitive_matrix is not None:
-            _primitive_matrix = primitive_matrix
-        elif phpy.primitive_matrix is not None:
-            _primitive_matrix = phpy.primitive_matrix
-        else:
-            _primitive_matrix = None
+        interface_mode_out = (
+            phpy.calculator if phpy.calculator is not None else interface_mode
+        )
+        supercell_matrix_out = (
+            phpy.supercell_matrix
+            if phpy.supercell_matrix is not None
+            else supercell_matrix
+        )
+        primitive_matrix_out = (
+            primitive_matrix if primitive_matrix is not None else phpy.primitive_matrix
+        )
     else:
-        interface_mode_out = _interface_mode
-        _supercell_matrix = supercell_matrix
-        _primitive_matrix = primitive_matrix
-
-    supercell_matrix_out = _supercell_matrix
-    primitive_matrix_out = _primitive_matrix
+        interface_mode_out = resolved_interface_mode
+        supercell_matrix_out = supercell_matrix
+        primitive_matrix_out = primitive_matrix
 
     return interface_mode_out, supercell_matrix_out, primitive_matrix_out
 
 
 def _get_error_message(
-    optional_structure_info,
-    fallback_reason,
-    cell_filename,
+    optional_structure_info: tuple,
+    fallback_reason: _FallbackReason | None,
+    cell_filename: str | os.PathLike | None,
     phonopy_yaml_cls: type[PhonopyYaml],
-):
+) -> str:
     """Show error message for failure of getting crystal structure."""
     final_cell_filename = optional_structure_info[0]
 
