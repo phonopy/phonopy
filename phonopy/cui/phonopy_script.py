@@ -91,6 +91,7 @@ from phonopy.file_IO import (
 )
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
 from phonopy.interface.calculator import (
+    StructureInfo,
     get_default_displacement_distance,
     write_supercells_with_displacements,
 )
@@ -555,7 +556,7 @@ def _write_displacements_files_then_exit(
     phonon: Phonopy,
     settings: PhonopySettings,
     confs: dict,
-    optional_structure_info: tuple,
+    optional_structure_info: StructureInfo,
     log_level: int,
     disp_filename: str = "phonopy_disp.yaml",
 ):
@@ -851,7 +852,7 @@ def _create_random_displacements_at_finite_temperature(
     phonon: Phonopy,
     settings: PhonopySettings,
     confs: dict,
-    optional_structure_info: tuple,
+    optional_structure_info: StructureInfo,
     log_level: int,
 ):
     if log_level:
@@ -1782,7 +1783,7 @@ def _check_supercell_in_yaml(
             if log_level:
                 print(
                     "Generated Supercell is inconsistent with that "
-                    f'in "{cell_info.optional_structure_info[0]}".'
+                    f'in "{cell_info.optional_structure_info.unitcell_filename}".'
                 )
                 print_error()
             sys.exit(1)
@@ -1969,7 +1970,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             print_error()
         sys.exit(1)
 
-    unitcell_filename = cell_info.optional_structure_info[0]
+    unitcell_filename = cell_info.optional_structure_info.unitcell_filename
 
     if cell_info.unitcell.magnetic_moments is not None and _auto_primitive_axes(
         cell_info.primitive_matrix

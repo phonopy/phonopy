@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -46,6 +45,7 @@ from numpy.typing import NDArray
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.interface.calculator import (
+    StructureInfo,
     get_default_cell_filename,
     write_crystal_structure,
 )
@@ -128,7 +128,7 @@ class Modulation:
     def write(
         self,
         interface_mode: str | None = None,
-        optional_structure_info: Any | None = None,
+        optional_structure_info: StructureInfo | None = None,
     ) -> None:
         """Write supercells with modulations."""
         base_fname = get_default_cell_filename(interface_mode)

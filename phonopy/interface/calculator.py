@@ -93,7 +93,14 @@ class SupercellWriterConfig:
 class StructureInfo:
     """Base class for interface-specific structure information."""
 
-    unitcell_filename: str
+    unitcell_filename: str | os.PathLike | None
+
+
+@dataclass(frozen=True)
+class PhonopyYamlStructureInfo(StructureInfo):
+    """PhonopyYaml structure information."""
+
+    phonopy_yaml: PhonopyYaml | None = None
 
 
 @dataclass(frozen=True)
@@ -107,16 +114,16 @@ class VaspStructureInfo(StructureInfo):
 class QeStructureInfo(StructureInfo):
     """Quantum Espresso structure information."""
 
-    pp_filenames: list[str] | None
+    pp_filenames: dict[str, str] | None
 
 
 @dataclass(frozen=True)
 class Wien2kStructureInfo(StructureInfo):
     """Wien2k structure information."""
 
-    npts: int
-    r0s: list
-    rmts: list
+    npts: list[int]
+    r0s: list[float]
+    rmts: list[float]
 
 
 @dataclass(frozen=True)
@@ -152,9 +159,9 @@ class FleurStructureInfo(StructureInfo):
 class AbacusStructureInfo(StructureInfo):
     """ABACUS structure information."""
 
-    pps: list[str] | None
-    orbitals: list[str] | None
-    abfs: list[str] | None
+    pps: dict[str, str] | None
+    orbitals: dict[str, str] | None
+    abfs: dict[str, str] | None
 
 
 @dataclass(frozen=True)
@@ -218,7 +225,7 @@ def convert_crystal_structure(
     interface_in: str | None,
     filename_out: str | os.PathLike,
     interface_out: str | None,
-    optional_structure_info: tuple | None = None,
+    optional_structure_info: StructureInfo | None = None,
 ):
     """Convert crystal structures between different calculator interfaces.
 
@@ -245,7 +252,7 @@ def write_crystal_structure(
     filename: str | os.PathLike,
     cell: PhonopyAtoms,
     interface_mode: str | None = None,
-    optional_structure_info: tuple | None = None,
+    optional_structure_info: StructureInfo | None = None,
 ):
     """Write crystal structure to file in each calculator format.
 
@@ -256,7 +263,7 @@ def write_crystal_structure(
     interface_mode : str, optional
         Calculator interface such as 'vasp', 'qe', ... Default is None,
         that is equivalent to 'vasp'.
-    optional_structure_info : tuple, optional
+    optional_structure_info : StructureInfo, optional
         Information returned by the method `read_crystal_structure`.
         See the docstring. Default is None.
 
@@ -272,29 +279,35 @@ def write_crystal_structure(
     elif interface_mode == "qe":
         import phonopy.interface.qe as qe
 
-        if optional_structure_info is not None:
-            pp_filenames = optional_structure_info[1]
-        else:
-            pp_filenames = None
+        pp_filenames = (
+            optional_structure_info.pp_filenames
+            if isinstance(optional_structure_info, QeStructureInfo)
+            else None
+        )
         qe.write_pwscf(filename, cell, pp_filenames)
 
     elif interface_mode == "wien2k":
         import phonopy.interface.wien2k as wien2k
 
-        if optional_structure_info is None:
+        if not isinstance(optional_structure_info, Wien2kStructureInfo):
             raise RuntimeError(
-                "Optional structure information (_, npts, r0s, rmts) is missing."
+                "Optional structure information (npts, r0s, rmts) is missing."
             )
-
-        _, npts, r0s, rmts = optional_structure_info
-        wien2k.write_wein2k(filename, cell, npts, r0s, rmts)
+        wien2k.write_wein2k(
+            filename,
+            cell,
+            optional_structure_info.npts,
+            optional_structure_info.r0s,
+            optional_structure_info.rmts,
+        )
     elif interface_mode == "elk":
         import phonopy.interface.elk as elk
 
-        if optional_structure_info is not None:
-            sp_filenames = optional_structure_info[1]
-        else:
-            sp_filenames = None
+        sp_filenames = (
+            optional_structure_info.sp_filenames
+            if isinstance(optional_structure_info, ElkStructureInfo)
+            else None
+        )
         elk.write_elk(filename, cell, sp_filenames)
     elif interface_mode == "siesta":
         import phonopy.interface.siesta as siesta
@@ -303,18 +316,19 @@ def write_crystal_structure(
     elif interface_mode == "cp2k":
         import phonopy.interface.cp2k as cp2k
 
-        if optional_structure_info is None:
-            raise RuntimeError("Optional structure information (tree) is missing.")
-
-        _, tree = optional_structure_info
-        cp2k.write_cp2k_by_filename(filename, cell, tree)
+        if not isinstance(optional_structure_info, Cp2kStructureInfo):
+            raise RuntimeError(
+                "Optional structure information (config_tree) is missing."
+            )
+        cp2k.write_cp2k_by_filename(filename, cell, optional_structure_info.config_tree)
     elif interface_mode == "crystal":
         import phonopy.interface.crystal as crystal
 
-        if optional_structure_info is not None:
-            conv_numbers = optional_structure_info[1]
-        else:
-            conv_numbers = None
+        conv_numbers = (
+            optional_structure_info.conv_numbers
+            if isinstance(optional_structure_info, CrystalStructureInfo)
+            else None
+        )
         crystal.write_crystal(filename, cell, conv_numbers)
     elif interface_mode == "dftbp":
         import phonopy.interface.dftbp as dftbp
@@ -335,20 +349,23 @@ def write_crystal_structure(
     elif interface_mode == "fleur":
         import phonopy.interface.fleur as fleur
 
-        if optional_structure_info is None:
+        if not isinstance(optional_structure_info, FleurStructureInfo):
             raise RuntimeError(
                 "Optional structure information (speci, restlines) is missing."
             )
-
-        _, speci, restlines = optional_structure_info
-        fleur.write_fleur(filename, cell, speci, restlines)
+        fleur.write_fleur(
+            filename,
+            cell,
+            optional_structure_info.speci,
+            optional_structure_info.restlines,
+        )
     elif interface_mode == "abacus":
         import phonopy.interface.abacus as abacus
 
-        if optional_structure_info is not None:
-            pps = optional_structure_info[1]
-            orbitals = optional_structure_info[2]
-            abfs = optional_structure_info[3]
+        if isinstance(optional_structure_info, AbacusStructureInfo):
+            pps = optional_structure_info.pps
+            orbitals = optional_structure_info.orbitals
+            abfs = optional_structure_info.abfs
         else:
             pps = None
             orbitals = None
@@ -594,103 +611,6 @@ def _get_filename_writer_kwargs(config: SupercellWriterConfig) -> dict[str, Any]
     return writer_kwargs
 
 
-def _parse_optional_structure_info(
-    interface_mode: str | None,
-    optional_structure_info: tuple,
-) -> StructureInfo:
-    """Convert tuple-based structure info to typed dataclass.
-
-    Parameters
-    ----------
-    interface_mode : str | None
-        Calculator interface mode.
-    optional_structure_info : tuple
-        Tuple containing structure information from read_crystal_structure.
-
-    Returns
-    -------
-    StructureInfo
-        Typed structure information object.
-
-    Raises
-    ------
-    RuntimeError
-        If required structure information is missing or malformed.
-
-    """
-    if not optional_structure_info:
-        raise ValueError("optional_structure_info cannot be empty")
-
-    if interface_mode == "qlm":
-        qlm_ctx = optional_structure_info[0]
-        return QlmStructureInfo(unitcell_filename="", qlm_ctx=qlm_ctx)
-
-    filename = optional_structure_info[0]
-
-    if interface_mode is None or interface_mode == "vasp":
-        return VaspStructureInfo(unitcell_filename=filename)
-    elif interface_mode == "qe":
-        pp_filenames = (
-            optional_structure_info[1] if len(optional_structure_info) > 1 else None
-        )
-        return QeStructureInfo(unitcell_filename=filename, pp_filenames=pp_filenames)
-    elif interface_mode == "wien2k":
-        if len(optional_structure_info) < 4:
-            msg = (
-                "Optional structure information "
-                "(unitcell_filename, npts, r0s, rmts) is missing."
-            )
-            raise RuntimeError(msg)
-        _, npts, r0s, rmts = optional_structure_info[:4]
-        return Wien2kStructureInfo(
-            unitcell_filename=filename, npts=npts, r0s=r0s, rmts=rmts
-        )
-    elif interface_mode == "elk":
-        sp_filenames = (
-            optional_structure_info[1] if len(optional_structure_info) > 1 else None
-        )
-        return ElkStructureInfo(unitcell_filename=filename, sp_filenames=sp_filenames)
-    elif interface_mode == "cp2k":
-        if len(optional_structure_info) < 2:
-            msg = (
-                "Optional structure information "
-                "(unitcell_filename, config_tree) is missing."
-            )
-            raise RuntimeError(msg)
-        _, config_tree = optional_structure_info[:2]
-        return Cp2kStructureInfo(unitcell_filename=filename, config_tree=config_tree)
-    elif interface_mode == "crystal":
-        conv_numbers = (
-            optional_structure_info[1] if len(optional_structure_info) > 1 else None
-        )
-        return CrystalStructureInfo(
-            unitcell_filename=filename, conv_numbers=conv_numbers
-        )
-    elif interface_mode == "fleur":
-        if len(optional_structure_info) < 3:
-            msg = (
-                "Optional structure information "
-                "(unitcell_filename, speci, restlines) is missing."
-            )
-            raise RuntimeError(msg)
-        _, speci, restlines = optional_structure_info[:3]
-        return FleurStructureInfo(
-            unitcell_filename=filename, speci=speci, restlines=restlines
-        )
-    elif interface_mode == "abacus":
-        pps = optional_structure_info[1] if len(optional_structure_info) > 1 else None
-        orbitals = (
-            optional_structure_info[2] if len(optional_structure_info) > 2 else None
-        )
-        abfs = optional_structure_info[3] if len(optional_structure_info) > 3 else None
-        return AbacusStructureInfo(
-            unitcell_filename=filename, pps=pps, orbitals=orbitals, abfs=abfs
-        )
-    else:
-        # Generic interfaces without special structure info
-        return StructureInfo(unitcell_filename=filename)
-
-
 def _get_writer_handler(
     interface_mode: str | None,
 ) -> Callable[[SupercellWriterConfig, StructureInfo], None]:
@@ -760,7 +680,7 @@ def write_supercells_with_displacements(
     interface_mode: str | None,
     supercell: PhonopyAtoms,
     cells_with_disps: Sequence[PhonopyAtoms],
-    optional_structure_info: tuple,
+    optional_structure_info: StructureInfo,
     displacement_ids: Sequence | NDArray | None = None,
     zfill_width: int = 3,
     additional_info: dict | None = None,
@@ -780,9 +700,9 @@ def write_supercells_with_displacements(
         Supercell to write.
     cells_with_disps : Sequence[PhonopyAtoms]
         Supercells with displacements to write.
-    optional_structure_info : tuple
+    optional_structure_info : StructureInfo
         Interface-specific structure information returned by
-        ``read_crystal_structure``. Structure varies by interface mode.
+        ``read_crystal_structure``.
     displacement_ids : Sequence | NDArray | None, optional
         Integer 1d array with the length of cells_with_disps, containing
         numbers to be assigned to the supercells with displacements.
@@ -819,21 +739,9 @@ def write_supercells_with_displacements(
         additional_info=additional_info,
     )
 
-    # Parse optional structure info to typed dataclass
-    try:
-        structure_info = _parse_optional_structure_info(
-            interface_mode, optional_structure_info
-        )
-    except (ValueError, RuntimeError, IndexError) as e:
-        msg = (
-            f"Failed to parse structure information "
-            f"for interface '{interface_mode}': {e}"
-        )
-        raise RuntimeError(msg) from e
-
     # Get and invoke the appropriate handler
     handler = _get_writer_handler(interface_mode)
-    handler(config, structure_info)
+    handler(config, optional_structure_info)
 
 
 def write_magnetic_moments(cell: PhonopyAtoms, sort_by_elements: bool = False) -> None:
@@ -869,7 +777,7 @@ def read_crystal_structure(
     interface_mode: str | None = None,
     chemical_symbols: Sequence[str] | None = None,
     phonopy_yaml_cls: type[PhonopyYaml] | None = None,
-) -> tuple[PhonopyAtoms | None, tuple]:
+) -> tuple[PhonopyAtoms | None, StructureInfo]:
     """Return crystal structure from file in each calculator format.
 
     Parameters
@@ -890,12 +798,11 @@ def read_crystal_structure(
 
     Returns
     -------
-    tuple
-        (Unit cell in PhonopyAtoms, optional_structure_info in tuple)
+    tuple[PhonopyAtoms | None, StructureInfo]
+        (Unit cell, structure info)
 
-        The optional_structure_info is given by a tuple. The first element of it
-        is the unit cell file name for which the unit cell data are read, and
-        the rest is dependent on calculator interface.
+        The StructureInfo contains unitcell_filename and, depending on the
+        interface, additional calculator-specific fields.
 
     """
     if interface_mode == "phonopy_yaml":
@@ -905,11 +812,11 @@ def read_crystal_structure(
     if filename is None:
         cell_filename = get_default_cell_filename(interface_mode)
         if not pathlib.Path(cell_filename).is_file():
-            return None, (cell_filename, "(default file name)")
+            return None, StructureInfo(unitcell_filename=cell_filename)
     else:
         cell_filename = filename
         if not pathlib.Path(cell_filename).is_file():
-            return None, (cell_filename,)
+            return None, StructureInfo(unitcell_filename=cell_filename)
 
     if interface_mode is None or interface_mode == "vasp":
         from phonopy.interface.vasp import read_vasp
@@ -918,88 +825,104 @@ def read_crystal_structure(
             unitcell = read_vasp(cell_filename)
         else:
             unitcell = read_vasp(cell_filename, symbols=chemical_symbols)
-        return unitcell, (cell_filename,)
+        return unitcell, VaspStructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "abinit":
         from phonopy.interface.abinit import read_abinit
 
         unitcell = read_abinit(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "qe":
         from phonopy.interface.qe import read_pwscf
 
         unitcell, pp_filenames = read_pwscf(cell_filename)
-        return unitcell, (cell_filename, pp_filenames)
+        return unitcell, QeStructureInfo(
+            unitcell_filename=cell_filename, pp_filenames=pp_filenames
+        )
     elif interface_mode == "pwmat":
         from phonopy.interface.pwmat import read_atom_config
 
         unitcell = read_atom_config(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "wien2k":
         from phonopy.interface.wien2k import parse_wien2k_struct
 
         unitcell, npts, r0s, rmts = parse_wien2k_struct(cell_filename)
-        return unitcell, (cell_filename, npts, r0s, rmts)
+        return unitcell, Wien2kStructureInfo(
+            unitcell_filename=cell_filename, npts=npts, r0s=r0s, rmts=rmts
+        )
     elif interface_mode == "elk":
         from phonopy.interface.elk import read_elk
 
         unitcell, sp_filenames = read_elk(cell_filename)
-        return unitcell, (cell_filename, sp_filenames)
+        return unitcell, ElkStructureInfo(
+            unitcell_filename=cell_filename, sp_filenames=sp_filenames
+        )
     elif interface_mode == "siesta":
         from phonopy.interface.siesta import read_siesta
 
         unitcell = read_siesta(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "cp2k":
         from phonopy.interface.cp2k import read_cp2k
 
         unitcell, config_tree = read_cp2k(cell_filename)
-        return unitcell, (cell_filename, config_tree)
+        return unitcell, Cp2kStructureInfo(
+            unitcell_filename=cell_filename, config_tree=config_tree
+        )
     elif interface_mode == "crystal":
         from phonopy.interface.crystal import read_crystal
 
         unitcell, conv_numbers = read_crystal(cell_filename)
-        return unitcell, (cell_filename, conv_numbers)
+        return unitcell, CrystalStructureInfo(
+            unitcell_filename=cell_filename, conv_numbers=conv_numbers
+        )
     elif interface_mode == "dftbp":
         from phonopy.interface.dftbp import read_dftbp
 
         unitcell = read_dftbp(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "turbomole":
         from phonopy.interface.turbomole import read_turbomole
 
         unitcell = read_turbomole(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "aims":
         from phonopy.interface.aims import read_aims
 
         unitcell = read_aims(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "castep":
         from phonopy.interface.castep import read_castep
 
         unitcell = read_castep(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
     elif interface_mode == "fleur":
         from phonopy.interface.fleur import read_fleur
 
         unitcell, speci, restlines = read_fleur(cell_filename)
-        return unitcell, (cell_filename, speci, restlines)
+        return unitcell, FleurStructureInfo(
+            unitcell_filename=cell_filename, speci=speci, restlines=restlines
+        )
     elif interface_mode == "abacus":
         from phonopy.interface.abacus import read_abacus
 
         unitcell, pps, orbitals, abfs = read_abacus(cell_filename)
-        return unitcell, (cell_filename, pps, orbitals, abfs)
+        return unitcell, AbacusStructureInfo(
+            unitcell_filename=cell_filename, pps=pps, orbitals=orbitals, abfs=abfs
+        )
     elif interface_mode == "lammps":
         from phonopy.interface.lammps import read_lammps
 
         unitcell = read_lammps(cell_filename)
-        return unitcell, (cell_filename,)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
 
     elif interface_mode == "qlm":
         from phonopy.interface.qlm import read_qlm
 
-        struct_info = read_qlm(cell_filename)
-        return struct_info
+        unitcell, (qlm_ctx,) = read_qlm(cell_filename)
+        return unitcell, QlmStructureInfo(
+            unitcell_filename=cell_filename, qlm_ctx=qlm_ctx
+        )
 
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -1228,10 +1151,10 @@ def get_force_constant_conversion_factor(
 
 def _read_phonopy_yaml(
     filename: str | os.PathLike | None, phonopy_yaml_cls: type[PhonopyYaml] | None
-) -> tuple[PhonopyAtoms | None, tuple]:
+) -> tuple[PhonopyAtoms | None, PhonopyYamlStructureInfo]:
     cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
-        return None, (None, None)
+        return None, PhonopyYamlStructureInfo(unitcell_filename=None)
 
     if phonopy_yaml_cls is None:
         phyml = PhonopyYaml()
@@ -1240,12 +1163,14 @@ def _read_phonopy_yaml(
     try:
         phyml.read(cell_filename)
     except TypeError:  # yaml.load returns str: File format seems not YAML.
-        return None, (cell_filename, None)
+        return None, PhonopyYamlStructureInfo(unitcell_filename=cell_filename)
     except yaml.parser.ParserError:  # type: ignore
-        return None, (cell_filename, None)
+        return None, PhonopyYamlStructureInfo(unitcell_filename=cell_filename)
 
     cell = phyml.unitcell
-    return cell, (cell_filename, phyml)
+    return cell, PhonopyYamlStructureInfo(
+        unitcell_filename=cell_filename, phonopy_yaml=phyml
+    )
 
 
 def _get_cell_filename(

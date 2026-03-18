@@ -35,7 +35,16 @@
 import os
 from argparse import ArgumentParser, ArgumentTypeError
 
-from phonopy.interface.calculator import calculator_info, convert_crystal_structure
+from phonopy.interface.calculator import (
+    AbacusStructureInfo,
+    CrystalStructureInfo,
+    ElkStructureInfo,
+    FleurStructureInfo,
+    QeStructureInfo,
+    Wien2kStructureInfo,
+    calculator_info,
+    convert_crystal_structure,
+)
 
 
 def get_options():
@@ -93,7 +102,7 @@ def get_options():
     return parser.parse_args()
 
 
-def parse_qe(opts):
+def parse_qe(opts) -> QeStructureInfo:
     """Parse additional info used in some calculators.
 
     qe:
@@ -109,10 +118,10 @@ def parse_qe(opts):
     keys = opts.additional_info[0::2]
     values = opts.additional_info[1::2]
     pp_files = dict(zip(keys, values, strict=True))
-    return (opts.filename_out, pp_files)
+    return QeStructureInfo(unitcell_filename=opts.filename_out, pp_filenames=pp_files)
 
 
-def parse_wien2k(opts):
+def parse_wien2k(opts) -> Wien2kStructureInfo:
     """Parse additional info used in wien2k.
 
     wien2k:
@@ -128,10 +137,12 @@ def parse_wien2k(opts):
     r0s = [float(x.strip()) for x in info[1].split()]
     rmts = [float(x.strip()) for x in info[2].split()]
 
-    return (opts.filename_out, npts, r0s, rmts)
+    return Wien2kStructureInfo(
+        unitcell_filename=opts.filename_out, npts=npts, r0s=r0s, rmts=rmts
+    )
 
 
-def parse_elk(opts):
+def parse_elk(opts) -> ElkStructureInfo:
     """Parse additional info used in elk.
 
     elk:
@@ -142,16 +153,16 @@ def parse_elk(opts):
         in the format of "symbol.in", which is otherwise intuited by the writer.
     """
     spfnames = opts.additional_info
-    return (opts.filename_out, spfnames)
+    return ElkStructureInfo(unitcell_filename=opts.filename_out, sp_filenames=spfnames)
 
 
-def parse_cp2k(opts):
+def parse_cp2k(opts) -> None:
     """Not Implemented."""
     if opts.additional_info is not None:
         raise NotImplementedError()
 
 
-def parse_fleur(opts):
+def parse_fleur(opts) -> FleurStructureInfo:
     r"""Parse additional info used in fleur.
 
     fleur:
@@ -170,12 +181,14 @@ def parse_fleur(opts):
             speci.append(float(arg))
         except ValueError:
             restlines = arg.split("\\n")
-    if len(speci) == 0:
-        speci = None
-    return (opts.filename_out, speci, restlines)
+    return FleurStructureInfo(
+        unitcell_filename=opts.filename_out,
+        speci=speci if speci else None,
+        restlines=restlines if restlines is not None else [],
+    )
 
 
-def parse_crystal(opts):
+def parse_crystal(opts) -> CrystalStructureInfo:
     """Parse additional info used in crystal.
 
     crystal:
@@ -183,10 +196,12 @@ def parse_crystal(opts):
         eg. 'Ge' -> 32 or 'Ge' -> 232
     """
     atomic_numbers = [int(x.strip()) for x in opts.additional_info]
-    return (opts.filename_out, atomic_numbers)
+    return CrystalStructureInfo(
+        unitcell_filename=opts.filename_out, conv_numbers=atomic_numbers
+    )
 
 
-def parse_abacus(opts):
+def parse_abacus(opts) -> AbacusStructureInfo:
     """Parse additional info used in abacus.
 
     abacus:
@@ -197,8 +212,17 @@ def parse_abacus(opts):
     NOTE: This is the same format as qe at the moment because the other
     possible information `atom_basis`, `atom_offsite_basis` is not implemented.
     """
-    fname, ppfiles = parse_qe(opts)
-    return fname, ppfiles, None, None
+    if len(opts.additional_info) % 2 != 0:
+        raise ArgumentTypeError("Equal number of symbols and pp files expected.")
+    keys = opts.additional_info[0::2]
+    values = opts.additional_info[1::2]
+    pp_files = dict(zip(keys, values, strict=True))
+    return AbacusStructureInfo(
+        unitcell_filename=opts.filename_out,
+        pps=pp_files,
+        orbitals=None,
+        abfs=None,
+    )
 
 
 def parse_additional_info(opts):
