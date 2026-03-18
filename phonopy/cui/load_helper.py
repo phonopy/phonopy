@@ -64,6 +64,7 @@ from phonopy.harmonic.force_constants import (
     full_fc_to_compact_fc,
 )
 from phonopy.interface.calculator import (
+    StructureInfo,
     get_force_constant_conversion_factor,
     read_crystal_structure,
 )
@@ -112,7 +113,8 @@ def get_cell_settings(
         smat = supercell_matrix
         if log_level:
             print(
-                'Unit cell structure was read from "%s".' % optional_structure_info[0]
+                "Unit cell structure was read from"
+                f' "{optional_structure_info.unitcell_filename}".'
             )
     elif supercell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
@@ -121,7 +123,8 @@ def get_cell_settings(
         smat = np.eye(3, dtype="int64", order="C")
         if log_level:
             print(
-                'Supercell structure was read from "%s".' % optional_structure_info[0]
+                "Supercell structure was read from"
+                f' "{optional_structure_info.unitcell_filename}".'
             )
     elif unitcell is not None:
         cell = unitcell.copy()
@@ -133,7 +136,7 @@ def get_cell_settings(
         raise RuntimeError("Cell has to be specified.")
 
     if optional_structure_info is not None and cell is None:
-        filename = optional_structure_info[0]
+        filename = optional_structure_info.unitcell_filename
         msg = "'%s' could not be found." % filename
         raise FileNotFoundError(msg)
 
@@ -533,7 +536,7 @@ def _read_force_constants_file(
 
 def _read_crystal_structure(
     filename: str | os.PathLike | None = None, interface_mode: str | None = None
-) -> tuple[PhonopyAtoms | None, tuple]:
+) -> tuple[PhonopyAtoms | None, StructureInfo]:
     try:
         return read_crystal_structure(filename=filename, interface_mode=interface_mode)
     except FileNotFoundError:

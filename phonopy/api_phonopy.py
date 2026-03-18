@@ -69,6 +69,7 @@ from phonopy.harmonic.force_constants import (
     symmetrize_compact_force_constants,
     symmetrize_force_constants,
 )
+from phonopy.interface.calculator import StructureInfo
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -2806,7 +2807,7 @@ class Phonopy:
     def write_modulations(
         self,
         calculator: str | None = None,
-        optional_structure_info: dict | None = None,
+        optional_structure_info: StructureInfo | None = None,
     ) -> None:
         """Write modulated structures to MPOSCAR's."""
         if self._modulation is None:

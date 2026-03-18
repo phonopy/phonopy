@@ -47,6 +47,8 @@ from phonopy.cui.settings import Settings
 from phonopy.exception import CellNotFoundError, MagmomValueError
 from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
+    PhonopyYamlStructureInfo,
+    StructureInfo,
     get_default_cell_filename,
     read_crystal_structure,
 )
@@ -68,7 +70,7 @@ class CellInfoResult:
     """Dataclass to hold the result of collect_cell_info."""
 
     unitcell: PhonopyAtoms
-    optional_structure_info: tuple
+    optional_structure_info: StructureInfo
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None
     primitive_matrix: (
         Sequence[Sequence[float]]
@@ -119,7 +121,7 @@ def get_cell_info(
     phpy_yaml = cell_info.phonopy_yaml
     if phpy_yaml is not None:
         assert phpy_yaml.unitcell is not None
-        yaml_filename = cell_info.optional_structure_info[0]
+        yaml_filename = cell_info.optional_structure_info.unitcell_filename
         pmat_in_settings = get_primitive_matrix_with_auto(
             phpy_yaml.unitcell, cell_info.primitive_matrix
         )
@@ -260,7 +262,9 @@ def collect_cell_info(
         primitive_matrix_out = "auto"
 
     phpy_yaml = (
-        optional_structure_info[1] if _interface_mode == "phonopy_yaml" else None
+        optional_structure_info.phonopy_yaml
+        if isinstance(optional_structure_info, PhonopyYamlStructureInfo)
+        else None
     )
 
     return PhonopyCellInfoResult(
@@ -333,14 +337,14 @@ def _validate_cell(
     unitcell: PhonopyAtoms,
     supercell_matrix_out: Sequence[Sequence[int]] | NDArray[np.int64] | None,
     resolved_interface_mode: str | None,
-    optional_structure_info: tuple,
+    optional_structure_info: StructureInfo,
     phonopy_yaml_cls: type[PhonopyYaml],
     _cell_filename: str | os.PathLike | None,
     interface_mode_out: str | None,
 ) -> None:
     """Validate the crystal cell parameters and raise CellNotFoundError if invalid."""
     err_msg = []
-    unitcell_filename = optional_structure_info[0]
+    unitcell_filename = optional_structure_info.unitcell_filename
     if supercell_matrix_out is None:
         if resolved_interface_mode == "phonopy_yaml":
             err_msg.append(f"'supercell_matrix' not found  in \"{unitcell_filename}\".")
@@ -466,7 +470,7 @@ def _poscar_failed(cell_filename: str | os.PathLike | None) -> _FallbackReason |
 
 def _resolve_cell_parameters(
     resolved_interface_mode: str | None,
-    optional_structure_info: tuple,
+    optional_structure_info: StructureInfo,
     interface_mode: str | None,
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None,
     primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
@@ -482,10 +486,10 @@ def _resolve_cell_parameters(
     | None,
 ]:
     if (
-        resolved_interface_mode == "phonopy_yaml"
-        and optional_structure_info[1] is not None
+        isinstance(optional_structure_info, PhonopyYamlStructureInfo)
+        and optional_structure_info.phonopy_yaml is not None
     ):
-        phpy: PhonopyYaml = optional_structure_info[1]
+        phpy: PhonopyYaml = optional_structure_info.phonopy_yaml
         interface_mode_out = (
             phpy.calculator if phpy.calculator is not None else interface_mode
         )
@@ -506,13 +510,13 @@ def _resolve_cell_parameters(
 
 
 def _get_error_message(
-    optional_structure_info: tuple,
+    optional_structure_info: StructureInfo,
     fallback_reason: _FallbackReason | None,
     cell_filename: str | os.PathLike | None,
     phonopy_yaml_cls: type[PhonopyYaml],
 ) -> str:
     """Show error message for failure of getting crystal structure."""
-    final_cell_filename = optional_structure_info[0]
+    final_cell_filename = optional_structure_info.unitcell_filename
 
     # No fallback to phonopy_yaml mode.
     if fallback_reason is None:
@@ -566,8 +570,12 @@ def _get_error_message(
         msg_list.append(f"{text} could not be found.")
         return "\n".join(msg_list)
 
-    phpy = optional_structure_info[1]
-    if phpy is None:  # Failed to parse phonopy*.yaml.
+    phpy_yaml = (
+        optional_structure_info.phonopy_yaml
+        if isinstance(optional_structure_info, PhonopyYamlStructureInfo)
+        else None
+    )
+    if phpy_yaml is None:  # Failed to parse phonopy*.yaml.
         msg_list.append(f'But parsing "{final_cell_filename}" failed.')
 
     return "\n".join(msg_list)
