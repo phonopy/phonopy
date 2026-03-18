@@ -2,6 +2,7 @@
 
 import pathlib
 
+import numpy as np
 import pytest
 
 from phonopy import Phonopy
@@ -11,13 +12,34 @@ from phonopy.sscha.core import MLPSSCHA
 cwd = pathlib.Path(__file__).parent
 
 
-def test_MLPSSCHA(ph_kcl: Phonopy):
-    """Test MLPSSCHA class."""
+@pytest.fixture(scope="module")
+def mlp_kcl():
+    """Return PhonopyMLP instance for KCl."""
     pytest.importorskip("pypolymlp")
-    mlp = PhonopyMLP().load(cwd / ".." / "polymlp_KCL-120.yaml")
+    return PhonopyMLP().load(cwd / ".." / "polymlp_KCL-120.yaml")
+
+
+@pytest.fixture(scope="module")
+def sscha_result(ph_kcl: Phonopy, mlp_kcl):
+    """Return MLPSSCHA instance after 3 iterations with fixed random seed."""
     sscha = MLPSSCHA(
         ph_kcl,
-        mlp,
+        mlp_kcl,
+        number_of_snapshots=50,
+        max_iterations=3,
+        temperature=300,
+        random_seed=42,
+        log_level=1,
+    )
+    sscha.run()
+    return sscha
+
+
+def test_MLPSSCHA(ph_kcl: Phonopy, mlp_kcl):
+    """Test MLPSSCHA class."""
+    sscha = MLPSSCHA(
+        ph_kcl,
+        mlp_kcl,
         number_of_snapshots=2,
         max_iterations=2,
         temperature=300,
@@ -27,7 +49,7 @@ def test_MLPSSCHA(ph_kcl: Phonopy):
 
     sscha = MLPSSCHA(
         ph_kcl,
-        mlp,
+        mlp_kcl,
         number_of_snapshots=2,
         max_iterations=2,
         temperature=300,
@@ -37,3 +59,48 @@ def test_MLPSSCHA(ph_kcl: Phonopy):
     for i, _ in enumerate(sscha):
         count = i
     assert count == 2
+
+
+def test_MLPSSCHA_force_constants_shape(sscha_result: MLPSSCHA):
+    """Force constants shape should be (n_atoms, n_atoms, 3, 3)."""
+    fc = sscha_result.force_constants
+    n_atoms = len(sscha_result.phonopy.supercell)
+    assert fc.shape == (n_atoms, n_atoms, 3, 3)
+
+
+def test_MLPSSCHA_force_constants_symmetry(sscha_result: MLPSSCHA):
+    """Force constants should satisfy fc[i,j,a,b] == fc[j,i,b,a]."""
+    fc = sscha_result.force_constants
+    np.testing.assert_allclose(fc, fc.transpose(1, 0, 3, 2), atol=1e-10)
+
+
+def test_MLPSSCHA_force_constants_diagonal_block(sscha_result: MLPSSCHA):
+    """Self-interaction block fc[i,i] should be isotropic and positive."""
+    fc = sscha_result.force_constants
+    # KCl has cubic symmetry: diagonal block is proportional to identity
+    np.testing.assert_allclose(fc[0, 0, 0, 0], fc[0, 0, 1, 1], rtol=1e-6)
+    np.testing.assert_allclose(fc[0, 0, 0, 0], fc[0, 0, 2, 2], rtol=1e-6)
+    np.testing.assert_allclose(fc[0, 0, 0, 1], 0.0, atol=1e-10)
+    # Self-interaction eigenvalue must be positive (stable structure)
+    assert fc[0, 0, 0, 0] > 0
+
+
+def test_MLPSSCHA_force_constants_values(sscha_result: MLPSSCHA):
+    """Force constants should match values reproduced by random_seed=42."""
+    fc = sscha_result.force_constants
+    # Values differ slightly between platforms (Mac/Windows vs Linux) due to
+    # differences in BLAS implementations and floating-point ordering.
+    fc00 = np.eye(3) * 2.1
+    assert np.allclose(fc[0, 0], fc00, atol=0.05)
+    print(fc[0, 0])
+
+
+def test_MLPSSCHA_free_energy(sscha_result: MLPSSCHA):
+    """free_energy should be finite and match value reproduced by random_seed=42."""
+    sscha_result.calculate_free_energy()
+    assert isinstance(sscha_result.free_energy, float)
+    assert np.isfinite(sscha_result.free_energy)
+    # Values differ slightly between platforms due to differences in BLAS
+    # implementations and floating-point ordering.
+    assert np.isclose(sscha_result.free_energy, -0.0986, atol=1e-3)
+    print(sscha_result.free_energy)

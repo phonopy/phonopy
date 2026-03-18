@@ -32,21 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import annotations
-
-import argparse
-import dataclasses
-import os
-import sys
-from typing import Sequence
-
-import numpy as np
-from numpy.typing import NDArray
-
-from phonopy.interface.vasp import parse_vasprunxml
-from phonopy.qha.electron import get_free_energy_at_T
-
-"""Calculate electronic free energy from vasprun.xml at temperatures
+"""Calculate electronic free energy from vasprun.xml at temperatures.
 
 Here the free energy is approximately given by:
 
@@ -54,38 +40,19 @@ Here the free energy is approximately given by:
 
 """
 
+from __future__ import annotations
 
-def get_options() -> argparse.Namespace:
-    """Parse command-line options."""
-    parser = argparse.ArgumentParser(description="Phonopy vasp-efe command-line-tool")
-    parser.add_argument(
-        "--tmax",
-        dest="tmax",
-        type=float,
-        default=1000.0,
-        help="Maximum calculated temperature",
-    )
-    parser.add_argument(
-        "--tmin",
-        dest="tmin",
-        type=float,
-        default=0.0,
-        help="Minimum calculated temperature",
-    )
-    parser.add_argument(
-        "--tstep",
-        dest="tstep",
-        type=float,
-        default=10.0,
-        help="Calculated temperature step",
-    )
-    parser.add_argument(
-        "filenames",
-        nargs="*",
-        help="Filenames: vasprun.xml's of all volumes in correct order",
-    )
-    args = parser.parse_args()
-    return args
+import argparse
+import dataclasses
+import os
+import sys
+from collections.abc import Sequence
+
+import numpy as np
+from numpy.typing import NDArray
+
+from phonopy.interface.vasp import parse_vasprunxml
+from phonopy.qha.electron import get_free_energy_at_T
 
 
 @dataclasses.dataclass
@@ -97,13 +64,39 @@ class PhonopyVaspEfeMockArgs:
     tstep: float = 10.0
     filenames: Sequence[os.PathLike | str] | None = None
 
-    def __iter__(self):
-        """Make self iterable to support in."""
-        return (getattr(self, field.name) for field in dataclasses.fields(self))
 
-    def __contains__(self, item):
-        """Implement in operator."""
-        return item in (field.name for field in dataclasses.fields(self))
+def get_options() -> argparse.Namespace:
+    """Parse command-line options."""
+    parser = argparse.ArgumentParser(description="Phonopy vasp-efe command-line-tool")
+    default_vals = PhonopyVaspEfeMockArgs()
+    parser.add_argument(
+        "--tmax",
+        dest="tmax",
+        type=float,
+        default=default_vals.tmax,
+        help="Maximum calculated temperature",
+    )
+    parser.add_argument(
+        "--tmin",
+        dest="tmin",
+        type=float,
+        default=default_vals.tmin,
+        help="Minimum calculated temperature",
+    )
+    parser.add_argument(
+        "--tstep",
+        dest="tstep",
+        type=float,
+        default=default_vals.tstep,
+        help="Calculated temperature step",
+    )
+    parser.add_argument(
+        "filenames",
+        nargs="*",
+        help="Filenames: vasprun.xml's of all volumes in correct order",
+    )
+    args = parser.parse_args()
+    return args
 
 
 def get_free_energy_lines(temperatures: NDArray, free_energies: NDArray) -> list[str]:
@@ -156,8 +149,9 @@ def get_fe_ev_lines(
     return lines_fe, lines_ev
 
 
-def main(**argparse_control: PhonopyVaspEfeMockArgs):
+def main(**argparse_control: PhonopyVaspEfeMockArgs) -> None:
     """Run phonopy-vasp-efe."""
+    args: PhonopyVaspEfeMockArgs | argparse.Namespace
     if argparse_control:
         args = argparse_control["args"]
     else:

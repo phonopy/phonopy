@@ -651,7 +651,10 @@ class AtomicData:
     )
 
 
-def set_atomic_data(atomic_data: AtomicData | None = None):
+_atomic_data: AtomicData
+
+
+def set_atomic_data(atomic_data: AtomicData | None = None) -> None:
     """Set atomic data: symbol_map, atom_data, isotope_data."""
     global _atomic_data
     if atomic_data is None:
@@ -660,12 +663,12 @@ def set_atomic_data(atomic_data: AtomicData | None = None):
         _atomic_data = atomic_data
 
 
-def get_atomic_data():
+def get_atomic_data() -> AtomicData:
     """Return atomic data: symbol_map, atom_data, isotope_data."""
     return _atomic_data
 
 
-def set_ASE_atomic_masses_iupac2016():
+def set_ASE_atomic_masses_iupac2016() -> None:
     """Set atomic masses from ASE according to IUPAC 2016.
 
     Note
@@ -674,7 +677,7 @@ def set_ASE_atomic_masses_iupac2016():
 
     """
     try:
-        from ase.data import atomic_masses_iupac2016
+        from ase.data import atomic_masses_iupac2016  # type: ignore[import-not-found]
 
         atomic_data = get_atomic_data()
         atom_data = atomic_data.atom_data
@@ -696,15 +699,16 @@ def set_ASE_atomic_masses_iupac2016():
             symbol_map[symbol] = atomic_number
 
         assert len(atom_data) == len(atomic_masses_iupac2016)
-        new_data = []
+        new_data: list[tuple[int, str, str, float | None]] = []
         for i, ary in enumerate(atom_data):
             assert ary[0] == i, "Atomic data index mismatch."
+            _ary: list[int | str | float | None]
             if i >= 113:
                 _ary = list(chemical_names[i - 113])
             else:
                 _ary = list(ary)
             _ary[3] = atomic_masses_iupac2016[i]
-            new_data.append(tuple(_ary))
+            new_data.append((_ary[0], _ary[1], _ary[2], _ary[3]))  # type: ignore[arg-type]
 
         atomic_data.atom_data = tuple(new_data)
         set_atomic_data(atomic_data)

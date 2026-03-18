@@ -62,7 +62,7 @@ def create_FORCE_SETS(
     force_sets_filename: str | os.PathLike = "FORCE_SETS",
     save_params: bool = False,
     log_level: int = 0,
-):
+) -> None:
     """Create FORCE_SETS from phonopy_disp.yaml and calculator output files.
 
     Reading disp.yaml instead of phonopy_disp.yaml is deprecated.
@@ -115,7 +115,7 @@ def create_FORCE_SETS(
         dataset_type = 2
     else:
         raise RuntimeError(
-            "Number of atoms could not be retrieved from %s" % disp_filename
+            f'Number of atoms could not be retrieved from "{disp_filename}"'
         )
 
     if log_level > 0:
@@ -127,6 +127,7 @@ def create_FORCE_SETS(
         force_filenames,
         disp_filename,
         force_sets_zero_mode=force_sets_zero_mode,
+        log_level=log_level,
     ):
         force_sets = []
     else:
@@ -149,10 +150,7 @@ def create_FORCE_SETS(
             )
             force_sets = calc_dataset["forces"]
             if "points" in calc_dataset:
-                if force_sets_zero_mode:
-                    range_start = 1
-                else:
-                    range_start = 0
+                range_start = int(force_sets_zero_mode)
                 assert supercell is not None
                 if filename := check_agreements_of_displacements(
                     supercell,
@@ -221,40 +219,38 @@ def create_FORCE_SETS(
 
     else:
         if log_level > 0:
-            print("%s could not be created." % force_sets_filename)
+            print(f'"{force_sets_filename}" could not be created.')
 
 
 def check_number_of_force_files(
     num_displacements: int,
-    force_filenames: list[str] | list[os.PathLike],
+    force_filenames: list[str | os.PathLike],
     disp_filename: str | os.PathLike,
     force_sets_zero_mode: bool = False,
-):
+    log_level: int = 0,
+) -> bool:
     """Verify number of supercell force files.
 
     This function is public because being used from phono3py.
 
     """
-    if force_sets_zero_mode:
-        num_force_filenames = len(force_filenames) - 1
-    else:
-        num_force_filenames = len(force_filenames)
-
+    num_force_filenames = len(force_filenames) - int(force_sets_zero_mode)
     if num_displacements != num_force_filenames:
-        print(f"Number of files to be read ({num_force_filenames}) don't match to")
-        print(
-            f'the number of displacements ({num_displacements}) in "{disp_filename}".'
-        )
+        if log_level > 0:
+            print(f"Number of files to be read ({num_force_filenames}) don't match to")
+            print(
+                f"the number of displacements ({num_displacements}) in "
+                f'"{disp_filename}".'
+            )
         return False
-    else:
-        return True
+    return True
 
 
 def check_agreements_of_displacements(
     supercell: PhonopyAtoms,
     dataset: dict,
-    all_points: list[NDArray],
-    force_filenames: list[str] | list[os.PathLike],
+    all_points: list[NDArray[np.double]],
+    force_filenames: list[str | os.PathLike],
 ) -> str | os.PathLike | None:
     """Check agreements of displacements.
 
@@ -271,10 +267,11 @@ def check_agreements_of_displacements(
         diff -= np.rint(diff)
         if (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any():
             return filename
+    return None
 
 
 def check_agreement_of_supercell_positions(
-    supercell: PhonopyAtoms, points: NDArray
+    supercell: PhonopyAtoms, points: NDArray[np.double]
 ) -> bool:
     """Check agreement of supercell positions."""
     diff = supercell.scaled_positions - points
@@ -282,7 +279,7 @@ def check_agreement_of_supercell_positions(
     return (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any()
 
 
-def _subtract_residual_forces(force_sets: list[NDArray]) -> list[NDArray]:
-    for i in range(1, len(force_sets)):
-        force_sets[i] -= force_sets[0]
-    return force_sets[1:]
+def _subtract_residual_forces(
+    force_sets: list[NDArray[np.double]],
+) -> list[NDArray[np.double]]:
+    return [fs - force_sets[0] for fs in force_sets[1:]]

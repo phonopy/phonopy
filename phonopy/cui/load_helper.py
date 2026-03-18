@@ -64,6 +64,7 @@ from phonopy.harmonic.force_constants import (
     full_fc_to_compact_fc,
 )
 from phonopy.interface.calculator import (
+    StructureInfo,
     get_force_constant_conversion_factor,
     read_crystal_structure,
 )
@@ -77,10 +78,12 @@ from phonopy.structure.dataset import forces_in_dataset
 
 
 def get_cell_settings(
-    supercell_matrix: Sequence[int] | Sequence[Sequence[int]] | NDArray | None = None,
+    supercell_matrix: (
+        Sequence[int] | Sequence[Sequence[int]] | NDArray[np.int64] | None
+    ) = None,
     primitive_matrix: Sequence[Sequence[float]]
     | Literal["P", "F", "I", "A", "C", "R", "auto"]
-    | NDArray
+    | NDArray[np.double]
     | None = None,
     unitcell: PhonopyAtoms | None = None,
     supercell: PhonopyAtoms | None = None,
@@ -91,8 +94,8 @@ def get_cell_settings(
     log_level: int = 0,
 ) -> tuple[
     PhonopyAtoms | None,
-    Sequence[int] | Sequence[Sequence[int]] | NDArray | None,
-    Literal["auto"] | NDArray | None,
+    Sequence[int] | Sequence[Sequence[int]] | NDArray[np.int64] | None,
+    Literal["auto"] | NDArray[np.double] | None,
 ]:
     """Return crystal structures."""
     optional_structure_info = None
@@ -110,7 +113,8 @@ def get_cell_settings(
         smat = supercell_matrix
         if log_level:
             print(
-                'Unit cell structure was read from "%s".' % optional_structure_info[0]
+                "Unit cell structure was read from"
+                f' "{optional_structure_info.unitcell_filename}".'
             )
     elif supercell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
@@ -119,7 +123,8 @@ def get_cell_settings(
         smat = np.eye(3, dtype="int64", order="C")
         if log_level:
             print(
-                'Supercell structure was read from "%s".' % optional_structure_info[0]
+                "Supercell structure was read from"
+                f' "{optional_structure_info.unitcell_filename}".'
             )
     elif unitcell is not None:
         cell = unitcell.copy()
@@ -131,7 +136,7 @@ def get_cell_settings(
         raise RuntimeError("Cell has to be specified.")
 
     if optional_structure_info is not None and cell is None:
-        filename = optional_structure_info[0]
+        filename = optional_structure_info.unitcell_filename
         msg = "'%s' could not be found." % filename
         raise FileNotFoundError(msg)
 
@@ -205,9 +210,9 @@ def get_nac_params(
 
 def read_force_constants_from_hdf5(
     filename: str | os.PathLike = "force_constants.hdf5",
-    p2s_map: NDArray | None = None,
+    p2s_map: NDArray[np.int64] | None = None,
     calculator: str | None = None,
-) -> NDArray:
+) -> NDArray[np.double]:
     """Convert force constants physical unit.
 
     Each calculator interface has own default force constants physical unit.
@@ -267,11 +272,11 @@ def select_and_load_dataset(
 def select_and_extract_force_constants(
     phonon: Phonopy,
     phonopy_yaml_filename: str | os.PathLike | None = None,
-    force_constants: NDArray | None = None,
+    force_constants: NDArray[np.double] | None = None,
     force_constants_filename: str | os.PathLike | None = None,
     is_compact_fc: bool = True,
     log_level: int = 0,
-) -> NDArray | None:
+) -> NDArray[np.double] | None:
     """Extract force constants.
 
     1. From fc (ndarray) in phonopy_yaml.
@@ -314,7 +319,7 @@ def produce_force_constants(
     is_compact_fc: bool = True,
     use_symfc_projector: bool = False,
     log_level: int = 0,
-):
+) -> None:
     """Produce force constants."""
     try:
         phonon.produce_force_constants(
@@ -336,7 +341,9 @@ def produce_force_constants(
             print("Displacement-force dataset was not found. ")
 
 
-def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray):
+def check_nac_params(
+    nac_params: dict, unitcell: PhonopyAtoms, pmat: NDArray[np.double]
+) -> None:
     """Check number of Born effective charges."""
     borns = nac_params["born"]
     if len(borns) != np.rint(len(unitcell) * np.linalg.det(pmat)).astype(int):
@@ -349,7 +356,7 @@ def develop_or_load_pypolymlp(
     mlp_params: str | dict | PypolymlpParams | None = None,
     mlp_filename: str | os.PathLike | None = None,
     log_level: int = 0,
-):
+) -> None:
     """Run pypolymlp to compute forces."""
     if log_level:
         print("-" * 29 + " pypolymlp start " + "-" * 30)
@@ -369,7 +376,9 @@ def develop_or_load_pypolymlp(
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
 
 
-def _show_pypolymlp_header(mlp_params: str | dict | PypolymlpParams | None = None):
+def _show_pypolymlp_header(
+    mlp_params: str | dict | PypolymlpParams | None = None,
+) -> None:
     """Show pypolymlp header."""
     import pypolymlp
 
@@ -383,7 +392,7 @@ def _load_pypolymlp(
     phonon: Phonopy,
     mlp_filename: str | os.PathLike | None = None,
     log_level: int = 0,
-):
+) -> None:
     """Load MLPs from polymlp.yaml or phonopy.pmlp."""
     _mlp_filename = None
     if mlp_filename is None:
@@ -423,7 +432,7 @@ def _develop_and_save_pypolymlp(
     mlp_params: str | dict | PypolymlpParams | None = None,
     mlp_filename: str | os.PathLike | None = None,
     log_level: int = 0,
-):
+) -> None:
     """Develop MLPs by pypolymlp and save them into polymlp.yaml."""
     if forces_in_dataset(phonon.mlp_dataset):
         if log_level:
@@ -464,7 +473,7 @@ def prepare_dataset_by_pypolymlp(
     rd_number_estimation_factor: float | None = None,
     random_seed: int | None = None,
     log_level: int = 0,
-):
+) -> None:
     """Generate displacements and evaluate forces by pypolymlp."""
     if displacement_distance is None:
         _displacement_distance = 0.01
@@ -509,10 +518,11 @@ def prepare_dataset_by_pypolymlp(
     phonon.evaluate_mlp()
 
 
-def _read_force_constants_file(phonon: Phonopy, force_constants_filename) -> NDArray:
-    dot_split = force_constants_filename.split(".")
+def _read_force_constants_file(
+    phonon: Phonopy, force_constants_filename: str | os.PathLike
+) -> NDArray[np.double]:
     p2s_map = phonon.primitive.p2s_map
-    if len(dot_split) > 1 and dot_split[-1] == "hdf5":
+    if pathlib.Path(force_constants_filename).suffix == ".hdf5":
         _fc = read_force_constants_from_hdf5(
             filename=force_constants_filename,
             p2s_map=p2s_map,
@@ -526,7 +536,7 @@ def _read_force_constants_file(phonon: Phonopy, force_constants_filename) -> NDA
 
 def _read_crystal_structure(
     filename: str | os.PathLike | None = None, interface_mode: str | None = None
-) -> tuple[PhonopyAtoms | None, tuple]:
+) -> tuple[PhonopyAtoms | None, StructureInfo]:
     try:
         return read_crystal_structure(filename=filename, interface_mode=interface_mode)
     except FileNotFoundError:

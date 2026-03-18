@@ -39,7 +39,8 @@ import dataclasses
 import lzma
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from typing import Any
 
 import h5py
 import numpy as np
@@ -67,7 +68,7 @@ def _get_label_for_latex(label: str) -> str:
     return label.replace("_", r"\_")
 
 
-def _get_max_frequency(frequencies: list[NDArray]) -> float:
+def _get_max_frequency(frequencies: list[NDArray[np.double]]) -> float:
     return max([np.max(fq) for fq in frequencies])
 
 
@@ -79,12 +80,14 @@ def _find_wrong_path_connections(all_path_connections: list[list[bool]]) -> int:
 
 
 def _arrange_band_data(
-    distances: NDArray,
-    frequencies: NDArray,
-    qpoints: NDArray,
-    segment_nqpoints: NDArray,
-    label_pairs,
-) -> tuple[list[str] | None, list[bool], list[NDArray], list[NDArray]]:
+    distances: NDArray[np.double],
+    frequencies: NDArray[np.double],
+    qpoints: NDArray[np.double],
+    segment_nqpoints: NDArray[np.int64],
+    label_pairs: list[list[str]],
+) -> tuple[
+    list[str] | None, list[bool], list[NDArray[np.double]], list[NDArray[np.double]]
+]:
     i = 0
     freq_list = []
     dist_list = []
@@ -131,13 +134,17 @@ def _arrange_band_data(
     return labels, path_connections, freq_list, dist_list
 
 
-def _savefig(plt, file, fonttype=42, family="serif"):
+def _savefig(
+    plt: Any, file: str | os.PathLike, fonttype: int = 42, family: str = "serif"
+) -> None:
     plt.rcParams["pdf.fonttype"] = fonttype
     plt.rcParams["font.family"] = family
     plt.savefig(file)
 
 
-def _get_dos(d: NDArray, f: NDArray, dmax: float) -> NDArray:
+def _get_dos(
+    d: NDArray[np.double], f: NDArray[np.double], dmax: float
+) -> NDArray[np.double]:
     """Cut DOS at dmax and dmin.
 
     Assume f is ordered.
@@ -149,7 +156,9 @@ def _get_dos(d: NDArray, f: NDArray, dmax: float) -> NDArray:
     return np.transpose(pdos)
 
 
-def _cut_dos(p1: tuple[float, float], p2: tuple[float, float], dmax: float):
+def _cut_dos(
+    p1: tuple[float, float], p2: tuple[float, float], dmax: float
+) -> list[tuple[float, float] | list[float]]:
     """Cut DOS at dmax.
 
     Parameters
@@ -196,7 +205,13 @@ def _cut_dos(p1: tuple[float, float], p2: tuple[float, float], dmax: float):
 
 def _read_band_yaml(
     filename: str | os.PathLike,
-) -> tuple[NDArray, NDArray, NDArray, NDArray, list[list[str]]]:
+) -> tuple[
+    NDArray[np.double],
+    NDArray[np.double],
+    NDArray[np.double],
+    NDArray[np.int64],
+    list[list[str]],
+]:
     _, ext = os.path.splitext(filename)
     if ext == ".xz" or ext == ".lzma":
         with lzma.open(filename) as f:
@@ -233,7 +248,13 @@ def _read_band_yaml(
 
 def _read_band_hdf5(
     filename: str | os.PathLike,
-) -> tuple[NDArray, NDArray, NDArray, NDArray, list[list[str]]]:
+) -> tuple[
+    NDArray[np.double],
+    NDArray[np.double],
+    NDArray[np.double],
+    NDArray[np.int64],
+    list[list[str]],
+]:
     with h5py.File(filename, "r") as data:
         labels_path = []
         for x in data["label"][:]:  # type: ignore
@@ -268,7 +289,7 @@ def _read_dos_dat(
     pdos_indices: str | None = None,
     factor: float | None = None,
     dos_factor: float | None = None,
-) -> tuple[NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Read DOS data.
 
     When pdos_indices is given, sum up projected DOSs of specified indices.
@@ -311,7 +332,7 @@ def _read_dos_dat(
     return frequencies[ind], dos[ind]
 
 
-def get_options():
+def get_options() -> argparse.Namespace:
     """Parse options."""
     parser = argparse.ArgumentParser(description="Phonopy bandplot command-line-tool")
     default_vals = PhonopyBandplotMockArgs()
@@ -423,7 +444,7 @@ def get_options():
     return args
 
 
-def _plot(params: PhonopyBandplotMockArgs):
+def _plot(params: PhonopyBandplotMockArgs) -> None:
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1 import ImageGrid
 
@@ -535,9 +556,9 @@ def _plot(params: PhonopyBandplotMockArgs):
 
 def _plot_dos(
     params: PhonopyBandplotMockArgs,
-    axs,
+    axs: list[Any],
     max_frequencies: list[float],
-):
+) -> None:
     assert params.dos_filename is not None
     dos_frequencies, dos = _read_dos_dat(
         params.dos_filename,
@@ -615,7 +636,7 @@ def _plot_dos(
     axs[-1].set_aspect(aspect)
 
 
-def _write_gnuplot_data(params: PhonopyBandplotMockArgs):
+def _write_gnuplot_data(params: PhonopyBandplotMockArgs) -> None:
     if params.is_hdf5:
         if len(params.filenames) == 0:
             filenames = [
@@ -687,16 +708,16 @@ class PhonopyBandplotMockArgs:
 
     filenames: Sequence[str | os.PathLike] = ()
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         """Make self iterable to support in."""
         return (getattr(self, field.name) for field in dataclasses.fields(self))
 
-    def __contains__(self, item):
+    def __contains__(self, item: Any) -> bool:
         """Implement in operator."""
         return item in (field.name for field in dataclasses.fields(self))
 
 
-def main(**argparse_control: PhonopyBandplotMockArgs):
+def main(**argparse_control: PhonopyBandplotMockArgs) -> None:
     """Run phonopy-bandplot."""
     if argparse_control:
         params = argparse_control["args"]

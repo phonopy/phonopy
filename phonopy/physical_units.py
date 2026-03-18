@@ -147,7 +147,7 @@ class PhysicalUnitsGenerator:
     EvTokJmol: float | None = None  # [kJ/mol]
     DefaultToTHz: float | None = None  # [THz]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize derived physical constants."""
         Mu0 = 4.0e-7 * pi  # [Hartree/m]
         self.THz = 1.0e12  # [/s]
@@ -264,7 +264,7 @@ def set_physical_units(
     AMU: float = 1.6605402e-27,  # [kg]
     EV: float = 1.60217733e-19,  # [J]
     Me: float = 9.10938215e-31,  # [kg],
-):
+) -> None:
     """Set physical units used globally.
 
     Default values are:
@@ -546,5 +546,6 @@ def get_calculator_physical_units(
     return units
 
 
-# Global variable _physical_units is initialized here.
+# Global variable _physical_units is initialized by set_physical_units() below.
+_physical_units: PhysicalUnits
 set_physical_units()

@@ -48,7 +48,7 @@ from phonopy.interface.calculator import (
 )
 
 
-def fix_deprecated_option_names(argv) -> list[str]:
+def fix_deprecated_option_names(argv: list[str]) -> list[str]:
     """Replace underscore in command option name by hyphen."""
     deprecated = []
     for i, v in enumerate(argv[1:]):
@@ -62,7 +62,7 @@ def fix_deprecated_option_names(argv) -> list[str]:
     return deprecated
 
 
-def show_deprecated_option_warnings(deprecated: list[str]):
+def show_deprecated_option_warnings(deprecated: list[str]) -> None:
     """Show warning when underscore is included in command option name."""
     lines = [
         "Option names with underscores are deprecated, by which",
@@ -83,12 +83,9 @@ def get_parser(
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
 
-    try:
-        parser = argparse.ArgumentParser(
-            description="Phonopy command-line-tool", allow_abbrev=False
-        )  # allow_abbrev requires >= python 3.5
-    except TypeError:
-        parser = argparse.ArgumentParser(description="Phonopy command-line-tool")
+    parser = argparse.ArgumentParser(
+        description="Phonopy command-line-tool", allow_abbrev=False
+    )
 
     add_arguments_of_calculators(parser, calculator_info)
 
@@ -115,7 +112,7 @@ def get_parser(
         dest="displacement_distance_max",
         type=float,
         default=None,
-        help="Minimum distance of displacements in random displacements",
+        help="Maximum distance of displacements in random displacements",
     )
     parser.add_argument(
         "--anime", nargs="+", dest="anime", default=None, help="Same as ANIME tag"
@@ -169,7 +166,7 @@ def get_parser(
         nargs="+",
         dest="band_indices",
         default=None,
-        help=("Band indices to be included to calcualte thermal properties"),
+        help=("Band indices to be included to calculate thermal properties"),
     )
     if not load_phonopy_yaml:
         parser.add_argument(
@@ -338,17 +335,6 @@ def get_parser(
         default=None,
         help="Fits total DOS to a Debye model",
     )
-    # parser.add_argument(
-    #     "--freq-scale",
-    #     dest="frequency_scale_factor",
-    #     type=float,
-    #     default=None,
-    #     help=(
-    #         "Squared scale factor multiplied as fc2 * factor^2. Therefore "
-    #         "frequency is changed but the contribution from NAC is not "
-    #         "changed."
-    #     ),
-    # )
     parser.add_argument(
         "--full-fc",
         dest="is_full_fc",
@@ -755,7 +741,7 @@ def get_parser(
         dest="read_qpoints",
         action="store_true",
         default=None,
-        help="Read QPOITNS",
+        help="Read QPOINTS",
     )
     parser.add_argument(
         "--relax-atomic-positions",
@@ -987,11 +973,3 @@ class PhonopyMockArgs:
     thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool | None = None
     write_dynamical_matrices: bool | None = None
-
-    def __iter__(self):
-        """Make self iterable to support in."""
-        return (getattr(self, field.name) for field in dataclasses.fields(self))
-
-    def __contains__(self, item):
-        """Implement in operator."""
-        return item in (field.name for field in dataclasses.fields(self))

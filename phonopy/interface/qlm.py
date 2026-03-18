@@ -2,17 +2,26 @@
 
 # Initial version by GCGS, adaptation to phonopy v2 and subsequent revision by DLP
 
+from __future__ import annotations
+
 import os
 import sys
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     is_parsed = True
     force_sets = []
@@ -35,7 +44,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_qlm(filename):
+def read_qlm(filename: str | os.PathLike) -> tuple[PhonopyAtoms, tuple[QlmFl]]:
     """Read crystal structure."""
     qlm_ctx = QlmFl()
     qlm_ctx.load_site(filename)
@@ -56,21 +65,27 @@ def read_qlm(filename):
     return cell, (qlm_ctx,)
 
 
-def to_site_str(cell, *extra_args):
+def to_site_str(cell: PhonopyAtoms, *extra_args: Any) -> str:
     """Convert cell to site-formatted string."""
     qctx = extra_args[0] if extra_args else QlmFl()
     return qctx.to_site_str(cell)
 
 
-def write_qlm(filename, cell, *extra_args):
+def write_qlm(
+    filename: str | os.PathLike, cell: PhonopyAtoms, *extra_args: Any
+) -> None:
     """Write site file."""
     qctx = extra_args[0] if extra_args else QlmFl()
     qctx.write_site(cell, filename=filename)
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_displacements, ids, qlm_ctx, width=3
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    qlm_ctx: QlmFl,
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     qlm_ctx.write_site(supercell, prefix="supercell")
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -80,28 +95,28 @@ def write_supercells_with_displacements(
 class QlmFl:
     """Class to read and write QLM site files."""
 
-    def __init__(self):
-        self._filename = "site.lm"
-        self._ext = ".lm"
-        self._content = ""
+    def __init__(self) -> None:
+        self._filename: str | os.PathLike = "site.lm"
+        self._ext: str = ".lm"
+        self._content: str = ""
 
-        self.natom = 0
-        self.xpos = False
-        self.alat = 1.0
-        self.plat = np.eye(3)
+        self.natom: int = 0
+        self.xpos: bool = False
+        self.alat: float = 1.0
+        self.plat: NDArray[np.double] = np.eye(3)
 
-        self.symbols = []
-        self.symbols_sfxn = []
-        self.positions = np.array([])
+        self.symbols: list[str] = []
+        self.symbols_sfxn: list[str] = []
+        self.positions: NDArray[np.double] = np.array([])
 
-        self._lsorted_els = sorted(
+        self._lsorted_els: list[str] = sorted(
             get_atomic_data().symbol_map.keys(), key=len, reverse=True
         )
 
-        self._sq2sp = dict()
-        self._sp2sq = dict()
+        self._sq2sp: dict[str, str] = dict()
+        self._sp2sq: dict[str, str] = dict()
 
-    def split_symbol_element(self, s):
+    def split_symbol_element(self, s: str) -> tuple[str, str]:
         """Split symbol to element and suffix."""
         el_sfx = "", s
 
@@ -112,7 +127,7 @@ class QlmFl:
 
         return el_sfx
 
-    def load_site(self, filename):
+    def load_site(self, filename: str | os.PathLike) -> None:
         """Fill internal variables from site file."""
         self._filename = filename
         self._ext = os.path.splitext(filename)[1]
@@ -172,7 +187,7 @@ class QlmFl:
         assert self.natom == self.positions.shape[0]
         assert self.natom == len(self.symbols)
 
-    def to_site_str(self, cell):
+    def to_site_str(self, cell: PhonopyAtoms) -> str:
         """Write cell to site file formatted string."""
         lattice = cell.cell / self.alat
         natoms = len(cell.symbols)
@@ -206,7 +221,14 @@ class QlmFl:
 
         return "\n".join(lines) + "\n"
 
-    def write_site(self, cell, filename="", prefix="", idx=None, width=None):
+    def write_site(
+        self,
+        cell: PhonopyAtoms,
+        filename: str | os.PathLike = "",
+        prefix: str = "",
+        idx: int | None = None,
+        width: int | None = None,
+    ) -> None:
         """Write optionally indexed cell to site file."""
         fname = filename
 

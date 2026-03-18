@@ -34,8 +34,24 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+from typing import TypedDict
+
+_MatRow = tuple[int, int, int]
+RotationRep = tuple[_MatRow, _MatRow, _MatRow]
+
+
+class CharTableEntry(TypedDict):
+    """Character table entry for a point group."""
+
+    rotation_list: str | tuple[str, ...]
+    character_table: dict[str, int | tuple[int, ...]]
+    mapping_table: dict[str, tuple[RotationRep, ...]]
+
+
 # from Wikipedia http://en.wikipedia.org/wiki/List_of_character_tables_for_chemically_important_3D_point_groups  # noqa E501
-character_table = {
+character_table: dict[str, list[CharTableEntry]] = {
     # C1 (1)
     "1": [
         {

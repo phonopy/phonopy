@@ -89,7 +89,10 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
         cell_info.phonopy_yaml is None
         or cell_info.phonopy_yaml.supercell_matrix is None
     ) and determinant(cell_info.supercell_matrix) > 1:
-        print(f'Input crystal structure: "{cell_info.optional_structure_info[0]}"')
+        print(
+            f"Input crystal structure: "
+            f'"{cell_info.optional_structure_info.unitcell_filename}"'
+        )
         phyml = PhonopyYaml()
         phyml.supercell = ph.supercell
         phyml.supercell_matrix = ph.supercell_matrix
@@ -118,7 +121,10 @@ def _show_symmetry_yaml(
     print(
         _get_symmetry_yaml(phonon.primitive, phonon.primitive_symmetry, phonon.version)
     )
-    print(f'# Input crystal structure: "{cell_info.optional_structure_info[0]}"')
+    print(
+        f"# Input crystal structure: "
+        f'"{cell_info.optional_structure_info.unitcell_filename}"'
+    )
     if cell_info.phonopy_yaml is None:
         optional_structure_info = cell_info.optional_structure_info
         filename = "B" + base_fname

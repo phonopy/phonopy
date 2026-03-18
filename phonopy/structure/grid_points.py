@@ -48,7 +48,7 @@ try:
 except AttributeError:
     pass
 
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.cells import (
@@ -69,7 +69,11 @@ from phonopy.structure.symmetry import (
 from phonopy.utils import similarity_transformation
 
 
-def length2mesh(length, lattice, rotations=None):
+def length2mesh(
+    length: float,
+    lattice: Sequence[Sequence[float]] | NDArray[np.double],
+    rotations: NDArray[np.int64] | None = None,
+) -> NDArray[np.int64]:
     """Convert length to mesh for q-point sampling.
 
     This conversion for each reciprocal axis follows VASP convention by
@@ -94,13 +98,13 @@ def length2mesh(length, lattice, rotations=None):
         dtype=int, shape=(3,)
 
     """
-    rec_lattice = np.linalg.inv(lattice)
+    rec_lattice = np.array(np.linalg.inv(lattice), dtype="double")
     rec_lat_lengths = get_cell_parameters(rec_lattice.T)
     mesh_numbers = np.rint(rec_lat_lengths * length).astype(int)
 
     if rotations is not None:
         reclat_equiv = get_lattice_vector_equivalence(
-            [r.T for r in np.array(rotations)]
+            np.array([r.T for r in rotations], dtype="int64")
         )
         m = mesh_numbers
         mesh_equiv = [m[1] == m[2], m[2] == m[0], m[0] == m[1]]
@@ -113,15 +117,18 @@ def length2mesh(length, lattice, rotations=None):
 
 
 def get_qpoints(
-    mesh_numbers: Sequence[int] | NDArray,
-    reciprocal_lattice: Sequence[Sequence[float]] | NDArray,  # column vectors
-    q_mesh_shift: Sequence[float] | NDArray | None = None,
+    mesh_numbers: Sequence[int] | NDArray[np.int64],
+    reciprocal_lattice: Sequence[Sequence[float]]
+    | NDArray[np.double],  # column vectors
+    q_mesh_shift: Sequence[float] | NDArray[np.double] | None = None,
     is_gamma_center: bool = True,
     is_time_reversal: bool = True,
     fit_in_BZ: bool = True,
-    rotations: Sequence | NDArray | None = None,  # Point group operations in real space
+    rotations: Sequence[Sequence[Sequence[int]]]
+    | NDArray[np.int64]
+    | None = None,  # Point group operations in real space
     is_mesh_symmetry: bool = True,
-):
+) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return q-points and weights on a mesh sampling grid.
 
     See attributes of GriePoints, qpoints and wegiths.
@@ -142,8 +149,8 @@ def get_qpoints(
 
 
 def extract_ir_grid_points(
-    grid_mapping_table: NDArray,
-) -> tuple[NDArray, NDArray]:
+    grid_mapping_table: NDArray[np.int64],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Return ir-grid points and weights in grid index mapping table."""
     dtype = grid_mapping_table.dtype
     ir_grid_points = np.array(np.unique(grid_mapping_table), dtype=dtype)
@@ -192,15 +199,18 @@ class GridPoints:
 
     def __init__(
         self,
-        mesh_numbers: Sequence[int] | NDArray,
-        reciprocal_lattice: Sequence[Sequence[float]] | NDArray,
-        q_mesh_shift: Sequence[float] | NDArray | None = None,
+        mesh_numbers: Sequence[int] | NDArray[np.int64],
+        reciprocal_lattice: Sequence[Sequence[float]] | NDArray[np.double],
+        q_mesh_shift: Sequence[float] | NDArray[np.double] | None = None,
         is_gamma_center: bool = True,
         is_time_reversal: bool = True,
         fit_in_BZ: bool = True,
-        rotations: Sequence | NDArray | None = None,
+        rotations: Sequence[Sequence[Sequence[int]]]
+        | Sequence[NDArray[np.int64]]
+        | NDArray[np.int64]
+        | None = None,
         is_mesh_symmetry: bool = True,
-    ):  # Except for time reversal symmetry
+    ) -> None:  # Except for time reversal symmetry
         """Init method.
 
         Note
@@ -240,7 +250,7 @@ class GridPoints:
             dtype='int64'
             shape=(rotations, 3, 3)
         is_mesh_symmetry: bool, optional, default True
-            Wheather symmetry search is done or not.
+            Whether symmetry search is done or not.
 
         """
         self._mesh = np.array(mesh_numbers, dtype="int64")
@@ -255,11 +265,11 @@ class GridPoints:
         )
         self._is_mesh_symmetry = is_mesh_symmetry
 
-        self._ir_qpoints: NDArray
-        self._grid_address: NDArray
-        self._ir_grid_points: NDArray
-        self._ir_weights: NDArray
-        self._grid_mapping_table: NDArray
+        self._ir_qpoints: NDArray[np.double]
+        self._grid_address: NDArray[np.int64]
+        self._ir_grid_points: NDArray[np.int64]
+        self._ir_weights: NDArray[np.int64]
+        self._grid_mapping_table: NDArray[np.int64]
 
         if self._is_shift is None:
             self._is_mesh_symmetry = False
@@ -271,42 +281,43 @@ class GridPoints:
             self._set_grid_points()
 
     @property
-    def mesh_numbers(self) -> NDArray:
+    def mesh_numbers(self) -> NDArray[np.int64]:
         """Return mesh numbers."""
         return self._mesh
 
     @property
-    def reciprocal_lattice(self) -> NDArray:
+    def reciprocal_lattice(self) -> NDArray[np.double]:
         """Return reciprocal lattice in column vectors."""
         return self._rec_lat
 
     @property
-    def grid_address(self) -> NDArray:
+    def grid_address(self) -> NDArray[np.int64]:
         """Return all grid point addresses."""
         return self._grid_address
 
     @property
-    def ir_grid_points(self) -> NDArray:
+    def ir_grid_points(self) -> NDArray[np.int64]:
         """Return ir-grid point indices."""
         return self._ir_grid_points
 
     @property
-    def qpoints(self) -> NDArray:
+    def qpoints(self) -> NDArray[np.double]:
         """Return irreducible q-points."""
         return self._ir_qpoints
 
     @property
-    def weights(self) -> NDArray:
+    def weights(self) -> NDArray[np.int64]:
         """Return weights of ir-grid points."""
         return self._ir_weights
 
     @property
-    def grid_mapping_table(self) -> NDArray:
+    def grid_mapping_table(self) -> NDArray[np.int64]:
         """Return grid index mapping table."""
         return self._grid_mapping_table
 
-    def _set_grid_points(self):
+    def _set_grid_points(self) -> None:
         if self._is_mesh_symmetry and self._has_mesh_symmetry():
+            assert self._rotations is not None
             self._set_ir_qpoints(
                 self._rotations, is_time_reversal=self._is_time_reversal
             )
@@ -315,13 +326,18 @@ class GridPoints:
                 [np.eye(3, dtype="int64")], is_time_reversal=self._is_time_reversal
             )
 
-    def _shift2boolean(self, q_mesh_shift, is_gamma_center=False, tolerance=1e-5):
+    def _shift2boolean(
+        self,
+        q_mesh_shift: Sequence[float] | NDArray[np.double] | None,
+        is_gamma_center: bool = False,
+        tolerance: float = 1e-5,
+    ) -> list | None:
         """Return bools of with or without half-shifts.
 
         Parameters
         ----------
         tolerance : float
-            This is used to judge zero/half gird shift.
+            This is used to judge zero/half grid shift.
 
         """
         if q_mesh_shift is None:
@@ -342,15 +358,17 @@ class GridPoints:
 
         return is_shift
 
-    def _has_mesh_symmetry(self):
+    def _has_mesh_symmetry(self) -> bool:
         if self._rotations is None:
             return False
         m = self._mesh
         mesh_equiv = [m[1] == m[2], m[2] == m[0], m[0] == m[1]]
-        lattice_equiv = get_lattice_vector_equivalence([r.T for r in self._rotations])
-        return np.extract(lattice_equiv, mesh_equiv).all()
+        lattice_equiv = get_lattice_vector_equivalence(
+            np.array([r.T for r in self._rotations], dtype="int64", order="C")
+        )
+        return bool(np.extract(lattice_equiv, mesh_equiv).all())
 
-    def _fit_qpoints_in_BZ(self):
+    def _fit_qpoints_in_BZ(self) -> None:
         qpolongset_in_BZ = get_qpoints_in_Brillouin_zone(
             self._rec_lat, self._ir_qpoints
         )
@@ -359,7 +377,11 @@ class GridPoints:
         )
         self._ir_qpoints = qpoints_in_BZ
 
-    def _set_ir_qpoints(self, rotations, is_time_reversal=True):
+    def _set_ir_qpoints(
+        self,
+        rotations: NDArray[np.int64] | list[NDArray[np.int64]],
+        is_time_reversal: bool = True,
+    ) -> None:
         grid_mapping_table, grid_address = spglib.get_stabilized_reciprocal_mesh(
             self._mesh,
             rotations,
@@ -370,8 +392,6 @@ class GridPoints:
         # uintp to long
         grid_mapping_table = np.array(grid_mapping_table, dtype="int64")
 
-        dtype = "int64"
-
         if self._fit_in_BZ:
             grid_address, _ = spglib.relocate_BZ_grid_address(
                 grid_address,
@@ -381,12 +401,12 @@ class GridPoints:
                 is_dense=True,
             )  # type: ignore
             self._grid_address = np.array(
-                grid_address[: np.prod(self._mesh)], dtype=dtype, order="C"
+                grid_address[: np.prod(self._mesh)], dtype="int64", order="C"
             )
         else:
-            self._grid_address = np.array(grid_address, dtype=dtype, order="C")
+            self._grid_address = np.array(grid_address, dtype="int64", order="C")
 
-        (self._ir_grid_points, self._ir_weights) = extract_ir_grid_points(
+        self._ir_grid_points, self._ir_weights = extract_ir_grid_points(
             grid_mapping_table
         )
 
@@ -450,13 +470,13 @@ class GeneralizedRegularGridPoints:
 
     def __init__(
         self,
-        cell,
-        length,
-        suggest=True,
-        is_time_reversal=True,
-        x_fastest=True,
-        symprec=1e-5,
-    ):
+        cell: PhonopyAtoms,
+        length: float,
+        suggest: bool = True,
+        is_time_reversal: bool = True,
+        x_fastest: bool = True,
+        symprec: float = 1e-5,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -481,11 +501,11 @@ class GeneralizedRegularGridPoints:
         self._suggest = suggest
         self._is_time_reversal = is_time_reversal
         self._x_fastest = x_fastest
-        self._grid_address: NDArray
+        self._grid_address: NDArray[np.int64]
         self._snf: SNF3x3
-        self._transformation_matrix: NDArray
-        self._grid_matrix: NDArray
-        self._reciprocal_operations: NDArray
+        self._transformation_matrix: NDArray[np.double]
+        self._grid_matrix: NDArray[np.int64]
+        self._reciprocal_operations: NDArray[np.int64]
         self._symmetry: Symmetry
         self._prepare(cell, length, symprec)
         self._generate_grid_points()
@@ -499,22 +519,22 @@ class GeneralizedRegularGridPoints:
         )
 
     @property
-    def grid_address(self) -> NDArray:
+    def grid_address(self) -> NDArray[np.int64]:
         """Return all grid point addresses."""
         return self._grid_address
 
     @property
-    def qpoints(self) -> NDArray:
+    def qpoints(self) -> NDArray[np.double]:
         """Return all q-points."""
         return self._qpoints
 
     @property
-    def grid_matrix(self) -> NDArray:
+    def grid_matrix(self) -> NDArray[np.int64]:
         """Return grid generating matrix."""
         return self._grid_matrix
 
     @property
-    def transformation_matrix(self) -> NDArray:
+    def transformation_matrix(self) -> NDArray[np.double]:
         """Return transformation matrix."""
         return self._transformation_matrix
 
@@ -524,16 +544,16 @@ class GeneralizedRegularGridPoints:
         return self._snf
 
     @property
-    def mesh_numbers(self):
+    def mesh_numbers(self) -> list[int]:
         """Return mesh numbers for reciprocal conventional unit cell."""
         return self._mesh_numbers
 
     @property
-    def reciprocal_operations(self):
+    def reciprocal_operations(self) -> NDArray[np.int64]:
         """Return reciprocal point group operations."""
         return self._reciprocal_operations
 
-    def _prepare(self, cell: PhonopyAtoms, length, symprec):
+    def _prepare(self, cell: PhonopyAtoms, length: float, symprec: float) -> None:
         """Define grid generating matrix and run the SNF."""
         # fsg_cell = cell.copy()
         # magmoms = fsg_cell.magnetic_moments
@@ -546,11 +566,14 @@ class GeneralizedRegularGridPoints:
             self._set_grid_matrix_by_input_cell(cell, length)
         self._snf = SNF3x3(self._grid_matrix)
 
-    def _set_grid_matrix_by_std_primitive_cell(self, cell, length):
+    def _set_grid_matrix_by_std_primitive_cell(
+        self, cell: PhonopyAtoms, length: float
+    ) -> None:
         """Grid generating matrix based on standardized primitive cell."""
         assert not isinstance(self._symmetry.dataset, NosymDataset)
         tmat = self._symmetry.dataset.transformation_matrix
         spg_type = spglib.get_spacegroup_type(self._symmetry.dataset.hall_number)
+        assert spg_type is not None
         centring = spg_type.international[0]
         pmat = get_primitive_matrix_by_centring(centring)
         conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
@@ -573,7 +596,9 @@ class GeneralizedRegularGridPoints:
             order="C",
         )
 
-    def _set_grid_matrix_by_input_cell(self, input_cell, length):
+    def _set_grid_matrix_by_input_cell(
+        self, input_cell: PhonopyAtoms, length: float
+    ) -> None:
         """Grid generating matrix based on input cell."""
         pointgroup = spglib.get_pointgroup(
             self._symmetry.symmetry_operations["rotations"]
@@ -593,7 +618,7 @@ class GeneralizedRegularGridPoints:
         )
         self._transformation_matrix = np.eye(3, dtype="double", order="C")
 
-    def _generate_grid_points(self):
+    def _generate_grid_points(self) -> None:
         d = np.diagonal(self._snf.D)
         if self._x_fastest:
             # x runs fastest.
@@ -605,7 +630,7 @@ class GeneralizedRegularGridPoints:
             np.c_[x.ravel(), y.ravel(), z.ravel()], dtype="int64", order="C"
         )
 
-    def _generate_q_points(self):
+    def _generate_q_points(self) -> None:
         D_inv = np.linalg.inv(self._snf.D)
         qpoints = np.dot(self._grid_address, np.dot(self._snf.Q, D_inv).T)
         qpoints -= np.rint(qpoints)
@@ -613,12 +638,12 @@ class GeneralizedRegularGridPoints:
 
 
 def get_reciprocal_operations(
-    rotations: ArrayLike,
-    transformation_matrix: ArrayLike,
-    D: ArrayLike,
-    Q: ArrayLike,
+    rotations: NDArray[np.int64],
+    transformation_matrix: NDArray[np.double],
+    D: NDArray[np.int64],
+    Q: NDArray[np.int64],
     is_time_reversal: bool = True,
-) -> NDArray:
+) -> NDArray[np.int64]:
     """Generate reciprocal rotation matrices.
 
     Collect unique real space rotation matrices and transpose them.
@@ -653,16 +678,16 @@ def get_reciprocal_operations(
         shape=(rotations, 3, 3), dtype='int64', order='C'
 
     """
-    unique_rots = []
-    tmat_inv = np.linalg.inv(transformation_matrix)  # type: ignore
+    unique_rots: list[NDArray[np.int64]] = []
+    tmat_inv: NDArray[np.double] = np.linalg.inv(transformation_matrix)  # type: ignore
     for r in collect_unique_rotations(rotations):
         _r = similarity_transformation(tmat_inv, r)
-        _r_int = np.rint(_r).astype(int)
+        _r_int = np.array(np.rint(_r), dtype="int64")
         assert (np.abs(_r - _r_int) < 1e-5).all()
         unique_rots.append(_r_int)
 
-    ptg_ops, rec_ops = get_pointgroup_operations(
-        unique_rots, is_time_reversal=is_time_reversal
+    _, rec_ops = get_pointgroup_operations(
+        np.array(unique_rots, dtype="int64"), is_time_reversal=is_time_reversal
     )
 
     Q_inv = np.linalg.inv(Q)  # type: ignore

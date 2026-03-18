@@ -36,12 +36,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_angles, get_cell_parameters
-
-if TYPE_CHECKING:
-    from phonopy.structure.atoms import PhonopyAtoms
 
 
 def write_cif_P1(cell: PhonopyAtoms, U_cif=None, filename=None):

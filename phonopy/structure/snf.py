@@ -34,9 +34,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 #
@@ -70,7 +73,7 @@ class SNF3x3:
 
     """
 
-    def __init__(self, A):
+    def __init__(self, A: Sequence[Sequence[int]] | NDArray[np.int64]) -> None:
         """Init method.
 
         Parameters
@@ -80,32 +83,19 @@ class SNF3x3:
             shape=(3, 3)
 
         """
-        self._A_orig = np.array(A, dtype="int64", order="C")
-        self._A = np.array(A, dtype="int64", order="C")
-        self._Ps = []
-        self._Qs = []
-        self._L = []
-        self._P: np.ndarray
-        self._Q: np.ndarray
-        self._D: np.ndarray
-        self._attempt = 0
+        self._A_orig: NDArray[np.int64] = np.array(A, dtype="int64", order="C")
+        self._A: NDArray[np.int64] = np.array(A, dtype="int64", order="C")
+        self._Ps: list[NDArray[np.int64]] = []
+        self._Qs: list[NDArray[np.int64]] = []
+        self._L: list[NDArray[np.int64]] = []
+        self._P: NDArray[np.int64]
+        self._Q: NDArray[np.int64]
+        self._D: NDArray[np.int64]
+        self._attempt: int = 0
 
         self._run()
 
-    def run(self):
-        """Run calculation of Smith normal form.
-
-        This method is deprecated and unnecessary.
-
-        """
-        warnings.warn(
-            "SNF3x3.run() is deprecated and unnecessary; "
-            "SNF3x3.__init__ already runs the calculation.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-    def _run(self):
+    def _run(self) -> None:
         """Calculate SNF."""
         for _ in self:
             pass
@@ -113,11 +103,11 @@ class SNF3x3:
         A = np.dot(self._P, np.dot(self._A_orig, self._Q))
         assert (A == self._A).all()
 
-    def __iter__(self):
+    def __iter__(self) -> SNF3x3:
         """Define iterator over calculation steps."""
         return self
 
-    def __next__(self):
+    def __next__(self) -> int:
         """Calculate an algorithm step."""
         self._attempt += 1
         if self._first():
@@ -127,26 +117,26 @@ class SNF3x3:
         return self._attempt
 
     @property
-    def A(self) -> np.ndarray:
+    def A(self) -> NDArray[np.int64]:
         """Return A of D = PAQ."""
         return self._A
 
     @property
-    def D(self) -> np.ndarray:
+    def D(self) -> NDArray[np.int64]:
         """Return D of D = PAQ."""
         return self._D
 
     @property
-    def P(self) -> np.ndarray:
+    def P(self) -> NDArray[np.int64]:
         """Return P of D = PAQ."""
         return self._P
 
     @property
-    def Q(self) -> np.ndarray:
+    def Q(self) -> NDArray[np.int64]:
         """Return Q of D = PAQ."""
         return self._Q
 
-    def _first(self):
+    def _first(self) -> bool:
         self._first_one_loop()
         A = self._A
         if A[1, 0] == 0 and A[2, 0] == 0:
@@ -159,7 +149,7 @@ class SNF3x3:
         else:
             return False
 
-    def _first_one_loop(self):
+    def _first_one_loop(self) -> None:
         self._first_column()
         self._Ps += self._L
         self._L = []
@@ -169,7 +159,7 @@ class SNF3x3:
         self._L = []
         self._A[:] = self._A.T
 
-    def _first_column(self):
+    def _first_column(self) -> None:
         i = self._search_first_pivot()
         if i > 0:
             self._swap_rows(0, i)
@@ -181,31 +171,31 @@ class SNF3x3:
         if self._A[2, 0] != 0:
             self._zero_first_column(2)
 
-    def _zero_first_column(self, j):
+    def _zero_first_column(self, j: int) -> None:
         A = self._A
         r, s, t = xgcd([A[0, 0], A[j, 0]])
         self._set_zero(0, j, A[0, 0], A[j, 0], r, s, t)
 
-    def _search_first_pivot(self):
+    def _search_first_pivot(self) -> int:
         for i in range(3):  # column index
             if self._A[i, 0] != 0:
                 return i
         return -1
 
-    def _first_finalize(self):
-        """Set zeros along the first colomn except for A[0, 0].
+    def _first_finalize(self) -> None:
+        """Set zeros along the first column except for A[0, 0].
 
         This is possible only when A[1,0] and A[2,0] are dividable by A[0,0].
 
         """
         A = self._A
-        L = np.eye(3, dtype="int64")
+        L = np.eye(3, dtype="int64", order="C")
         L[1, 0] = -A[1, 0] // A[0, 0]
         L[2, 0] = -A[2, 0] // A[0, 0]
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
 
-    def _second(self):
+    def _second(self) -> bool:
         """Find Smith normal form for Right-low 2x2 matrix."""
         self._second_one_loop()
         A = self._A
@@ -219,7 +209,7 @@ class SNF3x3:
         else:
             return False
 
-    def _second_one_loop(self):
+    def _second_one_loop(self) -> None:
         self._second_column()
         self._Ps += self._L
         self._L = []
@@ -229,7 +219,7 @@ class SNF3x3:
         self._L = []
         self._A[:] = self._A.T
 
-    def _second_column(self):
+    def _second_column(self) -> None:
         """Right-low 2x2 matrix.
 
         Assume elements in first row and column are all zero except for A[0,0].
@@ -241,12 +231,12 @@ class SNF3x3:
         if self._A[2, 1] != 0:
             self._zero_second_column()
 
-    def _zero_second_column(self):
+    def _zero_second_column(self) -> None:
         A = self._A
         r, s, t = xgcd([A[1, 1], A[2, 1]])
         self._set_zero(1, 2, A[1, 1], A[2, 1], r, s, t)
 
-    def _second_finalize(self):
+    def _second_finalize(self) -> None:
         """Set zero at A[2, 1].
 
         This is possible only when A[2,1] is dividable by A[1,1].
@@ -258,7 +248,7 @@ class SNF3x3:
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
 
-    def _finalize(self):
+    def _finalize(self) -> None:
         for i in range(3):
             if self._A[i, i] < 0:
                 self._flip_sign_row(i)
@@ -272,7 +262,7 @@ class SNF3x3:
         self._second()
         self._set_PQ()
 
-    def _finalize_sort(self):
+    def _finalize_sort(self) -> None:
         if self._A[0, 0] > self._A[1, 1]:
             self._swap_diag_elems(0, 1)
         if self._A[1, 1] > self._A[2, 2]:
@@ -280,7 +270,7 @@ class SNF3x3:
         if self._A[0, 0] > self._A[1, 1]:
             self._swap_diag_elems(0, 1)
 
-    def _finalize_disturb(self, i, j):
+    def _finalize_disturb(self, i: int, j: int) -> None:
         if self._A[j, j] % self._A[i, i] != 0:
             self._A[:] = self._A.T
             self._disturb_rows(i, j)
@@ -288,8 +278,8 @@ class SNF3x3:
             self._L = []
             self._A[:] = self._A.T
 
-    def _disturb_rows(self, i, j):
-        L = np.eye(3, dtype="int64")
+    def _disturb_rows(self, i: int, j: int) -> None:
+        L = np.eye(3, dtype="int64", order="C")
         L[i, i] = 1
         L[i, j] = 1
         L[j, i] = 0
@@ -297,7 +287,7 @@ class SNF3x3:
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
 
-    def _swap_diag_elems(self, i, j):
+    def _swap_diag_elems(self, i: int, j: int) -> None:
         self._swap_rows(i, j)
         self._Ps += self._L
         self._L = []
@@ -307,7 +297,7 @@ class SNF3x3:
         self._L = []
         self._A[:] = self._A.T
 
-    def _swap_rows(self, i, j):
+    def _swap_rows(self, i: int, j: int) -> None:
         """Swap i and j rows.
 
         As the side effect, determinant flips.
@@ -321,14 +311,14 @@ class SNF3x3:
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
 
-    def _flip_sign_row(self, i):
+    def _flip_sign_row(self, i: int) -> None:
         """Multiply -1 for all elements in row."""
         L = np.eye(3, dtype="int64")
         L[i, i] = -1
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
 
-    def _set_zero(self, i, j, a, b, r, s, t):
+    def _set_zero(self, i: int, j: int, a: int, b: int, r: int, s: int, t: int) -> None:
         """Let A[i, j] be zero based on Bezout's identity.
 
         [ii ij]
@@ -343,7 +333,7 @@ class SNF3x3:
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
 
-    def _set_PQ(self):
+    def _set_PQ(self) -> None:
         P = np.eye(3, dtype="int64")
         for _P in self._Ps:
             P = np.dot(_P, P)
@@ -359,15 +349,15 @@ class SNF3x3:
         self._Q = Q
         self._D = self._A.copy()
 
-    def _det(self, m):
-        return (
+    def _det(self, m: NDArray[np.int64]) -> int:
+        return int(
             m[0, 0] * (m[1, 1] * m[2, 2] - m[1, 2] * m[2, 1])
             + m[0, 1] * (m[1, 2] * m[2, 0] - m[1, 0] * m[2, 2])
             + m[0, 2] * (m[1, 0] * m[2, 1] - m[1, 1] * m[2, 0])
         )
 
 
-def xgcd(vals):
+def xgcd(vals: Sequence[int] | NDArray[np.int64]) -> NDArray[np.int64]:
     """Calculate extended greatest command divisor."""
     _xgcd = Xgcd(vals)
     return _xgcd.run()
@@ -376,11 +366,11 @@ def xgcd(vals):
 class Xgcd:
     """Class to implement extended Euclidean algorithm."""
 
-    def __init__(self, vals):
+    def __init__(self, vals: Sequence[int] | NDArray[np.int64]) -> None:
         """Init method."""
-        self._vals = np.array(vals, dtype="int64")
+        self._vals: NDArray[np.int64] = np.array(vals, dtype="int64")
 
-    def run(self):
+    def run(self) -> NDArray[np.int64]:
         """Calculate extended GCD."""
         r0, r1 = self._vals
         s0 = 1
@@ -394,11 +384,13 @@ class Xgcd:
 
         assert r0 == self._vals[0] * s0 + self._vals[1] * t0
 
-        self._rst = np.array([r0, s0, t0], dtype="int64")
+        self._rst: NDArray[np.int64] = np.array([r0, s0, t0], dtype="int64")
 
         return self._rst
 
-    def _step(self, r0, r1, s0, s1, t0, t1):
+    def _step(
+        self, r0: int, r1: int, s0: int, s1: int, t0: int, t1: int
+    ) -> tuple[int, int, int, int, int, int]:
         q, m = divmod(r0, r1)
         if m < 0:
             if r1 > 0:
@@ -412,7 +404,7 @@ class Xgcd:
         t2 = t0 - q * t1
         return r1, r2, s1, s2, t1, t2
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Show GCD relation."""
         v = self._vals
         r, s, t = self._rst

@@ -51,43 +51,53 @@ class PhononMoment:
 
     """
 
-    def __init__(self, frequencies, weights, eigenvectors=None):
+    def __init__(
+        self,
+        frequencies: NDArray[np.double],
+        weights: NDArray[np.double],
+        eigenvectors: NDArray[np.cdouble] | None = None,
+    ) -> None:
         """Init method."""
         self._frequencies = frequencies
         self._eigenvectors = eigenvectors
         self._weights = weights
-        self._fmin = None
-        self._fmax = None
+        self._fmin: float
+        self._fmax: float
         self.set_frequency_range()
-        self._moment: float | NDArray | None = None
+        self._moment: float | NDArray[np.double] | None = None
 
     @property
-    def moment(self) -> float | NDArray | None:
+    def moment(self) -> float | NDArray[np.double] | None:
         """Return phonon state moment."""
         return self._moment
 
-    def set_frequency_range(self, freq_min=None, freq_max=None, tolerance=1e-8):
-        """Set frequeny range where moment is computed."""
+    def set_frequency_range(
+        self,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+        tolerance: float = 1e-8,
+    ) -> None:
+        """Set frequency range where moment is computed."""
         if freq_min is None:
             self._fmin = tolerance
         else:
             self._fmin = freq_min - tolerance
 
         if freq_max is None:
-            self._fmax = np.max(self._frequencies) + tolerance
+            self._fmax = float(np.max(self._frequencies)) + tolerance
         else:
             self._fmax = freq_max + tolerance
 
-    def run(self, order=1):
+    def run(self, order: int = 1) -> None:
         """Calculate phonon state moment of specified order."""
         if self._eigenvectors is None:
             self._get_moment(order)
         else:
             self._get_projected_moment(order)
 
-    def _get_moment(self, order):
-        moment = 0
-        norm0 = 0
+    def _get_moment(self, order: int) -> None:
+        moment = 0.0
+        norm0 = 0.0
         for i, w in enumerate(self._weights):
             for freq in self._frequencies[i]:
                 if self._fmin < freq and freq < self._fmax:
@@ -95,7 +105,8 @@ class PhononMoment:
                     moment += freq**order * w
         self._moment = moment / norm0
 
-    def _get_projected_moment(self, order):
+    def _get_projected_moment(self, order: int) -> None:
+        assert self._eigenvectors is not None
         moment = np.zeros(self._frequencies.shape[1], dtype="double")
         norm0 = np.zeros_like(moment)
         for i, w in enumerate(self._weights):

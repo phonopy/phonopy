@@ -40,16 +40,24 @@
 #
 # Modified 2020 by Florian Knoop
 
+from __future__ import annotations
+
+import os
 import sys
+from collections.abc import Callable, Sequence
+from typing import Any, TypeVar
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms
 
+_T = TypeVar("_T")
+
 
 # FK 2018/07/19
-def lmap(func, lis):
+def lmap(func: Callable[[Any], _T], lis: Sequence[Any]) -> list[_T]:
     """Python2/3 compatibility.
 
     replace map(int, list) with lmap(int, list) that always returns a list
@@ -59,7 +67,7 @@ def lmap(func, lis):
     return list(map(func, lis))
 
 
-def read_aims(filename):
+def read_aims(filename: str | os.PathLike) -> PhonopyAtoms:
     """Read FHI-aims geometry files in phonopy context."""
     lines = open(filename, "r").readlines()
 
@@ -67,7 +75,7 @@ def read_aims(filename):
     is_frac = []
     positions = []
     symbols = []
-    magmoms = []
+    magmoms: list[float | None] = []
     for line in lines:
         fields = line.split()
         if not len(fields):
@@ -104,13 +112,16 @@ def read_aims(filename):
         atoms = PhonopyAtoms(cell=cell, symbols=symbols, positions=positions)
     else:
         atoms = PhonopyAtoms(
-            cell=cell, symbols=symbols, positions=positions, magmoms=magmoms
+            cell=cell,
+            symbols=symbols,
+            positions=positions,
+            magnetic_moments=magmoms,  # type: ignore[arg-type]
         )
 
     return atoms
 
 
-def write_aims(filename, atoms):
+def write_aims(filename: str | os.PathLike, atoms: PhonopyAtoms) -> None:
     """Write FHI-aims geometry files in phonopy context."""
     lines = ""
     lines += "# geometry.in for FHI-aims \n"
@@ -141,12 +152,14 @@ def write_aims(filename, atoms):
 class Atoms_with_forces(PhonopyAtoms):
     """Hack to phonopy.atoms to maintain ASE compatibility also for forces."""
 
-    def get_forces(self):
+    forces: list[list[float]]
+
+    def get_forces(self) -> list[list[float]]:
         """Return forces."""
         return self.forces
 
 
-def read_aims_output(filename):
+def read_aims_output(filename: str | os.PathLike) -> Atoms_with_forces:
     """Read aims output.
 
     Read FHI-aims output and return geometry, energy and forces
@@ -201,8 +214,12 @@ def read_aims_output(filename):
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_disps, ids, pre_filename="geometry.in", width=3
-):
+    supercell: PhonopyAtoms,
+    cells_with_disps: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str = "geometry.in",
+    width: int = 3,
+) -> None:
     """Write perfect supercell and supercells with displacements.
 
     Args:
@@ -222,7 +239,11 @@ def write_supercells_with_displacements(
         write_aims(filename, cell)
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse the forces from output files in ``forces_filenames``."""
     is_parsed = True
     force_sets = []

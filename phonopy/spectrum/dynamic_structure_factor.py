@@ -36,7 +36,8 @@
 
 from __future__ import annotations
 
-from typing import Union
+from collections.abc import Callable
+from typing import cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -86,7 +87,7 @@ class DynamicStructureFactor:
     Neutron scattering length
     -------------------------
     https://www.ncnr.nist.gov/resources/n-lengths/
-    Exmple: {'Na': 3.63,
+    Example: {'Na': 3.63,
              'Cl': 9.5770}
 
     Attributes
@@ -104,14 +105,14 @@ class DynamicStructureFactor:
 
     def __init__(
         self,
-        mesh_phonon: Union[Mesh, IterMesh],
-        Qpoints,
-        T,
-        atomic_form_factor_func=None,
-        scattering_lengths=None,
-        freq_min=None,
-        freq_max=None,
-    ):
+        mesh_phonon: Mesh | IterMesh,
+        Qpoints: NDArray[np.double],
+        T: float,
+        atomic_form_factor_func: Callable[[str, float], float] | None = None,
+        scattering_lengths: dict[str, float] | None = None,
+        freq_min: float | None = None,
+        freq_max: float | None = None,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -144,22 +145,22 @@ class DynamicStructureFactor:
             Coherent scattering lengths averaged over isotopes and spins.
             Supposed for INS. For example, {'Na': 3.63, 'Cl': 9.5770}.
         freq_min: float
-            Minimum phonon frequency to determine wheather include or not.
+            Minimum phonon frequency to determine whether include or not.
         freq_max: float
-            Maximum phonon frequency to determine wheather include or not. Only
+            Maximum phonon frequency to determine whether include or not. Only
             for Debye-Waller factor.
 
         """
         self._mesh_phonon = mesh_phonon
         self._dynamical_matrix = mesh_phonon.dynamical_matrix
         self._primitive = self._dynamical_matrix.primitive
-        self._Qpoints = np.array(Qpoints)  # (n_q, 3) array
+        self._Qpoints = np.array(Qpoints, dtype="double", order="C")
 
         self._func_AFF = atomic_form_factor_func
         self._b = scattering_lengths
         self._T = T
         if freq_min is None:
-            self._fmin = 0
+            self._fmin: float = 0.0
         else:
             self._fmin = freq_min
         if freq_max is None:
@@ -167,11 +168,15 @@ class DynamicStructureFactor:
         else:
             self._fmax = freq_max
 
-        self._rec_lat = np.linalg.inv(self._primitive.cell)
-        self.qpoints: NDArray
-        self._set_qpoints()  # self.qpoints needed in self._set_phonon()
-        self.frequencies: NDArray
-        self._eigvecs: NDArray
+        self._rec_lat: NDArray[np.double] = np.linalg.inv(self._primitive.cell)  # type: ignore
+        self._qpoints_1bz = cast(
+            np.ndarray,
+            get_qpoints_in_Brillouin_zone(
+                self._rec_lat, self._Qpoints, only_unique=True
+            ),
+        )
+        self._frequencies: NDArray[np.double]
+        self._eigvecs: NDArray[np.cdouble]
         self._set_phonon()
 
         self._q_count = 0
@@ -179,8 +184,8 @@ class DynamicStructureFactor:
             get_physical_units().AMU * (2 * np.pi * get_physical_units().THz) ** 2
         )
 
-        self.dynamic_structure_factors = np.zeros(
-            self.frequencies.shape, dtype="double", order="C"
+        self._dynamic_structure_factors = np.zeros(
+            self._frequencies.shape, dtype="double", order="C"
         )
 
         td = ThermalDisplacementMatrices(
@@ -188,36 +193,53 @@ class DynamicStructureFactor:
             freq_min=self._fmin,
             freq_max=self._fmax,
         )
-        td.temperatures = [self._T]
+        td.temperatures = np.array([self._T])
         td.run()
         assert td.thermal_displacement_matrices is not None
-        self._thermal_displacement_matrices = td.thermal_displacement_matrices[0]
+        self._thermal_displacement_matrices: NDArray[np.double] = (
+            td.thermal_displacement_matrices[0]
+        )
 
-    def __iter__(self):
+    def __iter__(self) -> DynamicStructureFactor:
         """Define iterator of calculation over q-points."""
         return self
 
-    def __next__(self):
+    def __next__(self) -> NDArray[np.double]:
         """Calculate at next q-point."""
         if self._q_count == len(self._Qpoints):
             self._q_count = 0
             raise StopIteration
         else:
             S = self._run_at_Q()
-            self.dynamic_structure_factors[self._q_count] = S
+            self._dynamic_structure_factors[self._q_count] = S
             self._q_count += 1
             return S
 
-    def run(self):
+    @property
+    def dynamic_structure_factors(self) -> NDArray[np.double]:
+        """Return dynamic structure factors."""
+        return self._dynamic_structure_factors
+
+    @property
+    def frequencies(self) -> NDArray[np.double]:
+        """Return phonon frequencies at q-points."""
+        return self._frequencies
+
+    @property
+    def qpoints(self) -> NDArray[np.double]:
+        """Return q-points in 1st Brillouin zone."""
+        return self._qpoints_1bz
+
+    def run(self) -> None:
         """Calculate at all q-points."""
         for _ in self:
             pass
 
-    def _run_at_Q(self):
-        freqs = self.frequencies[self._q_count]
+    def _run_at_Q(self) -> NDArray[np.double]:
+        freqs = self._frequencies[self._q_count]
         eigvecs = self._eigvecs[self._q_count]
         Q_cart = np.dot(self._rec_lat, self._Qpoints[self._q_count])
-        G_vector = self._Qpoints[self._q_count] - self.qpoints[self._q_count]
+        G_vector = self._Qpoints[self._q_count] - self._qpoints_1bz[self._q_count]
         Q_length = np.linalg.norm(Q_cart)
         if Q_length < 1e-8:
             debye_waller = np.zeros(len(self._primitive), dtype="double")
@@ -238,15 +260,17 @@ class DynamicStructureFactor:
                 S[i] = abs(F) ** 2 * (n + 1)
         return S * self._unit_conversion_factor
 
-    def _set_phonon(self):
+    def _set_phonon(self) -> None:
         qpoints_phonon = QpointsPhonon(
-            self.qpoints, self._dynamical_matrix, with_eigenvectors=True
+            self._qpoints_1bz, self._dynamical_matrix, with_eigenvectors=True
         )
-        self.frequencies = qpoints_phonon.frequencies
+        self._frequencies = qpoints_phonon.frequencies
         assert qpoints_phonon.eigenvectors is not None
         self._eigvecs = qpoints_phonon.eigenvectors
 
-    def _get_thermal_displacements(self, proj_dir: NDArray):
+    def _get_thermal_displacements(
+        self, proj_dir: NDArray[np.double]
+    ) -> NDArray[np.double]:
         thermal_displacements = np.zeros(
             self._thermal_displacement_matrices.shape[0], dtype=float
         )
@@ -269,7 +293,7 @@ class DynamicStructureFactor:
         """Return F(Q, q nu).
 
         The phase factor is different by exp(iq.r) from that of the book
-        "Thermal neutron scattering" because of different difinition of
+        "Thermal neutron scattering" because of different definition of
         dynamical matrix.
 
         """
@@ -281,7 +305,7 @@ class DynamicStructureFactor:
         val = 0
         for i, m in enumerate(masses):
             if self._func_AFF is not None:
-                f = self._func_AFF(symbols[i], np.linalg.norm(Q_cart) / 2)
+                f = self._func_AFF(symbols[i], float(np.linalg.norm(Q_cart)) / 2)
             elif self._b is not None:
                 f = self._b[symbols[i]]
             else:
@@ -290,10 +314,6 @@ class DynamicStructureFactor:
             val += f / np.sqrt(2 * m) * DW[i] * QW * phase[i]
         val /= np.sqrt(freq)
         return val
-
-    def _set_qpoints(self):
-        qpoints = get_qpoints_in_Brillouin_zone(self._rec_lat, self._Qpoints)
-        self.qpoints = np.array([q[0] for q in qpoints], dtype="double", order="C")
 
 
 def atomic_form_factor_WK1995(s: float, f_x: list) -> float:

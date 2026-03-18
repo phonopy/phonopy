@@ -36,7 +36,6 @@
 
 from __future__ import annotations
 
-import io
 import os
 import sys
 import typing
@@ -67,11 +66,11 @@ from phonopy.structure.cells import Primitive, get_primitive, get_supercell
 
 def parse_set_of_forces(
     num_atoms: int, forces_filenames: Sequence[str | os.PathLike], verbose: bool = True
-) -> list[NDArray] | list:
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     hook = "Forces acting on atoms"
     is_parsed = True
-    force_sets = []
+    force_sets: list[NDArray[np.double]] = []
 
     for i, filename in enumerate(forces_filenames):
         if verbose:
@@ -93,7 +92,7 @@ def parse_set_of_forces(
         return []
 
 
-def read_pwscf(filename: str | os.PathLike) -> tuple[PhonopyAtoms, dict]:
+def read_pwscf(filename: str | os.PathLike) -> tuple[PhonopyAtoms, dict[str, str]]:
     """Read crystal structure."""
     with open(filename) as f:
         pwscf_in = PwscfIn(f.readlines())
@@ -140,8 +139,8 @@ def read_pwscf(filename: str | os.PathLike) -> tuple[PhonopyAtoms, dict]:
             scaled_positions=scaled_positions,
         )
 
-    unique_symbols = []
-    pp_filenames = {}
+    unique_symbols: list[str] = []
+    pp_filenames: dict[str, str] = {}
     for i, symnum in enumerate(cell.symbols):
         if symnum not in unique_symbols:
             unique_symbols.append(symnum)
@@ -153,21 +152,21 @@ def read_pwscf(filename: str | os.PathLike) -> tuple[PhonopyAtoms, dict]:
 def write_pwscf(
     filename: str | os.PathLike,
     cell: PhonopyAtoms,
-    pp_filenames: str | os.PathLike | None,
-):
+    pp_filenames: dict[str, str] | None,
+) -> None:
     """Write cell to file."""
     f = open(filename, "w")
     f.write(get_pwscf_structure(cell, pp_filenames=pp_filenames))
 
 
 def write_supercells_with_displacements(
-    supercell,
-    cells_with_displacements,
-    ids,
-    pp_filenames,
-    pre_filename="supercell",
-    width=3,
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.intp],
+    pp_filenames: dict[str, str] | None,
+    pre_filename: str | os.PathLike = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_pwscf("%s.in" % pre_filename, supercell, pp_filenames)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -177,7 +176,9 @@ def write_supercells_with_displacements(
         write_pwscf(filename, cell, pp_filenames)
 
 
-def get_pwscf_structure(cell, pp_filenames=None):
+def get_pwscf_structure(
+    cell: PhonopyAtoms, pp_filenames: dict[str, str] | None = None
+) -> str:
     """Return QE structure in text."""
     if pp_filenames is None:
         warnings.warn(
@@ -189,8 +190,8 @@ def get_pwscf_structure(cell, pp_filenames=None):
     positions = cell.scaled_positions
     masses = cell.masses
     chemical_symbols = cell.symbols
-    unique_symbols = []
-    atomic_species = []
+    unique_symbols: list[str] = []
+    atomic_species: list[tuple[str, float]] = []
     for symbol, m in zip(chemical_symbols, masses, strict=True):
         if symbol not in unique_symbols:
             unique_symbols.append(symbol)
@@ -240,26 +241,26 @@ class PwscfIn:
         ]
     )
 
-    def __init__(self, lines):
+    def __init__(self, lines: list[str]) -> None:
         """Init method."""
-        self._tags = {}
-        self._current_tag_name = None
-        self._values = None
-        self._cartesian_positions = False
+        self._tags: dict = {}
+        self._current_tag_name: str | None = None
+        self._values: list[str] | None = None
+        self._cartesian_positions: bool = False
         self._collect(lines)
 
     @property
-    def cartesian_positions(self):
+    def cartesian_positions(self) -> bool:
         """Return True if positions are in Cartesian coordinates."""
         return self._cartesian_positions
 
-    def get_tags(self):
+    def get_tags(self) -> dict:
         """Return tags."""
         return self._tags
 
-    def _collect(self, lines):
-        elements = {}
-        tag_name = None
+    def _collect(self, lines: list[str]) -> None:
+        elements: dict[str, list[str]] = {}
+        tag_name: str | None = None
 
         for line in lines:
             _line = line.split("!")[0]
@@ -301,23 +302,27 @@ class PwscfIn:
                 if tag_name in self._set_methods.keys():
                     getattr(self, self._set_methods[tag_name])()
 
-    def _set_ibrav(self):
+    def _set_ibrav(self) -> None:
+        assert self._values is not None
         ibrav = int(self._values[0])
         if ibrav != 0:
             raise RuntimeError("Only %s = 0 is supported." % self._current_tag_name)
 
         self._tags["ibrav"] = ibrav
 
-    def _set_celldm1(self):
+    def _set_celldm1(self) -> None:
+        assert self._values is not None
         self._tags["celldm(1)"] = float(self._values[0])
 
-    def _set_nat(self):
+    def _set_nat(self) -> None:
+        assert self._values is not None
         self._tags["nat"] = int(self._values[0])
 
-    def _set_ntyp(self):
+    def _set_ntyp(self) -> None:
+        assert self._values is not None
         self._tags["ntyp"] = int(self._values[0])
 
-    def _set_lattice(self):
+    def _set_lattice(self) -> None:
         """Calculate and set lattice parameters.
 
         Invoked by CELL_PARAMETERS tag_name.
@@ -331,6 +336,7 @@ class PwscfIn:
             unit_factor * [[a1, a2, a3], [b1, b2, b3], [c1, c2, c3]]
 
         """
+        assert self._values is not None
         unit = self._values[0].lower()
         if unit == "alat":
             if not self._tags["celldm(1)"]:
@@ -350,7 +356,7 @@ class PwscfIn:
         lattice = np.reshape([float(x) for x in self._values[1:10]], (3, 3))
         self._tags["cell_parameters"] = lattice * factor
 
-    def _set_positions(self):
+    def _set_positions(self) -> None:
         """Set atomic positions.
 
         self._values[0] = unit
@@ -362,6 +368,7 @@ class PwscfIn:
         self._tags["atomic_positions"] = [[species, unit_factor * [x, y, z]], ...]
 
         """
+        assert self._values is not None
         unit = self._values[0].lower()
         factor = 1.0
         if "angstrom" in unit:
@@ -391,7 +398,7 @@ class PwscfIn:
 
         self._tags["atomic_positions"] = positions
 
-    def _set_atom_types(self):
+    def _set_atom_types(self) -> None:
         """Set atomic species.
 
         self._values = [species, mass, pp_filename, ...]
@@ -401,6 +408,7 @@ class PwscfIn:
         self._tags["atomic_species"] = [[species, mass, pp_filename], ...]
 
         """
+        assert self._values is not None
         num_types = self._tags["ntyp"]
         if len(self._values) != num_types * 3:
             raise RuntimeError(
@@ -420,7 +428,7 @@ class PwscfIn:
 
         self._tags["atomic_species"] = species
 
-    def _set_kpoints(self):
+    def _set_kpoints(self) -> None:
         """Set k-points."""
         pass
 
@@ -490,18 +498,22 @@ class PH_Q2R:
 
     """
 
-    def __init__(self, filename: str | os.PathLike | typing.IO, symprec: float = 1e-5):
+    def __init__(
+        self, filename: str | os.PathLike | typing.IO[str], symprec: float = 1e-5
+    ) -> None:
         """Init method."""
-        self.fc: NDArray | None = None
-        self.dimension: NDArray | None = None
-        self.epsilon: NDArray | None = None
-        self.borns: NDArray | None = None
+        self.fc: NDArray[np.double] | None = None
+        self.dimension: NDArray[np.int64] | None = None
+        self.epsilon: NDArray[np.double] | None = None
+        self.borns: NDArray[np.double] | None = None
         self.primitive: Primitive | None = None
         self.supercell: PhonopyAtoms | None = None
         self._symprec = symprec
         self._filename = filename
 
-    def run(self, cell: PhonopyAtoms, is_full_fc: bool = False, parse_fc: bool = True):
+    def run(
+        self, cell: PhonopyAtoms, is_full_fc: bool = False, parse_fc: bool = True
+    ) -> None:
         """Make supercell force constants readable for phonopy.
 
         Note
@@ -522,12 +534,11 @@ class PH_Q2R:
             False may be used when expected to parse only epsilon and born.
 
         """
-        if isinstance(self._filename, io.IOBase):
-            fc_dct = self._parse_q2r(self._filename)
-        else:
-            assert isinstance(self._filename, (str, os.PathLike))
+        if isinstance(self._filename, (str, os.PathLike)):
             with open(self._filename) as f:
                 fc_dct = self._parse_q2r(f)
+        else:
+            fc_dct = self._parse_q2r(self._filename)
 
         self.dimension = fc_dct["dimension"]
         self.epsilon = fc_dct["dielectric"]
@@ -537,7 +548,7 @@ class PH_Q2R:
                 cell, fc_dct["fc"], is_full_fc=is_full_fc
             )
 
-    def save(self, filename="phonopy_params_q2r.yaml"):
+    def save(self, filename: str | os.PathLike = "phonopy_params_q2r.yaml") -> None:
         """Save the q2r output to a file."""
         if self.primitive is None:
             raise RuntimeError("Run PH_Q2R.run() before saving.")
@@ -550,7 +561,7 @@ class PH_Q2R:
         ph.force_constants = self.fc
         ph.save(filename)
 
-    def write_force_constants(self, fc_format: str = "hdf5"):
+    def write_force_constants(self, fc_format: str = "hdf5") -> None:
         """Write force constants to file in hdf5."""
         if self.primitive is None:
             raise RuntimeError("Run PH_Q2R.run() before writing force constants.")
@@ -561,7 +572,7 @@ class PH_Q2R:
             else:
                 write_FORCE_CONSTANTS(self.fc, p2s_map=self.primitive.p2s_map)
 
-    def _parse_q2r(self, f):
+    def _parse_q2r(self, f: typing.IO[str]) -> dict:
         """Parse q2r output file.
 
         The format of q2r output is described at the mailing list below:
@@ -580,7 +591,14 @@ class PH_Q2R:
         }
         return fc_dct
 
-    def _parse_parameters(self, f):
+    def _parse_parameters(
+        self, f: typing.IO[str]
+    ) -> tuple[
+        int,
+        NDArray[np.int64],
+        NDArray[np.double] | None,
+        NDArray[np.double] | None,
+    ]:
         line = f.readline()
         ntype, natom, ibrav = (int(x) for x in line.split()[:3])
         if ibrav == 0:
@@ -599,7 +617,9 @@ class PH_Q2R:
 
         return natom, dim, epsilon, borns
 
-    def _parse_born(self, f, natom):
+    def _parse_born(
+        self, f: typing.IO[str], natom: int
+    ) -> tuple[NDArray[np.double], NDArray[np.double]]:
         epsilon = np.zeros((3, 3), dtype="double", order="C")
         borns = np.zeros((natom, 3, 3), dtype="double", order="C")
         for i in range(3):
@@ -612,13 +632,15 @@ class PH_Q2R:
                 borns[i, j, :] = [float(x) for x in line.split()]
         return epsilon, borns
 
-    def _parse_fc(self, f, natom, dim):
+    def _parse_fc(
+        self, f: typing.IO[str], natom: int, dim: NDArray[np.int64]
+    ) -> NDArray[np.double]:
         """Parse force constants part.
 
         Physical unit of force constants in the file is Ry/au^2.
 
         """
-        ndim = np.prod(dim)
+        ndim = int(np.prod(dim))
         fc = np.zeros((natom, natom * ndim, 3, 3), dtype="double", order="C")
         for k, ll, i, j in np.ndindex((3, 3, natom, natom)):  # xyz2 xzy1 p2 p1
             line = f.readline()  # xyz2 xzy1 p2 p1
@@ -628,8 +650,11 @@ class PH_Q2R:
         return fc
 
     def _get_phonopy_supercell_fc(
-        self, cell: PhonopyAtoms, q2r_fc: NDArray, is_full_fc: bool = False
-    ):
+        self,
+        cell: PhonopyAtoms,
+        q2r_fc: NDArray[np.double],
+        is_full_fc: bool = False,
+    ) -> tuple[NDArray[np.double], Primitive, PhonopyAtoms]:
         dim = self.dimension
         q2r_spos = self._get_q2r_positions(cell)
         assert dim is not None
@@ -644,7 +669,7 @@ class PH_Q2R:
         site_map = self._get_site_mapping(scell.scaled_positions, q2r_spos, scell.cell)
         natom = len(pcell)
         assert dim is not None
-        ndim = np.prod(dim)
+        ndim = int(np.prod(dim))
         natom_s = natom * ndim
 
         if is_full_fc:
@@ -657,7 +682,7 @@ class PH_Q2R:
 
         return fc, pcell, scell
 
-    def _get_q2r_positions(self, cell: PhonopyAtoms) -> NDArray:
+    def _get_q2r_positions(self, cell: PhonopyAtoms) -> NDArray[np.double]:
         """Define order of atomic positions in q2r.
 
         In [1]: dim = np.array([2, 2, 2])
@@ -677,28 +702,33 @@ class PH_Q2R:
         dim = self.dimension
         natom = len(cell)
         assert dim is not None
-        ndim = np.prod(dim)
-        spos = np.zeros((natom * np.prod(dim), 3), dtype="double", order="C")
+        ndim = int(np.prod(dim))
+        spos = np.zeros((natom * ndim, 3), dtype="double", order="C")
         # See the docstring for the order of lattice translation in QE.
         trans = [x[::-1] for x in np.ndindex(tuple(dim[::-1]))]
         for i, p in enumerate(cell.scaled_positions):
             spos[i * ndim : (i + 1) * ndim] = (trans + p) / dim
         return spos
 
-    def _get_site_mapping(self, spos: NDArray, q2r_spos: NDArray, lattice: NDArray):
+    def _get_site_mapping(
+        self,
+        spos: NDArray[np.double],
+        q2r_spos: NDArray[np.double],
+        lattice: NDArray[np.double],
+    ) -> NDArray[np.intp]:
         """Get mapping from supercell to q2r positions.
 
         site_map[i] gives the index of q2r_spos corresponding to spos[i].
 
         """
-        site_map = []
+        site_map: list[int] = []
         for _, p in enumerate(spos):
             diff = q2r_spos - p
             diff -= np.rint(diff)
             distances = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
             indices = np.where(distances < self._symprec)[0]
             assert len(indices) == 1, "%s" % indices
-            site_map.append(indices[0])
+            site_map.append(int(indices[0]))
 
         assert len(np.unique(site_map)) == len(spos)
 

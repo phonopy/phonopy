@@ -110,7 +110,7 @@ def fit_to_eos(
     """Fit volume-energy data to EOS."""
     fit = EOSFit(volumes, fe, eos)
     fit.fit([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
-
+    assert fit.parameters is not None
     return fit.parameters
 
 

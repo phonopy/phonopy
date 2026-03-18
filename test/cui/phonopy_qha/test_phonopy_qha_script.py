@@ -130,6 +130,46 @@ def test_phonopy_qha_efe():
             os.chdir(original_cwd)
 
 
+def test_phonopy_qha_bulk_modulus_only(capsys):
+    """Test phonopy-qha -b command."""
+    filenames = [cwd / "Cu-QHA" / "e-v.dat"]
+    argparse_control = {
+        "args": PhonopyQHAMockArgs(filenames=filenames, is_bulk_modulus_only=True)
+    }
+    with pytest.raises(SystemExit) as excinfo:
+        main(**argparse_control)
+    assert excinfo.value.code == 0
+
+    captured = capsys.readouterr()
+    lines = [line for line in captured.out.splitlines() if not line.startswith("#")]
+    values = {}
+    for line in lines:
+        key, val = line.split(":", maxsplit=1)
+        try:
+            values[key.strip()] = float(val.strip())
+        except ValueError:
+            pass
+
+    np.testing.assert_allclose(values["Volume"], 45.3863026, rtol=1e-6)
+    np.testing.assert_allclose(values["Energy"], -17.3464638, rtol=1e-6)
+    np.testing.assert_allclose(values["Bulk modulus"], 167.0075533, rtol=1e-6)
+
+
+def test_phonopy_qha_bulk_modulus_only_efe():
+    """Test phonopy-qha -b --efe command."""
+    filenames = [cwd / "Cu-QHA" / "e-v.dat"]
+    argparse_control = {
+        "args": PhonopyQHAMockArgs(
+            filenames=filenames,
+            is_bulk_modulus_only=True,
+            efe_file=cwd / "Cu-QHA" / "fe-v.dat",
+        )
+    }
+    with pytest.raises(SystemExit) as excinfo:
+        main(**argparse_control)
+    assert excinfo.value.code == 0
+
+
 def _ls():
     current_dir = pathlib.Path(".")
     for file in current_dir.iterdir():

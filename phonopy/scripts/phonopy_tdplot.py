@@ -40,9 +40,9 @@
 # The axis resolved thermal displacements are averaged by root mean
 # square with the successive indices separated by ",". In this
 # example, values at a temperature with the indices 1 and 2, 3 and 4
-# are averaged by root mean square respectively as follwos:
+# are averaged by root mean square respectively as follows:
 #   sqrt( ( x_1 ** 2 + x_2 ** 2 + x_3 ** 2 + x_4 ** 2 ) / 4 ),
-# and then they are ploted as a function of temperature.
+# and then they are plotted as a function of temperature.
 #
 # The definition is that indices correspond to those as follows:
 # 1 2 3 : X Y Z of the 1st atom,

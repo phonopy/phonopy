@@ -104,9 +104,9 @@ class GruneisenBase:
             band_order: Sequence[int] = list(range(len(self._dynmat.primitive) * 3))
             prev_eigvecs: NDArray[np.cdouble] | None = None
 
-        edDe = []  # <e|dD|e>
-        eigvals = []
-        eigvecs = []
+        edDe: list[NDArray[np.double]] = []  # <e|dD|e>
+        eigvals: list[NDArray[np.double]] = []
+        eigvecs: list[NDArray[np.cdouble]] = []
         for _, q in enumerate(self._qpoints):
             if self._is_band_connection and isinstance(
                 self._dynmat, DynamicalMatrixNAC
@@ -136,10 +136,10 @@ class GruneisenBase:
                 eigvecs.append(evecs_at_q)
                 edDe.append(edDe_at_q)
 
-        edDe = np.array(edDe, dtype="double", order="C")
+        edDe_arr = np.array(edDe, dtype="double", order="C")
         self._eigenvalues = np.array(eigvals, dtype="double", order="C")
-        self._eigenvectors = np.array(eigvecs, dtype=np.cdouble, order="C")
-        self._gruneisen = -edDe / self._delta_strain / self._eigenvalues / 2
+        self._eigenvectors = np.array(eigvecs, dtype="cdouble", order="C")
+        self._gruneisen = -edDe_arr / self._delta_strain / self._eigenvalues / 2
 
     def _get_dD(
         self,
