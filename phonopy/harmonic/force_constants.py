@@ -895,7 +895,7 @@ def _get_atom_indices_by_symmetry(
     K = len(positions)
     # positions[K, 3]
     # dot()[K, N, 3] where N is number of sym opts.
-    # translation[N, 3] is added to the last two dimenstions after dot().
+    # translation[N, 3] is added to the last two dimensions after dot().
     rpos = np.dot(positions, np.transpose(rotations, (0, 2, 1))) + translations
 
     # np.tile(rpos, (K, 1, 1, 1))[K(2), K(1), N, 3]

@@ -9,6 +9,7 @@ import pytest
 import phonopy
 from phonopy import Phonopy
 from phonopy.interface.pypolymlp import PypolymlpParams
+from phonopy.structure.cells import isclose
 from phonopy.structure.dataset import get_displacements_and_forces
 
 cwd = Path(__file__).parent
@@ -312,14 +313,65 @@ def test_Phonopy_calculator():
     assert ph.calculator is None
     assert ph.unit_conversion_factor == pytest.approx(15.6333023)
 
-    with pytest.warns(DeprecationWarning):
-        ph = Phonopy(
-            unitcell=ph_orig.unitcell,
-            supercell_matrix=ph_orig.supercell_matrix,
-            primitive_matrix=ph_orig.primitive_matrix,
-            factor=100,
-        )
-        assert ph.unit_conversion_factor == pytest.approx(100)
+    ph.unit_conversion_factor = 200
+    assert ph.unit_conversion_factor == pytest.approx(200)
+
+
+def test_save_default(ph_nacl: Phonopy, tmp_path: Path):
+    """Test Phonopy.save() returns filename and can be reloaded."""
+    filename = tmp_path / "phonopy_params.yaml"
+    out = ph_nacl.save(filename)
+    assert out == str(filename)
+    assert Path(out).exists()
+    ph = phonopy.load(out)
+    assert isclose(ph.unitcell, ph_nacl.unitcell)
+
+
+def test_save_compression_xz(ph_nacl: Phonopy, tmp_path: Path):
+    """Test Phonopy.save() with compression='xz' produces .xz file."""
+    filename = tmp_path / "phonopy_params.yaml"
+    out = ph_nacl.save(filename, compression="xz")
+    assert out == str(filename) + ".xz"
+    assert Path(out).exists()
+    ph = phonopy.load(out)
+    assert isclose(ph.unitcell, ph_nacl.unitcell)
+
+
+def test_save_compression_true(ph_nacl: Phonopy, tmp_path: Path):
+    """Test Phonopy.save() with compression=True produces .xz file."""
+    filename = tmp_path / "phonopy_params.yaml"
+    out = ph_nacl.save(filename, compression=True)
+    assert out == str(filename) + ".xz"
+    assert Path(out).exists()
+    ph = phonopy.load(out)
+    assert isclose(ph.supercell, ph_nacl.supercell)
+
+
+def test_save_force_constants(ph_nacl: Phonopy, tmp_path: Path):
+    """Test Phonopy.save() with force_constants=True saves FC to file."""
+    filename = tmp_path / "phonopy_params.yaml"
+    ph_nacl.save(filename, settings={"force_constants": True})
+    ph = phonopy.load(filename, is_compact_fc=False)
+    assert ph.force_constants is not None
+    assert ph_nacl.force_constants is not None
+    np.testing.assert_allclose(ph.force_constants, ph_nacl.force_constants)
+
+
+def test_save_auto_force_constants(ph_nacl: Phonopy, tmp_path: Path):
+    """Test force_constants are auto-saved when dataset is None."""
+    ph = Phonopy(
+        ph_nacl.unitcell,
+        supercell_matrix=ph_nacl.supercell_matrix,
+        primitive_matrix=ph_nacl.primitive_matrix,
+    )
+    ph.force_constants = ph_nacl.force_constants
+    assert ph.dataset is None
+    filename = tmp_path / "phonopy_params.yaml"
+    ph.save(filename)
+    ph_loaded = phonopy.load(filename, is_compact_fc=False)
+    assert ph_loaded.force_constants is not None
+    assert ph_nacl.force_constants is not None
+    np.testing.assert_allclose(ph_loaded.force_constants, ph_nacl.force_constants)
 
 
 def test_Phonopy_calculator_QE():
@@ -332,16 +384,5 @@ def test_Phonopy_calculator_QE():
         supercell_matrix=ph_orig.supercell_matrix,
         primitive_matrix=ph_orig.primitive_matrix,
         calculator="qe",
-        set_factor_by_calculator=False,
-    )
-    assert ph.calculator == "qe"
-    assert ph.unit_conversion_factor == pytest.approx(15.6333023)
-
-    ph = Phonopy(
-        unitcell=ph_orig.unitcell,
-        supercell_matrix=ph_orig.supercell_matrix,
-        primitive_matrix=ph_orig.primitive_matrix,
-        calculator="qe",
-        set_factor_by_calculator=True,
     )
     assert ph.unit_conversion_factor == pytest.approx(108.9707718)

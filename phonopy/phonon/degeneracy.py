@@ -36,14 +36,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 
 
-def degenerate_sets(freqs: NDArray, cutoff: float = 1e-4) -> list[list[int]]:
+def degenerate_sets(freqs: NDArray[np.double], cutoff: float = 1e-4) -> list[list[int]]:
     """Find degenerate bands from frequencies.
 
     Parameters
@@ -86,13 +88,13 @@ def degenerate_sets(freqs: NDArray, cutoff: float = 1e-4) -> list[list[int]]:
 
 
 def get_eigenvectors(
-    q: ArrayLike,
-    dm: DynamicalMatrix | DynamicalMatrixNAC,
+    q: NDArray[np.double],
+    dm: DynamicalMatrix,
     ddm: DerivativeOfDynamicalMatrix,
-    perturbation: ArrayLike | None = None,
+    perturbation: Sequence[float] | NDArray[np.double] | None = None,
     derivative_order: int | None = None,
-    nac_q_direction: ArrayLike | None = None,
-) -> tuple[NDArray, NDArray]:
+    nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
     """Return degenerated eigenvalues and rotated eigenvalues."""
     if isinstance(dm, DynamicalMatrixNAC):
         dm.run(q, q_direction=nac_q_direction)
@@ -114,8 +116,10 @@ def get_eigenvectors(
 
 
 def rotate_eigenvectors(
-    eigvals: NDArray, eigvecs: NDArray, dD: NDArray
-) -> tuple[NDArray, NDArray]:
+    eigvals: NDArray[np.double],
+    eigvecs: NDArray[np.cdouble],
+    dD: NDArray[np.cdouble],
+) -> tuple[NDArray[np.cdouble], NDArray[np.double]]:
     """Rotate eigenvectors among degenerated band.
 
     Parameters
@@ -140,8 +144,10 @@ def rotate_eigenvectors(
 
 
 def _get_dD(
-    q: ArrayLike, ddm: DerivativeOfDynamicalMatrix, perturbation: ArrayLike
-) -> NDArray:
+    q: NDArray[np.double],
+    ddm: DerivativeOfDynamicalMatrix,
+    perturbation: Sequence[float] | NDArray[np.double],
+) -> NDArray[np.cdouble]:
     """Return q-vector derivative of dynamical matrix.
 
     Returns

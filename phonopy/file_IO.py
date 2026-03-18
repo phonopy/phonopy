@@ -46,13 +46,13 @@ from types import ModuleType
 from typing import Literal
 
 import numpy as np
-import yaml
+import yaml  # type: ignore[import-untyped]
 from numpy.typing import NDArray
 
 try:
-    from yaml import CLoader as Loader
+    from yaml import CLoader as Loader  # type: ignore[import-untyped]
 except ImportError:
-    from yaml import Loader
+    from yaml import Loader  # type: ignore[import-untyped]
 
 from phonopy.cui.settings import fracval
 from phonopy.exception import BORNFileParseError
@@ -65,7 +65,7 @@ from phonopy.utils import similarity_transformation
 #
 # FORCE_SETS
 #
-def write_FORCE_SETS(dataset: dict, filename: str | os.PathLike = "FORCE_SETS"):
+def write_FORCE_SETS(dataset: dict, filename: str | os.PathLike = "FORCE_SETS") -> None:
     """Write FORCE_SETS from dataset.
 
     See more detail in ``get_FORCE_SETS_lines``.
@@ -77,7 +77,9 @@ def write_FORCE_SETS(dataset: dict, filename: str | os.PathLike = "FORCE_SETS"):
         w.write("\n")
 
 
-def get_FORCE_SETS_lines(dataset: dict, forces: NDArray | None = None) -> list:
+def get_FORCE_SETS_lines(
+    dataset: dict, forces: NDArray[np.double] | None = None
+) -> list[str]:
     """Generate FORCE_SETS string.
 
     See the format of dataset in the docstring of
@@ -96,13 +98,15 @@ def get_FORCE_SETS_lines(dataset: dict, forces: NDArray | None = None) -> list:
         raise RuntimeError("Unknown dataset format.")
 
 
-def _get_FORCE_SETS_lines_type1(dataset: dict, forces: NDArray | None = None) -> list:
+def _get_FORCE_SETS_lines_type1(
+    dataset: dict, forces: NDArray[np.double] | None = None
+) -> list[str]:
     num_atom = dataset["natom"]
     displacements = dataset["first_atoms"]
     if forces is None:
-        _forces = [x["forces"] for x in dataset["first_atoms"]]
+        forces_list: list[NDArray] = [x["forces"] for x in dataset["first_atoms"]]
     else:
-        _forces = forces
+        forces_list = list(forces)
 
     lines = []
     lines.append("%-5d" % num_atom)
@@ -111,13 +115,13 @@ def _get_FORCE_SETS_lines_type1(dataset: dict, forces: NDArray | None = None) ->
         lines.append("")
         lines.append("%-5d" % (disp["number"] + 1))
         lines.append("%20.16f %20.16f %20.16f" % tuple(disp["displacement"]))
-        for f in _forces[count]:
+        for f in forces_list[count]:
             lines.append("%15.10f %15.10f %15.10f" % tuple(f))
 
     return lines
 
 
-def _get_FORCE_SETS_lines_type2(dataset: dict) -> list:
+def _get_FORCE_SETS_lines_type2(dataset: dict) -> list[str]:
     lines = []
     for displacements, forces in zip(
         dataset["displacements"], dataset["forces"], strict=True
@@ -172,7 +176,7 @@ def _get_dataset(
             raise RuntimeError(msg)
 
         if to_type2:
-            disps, forces = get_displacements_and_forces(dataset)
+            disps, forces = get_displacements_and_forces(dataset)  # type: ignore[arg-type]
             return {"displacements": disps, "forces": forces}
         else:
             return dataset
@@ -189,15 +193,14 @@ def _get_dataset_type1(f: typing.TextIO) -> dict:
     num_displacements = int(_get_line_ignore_blank(f))
 
     for _ in range(num_displacements):
-        line = _get_line_ignore_blank(f)
-        atom_number = int(line)
-        line = _get_line_ignore_blank(f).split()
-        displacement = np.array([float(x) for x in line])
-        forces_tmp = []
+        atom_number = int(_get_line_ignore_blank(f))
+        disp_tokens = _get_line_ignore_blank(f).split()
+        displacement = np.array([float(x) for x in disp_tokens])
+        forces_rows: list[list[float]] = []
         for _ in range(num_atom):
-            line = _get_line_ignore_blank(f).split()
-            forces_tmp.append(np.array([float(x) for x in line]))
-        forces_tmp = np.array(forces_tmp, dtype="double")
+            force_tokens = _get_line_ignore_blank(f).split()
+            forces_rows.append([float(x) for x in force_tokens])
+        forces_tmp = np.array(forces_rows, dtype="double")
         forces = {
             "number": atom_number - 1,
             "displacement": displacement,
@@ -243,7 +246,7 @@ def collect_forces(
     hook: str,
     force_pos: Sequence[int],
     word: str | None = None,
-) -> list:
+) -> list[list[float]]:
     """General function to collect forces from lines of a text file.
 
     Parameters
@@ -311,15 +314,15 @@ def iter_collect_forces(
     force_pos: Sequence[int],
     word: str | None = None,
     max_iter: int = 1000,
-) -> list:
+) -> list[list[float]]:
     """Repeat ``collect_forces`` to get the last set of forces in the file.
 
     Details of parameters are explained in ``collect_forces``.
 
     """
     with open(filename, "r") as f:
-        forces = []
-        prev_forces = []
+        forces: list[list[float]] = []
+        prev_forces: list[list[float]] = []
 
         for i in range(max_iter):  # noqa B007
             forces = collect_forces(f, num_atom, hook, force_pos, word=word)
@@ -339,10 +342,10 @@ def iter_collect_forces(
 # FORCE_CONSTANTS, force_constants.hdf5
 #
 def write_FORCE_CONSTANTS(
-    force_constants: NDArray,
+    force_constants: NDArray[np.double],
     filename: str | os.PathLike = "FORCE_CONSTANTS",
-    p2s_map: NDArray | None = None,
-):
+    p2s_map: NDArray[np.int64] | None = None,
+) -> None:
     """Write force constants in text file format.
 
     Parameters
@@ -364,8 +367,8 @@ def write_FORCE_CONSTANTS(
 
 
 def get_FORCE_CONSTANTS_lines(
-    force_constants: NDArray, p2s_map: NDArray | None = None
-) -> list:
+    force_constants: NDArray[np.double], p2s_map: NDArray[np.int64] | None = None
+) -> list[str]:
     """Return text in FORCE_CONSTANTS format.
 
     See also ``write_FORCE_CONSTANTS``.
@@ -389,12 +392,12 @@ def get_FORCE_CONSTANTS_lines(
 
 
 def write_force_constants_to_hdf5(
-    force_constants: NDArray,
+    force_constants: NDArray[np.double],
     filename: str = "force_constants.hdf5",
-    p2s_map: NDArray | None = None,
+    p2s_map: NDArray[np.int64] | None = None,
     physical_unit: str | None = None,
     compression: Literal["gzip", "lzf"] | int | None = None,
-):
+) -> None:
     """Write force constants in hdf5 format.
 
     Parameters
@@ -410,7 +413,7 @@ def write_force_constants_to_hdf5(
         shape=(n_patom,)
         dtype=int64
     physical_unit : str, optional
-        Physical unit used for force contants. Default is None.
+        Physical unit used for force constants. Default is None.
     compression : str or int, optional
         h5py's lossless compression filters (e.g., "gzip", "lzf").
         See the detail at docstring of h5py.Group.create_dataset. Default is
@@ -418,7 +421,7 @@ def write_force_constants_to_hdf5(
 
     """
     try:
-        import h5py
+        import h5py  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ModuleNotFoundError("You need to install python-h5py.") from exc
 
@@ -463,7 +466,9 @@ def parse_FORCE_CONSTANTS(
                     tensor.append([float(x) for x in fcfile.readline().split()])
                 force_constants[i, j] = tensor
 
-        check_force_constants_indices(idx, idx1, p2s_map, filename)
+        check_force_constants_indices(
+            tuple(idx), np.array(idx1, dtype="int64"), p2s_map, filename
+        )
 
         return force_constants
 
@@ -487,7 +492,7 @@ def read_force_constants_hdf5(
 
     """
     try:
-        import h5py
+        import h5py  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ModuleNotFoundError("You need to install python-h5py.") from exc
 
@@ -517,8 +522,11 @@ def read_force_constants_hdf5(
 
 
 def check_force_constants_indices(
-    shape: tuple, indices: NDArray, p2s_map: NDArray | None, filename: str | os.PathLike
-):
+    shape: tuple[int, ...],
+    indices: NDArray[np.int64],
+    p2s_map: NDArray[np.int64] | None,
+    filename: str | os.PathLike,
+) -> None:
     """Check consistency of force constants data type."""
     if shape[0] != shape[1] and p2s_map is not None:
         if len(p2s_map) != len(indices) or (p2s_map != indices).any():
@@ -533,12 +541,12 @@ def check_force_constants_indices(
 
 def parse_disp_yaml(
     filename: str | os.PathLike = "disp.yaml", return_cell: bool = False
-):
+) -> dict | tuple[dict, PhonopyAtoms]:
     """Read disp.yaml or phonopy_disp.yaml.
 
     This method was originally made for parsing disp.yaml. Later this
     started to work for phonopy_disp.yaml, too. But now this method is not
-    allowed to read phonopy_disp.yaml because of existance of PhonopyYaml
+    allowed to read phonopy_disp.yaml because of existence of PhonopyYaml
     class.
 
     """
@@ -578,7 +586,7 @@ def parse_disp_yaml(
 
 def write_disp_yaml_from_dataset(
     dataset: dict, supercell: PhonopyAtoms, filename: str | os.PathLike = "disp.yaml"
-):
+) -> None:
     """Write disp.yaml from dataset.
 
     This function is obsolete, because disp.yaml is obsolete.
@@ -594,7 +602,7 @@ def write_disp_yaml(
     displacements: list,
     supercell: PhonopyAtoms,
     filename: str | os.PathLike = "disp.yaml",
-):
+) -> None:
     """Write disp.yaml from displacements.
 
     This function is obsolete, because disp.yaml is obsolete.
@@ -609,7 +617,7 @@ def write_disp_yaml(
         w.write("\n".join(lines))
 
 
-def _get_disp_yaml_lines(displacements: list) -> list:
+def _get_disp_yaml_lines(displacements: list) -> list[str]:
     lines = []
     lines.append("displacements:")
     for _, disp in enumerate(displacements):
@@ -622,7 +630,7 @@ def _get_disp_yaml_lines(displacements: list) -> list:
 #
 # DISP (old phonopy displacement format)
 #
-def parse_DISP(filename="DISP"):
+def parse_DISP(filename: str | os.PathLike = "DISP") -> list[list[float]]:
     """Parse DISP file.
 
     This function is obsolete, because DISP is obsolete.
@@ -642,7 +650,7 @@ def parse_DISP(filename="DISP"):
 #
 # Parse supercell in disp.yaml
 #
-def get_cell_from_disp_yaml(dataset):
+def get_cell_from_disp_yaml(dataset: dict) -> PhonopyAtoms:
     """Read cell from disp.yaml like file."""
     if "lattice" in dataset:
         lattice = dataset["lattice"]
@@ -675,7 +683,7 @@ def get_cell_from_disp_yaml(dataset):
 #
 # QPOINTS
 #
-def parse_QPOINTS(filename="QPOINTS"):
+def parse_QPOINTS(filename: str | os.PathLike = "QPOINTS") -> NDArray[np.double]:
     """Read QPOINTS file."""
     with open(filename, "r") as f:
         num_qpoints = int(f.readline().strip())
@@ -688,22 +696,27 @@ def parse_QPOINTS(filename="QPOINTS"):
 #
 # BORN
 #
-def write_BORN(primitive, borns, epsilon, filename="BORN"):
-    """Write BORN from NAC paramters."""
+def write_BORN(
+    primitive: PhonopyAtoms,
+    borns: NDArray[np.double],
+    epsilon: NDArray[np.double],
+    filename: str | os.PathLike = "BORN",
+) -> None:
+    """Write BORN from NAC parameters."""
     lines = get_BORN_lines(primitive, borns, epsilon)
     with open(filename, "w") as w:
         w.write("\n".join(lines))
 
 
 def get_BORN_lines(
-    unitcell,
-    borns,
-    epsilon,
-    factor=None,
-    primitive_matrix=None,
-    supercell_matrix=None,
-    symprec=1e-5,
-):
+    unitcell: PhonopyAtoms,
+    borns: NDArray[np.double],
+    epsilon: NDArray[np.double],
+    factor: float | None = None,
+    primitive_matrix: NDArray[np.double] | None = None,
+    supercell_matrix: NDArray[np.int64] | None = None,
+    symprec: float = 1e-5,
+) -> list[str]:
     """Generate text of BORN file."""
     borns, epsilon, atom_indices = elaborate_borns_and_epsilon(
         unitcell,
@@ -774,7 +787,7 @@ def _parse_BORN_from_file_object(
 
 def get_born_parameters(
     f: typing.TextIO, primitive: PhonopyAtoms, prim_symmetry: Symmetry
-) -> dict:
+) -> dict[str, NDArray[np.double] | float]:
     """Parse BORN file text.
 
     Parameters
@@ -844,7 +857,10 @@ def get_born_parameters(
         raise BORNFileParseError(msg)
 
     _expand_borns(borns, primitive, prim_symmetry)
-    non_anal = {"born": borns, "dielectric": dielectric}
+    non_anal: dict[str, NDArray[np.double] | float] = {
+        "born": borns,
+        "dielectric": dielectric,
+    }
     if factor is not None:
         non_anal["factor"] = factor
     if G_cutoff is not None:
@@ -855,7 +871,9 @@ def get_born_parameters(
     return non_anal
 
 
-def _expand_borns(borns: NDArray, primitive: PhonopyAtoms, prim_symmetry: Symmetry):
+def _expand_borns(
+    borns: NDArray[np.double], primitive: PhonopyAtoms, prim_symmetry: Symmetry
+) -> None:
     # Expand Born effective charges to all atoms in the primitive cell
     rotations = prim_symmetry.symmetry_operations["rotations"]
     map_operations = prim_symmetry.get_map_operations()
@@ -874,8 +892,10 @@ def _expand_borns(borns: NDArray, primitive: PhonopyAtoms, prim_symmetry: Symmet
 # phonopy.yaml
 #
 def is_file_phonopy_yaml(
-    filename, keyword: str | None = None, yaml_dict_keys: Sequence[str] | None = None
-):
+    filename: str | os.PathLike,
+    keyword: str | None = None,
+    yaml_dict_keys: Sequence[str] | None = None,
+) -> bool:
     """Check whether the file is phonopy.yaml like file or not.
 
     Parameters
@@ -901,10 +921,11 @@ def is_file_phonopy_yaml(
             data = yaml.load(f, Loader=Loader)
             if data is None:
                 return False
-            if yaml_dict_keys is None:
-                keys = ("supercell_matrix", "unit_cell")
-            else:
-                keys = yaml_dict_keys
+            keys: Sequence[str] = (
+                yaml_dict_keys
+                if yaml_dict_keys is not None
+                else ("supercell_matrix", "unit_cell")
+            )
             return keys_exist(data, keys)
         except yaml.YAMLError:
             return False
@@ -929,14 +950,14 @@ def read_thermal_properties_yaml(
                 num_modes.append(tp_yaml["num_modes"])
                 num_integrated_modes.append(tp_yaml["num_integrated_modes"])
 
-    temperatures = [v["temperature"] for v in thermal_properties[0]]
-    temp = []
-    cv = []
-    entropy = []
-    fe_phonon = []
+    temperatures_list = [v["temperature"] for v in thermal_properties[0]]
+    temp: list[list[float]] = []
+    cv_list: list[list[float]] = []
+    entropy_list: list[list[float]] = []
+    fe_phonon_list: list[list[float]] = []
     for _, tp in enumerate(thermal_properties):
         temp.append([v["temperature"] for v in tp])
-        if not np.allclose(temperatures, temp):
+        if not np.allclose(temperatures_list, temp):
             msg = [
                 "",
             ]
@@ -950,20 +971,22 @@ def read_thermal_properties_yaml(
             msg.append("")
             msg.append("Stop phonopy-qha")
             raise RuntimeError(msg)
-        cv.append([v["heat_capacity"] for v in tp])
-        entropy.append([v["entropy"] for v in tp])
-        fe_phonon.append([v["free_energy"] for v in tp])
+        cv_list.append([v["heat_capacity"] for v in tp])
+        entropy_list.append([v["entropy"] for v in tp])
+        fe_phonon_list.append([v["free_energy"] for v in tp])
 
     # shape=(temperatures, volumes)
-    cv = np.array(cv).T
-    entropy = np.array(entropy).T
-    fe_phonon = np.array(fe_phonon).T
-    temperatures = np.array(temperatures)
+    cv = np.array(cv_list).T
+    entropy = np.array(entropy_list).T
+    fe_phonon = np.array(fe_phonon_list).T
+    temperatures = np.array(temperatures_list)
 
     return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
 
 
-def read_v_e(filename):
+def read_v_e(
+    filename: str | os.PathLike,
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Read v-e.dat file."""
     data = _parse_QHA_data(filename)
     if data.shape[1] != 2:
@@ -973,7 +996,9 @@ def read_v_e(filename):
     return volumes, electronic_energies
 
 
-def read_efe(filename):
+def read_efe(
+    filename: str | os.PathLike,
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Read fe-v.dat (efe) file."""
     data = _parse_QHA_data(filename)
     temperatures = data[:, 0]
@@ -981,7 +1006,7 @@ def read_efe(filename):
     return temperatures, free_energies
 
 
-def _parse_QHA_data(filename):
+def _parse_QHA_data(filename: str | os.PathLike) -> NDArray[np.double]:
     data = []
     with open(filename) as f:
         for line in f:
@@ -994,7 +1019,7 @@ def _parse_QHA_data(filename):
         return np.array(data)
 
 
-def get_io_module_to_decompress(filename) -> ModuleType:
+def get_io_module_to_decompress(filename: str | os.PathLike) -> ModuleType:
     """Return io-module to decompress file.
 
     Filename extensions of lzma, xz, gzip, bz2 are supported.
@@ -1021,7 +1046,7 @@ def get_io_module_to_decompress(filename) -> ModuleType:
         return io
 
 
-def get_supported_file_extensions_for_compression():
+def get_supported_file_extensions_for_compression() -> tuple[str, ...]:
     """Return file extensions for compression.
 
     This function must be coupled with `get_io_module_to_decompress`.

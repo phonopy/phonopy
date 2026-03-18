@@ -37,14 +37,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.structure.cells import get_reduced_bases
 
-search_space = np.array(
+search_space: NDArray[np.int64] = np.array(
     [
         [0, 0, 0],
         [0, 0, 1],
@@ -79,11 +78,11 @@ search_space = np.array(
 
 
 def get_qpoints_in_Brillouin_zone(
-    reciprocal_lattice: Union[Sequence, NDArray],
-    qpoints: Union[Sequence, NDArray],
+    reciprocal_lattice: Sequence[Sequence[float]] | NDArray[np.double],
+    qpoints: Sequence[Sequence[float]] | NDArray[np.double],
     only_unique: bool = False,
     tolerance: float = 0.01,
-) -> Union[NDArray, list]:
+) -> NDArray[np.double] | list[NDArray[np.double]]:
     """Move qpoints to first Brillouin zone by lattice translation.
 
     Parameters
@@ -116,7 +115,8 @@ class BrillouinZone:
 
     Attributes
     ----------
-    shortest_qpoints : list
+    shortest_qpoints : list[NDArray[np.double]]
+        This must be list.
         Each element of the list contains a set of q-points that are in first
         Brillouin zone (BZ). When inside BZ, there is only one q-point for
         each element, but on the surface, multiple q-points that are
@@ -124,7 +124,11 @@ class BrillouinZone:
 
     """
 
-    def __init__(self, reciprocal_lattice, tolerance=0.01):
+    def __init__(
+        self,
+        reciprocal_lattice: Sequence[Sequence[float]] | NDArray[np.double],
+        tolerance: float = 0.01,
+    ) -> None:
         """Init method.
 
         Parameters
@@ -137,23 +141,34 @@ class BrillouinZone:
             0.01.
 
         """
-        self._reciprocal_lattice = np.array(reciprocal_lattice)
-        self._tolerance = min(np.sum(reciprocal_lattice**2, axis=0)) * tolerance
-        self._reduced_bases = get_reduced_bases(reciprocal_lattice.T)
-        self._tmat = np.dot(
-            np.linalg.inv(self._reciprocal_lattice), self._reduced_bases.T
+        _rec_lat = np.array(reciprocal_lattice, dtype="double")
+        self._reciprocal_lattice: NDArray[np.double] = _rec_lat
+        self._tolerance: float = float(min(np.sum(_rec_lat**2, axis=0)) * tolerance)
+        self._reduced_bases: NDArray[np.double] = get_reduced_bases(_rec_lat.T)
+        self._tmat: NDArray[np.double] = np.dot(
+            np.linalg.inv(_rec_lat), self._reduced_bases.T
         )
-        self._tmat_inv = np.linalg.inv(self._tmat)
-        self._shortest_qpoints = None
+        self._tmat_inv: NDArray[np.double] = np.array(
+            np.linalg.inv(self._tmat), dtype="double"
+        )
+        self._shortest_qpoints: list[NDArray[np.double]] | None = None
 
     def run(
         self,
-        qpoints: Union[Sequence, np.ndarray],
-    ):
+        qpoints: Sequence[Sequence[float]] | NDArray[np.double],
+    ) -> None:
         """Find q-points inside Wigner–Seitz cell.
 
-        qpoints : array_like
+        Parameters
+        ----------
+        qpoints : Sequence[Sequence[float]] | NDArray[np.double]
             q-points in reduced coordinates.
+
+        Returns
+        -------
+        list[NDArray[np.double]]
+            Each element of the list contains a set of q-points whose size can
+            be different.
 
         """
         reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
@@ -168,7 +183,7 @@ class BrillouinZone:
             )
 
     @property
-    def shortest_qpoints(self) -> list[NDArray]:
+    def shortest_qpoints(self) -> list[NDArray[np.double]]:
         """Return shortest qpoints including equivalents."""
         if self._shortest_qpoints is None:
             raise RuntimeError("run method has not been called yet.")

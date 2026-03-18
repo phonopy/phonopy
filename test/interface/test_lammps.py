@@ -1,6 +1,7 @@
 """Tests for lammps calculater interface."""
 
 import io
+import pathlib
 from pathlib import Path
 
 import numpy as np
@@ -10,10 +11,15 @@ from phonopy.interface.lammps import (
     LammpsForcesLoader,
     LammpsStructureDumper,
     LammpsStructureLoader,
+    parse_set_of_forces,
+    read_lammps,
+    rotate_lammps_forces,
+    write_lammps,
+    write_supercells_with_displacements,
 )
 from phonopy.interface.phonopy_yaml import read_phonopy_yaml
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_cell_matrix_from_lattice
+from phonopy.structure.cells import get_cell_matrix_from_lattice, isclose
 from phonopy.structure.symmetry import Symmetry
 
 cwd = Path(__file__).parent
@@ -91,3 +97,138 @@ def test_LammpsForcesLoader():
     np.testing.assert_allclose(
         forces[-1], [-0.0000369000, -0.0000003300, 0.0001166000], atol=1e-8
     )
+
+
+# ---------------------------------------------------------------------------
+# read_lammps / write_lammps
+# ---------------------------------------------------------------------------
+
+
+def test_read_lammps_natoms() -> None:
+    """lammps_structure_Ti has 2 Ti atoms."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    assert len(cell) == 2
+
+
+def test_read_lammps_symbols() -> None:
+    """All atoms should be Ti."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    assert all(s == "Ti" for s in cell.symbols)
+
+
+def test_read_lammps_cell_shape() -> None:
+    """Lattice must be a 3×3 array."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    assert cell.cell.shape == (3, 3)
+
+
+def test_read_lammps_lattice_diagonal() -> None:
+    """Diagonal elements must match xlo_xhi, ylo_yhi, zlo_zhi ranges."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    np.testing.assert_allclose(cell.cell[0, 0], 2.923479689273095, atol=1e-10)
+    np.testing.assert_allclose(cell.cell[1, 1], 2.531807678358337, atol=1e-10)
+    np.testing.assert_allclose(cell.cell[2, 2], 4.624022835916574, atol=1e-10)
+
+
+def test_read_lammps_lattice_off_diagonal() -> None:
+    """Xy tilt must be parsed from the xy xz yz line."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    np.testing.assert_allclose(cell.cell[1, 0], -1.461739844636547, atol=1e-10)
+    np.testing.assert_allclose(cell.cell[2, 0], 0.0, atol=1e-10)
+    np.testing.assert_allclose(cell.cell[2, 1], 0.0, atol=1e-10)
+
+
+def test_write_lammps_roundtrip(tmp_path: pathlib.Path) -> None:
+    """write_lammps then read_lammps must reproduce the original cell."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    fpath = tmp_path / "Ti.lammps"
+    write_lammps(str(fpath), cell)
+    cell2 = read_lammps(str(fpath))
+
+    assert isclose(cell, cell2)
+
+
+# ---------------------------------------------------------------------------
+# parse_set_of_forces
+# ---------------------------------------------------------------------------
+
+
+def test_parse_set_of_forces_length() -> None:
+    """parse_set_of_forces returns one entry per file."""
+    result = parse_set_of_forces(96, [cwd / "lammps_forces_Ti.0"], verbose=False)
+    assert len(result) == 1
+
+
+def test_parse_set_of_forces_shape() -> None:
+    """Each force array must have shape (num_atoms, 3)."""
+    result = parse_set_of_forces(96, [cwd / "lammps_forces_Ti.0"], verbose=False)
+    assert result[0].shape == (96, 3)
+
+
+def test_parse_set_of_forces_drift_removed() -> None:
+    """After drift removal the sum of forces must be near zero."""
+    result = parse_set_of_forces(96, [cwd / "lammps_forces_Ti.0"], verbose=False)
+    np.testing.assert_allclose(result[0].sum(axis=0), [0.0, 0.0, 0.0], atol=1e-10)
+
+
+def test_parse_set_of_forces_wrong_natoms_returns_empty() -> None:
+    """Wrong num_atoms causes parse_set_of_forces to return []."""
+    result = parse_set_of_forces(1, [cwd / "lammps_forces_Ti.0"], verbose=False)
+    assert result == []
+
+
+# ---------------------------------------------------------------------------
+# rotate_lammps_forces
+# ---------------------------------------------------------------------------
+
+
+def test_rotate_lammps_forces_modifies_in_place() -> None:
+    """rotate_lammps_forces must modify force_sets elements in place."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    original = np.ones((2, 3))
+    force_sets = [original]
+    rotate_lammps_forces(force_sets, cell.cell, verbose=False)
+    assert force_sets[0] is original
+
+
+def test_rotate_lammps_forces_shape_preserved() -> None:
+    """Force array shape must be unchanged after rotation."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    forces = np.random.default_rng(0).random((2, 3))
+    force_sets = [forces.copy()]
+    rotate_lammps_forces(force_sets, cell.cell, verbose=False)
+    assert force_sets[0].shape == (2, 3)
+
+
+# ---------------------------------------------------------------------------
+# write_supercells_with_displacements
+# ---------------------------------------------------------------------------
+
+
+def test_write_supercells_filenames(tmp_path: pathlib.Path) -> None:
+    """Supercell and displacement files (no extension) must be created."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    ids = np.array([1, 2])
+    pre = str(tmp_path / "supercell")
+    write_supercells_with_displacements(cell, [cell, cell], ids, pre_filename=pre)
+    assert (tmp_path / "supercell").exists()
+    assert (tmp_path / "supercell-001").exists()
+    assert (tmp_path / "supercell-002").exists()
+
+
+def test_write_supercells_custom_prefix(tmp_path: pathlib.Path) -> None:
+    """Custom pre_filename is used for all output files."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    pre = str(tmp_path / "disp")
+    write_supercells_with_displacements(cell, [cell], np.array([1]), pre_filename=pre)
+    assert (tmp_path / "disp").exists()
+    assert (tmp_path / "disp-001").exists()
+
+
+def test_write_supercells_content_readable(tmp_path: pathlib.Path) -> None:
+    """Written supercell file must be parseable by read_lammps."""
+    cell = read_lammps(cwd / "lammps_structure_Ti")
+    pre = str(tmp_path / "supercell")
+    write_supercells_with_displacements(cell, [cell], np.array([1]), pre_filename=pre)
+    cell2 = read_lammps(str(tmp_path / "supercell"))
+    assert isclose(cell, cell2)

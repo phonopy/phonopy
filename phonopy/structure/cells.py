@@ -106,7 +106,7 @@ class Supercell(PhonopyAtoms):
             elements have to be integers.
             shape=(3,3)
         is_old_stype: bool
-            This swithes the algorithms. See Note.
+            This switches the algorithms. See Note.
         symprec: float, optional
             Tolerance to find overlapping atoms in supercell cell. The default
             values is 1e-5.
@@ -424,7 +424,7 @@ class Primitive(PhonopyAtoms):
         """Return shortest vectors and multiplicities.
 
         See also the docstring of `ShortestPairs`. The older less densen format
-        is deprecated. The detailed explaination is found in `ShortestPairs`
+        is deprecated. The detailed explanation is found in `ShortestPairs`
         class.
 
         Returns
@@ -648,7 +648,7 @@ class TrimmedCell(PhonopyAtoms):
 
     @property
     def mapping_table(self) -> NDArray[np.int64]:
-        """Return mappping table.
+        """Return mapping table.
 
         mapping_table : ndarray
             The atomic indices of 'extracted_atom's of all atoms in the input
@@ -955,24 +955,55 @@ def isclose(
             if len(matches) != 1:
                 return False
             indices.append(matches[0])
-        if (np.sort(indices) == np.arange(len(indices))).all() and (
-            a.numbers[indices] == b.numbers
-        ).all():
-            if return_order:
-                return indices
-            return True
-        else:
+        if (np.sort(indices) != np.arange(len(indices))).all():
             return False
+        if (a.numbers[indices] != b.numbers).all():
+            return False
+        if not _magnetic_moments_all_close(
+            a.magnetic_moments,
+            b.magnetic_moments,
+            indices=indices,
+            rtol=rtol,
+            atol=atol,
+        ):
+            return False
+        if return_order:
+            return indices
+        return True
     else:
         if (a.numbers != b.numbers).any():
             return False
-
+        if not _magnetic_moments_all_close(
+            a.magnetic_moments, b.magnetic_moments, rtol=rtol, atol=atol
+        ):
+            return False
         diff = a.scaled_positions - b.scaled_positions
         diff -= np.rint(diff)
         dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
         if (dist > atol).any():
             return False
     return True
+
+
+def _magnetic_moments_all_close(
+    a: NDArray[np.double] | None,
+    b: NDArray[np.double] | None,
+    indices: list[int] | None = None,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+) -> bool:
+    if indices is None or a is None:
+        _a = a
+    else:
+        _a = a[indices]
+    if _a is None and b is not None:
+        return False
+    if b is None and _a is not None:
+        return False
+    if _a is None and b is None:
+        return True
+    assert _a is not None and b is not None
+    return np.allclose(_a, b, rtol=rtol, atol=atol)
 
 
 def is_primitive_cell(rotations: NDArray[np.int64] | NDArray[np.int32]) -> bool:
@@ -1043,7 +1074,7 @@ def get_reduced_bases(
         delaunay: Delaunay reduction
         niggli: Niggli reduction
     tolerance : float
-        Tolerance to find shortest basis vecotrs
+        Tolerance to find shortest basis vectors
 
     Returns
     -------
@@ -1126,7 +1157,7 @@ class ShortestPairs:
             dtype='double', shape=(size_super, 3)
         primitive_pos : array_like
             Atomic positions in fractional coordinates of supercell. Note that
-            not in fractional coodinates of primitive cell.  dtype='double',
+            not in fractional coordinates of primitive cell.  dtype='double',
             shape=(size_prim, 3)
         store_dense_svecs_: bool, optional
             ``shortest_vectors`` are stored in the dense data structure.
@@ -1616,7 +1647,7 @@ def get_cell_matrix(
     beta: float,
     gamma: float,
     is_radian: bool = False,
-) -> NDArray:
+) -> NDArray[np.double]:
     """Return basis vectors in another orientation.
 
     Parameters
@@ -1832,10 +1863,11 @@ def guess_primitive_matrix(
         raise RuntimeError(msg)
 
     if unitcell.magnetic_moments is None:
-        dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
+        dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)  # type: ignore
     else:
         dataset = spglib.get_magnetic_symmetry_dataset(
-            unitcell.totuple(), symprec=symprec
+            unitcell.totuple(),  # type: ignore
+            symprec=symprec,
         )
 
     if isinstance(dataset, (SpglibDataset, SpglibMagneticDataset)):

@@ -34,10 +34,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import os
 import sys
 import warnings
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
@@ -46,7 +51,11 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     hook = "ATOM                     X                   Y                   Z"
     force_sets = []
@@ -79,7 +88,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_crystal(filename):
+def read_crystal(filename: str | os.PathLike) -> tuple[PhonopyAtoms, list | None]:
     """Read crystal structure."""
     f_crystal = open(filename)
     crystal_in = CrystalIn(f_crystal.readlines())
@@ -119,13 +128,17 @@ def read_crystal(filename):
 
 
 def write_crystal(
-    filename, cell, conv_numbers, template_file="TEMPLATE", write_symmetry=False
-):
+    filename: str,
+    cell: PhonopyAtoms,
+    conv_numbers: list[int] | None,
+    template_file: str | os.PathLike = "TEMPLATE",
+    write_symmetry: bool = False,
+) -> None:
     """Write cell to file."""
     if conv_numbers is None:
         # NAT<200: all-electron BS 	Given Z, NAT=Z, NAT'=Z+100
         # NAT>200: valence-electron BS 	Given Z, NAT=Z+200, NAT'=Z+300
-        conv_numbers = cell.numbers
+        conv_numbers = cell.numbers  # type: ignore[assignment]
         warnings.warn(
             (
                 "No CRYSTAL conventional atomic numbers provided, "
@@ -137,15 +150,15 @@ def write_crystal(
             UserWarning,
             stacklevel=2,
         )
-    if len(cell.positions) != len(conv_numbers):
+    if len(cell.positions) != len(conv_numbers):  # type: ignore[arg-type]
         raise ValueError(
-            f"Length of conv_numbers ({len(conv_numbers)}) does not match "
+            f"Length of conv_numbers ({len(conv_numbers)}) does not match "  # type: ignore[arg-type]
             f"number of atoms ({len(cell.positions)})."
         )
 
     # Write geometry in EXTERNAL file (fort.34)
     f_ext = open(filename + ".ext", "w")
-    f_ext.write(get_crystal_structure(cell, conv_numbers, write_symmetry))
+    f_ext.write(get_crystal_structure(cell, conv_numbers, write_symmetry))  # type: ignore[arg-type]
     f_ext.close()
 
     # Create input file (filename.d12)
@@ -184,18 +197,18 @@ def write_crystal(
 
 
 def write_supercells_with_displacements(
-    supercell,
-    cells_with_displacements,
-    ids,
-    conv_numbers,
-    num_unitcells_in_supercell,
-    pre_filename="supercell",
-    width=3,
-    template_file="TEMPLATE",
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    conv_numbers: list[int] | None,
+    num_unitcells_in_supercell: int,
+    pre_filename: str = "supercell",
+    width: int = 3,
+    template_file: str | os.PathLike = "TEMPLATE",
+) -> None:
     """Write supercells with displacements to files."""
     convnum_super = []
-    for i in conv_numbers:
+    for i in conv_numbers:  # type: ignore[union-attr]
         for _ in range(num_unitcells_in_supercell):
             convnum_super.append(i)
 
@@ -228,7 +241,11 @@ def write_supercells_with_displacements(
         )
 
 
-def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
+def get_crystal_structure(
+    cell: PhonopyAtoms,
+    conv_numbers: Sequence[int],
+    write_symmetry: bool = False,
+) -> str:
     """Return CRYSTAL structure in text."""
     lattice = cell.cell
     positions = cell.positions
@@ -275,11 +292,11 @@ def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
 class CrystalIn:
     """Class to create CRYSTAL input file."""
 
-    def __init__(self, lines):
+    def __init__(self, lines: list[str]) -> None:
         """Init method."""
         # conv_numbers = CRYSTAL conventional atomic number mapping:
         #  'Ge' -> 32 or 'Ge' -> 232
-        self._tags = {
+        self._tags: dict[str, list | None] = {
             "lattice_vectors": None,
             "atomic_species": None,
             "coordinates": None,
@@ -287,14 +304,14 @@ class CrystalIn:
             "conv_numbers": None,
         }
 
-        self._values = None
+        self._values: list[str] | None = None
         self._collect(lines)
 
-    def get_tags(self):
+    def get_tags(self) -> dict[str, list | None]:
         """Return tags."""
         return self._tags
 
-    def _collect(self, lines):
+    def _collect(self, lines: list[str]) -> None:
         # Reads a CRYSTAL output file (lattice vectors, conventional atomic numbers,
         # fractional atomic positions).
         # - For optimization outputs, the final geometry in the file is read.
@@ -386,4 +403,4 @@ if __name__ == "__main__":
     cell, conv_numbers = read_crystal(sys.argv[1])
     symmetry = Symmetry(cell)
     print("# %s" % symmetry.get_international_table())
-    print(get_crystal_structure(cell, conv_numbers))
+    print(get_crystal_structure(cell, conv_numbers))  # type: ignore[arg-type]

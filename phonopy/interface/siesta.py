@@ -34,10 +34,16 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import os
 import re
 import sys
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
@@ -45,7 +51,11 @@ from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     hook = ""  # Just for skipping the first line
     is_parsed = True
@@ -70,7 +80,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_siesta(filename):
+def read_siesta(filename: str | os.PathLike) -> PhonopyAtoms:
     """Read crystal structure."""
     siesta_in = SiestaIn(open(filename).read())
     numbers = siesta_in._tags["atomicnumbers"]
@@ -98,15 +108,19 @@ def read_siesta(filename):
     return cell
 
 
-def write_siesta(filename, cell):
+def write_siesta(filename: str | os.PathLike, cell: PhonopyAtoms) -> None:
     """Write cell to file."""
     with open(filename, "w") as w:
         w.write(get_siesta_structure(cell))
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str | os.PathLike = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_siesta("%s.fdf" % pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -116,7 +130,7 @@ def write_supercells_with_displacements(
         write_siesta(filename, cell)
 
 
-def get_siesta_structure(cell):
+def get_siesta_structure(cell: PhonopyAtoms) -> str:
     """Return SIESTA structure in text."""
     lattice = cell.cell
     positions = cell.scaled_positions
@@ -125,14 +139,15 @@ def get_siesta_structure(cell):
 
     lines = ""
 
-    lines += "NumberOfSpecies %d\n" % len(set(chemical_symbols))
+    species = {}  # {symbol: num} in first-occurrence order
+    for symbol, num in zip(chemical_symbols, nums, strict=True):
+        if symbol not in species:
+            species[symbol] = num
+
+    lines += "NumberOfSpecies %d\n" % len(species)
     lines += "%block ChemicalSpeciesLabel\n"
-    unique_nums = set(nums)
-    unique_symbols = set(chemical_symbols)
     atypes = {}
-    for i, (num, symbol) in enumerate(
-        zip(unique_nums, unique_symbols, strict=True), start=1
-    ):
+    for i, (symbol, num) in enumerate(species.items(), start=1):
         atypes[symbol] = i
         lines += "%4d %4d %s\n" % (i, num, symbol)
     lines += "%endblock ChemicalSpeciesLabel\n\n"
@@ -146,8 +161,8 @@ def get_siesta_structure(cell):
     lines += "LatticeConstant 1.0 Bohr\n\n"
 
     lines += "%block AtomicCoordinatesAndAtomicSpecies\n"
-    for pos, i in zip(positions, chemical_symbols, strict=True):
-        lines += ("%21.16lf" * 3 + " %d\n") % tuple(pos.tolist() + [atypes[i]])
+    for pos, i in zip(positions, chemical_symbols, strict=True):  # type: ignore[assignment]
+        lines += ("%21.16lf" * 3 + " %d\n") % tuple(pos.tolist() + [atypes[i]])  # type: ignore[index]
     lines += "%endblock AtomicCoordinatesAndAtomicSpecies\n"
 
     return lines
@@ -156,8 +171,8 @@ def get_siesta_structure(cell):
 class SiestaIn:
     """Class to create SIESTA input file."""
 
-    _num_regex = r"([+-]?\d+(?:\.\d*)?(?:[eE][-+]?\d+)?)"
-    _tags = {
+    _num_regex: str = r"([+-]?\d+(?:\.\d*)?(?:[eE][-+]?\d+)?)"
+    _tags: dict[str, Any] = {
         "latticeconstant": 1.0,
         "latticeconstantunit": None,
         "chemicalspecieslabel": None,
@@ -167,11 +182,11 @@ class SiestaIn:
         "atomiccoordinates": None,
     }
 
-    def __init__(self, lines):
+    def __init__(self, lines: str) -> None:
         """Init method."""
         self._collect(lines)
 
-    def _collect(self, lines):
+    def _collect(self, lines: str) -> None:
         """Collect values.
 
         This routine reads the following from the Siesta file:
@@ -214,7 +229,7 @@ class SiestaIn:
             if tag == "chemicalspecieslabel":
                 block_array = block.split("\n")[:-1]
                 self._tags["atomicnumbers"] = dict(
-                    [map(int, species.split()[:2]) for species in block_array]
+                    [map(int, species.split()[:2]) for species in block_array]  # type: ignore[misc]
                 )
                 self._tags[tag] = dict(
                     [
@@ -247,14 +262,14 @@ class SiestaIn:
             self._tags["atomicnumbers"][atype] for atype in self._tags["atomicspecies"]
         ]
 
-    def _check_present(self, tag):
+    def _check_present(self, tag: str) -> None:
         if not self._tags[tag]:
             print("%s not present" % tag)
             sys.exit(1)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return tags."""
-        return self._tags
+        return self._tags  # type: ignore[return-value]
 
 
 if __name__ == "__main__":

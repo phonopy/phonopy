@@ -2,6 +2,13 @@
 
 # Change Log
 
+## Mar-18-2026: Version 3.2.0
+
+- Remove deprecated parameters from `Phonopy.__init__()`: `frequency_scale_factor`,
+  `dynamical_matrix_decimals`, `force_constants_decimals`, `store_dense_svecs`, and
+  `set_factor_by_calculator`.
+- Major refactoring has been made.
+
 ## Mar-10-2026: Version 3.1.0
 
 - Fix the handler for writing supercell files across various calculators.

@@ -26,7 +26,7 @@ for vol in ("orig", "plus", "minus"):
         primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
     )
     force_sets = parse_FORCE_SETS(filename="%s/FORCE_SETS" % vol)
-    phonon.set_displacement_dataset(force_sets)
+    phonon.forces = force_sets
     phonon.produce_force_constants()
     phonons[vol] = phonon
 

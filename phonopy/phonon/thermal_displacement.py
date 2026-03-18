@@ -37,9 +37,8 @@
 from __future__ import annotations
 
 import os
-import warnings
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -47,6 +46,15 @@ from numpy.typing import NDArray
 from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.physical_units import get_physical_units
+from phonopy.structure.atoms import PhonopyAtoms
+
+
+class ThermalDisplacementMatricesDict(TypedDict):
+    """Return type of Phonopy.get_thermal_displacement_matrices_dict."""
+
+    temperatures: NDArray[np.double] | None
+    thermal_displacement_matrices: NDArray[np.double] | None
+    thermal_displacement_matrices_cif: NDArray[np.double] | None
 
 
 class ThermalMotion:
@@ -61,7 +69,7 @@ class ThermalMotion:
         """Init method."""
         self._iter_mesh = iter_mesh
         if freq_min is None:
-            self._fmin = 0
+            self._fmin: float = 0.0
         else:
             self._fmin = freq_min
         if freq_max is None:
@@ -78,7 +86,7 @@ class ThermalMotion:
         self._temperatures: NDArray[np.double] | None = None
 
     def _get_Q2(
-        self, freq: float | NDArray[np.double], t: NDArray[np.double]
+        self, freq: float, t: NDArray[np.double]
     ) -> NDArray[np.double]:  # freq in THz
         return (
             get_physical_units().Hbar
@@ -98,26 +106,6 @@ class ThermalMotion:
         condition = np.logical_not(t_array < 0)
         self._temperatures = np.extract(condition, t_array).astype("double")
 
-    def get_temperatures(self) -> NDArray[np.double] | None:
-        """Return temperatures."""
-        warnings.warn(
-            "ThermalMotion.get_temperatures() is deprecated. "
-            "Use temperatures attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.temperatures
-
-    def set_temperatures(self, temperatures: NDArray[np.double]) -> None:
-        """Set temperatures."""
-        warnings.warn(
-            "ThermalMotion.set_temperatures() is deprecated. "
-            "Use temperatures attribute instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.temperatures = temperatures
-
     def set_temperature_range(
         self,
         t_min: float | None = None,
@@ -126,42 +114,37 @@ class ThermalMotion:
     ) -> None:
         """Set temperatures by range."""
         if t_min is None:
-            _t_min = 10
+            _t_min: float = 10.0
         elif t_min < 0:
-            _t_min = 0
+            _t_min = 0.0
         else:
             _t_min = t_min
 
         if t_max is None:
-            _t_max = 1000
+            _t_max: float = 1000.0
         elif t_max > _t_min:
             _t_max = t_max
         else:
             _t_max = _t_min
 
         if t_step is None:
-            _t_step = 10
+            _t_step: float = 10.0
         elif t_step > 0:
             _t_step = t_step
         else:
-            _t_step = 10
+            _t_step = 10.0
 
         self._temperatures = np.arange(
             _t_min, _t_max + _t_step / 2.0, _t_step, dtype="double"
         )
 
     def _get_population(
-        self, freq: float | NDArray[np.double], t: NDArray[np.double]
+        self,
+        freq: float,
+        t: Sequence[float] | NDArray[np.double],
     ) -> NDArray[np.double]:  # freq in THz
-        """Return phonon population number.
-
-        Three types of combinations of array inputs are possible.
-        - single freq and single t
-        - single freq and len(t) > 1
-        - len(freq) > 1 and single t
-
-        """
-        t_array = np.array(t, dtype="double")
+        """Return phonon population number."""
+        t_array = np.asarray(t, dtype="double")
         vals = np.zeros_like(t_array, dtype="double")
         condition = t_array > 1.0
         vals[condition] = 1.0 / (
@@ -207,9 +190,9 @@ class ThermalDisplacements(ThermalMotion):
             Eigenvector projection direction in Cartesian
             coordinates. If None, eigenvector is not projected.
         freq_min:
-            Minimum phonon frequency to determine wheather include or not.
+            Minimum phonon frequency to determine whether include or not.
         freq_max:
-            Maximum phonon frequency to determine wheather include or not.
+            Maximum phonon frequency to determine whether include or not.
 
         """
         super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
@@ -229,18 +212,6 @@ class ThermalDisplacements(ThermalMotion):
         """Return thermal displacements."""
         return self._displacements
 
-    def get_thermal_displacements(
-        self,
-    ) -> tuple[NDArray[np.double] | None, NDArray[np.double] | None]:
-        """Return thermal displacements and temperatures."""
-        warnings.warn(
-            "ThermalDisplacements.get_thermal_displacements() is deprecated. "
-            "Use thermal_displacements and temperatures attributes instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return (self._temperatures, self._displacements)
-
     def run(self) -> None:
         """Calculate thermal displacements."""
         if self._projection_direction is not None:
@@ -251,6 +222,7 @@ class ThermalDisplacements(ThermalMotion):
         assert temps is not None
         disps = np.zeros((len(temps), len(masses)), dtype=float)
 
+        count = 0
         for count, (fs, vecs) in enumerate(self._iter_mesh):  # noqa B007
             assert vecs is not None
             if self._projection_direction is not None:
@@ -346,9 +318,9 @@ class ThermalDisplacementMatrices(ThermalMotion):
             symmetry, i.e., IterMesh instance has to be create
             ``is_mesh_symmetry=False``.
         freq_min: float
-            Minimum phonon frequency to determine wheather include or not.
+            Minimum phonon frequency to determine whether include or not.
         freq_max: float
-            Maximum phonon frequency to determine wheather include or not.
+            Maximum phonon frequency to determine whether include or not.
         lattice: array_like
             Lattice parameters (column vectors) in real space
             dtype='double', shape=(3, 3)
@@ -358,8 +330,9 @@ class ThermalDisplacementMatrices(ThermalMotion):
         self._disp_matrices: NDArray[np.double] | None = None
         self._disp_matrices_cif: NDArray[np.double] | None = None
 
+        self._ANinv: NDArray[np.double] | None
         if lattice is not None:
-            A = np.array(lattice, dtype="double")
+            A = lattice
             N = np.diag([np.linalg.norm(x) for x in np.linalg.inv(A)])
             self._ANinv = np.linalg.inv(np.dot(A, N))
         else:
@@ -374,19 +347,6 @@ class ThermalDisplacementMatrices(ThermalMotion):
     def thermal_displacement_matrices_cif(self) -> NDArray[np.double] | None:
         """Return thermal displacement matrices in cif definition."""
         return self._disp_matrices_cif
-
-    def get_thermal_displacement_matrices(
-        self,
-    ) -> tuple[NDArray[np.double] | None, NDArray[np.double] | None]:
-        """Return thermal displacement matrices."""
-        warnings.warn(
-            "ThermalDisplacementMatrices.get_thermal_displacement_matrices() is "
-            "deprecated. Use thermal_displacement_matrices and temperatures "
-            "attributes instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return (self._temperatures, self._disp_matrices)
 
     def run(
         self,
@@ -423,6 +383,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
         disps = np.zeros(
             (len(self._temperatures), len(self._masses), 3, 3), dtype=dtype_complex
         )
+        count = 0
         for count, (freqs, eigvecs) in enumerate(self._iter_mesh):  # noqa B007
             assert eigvecs is not None
             valid_indices = freqs > self._fmin
@@ -457,7 +418,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
     def write_cif(
         self,
-        cell: Any,
+        cell: PhonopyAtoms,
         temperature_index: int,
         filename: str | os.PathLike = "tdispmat.cif",
     ) -> None:

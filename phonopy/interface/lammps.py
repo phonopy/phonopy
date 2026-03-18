@@ -40,22 +40,27 @@ import io
 import os
 import re
 import typing
+from collections.abc import Sequence
+from typing import Any, TypeVar
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_cell_matrix_from_lattice
 
+_T = TypeVar("_T")
+
 
 def write_supercells_with_displacements(
-    supercell,
-    cells_with_displacements,
-    ids,
-    pre_filename="supercell",
-    width=3,
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str | os.PathLike = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_lammps(pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
@@ -63,18 +68,22 @@ def write_supercells_with_displacements(
         write_lammps(filename, cell)
 
 
-def write_lammps(filename, cell):
+def write_lammps(filename: str | os.PathLike, cell: PhonopyAtoms) -> None:
     """Write LAMMPS structure to file."""
     with open(filename, "w") as w:
         w.write("\n".join(LammpsStructureDumper(cell).get_lines()))
 
 
-def read_lammps(cell_filename) -> PhonopyAtoms:
+def read_lammps(cell_filename: str | os.PathLike) -> PhonopyAtoms:
     """Read LAMMPS structure file and return cell."""
     return LammpsStructureLoader().load(cell_filename).cell
 
 
-def parse_set_of_forces(num_atoms: int, forces_filenames: list, verbose: bool = True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     is_parsed = True
     force_sets = []
@@ -95,7 +104,11 @@ def parse_set_of_forces(num_atoms: int, forces_filenames: list, verbose: bool = 
         return []
 
 
-def rotate_lammps_forces(force_sets: list, lattice: np.ndarray, verbose: bool = True):
+def rotate_lammps_forces(
+    force_sets: list[NDArray[np.double]],
+    lattice: NDArray[np.double],
+    verbose: bool = True,
+) -> None:
     """Rotate forces of LAMMPS output.
 
     Parameters
@@ -135,8 +148,9 @@ class LammpsStructureDumper:
 
     """
 
-    def __init__(self, cell: PhonopyAtoms):
+    def __init__(self, cell: PhonopyAtoms) -> None:
         """Init method."""
+        self._lines: list[str] = []
         lattice = get_cell_matrix_from_lattice(cell.cell)
         lmps_cell = PhonopyAtoms(
             cell=lattice, scaled_positions=cell.scaled_positions, symbols=cell.symbols
@@ -147,7 +161,7 @@ class LammpsStructureDumper:
         """Return LAMMPS structure str lines."""
         return self._lines
 
-    def _run(self, cell: PhonopyAtoms):
+    def _run(self, cell: PhonopyAtoms) -> None:
         unums, uids = np.unique(cell.numbers, return_index=True)
         usyms = [cell.symbols[i] for i in uids]
         num_map = {n: i for i, n in enumerate(unums)}
@@ -202,11 +216,11 @@ class LammpsForcesLoader:
         "num_atoms": r"ITEM:\s+NUMBER\s+OF\s+ATOMS",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init method."""
-        self._forces = None
+        self._forces: NDArray[np.double] | None = None
 
-    def load(self, fp: str | os.PathLike | typing.IO):
+    def load(self, fp: str | os.PathLike | typing.IO) -> LammpsForcesLoader:
         """Load and parse LAMMPS structure file.
 
         Parameters
@@ -218,11 +232,11 @@ class LammpsForcesLoader:
         return _load(self, fp, return_lines=False)
 
     @property
-    def forces(self) -> np.ndarray:
+    def forces(self) -> NDArray[np.double]:
         """Return forces."""
-        return self._forces
+        return self._forces  # type: ignore[return-value]
 
-    def _parse(self, fp: typing.IO, column_start=5, column_end=8):
+    def _parse(self, fp: typing.IO, column_start: int = 5, column_end: int = 8) -> None:
         """Parse lines of LAMMPS output file."""
         num_atoms = -1
         for line in fp:
@@ -268,21 +282,21 @@ class LammpsStructureLoader:
         "atom_types": (re.compile(r"atom\s+types"), "_set_number_of_atoms"),
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init method."""
-        self._header_tags = {}
-        self._atom_type_labels = {}
-        self._atom_ids = None
-        self._atom_labels = None
-        self._atom_positions = None
-        self._cell = None
+        self._header_tags: dict[str, Any] = {}
+        self._atom_type_labels: dict[str, int] = {}
+        self._atom_ids: NDArray[np.int64] | None = None
+        self._atom_labels: list[str] | NDArray[np.int64] | None = None
+        self._atom_positions: NDArray[np.double] | None = None
+        self._cell: PhonopyAtoms | None = None
 
     @property
     def cell(self) -> PhonopyAtoms:
         """Return parsed cell."""
-        return self._cell
+        return self._cell  # type: ignore[return-value]
 
-    def load(self, fp: str | os.PathLike | typing.IO):
+    def load(self, fp: str | os.PathLike | typing.IO) -> LammpsStructureLoader:
         """Load and parse LAMMPS structure file.
 
         Parameters
@@ -293,7 +307,7 @@ class LammpsStructureLoader:
         """
         return _load(self, fp)
 
-    def _parse(self, lines):
+    def _parse(self, lines: list[str]) -> None:
         """Parse LAMMPS structure file."""
         re_ATL = re.compile(r"Atom\s+Type\s+Labels")
         for line in lines:
@@ -328,16 +342,18 @@ class LammpsStructureLoader:
 
         if self._atom_type_labels:
             self._cell = PhonopyAtoms(
-                cell=lattice, positions=self._atom_positions, symbols=self._atom_labels
+                cell=lattice,
+                positions=self._atom_positions,
+                symbols=self._atom_labels,  # type: ignore[arg-type]
             )
         else:
             atom_data = get_atomic_data().atom_data
-            symbols = [atom_data[n][1] for n in self._atom_labels]
+            symbols = [atom_data[n][1] for n in self._atom_labels]  # type: ignore[union-attr,index]
             self._cell = PhonopyAtoms(
                 cell=lattice, positions=self._atom_positions, symbols=symbols
             )
 
-    def _parse_AtomTypeLabels(self, lines):
+    def _parse_AtomTypeLabels(self, lines: list[str]) -> int:
         num_types = 0
         for i, line in enumerate(lines):  # noqa: B007
             _line = line.split("#")[0].strip()
@@ -351,10 +367,10 @@ class LammpsStructureLoader:
         assert num_types == self._header_tags["atom_types"]
         return i + 1
 
-    def _parse_Atoms(self, lines):
+    def _parse_Atoms(self, lines: list[str]) -> None:
         positions = np.zeros((self._header_tags["atoms"], 3), dtype="double", order="C")
         if self._atom_type_labels:
-            lables = []
+            lables: Any = []
         else:
             lables = np.zeros(self._header_tags["atoms"], dtype="int64")
         ids = np.zeros(self._header_tags["atoms"], dtype="int64")
@@ -386,16 +402,18 @@ class LammpsStructureLoader:
         self._atom_labels = lables
         self._atom_positions = positions
 
-    def _set_xlo_xhi(self, key, line):
+    def _set_xlo_xhi(self, key: str, line: str) -> None:
         self._header_tags[key] = np.array(
             [float(v) for v in line.split("#")[0].split()]
         )
 
-    def _set_number_of_atoms(self, key, line):
+    def _set_number_of_atoms(self, key: str, line: str) -> None:
         self._header_tags[key] = int(line.split("#")[0])
 
 
-def _load(self, fp: str | os.PathLike | typing.IO, return_lines=True):
+def _load(
+    self: Any, fp: str | os.PathLike | typing.IO, return_lines: bool = True
+) -> Any:
     """Load and parse LAMMPS structure file.
 
     Parameters
@@ -410,7 +428,7 @@ def _load(self, fp: str | os.PathLike | typing.IO, return_lines=True):
         else:
             self._parse(fp)
     else:
-        with open(fp) as f:
+        with open(fp) as f:  # type: ignore[arg-type]
             if return_lines:
                 self._parse(f.readlines())
             else:

@@ -34,9 +34,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import os
 import sys
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
@@ -45,11 +50,15 @@ from phonopy.structure.atoms import PhonopyAtoms
 dftbpToBohr = 0.188972598857892e01
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     hook = "forces              :real:2:"
     is_parsed = True
-    force_sets = []
+    force_sets: list[NDArray[np.double]] = []
     for i, filename in enumerate(forces_filenames):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
@@ -75,7 +84,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 #
 
 
-def read_dftbp(filename):
+def read_dftbp(filename: str | os.PathLike) -> PhonopyAtoms:
     """Read DFTB+ structure files in gen format.
 
     Parameters
@@ -102,16 +111,16 @@ def read_dftbp(filename):
 
     if lines[0].split()[1].lower() == "f":
         is_scaled = True
-        scale_pos = 1
-        scale_latvecs = dftbpToBohr
+        scale_pos: float = 1
+        scale_latvecs: float = dftbpToBohr
     else:
         is_scaled = False
         scale_pos = dftbpToBohr
         scale_latvecs = dftbpToBohr
 
     # assign positions and expanded symbols
-    positions = []
-    expaned_symbols = []
+    positions: list[list[float]] = []
+    expaned_symbols: list[str] = []
 
     for ii in range(2, natoms + 2):
         lsplit = lines[ii].split()
@@ -123,13 +132,13 @@ def read_dftbp(filename):
     # origin = [float(ss) for ss in lines[natoms + 2].split()]
 
     # assign coords of unitcell
-    cell = []
+    cell_rows: list[list[float]] = []
 
     for ii in range(natoms + 3, natoms + 6):
         lsplit = lines[ii].split()
 
-        cell.append([float(ss) * scale_latvecs for ss in lsplit[:3]])
-    cell = np.array(cell)
+        cell_rows.append([float(ss) * scale_latvecs for ss in lsplit[:3]])
+    cell = np.array(cell_rows)
 
     if is_scaled:
         atoms = PhonopyAtoms(
@@ -144,7 +153,7 @@ def read_dftbp(filename):
 #
 # write dftb+ .gen-file
 #
-def get_reduced_symbols(symbols):
+def get_reduced_symbols(symbols: list[str]) -> list[str]:
     """Reduce expanded list of symbols.
 
     Parameters
@@ -158,7 +167,7 @@ def get_reduced_symbols(symbols):
     reduced_symbols: any symbols appears only once.
 
     """
-    reduced_symbols = []
+    reduced_symbols: list[str] = []
 
     for ss in symbols:
         if ss not in reduced_symbols:
@@ -167,7 +176,7 @@ def get_reduced_symbols(symbols):
     return reduced_symbols
 
 
-def write_dftbp(filename, atoms):
+def write_dftbp(filename: str | os.PathLike, atoms: PhonopyAtoms) -> None:
     """Write DFTB+ readable, gen-formatted structure files.
 
     Parameters
@@ -190,7 +199,7 @@ def write_dftbp(filename, atoms):
     symbols = get_reduced_symbols(expaned_symbols)
     lines += " ".join(symbols) + "\n"
 
-    atom_numbers = []
+    atom_numbers: list[int] = []
     for ss in expaned_symbols:
         atom_numbers.append(symbols.index(ss) + 1)
 
@@ -219,8 +228,12 @@ def write_dftbp(filename, atoms):
 
 
 def write_supercells_with_displacements(
-    supercell, cells_with_disps, ids, pre_filename="geo.gen", width=3
-):
+    supercell: PhonopyAtoms,
+    cells_with_disps: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str | os.PathLike = "geo.gen",
+    width: int = 3,
+) -> None:
     """Write perfect supercell and supercells with displacements.
 
     Parameters
@@ -231,7 +244,7 @@ def write_supercells_with_displacements(
 
     """
     # original cell
-    write_dftbp(pre_filename + "S", supercell)
+    write_dftbp(str(pre_filename) + "S", supercell)
 
     # displaced cells
     for i, cell in zip(ids, cells_with_disps, strict=True):

@@ -36,8 +36,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Literal
+
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
@@ -61,7 +64,7 @@ class DerivativeOfDynamicalMatrix:
 
     Q_DIRECTION_TOLERANCE = 1e-5
 
-    def __init__(self, dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC):
+    def __init__(self, dynamical_matrix: DynamicalMatrix) -> None:
         """Init method.
 
         Parameters
@@ -76,35 +79,47 @@ class DerivativeOfDynamicalMatrix:
         self._pcell = self._dynmat.primitive
 
         dtype = "int64"
-        self._p2s_map = np.array(self._pcell.p2s_map, dtype=dtype)
-        self._s2p_map = np.array(self._pcell.s2p_map, dtype=dtype)
+        self._p2s_map: NDArray[np.int64] = np.array(self._pcell.p2s_map, dtype=dtype)
+        self._s2p_map: NDArray[np.int64] = np.array(self._pcell.s2p_map, dtype=dtype)
         p2p_map = self._pcell.p2p_map
-        self._s2pp_map = np.array(
+        self._s2pp_map: NDArray[np.int64] = np.array(
             [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))], dtype=dtype
         )
 
         svecs, multi = self._pcell.get_smallest_vectors()
+        self._svecs: NDArray[np.double]
+        self._multi: NDArray[np.int64]
         if self._pcell.store_dense_svecs:
             self._svecs = svecs
             self._multi = multi
         else:
             self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
 
-        self._ddm = None
+        self._ddm: NDArray[np.cdouble] | None = None
 
         # Derivative order=2 can work only within the following conditions:
         # 1. Second derivative of NAC is not considered.
         # 2. Python implementation
-        self._derivative_order = None
+        self._derivative_order: int | None = None
 
-    def run(self, q, q_direction: ArrayLike | None = None, lang="C"):
+    def run(
+        self,
+        q: Sequence[float] | NDArray[np.double],
+        q_direction: Sequence[float] | NDArray[np.double] | None = None,
+        lang: Literal["C", "Python"] = "C",
+    ) -> None:
         """Run at q."""
-        if self._derivative_order is not None or lang != "C":
-            self._run_py(q, q_direction=q_direction)
+        _q = np.array(q, dtype="double")
+        if q_direction is None:
+            _q_direction = None
         else:
-            self._run_c(q, q_direction=q_direction)
+            _q_direction = np.array(q_direction, dtype="double")
+        if self._derivative_order is not None or lang != "C":
+            self._run_py(_q, q_direction=_q_direction)
+        else:
+            self._run_c(_q, q_direction=_q_direction)
 
-    def set_derivative_order(self, order: int):
+    def set_derivative_order(self, order: int) -> None:
         """Set order of derivative."""
         if order == 1 or order == 2:
             self._derivative_order = order
@@ -112,7 +127,7 @@ class DerivativeOfDynamicalMatrix:
             print("Error: derivative order has to be 1 or 2")
 
     @property
-    def d_dynamical_matrix(self) -> NDArray | None:
+    def d_dynamical_matrix(self) -> NDArray[np.cdouble] | None:
         """Return derivative of dynamical matrix.
 
         Returns
@@ -125,8 +140,10 @@ class DerivativeOfDynamicalMatrix:
         """
         return self._ddm
 
-    def _run_c(self, q, q_direction=None):
-        import phonopy._phonopy as phonoc
+    def _run_c(
+        self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None
+    ) -> None:
+        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
         num_patom = len(self._p2s_map)
         fc = self._force_constants
@@ -202,12 +219,16 @@ class DerivativeOfDynamicalMatrix:
 
         self._ddm = ddm
 
-    def _run_py(self, q, q_direction: ArrayLike | None = None):
+    def _run_py(
+        self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None
+    ) -> None:
         """Run in python.
 
         This works only for full-FC.
 
         """
+        fc_nac: NDArray[np.double] | None = None
+        d_nac: NDArray[np.double] | None = None
         if isinstance(self._dynmat, DynamicalMatrixNAC):
             if not isinstance(self._dynmat, DynamicalMatrixWang):
                 raise NotImplementedError(
@@ -269,6 +290,7 @@ class DerivativeOfDynamicalMatrix:
                     coef = coef_order1
 
                 if isinstance(self._dynmat, DynamicalMatrixNAC):
+                    assert fc_nac is not None
                     fc_elem = fc[s_i, k] + fc_nac[i, j]
                 else:
                     fc_elem = fc[s_i, k]
@@ -279,6 +301,7 @@ class DerivativeOfDynamicalMatrix:
                         isinstance(self._dynmat, DynamicalMatrixNAC)
                         and not self._derivative_order == 2
                     ):
+                        assert d_nac is not None
                         ddm_elem += d_nac[ll, i, j] * phase_multi.sum()
 
                     ddm_local[ll] += ddm_elem / mass / multi[0]
@@ -288,7 +311,7 @@ class DerivativeOfDynamicalMatrix:
         # Impose Hermite condition
         self._ddm = np.array([(ddm[i] + ddm[i].conj().T) / 2 for i in range(num_elem)])
 
-    def _nac(self, q_direction: ArrayLike):
+    def _nac(self, q_direction: NDArray[np.double]) -> NDArray[np.double]:
         """Python implementation of nac_term = (A1 (x) A2) / B * coef.
 
         This is for testing purposes.
@@ -318,7 +341,7 @@ class DerivativeOfDynamicalMatrix:
 
         return nac_q * nac_factor / N
 
-    def _d_nac(self, q_direction):
+    def _d_nac(self, q_direction: NDArray[np.double]) -> NDArray[np.double]:
         assert isinstance(self._dynmat, DynamicalMatrixNAC)
         num_atom = len(self._pcell)
         d_nac_q = np.zeros((3, num_atom, num_atom, 3, 3), dtype="double")
@@ -348,15 +371,18 @@ class DerivativeOfDynamicalMatrix:
         N = num_satom // num_atom
         return d_nac_q * nac_factor / N
 
-    def _A(self, q, Z, atom_num):
+    def _A(
+        self, q: NDArray[np.double], Z: NDArray[np.double], atom_num: int
+    ) -> NDArray[np.double]:
         return np.dot(q, Z[atom_num])
 
-    def _B(self, epsilon, q):
-        return np.dot(q, np.dot(epsilon, q))
+    def _B(self, epsilon: NDArray[np.double], q: NDArray[np.double]) -> float:
+        return float(np.dot(q, np.dot(epsilon, q)))
 
-    def _dA(self, Z, atom_num, xyz):
+    def _dA(self, Z: NDArray[np.double], atom_num: int, xyz: int) -> NDArray[np.double]:
         return Z[atom_num, xyz, :]
 
-    def _dB(self, epsilon, q, xyz):
-        e = epsilon
-        return np.dot(e[xyz], q) * 2
+    def _dB(
+        self, epsilon: NDArray[np.double], q: NDArray[np.double], xyz: int
+    ) -> NDArray[np.double]:
+        return np.dot(epsilon[xyz], q) * 2

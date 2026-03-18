@@ -135,7 +135,6 @@ def ph_nacl_nonac_dense_svecs() -> Phonopy:
         force_sets_filename=force_sets_filename,
         is_nac=False,
         is_compact_fc=True,
-        store_dense_svecs=True,
         log_level=1,
         produce_fc=True,
     )

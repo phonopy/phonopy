@@ -1,10 +1,12 @@
 """Tests for QHA calculations."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from phonopy import PhonopyQHA
 
@@ -25,7 +27,7 @@ ev_vs_v_Si = np.array(
         [189.070000, -42.527932],
     ]
 )
-temperatures_Si = np.arange(0, 2101, 10)
+temperatures_Si = np.arange(0, 2101, 10, dtype="double")
 tprop_file_Si = current_dir / "tprop-Si.dat"
 cv_Si, entropy_Si, fe_phonon_Si = np.loadtxt(tprop_file_Si).reshape(3, 211, 11)
 
@@ -272,7 +274,7 @@ gruneisen_temperature_Si = np.array(
 
 
 @pytest.mark.parametrize("pressure,index", [(None, 0), (5, 1)])
-def test_QHA_Si(pressure: Optional[float], index: int):
+def test_QHA_Si(pressure: float | None, index: int) -> None:
     """Test of QHA calculation by Si."""
     indices = list(range(11))
     volumes = ev_vs_v_Si[indices, 0]
@@ -351,7 +353,97 @@ def test_QHA_Si(pressure: Optional[float], index: int):
     )
 
 
-def _print_values(values):
+@pytest.fixture(scope="module")
+def qha_si() -> PhonopyQHA:
+    """PhonopyQHA fixture using Si data with no pressure."""
+    indices = list(range(11))
+    volumes = ev_vs_v_Si[indices, 0]
+    electronic_energies = ev_vs_v_Si[indices, 1]
+    return PhonopyQHA(
+        volumes=volumes,
+        electronic_energies=electronic_energies,
+        eos="vinet",
+        temperatures=temperatures_Si,
+        free_energy=fe_phonon_Si[:, indices],
+        cv=cv_Si[:, indices],
+        entropy=entropy_Si[:, indices],
+        t_max=1000,
+    )
+
+
+def test_write_helmholtz_volume(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_helmholtz_volume."""
+    fn = tmp_path / "helmholtz-volume.dat"
+    qha_si.write_helmholtz_volume(filename=fn)
+    data = np.loadtxt(fn, comments="#")
+    n_temps, n_vols = qha_si.helmholtz_volume.shape
+    assert data.shape == (n_temps * n_vols, 2)
+    written_fe = data[:, 1].reshape(n_temps, n_vols)
+    np.testing.assert_allclose(written_fe, qha_si.helmholtz_volume, atol=1e-10)
+
+
+def test_write_volume_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_volume_temperature."""
+    fn = tmp_path / "volume-temperature.dat"
+    qha_si.write_volume_temperature(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.volume_temperature, atol=1e-10)
+
+
+def test_write_thermal_expansion(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_thermal_expansion."""
+    fn = tmp_path / "thermal_expansion.dat"
+    qha_si.write_thermal_expansion(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.thermal_expansion, atol=1e-10)
+
+
+def test_write_gibbs_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_gibbs_temperature."""
+    fn = tmp_path / "gibbs-temperature.dat"
+    qha_si.write_gibbs_temperature(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.gibbs_temperature, atol=1e-10)
+
+
+def test_write_bulk_modulus_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_bulk_modulus_temperature."""
+    fn = tmp_path / "bulk_modulus-temperature.dat"
+    qha_si.write_bulk_modulus_temperature(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.bulk_modulus_temperature, atol=1e-10)
+
+
+def test_write_heat_capacity_P_numerical(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_heat_capacity_P_numerical."""
+    fn = tmp_path / "Cp-temperature.dat"
+    qha_si.write_heat_capacity_P_numerical(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.heat_capacity_P_numerical, atol=1e-10)
+
+
+def test_write_heat_capacity_P_polyfit(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_heat_capacity_P_polyfit."""
+    fn = tmp_path / "Cp-temperature_polyfit.dat"
+    qha_si.write_heat_capacity_P_polyfit(
+        filename=fn,
+        filename_ev=tmp_path / "entropy-volume.dat",
+        filename_cvv=tmp_path / "Cv-volume.dat",
+        filename_dsdvt=tmp_path / "dsdv-temperature.dat",
+    )
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.heat_capacity_P_polyfit, atol=1e-10)
+
+
+def test_write_gruneisen_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_gruneisen_temperature."""
+    fn = tmp_path / "gruneisen-temperature.dat"
+    qha_si.write_gruneisen_temperature(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.gruneisen_temperature, atol=1e-10)
+
+
+def _print_values(values: NDArray[np.double]) -> None:
     print("%.7f," % values[0])
     for line in np.reshape(values[1:], (-1, 5)):
         print("".join(["%.7f, " % v for v in line]))

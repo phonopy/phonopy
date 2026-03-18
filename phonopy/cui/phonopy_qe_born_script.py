@@ -46,6 +46,16 @@ from phonopy.interface.qe import read_pwscf
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
+@dataclasses.dataclass
+class PhonopyQeBornMockArgs:
+    """Mock args of ArgumentParser."""
+
+    file_pw_in: str | os.PathLike | None = None
+    file_ph_out: str | os.PathLike | None = None
+    symmetrize_tensors: bool = True
+    symprec: float = 1e-5
+
+
 def parse_ph_out(file: str | os.PathLike, natoms: int) -> tuple[NDArray, NDArray]:
     """Parse BEC and dielectric tensor from QE ph.x output w/ a minor sanity check."""
     hook_eps = "Dielectric constant in cartesian axis"
@@ -63,7 +73,7 @@ def parse_ph_out(file: str | os.PathLike, natoms: int) -> tuple[NDArray, NDArray
     def parse_bec(fp, natoms) -> NDArray:
         """Parse the BEC from ph.x output."""
         next(fp)  # skip 1 line
-        bec = []
+        bec: list[list[str]] = []
         for _ in range(natoms):
             next(fp)
             bec.extend(next(fp).split()[2:5] for _ in range(3))
@@ -82,9 +92,9 @@ def parse_ph_out(file: str | os.PathLike, natoms: int) -> tuple[NDArray, NDArray
                 bec = parse_bec(f, natoms=natoms)
 
     if epsilon is None:
-        raise RuntimeError("Could not find Born effective charges in ph.x output.")
-    if bec is None:
         raise RuntimeError("Could not find dielectric tensor in ph.x output.")
+    if bec is None:
+        raise RuntimeError("Could not find Born effective charges in ph.x output.")
 
     return epsilon, bec
 
@@ -107,18 +117,17 @@ def get_born_qe_ph(
     epsilon, borns = parse_ph_out(file_ph_out, len(ucell))
     if len(borns) == 0 or len(epsilon) == 0:
         raise RuntimeError("No Born effective charges or dielectric tensor found.")
-    else:
-        return elaborate_borns_and_epsilon(
-            ucell,
-            borns,
-            epsilon,
-            is_symmetry=is_symmetry,
-            symmetrize_tensors=symmetrize_tensors,
-            symprec=symprec,
-        )
+    return elaborate_borns_and_epsilon(
+        ucell,
+        borns,
+        epsilon,
+        is_symmetry=is_symmetry,
+        symmetrize_tensors=symmetrize_tensors,
+        symprec=symprec,
+    )
 
 
-def get_options():
+def get_options() -> argparse.Namespace:
     """Parse command-line options."""
     parser = argparse.ArgumentParser(
         description="Parse phonopy BORN file from QE output"
@@ -144,7 +153,7 @@ def get_options():
     return args
 
 
-def run(args: PhonopyQeBornMockArgs | argparse.Namespace):
+def run(args: PhonopyQeBornMockArgs | argparse.Namespace) -> None:
     """Run phonopy-qe-born."""
     try:
         assert args.file_pw_in is not None
@@ -157,9 +166,7 @@ def run(args: PhonopyQeBornMockArgs | argparse.Namespace):
         )
 
     except UserWarning:
-        text = "# Symmetry broken"
-        lines = [text]
-        print("\n".join(lines))
+        print("# Symmetry broken")
         sys.exit(0)
 
     try:
@@ -177,26 +184,9 @@ def run(args: PhonopyQeBornMockArgs | argparse.Namespace):
         sys.exit(0)
 
 
-@dataclasses.dataclass
-class PhonopyQeBornMockArgs:
-    """Mock args of ArgumentParser."""
-
-    file_pw_in: str | os.PathLike | None = None
-    file_ph_out: str | os.PathLike | None = None
-    symmetrize_tensors: bool = True
-    symprec: float = 1e-5
-
-    def __iter__(self):
-        """Make self iterable to support in."""
-        return (getattr(self, field.name) for field in dataclasses.fields(self))
-
-    def __contains__(self, item):
-        """Implement in operator."""
-        return item in (field.name for field in dataclasses.fields(self))
-
-
-def main(**argparse_control: PhonopyQeBornMockArgs):
+def main(**argparse_control: PhonopyQeBornMockArgs) -> None:
     """Run phonopy-qe-born."""
+    args: PhonopyQeBornMockArgs | argparse.Namespace
     if argparse_control:
         args = argparse_control["args"]
     else:

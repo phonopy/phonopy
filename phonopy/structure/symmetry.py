@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
+from typing import TypedDict
 
 import numpy as np
 import spglib
@@ -47,7 +48,7 @@ try:
 except AttributeError:
     pass
 
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy.structure.atoms import PhonopyAtoms
@@ -61,12 +62,19 @@ from phonopy.structure.cells import (
 from phonopy.utils import similarity_transformation
 
 
+class _SymmetryOperations(TypedDict):
+    rotations: NDArray[np.int64]
+    translations: NDArray[np.double]
+
+
 @dataclasses.dataclass(eq=False, frozen=True)
 class NosymDataset:
     """Dataset for no symmetry case."""
 
     rotations: NDArray[np.int64]
     translations: NDArray[np.double]
+    transformation_matrix: NDArray[np.double]
+    pointgroup: str
 
 
 class Symmetry:
@@ -77,7 +85,7 @@ class Symmetry:
         cell: PhonopyAtoms,
         symprec: float = 1e-5,
         is_symmetry: bool = True,
-        s2p_map: NDArray | None = None,
+        s2p_map: NDArray[np.int64] | None = None,
     ):
         """Init method.
 
@@ -96,7 +104,7 @@ class Symmetry:
         self._cell = cell
         self._symprec = symprec
 
-        self._symmetry_operations: dict
+        self._symmetry_operations: _SymmetryOperations
         self._international_table = None
         self._dataset: SpglibDataset | SpglibMagneticDataset | NosymDataset
         self._wyckoff_letters = None
@@ -104,7 +112,7 @@ class Symmetry:
         self._atomic_permutations: NDArray
         self._pointgroup_operations: NDArray
         self._reciprocal_operations: NDArray
-        self._pointgroup = None
+        self._pointgroup_symbol: str
         self._independent_atoms: NDArray
         self._map_operations: NDArray
 
@@ -123,13 +131,13 @@ class Symmetry:
         _ptg = spglib.get_pointgroup(self._pointgroup_operations)
         assert _ptg is not None
         ptg_symbol = _ptg[0]
-        self._pointgroup = ptg_symbol.strip()
+        self._pointgroup_symbol = ptg_symbol.strip()
         self._set_atomic_permutations()
         self._set_independent_atoms()
         self._map_operations = self._get_map_operations_from_permutations()
 
     @property
-    def symmetry_operations(self) -> dict[str, NDArray]:
+    def symmetry_operations(self) -> _SymmetryOperations:
         """Return symmetry operations.
 
         Returns
@@ -145,7 +153,7 @@ class Symmetry:
         """
         return self._symmetry_operations
 
-    def get_symmetry_operation(self, operation_number: int) -> dict[str, NDArray]:
+    def get_symmetry_operation(self, operation_number: int) -> _SymmetryOperations:
         """Return one symmetry operation."""
         operation = self._symmetry_operations
         return {
@@ -159,9 +167,9 @@ class Symmetry:
         return self._pointgroup_operations
 
     @property
-    def pointgroup_symbol(self) -> str | None:
+    def pointgroup_symbol(self) -> str:
         """Return symbol of crystallographic point group."""
-        return self._pointgroup
+        return self._pointgroup_symbol
 
     def get_international_table(self) -> str | None:
         """Return international symbol of space group."""
@@ -286,7 +294,7 @@ class Symmetry:
         return np.array(site_symmetries, dtype="int64")
 
     def _set_symmetry_dataset(self) -> None:
-        _dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
+        _dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)  # type: ignore[arg-type]
         assert _dataset is not None
         self._dataset = _dataset
 
@@ -306,7 +314,8 @@ class Symmetry:
 
     def _set_symmetry_operations_with_magmoms(self) -> None:
         _dataset = spglib.get_magnetic_symmetry_dataset(
-            self._cell.totuple(), symprec=self._symprec
+            self._cell.totuple(),  # type: ignore
+            symprec=self._symprec,
         )
         assert _dataset is not None
         self._dataset = _dataset
@@ -335,7 +344,7 @@ class Symmetry:
             map_operations[i] = match[0]
         return map_operations
 
-    def _set_nosym(self, s2p_map: NDArray[np.int64] | None) -> None:
+    def _set_nosym(self, s2p_map: NDArray[np.int64] | None = None) -> None:
         translations = []
         rotations = []
 
@@ -345,6 +354,7 @@ class Symmetry:
             self._map_atoms = np.arange(len(self._cell), dtype="int64")
         else:
             positions = self._cell.scaled_positions
+            ipos0 = 0
             for i, j in enumerate(s2p_map):
                 if j == 0:
                     ipos0 = i
@@ -365,6 +375,8 @@ class Symmetry:
         self._dataset = NosymDataset(
             rotations=self._symmetry_operations["rotations"],
             translations=self._symmetry_operations["translations"],
+            transformation_matrix=np.eye(3, dtype="double", order="C"),
+            pointgroup="1",
         )
 
 
@@ -384,15 +396,10 @@ def get_pointgroup_operations(
         if not exist_r_inv:
             reciprocal_rotations += [-rot.T for rot in ptg_ops]
 
-    return (
-        np.array(ptg_ops, dtype="int64"),
-        np.array(reciprocal_rotations, dtype="int64"),
-    )
+    return ptg_ops, np.array(reciprocal_rotations, dtype="int64", order="C")
 
 
-def collect_unique_rotations(
-    rotations: NDArray[np.int64],
-) -> list[NDArray[np.int64]]:
+def collect_unique_rotations(rotations: NDArray[np.int64]) -> NDArray[np.int64]:
     """Collect unique rotations in input rotation matrices."""
     ptg_ops = []
     for rot in rotations:
@@ -404,12 +411,10 @@ def collect_unique_rotations(
         if not is_same:
             ptg_ops.append(rot)
 
-    return ptg_ops
+    return np.array(ptg_ops, dtype="int64", order="C")
 
 
-def get_lattice_vector_equivalence(
-    point_symmetry: NDArray[np.int64],
-) -> list[bool]:
+def get_lattice_vector_equivalence(point_symmetry: NDArray[np.int64]) -> list[bool]:
     """Return equivalences of basis vector length pairs, (b==c, c==a, a==b).
 
     Change of basis is defined by
@@ -449,14 +454,14 @@ def get_lattice_vector_equivalence(
 
 def elaborate_borns_and_epsilon(
     ucell: PhonopyAtoms,
-    borns: NDArray,
-    epsilon: NDArray,
-    primitive_matrix: Sequence[Sequence[float]] | NDArray | None = None,
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    borns: NDArray[np.double],
+    epsilon: NDArray[np.double],
+    primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     is_symmetry: bool = True,
     symmetrize_tensors: bool = False,
     symprec: float = 1e-5,
-) -> tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.int64]]:
     """Symmetrize Born effective charges and dielectric constants.
 
     Born effective charges of symmetrically independent atoms
@@ -512,19 +517,23 @@ def elaborate_borns_and_epsilon(
         symprec=symprec,
     )
 
-    return borns_[indeps_in_unitcell].copy(), epsilon_, indeps_in_supercell
+    return (
+        np.array(borns_[indeps_in_unitcell], dtype="double", order="C"),
+        epsilon_,
+        indeps_in_supercell,
+    )
 
 
 def symmetrize_borns_and_epsilon(
-    borns: Sequence | NDArray,
-    epsilon: Sequence | NDArray,
+    borns: Sequence[Sequence[Sequence[float]]] | NDArray[np.double],
+    epsilon: Sequence[Sequence[float]] | NDArray[np.double],
     ucell: PhonopyAtoms,
-    primitive_matrix: ArrayLike | None = None,
+    primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
     primitive: PhonopyAtoms | None = None,
-    supercell_matrix: ArrayLike | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     symprec: float = 1e-5,
     is_symmetry: bool = True,
-) -> tuple[NDArray, NDArray]:
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Symmetrize Born effective charges and dielectric tensor.
 
     Parameters
@@ -548,20 +557,20 @@ def symmetrize_borns_and_epsilon(
     primitive : PhonopyAtoms
         This is an alternative of giving primitive_matrix (Mp). Mp is given as
             Mp = (a_u, b_u, c_u)^-1 * (a_p, b_p, c_p).
-        In addition, the order of atoms is alined to those of atoms in this
+        In addition, the order of atoms is aligned to those of atoms in this
         primitive cell for Born effective charges. No rigid rotation of
         crystal structure is assumed.
     supercell_matrix: array_like, optional
         Supercell matrix. This is used to select Born effective charges in
         **primitive cell**. Supercell matrix is needed because primitive
         cell is created first creating supercell from unit cell, then
-        the primitive cell is created from the supercell. If None (defautl),
+        the primitive cell is created from the supercell. If None (default),
         1x1x1 supercell is created.
         shape=(3, 3)
         dtype='int'
     symprec: float, optional
         Symmetry tolerance. Default is 1e-5
-    is_symmetry: bool, optinal
+    is_symmetry: bool, optional
         By setting False, symmetrization can be switched off. Default is True.
 
     """
@@ -570,7 +579,9 @@ def symmetrize_borns_and_epsilon(
     rotations = u_sym.symmetry_operations["rotations"]
     translations = u_sym.symmetry_operations["translations"]
     ptg_ops = u_sym.pointgroup_operations
-    epsilon_ = _symmetrize_2nd_rank_tensor(epsilon, ptg_ops, lattice)
+    epsilon_ = _symmetrize_2nd_rank_tensor(
+        np.asarray(epsilon, dtype="double"), ptg_ops, lattice
+    )
     borns_ = _take_average_of_borns(borns, rotations, translations, ucell, symprec)
 
     if (abs(borns - borns_) > 0.1).any():
@@ -598,17 +609,17 @@ def symmetrize_borns_and_epsilon(
         )
 
         idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
-        borns_in_prim = borns_[idx].copy()
+        borns_in_prim = np.array(borns_[idx], dtype="double", order="C")
 
         if primitive is None:
             return borns_in_prim, epsilon_
         else:
             idx2 = _get_mapping_between_cells(pcell, primitive)
-            return borns_in_prim[idx2].copy(), epsilon_
+            return np.array(borns_in_prim[idx2], dtype="double", order="C"), epsilon_
 
 
 def _take_average_of_borns(
-    borns: Sequence | NDArray[np.double],
+    borns: Sequence[Sequence[Sequence[float]]] | NDArray[np.double],
     rotations: NDArray[np.int64],
     translations: NDArray[np.double],
     cell: PhonopyAtoms,
@@ -666,11 +677,11 @@ def _symmetrize_2nd_rank_tensor(
 
 def _extract_independent_atoms(
     ucell: PhonopyAtoms,
-    primitive_matrix: Sequence[Sequence[float]] | NDArray | None = None,
-    supercell_matrix: Sequence[Sequence[int]] | NDArray | None = None,
+    primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     is_symmetry: bool = True,
     symprec: float = 1e-5,
-) -> tuple[NDArray, list[int]]:
+) -> tuple[NDArray[np.int64], list[int]]:
     scell, pcell = _get_supercell_and_primitive(
         ucell,
         primitive_matrix=primitive_matrix,
@@ -678,7 +689,9 @@ def _extract_independent_atoms(
         symprec=symprec,
     )
     p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
-    s_indep_atoms = pcell.p2s_map[p_sym.get_independent_atoms()]
+    s_indep_atoms = np.array(
+        pcell.p2s_map[p_sym.get_independent_atoms()], dtype="int64"
+    )
     u_indep_atoms = [scell.u2u_map[x] for x in s_indep_atoms]
 
     return s_indep_atoms, u_indep_atoms
@@ -686,8 +699,8 @@ def _extract_independent_atoms(
 
 def _get_supercell_and_primitive(
     ucell: PhonopyAtoms,
-    primitive_matrix: ArrayLike | None = None,
-    supercell_matrix: ArrayLike | None = None,
+    primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     symprec: float = 1e-5,
 ) -> tuple[Supercell, Primitive]:
     if primitive_matrix is None:

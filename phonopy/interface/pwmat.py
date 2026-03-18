@@ -34,9 +34,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import os
 import sys
+from collections.abc import Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
@@ -44,7 +49,11 @@ from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[str | os.PathLike],
+    verbose: bool = True,
+) -> list[NDArray[np.double]]:
     """Parse forces from output files."""
     hook = "force (eV/A)"
     is_parsed = True
@@ -74,7 +83,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_atom_config(filename):
+def read_atom_config(filename: str | os.PathLike) -> PhonopyAtoms:
     """Read structure information from atom.config."""
     with open(filename) as f:
         lines = f.read().splitlines()
@@ -115,16 +124,16 @@ def read_atom_config(filename):
         "scaled_positions": atom_position,
     }
 
-    return PhonopyAtoms(**cell_args)
+    return PhonopyAtoms(**cell_args)  # type: ignore[arg-type]
 
 
-def write_atom_config(filename, cell):
+def write_atom_config(filename: str | os.PathLike, cell: PhonopyAtoms) -> None:
     """Write atom.config to file."""
     with open(filename, "w") as f:
         f.write(get_pwmat_structure(cell))
 
 
-def get_pwmat_structure(cell):
+def get_pwmat_structure(cell: PhonopyAtoms) -> str:
     """Return PWmat structure in text."""
     lattice = cell.cell
     positions = cell.scaled_positions
@@ -157,12 +166,12 @@ def get_pwmat_structure(cell):
 
 
 def write_supercells_with_displacements(
-    supercell,
-    cells_with_displacements,
-    ids,
-    pre_filename="supercell",
-    width=3,
-):
+    supercell: PhonopyAtoms,
+    cells_with_displacements: Sequence[PhonopyAtoms],
+    ids: NDArray[np.int64] | Sequence[int],
+    pre_filename: str | os.PathLike = "supercell",
+    width: int = 3,
+) -> None:
     """Write supercells with displacements to files."""
     write_atom_config(
         "%s.config" % pre_filename,
