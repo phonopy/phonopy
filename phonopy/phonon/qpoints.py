@@ -93,7 +93,7 @@ class QpointsPhonon:
         | Sequence[NDArray[np.double]]
         | NDArray[np.double],
         dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
-        nac_q_direction: NDArray[np.double] | None = None,
+        nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
         with_eigenvectors: bool = False,
         group_velocity: GroupVelocity | None = None,
         with_dynamical_matrices: bool = False,
@@ -132,7 +132,11 @@ class QpointsPhonon:
 
         self._qpoints = np.asarray(qpoints, dtype="double", order="C")
         self._dynamical_matrix = dynamical_matrix
-        self._nac_q_direction = nac_q_direction
+        self._nac_q_direction = (
+            np.array(nac_q_direction, dtype="double")
+            if nac_q_direction is not None
+            else None
+        )
         self._with_eigenvectors = with_eigenvectors
         self._gv_obj: GroupVelocity | None = group_velocity
         self._with_dynamical_matrices = with_dynamical_matrices

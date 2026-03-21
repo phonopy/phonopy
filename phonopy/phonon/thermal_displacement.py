@@ -101,7 +101,7 @@ class ThermalMotion:
         return self._temperatures
 
     @temperatures.setter
-    def temperatures(self, temperatures: NDArray[np.double]) -> None:
+    def temperatures(self, temperatures: Sequence[float] | NDArray[np.double]) -> None:
         t_array = np.array(temperatures, dtype="double")
         condition = np.logical_not(t_array < 0)
         self._temperatures = np.extract(condition, t_array).astype("double")
