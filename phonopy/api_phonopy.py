@@ -256,7 +256,7 @@ class Phonopy:
         self._search_primitive_symmetry()
 
         # displacements
-        self._dataset = None
+        self._dataset: DisplacementDataset | None = None
         self._supercells_with_displacements = None
 
         # set_force_constants or set_forces
@@ -270,7 +270,7 @@ class Phonopy:
 
         # MLP
         self._mlp = None
-        self._mlp_dataset = None
+        self._mlp_dataset: Type2DisplacementDataset | None = None
 
         self._band_structure = None
         self._mesh = None
@@ -404,13 +404,13 @@ class Phonopy:
         return self._calculator
 
     @property
-    def dataset(self) -> dict | None:
+    def dataset(self) -> DisplacementDataset | None:
         """Return displacement-force dataset.
 
         Dataset containing information of displacements in supercells.
         This optionally contains energies and forces of respective supercells.
 
-        dataset : dict
+        dataset : DisplacementDataset or None
             The format can be either one of two types
 
             Type 1. One atomic displacement in each supercell:
@@ -441,13 +441,13 @@ class Phonopy:
         return self._dataset
 
     @dataset.setter
-    def dataset(self, dataset: dict | None) -> None:
+    def dataset(self, dataset: DisplacementDataset | None) -> None:
         if dataset is None:
             self._dataset = None
         elif "first_atoms" in dataset:
             self._dataset = copy.deepcopy(dataset)
         elif "displacements" in dataset:
-            self._dataset = {}
+            self._dataset = None
             self.displacements = dataset["displacements"]
             if "forces" in dataset:
                 self.forces = dataset["forces"]
@@ -552,14 +552,11 @@ class Phonopy:
         disp = np.array(displacements, dtype="double", order="C")
         if disp.ndim != 3 or disp.shape[1:] != (len(self._supercell), 3):
             raise RuntimeError("Array shape of displacements is incorrect.")
-        if self._dataset is None:
-            self._dataset = {}
-        if "first_atoms" in self._dataset:
+        if self._dataset is not None and "first_atoms" in self._dataset:
             raise RuntimeError(
                 "Setting displacements to type-1 dataset is not supported."
             )
-
-        self._dataset["displacements"] = disp
+        self._dataset = {"displacements": disp}
         self._supercells_with_displacements = None
 
     @property
@@ -3285,8 +3282,7 @@ class Phonopy:
             phpy_yaml = PhonopyYaml(
                 configuration=configuration, physical_units=units, settings=settings
             )
-        phpy_yaml.frequency_unit_conversion_factor = self._unit_conversion_factor
-        set_yaml(phpy_yaml, self)
+        set_data_to_phonopy_yaml(phpy_yaml, self)
         return phpy_yaml
 
     ###################
@@ -3528,8 +3524,8 @@ class Phonopy:
         """
         if self._dataset is None:
             raise RuntimeError("Displacement-force dataset is not set.")
-        if target in self._dataset:  # type-2
-            return self._dataset[target]
+        if "displacements" in self._dataset and target in self._dataset:  # type-2
+            return self._dataset[target]  # type: ignore
         if "first_atoms" in self._dataset:  # type-1
             values = []
             for disp in self._dataset["first_atoms"]:
@@ -3545,18 +3541,19 @@ class Phonopy:
 
     def _set_forces_energies(
         self,
-        values: NDArray[np.double]
+        values: Sequence[float]
+        | NDArray[np.double]
         | Sequence[NDArray[np.double]]
         | Sequence[Sequence[Sequence[float]]],
         target: Literal["forces", "supercell_energies"],
     ) -> None:
         assert self._dataset is not None
         if "first_atoms" in self._dataset:  # type-1
-            for disp, v in zip(self._dataset["first_atoms"], values, strict=True):  # type: ignore
+            for disp, val in zip(self._dataset["first_atoms"], values, strict=True):  # type: ignore
                 if target == "forces":
-                    disp[target] = np.array(v, dtype="double", order="C")
+                    disp[target] = np.array(val, dtype="double", order="C")
                 elif target == "supercell_energies":
-                    disp["supercell_energy"] = float(v)
+                    disp["supercell_energy"] = float(val)  # type: ignore
         elif "displacements" in self._dataset:  # type-2
             _values = np.array(values, dtype="double", order="C")
             natom = len(self._supercell)
@@ -3573,7 +3570,7 @@ class Phonopy:
             raise RuntimeError("Set of displacements is not available.")
 
 
-def set_yaml(phpy_yaml: PhonopyYaml, self: Phonopy) -> None:
+def set_data_to_phonopy_yaml(phpy_yaml: PhonopyYaml, self: Phonopy) -> None:
     """Set data to PhonopyYaml instance."""
     phpy_yaml.unitcell = self.unitcell
     phpy_yaml.primitive = self.primitive

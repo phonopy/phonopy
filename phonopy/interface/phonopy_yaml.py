@@ -1213,12 +1213,12 @@ def load_yaml(fp: str | os.PathLike | typing.IO) -> dict:
     lzma and gzip comppressed non-stream files can be loaded.
 
     """
-    if isinstance(fp, io.IOBase):
-        yaml_data = yaml.load(fp, Loader=Loader)
-    else:
+    if isinstance(fp, (str, os.PathLike)):
         myio = get_io_module_to_decompress(fp)
         with myio.open(fp, "rb") as f:
             yaml_data = yaml.load(f, Loader=Loader)
+    else:
+        yaml_data = yaml.load(fp, Loader=Loader)
 
     return yaml_data
 

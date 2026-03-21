@@ -41,6 +41,7 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.harmonic.displacement import Type1DisplacementDataset
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     Primitive,
@@ -64,7 +65,7 @@ class FDFCSolver:
         supercell: PhonopyAtoms,
         primitive: Primitive | None,
         symmetry: Symmetry,
-        dataset: dict,
+        dataset: Type1DisplacementDataset,
         is_compact_fc: bool = False,
         log_level: int = 0,  # currently not used
     ):
@@ -93,7 +94,7 @@ class FDFCSolver:
         self,
         supercell: PhonopyAtoms,
         symmetry: Symmetry,
-        dataset: dict,
+        dataset: Type1DisplacementDataset,
         atom_list: NDArray[np.int64] | None = None,
         primitive: Primitive | None = None,
     ) -> NDArray[np.double]:
@@ -830,7 +831,7 @@ def _solve_force_constants_svd(
 def _get_force_constants_disps(
     force_constants: NDArray[np.double],
     supercell: PhonopyAtoms,
-    dataset: dict,
+    dataset: Type1DisplacementDataset,
     symmetry: Symmetry,
     atom_list: NDArray[np.int64] | None = None,
 ) -> NDArray[np.int64]:
@@ -861,11 +862,12 @@ def _get_force_constants_disps(
         disps = []
         sets_of_forces = []
 
-        for x in dataset["first_atoms"]:
-            if x["number"] != disp_atom_number:
+        for data_1st in dataset["first_atoms"]:
+            if data_1st["number"] != disp_atom_number:
                 continue
-            disps.append(x["displacement"])
-            sets_of_forces.append(x["forces"])
+            disps.append(data_1st["displacement"])
+            assert "forces" in data_1st
+            sets_of_forces.append(data_1st["forces"])
 
         site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
 

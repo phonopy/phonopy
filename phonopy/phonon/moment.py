@@ -54,7 +54,7 @@ class PhononMoment:
     def __init__(
         self,
         frequencies: NDArray[np.double],
-        weights: NDArray[np.double],
+        weights: NDArray[np.int64],
         eigenvectors: NDArray[np.cdouble] | None = None,
     ) -> None:
         """Init method."""

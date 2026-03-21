@@ -36,7 +36,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import cast
 
 import numpy as np
@@ -106,7 +106,7 @@ class DynamicStructureFactor:
     def __init__(
         self,
         mesh_phonon: Mesh | IterMesh,
-        Qpoints: NDArray[np.double],
+        Qpoints: Sequence[Sequence[float]] | NDArray[np.double],
         T: float,
         atomic_form_factor_func: Callable[[str, float], float] | None = None,
         scattering_lengths: dict[str, float] | None = None,
