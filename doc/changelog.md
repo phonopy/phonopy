@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-21-2026: Version 3.2.1
+
+- Minor refactoring of `Phonopy` class.
+
 ## Mar-18-2026: Version 3.2.0
 
 - Remove deprecated parameters from `Phonopy.__init__()`: `frequency_scale_factor`,
