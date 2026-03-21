@@ -65,7 +65,7 @@ class Modulation:
         phonon_modes: Sequence[tuple[NDArray[np.double], int, float, float]],
         delta_q: NDArray[np.double] | Sequence[float] | None = None,
         derivative_order: int | None = None,
-        nac_q_direction: NDArray[np.double] | None = None,
+        nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
         factor: float | None = None,
     ) -> None:
         """Init method."""
@@ -74,7 +74,11 @@ class Modulation:
         self._phonon_modes = phonon_modes
         self._dimension = np.array(dimension, dtype="int64").ravel()
         self._delta_q = delta_q
-        self._nac_q_direction = nac_q_direction
+        self._nac_q_direction = (
+            np.array(nac_q_direction, dtype="double")
+            if nac_q_direction is not None
+            else None
+        )
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         self._derivative_order = derivative_order
 
