@@ -46,6 +46,7 @@ from phonopy.exception import (
     ForceCalculatorRequiredError,
     ForceConstantsCalculatorNotFoundError,
 )
+from phonopy.harmonic.displacement import DisplacementDataset
 from phonopy.harmonic.force_constants import FDFCSolver
 from phonopy.interface.alm import ALMFCSolver
 from phonopy.interface.symfc import SymfcFCSolver, parse_symfc_options
@@ -77,7 +78,7 @@ def check_and_cast_fc_calculator_name(
 
 def get_fc_solver(
     supercell: PhonopyAtoms,
-    dataset: dict,
+    dataset: DisplacementDataset,
     primitive: Primitive | None = None,
     fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
     fc_calculator_options: str | None = None,
@@ -92,7 +93,7 @@ def get_fc_solver(
     ----------
     supercell : PhonopyAtoms
         Supercell
-    dataset : dict
+    dataset : DisplacementDataset
         Dataset that contains displacements, forces, and optionally energies.
     primitive : Primitive
         Primitive cell. Only needed for the traditional FC calculator.
@@ -135,7 +136,7 @@ def get_fc_solver(
 
 def get_fc2(
     supercell: PhonopyAtoms,
-    dataset: dict,
+    dataset: DisplacementDataset,
     primitive: Primitive | None = None,
     fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
     fc_calculator_options: str | None = None,
@@ -152,7 +153,7 @@ def get_fc2(
     ----------
     supercell : PhonopyAtoms
         Supercell
-    dataset : dict
+    dataset : DisplacementDataset
         Dataset that contains displacements, forces, and optionally energies.
     primitive : Primitive
         Primitive cell. Only needed for the traditional FC calculator.
@@ -199,7 +200,7 @@ class FCSolver:
         fc_solver_name: Literal["traditional", "symfc", "alm"],
         supercell: PhonopyAtoms,
         symmetry: Symmetry | None = None,
-        dataset: dict | None = None,
+        dataset: DisplacementDataset | None = None,
         is_compact_fc: bool = False,
         primitive: Primitive | None = None,
         orders: Sequence[int] | None = None,
@@ -222,7 +223,7 @@ class FCSolver:
             Supercell.
         symmetry : Symmetry, optional
             Symmetry of supercell. Default is None.
-        dataset : dict, optional
+        dataset : DisplacementDataset, optional
             Dataset that contains displacements, forces, and optionally
             energies. Default is None.
         is_compact_fc : bool, optional
