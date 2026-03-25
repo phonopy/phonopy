@@ -78,7 +78,7 @@ class FirstAtomDisplacement(TypedDict):
     """Displacement information of one displaced atom."""
 
     number: int
-    displacement: list[float]
+    displacement: NDArray[np.double]
 
 
 class FirstAtomDisplacementWithForces(FirstAtomDisplacement, total=False):
