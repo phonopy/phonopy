@@ -322,6 +322,122 @@ def test_Phonopy_calculator():
         assert ph.unit_conversion_factor == pytest.approx(100)
 
 
+def test_save_hdf5_force_constants(ph_nacl: Phonopy, tmp_path: Path):
+    """Test saving to .hdf5 with force_constants=True stores FC."""
+    import h5py
+
+    filename = tmp_path / "phonopy_params.hdf5"
+    ph_nacl.save(filename, settings={"force_constants": True})
+    assert filename.exists()
+    with h5py.File(filename, "r") as f:
+        assert "force_constants" in f
+        np.testing.assert_allclose(f["force_constants"][...], ph_nacl.force_constants)
+        assert "p2s_map" in f
+        np.testing.assert_array_equal(f["p2s_map"][...], ph_nacl.primitive.p2s_map)
+
+
+def test_save_hdf5_force_sets(ph_nacl: Phonopy, tmp_path: Path):
+    """Test saving to .hdf5 stores force sets."""
+    import h5py
+
+    filename = tmp_path / "phonopy_params.hdf5"
+    ph_nacl.save(filename)
+    assert filename.exists()
+    with h5py.File(filename, "r") as f:
+        assert "force_sets" in f
+        grp = f["force_sets"]
+        assert grp.attrs["dataset_type"] == 1
+        assert "displacements" in grp
+        assert "forces" in grp
+        assert "numbers" in grp
+
+
+def test_save_hdf5_both(ph_nacl: Phonopy, tmp_path: Path):
+    """Test saving to .hdf5 with both force_constants and force_sets."""
+    import h5py
+
+    filename = tmp_path / "phonopy_params.hdf5"
+    ph_nacl.save(filename, settings={"force_constants": True})
+    assert filename.exists()
+    with h5py.File(filename, "r") as f:
+        assert "force_constants" in f
+        assert "force_sets" in f
+
+
+def test_save_hdf5_structure(ph_nacl: Phonopy, tmp_path: Path):
+    """Test that HDF5 file stores structure metadata as native datasets."""
+    import h5py
+
+    filename = tmp_path / "phonopy_params.hdf5"
+    ph_nacl.save(filename)
+    with h5py.File(filename, "r") as f:
+        assert "phonopy" in f
+        assert "version" in f["phonopy"].attrs
+        assert "unit_cell" in f
+        uc = f["unit_cell"]
+        np.testing.assert_allclose(uc["lattice"][...], ph_nacl.unitcell.cell)
+        np.testing.assert_allclose(
+            uc["coordinates"][...], ph_nacl.unitcell.scaled_positions
+        )
+        np.testing.assert_allclose(uc["masses"][...], ph_nacl.unitcell.masses)
+        assert "supercell_matrix" in f
+        np.testing.assert_array_equal(
+            f["supercell_matrix"][...], ph_nacl.supercell_matrix
+        )
+
+
+def test_save_hdf5_force_sets_type2(ph_nacl: Phonopy, tmp_path: Path):
+    """Test saving type 2 dataset to .hdf5."""
+    import h5py
+
+    ph = Phonopy(
+        ph_nacl.unitcell,
+        supercell_matrix=ph_nacl.supercell_matrix,
+        primitive_matrix=ph_nacl.primitive_matrix,
+    )
+    ph.generate_displacements(number_of_snapshots=3)
+    n_supercells = len(ph.supercells_with_displacements)
+    ph.forces = np.random.default_rng(0).random((n_supercells, len(ph.supercell), 3))
+    filename = tmp_path / "phonopy_params.hdf5"
+    ph.save(filename)
+    with h5py.File(filename, "r") as f:
+        grp = f["force_sets"]
+        assert grp.attrs["dataset_type"] == 2
+        assert grp["displacements"].shape == (n_supercells, len(ph.supercell), 3)
+        assert grp["forces"].shape == (n_supercells, len(ph.supercell), 3)
+
+
+def test_load_hdf5_force_constants(ph_nacl: Phonopy, tmp_path: Path):
+    """Test loading force constants from .hdf5 file."""
+    hdf5_filename = tmp_path / "phonopy_params.hdf5"
+    ph_nacl.save(hdf5_filename, settings={"force_constants": True})
+    ph = phonopy.load(hdf5_filename, is_compact_fc=False)
+    assert ph.force_constants is not None
+    assert ph_nacl.force_constants is not None
+    np.testing.assert_allclose(ph.force_constants, ph_nacl.force_constants)
+
+
+def test_load_hdf5_force_sets(ph_nacl: Phonopy, tmp_path: Path):
+    """Test loading force sets from .hdf5 file."""
+    hdf5_filename = tmp_path / "phonopy_params.hdf5"
+    ph_nacl.save(hdf5_filename)
+    ph = phonopy.load(hdf5_filename, produce_fc=False)
+    assert ph.dataset is not None
+    assert "first_atoms" in ph.dataset
+    assert "forces" in ph.dataset["first_atoms"][0]
+
+
+def test_load_hdf5_both(ph_nacl: Phonopy, tmp_path: Path):
+    """Test loading both FC and force sets from .hdf5."""
+    hdf5_filename = tmp_path / "phonopy_params.hdf5"
+    ph_nacl.save(hdf5_filename, settings={"force_constants": True})
+    ph = phonopy.load(hdf5_filename, is_compact_fc=False)
+    assert ph.force_constants is not None
+    assert ph.dataset is not None
+    assert ph_nacl.force_constants is not None
+    np.testing.assert_allclose(ph.force_constants, ph_nacl.force_constants)
+
+
 def test_Phonopy_calculator_QE():
     """Test phonopy_load with phonopy_params.yaml for QE."""
     ph_orig = phonopy.load(

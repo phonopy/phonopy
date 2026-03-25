@@ -56,7 +56,7 @@ def load(
     phonopy_yaml: str
     | os.PathLike
     | typing.IO
-    | None = None,  # phonopy.yaml-like must be the first argument.
+    | None = None,  # phonopy.yaml-like or .hdf5 file as first argument.
     supercell_matrix: Sequence[int] | Sequence[Sequence[int]] | NDArray | None = None,
     primitive_matrix: Sequence[Sequence[float]]
     | Literal["P", "F", "I", "A", "C", "R", "auto"]
@@ -88,8 +88,8 @@ def load(
 ) -> Phonopy:
     """Create Phonopy instance from parameters and/or input files.
 
-    "phonopy_yaml"-like file is parsed unless crystal structure information is
-    given by unitcell_filename, supercell_filename, unitcell
+    "phonopy_yaml"-like file or ".hdf5" file is parsed unless crystal structure
+    information is given by unitcell_filename, supercell_filename, unitcell
     (PhonopyAtoms-like), or supercell (PhonopyAtoms-like). Even when
     "phonopy_yaml"-like file is parse, parameters except for crystal structure
     can be overwritten.
@@ -122,6 +122,9 @@ def load(
     dataset are stored in Phonopy instance, but force constants are not produced
     from dataset.
 
+    When a ".hdf5" file is given as ``phonopy_yaml``, force constants and
+    force sets stored in the HDF5 file are loaded directly.
+
     Parameters for non-analytical term correctiion (NAC)
     ----------------------------------------------------
     Optional. Means to provide NAC parameters and their priority:
@@ -133,9 +136,10 @@ def load(
     Parameters
     ----------
     phonopy_yaml : str, os.PathLike, typing.IO, optional
-        Filename of "phonopy.yaml"-like file for str or bytes, otherwise file
-        pointer-like. If this is given, the data in the file are parsed. Default
-        is None.
+        Filename of "phonopy.yaml"-like file or ".hdf5" file, or file
+        pointer-like. If this is given, the data in the file are parsed.
+        When a ".hdf5" file is given, the embedded YAML and binary data are
+        both read from it. Default is None.
     supercell_matrix : array_like, optional
         Supercell matrix multiplied to input cell basis vectors. shape=(3, ) or
         (3, 3), where the former is considered a diagonal matrix. Default is the
@@ -224,7 +228,23 @@ def load(
         Verbosity control. Default is 0.
 
     """
-    if (
+    _is_hdf5 = _is_hdf5_file(phonopy_yaml)
+
+    if _is_hdf5:
+        hdf5_data = _load_from_hdf5(
+            str(phonopy_yaml), is_compact_fc=is_compact_fc, log_level=log_level
+        )
+        cell = hdf5_data["cell"]
+        smat = supercell_matrix if supercell_matrix is not None else hdf5_data["smat"]
+        if primitive_matrix is not None:
+            pmat = primitive_matrix
+        else:
+            pmat = hdf5_data["pmat"]
+        _calculator = calculator if calculator is not None else hdf5_data["calculator"]
+        _nac_params = nac_params if nac_params is not None else hdf5_data["nac_params"]
+        _dataset = hdf5_data["dataset"]
+        _fc = hdf5_data["fc"]
+    elif (
         supercell is not None
         or supercell_filename is not None
         or unitcell is not None
@@ -350,3 +370,130 @@ def load(
         )
 
     return phonon
+
+
+def _load_from_hdf5(
+    hdf5_filename: str,
+    is_compact_fc: bool = True,
+    log_level: int = 0,
+) -> dict:
+    """Load all phonopy data from a pure HDF5 file.
+
+    Returns a dict with keys: cell, smat, pmat, calculator, nac_params,
+    dataset, fc — ready for constructing a Phonopy instance.
+
+    """
+    from phonopy.harmonic.force_constants import (
+        compact_fc_to_full_fc,
+        full_fc_to_compact_fc,
+    )
+
+    try:
+        import h5py
+    except ImportError as exc:
+        raise ModuleNotFoundError("You need to install python-h5py.") from exc
+
+    result: dict = {}
+
+    with h5py.File(hdf5_filename, "r") as f:
+        # Header
+        calculator = None
+        if "phonopy" in f and "calculator" in f["phonopy"].attrs:
+            calculator = str(f["phonopy"].attrs["calculator"])
+        result["calculator"] = calculator
+
+        # Unit cell
+        uc_grp = f["unit_cell"]
+        lattice = uc_grp["lattice"][...]
+        coordinates = uc_grp["coordinates"][...]
+        masses = uc_grp["masses"][...]
+        symbols = [s.decode() for s in uc_grp["symbols"][...]]
+        result["cell"] = PhonopyAtoms(
+            symbols=symbols,
+            cell=lattice,
+            scaled_positions=coordinates,
+            masses=masses,
+        )
+
+        # Supercell matrix
+        result["smat"] = f["supercell_matrix"][...]
+
+        # Primitive matrix
+        if "primitive_matrix" in f:
+            result["pmat"] = f["primitive_matrix"][...]
+        else:
+            result["pmat"] = None
+
+        # NAC parameters
+        nac_params = None
+        if "nac" in f:
+            nac_grp = f["nac"]
+            nac_params = {}
+            if "born" in nac_grp:
+                nac_params["born"] = nac_grp["born"][...]
+            if "dielectric" in nac_grp:
+                nac_params["dielectric"] = nac_grp["dielectric"][...]
+            if "factor" in nac_grp.attrs:
+                nac_params["factor"] = float(nac_grp.attrs["factor"])
+        result["nac_params"] = nac_params
+
+        # Force constants
+        fc = None
+        if "force_constants" in f:
+            fc = f["force_constants"][...]
+        result["fc"] = fc
+
+        # Force sets
+        dataset = None
+        if "force_sets" in f:
+            grp = f["force_sets"]
+            dtype = int(grp.attrs["dataset_type"])
+            if dtype == 1:
+                natom = int(grp.attrs["natom"])
+                numbers = grp["numbers"][...]
+                disps = grp["displacements"][...]
+                first_atoms = []
+                for i in range(len(numbers)):
+                    entry: dict = {
+                        "number": int(numbers[i]),
+                        "displacement": disps[i].tolist(),
+                    }
+                    if "forces" in grp:
+                        entry["forces"] = grp["forces"][i]
+                    if "supercell_energies" in grp:
+                        entry["supercell_energy"] = float(
+                            grp["supercell_energies"][i]
+                        )
+                    first_atoms.append(entry)
+                dataset = {"natom": natom, "first_atoms": first_atoms}
+            elif dtype == 2:
+                dataset = {
+                    "displacements": grp["displacements"][...],
+                }
+                if "forces" in grp:
+                    dataset["forces"] = grp["forces"][...]
+                if "supercell_energies" in grp:
+                    dataset["supercell_energies"] = grp["supercell_energies"][
+                        ...
+                    ]
+                if "random_seed" in grp.attrs:
+                    dataset["random_seed"] = int(grp.attrs["random_seed"])
+                if "cutoff_distance" in grp.attrs:
+                    dataset["cutoff_distance"] = float(
+                        grp.attrs["cutoff_distance"]
+                    )
+        result["dataset"] = dataset
+
+    if log_level:
+        print(f'Phonopy data were read from "{hdf5_filename}".')
+
+    return result
+
+
+def _is_hdf5_file(
+    phonopy_yaml: str | os.PathLike | typing.IO | None,
+) -> bool:
+    """Check if the given path points to an .hdf5 file."""
+    if not isinstance(phonopy_yaml, (str, os.PathLike)):
+        return False
+    return str(phonopy_yaml).endswith(".hdf5")

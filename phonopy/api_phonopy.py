@@ -3146,15 +3146,19 @@ class Phonopy:
         self,
         filename: str | os.PathLike = "phonopy_params.yaml",
         settings: dict | None = None,
-        hdf5_settings: dict | None = None,
         compression: str | bool = False,
     ) -> str:
         """Save phonopy parameters into file.
 
+        The output format is determined by the filename extension:
+        - ``.yaml`` or ``.yml``: YAML format (optionally xz-compressed).
+        - ``.hdf5``: Self-contained HDF5 file with structure metadata
+          embedded as YAML and force constants / force sets as binary datasets.
+
         Parameters
         ----------
         filename: str, optional
-            File name. Default is "phonopy_params.yaml"
+            File name. Default is "phonopy_params.yaml".
         settings: dict, optional
             It is described which parameters are written out. Only the settings
             expected to be updated from the following default settings are
@@ -3166,28 +3170,28 @@ class Phonopy:
             This default settings are updated by {'force_constants': True} when
             dataset is None and force_constants is not None unless
             {'force_constants': False} is specified.
-        hdf5_settings: dict, optional (To be implemented)
-            Force constants and force_sets are stored in hdf5 file when they are
-            activated in the dict. The dict has the following keys. The default
-            filename is the filename of yaml file where '.yaml' is replaced by
-            '.hdf5'.
-                'filename' : str 'force_constants': bool (default=False)
-                'force_sets': bool (default=False)
         compression : bool or str
-            If True, phonopy_params.yaml like file is compressed by xz. When
-            compression=='xz', the file is compressed by xz. Default is False.
+            For YAML output: if True or 'xz', the file is compressed by xz.
+            Default is False. Ignored for HDF5 output.
 
         Returns
         -------
         str :
-            File name of the saved phonopy_params.yaml like file. If it is
-            compressed,
+            File name of the saved file.
 
         """
-        if hdf5_settings is not None:
-            msg = "hdf5_settings parameter has not yet been implemented."
-            raise NotImplementedError(msg)
+        if str(filename).endswith(".hdf5"):
+            return self._save_as_hdf5(filename, settings)
 
+        return self._save_as_yaml(filename, settings, compression)
+
+    def _save_as_yaml(
+        self,
+        filename: str | os.PathLike,
+        settings: dict | None,
+        compression: str | bool,
+    ) -> str:
+        """Save phonopy parameters as YAML."""
         if settings is None:
             _settings = {}
         else:
@@ -3209,6 +3213,145 @@ class Phonopy:
                 w.write(str(phpy_yaml))
 
         return out_filename
+
+    def _save_as_hdf5(
+        self,
+        filename: str | os.PathLike,
+        settings: dict | None,
+    ) -> str:
+        """Save all phonopy parameters into a self-contained HDF5 file.
+
+        All data is stored as native HDF5 datasets and attributes with a
+        structure mirroring the YAML format.
+
+        """
+        try:
+            import h5py
+        except ImportError as exc:
+            raise ModuleNotFoundError("You need to install python-h5py.") from exc
+
+        if settings is None:
+            _settings = {}
+        else:
+            _settings = settings.copy()
+        if _settings.get("force_constants") is False:
+            pass
+        elif not forces_in_dataset(self.dataset) and self.force_constants is not None:
+            _settings.update({"force_constants": True})
+
+        out_filename = str(filename)
+        with h5py.File(out_filename, "w") as w:
+            # Header
+            phgrp = w.create_group("phonopy")
+            phgrp.attrs["version"] = __version__
+            if self.calculator is not None:
+                phgrp.attrs["calculator"] = self.calculator
+
+            # Unit cell
+            uc_grp = w.create_group("unit_cell")
+            uc_grp.create_dataset("lattice", data=self.unitcell.cell)
+            uc_grp.create_dataset(
+                "coordinates", data=self.unitcell.scaled_positions
+            )
+            uc_grp.create_dataset("masses", data=self.unitcell.masses)
+            uc_grp.create_dataset(
+                "symbols",
+                data=np.array(self.unitcell.symbols, dtype="S"),
+            )
+            uc_grp.create_dataset("numbers", data=self.unitcell.numbers)
+
+            # Supercell matrix
+            w.create_dataset("supercell_matrix", data=self.supercell_matrix)
+
+            # Primitive matrix
+            if self.primitive_matrix is not None:
+                w.create_dataset("primitive_matrix", data=self.primitive_matrix)
+
+            # NAC parameters
+            nac = self.nac_params
+            if nac is not None:
+                nac_grp = w.create_group("nac")
+                if (
+                    "born" in nac
+                    and _settings.get("born_effective_charge", True)
+                ):
+                    nac_grp.create_dataset("born", data=nac["born"])
+                if (
+                    "dielectric" in nac
+                    and _settings.get("dielectric_constant", True)
+                ):
+                    nac_grp.create_dataset(
+                        "dielectric", data=nac["dielectric"]
+                    )
+                if "factor" in nac:
+                    nac_grp.attrs["factor"] = nac["factor"]
+
+            # Force constants
+            if self.force_constants is not None and _settings.get(
+                "force_constants", False
+            ):
+                w.create_dataset("force_constants", data=self.force_constants)
+                w.create_dataset("p2s_map", data=self.primitive.p2s_map)
+
+            # Force sets
+            if self.dataset is not None and forces_in_dataset(self.dataset):
+                grp = w.create_group("force_sets")
+                self._write_force_sets_to_hdf5_group(grp, self.dataset)
+
+        return out_filename
+
+    @staticmethod
+    def _write_force_sets_to_hdf5_group(
+        grp: Any,
+        dataset: dict,
+        compression: str | None = None,
+    ) -> None:
+        """Write force sets data into an hdf5 group."""
+        if "first_atoms" in dataset:
+            grp.attrs["dataset_type"] = 1
+            grp.attrs["natom"] = dataset["natom"]
+            numbers = np.array(
+                [d["number"] for d in dataset["first_atoms"]], dtype="int32"
+            )
+            displacements = np.array(
+                [d["displacement"] for d in dataset["first_atoms"]], dtype="double"
+            )
+            grp.create_dataset("numbers", data=numbers, compression=compression)
+            grp.create_dataset(
+                "displacements", data=displacements, compression=compression
+            )
+            if "forces" in dataset["first_atoms"][0]:
+                forces = np.array(
+                    [d["forces"] for d in dataset["first_atoms"]], dtype="double"
+                )
+                grp.create_dataset("forces", data=forces, compression=compression)
+            if "supercell_energy" in dataset["first_atoms"][0]:
+                energies = np.array(
+                    [d["supercell_energy"] for d in dataset["first_atoms"]],
+                    dtype="double",
+                )
+                grp.create_dataset(
+                    "supercell_energies", data=energies, compression=compression
+                )
+        elif "displacements" in dataset:
+            grp.attrs["dataset_type"] = 2
+            grp.create_dataset(
+                "displacements", data=dataset["displacements"], compression=compression
+            )
+            if "forces" in dataset:
+                grp.create_dataset(
+                    "forces", data=dataset["forces"], compression=compression
+                )
+            if "supercell_energies" in dataset:
+                grp.create_dataset(
+                    "supercell_energies",
+                    data=dataset["supercell_energies"],
+                    compression=compression,
+                )
+            if "random_seed" in dataset:
+                grp.attrs["random_seed"] = dataset["random_seed"]
+            if "cutoff_distance" in dataset:
+                grp.attrs["cutoff_distance"] = dataset["cutoff_distance"]
 
     def ph2ph(
         self,

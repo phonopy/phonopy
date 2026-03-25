@@ -432,6 +432,166 @@ def write_force_constants_to_hdf5(
             w.create_dataset("physical_unit", data=[physical_unit])
 
 
+def write_force_sets_to_hdf5(
+    dataset: dict,
+    filename: str | os.PathLike = "force_sets.hdf5",
+    compression: Literal["gzip", "lzf"] | int | None = None,
+):
+    """Write force sets (displacements and forces) in hdf5 format.
+
+    Parameters
+    ----------
+    dataset : dict
+        Displacement-force dataset. See Phonopy.dataset for the format.
+        Both type 1 and type 2 formats are supported.
+    filename : str or os.PathLike
+        Filename to be saved. Default is "force_sets.hdf5".
+    compression : str or int, optional
+        h5py's lossless compression filters (e.g., "gzip", "lzf").
+        Default is None.
+
+    """
+    try:
+        import h5py
+    except ImportError as exc:
+        raise ModuleNotFoundError("You need to install python-h5py.") from exc
+
+    with h5py.File(filename, "w") as w:
+        if "first_atoms" in dataset:
+            # Type 1 dataset
+            w.attrs["dataset_type"] = 1
+            w.attrs["natom"] = dataset["natom"]
+            n_disp = len(dataset["first_atoms"])
+            w.attrs["n_displacements"] = n_disp
+            numbers = np.array(
+                [d["number"] for d in dataset["first_atoms"]], dtype="int32"
+            )
+            displacements = np.array(
+                [d["displacement"] for d in dataset["first_atoms"]], dtype="double"
+            )
+            w.create_dataset("numbers", data=numbers, compression=compression)
+            w.create_dataset(
+                "displacements", data=displacements, compression=compression
+            )
+            if "forces" in dataset["first_atoms"][0]:
+                forces = np.array(
+                    [d["forces"] for d in dataset["first_atoms"]], dtype="double"
+                )
+                w.create_dataset("forces", data=forces, compression=compression)
+            if "supercell_energy" in dataset["first_atoms"][0]:
+                energies = np.array(
+                    [d["supercell_energy"] for d in dataset["first_atoms"]],
+                    dtype="double",
+                )
+                w.create_dataset(
+                    "supercell_energies", data=energies, compression=compression
+                )
+        elif "displacements" in dataset:
+            # Type 2 dataset
+            w.attrs["dataset_type"] = 2
+            w.create_dataset(
+                "displacements", data=dataset["displacements"], compression=compression
+            )
+            if "forces" in dataset:
+                w.create_dataset(
+                    "forces", data=dataset["forces"], compression=compression
+                )
+            if "supercell_energies" in dataset:
+                w.create_dataset(
+                    "supercell_energies",
+                    data=dataset["supercell_energies"],
+                    compression=compression,
+                )
+            if "random_seed" in dataset:
+                w.attrs["random_seed"] = dataset["random_seed"]
+            if "cutoff_distance" in dataset:
+                w.attrs["cutoff_distance"] = dataset["cutoff_distance"]
+        else:
+            raise RuntimeError("Unknown dataset format.")
+
+
+def read_force_sets_from_hdf5(
+    filename: str | os.PathLike = "force_sets.hdf5",
+) -> dict | None:
+    """Read force sets from hdf5 format.
+
+    This reads hdf5 files written by ``write_force_sets_to_hdf5`` or by
+    ``Phonopy.save(hdf5_settings=...)``. In the latter case, force sets are
+    stored under a ``"force_sets"`` group.
+
+    Parameters
+    ----------
+    filename : str or os.PathLike
+        Filename to read. Default is "force_sets.hdf5".
+
+    Returns
+    -------
+    dict or None
+        Displacement-force dataset in the format described at Phonopy.dataset.
+        Returns None if no force sets data is found.
+
+    """
+    try:
+        import h5py
+    except ImportError as exc:
+        raise ModuleNotFoundError("You need to install python-h5py.") from exc
+
+    with h5py.File(filename, "r") as f:
+        # When saved via Phonopy.save(), force sets are in a group
+        if "force_sets" in f:
+            grp = f["force_sets"]
+        elif "dataset_type" in f.attrs:
+            grp = f
+        else:
+            return None
+
+        dataset_type = grp.attrs.get("dataset_type", None)
+        if dataset_type is None:
+            return None
+
+        if dataset_type == 1:
+            dataset: dict = {"natom": int(grp.attrs["natom"]), "first_atoms": []}
+            numbers = grp["numbers"][:]
+            displacements = grp["displacements"][:]
+            forces = grp["forces"][:] if "forces" in grp else None
+            energies = (
+                grp["supercell_energies"][:] if "supercell_energies" in grp else None
+            )
+            for i in range(len(numbers)):
+                d: dict = {
+                    "number": int(numbers[i]),
+                    "displacement": np.array(displacements[i], dtype="double"),
+                }
+                if forces is not None:
+                    d["forces"] = np.array(forces[i], dtype="double", order="C")
+                if energies is not None:
+                    d["supercell_energy"] = float(energies[i])
+                dataset["first_atoms"].append(d)
+            return dataset
+
+        elif dataset_type == 2:
+            dataset = {
+                "displacements": np.array(
+                    grp["displacements"][:], dtype="double", order="C"
+                )
+            }
+            if "forces" in grp:
+                dataset["forces"] = np.array(
+                    grp["forces"][:], dtype="double", order="C"
+                )
+            if "supercell_energies" in grp:
+                dataset["supercell_energies"] = np.array(
+                    grp["supercell_energies"][:], dtype="double"
+                )
+            if "random_seed" in grp.attrs:
+                dataset["random_seed"] = int(grp.attrs["random_seed"])
+            if "cutoff_distance" in grp.attrs:
+                dataset["cutoff_distance"] = float(grp.attrs["cutoff_distance"])
+            return dataset
+
+    return None
+
+
 def parse_FORCE_CONSTANTS(
     filename: str | os.PathLike = "FORCE_CONSTANTS", p2s_map: NDArray | None = None
 ) -> NDArray:
