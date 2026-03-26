@@ -679,14 +679,20 @@ class PhonopyYamlDumperBase(ABC):
                     )
         return []
 
-    @abstractmethod
     def _displacements_yaml_lines_type1(
         self,
         dataset: Type1DisplacementDataset,
         with_forces: bool = False,
         key_prefix: str = "",
     ) -> list[str]:
-        pass
+        """Return type1 dataset in yaml.
+
+        See data structure at Phonopy.dataset.
+
+        """
+        return _displacements_yaml_lines_type1(
+            dataset, with_forces=with_forces, key_prefix=key_prefix
+        )
 
     def _displacements_yaml_lines_type2(
         self,
@@ -808,18 +814,6 @@ class PhonopyYamlDumper(PhonopyYamlDumperBase):
         else:
             symbols = self._data.primitive.symbols
         return self._nac_yaml_lines_given_symbols(symbols)
-
-    def _displacements_yaml_lines_type1(
-        self, dataset: dict, with_forces: bool = False, key_prefix: str = ""
-    ) -> list[str]:
-        """Return type1 dataset in yaml.
-
-        See data structure at Phonopy.dataset.
-
-        """
-        return _displacements_yaml_lines_type1(
-            dataset, with_forces=with_forces, key_prefix=key_prefix
-        )
 
 
 class PhonopyYaml:
@@ -1224,7 +1218,7 @@ def load_yaml(fp: str | os.PathLike | typing.IO) -> dict:
 
 
 def _displacements_yaml_lines_type1(
-    dataset: dict, with_forces: bool = False, key_prefix: str = ""
+    dataset: Type1DisplacementDataset, with_forces: bool = False, key_prefix: str = ""
 ) -> list:
     """Return type1 dataset in yaml.
 
