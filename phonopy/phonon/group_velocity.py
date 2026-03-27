@@ -81,7 +81,7 @@ class GroupVelocity:
 
     def __init__(
         self,
-        dynamical_matrix: DynamicalMatrix | DynamicalMatrixNAC,
+        dynamical_matrix: DynamicalMatrix,
         q_length: float | None = None,
         symmetry: Symmetry | None = None,
         frequency_factor_to_THz: float | None = None,
@@ -89,7 +89,7 @@ class GroupVelocity:
     ) -> None:
         """Init method.
 
-        dynamical_matrix : DynamicalMatrix or DynamicalMatrixNAC
+        dynamical_matrix : DynamicalMatrix
             Dynamical matrix class instance.
         q_length : float
             This is used such as D(q + q_length) - D(q - q_length) for
@@ -107,7 +107,9 @@ class GroupVelocity:
         self._dynmat = dynamical_matrix
         primitive = dynamical_matrix.primitive
         self._reciprocal_lattice_inv = primitive.cell
-        self._reciprocal_lattice = np.linalg.inv(self._reciprocal_lattice_inv)
+        self._reciprocal_lattice: NDArray[np.double] = np.linalg.inv(
+            self._reciprocal_lattice_inv
+        )  # type: ignore
         self._q_length = q_length
         if isinstance(self._dynmat, DynamicalMatrixGL):
             if self._q_length is None:
