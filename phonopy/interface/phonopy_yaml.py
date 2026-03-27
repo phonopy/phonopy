@@ -651,16 +651,10 @@ class PhonopyYamlDumperBase(ABC):
         dataset: DisplacementDataset | None,
         with_forces: bool = False,
         key_prefix: str = "",
-        v223_mode: bool = False,
     ) -> list[str]:
         """Choose yaml writer depending on the dataset type.
 
         See type1 and type2 at Phonopy.dataset.
-
-        Parameters
-        ----------
-        v223_mode : bool
-            When True, old dataset yaml format is generated. Default is False.
 
         """
         if dataset is not None:
@@ -669,14 +663,9 @@ class PhonopyYamlDumperBase(ABC):
                     dataset, with_forces=with_forces, key_prefix=key_prefix
                 )
             elif "displacements" in dataset:
-                if v223_mode:
-                    return self._displacements_yaml_lines_type2_v223(
-                        dataset, with_forces=with_forces, key_prefix=key_prefix
-                    )
-                else:
-                    return self._displacements_yaml_lines_type2(
-                        dataset, with_forces=with_forces, key_prefix=key_prefix
-                    )
+                return self._displacements_yaml_lines_type2(
+                    dataset, with_forces=with_forces, key_prefix=key_prefix
+                )
         return []
 
     def _displacements_yaml_lines_type1(
@@ -727,47 +716,6 @@ class PhonopyYamlDumperBase(ABC):
             lines.append("  supercell_energies:")
             for i, energy in enumerate(dataset["supercell_energies"]):
                 lines.append(f"  - {energy:.16f} # {i + 1}")
-            lines.append("")
-
-        return lines
-
-    def _displacements_yaml_lines_type2_v223(
-        self,
-        dataset: Type2DisplacementDataset,
-        with_forces: bool = False,
-        key_prefix: str = "",
-    ) -> list[str]:
-        """Return type2 dataset in old stype yaml.
-
-        This is the format < v2.24.
-
-        See data structure at Phonopy.dataset.
-
-        """
-        if "random_seed" in dataset:
-            lines = [
-                "random_seed: %d" % dataset["random_seed"],
-                f"{key_prefix}displacements:",
-            ]
-        else:
-            lines = [
-                f"{key_prefix}displacements:",
-            ]
-        for i, dset in enumerate(dataset["displacements"]):
-            lines.append(f"- # {i + 1}")
-            for j, d in enumerate(dset):
-                lines.append(f"  - displacement: # {j + 1}")
-                lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(d))
-                if with_forces and "forces" in dataset:
-                    f = dataset["forces"][i][j]
-                    lines.append("    force:")
-                    lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
-        lines.append("")
-
-        if "supercell_energies" in dataset:
-            lines.append(f"{key_prefix}supercell_energies:")
-            for i, energy in enumerate(dataset["supercell_energies"]):
-                lines.append(f"- {energy:.8f} # {i + 1}")
             lines.append("")
 
         return lines
