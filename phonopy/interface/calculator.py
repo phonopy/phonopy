@@ -1052,8 +1052,9 @@ def get_calc_dataset(
     Returns
     -------
     dict:
-        "forces": Set of forces in supercells.
-        "supercell_energies": Set of supercell energies.
+        "forces": List of forces in supercells.
+        "supercell_energies": List of supercell energies.
+        "points": List of points in the supercells with displacements.
 
     """
     parse_set_of_forces: Callable[..., Any]
