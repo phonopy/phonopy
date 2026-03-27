@@ -88,11 +88,21 @@ class FirstAtomDisplacementWithForces(FirstAtomDisplacement, total=False):
     supercell_energy: float
 
 
-class Type1DisplacementDataset(TypedDict):
+class Type1DisplacementDatasetBase(TypedDict):
     """Displacement dataset in the type-1 format."""
 
     natom: int
     first_atoms: list[FirstAtomDisplacementWithForces]
+
+
+class Type1DisplacementDataset(Type1DisplacementDatasetBase, total=False):
+    """Type-1 displacement dataset with optional accompanying properties.
+
+    cutoff_distance is not (yet) used in phonopy.
+
+    """
+
+    cutoff_distance: float
 
 
 class Type2DisplacementDatasetBase(TypedDict):
@@ -102,11 +112,16 @@ class Type2DisplacementDatasetBase(TypedDict):
 
 
 class Type2DisplacementDataset(Type2DisplacementDatasetBase, total=False):
-    """Type-2 displacement dataset with optional accompanying properties."""
+    """Type-2 displacement dataset with optional accompanying properties.
+
+    cutoff_distance is not (yet) used in phonopy.
+
+    """
 
     forces: NDArray[np.double]
     supercell_energies: NDArray[np.double]
     random_seed: int
+    cutoff_distance: float
 
 
 DisplacementDataset: TypeAlias = Type1DisplacementDataset | Type2DisplacementDataset

@@ -56,6 +56,11 @@ except ImportError:
 
 from phonopy.cui.settings import fracval
 from phonopy.exception import BORNFileParseError
+from phonopy.harmonic.displacement import (
+    DisplacementDataset,
+    Type1DisplacementDataset,
+    Type2DisplacementDataset,
+)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
@@ -65,7 +70,9 @@ from phonopy.utils import similarity_transformation
 #
 # FORCE_SETS
 #
-def write_FORCE_SETS(dataset: dict, filename: str | os.PathLike = "FORCE_SETS") -> None:
+def write_FORCE_SETS(
+    dataset: DisplacementDataset, filename: str | os.PathLike = "FORCE_SETS"
+) -> None:
     """Write FORCE_SETS from dataset.
 
     See more detail in ``get_FORCE_SETS_lines``.
@@ -78,7 +85,7 @@ def write_FORCE_SETS(dataset: dict, filename: str | os.PathLike = "FORCE_SETS") 
 
 
 def get_FORCE_SETS_lines(
-    dataset: dict, forces: NDArray[np.double] | None = None
+    dataset: DisplacementDataset, forces: NDArray[np.double] | None = None
 ) -> list[str]:
     """Generate FORCE_SETS string.
 
@@ -99,7 +106,7 @@ def get_FORCE_SETS_lines(
 
 
 def _get_FORCE_SETS_lines_type1(
-    dataset: dict, forces: NDArray[np.double] | None = None
+    dataset: Type1DisplacementDataset, forces: NDArray[np.double] | None = None
 ) -> list[str]:
     num_atom = dataset["natom"]
     displacements = dataset["first_atoms"]
@@ -121,7 +128,7 @@ def _get_FORCE_SETS_lines_type1(
     return lines
 
 
-def _get_FORCE_SETS_lines_type2(dataset: dict) -> list[str]:
+def _get_FORCE_SETS_lines_type2(dataset: Type2DisplacementDataset) -> list[str]:
     lines = []
     for displacements, forces in zip(
         dataset["displacements"], dataset["forces"], strict=True
@@ -136,7 +143,7 @@ def parse_FORCE_SETS(
     natom: int | None = None,
     filename: str | os.PathLike = "FORCE_SETS",
     to_type2: bool = False,
-) -> dict:
+) -> DisplacementDataset:
     """Parse FORCE_SETS from file.
 
     to_type2 : bool
@@ -144,7 +151,7 @@ def parse_FORCE_SETS(
 
     Returns
     -------
-    dataset : dict
+    dataset : DisplacementDataset
         Displacement dataset. See Phonopy.dataset.
 
     """
@@ -158,14 +165,14 @@ def parse_FORCE_SETS(
 
 def parse_FORCE_SETS_from_strings(
     strings: str, natom: int | None = None, to_type2: bool = False
-) -> dict:
+) -> DisplacementDataset:
     """Parse FORCE_SETS from strings."""
     return _get_dataset(io.StringIO(strings), natom=natom, to_type2=to_type2)
 
 
 def _get_dataset(
     f: typing.TextIO, natom: int | None = None, to_type2: bool = False
-) -> dict:
+) -> DisplacementDataset:
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
     if len(first_line_ary) == 1:
@@ -187,7 +194,7 @@ def _get_dataset(
     raise RuntimeError("Unknown dataset format.")
 
 
-def _get_dataset_type1(f: typing.TextIO) -> dict:
+def _get_dataset_type1(f: typing.TextIO) -> Type1DisplacementDataset:
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
@@ -213,7 +220,9 @@ def _get_dataset_type1(f: typing.TextIO) -> dict:
     return dataset
 
 
-def get_dataset_type2(f: typing.TextIO, natom: int | None = None) -> dict:
+def get_dataset_type2(
+    f: typing.TextIO, natom: int | None = None
+) -> Type2DisplacementDataset:
     """Parse type2 FORCE_SETS text and return dataset."""
     data = np.loadtxt(f, dtype="double")
     if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
