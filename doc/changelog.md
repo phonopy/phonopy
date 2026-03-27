@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-21-2026: Version 3.3.0
+
+- Refactoring of `PhonopyYaml` class.
+
 ## Mar-21-2026: Version 3.2.1
 
 - Minor refactoring of `Phonopy` class.
