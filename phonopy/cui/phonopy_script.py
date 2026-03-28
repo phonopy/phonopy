@@ -375,7 +375,7 @@ def _print_settings(
     settings: PhonopySettings,
     phonon: Phonopy,
     is_primitive_axes_auto: bool,
-    unitcell_filename: str,
+    unitcell_filename: str | os.PathLike,
     load_phonopy_yaml: bool,
 ):
     """Show setting info."""
@@ -937,7 +937,7 @@ def store_nac_params(
     phonon: Phonopy,
     settings: Settings,
     phpy_yaml: PhonopyYaml | None,
-    unitcell_filename: str,
+    unitcell_filename: str | os.PathLike,
     log_level: int,
     nac_factor: float | None = None,
 ):
@@ -995,7 +995,7 @@ def _run_qpoints(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> 
         q_points = parse_QPOINTS()
         if log_level:
             print("Frequencies at q-points given by QPOINTS:")
-    elif settings.qpoints:
+    elif settings.qpoints is not None:
         q_points = settings.qpoints
         if log_level:
             print("Q-points that will be calculated at:")
@@ -2065,6 +2065,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         ###########################
         if settings.use_pypolymlp:
             if phonon.dataset is not None:
+                assert "forces" in phonon.dataset
                 phonon.mlp_dataset = phonon.dataset
                 phonon.dataset = None
 

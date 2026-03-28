@@ -100,11 +100,13 @@ class Settings:
         self.mesh_numbers: float | list[int] | list[list[int]] | None = None
         self.mlp_params: str | None = None
         self.nac_method: str | None = None
-        self.nac_q_direction: list[float] | None = None
+        self.nac_q_direction: NDArray[np.double] | None = None
         self.num_frequency_points: int | None = None
         self.relax_atomic_positions: bool = False
-        self.primitive_matrix: NDArray[np.double] | str | None = None
-        self.qpoints: list | None = None
+        self.primitive_matrix: (
+            NDArray[np.double] | Literal["P", "F", "I", "A", "C", "R", "auto"] | None
+        ) = None
+        self.qpoints: NDArray[np.double] | None = None
         self.random_displacements: Literal["auto"] | int | None = None
         self.random_seed: int | None = None
         self.rd_number_estimation_factor: float | None = None
@@ -697,7 +699,7 @@ class ConfParser(Generic[TSettings]):
                     p_axis_elems: list[float] = []
                     for x in confs[conf_key].split():
                         p_axis_elems.append(fracval(x))
-                    p_axis = np.array(p_axis_elems).reshape(3, 3)
+                    p_axis = np.array(p_axis_elems, dtype="double").reshape(3, 3)
                     if np.linalg.det(p_axis) < 1e-8:
                         self.setting_error(
                             "%s has to have positive determinant." % conf_key.upper()
@@ -705,7 +707,9 @@ class ConfParser(Generic[TSettings]):
                     self._set_parameter("primitive_axes", p_axis)
 
             if conf_key == "q_direction":
-                q_direction = [fracval(x) for x in confs["q_direction"].split()]
+                q_direction = np.array(
+                    [fracval(x) for x in confs["q_direction"].split()], dtype="double"
+                )
                 if len(q_direction) < 3:
                     self.setting_error(
                         "Number of elements of q_direction is less than 3"
@@ -719,11 +723,13 @@ class ConfParser(Generic[TSettings]):
                 elif confs["qpoints"].lower() == ".false.":
                     self._set_parameter("read_qpoints", False)
                 else:
-                    vals = [fracval(x) for x in confs["qpoints"].split()]
+                    vals = np.array(
+                        [fracval(x) for x in confs["qpoints"].split()], dtype="double"
+                    )
                     if len(vals) == 0 or len(vals) % 3 != 0:
                         self.setting_error("Q-points are incorrectly set.")
                     else:
-                        self._set_parameter("qpoints", list(np.reshape(vals, (-1, 3))))
+                        self._set_parameter("qpoints", vals.reshape(-1, 3))
 
             # Number of supercells with random displacements
             if conf_key == "random_displacements":

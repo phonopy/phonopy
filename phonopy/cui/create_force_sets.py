@@ -38,12 +38,14 @@ from __future__ import annotations
 
 import copy
 import os
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.cui.load_helper import get_nac_params
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
+from phonopy.harmonic.displacement import DisplacementDataset
 from phonopy.interface.calculator import get_calc_dataset, get_calc_dataset_wien2k
 from phonopy.interface.lammps import rotate_lammps_forces
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -224,7 +226,7 @@ def create_FORCE_SETS(
 
 def check_number_of_force_files(
     num_displacements: int,
-    force_filenames: list[str | os.PathLike],
+    force_filenames: Sequence[str | os.PathLike],
     disp_filename: str | os.PathLike,
     force_sets_zero_mode: bool = False,
     log_level: int = 0,
@@ -248,9 +250,9 @@ def check_number_of_force_files(
 
 def check_agreements_of_displacements(
     supercell: PhonopyAtoms,
-    dataset: dict,
-    all_points: list[NDArray[np.double]],
-    force_filenames: list[str | os.PathLike],
+    dataset: DisplacementDataset,
+    all_points: Sequence[NDArray[np.double]],
+    force_filenames: Sequence[str | os.PathLike],
 ) -> str | os.PathLike | None:
     """Check agreements of displacements.
 

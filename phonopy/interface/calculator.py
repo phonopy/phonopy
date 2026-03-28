@@ -93,7 +93,7 @@ class SupercellWriterConfig:
 class StructureInfo:
     """Base class for interface-specific structure information."""
 
-    unitcell_filename: str | os.PathLike | None
+    unitcell_filename: str | os.PathLike
 
 
 @dataclass(frozen=True)
@@ -1052,8 +1052,9 @@ def get_calc_dataset(
     Returns
     -------
     dict:
-        "forces": Set of forces in supercells.
-        "supercell_energies": Set of supercell energies.
+        "forces": List of forces in supercells.
+        "supercell_energies": List of supercell energies.
+        "points": List of points in the supercells with displacements.
 
     """
     parse_set_of_forces: Callable[..., Any]

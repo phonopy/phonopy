@@ -6,6 +6,7 @@ import itertools
 import os
 import pathlib
 import tempfile
+from unittest.mock import patch
 
 import h5py
 import numpy as np
@@ -15,6 +16,7 @@ import yaml
 import phonopy
 from phonopy.cui.phonopy_argparse import PhonopyMockArgs
 from phonopy.cui.phonopy_script import main
+from phonopy.exception import PypolymlpDevelopmentError, PypolymlpFileNotFoundError
 from phonopy.structure.atomic_data import set_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
@@ -882,6 +884,81 @@ def test_band_mesh():
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists()
                 file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize("load_phonopy_yaml", [False, True])
+def test_use_pypolymlp_develop(load_phonopy_yaml: bool):
+    """Test phonopy --pypolymlp when develop_or_load_pypolymlp succeeds.
+
+    When use_pypolymlp=True and the dataset contains forces, the dataset should
+    be moved to mlp_dataset and develop_or_load_pypolymlp should be called.
+    Without --rd or -d, the script finalizes and exits with code 0.
+
+    Since pypolymlp is not exectued using MagicMock, polymlp.yaml is not created.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-rd.yaml.xz",
+                use_pypolymlp=True,
+                load_phonopy_yaml=load_phonopy_yaml,
+            )
+            with patch(
+                "phonopy.cui.phonopy_script.develop_or_load_pypolymlp"
+            ) as mock_develop:
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
+                assert excinfo.value.code == 0
+                mock_develop.assert_called_once()
+
+            for created_filename in ("phonopy.yaml",):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize(
+    "error_class",
+    [PypolymlpDevelopmentError, PypolymlpFileNotFoundError],
+)
+def test_use_pypolymlp_develop_error(error_class: type):
+    """Test phonopy --pypolymlp when develop_or_load_pypolymlp raises an error.
+
+    PypolymlpDevelopmentError and PypolymlpFileNotFoundError should both cause
+    the script to print an error message and exit with code 1.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-rd.yaml.xz",
+                use_pypolymlp=True,
+                load_phonopy_yaml=True,
+            )
+            with patch(
+                "phonopy.cui.phonopy_script.develop_or_load_pypolymlp",
+                side_effect=error_class("test error"),
+            ):
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
+                assert excinfo.value.code == 1
 
             _check_no_files()
 

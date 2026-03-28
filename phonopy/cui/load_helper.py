@@ -59,6 +59,7 @@ from phonopy.file_IO import (
     parse_FORCE_SETS,
     read_force_constants_hdf5,
 )
+from phonopy.harmonic.displacement import DisplacementDataset
 from phonopy.harmonic.force_constants import (
     compact_fc_to_full_fc,
     full_fc_to_compact_fc,
@@ -237,11 +238,11 @@ def read_force_constants_from_hdf5(
 
 def select_and_load_dataset(
     nsatom: int,
-    dataset: dict | None = None,
+    dataset: DisplacementDataset | None = None,
     phonopy_yaml_filename: str | os.PathLike | typing.IO | None = None,
     force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
-) -> dict | None:
+) -> DisplacementDataset | None:
     """Set displacement-force dataset."""
     _dataset = None
     _force_sets_filename = None
