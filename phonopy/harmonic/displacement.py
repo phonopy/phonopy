@@ -142,7 +142,7 @@ def directions_to_displacement_dataset(
         first_atoms.append(
             {
                 "number": int(disp[0]),
-                "displacement": [float(x) for x in disp_cartesian],
+                "displacement": np.array(disp_cartesian, dtype="double"),
             }
         )
     displacement_dataset: Type1DisplacementDataset = {

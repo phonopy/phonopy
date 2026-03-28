@@ -137,7 +137,9 @@ class GroupVelocity:
 
     def run(
         self,
-        q_points: Sequence[Sequence[float]] | NDArray[np.double],
+        q_points: Sequence[Sequence[float]]
+        | Sequence[NDArray[np.double]]
+        | NDArray[np.double],
         perturbation: Sequence[float] | NDArray[np.double] | None = None,
     ) -> None:
         """Group velocities are computed at q-points.

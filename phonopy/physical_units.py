@@ -58,9 +58,11 @@ class CalculatorPhysicalUnits:
     nac_factor: float
     distance_to_A: float
     force_to_eVperA: float
+    energy_to_eV: float
     force_constants_unit: str
     length_unit: str
     force_unit: str
+    energy_unit: str
 
     @classmethod
     def field_names(cls) -> tuple[str, ...]:
@@ -342,16 +344,25 @@ def get_calculator_physical_units(
     """
     physical_units = get_physical_units()
 
-    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps", "pwmat"):
+    if interface_mode is None or interface_mode in (
+        "vasp",
+        "aims",
+        "lammps",
+        "pwmat",
+        "crystal",
+        "castep",
+    ):
         VaspToTHz = physical_units.DefaultToTHz  # [THz] 15.633302
         units = CalculatorPhysicalUnits(
             factor=VaspToTHz,
             nac_factor=physical_units.Hartree * physical_units.Bohr,
             distance_to_A=1.0,
             force_to_eVperA=1.0,
+            energy_to_eV=1.0,
             force_constants_unit="eV/angstrom^2",
             length_unit="angstrom",
             force_unit="eV/angstrom",
+            energy_unit="eV",
         )
     elif interface_mode == "abinit":
         AbinitToTHz = (
@@ -365,11 +376,13 @@ def get_calculator_physical_units(
             nac_factor=physical_units.Hartree / physical_units.Bohr,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=1.0,
+            energy_to_eV=physical_units.Hartree,
             force_constants_unit="eV/angstrom.au",
             length_unit="au",
             force_unit="eV/angstrom",
+            energy_unit="hartree",
         )
-    elif interface_mode == "qe":
+    elif interface_mode in ("qe", "qlm"):
         PwscfToTHz = (
             sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
             / (physical_units.Bohr * 1e-10)
@@ -381,9 +394,11 @@ def get_calculator_physical_units(
             nac_factor=2.0,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=physical_units.Rydberg / physical_units.Bohr,
+            energy_to_eV=physical_units.Rydberg,
             force_constants_unit="Ry/au^2",
             length_unit="au",
             force_unit="Ry/au",
+            energy_unit="Ry",
         )
     elif interface_mode == "wien2k":
         Wien2kToTHz = (
@@ -397,11 +412,13 @@ def get_calculator_physical_units(
             nac_factor=2000.0,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=0.001 * physical_units.Rydberg / physical_units.Bohr,
+            energy_to_eV=physical_units.Rydberg,
             force_constants_unit="mRy/au^2",
             length_unit="au",
             force_unit="mRy/au",
+            energy_unit="Ry",
         )
-    elif interface_mode == "elk":
+    elif interface_mode in ("elk", "dftbp", "turbomole", "fleur"):
         ElkToTHz = (
             sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
             / (physical_units.Bohr * 1e-10)
@@ -410,12 +427,14 @@ def get_calculator_physical_units(
         )  # [THz] 154.10794
         units = CalculatorPhysicalUnits(
             factor=ElkToTHz,
-            nac_factor=1.0,
+            nac_factor=physical_units.Hartree * physical_units.Bohr,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            energy_to_eV=physical_units.Hartree,
             force_constants_unit="hartree/au^2",
             length_unit="au",
             force_unit="hartree/au",
+            energy_unit="hartree",
         )
     elif interface_mode in ["siesta", "abacus"]:
         SiestaToTHz = (
@@ -429,9 +448,11 @@ def get_calculator_physical_units(
             nac_factor=physical_units.Hartree / physical_units.Bohr,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=1.0,
+            energy_to_eV=1.0,
             force_constants_unit="eV/angstrom.au",
             length_unit="au",
             force_unit="eV/angstrom",
+            energy_unit="eV",
         )
     elif interface_mode == "cp2k":
         CP2KToTHz = (  # CP2K uses a.u. for forces but Angstrom for distances
@@ -449,95 +470,11 @@ def get_calculator_physical_units(
             nac_factor=physical_units.Bohr**2,
             distance_to_A=1.0,
             force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            energy_to_eV=physical_units.Hartree,
             force_constants_unit="hartree/angstrom.au",
             length_unit="angstrom",
             force_unit="hartree/au",
-        )
-    elif interface_mode == "crystal":
-        CrystalToTHz = physical_units.DefaultToTHz
-        units = CalculatorPhysicalUnits(
-            factor=CrystalToTHz,
-            nac_factor=physical_units.Hartree * physical_units.Bohr,
-            distance_to_A=1.0,
-            force_to_eVperA=1.0,
-            force_constants_unit="eV/angstrom^2",
-            length_unit="angstrom",
-            force_unit="eV/angstrom",
-        )
-    elif interface_mode == "dftbp":
-        DftbpToTHz = (
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 154.10794344
-        units = CalculatorPhysicalUnits(
-            factor=DftbpToTHz,
-            nac_factor=physical_units.Hartree * physical_units.Bohr,
-            distance_to_A=physical_units.Bohr,
-            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
-            force_constants_unit="hartree/au^2",
-            length_unit="au",
-            force_unit="hartree/au",
-        )
-    elif interface_mode == "turbomole":
-        TurbomoleToTHz = (  # Turbomole uses atomic units (Hartree/Bohr)
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 154.10794
-        units = CalculatorPhysicalUnits(
-            factor=TurbomoleToTHz,
-            nac_factor=1.0,
-            distance_to_A=physical_units.Bohr,
-            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
-            force_constants_unit="hartree/au^2",
-            length_unit="au",
-            force_unit="hartree/au",
-        )
-    elif interface_mode == "castep":
-        CastepToTHz = physical_units.DefaultToTHz
-        units = CalculatorPhysicalUnits(
-            factor=CastepToTHz,
-            nac_factor=physical_units.Hartree * physical_units.Bohr,
-            distance_to_A=1.0,
-            force_to_eVperA=1.0,
-            force_constants_unit="eV/angstrom^2",
-            length_unit="angstrom",
-            force_unit="eV/angstrom",
-        )
-    elif interface_mode == "fleur":
-        FleurToTHz = (  # Fleur uses atomic units (Hartree/Bohr)
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 154.10794
-        units = CalculatorPhysicalUnits(
-            factor=FleurToTHz,
-            nac_factor=1.0,
-            distance_to_A=physical_units.Bohr,
-            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
-            force_constants_unit="hartree/au^2",
-            length_unit="au",
-            force_unit="hartree/au",
-        )
-    elif interface_mode == "qlm":
-        QlmToTHz = (
-            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )  # [THz] 108.97077
-        units = CalculatorPhysicalUnits(
-            factor=QlmToTHz,
-            nac_factor=2.0,
-            distance_to_A=physical_units.Bohr,
-            force_to_eVperA=physical_units.Rydberg / physical_units.Bohr,
-            force_constants_unit="Ry/au^2",
-            length_unit="au",
-            force_unit="Ry/au",
+            energy_unit="hartree",
         )
     else:
         msg = f"Unknown calculator interface: {interface_mode}"
