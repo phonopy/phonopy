@@ -106,7 +106,7 @@ class Settings:
         self.primitive_matrix: (
             NDArray[np.double] | Literal["P", "F", "I", "A", "C", "R", "auto"] | None
         ) = None
-        self.qpoints: list | None = None
+        self.qpoints: NDArray[np.double] | None = None
         self.random_displacements: Literal["auto"] | int | None = None
         self.random_seed: int | None = None
         self.rd_number_estimation_factor: float | None = None
@@ -723,11 +723,13 @@ class ConfParser(Generic[TSettings]):
                 elif confs["qpoints"].lower() == ".false.":
                     self._set_parameter("read_qpoints", False)
                 else:
-                    vals = [fracval(x) for x in confs["qpoints"].split()]
+                    vals = np.array(
+                        [fracval(x) for x in confs["qpoints"].split()], dtype="double"
+                    )
                     if len(vals) == 0 or len(vals) % 3 != 0:
                         self.setting_error("Q-points are incorrectly set.")
                     else:
-                        self._set_parameter("qpoints", list(np.reshape(vals, (-1, 3))))
+                        self._set_parameter("qpoints", vals.reshape(-1, 3))
 
             # Number of supercells with random displacements
             if conf_key == "random_displacements":

@@ -995,7 +995,7 @@ def _run_qpoints(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> 
         q_points = parse_QPOINTS()
         if log_level:
             print("Frequencies at q-points given by QPOINTS:")
-    elif settings.qpoints:
+    elif settings.qpoints is not None:
         q_points = settings.qpoints
         if log_level:
             print("Q-points that will be calculated at:")
