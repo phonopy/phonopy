@@ -93,7 +93,7 @@ class SupercellWriterConfig:
 class StructureInfo:
     """Base class for interface-specific structure information."""
 
-    unitcell_filename: str | os.PathLike | None
+    unitcell_filename: str | os.PathLike
 
 
 @dataclass(frozen=True)
