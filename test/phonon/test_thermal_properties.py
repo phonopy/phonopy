@@ -1,6 +1,10 @@
 """Tests for thermal property calculation."""
 
+from __future__ import annotations
+
 import numpy as np
+
+from phonopy import Phonopy
 
 temps = [
     0.000000,
@@ -67,7 +71,7 @@ def test_thermal_properties_at_temperatues(ph_nacl):
     _test_thermal_properties(ph_nacl)
 
 
-def _test_thermal_properties(ph):
+def _test_thermal_properties(ph: Phonopy):
     tp = ph.thermal_properties
 
     # for vals in tp.thermal_properties:
@@ -75,7 +79,7 @@ def _test_thermal_properties(ph):
 
     for i in range(2):
         if i == 1:
-            tp.run(lang="py")
+            tp.run(lang="Python")
         for vals_ref, vals in zip(
             (temps, fes, entropies, cvs), tp.thermal_properties, strict=True
         ):

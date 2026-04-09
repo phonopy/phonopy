@@ -58,7 +58,7 @@ class ThermalPropertiesDict(TypedDict):
 
 
 def mode_cv(
-    temp: float,
+    temps: float | NDArray[np.double],
     freqs: float | NDArray[np.double],
     classical: bool = False,
 ) -> float | NDArray[np.double]:  # freqs (eV)
@@ -83,7 +83,7 @@ def mode_cv(
     if classical:
         return np.array(len(freqs) * [get_physical_units().KB])  # type: ignore[arg-type]
     else:
-        x = freqs / get_physical_units().KB / temp
+        x = np.divide.outer(freqs, get_physical_units().KB * temps).T
         expVal = np.exp(x)
         return get_physical_units().KB * x**2 * expVal / (expVal - 1.0) ** 2
 
