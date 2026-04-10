@@ -1,39 +1,5 @@
 """Create atomic displacements."""
 
-# Copyright (C) 2011 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
 from __future__ import annotations
 
 import os
@@ -43,13 +9,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.interface.calculator import (
     StructureInfo,
     get_default_cell_filename,
     write_crystal_structure,
 )
-from phonopy.phonon.degeneracy import get_eigenvectors
+from phonopy.phonon.degeneracy import lift_degeneracy
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
@@ -329,3 +295,51 @@ class Modulation:
         w.write("  positions:\n")
         for p in positions:
             w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
+
+
+def get_eigenvectors(
+    q: NDArray[np.double],
+    dm: DynamicalMatrix,
+    ddm: DerivativeOfDynamicalMatrix,
+    perturbation: Sequence[float] | NDArray[np.double] | None = None,
+    derivative_order: int | None = None,
+    nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
+    """Return degenerated eigenvalues and rotated eigenvalues."""
+    if isinstance(dm, DynamicalMatrixNAC):
+        dm.run(q, q_direction=nac_q_direction)
+    else:
+        dm.run(q)
+
+    assert dm.dynamical_matrix is not None
+    eigvals, eigvecs = np.linalg.eigh(dm.dynamical_matrix)
+    eigvals = eigvals.real  # type: ignore
+    if perturbation is None:
+        return eigvals, eigvecs
+
+    if derivative_order is not None:
+        ddm.set_derivative_order(derivative_order)
+    ddm.run(q)
+    ddm_vals = ddm.d_dynamical_matrix
+    assert ddm_vals is not None
+    d = np.asarray(perturbation, dtype="double")
+    norm = np.linalg.norm(d)
+    if len(ddm_vals) == 3:
+        dD = (d[0] * ddm_vals[0] + d[1] * ddm_vals[1] + d[2] * ddm_vals[2]) / norm
+    elif len(ddm_vals) == 6:
+        dD = (
+            d[0] * d[0] * ddm_vals[0]
+            + d[1] * d[1] * ddm_vals[1]
+            + d[2] * d[2] * ddm_vals[2]
+            + 2 * d[1] * d[2] * ddm_vals[3]
+            + 2 * d[0] * d[2] * ddm_vals[4]
+            + 2 * d[0] * d[1] * ddm_vals[5]
+        ) / norm**2
+    else:
+        raise ValueError(
+            "Derivative tensor of the dynamical matrix must have leading "
+            f"dimension 3 or 6, got {len(ddm_vals)}."
+        )
+    _, rot_eigvecs = lift_degeneracy(eigvals, eigvecs, dD)
+
+    return eigvals, rot_eigvecs
