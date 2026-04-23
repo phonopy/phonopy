@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Apr-23-2026: Version 3.5.1
+
+- Release to follow the change of symfc.
+
 ## Apr-9-2026: Version 3.5.0
 
 - Maintenance release.
