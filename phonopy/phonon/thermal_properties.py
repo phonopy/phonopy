@@ -81,9 +81,18 @@ def mode_cv(
 
     """
     if classical:
-        return np.array(len(freqs) * [get_physical_units().KB])  # type: ignore[arg-type]
+        if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
+            return (
+                np.ones(shape=np.atleast_1d(freqs).shape + np.atleast_1d(temps).shape)
+                * get_physical_units().KB
+            )
+        else:
+            return get_physical_units().KB
     else:
-        x = np.divide.outer(freqs, get_physical_units().KB * temps).T
+        if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
+            x = np.divide.outer(freqs, get_physical_units().KB * temps).T
+        else:
+            x = freqs / (get_physical_units().KB * temps)
         expVal = np.exp(x)
         return get_physical_units().KB * x**2 * expVal / (expVal - 1.0) ** 2
 

@@ -3402,6 +3402,13 @@ class Phonopy:
         if self._dynamical_matrix is None:
             raise RuntimeError("Dynamical matrix has not yet built.")
 
+        self._group_velocity = GroupVelocity(
+            self._dynamical_matrix,
+            q_length=self._gv_delta_q,
+            symmetry=self._primitive_symmetry,
+            frequency_factor_to_THz=self._unit_conversion_factor,
+        )
+
         if (
             isinstance(self._dynamical_matrix, DynamicalMatrixGL)
             and self._gv_delta_q is None
@@ -3412,19 +3419,12 @@ class Phonopy:
                     "Analytical derivative of dynamical matrix is not "
                     "implemented for NAC by Gonze et al. Instead "
                     "numerical derivative of it is used with dq=%.1e "
-                    "for group velocity calculation." % GroupVelocity.Default_q_length
+                    "for group velocity calculation." % self._group_velocity.q_length
                 )
                 msg += textwrap.fill(
                     text, initial_indent="  ", subsequent_indent="  ", width=70
                 )
                 print(msg)
-
-        self._group_velocity = GroupVelocity(
-            self._dynamical_matrix,
-            q_length=self._gv_delta_q,
-            symmetry=self._primitive_symmetry,
-            frequency_factor_to_THz=self._unit_conversion_factor,
-        )
 
     def _search_symmetry(self) -> None:
         self._symmetry = Symmetry(

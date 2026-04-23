@@ -152,12 +152,11 @@ def extract_ir_grid_points(
     grid_mapping_table: NDArray[np.int64],
 ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Return ir-grid points and weights in grid index mapping table."""
-    dtype = grid_mapping_table.dtype
-    ir_grid_points = np.array(np.unique(grid_mapping_table), dtype=dtype)
+    ir_grid_points = np.array(np.unique(grid_mapping_table), dtype="int64")
     weights = np.zeros_like(grid_mapping_table)
     for gp in grid_mapping_table:
         weights[gp] += 1
-    ir_weights = np.array(weights[ir_grid_points], dtype=dtype)
+    ir_weights = np.array(weights[ir_grid_points], dtype="int64")
 
     return ir_grid_points, ir_weights
 

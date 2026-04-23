@@ -36,16 +36,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
+
+DEFAULT_Q_LENGTH = 1e-5
+DEFAULT_CUTOFF = 1e-4
 
 
-def degenerate_sets(freqs: NDArray[np.double], cutoff: float = 1e-4) -> list[list[int]]:
+def degenerate_sets(
+    freqs: NDArray[np.double], cutoff: float = DEFAULT_CUTOFF
+) -> list[list[int]]:
     """Find degenerate bands from frequencies.
 
     Parameters
@@ -87,87 +89,70 @@ def degenerate_sets(freqs: NDArray[np.double], cutoff: float = 1e-4) -> list[lis
     return indices
 
 
-def get_eigenvectors(
-    q: NDArray[np.double],
-    dm: DynamicalMatrix,
-    ddm: DerivativeOfDynamicalMatrix,
-    perturbation: Sequence[float] | NDArray[np.double] | None = None,
-    derivative_order: int | None = None,
-    nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
-) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
-    """Return degenerated eigenvalues and rotated eigenvalues."""
-    if isinstance(dm, DynamicalMatrixNAC):
-        dm.run(q, q_direction=nac_q_direction)
-    else:
-        dm.run(q)
-
-    assert dm.dynamical_matrix is not None
-    eigvals, eigvecs = np.linalg.eigh(dm.dynamical_matrix)
-    eigvals = eigvals.real  # type: ignore
-    if perturbation is None:
-        return eigvals, eigvecs
-
-    if derivative_order is not None:
-        ddm.set_derivative_order(derivative_order)
-    dD = _get_dD(q, ddm, perturbation)
-    rot_eigvecs, _ = rotate_eigenvectors(eigvals, eigvecs, dD)
-
-    return eigvals, rot_eigvecs
-
-
-def rotate_eigenvectors(
-    eigvals: NDArray[np.double],
+def lift_degeneracy(
+    freqs: NDArray[np.double],
     eigvecs: NDArray[np.cdouble],
-    dD: NDArray[np.cdouble],
-) -> tuple[NDArray[np.cdouble], NDArray[np.double]]:
-    """Rotate eigenvectors among degenerated band.
+    dDdq: NDArray[np.cdouble],
+) -> tuple[NDArray[np.double], NDArray[np.cdouble]]:
+    """Lift degeneracy by diagonalizing a perturbation within degenerate subspaces.
+
+    For each degenerate subspace of ``eigvals``, the ``dDdq`` operator
+    is projected onto that subspace and diagonalized. The returned
+    eigenvectors remain eigenvectors of the original operator (with the same
+    ``eigvals``), but are additionally the "good" zeroth-order basis of
+    degenerate perturbation theory for ``dDdq``. Non-degenerate
+    eigenvectors are returned unchanged.
+
+    A typical use is to pick a unique basis among degenerate phonon bands by
+    taking ``dDdq`` as the q-derivative of the dynamical matrix along
+    some chosen direction. The resulting eigenvectors then vary analytically
+    along that direction in the limit of small perturbation.
 
     Parameters
     ----------
-    eigvals :
-        Eigenvalues.
-        shape=(num_band, )
+    freqs :
+        Eigenvalues of the unperturbed operator (e.g. dynamical matrix).
+        shape=(num_band,)
     eigvecs :
-        Eigenvectors.
-        shape=(num_atom * 3, num_band)
-    dD :
-        q-point derivative of dynamical matrix.
-
-    """
-    rot_eigvecs = np.zeros_like(eigvecs)
-    eigvals_dD = np.zeros_like(eigvals)
-    for deg in degenerate_sets(eigvals):
-        dD_part = np.dot(eigvecs[:, deg].T.conj(), np.dot(dD, eigvecs[:, deg]))
-        eigvals_dD[deg], eigvecs_dD = np.linalg.eigh(dD_part)
-        rot_eigvecs[:, deg] = np.dot(eigvecs[:, deg], eigvecs_dD)
-    return rot_eigvecs, eigvals_dD
-
-
-def _get_dD(
-    q: NDArray[np.double],
-    ddm: DerivativeOfDynamicalMatrix,
-    perturbation: Sequence[float] | NDArray[np.double],
-) -> NDArray[np.cdouble]:
-    """Return q-vector derivative of dynamical matrix.
+        Eigenvectors of the unperturbed operator, column-wise.
+        shape=(num_band, num_band)
+    dDdq :
+        Perturbation operator in the same basis as ``eigvecs``. For phonon
+        group velocities or Grueneisen parameters, this is the q-derivative
+        of the dynamical matrix along a chosen direction.
+        shape=(num_band, num_band)
 
     Returns
     -------
-    shape=(3, num_band, num_band).
+    eigvals_pert :
+        Eigenvalues of ``dDdq`` projected onto each degenerate
+        subspace of ``freqs``. For non-degenerate bands, this is simply
+        ``<e|dDdq|e>``.
+        shape=(num_band,)
+    rot_eigvecs :
+        Rotated eigenvectors that diagonalize ``dDdq`` within each
+        degenerate subspace of ``freqs``.
+        shape=(num_band, num_band)
 
     """
-    ddm.run(q)
-    ddm_vals = ddm.d_dynamical_matrix
-    assert ddm_vals is not None
-    dD = np.zeros(ddm_vals.shape[1:], dtype=ddm_vals.dtype, order="C")
-    if len(ddm_vals) == 3:
-        for i in range(3):
-            dD += perturbation[i] * ddm_vals[i]  # type: ignore
-        return dD / np.linalg.norm(perturbation)
-    else:
-        dD += perturbation[0] * perturbation[0] * ddm_vals[0]  # type: ignore
-        dD += perturbation[1] * perturbation[1] * ddm_vals[1]  # type: ignore
-        dD += perturbation[2] * perturbation[2] * ddm_vals[2]  # type: ignore
-        dD += 2 * perturbation[0] * perturbation[1] * ddm_vals[5]  # type: ignore
-        dD += 2 * perturbation[0] * perturbation[2] * ddm_vals[4]  # type: ignore
-        dD += 2 * perturbation[1] * perturbation[2] * ddm_vals[3]  # type: ignore
-        return dD / np.linalg.norm(perturbation) ** 2
+    rot_eigvecs = np.zeros_like(eigvecs)
+    eigvals_pert = np.zeros_like(freqs)
+    for deg in degenerate_sets(freqs):
+        block = eigvecs[:, deg].T.conj() @ dDdq @ eigvecs[:, deg]
+        eigvals_pert[deg], u = np.linalg.eigh(block)
+        rot_eigvecs[:, deg] = eigvecs[:, deg] @ u
+    return eigvals_pert, rot_eigvecs
+
+
+def delta_dynamical_matrix(
+    q: NDArray[np.double],
+    delta_q: NDArray[np.double],
+    dynmat: DynamicalMatrix,
+) -> NDArray[np.cdouble]:
+    """Compute the difference of dynamical matrices at q+delta_q and q-delta_q."""
+    dynmat.run(q - delta_q)
+    dm1 = dynmat.dynamical_matrix
+    dynmat.run(q + delta_q)
+    dm2 = dynmat.dynamical_matrix
+    assert dm1 is not None and dm2 is not None
+    return dm2 - dm1
