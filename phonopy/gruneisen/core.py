@@ -43,7 +43,7 @@ from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.band_structure import estimate_band_connection
-from phonopy.phonon.degeneracy import rotate_eigenvectors
+from phonopy.phonon.degeneracy import lift_degeneracy
 
 
 class GruneisenBase:
@@ -120,7 +120,7 @@ class GruneisenBase:
             evals, evecs = np.linalg.eigh(dm)
             evals_at_q = np.array(evals, dtype="double")
             dD = self._get_dD(q, self._dynmat_minus, self._dynmat_plus)
-            evecs_at_q, edDe_at_q = rotate_eigenvectors(evals_at_q, evecs, dD)
+            edDe_at_q, evecs_at_q = lift_degeneracy(evals_at_q, evecs, dD)
 
             if self._is_band_connection:
                 if prev_eigvecs is not None:

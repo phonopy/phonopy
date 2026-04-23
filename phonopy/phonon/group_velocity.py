@@ -42,12 +42,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import (
-    DynamicalMatrix,
-    DynamicalMatrixGL,
-    DynamicalMatrixNAC,
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixGL
+from phonopy.phonon.degeneracy import (
+    DEFAULT_Q_LENGTH,
+    degenerate_sets,
+    delta_dynamical_matrix,
 )
-from phonopy.phonon.degeneracy import degenerate_sets
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -76,8 +76,6 @@ class GroupVelocity:
         dynamcial matrix.
 
     """
-
-    Default_q_length = 1e-5
 
     def __init__(
         self,
@@ -113,7 +111,7 @@ class GroupVelocity:
         self._q_length = q_length
         if isinstance(self._dynmat, DynamicalMatrixGL):
             if self._q_length is None:
-                self._q_length = self.Default_q_length
+                self._q_length = DEFAULT_Q_LENGTH
 
         self._ddm: DerivativeOfDynamicalMatrix | None
         if self._q_length is None:
@@ -229,39 +227,47 @@ class GroupVelocity:
 
         return gv_sym / len(rotations)
 
-    def _get_dD(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
+    def _get_dD(self, q: NDArray[np.double]) -> list[NDArray[np.cdouble]]:
         """Compute derivative or finite difference of dynamcial matrices."""
         if self._q_length is None:
             return self._get_dD_analytical(q)
         else:
-            return self._get_dD_FD(q)
+            return [self._get_dD_FD(q, direction) for direction in self._directions]
 
-    def _get_dD_FD(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
-        """Compute finite difference of dynamcial matrices."""
-        ddm = []
-        assert self._q_length is not None
-        for dqc in self._directions * self._q_length:
-            dq = np.dot(self._reciprocal_lattice_inv, dqc)
-            ddm.append(
-                _delta_dynamical_matrix(q, dq, self._dynmat) / self._q_length / 2
-            )
-        return np.array(ddm, dtype="cdouble", order="C")
-
-    def _get_dD_analytical(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
+    def _get_dD_analytical(self, q: NDArray[np.double]) -> list[NDArray[np.cdouble]]:
         """Compute derivative of dynamcial matrices."""
         assert self._ddm is not None
         self._ddm.run(q)
         ddm = self._ddm.d_dynamical_matrix
         assert ddm is not None
-        dtype = "c%d" % (np.dtype("double").itemsize * 2)
-        ddm_dirs = np.zeros((len(self._directions),) + ddm.shape[1:], dtype=dtype)
-        for i, dq in enumerate(self._directions):
+        ddm_dirs = []
+        for dq in self._directions:
+            ddm_dir = np.zeros(ddm.shape[1:], dtype="cdouble", order="C")
             for j in range(3):
-                ddm_dirs[i] += dq[j] * ddm[j]
+                ddm_dir += dq[j] * ddm[j]
+            ddm_dirs.append(ddm_dir)
         return ddm_dirs
 
+    def _get_dD_FD(
+        self,
+        q: NDArray[np.double],
+        direction: NDArray[np.double],
+    ) -> NDArray[np.cdouble]:
+        """Compute finite difference of dynamcial matrices.
+
+        dq :
+            q-shift in reduced coordinates in reciprocal space.
+            dq = L*^-1 dq_cart
+
+        """
+        assert self._q_length is not None
+        dq_cart = direction / np.linalg.norm(direction) * self._q_length
+        dq = self._dynmat.primitive.cell @ dq_cart
+        ddm = delta_dynamical_matrix(q, dq, self._dynmat) / self._q_length / 2
+        return ddm
+
     def _perturb_D(
-        self, ddms: NDArray[np.cdouble], eigsets: NDArray[np.cdouble]
+        self, ddms: list[NDArray[np.cdouble]], eigsets: NDArray[np.cdouble]
     ) -> NDArray[np.double]:
         """Treat degeneracy.
 
@@ -275,26 +281,11 @@ class GroupVelocity:
             List of phonon eigenvectors of degenerate bands.
 
         """
-        _, eigvecs = np.linalg.eigh(np.dot(eigsets.T.conj(), np.dot(ddms[0], eigsets)))
+        _, eigvecs = np.linalg.eigh(eigsets.T.conj() @ ddms[0] @ eigsets)
 
         gv = []
         rot_eigsets = np.dot(eigsets, eigvecs)
         for ddm in ddms[1:]:
-            gv.append(
-                np.diag(np.dot(rot_eigsets.T.conj(), np.dot(ddm, rot_eigsets))).real  # type: ignore
-            )
+            gv.append(np.diag(rot_eigsets.T.conj() @ ddm @ rot_eigsets).real)  # type: ignore
 
         return np.transpose(gv)
-
-
-def _delta_dynamical_matrix(
-    q: NDArray[np.double],
-    delta_q: NDArray[np.double],
-    dynmat: DynamicalMatrix | DynamicalMatrixNAC,
-) -> NDArray[np.cdouble]:
-    dynmat.run(q - delta_q)
-    dm1 = dynmat.dynamical_matrix
-    dynmat.run(q + delta_q)
-    dm2 = dynmat.dynamical_matrix
-    assert dm1 is not None and dm2 is not None
-    return dm2 - dm1
