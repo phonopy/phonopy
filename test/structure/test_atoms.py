@@ -125,8 +125,6 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     symbols[-1] = "Cl1"
     masses = ph_nacl.unitcell.masses
     masses[-1] = 70.0
-    numbers = ph_nacl.unitcell.numbers
-    numbers[-1] = numbers[-1] + PhonopyAtoms._MOD_DIVISOR
 
     cell = PhonopyAtoms(
         cell=ph_nacl.unitcell.cell,
@@ -135,7 +133,9 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     )
     assert symbols == cell.symbols
     np.testing.assert_allclose(cell.masses, ph_nacl.unitcell.masses)
-    np.testing.assert_equal(cell.numbers_with_shifts, numbers)
+    # "Cl" and "Cl1" must get distinct species ids even though their atomic
+    # number is the same.
+    assert len(set(cell.species_ids.tolist())) == len(set(symbols))
     np.testing.assert_equal(cell.numbers, ph_nacl.unitcell.numbers)
 
     cell = PhonopyAtoms(
@@ -147,31 +147,31 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     assert symbols == cell.symbols
     np.testing.assert_allclose(cell.masses, masses)
 
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(ValueError) as e:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
-            numbers=numbers,
+            numbers=[200] * len(symbols),
         )
-    assert str(e.value) == "Atomic numbers cannot be larger than 118."
+    assert str(e.value) == "Atomic numbers must be in 1..118."
 
     symbols[-1] = "Cl_1"
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(RuntimeError) as e2:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
             symbols=symbols,
         )
-    assert str(e.value) == "Invalid symbol: Cl_1."
+    assert str(e2.value) == "Invalid symbol: Cl_1."
 
     symbols[-1] = "Cl_0"
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(RuntimeError) as e2:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
             symbols=symbols,
         )
-    assert str(e.value) == "Invalid symbol: Cl_0."
+    assert str(e2.value) == "Invalid symbol: Cl_0."
 
 
 def _test_phonopy_atoms(cell: PhonopyAtoms):
