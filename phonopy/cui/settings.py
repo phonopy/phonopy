@@ -97,6 +97,7 @@ class Settings:
         self.is_trigonal_displacement: bool = False
         self.magnetic_moments: list[float] | None = None
         self.masses: list[float] | None = None
+        self.vca_weights: list[float] | None = None
         self.mesh_numbers: float | list[int] | list[list[int]] | None = None
         self.mlp_params: str | None = None
         self.nac_method: str | None = None
@@ -337,6 +338,13 @@ class ConfParser(Generic[TSettings]):
                     self._confs["magmom"] = " ".join(args.magmoms)
                 else:
                     self._confs["magmom"] = args.magmoms
+
+        if "vca_weights" in arg_list:
+            if args.vca_weights is not None:
+                if isinstance(args.vca_weights, list):
+                    self._confs["vca"] = " ".join(args.vca_weights)
+                else:
+                    self._confs["vca"] = args.vca_weights
 
         if "mesh_numbers" in arg_list:
             mesh = args.mesh_numbers
@@ -636,6 +644,17 @@ class ConfParser(Generic[TSettings]):
                 self._set_parameter(
                     "magmom", [float(x) for x in confs["magmom"].split()]
                 )
+
+            if conf_key == "vca":
+                vca_str = confs["vca"]
+                if isinstance(vca_str, str):
+                    tokens = vca_str.split()
+                else:
+                    tokens = list(vca_str)
+                try:
+                    self._set_parameter("vca", [float(x) for x in tokens])
+                except ValueError:
+                    self.setting_error("VCA tag is incorrectly set.")
 
             if conf_key == "mass":
                 self._set_parameter("mass", [float(x) for x in confs["mass"].split()])
@@ -956,6 +975,10 @@ class ConfParser(Generic[TSettings]):
         # Magnetic moments
         if "magmom" in params:
             settings.magnetic_moments = params["magmom"]
+
+        # VCA weights
+        if "vca" in params:
+            settings.vca_weights = params["vca"]
 
         # Atomic mass
         if "mass" in params:

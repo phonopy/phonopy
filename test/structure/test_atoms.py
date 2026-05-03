@@ -411,6 +411,37 @@ def test_build_species_table_from_mixtures_weight_sum_error():
         build_species_table_from_mixtures([[("Ge", 0.3), ("Sn", 0.6)]])
 
 
+def test_build_species_table_from_mixtures_sort_constituents_default():
+    """By default, constituents are sorted so input order does not matter."""
+    species_a, ids_a = build_species_table_from_mixtures([[("Ge", 0.5), ("Sn", 0.5)]])
+    species_b, ids_b = build_species_table_from_mixtures([[("Sn", 0.5), ("Ge", 0.5)]])
+    assert species_a == species_b
+    np.testing.assert_array_equal(ids_a, ids_b)
+    assert species_a[0].symbol == "GeSn"
+    assert species_a[0].mixture == (("Ge", 0.5), ("Sn", 0.5))
+
+
+def test_build_species_table_from_mixtures_sort_constituents_off():
+    """Passing sort_constituents=False preserves caller order."""
+    species, _ = build_species_table_from_mixtures(
+        [[("Sn", 0.5), ("Ge", 0.5)]], sort_constituents=False
+    )
+    assert species[0].symbol == "SnGe"
+    assert species[0].mixture == (("Sn", 0.5), ("Ge", 0.5))
+
+
+def test_build_species_table_from_mixtures_distinct_weights_get_suffixes():
+    """Same constituents, different weights produce distinct suffixed labels."""
+    species, ids = build_species_table_from_mixtures(
+        [
+            [("Ge", 0.5), ("Sn", 0.5)],
+            [("Ge", 0.25), ("Sn", 0.75)],
+        ]
+    )
+    assert [sp.symbol for sp in species] == ["GeSn1", "GeSn2"]
+    np.testing.assert_array_equal(ids, [0, 1])
+
+
 def test_PhonopyAtoms_input_mutual_exclusion():
     """Reject simultaneous symbols / numbers / species_table."""
     species, ids = build_species_table_from_mixtures([[("Si", 1.0)]])

@@ -50,7 +50,7 @@ except AttributeError:
 from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
 from phonopy.structure.snf import SNF3x3
 
 
@@ -219,8 +219,8 @@ class Supercell(PhonopyAtoms):
             raise RuntimeError(msg)
         else:
             super().__init__(
-                species_table=supercell._species,
-                species_ids=supercell._species_ids,
+                species_table=supercell.species_table,
+                species_ids=supercell.species_ids,
                 masses=supercell.masses,
                 magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
@@ -285,7 +285,7 @@ class Supercell(PhonopyAtoms):
             magmoms_multi = [v for v in magmoms for _ in range(n_l)]
 
         simple_supercell = PhonopyAtoms(
-            species_table=unitcell._species,
+            species_table=unitcell.species_table,
             species_ids=species_ids_multi,
             masses=masses_multi,
             magnetic_moments=magmoms_multi,
@@ -518,8 +518,8 @@ class Primitive(PhonopyAtoms):
                 msg.append(f"  {i + 1}: {s1} -> {s2}")
             raise RuntimeError("\n".join(msg))
         super().__init__(
-            species_table=trimmed_cell._species,
-            species_ids=trimmed_cell._species_ids,
+            species_table=trimmed_cell.species_table,
+            species_ids=trimmed_cell.species_ids,
             masses=trimmed_cell.masses,
             magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
@@ -718,8 +718,8 @@ class TrimmedCell(PhonopyAtoms):
         scale = 1.0 / np.linalg.det(relative_axes)
         if len(cell) == int(np.rint(scale * len(extracted_atoms))):
             super().__init__(
-                species_table=cell._species,
-                species_ids=cell._species_ids[extracted_atoms],
+                species_table=cell.species_table,
+                species_ids=cell.species_ids[extracted_atoms],
                 masses=trimmed_masses,
                 magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
@@ -847,6 +847,111 @@ def get_primitive(
     )
 
 
+def apply_vca(
+    cell: PhonopyAtoms,
+    weights: Sequence[float],
+    symprec: float = 1e-5,
+    sort_constituents: bool = True,
+) -> PhonopyAtoms:
+    """Merge overlapping atoms into mixed-species sites for VCA.
+
+    Atoms whose fractional positions agree (modulo lattice translations)
+    within ``symprec`` are collapsed into a single site whose species is the
+    weighted mixture of the constituents (Virtual Crystal Approximation).
+    Each non-overlapping atom is preserved verbatim and its weight must
+    equal 1.0.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Input unit cell. Must not already contain mixed-species sites.
+    weights : sequence of float
+        Per-atom VCA weights in the input order, matching the VASP
+        ``INCAR`` ``VCA`` tag convention. Length must equal ``len(cell)``.
+        Within each overlapping atom group the weights must sum to 1.0;
+        for an isolated atom the weight must be exactly 1.0.
+    symprec : float
+        Tolerance for treating two fractional positions as overlapping.
+    sort_constituents : bool, optional
+        Forwarded to ``build_species_table_from_mixtures``. When True
+        (default), constituents of every merged site are sorted
+        alphabetically by symbol so that two sites differing only in input
+        order share one species. Pass False to keep the input order.
+
+    Returns
+    -------
+    PhonopyAtoms
+        Cell with one atom per merged group. Mixed sites carry composite
+        symbols (e.g. ``"GeSn"``); when several distinct mixtures share the
+        same composite within the cell, all of them get 1-based suffixes
+        (``"GeSn1"``, ``"GeSn2"``, ...).
+
+    """
+    if cell.has_mixtures:
+        raise ValueError(
+            "apply_vca cannot be applied to a cell that already contains "
+            "mixed-species sites."
+        )
+    if cell.magnetic_moments is not None:
+        raise ValueError("apply_vca does not support cells carrying magnetic moments.")
+    if len(weights) != len(cell):
+        raise ValueError(
+            f"Length of weights ({len(weights)}) must match number of atoms "
+            f"({len(cell)})."
+        )
+
+    weights_arr = np.asarray(weights, dtype="double")
+    scaled = cell.scaled_positions
+    symbols = cell.symbols
+    natom = len(cell)
+
+    visited = [False] * natom
+    groups: list[list[int]] = []
+    for i in range(natom):
+        if visited[i]:
+            continue
+        group = [i]
+        visited[i] = True
+        for j in range(i + 1, natom):
+            if visited[j]:
+                continue
+            diff = scaled[j] - scaled[i]
+            diff -= np.rint(diff)
+            if np.all(np.abs(diff) < symprec):
+                group.append(j)
+                visited[j] = True
+        groups.append(group)
+
+    mixtures: list[list[tuple[str, float]]] = []
+    new_scaled: list[NDArray[np.double]] = []
+    for group in groups:
+        wsum = float(weights_arr[group].sum())
+        if len(group) == 1:
+            if not np.isclose(weights_arr[group[0]], 1.0):
+                raise ValueError(
+                    f"Weight of non-overlapping atom at index {group[0]} "
+                    f"must be 1.0, got {weights_arr[group[0]]}."
+                )
+        elif not np.isclose(wsum, 1.0):
+            raise ValueError(
+                f"Weights of overlapping atoms at indices {group} must "
+                f"sum to 1.0, got {wsum}."
+            )
+        mixtures.append([(symbols[i], float(weights_arr[i])) for i in group])
+        new_scaled.append(scaled[group[0]])
+
+    species_table, species_ids = build_species_table_from_mixtures(
+        mixtures, sort_constituents=sort_constituents
+    )
+
+    return PhonopyAtoms(
+        cell=cell.cell,
+        scaled_positions=np.array(new_scaled, dtype="double"),
+        species_table=species_table,
+        species_ids=species_ids,
+    )
+
+
 def print_cell(
     cell: PhonopyAtoms,
     mapping: NDArray[np.int64] | None = None,
@@ -952,7 +1057,8 @@ def isclose(
             indices.append(matches[0])
         if (np.sort(indices) != np.arange(len(indices))).all():
             return False
-        if (a.numbers[indices] != b.numbers).all():
+        a_symbols = a.symbols
+        if [a_symbols[i] for i in indices] != b.symbols:
             return False
         if not _magnetic_moments_all_close(
             a.magnetic_moments,
@@ -966,7 +1072,7 @@ def isclose(
             return indices
         return True
     else:
-        if (a.numbers != b.numbers).any():
+        if a.symbols != b.symbols:
             return False
         if not _magnetic_moments_all_close(
             a.magnetic_moments, b.magnetic_moments, rtol=rtol, atol=atol
