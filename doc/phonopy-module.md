@@ -663,16 +663,16 @@ in input order ("GeSn"); two distinct mixtures that would share the same
 composite label still get distinct ids because the underlying
 `(symbol, weight)` tuples differ.
 
-#### `apply_vca` utility
+#### `apply_site_mixture` utility
 
-`phonopy.structure.cells.apply_vca` collapses overlapping atoms in an
-ordinary cell into mixed-species sites, mimicking the convention used by
-VASP's INCAR `VCA` tag (per-atom weights in input order).
+`phonopy.structure.cells.apply_site_mixture` collapses overlapping atoms in
+an ordinary cell into mixed-species sites. The Virtual Crystal
+Approximation (VCA) is the typical use case.
 
 ```python
-from phonopy.structure.cells import apply_vca
+from phonopy.structure.cells import apply_site_mixture
 
-vca_cell = apply_vca(cell, weights=[0.5, 0.5, 0.5, 0.5])
+mixed_cell = apply_site_mixture(cell, weights=[0.5, 0.5, 0.5, 0.5])
 ```
 
 `weights` must have one entry per atom in the input order. Atoms whose
@@ -683,19 +683,30 @@ cell would collide on the same composite label, all colliding sites get
 1-based suffixes (`"GeSn1"`, `"GeSn2"`, ...). The returned cell can be
 fed to `Phonopy(...)` as a unit cell.
 
-#### CLI: `--vca`
+The per-atom convention here is distinct from VASP's INCAR `VCA` tag, which
+lists one weight per element row in POSCAR; see the CLI section below for
+how `phonopy` generates a VASP-compatible POSCAR/INCAR pair.
+
+#### CLI: `--site-mixture`
 
 The same merge can be requested at the command line:
 
 ```bash
-phonopy --dim "2 2 2" --vca "0.5 0.5 0.5 0.5" -d
+phonopy --dim "2 2 2" --site-mixture "0.5 0.5 0.5 0.5" -d
 ```
 
-`--vca` takes a space-separated list of per-atom weights in the input
-order, with the same validation rules as `apply_vca`. The merge is applied
-immediately after the unit cell is read, so the rest of the workflow
-(displacement generation, supercell construction, force-constant building)
-sees only the merged cell.
+`--site-mixture` takes a space-separated list of per-atom weights in the
+input order, with the same validation rules as `apply_site_mixture`. The
+merge is applied immediately after the unit cell is read, so the rest of
+the workflow (displacement generation, supercell construction,
+force-constant building) sees only the merged cell.
+
+When the calculator is VASP, the supercell and displaced supercells are
+written with each mixed-species site expanded into one POSCAR row per
+constituent at the same fractional coordinates, and a hint is printed
+showing the matching POTCAR concatenation order and the INCAR `VCA = ...`
+line. For example, a 50/50 GeSn cell with `--dim "2 2 2"` produces
+`SPOSCAR` with `Ge Sn / 16 16` and prints `INCAR: VCA = 0.5 0.5`.
 
 ## Definitions of variables
 

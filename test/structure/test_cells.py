@@ -13,7 +13,7 @@ from phonopy.structure.cells import (
     Primitive,
     ShortestPairs,
     TrimmedCell,
-    apply_vca,
+    apply_site_mixture,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
     convert_to_phonopy_primitive,
@@ -549,7 +549,7 @@ def test_get_primitive_with_Xn_symbol(ph_nacl: Phonopy):
     assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
 
 
-def test_apply_vca_GeSn():
+def test_apply_site_mixture_GeSn():
     """Two overlapping Ge/Sn pairs collapse into two GeSn mixture sites."""
     a = 2.82173
     cell = PhonopyAtoms(
@@ -562,20 +562,20 @@ def test_apply_vca_GeSn():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    vca_cell = apply_vca(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
 
-    assert len(vca_cell) == 2
-    assert vca_cell.has_mixtures
-    assert vca_cell.symbols == ["GeSn", "GeSn"]
+    assert len(mixed_cell) == 2
+    assert mixed_cell.has_mixtures
+    assert mixed_cell.symbols == ["GeSn", "GeSn"]
     np.testing.assert_allclose(
-        vca_cell.scaled_positions, [[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]
+        mixed_cell.scaled_positions, [[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]
     )
-    np.testing.assert_allclose(vca_cell.species_ids, [0, 0])
+    np.testing.assert_allclose(mixed_cell.species_ids, [0, 0])
     expected_mass = 0.5 * 72.64 + 0.5 * 118.71
-    np.testing.assert_allclose(vca_cell.masses, [expected_mass, expected_mass])
+    np.testing.assert_allclose(mixed_cell.masses, [expected_mass, expected_mass])
 
 
-def test_apply_vca_distinct_mixtures_get_suffixes():
+def test_apply_site_mixture_distinct_mixtures_get_suffixes():
     """When two distinct mixtures share a composite label, suffixes are added."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -588,13 +588,13 @@ def test_apply_vca_distinct_mixtures_get_suffixes():
         ],
         symbols=["Ge", "Sn", "Ge", "Sn"],
     )
-    vca_cell = apply_vca(cell, [0.5, 0.5, 0.25, 0.75])
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.25, 0.75])
 
-    assert vca_cell.has_mixtures
-    assert vca_cell.symbols == ["GeSn1", "GeSn2"]
+    assert mixed_cell.has_mixtures
+    assert mixed_cell.symbols == ["GeSn1", "GeSn2"]
 
 
-def test_apply_vca_unique_composite_no_suffix():
+def test_apply_site_mixture_unique_composite_no_suffix():
     """A single GeSn mixture in the cell stays unsuffixed."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -606,12 +606,12 @@ def test_apply_vca_unique_composite_no_suffix():
         ],
         symbols=["Ge", "Sn", "Si"],
     )
-    vca_cell = apply_vca(cell, [0.5, 0.5, 1.0])
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 1.0])
 
-    assert vca_cell.symbols == ["GeSn", "Si"]
+    assert mixed_cell.symbols == ["GeSn", "Si"]
 
 
-def test_apply_vca_weight_sum_error():
+def test_apply_site_mixture_weight_sum_error():
     """Group weights must sum to 1.0."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -620,10 +620,10 @@ def test_apply_vca_weight_sum_error():
         symbols=["Ge", "Sn"],
     )
     with pytest.raises(ValueError, match="sum to 1.0"):
-        apply_vca(cell, [0.4, 0.4])
+        apply_site_mixture(cell, [0.4, 0.4])
 
 
-def test_apply_vca_isolated_atom_weight_must_be_one():
+def test_apply_site_mixture_isolated_atom_weight_must_be_one():
     """A non-overlapping atom must carry weight 1.0."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -632,10 +632,10 @@ def test_apply_vca_isolated_atom_weight_must_be_one():
         symbols=["Ge", "Sn"],
     )
     with pytest.raises(ValueError, match="must be 1.0"):
-        apply_vca(cell, [1.0, 0.5])
+        apply_site_mixture(cell, [1.0, 0.5])
 
 
-def test_apply_vca_length_mismatch():
+def test_apply_site_mixture_length_mismatch():
     """Weights length must match natoms."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -644,24 +644,24 @@ def test_apply_vca_length_mismatch():
         symbols=["Si"],
     )
     with pytest.raises(ValueError, match="must match number of atoms"):
-        apply_vca(cell, [1.0, 0.0])
+        apply_site_mixture(cell, [1.0, 0.0])
 
 
-def test_apply_vca_rejects_already_mixed_cell():
-    """Re-applying apply_vca on a VCA cell raises."""
+def test_apply_site_mixture_rejects_already_mixed_cell():
+    """Re-applying apply_site_mixture on a mixed cell raises."""
     a = 4.0
     cell = PhonopyAtoms(
         cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
         scaled_positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
         symbols=["Ge", "Sn"],
     )
-    vca_cell = apply_vca(cell, [0.5, 0.5])
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5])
     with pytest.raises(ValueError, match="already contains"):
-        apply_vca(vca_cell, [1.0])
+        apply_site_mixture(mixed_cell, [1.0])
 
 
-def test_apply_vca_supercell_through_phonopy(ph_nacl: Phonopy):
-    """A VCA unitcell flows through Phonopy and produces a supercell with mixtures."""
+def test_apply_site_mixture_supercell_through_phonopy(ph_nacl: Phonopy):
+    """A mixed unitcell flows through Phonopy and produces a supercell with mixtures."""
     a = 2.82173
     cell = PhonopyAtoms(
         cell=[[0, a, a], [a, 0, a], [a, a, 0]],
@@ -673,8 +673,8 @@ def test_apply_vca_supercell_through_phonopy(ph_nacl: Phonopy):
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    vca_cell = apply_vca(cell, [0.5, 0.5, 0.5, 0.5])
-    ph = Phonopy(vca_cell, supercell_matrix=np.diag([2, 2, 2]))
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(mixed_cell, supercell_matrix=np.diag([2, 2, 2]))
     assert ph.supercell.has_mixtures
     assert ph.primitive.has_mixtures
     assert len(ph.supercell) == 16
