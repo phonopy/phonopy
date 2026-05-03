@@ -154,6 +154,7 @@ class _Species:
 
 def build_species_table_from_mixtures(
     mixtures: Sequence[Sequence[tuple[str, float]]],
+    sort_constituents: bool = True,
 ) -> tuple[list[_Species], NDArray[np.int64]]:
     """Convert per-atom species mixtures into a (species_table, species_ids) pair.
 
@@ -161,9 +162,23 @@ def build_species_table_from_mixtures(
     describing the constituents of one atomic site. Weights must sum to 1.0.
     A single-component entry of weight 1.0 is canonicalized to a normal
     (single-element) species. The composite symbol of a true mixture is
-    derived as the concatenation of constituent symbols (e.g. "GeSn");
-    duplicate composite labels for distinct mixtures still get distinct
-    species ids because their mixture tuples differ.
+    derived as the concatenation of constituent symbols (e.g. "GeSn"); when
+    several distinct mixtures within the same cell would collide on the same
+    composite label, every colliding mixed species receives a 1-based suffix
+    (``"GeSn1"``, ``"GeSn2"``, ...) in table order while unique composites
+    stay unsuffixed.
+
+    Parameters
+    ----------
+    mixtures :
+        Per-site lists of ``(symbol, weight)`` pairs.
+    sort_constituents :
+        If True (default), each per-site mixture is reordered alphabetically
+        by symbol before deriving species identity and the composite label.
+        This treats two physically equivalent sites that differ only in the
+        order constituents were listed (e.g. ``[("Ge", 0.5), ("Sn", 0.5)]``
+        and ``[("Sn", 0.5), ("Ge", 0.5)]``) as the same species. Pass False
+        to preserve the caller's order verbatim.
 
     The returned pair can be passed to ``PhonopyAtoms(species_table=...,
     species_ids=...)``. Use cases include the Virtual Crystal Approximation
@@ -179,6 +194,8 @@ def build_species_table_from_mixtures(
         mix = tuple((str(s), float(w)) for s, w in atom_mixture)
         if not mix:
             raise ValueError("mixture entry must be non-empty.")
+        if sort_constituents:
+            mix = tuple(sorted(mix, key=lambda sw: sw[0]))
         wsum = sum(w for _, w in mix)
         if not np.isclose(wsum, 1.0):
             raise ValueError(f"mixture weights must sum to 1.0, got {wsum} for {mix}.")
@@ -201,7 +218,41 @@ def build_species_table_from_mixtures(
             species_list.append(sp)
             seen[sp] = sid
         ids.append(sid)
+    species_list = _disambiguate_composite_labels(species_list)
     return species_list, np.array(ids, dtype="int64")
+
+
+def _disambiguate_composite_labels(
+    species_table: list[_Species],
+) -> list[_Species]:
+    """Append 1-based suffixes to mixed-species symbols that collide.
+
+    Distinct mixtures may produce the same composite label
+    (e.g. two GeSn mixtures with different ratios both yield ``"GeSn"``).
+    When that happens within a single species table, every colliding mixed
+    species is renamed to ``"GeSn1"`` / ``"GeSn2"`` / ... in table order,
+    while unique composites stay unsuffixed. Non-mixture species are
+    untouched.
+
+    """
+    label_counts: dict[str, int] = {}
+    for sp in species_table:
+        if sp.mixture is not None:
+            label_counts[sp.symbol] = label_counts.get(sp.symbol, 0) + 1
+    duplicates = {label for label, count in label_counts.items() if count > 1}
+    if not duplicates:
+        return species_table
+
+    counters: dict[str, int] = {}
+    new_table: list[_Species] = []
+    for sp in species_table:
+        if sp.mixture is not None and sp.symbol in duplicates:
+            counters[sp.symbol] = counters.get(sp.symbol, 0) + 1
+            new_label = f"{sp.symbol}{counters[sp.symbol]}"
+            new_table.append(dataclasses.replace(sp, symbol=new_label))
+        else:
+            new_table.append(sp)
+    return new_table
 
 
 class PhonopyAtoms:
@@ -370,6 +421,17 @@ class PhonopyAtoms:
 
         """
         return self._species_ids.copy()
+
+    @property
+    def species_table(self) -> list[_Species]:
+        """Deduplicated species table indexed by ``species_ids``.
+
+        For getter, a shallow list copy is returned; ``_Species`` entries
+        are frozen dataclasses so the list elements are themselves
+        immutable.
+
+        """
+        return list(self._species)
 
     @property
     def numbers(self) -> NDArray[np.int64]:

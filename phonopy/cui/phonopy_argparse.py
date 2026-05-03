@@ -489,6 +489,18 @@ def get_parser(
         "--magmom", nargs="+", dest="magmoms", default=None, help="Same as MAGMOM tag"
     )
     parser.add_argument(
+        "--vca",
+        nargs="+",
+        dest="vca_weights",
+        default=None,
+        help=(
+            "Per-atom weights for the Virtual Crystal Approximation, in "
+            "the order atoms appear in the input cell. Overlapping atoms "
+            "are merged into mixed-species sites; weights within each "
+            "overlapping group must sum to 1.0."
+        ),
+    )
+    parser.add_argument(
         "--mesh-format",
         dest="mesh_format",
         default=None,
@@ -966,6 +978,7 @@ class PhonopyMockArgs:
     log_level: int | None = None
     magmoms: str | None = None
     mesh_numbers: str | None = None
+    vca_weights: str | None = None
     primitive_axes: str | None = None
     qpoints: str | None = None
     save_params: bool | None = None

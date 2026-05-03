@@ -491,13 +491,20 @@ numbers=None,
 symbols=None,
 masses=None,
 magnetic_moments=None,
+species_table=None,
+species_ids=None,
 ```
 
 At least three arguments have to be given at the initialization, which are
 
 - `cell`
 - `positions` or `scaled_positions`
-- `symbols` or `numbers`
+- `symbols`, or `numbers`, or (`species_table` and `species_ids`)
+
+`symbols`, `numbers`, and `species_table` are mutually exclusive. The
+`species_table` / `species_ids` pair is the canonical internal representation
+and is required to construct cells with mixed-species sites such as those
+arising from the Virtual Crystal Approximation; see {ref}`mixed_species_sites`.
 
 (phonopy_Atoms_variables)=
 ### Variables
@@ -552,6 +559,31 @@ Atomic numbers, e.g.,
 
 for the ZnO unit cell.
 
+For cells that contain mixed-species sites (e.g. VCA), `cell.numbers` raises
+`RuntimeError` because a mixture has no single atomic number; use
+`cell.species_ids` instead.
+
+#### `species_ids`
+
+Per-atom indices into `cell.species_table`. Each id is an opaque
+non-negative integer that refers to a `_Species` entry; two atoms share
+an id iff they are the same chemical species (including any suffix index
+or mixture content). Available on every cell, including those without
+mixed sites.
+
+#### `species_table`
+
+Deduplicated list of `_Species` entries indexed by `species_ids`. Each
+entry holds either a single-element species (`atomic_number` set) or a
+mixed-species site (`mixture` set to a tuple of `(symbol, weight)` pairs
+summing to 1.0). The list is a shallow copy on each access; entries are
+frozen and safe to share.
+
+#### `has_mixtures`
+
+Boolean property. `True` when any species in the cell is a weighted mixture
+of constituents (e.g. a VCA virtual-crystal site).
+
 #### `masses`
 
 Atomic masses, e.g.,
@@ -572,6 +604,9 @@ masses
 magnetic_moments
 symbols
 numbers
+species_ids
+species_table
+has_mixtures
 volume
 ```
 
@@ -584,6 +619,83 @@ can be deep-copied by `unitcell.copy()`. Human-readable crystal structure in
 Yaml format is shown by `print(unitcell)`. `unitcell.to_tuple` converts to
 spglib crystal structure
 (https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell).
+
+(mixed_species_sites)=
+### Mixed-species sites and the Virtual Crystal Approximation
+
+Each `PhonopyAtoms` instance owns a deduplicated species table plus a
+per-atom index list (`species_ids`). A species can either be an ordinary
+chemical element or a weighted mixture of elements; the latter represents a
+single crystallographic site shared by several species in fixed proportions
+(e.g. a Virtual Crystal Approximation site for a Ge/Sn alloy). Mixed-site
+masses are the weight-averaged sum of constituent atomic masses.
+
+#### Building a cell with mixed sites
+
+`build_species_table_from_mixtures` packs a per-atom list of `(symbol,
+weight)` tuples into the canonical `(species_table, species_ids)` pair:
+
+```python
+from phonopy.structure.atoms import (
+    PhonopyAtoms,
+    build_species_table_from_mixtures,
+)
+
+species_table, species_ids = build_species_table_from_mixtures(
+    [
+        [("Si", 1.0)],                  # ordinary Si
+        [("Ge", 0.5), ("Sn", 0.5)],     # GeSn mixed-species site
+    ]
+)
+cell = PhonopyAtoms(
+    cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+    scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+    species_table=species_table,
+    species_ids=species_ids,
+)
+assert cell.has_mixtures
+```
+
+Constituent weights of each entry must sum to 1.0; a single-component entry
+of weight 1.0 is canonicalized to a normal (single-element) species. Mixed
+species carry composite labels formed by concatenating constituent symbols
+in input order ("GeSn"); two distinct mixtures that would share the same
+composite label still get distinct ids because the underlying
+`(symbol, weight)` tuples differ.
+
+#### `apply_vca` utility
+
+`phonopy.structure.cells.apply_vca` collapses overlapping atoms in an
+ordinary cell into mixed-species sites, mimicking the convention used by
+VASP's INCAR `VCA` tag (per-atom weights in input order).
+
+```python
+from phonopy.structure.cells import apply_vca
+
+vca_cell = apply_vca(cell, weights=[0.5, 0.5, 0.5, 0.5])
+```
+
+`weights` must have one entry per atom in the input order. Atoms whose
+fractional positions agree (modulo lattice translations) within `symprec`
+are merged into a single site whose weights must sum to 1.0; isolated
+atoms must carry weight 1.0. When several distinct mixtures within the same
+cell would collide on the same composite label, all colliding sites get
+1-based suffixes (`"GeSn1"`, `"GeSn2"`, ...). The returned cell can be
+fed to `Phonopy(...)` as a unit cell.
+
+#### CLI: `--vca`
+
+The same merge can be requested at the command line:
+
+```bash
+phonopy --dim "2 2 2" --vca "0.5 0.5 0.5 0.5" -d
+```
+
+`--vca` takes a space-separated list of per-atom weights in the input
+order, with the same validation rules as `apply_vca`. The merge is applied
+immediately after the unit cell is read, so the rest of the workflow
+(displacement generation, supercell construction, force-constant building)
+sees only the merged cell.
 
 ## Definitions of variables
 
