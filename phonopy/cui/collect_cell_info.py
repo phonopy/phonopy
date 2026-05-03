@@ -55,7 +55,7 @@ from phonopy.interface.calculator import (
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import apply_vca, get_primitive_matrix_with_auto
+from phonopy.structure.cells import apply_site_mixture, get_primitive_matrix_with_auto
 
 _FallbackReason = Literal[
     "load_phonopy_yaml mode",
@@ -146,8 +146,10 @@ def get_cell_info(
                 print(f"  {v}")
             print("")
 
-    if settings.vca_weights is not None:
-        cell_info.unitcell = apply_vca(cell_info.unitcell, settings.vca_weights)
+    if settings.site_mixture is not None:
+        cell_info.unitcell = apply_site_mixture(
+            cell_info.unitcell, settings.site_mixture
+        )
 
     set_magnetic_moments(cell_info.unitcell, settings.magnetic_moments, log_level)
 

@@ -17,6 +17,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
     get_vasp_structure_lines,
+    get_vasp_vca_hint_lines,
     parse_force_constants,
     parse_set_of_forces,
     read_vasp,
@@ -27,7 +28,8 @@ from phonopy.interface.vasp import (
     write_vasp,
     write_XDATCAR,
 )
-from phonopy.structure.cells import isclose
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import apply_site_mixture, isclose
 
 cwd = Path(__file__).parent
 
@@ -551,3 +553,133 @@ def test_read_force_constants_from_vasprun_xml():
     assert fc.shape == (64, 64, 3, 3)
     assert symbols == ["Na", "Cl"]
     assert fc[0, 1, 2, 2] == pytest.approx(0.0046225992999999995)
+
+
+# ---------------------------------------------------------------------------
+# expand_mixtures (VASP VCA-compatible writing)
+# ---------------------------------------------------------------------------
+
+
+def _gesn_unitcell() -> PhonopyAtoms:
+    a = 2.82173
+    return PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+
+
+def _parse_species_and_counts(lines: list[str]) -> tuple[list[str], list[int]]:
+    """Pull the species row and the count row from a VASP5 POSCAR."""
+    return lines[5].split(), [int(x) for x in lines[6].split()]
+
+
+def test_expand_mixtures_caseA_GeSn_50_50():
+    """Single GeSn 50/50 mixture expands into Ge Sn / N N rows."""
+    cell = apply_site_mixture(_gesn_unitcell(), [0.5, 0.5, 0.5, 0.5])
+    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    species, counts = _parse_species_and_counts(lines)
+    assert species == ["Ge", "Sn"]
+    assert counts == [2, 2]
+    # Same fractional positions repeat for each constituent.
+    pos_lines = lines[8 : 8 + 4]
+    assert pos_lines[0] == pos_lines[2]
+    assert pos_lines[1] == pos_lines[3]
+
+
+def test_expand_mixtures_caseB_pure_plus_mixture():
+    """Si + GeSn 50/50: Si Ge Sn / 1 1 1."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]],
+        symbols=["Si", "Ge", "Sn"],
+    )
+    cell = apply_site_mixture(cell, [1.0, 0.5, 0.5])
+    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    species, counts = _parse_species_and_counts(lines)
+    assert species == ["Si", "Ge", "Sn"]
+    assert counts == [1, 1, 1]
+
+
+def test_expand_mixtures_caseC_two_distinct_ratios():
+    """Two GeSn mixtures with different ratios get four POSCAR rows."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
+        ],
+        symbols=["Ge", "Sn", "Ge", "Sn"],
+    )
+    cell = apply_site_mixture(cell, [0.5, 0.5, 0.25, 0.75])
+    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    species, counts = _parse_species_and_counts(lines)
+    assert species == ["Ge", "Sn", "Ge", "Sn"]
+    assert counts == [1, 1, 1, 1]
+
+
+def test_expand_mixtures_caseD_distinct_constituents():
+    """GeSn + SiGe mixtures become two pairs of constituent rows."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
+        ],
+        symbols=["Ge", "Sn", "Si", "Ge"],
+    )
+    cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    species, counts = _parse_species_and_counts(lines)
+    # Constituents are sorted alphabetically by default in apply_site_mixture.
+    assert species == ["Ge", "Sn", "Ge", "Si"]
+    assert counts == [1, 1, 1, 1]
+
+
+def test_expand_mixtures_no_op_for_pure_cell():
+    """A cell without mixtures emits the same output regardless of the flag."""
+    cell = read_vasp_from_strings(_POSCAR_VASP5)
+    lines_off = get_vasp_structure_lines(cell, expand_mixtures=False)
+    lines_on = get_vasp_structure_lines(cell, expand_mixtures=True)
+    assert lines_off == lines_on
+
+
+def test_expand_mixtures_round_trip_via_apply_site_mixture(tmp_path):
+    """Round-trip an expanded POSCAR back through apply_site_mixture.
+
+    Reading the per-element-expanded POSCAR yields the un-merged input;
+    re-applying apply_site_mixture with the canonical weights recovers the
+    original mixed cell.
+    """
+    cell = apply_site_mixture(_gesn_unitcell(), [0.5, 0.5, 0.5, 0.5])
+    fpath = tmp_path / "POSCAR_expanded"
+    write_vasp(fpath, cell, expand_mixtures=True)
+    parsed = read_vasp(fpath)
+    # parsed has 4 atoms (Ge, Ge, Sn, Sn) — the inverse of apply_site_mixture.
+    assert len(parsed) == 4
+    # Re-applying with the canonical 0.5 weights collapses back to the mixture.
+    rt = apply_site_mixture(parsed, [0.5, 0.5, 0.5, 0.5])
+    assert rt.has_mixtures
+    assert rt.symbols == ["GeSn", "GeSn"]
+    np.testing.assert_allclose(rt.scaled_positions, cell.scaled_positions, atol=1e-10)
+
+
+def test_get_vasp_vca_hint_lines_caseA():
+    """Hint reports Ge Sn rows, counts, and INCAR VCA = 0.5 0.5."""
+    cell = apply_site_mixture(_gesn_unitcell(), [0.5, 0.5, 0.5, 0.5])
+    text = "\n".join(get_vasp_vca_hint_lines(cell))
+    assert "POSCAR species rows: Ge Sn" in text
+    assert "POSCAR counts:       2 2" in text
+    assert "VCA = 0.5 0.5" in text

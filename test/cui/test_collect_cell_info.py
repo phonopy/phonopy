@@ -93,7 +93,7 @@ def _settings(
     supercell_matrix: list[list[int]] | None = None,
     primitive_matrix: str | list[list[float]] | None = None,
     magnetic_moments: list[float] | None = None,
-    vca_weights: list[float] | None = None,
+    site_mixture: list[float] | None = None,
 ) -> Settings:
     settings = Settings()
     settings.supercell_matrix = (
@@ -105,7 +105,7 @@ def _settings(
     settings.calculator = None
     settings.chemical_symbols = None
     settings.magnetic_moments = magnetic_moments
-    settings.vca_weights = vca_weights
+    settings.site_mixture = site_mixture
     return settings
 
 
@@ -155,14 +155,14 @@ def test_get_cell_info_enforce_primitive_matrix_auto(monkeypatch, tmp_path):
     assert result.primitive_matrix == "auto"
 
 
-def test_get_cell_info_vca_merges_overlapping_atoms(monkeypatch, tmp_path):
-    """--vca merges overlapping atoms into mixed-species sites."""
+def test_get_cell_info_site_mixture_merges_overlapping_atoms(monkeypatch, tmp_path):
+    """--site-mixture merges overlapping atoms into mixed-species sites."""
     monkeypatch.chdir(tmp_path)
     poscar = tmp_path / "POSCAR_GeSn"
     poscar.write_text(_POSCAR_GeSn_VCA)
     settings = _settings(
         supercell_matrix=_supercell_matrix,
-        vca_weights=[0.5, 0.5, 0.5, 0.5],
+        site_mixture=[0.5, 0.5, 0.5, 0.5],
     )
 
     result = get_cell_info(settings=settings, cell_filename=poscar)

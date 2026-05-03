@@ -395,13 +395,19 @@ def _write_supercells_vasp(
     """Write supercells for VASP interface."""
     import phonopy.interface.vasp as vasp
 
+    expand = config.supercell.has_mixtures
     vasp.write_supercells_with_displacements(
         config.supercell,
         config.cells_with_disps,
         config.displacement_ids,
+        expand_mixtures=expand,
         **_get_filename_writer_kwargs(config),
     )
     write_magnetic_moments(config.supercell, sort_by_elements=True)
+    if expand:
+        print("")
+        for line in vasp.get_vasp_vca_hint_lines(config.supercell):
+            print(line)
 
 
 def _write_supercells_qe(

@@ -97,7 +97,7 @@ class Settings:
         self.is_trigonal_displacement: bool = False
         self.magnetic_moments: list[float] | None = None
         self.masses: list[float] | None = None
-        self.vca_weights: list[float] | None = None
+        self.site_mixture: list[float] | None = None
         self.mesh_numbers: float | list[int] | list[list[int]] | None = None
         self.mlp_params: str | None = None
         self.nac_method: str | None = None
@@ -339,12 +339,12 @@ class ConfParser(Generic[TSettings]):
                 else:
                     self._confs["magmom"] = args.magmoms
 
-        if "vca_weights" in arg_list:
-            if args.vca_weights is not None:
-                if isinstance(args.vca_weights, list):
-                    self._confs["vca"] = " ".join(args.vca_weights)
+        if "site_mixture" in arg_list:
+            if args.site_mixture is not None:
+                if isinstance(args.site_mixture, list):
+                    self._confs["site_mixture"] = " ".join(args.site_mixture)
                 else:
-                    self._confs["vca"] = args.vca_weights
+                    self._confs["site_mixture"] = args.site_mixture
 
         if "mesh_numbers" in arg_list:
             mesh = args.mesh_numbers
@@ -645,16 +645,16 @@ class ConfParser(Generic[TSettings]):
                     "magmom", [float(x) for x in confs["magmom"].split()]
                 )
 
-            if conf_key == "vca":
-                vca_str = confs["vca"]
-                if isinstance(vca_str, str):
-                    tokens = vca_str.split()
+            if conf_key == "site_mixture":
+                site_mixture_str = confs["site_mixture"]
+                if isinstance(site_mixture_str, str):
+                    tokens = site_mixture_str.split()
                 else:
-                    tokens = list(vca_str)
+                    tokens = list(site_mixture_str)
                 try:
-                    self._set_parameter("vca", [float(x) for x in tokens])
+                    self._set_parameter("site_mixture", [float(x) for x in tokens])
                 except ValueError:
-                    self.setting_error("VCA tag is incorrectly set.")
+                    self.setting_error("SITE_MIXTURE tag is incorrectly set.")
 
             if conf_key == "mass":
                 self._set_parameter("mass", [float(x) for x in confs["mass"].split()])
@@ -976,9 +976,9 @@ class ConfParser(Generic[TSettings]):
         if "magmom" in params:
             settings.magnetic_moments = params["magmom"]
 
-        # VCA weights
-        if "vca" in params:
-            settings.vca_weights = params["vca"]
+        # Site mixture weights
+        if "site_mixture" in params:
+            settings.site_mixture = params["site_mixture"]
 
         # Atomic mass
         if "mass" in params:

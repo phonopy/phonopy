@@ -847,29 +847,31 @@ def get_primitive(
     )
 
 
-def apply_vca(
+def apply_site_mixture(
     cell: PhonopyAtoms,
     weights: Sequence[float],
     symprec: float = 1e-5,
     sort_constituents: bool = True,
 ) -> PhonopyAtoms:
-    """Merge overlapping atoms into mixed-species sites for VCA.
+    """Merge overlapping atoms into mixed-species sites.
 
     Atoms whose fractional positions agree (modulo lattice translations)
     within ``symprec`` are collapsed into a single site whose species is the
-    weighted mixture of the constituents (Virtual Crystal Approximation).
-    Each non-overlapping atom is preserved verbatim and its weight must
-    equal 1.0.
+    weighted mixture of the constituents. The Virtual Crystal Approximation
+    (VCA) is the typical use case. Each non-overlapping atom is preserved
+    verbatim and its weight must equal 1.0.
 
     Parameters
     ----------
     cell : PhonopyAtoms
         Input unit cell. Must not already contain mixed-species sites.
     weights : sequence of float
-        Per-atom VCA weights in the input order, matching the VASP
-        ``INCAR`` ``VCA`` tag convention. Length must equal ``len(cell)``.
-        Within each overlapping atom group the weights must sum to 1.0;
-        for an isolated atom the weight must be exactly 1.0.
+        Per-atom mixture weights in the input order. Length must equal
+        ``len(cell)``. Within each overlapping atom group the weights must
+        sum to 1.0; for an isolated atom the weight must be exactly 1.0.
+        Note that this is a per-atom convention and is distinct from the
+        VASP ``INCAR`` ``VCA`` tag, which lists one weight per element row
+        in POSCAR.
     symprec : float
         Tolerance for treating two fractional positions as overlapping.
     sort_constituents : bool, optional
@@ -889,11 +891,13 @@ def apply_vca(
     """
     if cell.has_mixtures:
         raise ValueError(
-            "apply_vca cannot be applied to a cell that already contains "
-            "mixed-species sites."
+            "apply_site_mixture cannot be applied to a cell that already "
+            "contains mixed-species sites."
         )
     if cell.magnetic_moments is not None:
-        raise ValueError("apply_vca does not support cells carrying magnetic moments.")
+        raise ValueError(
+            "apply_site_mixture does not support cells carrying magnetic moments."
+        )
     if len(weights) != len(cell):
         raise ValueError(
             f"Length of weights ({len(weights)}) must match number of atoms "
