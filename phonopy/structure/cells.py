@@ -219,7 +219,8 @@ class Supercell(PhonopyAtoms):
             raise RuntimeError(msg)
         else:
             super().__init__(
-                symbols=supercell.symbols,
+                species_table=supercell._species,
+                species_ids=supercell._species_ids,
                 masses=supercell.masses,
                 magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
@@ -243,7 +244,6 @@ class Supercell(PhonopyAtoms):
         # Scaled positions within the frame, i.e., create a supercell that
         # is made simply to multiply the input cell.
         positions = unitcell.scaled_positions
-        symbols = unitcell.symbols
         masses = unitcell.masses
         magmoms = unitcell.magnetic_moments
         lattice = unitcell.cell
@@ -271,7 +271,7 @@ class Supercell(PhonopyAtoms):
             np.tile(lattice_points, (n, 1)) + np.repeat(positions, n_l, axis=0),
             np.linalg.inv(mat).T,
         )
-        symbols_multi = [s for s in symbols for _ in range(n_l)]
+        species_ids_multi = np.repeat(unitcell.species_ids, n_l)
         atom_map = np.repeat(np.arange(n), n_l)
         if masses is None:
             masses_multi = None
@@ -285,7 +285,8 @@ class Supercell(PhonopyAtoms):
             magmoms_multi = [v for v in magmoms for _ in range(n_l)]
 
         simple_supercell = PhonopyAtoms(
-            symbols=symbols_multi,
+            species_table=unitcell._species,
+            species_ids=species_ids_multi,
             masses=masses_multi,
             magnetic_moments=magmoms_multi,
             scaled_positions=positions_multi,
@@ -517,7 +518,8 @@ class Primitive(PhonopyAtoms):
                 msg.append(f"  {i + 1}: {s1} -> {s2}")
             raise RuntimeError("\n".join(msg))
         super().__init__(
-            symbols=trimmed_cell.symbols,
+            species_table=trimmed_cell._species,
+            species_ids=trimmed_cell._species_ids,
             masses=trimmed_cell.masses,
             magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
@@ -688,7 +690,6 @@ class TrimmedCell(PhonopyAtoms):
 
         (
             trimmed_positions,
-            trimmed_symbols,
             trimmed_masses,
             trimmed_magmoms,
             extracted_atoms,
@@ -696,7 +697,6 @@ class TrimmedCell(PhonopyAtoms):
         ) = self._extract(
             positions_in_new_lattice,
             trimmed_lattice,
-            cell.symbols,
             cell.masses,
             cell.magnetic_moments,
             check_overlap,
@@ -708,7 +708,6 @@ class TrimmedCell(PhonopyAtoms):
                 positions_to_reorder, trimmed_positions, trimmed_lattice, symprec
             )
             trimmed_positions = trimmed_positions[ids]
-            trimmed_symbols = [trimmed_symbols[i] for i in ids]
             if trimmed_masses is not None:
                 trimmed_masses = trimmed_masses[ids]
             if trimmed_magmoms is not None:
@@ -717,9 +716,10 @@ class TrimmedCell(PhonopyAtoms):
 
         # scale is not always to become integer.
         scale = 1.0 / np.linalg.det(relative_axes)
-        if len(cell) == int(np.rint(scale * len(trimmed_symbols))):
+        if len(cell) == int(np.rint(scale * len(extracted_atoms))):
             super().__init__(
-                symbols=trimmed_symbols,
+                species_table=cell._species,
+                species_ids=cell._species_ids[extracted_atoms],
                 masses=trimmed_masses,
                 magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
@@ -734,32 +734,23 @@ class TrimmedCell(PhonopyAtoms):
         self,
         positions_in_new_lattice: NDArray[np.double],
         trimmed_lattice: NDArray[np.double],
-        symbols: list[str],
         masses: NDArray[np.double] | None,
         magmoms: NDArray[np.double] | None,
         check_overlap: bool,
         symprec: float,
     ) -> tuple[
         NDArray[np.double],
-        list[str],
         NDArray[np.double] | None,
         NDArray[np.double] | None,
         NDArray[np.int64],
         NDArray[np.int64],
     ]:
         num_atoms = 0
-        extracted_atoms = []
+        extracted_atoms: list[int] = []
         mapping_table = np.arange(len(positions_in_new_lattice), dtype="int64")
         trimmed_positions = np.zeros_like(positions_in_new_lattice)
-        trimmed_symbols = []
-        if masses is None:
-            trimmed_masses = None
-        else:
-            trimmed_masses = []
-        if magmoms is None:
-            trimmed_magmoms = None
-        else:
-            trimmed_magmoms = []
+        trimmed_masses_list: list[float] | None = None if masses is None else []
+        trimmed_magmoms_list: list | None = None if magmoms is None else []
 
         for i, pos in enumerate(positions_in_new_lattice):
             found_overlap = False
@@ -777,23 +768,27 @@ class TrimmedCell(PhonopyAtoms):
             if not found_overlap:
                 trimmed_positions[num_atoms] = pos
                 num_atoms += 1
-                trimmed_symbols.append(symbols[i])
                 if masses is not None:
-                    assert trimmed_masses is not None
-                    trimmed_masses.append(masses[i])
+                    assert trimmed_masses_list is not None
+                    trimmed_masses_list.append(masses[i])
                 if magmoms is not None:
-                    assert trimmed_magmoms is not None
-                    trimmed_magmoms.append(magmoms[i])
+                    assert trimmed_magmoms_list is not None
+                    trimmed_magmoms_list.append(magmoms[i])
                 extracted_atoms.append(i)
 
-        if trimmed_masses is not None:
-            trimmed_masses = np.array(trimmed_masses, dtype="double")
-        if trimmed_magmoms is not None:
-            trimmed_magmoms = np.array(trimmed_magmoms, dtype="double", order="C")
+        trimmed_masses = (
+            None
+            if trimmed_masses_list is None
+            else np.array(trimmed_masses_list, dtype="double")
+        )
+        trimmed_magmoms = (
+            None
+            if trimmed_magmoms_list is None
+            else np.array(trimmed_magmoms_list, dtype="double", order="C")
+        )
 
         return (
             np.array(trimmed_positions[:num_atoms], dtype="double", order="C"),
-            trimmed_symbols,
             trimmed_masses,
             trimmed_magmoms,
             np.array(extracted_atoms, dtype="int64"),
