@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import re
 import warnings
 from collections.abc import Sequence
@@ -99,21 +100,31 @@ def Atoms(*args, **kwargs) -> "PhonopyAtoms":
     return PhonopyAtoms(*args, **kwargs)
 
 
+_SYMBOL_INDEX_RE = re.compile(r"^([A-Z][a-z]{0,2})([0-9]*)$")
+
+
 def split_symbol_and_index(symnum: str) -> tuple[str, int]:
-    """Split symbol and index.
+    """Split a single-element symbol with an optional natural-number suffix.
+
+    Accepted: a single chemical symbol (1 uppercase letter, optionally followed
+    by up to 2 lowercase letters — Uuo etc.), optionally followed by digits
+    forming a positive integer suffix.
 
     H --> H, 0
     H2 --> H, 2
+    Cl1 --> Cl, 1
+    Uuo --> Uuo, 0
+
+    Composite symbols like "GeSn" or invalid forms like "Cl_1" raise
+    RuntimeError.
 
     """
-    m = re.match(r"([a-zA-Z]+)([0-9]*)", symnum)
+    m = _SYMBOL_INDEX_RE.match(symnum)
     if m is None:
         raise RuntimeError(f"Invalid symbol: {symnum}.")
-    symbol, index = m.groups()
-    if symnum != f"{symbol}{index}":
-        raise RuntimeError(f"Invalid symbol: {symnum}.")
-    if index:
-        index = int(index)
+    symbol, index_str = m.groups()
+    if index_str:
+        index = int(index_str)
         if index < 1:
             raise RuntimeError(
                 f"Invalid symbol. Index has to be greater than 0: {symnum}."
@@ -121,6 +132,20 @@ def split_symbol_and_index(symnum: str) -> tuple[str, int]:
     else:
         index = 0
     return symbol, index
+
+
+@dataclasses.dataclass(frozen=True)
+class _Species:
+    """Identity of a chemical species used inside PhonopyAtoms.
+
+    Two atoms share a species iff their (symbol, atomic_number) tuple is
+    equal. ``symbol`` carries the suffix ("Cl1") so that "Cl" and "Cl1"
+    are distinct species that share the same atomic number.
+
+    """
+
+    symbol: str
+    atomic_number: int
 
 
 class PhonopyAtoms:
@@ -142,7 +167,13 @@ class PhonopyAtoms:
         List of chemical symbols of atoms. Chemical symbol + natural number is
         allowed, e.g., "Cl1".
     numbers : np.ndarray
-        Atomic numbers. Numbers cannot exceed 118. shape=(natom,), dtype='int64'
+        Atomic numbers per atom in 1..118. shape=(natom,), dtype='int64'
+    species_ids : np.ndarray
+        Per-atom unique species index. Atoms with the same (symbol,
+        atomic_number) get the same id; "Cl" and "Cl1" get different ids.
+        Suitable as the ``types`` argument for spglib when atoms with the
+        same atomic number but different symbol suffix must be distinguished.
+        shape=(natom,), dtype='int64'
     masses : np.ndarray, optional
         Atomic masses. shape=(natom,), dtype='double'
     magnetic_moments : np.ndarray, optional
@@ -153,8 +184,6 @@ class PhonopyAtoms:
         Number of formula units in this cell.
 
     """
-
-    _MOD_DIVISOR = 1000
 
     def __init__(
         self,
@@ -171,56 +200,44 @@ class PhonopyAtoms:
     ) -> None:  # pbc is dummy argument, and never used.
         """Set crystal structure parameters.
 
-        Setting atomic numbers larger than 118 is not allowed in this method.
-        Internally atomic numbers are stored in self._numbers_with_shifts, and
-        these values can exceed 118 by adding self._MOD_DIVISOR * index. This is
-        used to distinguish atoms with the same chemical symbol + natural
-        number, e.g., among "Cl", "Cl1", "Cl2", and the index corresponds to the
-        number next to the chemical symbol.
+        Exactly one of ``symbols`` or ``numbers`` must be specified. ``numbers``
+        accepts atomic numbers in the range 1..118.
 
         """
         self._cell: NDArray[np.double]
         self._scaled_positions: NDArray[np.double]
-        self._symbols: list[str]
+        self._species: list[_Species]
+        self._species_ids: NDArray[np.int64]
         self._magnetic_moments: NDArray[np.double] | None
         self._masses: NDArray[np.double]
-        self._numbers_with_shifts: NDArray[np.int64]
 
         self._set_cell_and_positions(
             cell, positions=positions, scaled_positions=scaled_positions
         )
 
-        # Define symbols and numbers.
         if symbols is None and numbers is None:
-            raise RuntimeError(
-                "Either symbols or numbers has to be specified. "
-                "If symbols is specified, numbers is set automatically."
-            )
-        if numbers is not None:
-            if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
-                raise RuntimeError("Atomic numbers cannot be larger than 118.")
-            self._numbers_with_shifts = np.array(numbers, dtype="int64")
-        if symbols is None:
-            self._numbers_to_symbols()
-        else:
-            self._symbols = list(symbols)
-            self._symbols_to_numbers()
+            raise RuntimeError("Either symbols or numbers has to be specified.")
+        if symbols is not None and numbers is not None:
+            raise ValueError("symbols and numbers cannot be specified together.")
 
-        # mass
+        if symbols is not None:
+            self._build_species_from_symbols(list(symbols))
+        else:
+            assert numbers is not None
+            self._build_species_from_numbers(np.asarray(numbers, dtype="int64"))
+
         if masses is not None:
             self._set_masses(masses)
         else:
-            self._symbols_to_masses()
+            self._set_default_masses()
 
-        # magnetic moments
         self._set_magnetic_moments(magnetic_moments)
 
-        # Check consistency of parameters.
         self._check()
 
     def __len__(self) -> int:
         """Return number of atoms."""
-        return len(self.numbers)
+        return len(self._species_ids)
 
     @property
     def cell(self) -> NDArray[np.double]:
@@ -258,51 +275,28 @@ class PhonopyAtoms:
 
     @property
     def symbols(self) -> list[str]:
-        """Setter and getter of chemical symbols."""
-        assert self._symbols is not None
-        return self._symbols[:]
-
-    @symbols.setter
-    def symbols(self, symbols: Sequence[str]):
-        warnings.warn(
-            "Setter of PhonopyAtoms.symbols is deprecated.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self._symbols = list(symbols)
-        self._check()
-        self._symbols_to_numbers()
-        self._symbols_to_masses()
+        """Chemical symbols per atom."""
+        return [self._species[sid].symbol for sid in self._species_ids]
 
     @property
-    def numbers_with_shifts(self) -> NDArray[np.int64]:
-        """Getter of atomic numbers + MOD_DIVISOR * index."""
-        return self._numbers_with_shifts.copy()
+    def species_ids(self) -> NDArray[np.int64]:
+        """Per-atom unique species index. For getter, copy is returned.
+
+        Atoms with the same (symbol, atomic_number) pair share an id; "Cl"
+        and "Cl1" get different ids. Suitable as the ``types`` argument for
+        spglib when atoms with the same atomic number but different symbol
+        suffix must be distinguished.
+
+        """
+        return self._species_ids.copy()
 
     @property
     def numbers(self) -> NDArray[np.int64]:
-        """Setter and getter of atomic numbers. For getter, new array is returned.
-
-        Atomic numbers larger than 118 are not allowed.
-
-        """
+        """Atomic numbers per atom in 1..118. For getter, new array is returned."""
         return np.array(
-            [n % self._MOD_DIVISOR for n in self._numbers_with_shifts], dtype="int64"
+            [self._species[sid].atomic_number for sid in self._species_ids],
+            dtype="int64",
         )
-
-    @numbers.setter
-    def numbers(self, numbers: Sequence[int] | NDArray[np.int64]):
-        if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
-            raise RuntimeError("Atomic numbers cannot be larger than 118.")
-        warnings.warn(
-            "Setter of PhonopyAtoms.number is deprecated.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self._numbers_with_shifts = np.array(numbers, dtype="int64")
-        self._check()
-        self._numbers_to_symbols()
-        self._symbols_to_masses()
 
     @property
     def masses(self) -> NDArray[np.double]:
@@ -356,12 +350,9 @@ class PhonopyAtoms:
     @property
     def Z(self) -> int:
         """Return number of formula units in this cell."""
-        count = {}
-        for n in self._numbers_with_shifts:
-            if n in count:
-                count[n] += 1
-            else:
-                count[n] = 1
+        count: dict[int, int] = {}
+        for sid in self._species_ids:
+            count[sid] = count.get(sid, 0) + 1
         values = list(count.values())
         x = values[0]
         for v in values[1:]:
@@ -420,38 +411,60 @@ class PhonopyAtoms:
         elif scaled_positions is not None:
             self._set_scaled_positions(scaled_positions)
 
-    def _numbers_to_symbols(self) -> None:
-        _atom_data = get_atomic_data().atom_data
-        symbols = []
-        for number in self._numbers_with_shifts:
-            n = number % self._MOD_DIVISOR
-            m = number // self._MOD_DIVISOR
-            if m > 0:
-                symbols.append(f"{_atom_data[n][1]}{m}")
+    def _build_species_from_symbols(self, symbols: list[str]) -> None:
+        """Parse symbol strings and populate _species and _species_ids."""
+        symbol_map = get_atomic_data().symbol_map
+        species_table: dict[_Species, int] = {}
+        species_list: list[_Species] = []
+        ids: list[int] = []
+        for symnum in symbols:
+            base, _ = split_symbol_and_index(symnum)
+            if base not in symbol_map:
+                raise RuntimeError(f"Invalid symbol: {symnum}.")
+            sp = _Species(symbol=symnum, atomic_number=symbol_map[base])
+            sid = species_table.get(sp)
+            if sid is None:
+                sid = len(species_list)
+                species_list.append(sp)
+                species_table[sp] = sid
+            ids.append(sid)
+        self._species = species_list
+        self._species_ids = np.array(ids, dtype="int64")
+
+    def _build_species_from_numbers(self, numbers: NDArray[np.int64]) -> None:
+        """Populate _species and _species_ids from atomic numbers (1..118)."""
+        if numbers.size and ((numbers > 118).any() or (numbers < 1).any()):
+            raise ValueError("Atomic numbers must be in 1..118.")
+        atom_data = get_atomic_data().atom_data
+        species_table: dict[_Species, int] = {}
+        species_list: list[_Species] = []
+        ids: list[int] = []
+        for n in numbers:
+            sp = _Species(symbol=atom_data[n][1], atomic_number=int(n))
+            sid = species_table.get(sp)
+            if sid is None:
+                sid = len(species_list)
+                species_list.append(sp)
+                species_table[sp] = sid
+            ids.append(sid)
+        self._species = species_list
+        self._species_ids = np.array(ids, dtype="int64")
+
+    def _set_default_masses(self) -> None:
+        """Set _masses from the periodic table using each atom's species."""
+        atom_data = get_atomic_data().atom_data
+        masses: list[float] = []
+        undefined: set[str] = set()
+        for sid in self._species_ids:
+            sp = self._species[sid]
+            m = atom_data[sp.atomic_number][3]
+            if m is None:
+                undefined.add(sp.symbol)
             else:
-                symbols.append(f"{_atom_data[n][1]}")
-        self._symbols = symbols
-
-    def _symbols_to_numbers(self) -> None:
-        _symbol_map = get_atomic_data().symbol_map
-        numbers = []
-        for symnum in self._symbols:
-            symbol, index = split_symbol_and_index(symnum)
-            numbers.append(_symbol_map[symbol] + self._MOD_DIVISOR * index)
-
-        self._numbers_with_shifts = np.array(numbers, dtype="int64")
-
-    def _symbols_to_masses(self) -> None:
-        _symbol_map = get_atomic_data().symbol_map
-        _atom_data = get_atomic_data().atom_data
-        symbols = [split_symbol_and_index(s)[0] for s in self._symbols]
-        masses = [_atom_data[_symbol_map[s]][3] for s in symbols]
-        if None in masses:
-            symbols_with_undefined_masses = set(
-                [s for s in self._symbols if _atom_data[_symbol_map[s]][3] is None]
-            )
+                masses.append(m)
+        if undefined:
             raise RuntimeError(
-                f"Masses of {symbols_with_undefined_masses} are undefined."
+                f"Masses of {undefined} are undefined. "
                 "These have to be specified by masses parameter."
             )
         self._masses = np.array(masses, dtype="double")
@@ -466,16 +479,17 @@ class PhonopyAtoms:
             raise RuntimeError("cell is not set.")
         if self._scaled_positions is None:
             raise RuntimeError("scaled_positions (positions) is not set.")
-        if self._numbers_with_shifts is None:
-            raise RuntimeError("numbers is not set.")
-        if self._symbols is None:
-            raise RuntimeError("symbols is not set.")
-        if len(self._numbers_with_shifts) != len(self._scaled_positions):
-            raise RuntimeError("len(numbers) != len(scaled_positions).")
-        if len(self._numbers_with_shifts) != len(self._symbols):
-            raise RuntimeError("len(numbers) != len(symbols).")
-        if len(self._numbers_with_shifts) != len(self._masses):
-            raise RuntimeError("len(numbers) != len(masses).")
+        if self._species_ids is None:
+            raise RuntimeError("species_ids is not set.")
+        natom = len(self._scaled_positions)
+        if len(self._species_ids) != natom:
+            raise RuntimeError("len(species_ids) != len(scaled_positions).")
+        if len(self._masses) != natom:
+            raise RuntimeError("len(masses) != len(scaled_positions).")
+        if self._species_ids.size and (
+            self._species_ids.max() >= len(self._species) or self._species_ids.min() < 0
+        ):
+            raise RuntimeError("species_ids out of range of species table.")
         if self._magnetic_moments is not None:
             if len(self._magnetic_moments) not in (len(self), len(self) * 3):
                 raise RuntimeError(
@@ -489,7 +503,7 @@ class PhonopyAtoms:
             scaled_positions=self._scaled_positions,
             masses=self._masses,
             magnetic_moments=self._magnetic_moments,
-            symbols=self._symbols,
+            symbols=self.symbols,
         )
 
     def totuple(
@@ -505,21 +519,21 @@ class PhonopyAtoms:
     ):
         """Return (cell, scaled_position, numbers).
 
-        If magmams is set, (cell, scaled_position, numbers, magmoms) is
+        If magmoms is set, (cell, scaled_position, numbers, magmoms) is
         returned.
 
         Parameters
         ----------
-        with_symbol_index : bool
-            If True, number is replaced with atomic number + index *
-            self.MOD_DIVISOR.
-
-            'H' --> 1
-            'H2' --> 1 + self.MOD_DIVISOR * 2
+        distinguish_symbol_index : bool
+            If True, the per-atom integer is the species id (atoms with the
+            same symbol but different suffix get different ids); suitable as
+            the ``types`` argument for spglib when symbol-suffix groupings
+            must be preserved. If False (default), the per-atom integer is
+            the atomic number.
 
         """
         if distinguish_symbol_index:
-            numbers = self.numbers_with_shifts
+            numbers = self.species_ids
         else:
             numbers = self.numbers
 
@@ -543,7 +557,7 @@ class PhonopyAtoms:
             )
         lines.append("points:")
         if self.magnetic_moments is None:
-            magmoms = [None] * len(self._symbols)
+            magmoms = [None] * len(self)
         else:
             magmoms = self.magnetic_moments
         for i, (symbol, number, pos, mass, mag) in enumerate(
@@ -579,8 +593,8 @@ class PhonopyAtoms:
 
     def _get_element_counts(self) -> dict[str, int]:
         """Return dict of element counts, with indices stripped from symbols."""
-        counts = {}
-        for symbol in self._symbols:
+        counts: dict[str, int] = {}
+        for symbol in self.symbols:
             base_symbol = symbol.rstrip("0123456789")
             counts[base_symbol] = counts.get(base_symbol, 0) + 1
         return counts
