@@ -10,7 +10,11 @@ import pytest
 import yaml
 
 from phonopy import Phonopy
-from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
+from phonopy.structure.atoms import (
+    PhonopyAtoms,
+    build_species_table_from_mixtures,
+    parse_cell_dict,
+)
 
 symbols_SiO2 = ["Si"] * 2 + ["O"] * 4
 symbols_AcO2 = ["Ac"] * 2 + ["O"] * 4
@@ -364,6 +368,67 @@ def test_formulas(symbols, expected_formula, expected_normalized):
 
     assert cell.formula == expected_formula
     assert cell.normalized_formula == expected_normalized
+
+
+def test_PhonopyAtoms_mixture_construct_and_yaml_roundtrip():
+    """PhonopyAtoms holds mixed-species sites and round-trips through YAML."""
+    species, ids = build_species_table_from_mixtures(
+        [[("Si", 1.0)], [("Ge", 0.5), ("Sn", 0.5)]]
+    )
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        species_table=species,
+        species_ids=ids,
+    )
+    assert cell.has_mixtures
+    assert cell.symbols == ["Si", "GeSn"]
+    np.testing.assert_allclose(cell.species_ids, [0, 1])
+    # Mass of a mixed-species site is the weighted average of constituents.
+    np.testing.assert_allclose(cell.masses[1], 0.5 * 72.64 + 0.5 * 118.710)
+    # cell.numbers is undefined for cells with mixed-species sites.
+    with pytest.raises(RuntimeError):
+        _ = cell.numbers
+
+    # YAML round-trip
+    data = yaml.safe_load(str(cell))
+    assert data["points"][0]["symbol"] == "Si"
+    assert "mixture" not in data["points"][0]
+    assert data["points"][1]["symbol"] == "GeSn"
+    assert data["points"][1]["mixture"] == [["Ge", 0.5], ["Sn", 0.5]]
+
+    cell2 = parse_cell_dict(data)
+    assert cell2 is not None
+    assert cell2.has_mixtures
+    assert cell2.symbols == ["Si", "GeSn"]
+    np.testing.assert_allclose(cell2.species_ids, [0, 1])
+    np.testing.assert_allclose(cell2.masses, cell.masses)
+
+
+def test_build_species_table_from_mixtures_weight_sum_error():
+    """Weights of each mixture entry must sum to 1.0."""
+    with pytest.raises(ValueError):
+        build_species_table_from_mixtures([[("Ge", 0.3), ("Sn", 0.6)]])
+
+
+def test_PhonopyAtoms_input_mutual_exclusion():
+    """Reject simultaneous symbols / numbers / species_table."""
+    species, ids = build_species_table_from_mixtures([[("Si", 1.0)]])
+    with pytest.raises(ValueError):
+        PhonopyAtoms(
+            cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            scaled_positions=[[0, 0, 0]],
+            symbols=["Si"],
+            species_table=species,
+            species_ids=ids,
+        )
+    with pytest.raises(ValueError):
+        # species_table without species_ids is rejected.
+        PhonopyAtoms(
+            cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            scaled_positions=[[0, 0, 0]],
+            species_table=species,
+        )
 
 
 def test_import_deprecated_atom_data():

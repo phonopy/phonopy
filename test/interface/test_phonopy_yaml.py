@@ -16,7 +16,7 @@ from phonopy.interface.phonopy_yaml import (
     read_phonopy_yaml,
 )
 from phonopy.interface.vasp import read_vasp
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
 from phonopy.structure.cells import get_primitive
 from phonopy.structure.dataset import get_displacements_and_forces
 
@@ -197,6 +197,44 @@ def test_phonopy_yaml_extended_symbol(nacl_unitcell_order1: PhonopyAtoms):
     assert ph_load.supercell.symbols[:32] == ["Na"] * 32
     assert ph_load.supercell.symbols[-32:-8] == ["Cl"] * 24
     assert ph_load.supercell.symbols[-8:] == ["Cl1"] * 8
+
+
+def test_phonopy_yaml_mixture_roundtrip():
+    """Test of PhonopyYaml round-trip for a cell with mixed-species sites.
+
+    Build a Phonopy on a GeSn 50/50 zincblende (the canonical VCA use case),
+    dump to phonopy.yaml, read back via phonopy.load, and verify cells
+    round-trip with masses preserved. Also checks the supercell carries the
+    mixture spec through.
+
+    """
+    species, ids = build_species_table_from_mixtures(
+        [
+            [("Ge", 0.5), ("Sn", 0.5)],
+            [("Ge", 0.5), ("Sn", 0.5)],
+        ]
+    )
+    cell = PhonopyAtoms(
+        cell=[[0, 2.82, 2.82], [2.82, 0, 2.82], [2.82, 2.82, 0]],
+        scaled_positions=[[0, 0, 0], [0.25, 0.25, 0.25]],
+        species_table=species,
+        species_ids=ids,
+    )
+    ph = Phonopy(cell, supercell_matrix=[2, 2, 2])
+    assert ph.unitcell.has_mixtures
+    assert ph.supercell.has_mixtures
+    assert ph.unitcell.symbols == ["GeSn", "GeSn"]
+
+    ph_load = phonopy.load(io.StringIO(str(ph.to_phonopy_yaml())))
+    assert ph_load.unitcell.has_mixtures
+    assert ph_load.supercell.has_mixtures
+    assert ph_load.unitcell.symbols == ph.unitcell.symbols
+    assert ph_load.supercell.symbols == ph.supercell.symbols
+    np.testing.assert_allclose(ph_load.unitcell.masses, ph.unitcell.masses)
+    np.testing.assert_allclose(ph_load.supercell.masses, ph.supercell.masses)
+    np.testing.assert_allclose(
+        ph_load.unitcell.scaled_positions, ph.unitcell.scaled_positions
+    )
 
 
 def _compare_NaCl_convcell(cell, compare_cells):
