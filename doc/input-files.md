@@ -199,6 +199,16 @@ option). All the data are used for calculating force constants in the fitting
 
 ### FORCE_SETS for mixed-species (site-mixture) cells
 
+```{warning}
+**Experimental.** The expanded `FORCE_SETS` formats described in this
+section, together with the underlying mixed-species / Virtual Crystal
+Approximation support, are experimental. The exact layout (line-1
+header, atom-index convention, Type-1 vs Type-2 expansion) and the
+companion CLI / API may change in upcoming releases. Currently only the
+VASP calculator interface emits mixture-expanded force files; for other
+calculators the support is not yet wired.
+```
+
 Cells built with {ref}`mixed-species sites <mixed_species_sites>` (e.g. via
 `--site-mixture` or `apply_site_mixture`) keep one phonopy site per
 crystallographic position, but the calculator (e.g. VASP) sees one row per

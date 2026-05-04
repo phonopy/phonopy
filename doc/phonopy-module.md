@@ -623,6 +623,18 @@ spglib crystal structure
 (mixed_species_sites)=
 ### Mixed-species sites and the Virtual Crystal Approximation
 
+```{warning}
+**Experimental.** The mixed-species / Virtual Crystal Approximation
+(VCA) support — including `species_table` / `species_ids` /
+`has_mixtures` on `PhonopyAtoms`, `apply_site_mixture`,
+`build_species_table_from_mixtures`, the `--site-mixture` CLI option,
+the FC-time mixture-force reduction, and the VASP `expand_mixtures`
+writer — is experimental. APIs, file layouts (including the expanded
+`FORCE_SETS` format), and CLI flags may change without notice in
+upcoming releases. Currently only the VASP calculator interface is
+wired for mixture-expanded I/O.
+```
+
 Each `PhonopyAtoms` instance owns a deduplicated species table plus a
 per-atom index list (`species_ids`). A species can either be an ordinary
 chemical element or a weighted mixture of elements; the latter represents a
