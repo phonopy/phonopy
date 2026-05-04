@@ -27,6 +27,7 @@ from phonopy.structure.cells import (
     isclose,
     sparse_to_dense_svecs,
 )
+from phonopy.structure.mixture import get_mixture_expansion
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 primitive_matrix_nacl = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
@@ -678,3 +679,50 @@ def test_apply_site_mixture_supercell_through_phonopy(ph_nacl: Phonopy):
     assert ph.supercell.has_mixtures
     assert ph.primitive.has_mixtures
     assert len(ph.supercell) == 16
+
+
+def test_GeSn_mixture_force_constants_e2e():
+    """End-to-end: GeSn 50/50 supercell with raw expanded forces builds FC.
+
+    Construct the canonical GeSn 50/50 zincblende cell, generate
+    displacements through Phonopy, plug in synthetic *expanded* forces
+    of shape (num_supercells, n_expanded, 3) (the shape that VASP would
+    emit on a mixture-expanded SPOSCAR), and confirm produce_force_constants
+    runs end-to-end. The resulting FC has per-site shape, demonstrating
+    the FC-time reduction of raw forces.
+
+    """
+    a = 2.82173
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+    mixed = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(mixed, supercell_matrix=np.diag([2, 2, 2]))
+    ph.generate_displacements(distance=0.01)
+    n_sites = len(ph.supercell)
+    site_indices, _ = get_mixture_expansion(ph.supercell)
+    n_expanded = int(site_indices.size)
+    assert n_expanded == 2 * n_sites
+
+    rng = np.random.default_rng(seed=42)
+    dataset = ph.dataset
+    assert dataset is not None
+    for entry in dataset["first_atoms"]:
+        forces = rng.standard_normal((n_expanded, 3)) * 1e-3
+        forces -= forces.mean(axis=0)  # zero net force
+        entry["forces"] = forces
+
+    ph.dataset = dataset
+    ph.produce_force_constants()
+
+    fc = ph.force_constants
+    assert fc is not None
+    assert fc.shape == (n_sites, n_sites, 3, 3)
+    assert ph.dataset["first_atoms"][0]["forces"].shape == (n_expanded, 3)

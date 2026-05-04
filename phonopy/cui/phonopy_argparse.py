@@ -989,3 +989,5 @@ class PhonopyMockArgs:
     thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool | None = None
     write_dynamical_matrices: bool | None = None
+    write_force_constants: bool | None = None
+    writefc_format: str | None = None

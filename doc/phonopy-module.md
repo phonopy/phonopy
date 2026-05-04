@@ -708,6 +708,66 @@ showing the matching POTCAR concatenation order and the INCAR `VCA = ...`
 line. For example, a 50/50 GeSn cell with `--dim "2 2 2"` produces
 `SPOSCAR` with `Ge Sn / 16 16` and prints `INCAR: VCA = 0.5 0.5`.
 
+#### Forces for mixed-species cells
+
+A VASP run on a mixture-expanded supercell returns one force vector per
+expanded constituent row (`n_expanded` per displacement). Because every
+constituent at a shared crystallographic site is governed by its own
+POTCAR, those forces differ between constituents and carry the raw
+single-potential information from the SCF calculation.
+
+Phonopy preserves this raw output: `parse_set_of_forces` (and
+`get_forces_vasprunxml`) for a mixed-species cell return forces of shape
+`(num_supercells, n_expanded, 3)` and store them as-is in the
+`Phonopy.dataset`. The corresponding displacement entries remain on a
+per-site basis in `1..n_sites`, so the dataset is asymmetric in shape
+between displacements and forces; this is intentional and preserved by
+`phonopy.yaml` round-trips and by the {ref}`expanded FORCE_SETS format
+<file_forces_site_mixture>`.
+
+The conversion to per-site forces is deferred to immediately before
+force-constant calculation. The reduction utility is
+`phonopy.structure.cells.reduce_mixture_forces(forces, cell, mode=...)`,
+which supports two conventions selected through the ``mode`` keyword:
+
+- ``mode="sum"`` produces the plain sum,
+
+  ```python
+  F_site = sum_k F_k
+  ```
+
+  used for VASP because its `vasprun.xml` per-row forces already
+  incorporate the VCA weights through the averaged potential.
+- ``mode="weighted_sum"`` (the default) produces the weighted sum,
+
+  ```python
+  F_site = sum_k (w_k * F_k)
+  ```
+
+  where ``w_k`` is the constituent weight stored in the mixture entry of
+  ``cell.species_table``. Use this when the calculator returns
+  single-potential forces that have not yet been folded with mixture
+  weights.
+
+The Phonopy FC pipeline picks the convention based on
+``Phonopy.calculator``: VASP (and the default ``None`` calculator) maps
+to ``"sum"``; all other interfaces map to ``"weighted_sum"``. Because the
+raw forces are preserved in the dataset, applying a different reduction
+convention or different weights only requires re-running the reduction
+and the force-constant build, not the calculator.
+
+#### Expansion ordering
+
+The mapping from expanded row indices back to phonopy sites is fixed by
+the same routine that writes the VASP POSCAR: for each entry in
+`cell.species_table`, the atoms belonging to that entry are emitted once
+per constituent (in `mixture` order) at the original site coordinates.
+The shared helper
+`phonopy.structure.cells.get_mixture_expansion(cell)` returns the
+ordered list of `(site_index, weight)` pairs that this row order
+corresponds to, and is used by both the writer and the force/FORCE_SETS
+parser so the two stay in lockstep.
+
 ## Definitions of variables
 
 (variable_supercell_matrix)=

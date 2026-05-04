@@ -51,6 +51,7 @@ from numpy.typing import NDArray
 from phonopy.exception import ForcesetsNotFoundError
 from phonopy.harmonic.displacement import (
     DisplacementDataset,
+    Type1DisplacementDataset,
     Type2DisplacementDataset,
     directions_to_displacement_dataset,
     get_least_displacements,
@@ -115,6 +116,7 @@ from phonopy.structure.cells import (
 )
 from phonopy.structure.dataset import forces_in_dataset
 from phonopy.structure.grid_points import length2mesh
+from phonopy.structure.mixture import reduce_mixture_forces
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.version import __version__
 
@@ -3341,9 +3343,24 @@ class Phonopy:
         if self._dataset is None:
             return None
 
+        # For mixed-species (site-mixture) supercells, the stored dataset
+        # carries raw per-constituent forces shape (..., n_expanded, 3).
+        # Reduce them to per-site forces here so the existing FC
+        # calculator path remains unchanged. The raw forces in
+        # ``self._dataset`` are kept intact. Reduction convention is
+        # picked from the calculator: VASP uses a plain sum because its
+        # vasprun.xml forces already carry the VCA weight factor.
+        dataset_for_fc = self._dataset
+        if self._supercell.has_mixtures:
+            dataset_for_fc = _reduce_mixture_dataset_forces(
+                self._dataset,
+                self._supercell,
+                mode=_mixture_reduce_mode_for_calculator(self._calculator),
+            )
+
         self._force_constants = get_fc2(
             self._supercell,
-            self._dataset,
+            dataset_for_fc,
             primitive=self._primitive,
             fc_calculator=fc_calculator,
             fc_calculator_options=fc_calculator_options,
@@ -3569,6 +3586,57 @@ class Phonopy:
             self._dataset[target] = _values
         else:
             raise RuntimeError("Set of displacements is not available.")
+
+
+def _reduce_mixture_dataset_forces(
+    dataset: DisplacementDataset,
+    supercell: PhonopyAtoms,
+    mode: Literal["weighted_sum", "sum"] = "weighted_sum",
+) -> DisplacementDataset:
+    """Return a shallow-copied dataset with forces reduced to per-site values.
+
+    Used to feed the FC calculator a per-site force tensor while leaving the
+    raw expanded forces in the user-visible dataset. ``mode`` selects the
+    per-site reduction convention; see ``reduce_mixture_forces``.
+
+    """
+    if "first_atoms" in dataset:
+        d1 = cast(Type1DisplacementDataset, dataset)
+        new_first_atoms = []
+        for entry in d1["first_atoms"]:
+            new_entry = dict(entry)
+            if "forces" in entry:
+                new_entry["forces"] = reduce_mixture_forces(
+                    entry["forces"], supercell, mode=mode
+                )
+            new_first_atoms.append(new_entry)
+        new_dataset: dict = {"first_atoms": new_first_atoms, "natom": d1["natom"]}
+        return cast(DisplacementDataset, new_dataset)
+
+    d2 = cast(Type2DisplacementDataset, dataset)
+    new_dataset = dict(d2)
+    if "forces" in d2:
+        new_dataset["forces"] = reduce_mixture_forces(
+            d2["forces"], supercell, mode=mode
+        )
+    return cast(DisplacementDataset, new_dataset)
+
+
+def _mixture_reduce_mode_for_calculator(
+    calculator: str | None,
+) -> Literal["weighted_sum", "sum"]:
+    """Return the mixture-reduce convention appropriate for ``calculator``.
+
+    VASP applies the VCA weights inside the SCF, so the per-row forces in
+    vasprun.xml already carry the weight factor: a plain sum across
+    constituents is correct. Other calculators have not yet been wired
+    for site-mixture; for them we default to the explicit weighted sum
+    so the per-site force matches the standard VCA expression.
+
+    """
+    if calculator is None or calculator == "vasp":
+        return "sum"
+    return "weighted_sum"
 
 
 def set_data_to_phonopy_yaml(phpy_yaml: PhonopyYaml, self: Phonopy) -> None:

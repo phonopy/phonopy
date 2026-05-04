@@ -272,17 +272,34 @@ class PhonopyAtoms:
         shape=(natom, 3), dtype='double', order='C'
     symbols : list[str]
         List of chemical symbols of atoms. Chemical symbol + natural number is
-        allowed, e.g., "Cl1".
+        allowed, e.g., "Cl1". Mixed-species sites carry a composite label
+        formed by concatenating constituent symbols (e.g., "GeSn").
     numbers : np.ndarray
-        Atomic numbers per atom in 1..118. shape=(natom,), dtype='int64'
+        Atomic numbers per atom in 1..118. shape=(natom,), dtype='int64'.
+        Raises RuntimeError when the cell contains a mixed-species site,
+        since a mixture has no single atomic number; use ``species_ids``
+        in that case.
     species_ids : np.ndarray
-        Per-atom unique species index. Atoms with the same (symbol,
-        atomic_number) get the same id; "Cl" and "Cl1" get different ids.
-        Suitable as the ``types`` argument for spglib when atoms with the
-        same atomic number but different symbol suffix must be distinguished.
-        shape=(natom,), dtype='int64'
+        Per-atom index into ``species_table``. Atoms that reference the same
+        ``species_table`` entry get the same id; ordinary "Cl" and labeled
+        "Cl1" get different ids, and two atoms differing only in mixture
+        composition or weights also get different ids. Suitable as the
+        ``types`` argument for spglib. shape=(natom,), dtype='int64'
+    species_table : list[_Species]
+        Deduplicated table of species entries indexed by ``species_ids``.
+        Each entry is either an ordinary single-element species (with
+        ``atomic_number`` set) or a weighted mixture
+        (``mixture`` set to a tuple of ``(symbol, weight)`` pairs summing
+        to 1.0). Returned as a shallow copy on each access; entries are
+        frozen and safe to share. See
+        ``build_species_table_from_mixtures``.
+    has_mixtures : bool
+        True when any species in the cell is a weighted mixture of
+        constituents (e.g., a Virtual Crystal Approximation site).
     masses : np.ndarray, optional
-        Atomic masses. shape=(natom,), dtype='double'
+        Atomic masses. For a mixed-species site this is the
+        weight-averaged sum over its constituents. shape=(natom,),
+        dtype='double'
     magnetic_moments : np.ndarray, optional
         shape=(natom,), (natom*3), (natom, 3), dtype='double', order='C'
     volume : float

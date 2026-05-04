@@ -237,6 +237,62 @@ def test_phonopy_yaml_mixture_roundtrip():
     )
 
 
+def test_phonopy_yaml_mixture_expanded_forces_roundtrip():
+    """Raw expanded forces survive a phonopy.yaml round-trip on a mixture cell.
+
+    The dataset's per-disp force block carries one row per expanded
+    constituent (n_expanded > n_sites). The round-trip must preserve raw
+    force values and keep ``dataset["natom"]`` equal to the supercell site
+    count, not to the force-row count.
+
+    """
+    species, ids = build_species_table_from_mixtures(
+        [
+            [("Ge", 0.5), ("Sn", 0.5)],
+            [("Ge", 0.5), ("Sn", 0.5)],
+        ]
+    )
+    cell = PhonopyAtoms(
+        cell=[[0, 2.82, 2.82], [2.82, 0, 2.82], [2.82, 2.82, 0]],
+        scaled_positions=[[0, 0, 0], [0.25, 0.25, 0.25]],
+        species_table=species,
+        species_ids=ids,
+    )
+    ph = Phonopy(cell, supercell_matrix=[2, 2, 2])
+    n_sites = len(ph.supercell)
+    n_expanded = 2 * n_sites  # 50/50 GeSn -> 2 constituents per site
+
+    # Synthesize a per-disp force block of shape (n_expanded, 3).
+    forces0 = np.zeros((n_expanded, 3), dtype="double")
+    forces0[0] = [0.1, 0.2, 0.3]
+    forces0[n_sites] = [0.4, 0.5, 0.6]
+    forces1 = np.zeros((n_expanded, 3), dtype="double")
+    forces1[1] = [-0.1, -0.2, -0.3]
+    forces1[n_sites + 1] = [-0.4, -0.5, -0.6]
+    ph.dataset = {
+        "natom": n_sites,
+        "first_atoms": [
+            {
+                "number": 0,
+                "displacement": np.array([0.01, 0.0, 0.0]),
+                "forces": forces0,
+            },
+            {
+                "number": 1,
+                "displacement": np.array([0.0, 0.01, 0.0]),
+                "forces": forces1,
+            },
+        ],
+    }
+
+    ph_load = phonopy.load(io.StringIO(str(ph.to_phonopy_yaml())), produce_fc=False)
+    assert ph_load.dataset is not None
+    assert ph_load.dataset["natom"] == n_sites
+    assert ph_load.dataset["first_atoms"][0]["forces"].shape == (n_expanded, 3)
+    np.testing.assert_allclose(ph_load.dataset["first_atoms"][0]["forces"], forces0)
+    np.testing.assert_allclose(ph_load.dataset["first_atoms"][1]["forces"], forces1)
+
+
 def _compare_NaCl_convcell(cell, compare_cells):
     cell_ref = read_vasp(cwd / ".." / "POSCAR_NaCl")
     compare_cells(cell, cell_ref)

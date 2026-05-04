@@ -1,0 +1,151 @@
+phonopy:
+  version: "3.5.1"
+  frequency_unit_conversion_factor: 15.633302
+  symmetry_tolerance: 1.00000e-05
+  configuration:
+    cell_filename: "POSCAR-unitcell"
+    create_displacements: ".true."
+    site_mixture: "0.99 0.99 0.01 0.01"
+    dim: "2 2 2"
+
+physical_unit:
+  atomic_mass: "AMU"
+  length: "angstrom"
+
+space_group:
+  type: "Fd-3m"
+  number: 227
+  Hall_symbol: "F 4d 2 3 -1d"
+
+supercell_matrix:
+- [   2,   0,   0 ]
+- [   0,   2,   0 ]
+- [   0,   0,   2 ]
+
+primitive_cell:
+  lattice:
+  - [     0.000000000000000,     2.894477534794636,     2.894477534794636 ] # a
+  - [     2.894477534794636,     0.000000000000000,     2.894477534794636 ] # b
+  - [     2.894477534794636,     2.894477534794636,     0.000000000000000 ] # c
+  points:
+  - symbol: GeSn # 1
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 73.100700
+  - symbol: GeSn # 2
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.250000000000000,  0.250000000000000,  0.250000000000000 ]
+    mass: 73.100700
+  reciprocal_lattice: # without 2pi
+  - [    -0.172742746830638,     0.172742746830638,     0.172742746830638 ] # a*
+  - [     0.172742746830638,    -0.172742746830638,     0.172742746830638 ] # b*
+  - [     0.172742746830638,     0.172742746830638,    -0.172742746830638 ] # c*
+
+unit_cell:
+  lattice:
+  - [    -0.000000000000000,     2.894477534794636,     2.894477534794636 ] # a
+  - [     2.894477534794636,    -0.000000000000000,     2.894477534794636 ] # b
+  - [     2.894477534794636,     2.894477534794636,     0.000000000000000 ] # c
+  points:
+  - symbol: GeSn # 1
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 2
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.250000000000000,  0.250000000000000,  0.250000000000000 ]
+    mass: 73.100700
+    reduced_to: 2
+
+supercell:
+  lattice:
+  - [     0.000000000000000,     5.788955069589272,     5.788955069589272 ] # a
+  - [     5.788955069589272,     0.000000000000000,     5.788955069589272 ] # b
+  - [     5.788955069589272,     5.788955069589272,     0.000000000000000 ] # c
+  points:
+  - symbol: GeSn # 1
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 2
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 3
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 4
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 5
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 6
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 7
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 8
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 73.100700
+    reduced_to: 1
+  - symbol: GeSn # 9
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.125000000000000,  0.125000000000000,  0.125000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+  - symbol: GeSn # 10
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.625000000000000,  0.125000000000000,  0.125000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+  - symbol: GeSn # 11
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.125000000000000,  0.625000000000000,  0.125000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+  - symbol: GeSn # 12
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.625000000000000,  0.625000000000000,  0.125000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+  - symbol: GeSn # 13
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.125000000000000,  0.125000000000000,  0.625000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+  - symbol: GeSn # 14
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.625000000000000,  0.125000000000000,  0.625000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+  - symbol: GeSn # 15
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.125000000000000,  0.625000000000000,  0.625000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+  - symbol: GeSn # 16
+    mixture: [ [Ge, 0.99], [Sn, 0.01] ]
+    coordinates: [  0.625000000000000,  0.625000000000000,  0.625000000000000 ]
+    mass: 73.100700
+    reduced_to: 9
+
+displacements:
+- atom:    1
+  displacement:
+    [   0.0000000000000000,  0.0070710678118655,  0.0070710678118655 ]

@@ -1,5 +1,7 @@
 """Tests of VASP calculator interface."""
 
+import lzma
+import shutil
 import tarfile
 import tempfile
 from io import StringIO
@@ -8,7 +10,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from phonopy.file_IO import parse_FORCE_SETS
+import phonopy
+from phonopy.file_IO import parse_FORCE_SETS, write_FORCE_SETS
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.interface.vasp import (
     Vasprun,
@@ -683,3 +686,135 @@ def test_get_vasp_vca_hint_lines_caseA():
     assert "POSCAR species rows: Ge Sn" in text
     assert "POSCAR counts:       2 2" in text
     assert "VCA = 0.5 0.5" in text
+
+
+# ---------------------------------------------------------------------------
+# Real GeSn 99/1 VCA fixtures (vasprun.xml + phonopy_disp.yaml + FORCE_SETS)
+# ---------------------------------------------------------------------------
+
+
+def test_parse_set_of_forces_GeSn_vca_vasprun():
+    """parse_set_of_forces reads 32 expanded forces from a real GeSn vasprun.xml."""
+    with lzma.open(cwd / "GeSn-vca-vasprun-001.xml.xz", "rb") as fp:
+        calc_dataset = parse_set_of_forces(32, [fp], verbose=False)
+
+    assert "forces" in calc_dataset
+    forces = calc_dataset["forces"]
+    assert len(forces) == 1
+    assert forces[0].shape == (32, 3)
+    np.testing.assert_allclose(
+        forces[0][0], [-0.00108926, -0.07349826, -0.07349826], atol=1e-8
+    )
+
+
+def test_GeSn_vca_FORCE_SETS_fixture_format():
+    """Reference FORCE_SETS uses (gamma) layout: line1=32, atom_index in 1..16."""
+    text = (cwd / "GeSn-vca-FORCE_SETS").read_text().splitlines()
+    assert int(text[0].strip()) == 32  # n_expanded
+    assert int(text[1].strip()) == 1  # n_disp
+    # Find the atom-number line (first non-blank after header)
+    body = [ln.strip() for ln in text[2:] if ln.strip()]
+    atom_number = int(body[0])
+    assert 1 <= atom_number <= 16  # site index, 1-based, in n_sites range
+
+
+def test_parse_FORCE_SETS_GeSn_vca_fixture_expanded_mode():
+    """parse_FORCE_SETS with natom=16 detects expanded mode and stores 32-row forces."""
+    dataset = parse_FORCE_SETS(natom=16, filename=cwd / "GeSn-vca-FORCE_SETS")
+    assert dataset["natom"] == 16  # restamped to site count
+    assert len(dataset["first_atoms"]) == 1
+    fa = dataset["first_atoms"][0]
+    assert fa["forces"].shape == (32, 3)
+    np.testing.assert_allclose(
+        fa["forces"][0], [-0.00108926, -0.07349826, -0.07349826], atol=1e-8
+    )
+
+
+def test_GeSn_vca_vasprun_to_FORCE_SETS_matches_fixture(tmp_path):
+    """Writing FORCE_SETS from parsed vasprun forces reproduces the fixture file.
+
+    Loads phonopy_disp.yaml to get the mixture supercell + displacement
+    metadata, parses vasprun.xml with the mixture-aware row count, and
+    writes a FORCE_SETS via the same path the CLI uses. The output must
+    match the bundled GeSn-vca-FORCE_SETS byte-for-byte (modulo
+    whitespace) to confirm the end-to-end pipeline is wire-compatible.
+
+    """
+    ph = phonopy.load(str(cwd / "GeSn-vca-phonopy_disp.yaml"), produce_fc=False)
+    assert ph.supercell.has_mixtures
+    assert len(ph.supercell) == 16
+    assert ph.dataset is not None
+    assert len(ph.dataset["first_atoms"]) == 1
+
+    with lzma.open(cwd / "GeSn-vca-vasprun-001.xml.xz", "rb") as fp:
+        calc_dataset = parse_set_of_forces(32, [fp], verbose=False)
+    forces = calc_dataset["forces"]
+    assert forces[0].shape == (32, 3)
+
+    # Mirror what create_FORCE_SETS does: stamp forces into dataset and write.
+    for entry, f in zip(ph.dataset["first_atoms"], forces, strict=True):
+        entry["forces"] = f
+    out = tmp_path / "FORCE_SETS"
+    write_FORCE_SETS(ph.dataset, filename=out)
+
+    written = parse_FORCE_SETS(natom=16, filename=out)
+    reference = parse_FORCE_SETS(natom=16, filename=cwd / "GeSn-vca-FORCE_SETS")
+    assert written["natom"] == reference["natom"] == 16
+    assert written["first_atoms"][0]["number"] == reference["first_atoms"][0]["number"]
+    np.testing.assert_allclose(
+        written["first_atoms"][0]["displacement"],
+        reference["first_atoms"][0]["displacement"],
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(
+        written["first_atoms"][0]["forces"],
+        reference["first_atoms"][0]["forces"],
+        atol=1e-9,
+    )
+
+
+def test_GeSn_vca_phonopy_load_builds_FC(tmp_path):
+    """End-to-end: load phonopy_disp.yaml + FORCE_SETS, build FC with traditional FD.
+
+    This is the CLI path ``phonopy-load phonopy_disp.yaml`` exercised
+    in-process. A single-displacement dataset is enough for the
+    finite-difference solver as long as the displaced sites cover one
+    representative per primitive-cell orbit; that is the case for a
+    GeSn 50/50 zincblende cell with 1 disp on site 0.
+
+    """
+    shutil.copy(cwd / "GeSn-vca-phonopy_disp.yaml", tmp_path / "phonopy_disp.yaml")
+    shutil.copy(cwd / "GeSn-vca-FORCE_SETS", tmp_path / "FORCE_SETS")
+    ph = phonopy.load(
+        str(tmp_path / "phonopy_disp.yaml"),
+        force_sets_filename=str(tmp_path / "FORCE_SETS"),
+        fc_calculator="traditional",
+    )
+    assert ph.force_constants is not None
+    n_sites = len(ph.supercell)
+    # phonopy.load defaults to compact FC, shape (n_patom, n_satom, 3, 3).
+    fc = ph.force_constants
+    assert fc.ndim == 4
+    assert fc.shape[1] == n_sites
+    assert fc.shape[2:] == (3, 3)
+    # Raw expanded forces are still in the dataset.
+    assert ph.dataset["first_atoms"][0]["forces"].shape == (32, 3)
+
+
+def test_GeSn_vca_phonopy_load_builds_FC_symfc(tmp_path):
+    """Same as above, but through the default symfc fc_calculator path."""
+    pytest.importorskip("symfc")
+    shutil.copy(cwd / "GeSn-vca-phonopy_disp.yaml", tmp_path / "phonopy_disp.yaml")
+    shutil.copy(cwd / "GeSn-vca-FORCE_SETS", tmp_path / "FORCE_SETS")
+    ph = phonopy.load(
+        str(tmp_path / "phonopy_disp.yaml"),
+        force_sets_filename=str(tmp_path / "FORCE_SETS"),
+        fc_calculator="symfc",
+    )
+    assert ph.force_constants is not None
+    n_sites = len(ph.supercell)
+    # phonopy.load defaults to compact FC, shape (n_patom, n_satom, 3, 3).
+    fc = ph.force_constants
+    assert fc.ndim == 4
+    assert fc.shape[1] == n_sites
+    assert fc.shape[2:] == (3, 3)

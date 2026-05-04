@@ -269,10 +269,18 @@ class SymfcFCSolver:
         except ImportError as exc:
             raise ModuleNotFoundError("Symfc python module was not found.") from exc
 
+        # Mixed-species (site-mixture) supercells have no per-site atomic
+        # number, so ``cell.numbers`` raises. Symfc only uses these as
+        # opaque integer type labels for symmetry, which is exactly what
+        # ``species_ids`` already encodes.
+        if self._supercell.has_mixtures:
+            numbers = self._supercell.species_ids
+        else:
+            numbers = self._supercell.numbers
         symfc_supercell = SymfcAtoms(
             cell=self._supercell.cell,
             scaled_positions=self._supercell.scaled_positions,
-            numbers=self._supercell.numbers,
+            numbers=numbers,
         )
         spacegroup_operations = (
             self._symmetry.symmetry_operations if self._symmetry else None
