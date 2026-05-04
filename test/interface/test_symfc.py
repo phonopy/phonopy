@@ -19,6 +19,9 @@ from phonopy.interface.symfc import (
     symmetrize_by_projector,
     update_symfc_cutoff_by_memsize,
 )
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import apply_site_mixture
+from phonopy.structure.mixture import get_mixture_expansion
 
 
 @pytest.mark.parametrize("cutoff", [None, {3: 5.0}])
@@ -250,3 +253,53 @@ def test_update_symfc_cutoff_by_memsize_large_memsize(ph_nacl_rd: Phonopy):
     update_symfc_cutoff_by_memsize(options, ph.supercell, ph.primitive, ph.symmetry)
     assert "memsize" not in options
     assert options.get("cutoff") is None
+
+
+def test_symfc_force_constants_GeSn_mixture():
+    """Symfc fc_calculator builds FC on a GeSn 50/50 mixture supercell.
+
+    Mixed-species cells raise RuntimeError on ``cell.numbers`` because a
+    mixture has no single atomic number. The symfc interface must fall
+    back to ``species_ids`` (which already encodes the same "same species
+    -> same opaque integer" contract that symfc / spglib expect from the
+    ``numbers`` argument) so that the default fc_calculator path works
+    end-to-end on VCA cells.
+
+    """
+    pytest.importorskip("symfc")
+
+    a = 2.82173
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+    mixed = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(mixed, supercell_matrix=np.diag([2, 2, 2]))
+    ph.generate_displacements(distance=0.01)
+
+    n_sites = len(ph.supercell)
+    site_indices, _ = get_mixture_expansion(ph.supercell)
+    n_expanded = int(site_indices.size)
+    assert n_expanded == 2 * n_sites
+
+    rng = np.random.default_rng(seed=42)
+    dataset = ph.dataset
+    assert dataset is not None
+    for entry in dataset["first_atoms"]:
+        forces = rng.standard_normal((n_expanded, 3)) * 1e-3
+        forces -= forces.mean(axis=0)
+        entry["forces"] = forces
+    ph.dataset = dataset
+
+    ph.produce_force_constants(fc_calculator="symfc")
+
+    fc = ph.force_constants
+    assert fc is not None
+    assert fc.shape == (n_sites, n_sites, 3, 3)
+    assert ph.dataset["first_atoms"][0]["forces"].shape == (n_expanded, 3)

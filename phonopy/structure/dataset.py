@@ -82,7 +82,17 @@ def get_displacements_and_forces(
             disps[i, disp1["number"]] = disp1["displacement"]
             if "forces" in disp1:
                 if forces is None:
-                    forces = np.zeros_like(disps)
+                    # For mixed-species (site-mixture) supercells, per-disp
+                    # forces carry one row per expanded constituent rather
+                    # than one per site, so the force array can have a
+                    # different second-axis length than the displacement
+                    # array.
+                    force_natom = disp1["forces"].shape[0]
+                    forces = np.zeros(
+                        (len(d1["first_atoms"]), force_natom, 3),
+                        dtype="double",
+                        order="C",
+                    )
                 forces[i] = disp1["forces"]
         return disps, forces
     elif "displacements" in disp_dataset:

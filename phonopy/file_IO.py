@@ -115,8 +115,17 @@ def _get_FORCE_SETS_lines_type1(
     else:
         forces_list = list(forces)
 
+    # For mixed-species (site-mixture) supercells, per-disp forces carry
+    # one row per expanded constituent, which exceeds the supercell site
+    # count stored in ``natom``. Write the row count actually present in
+    # the force block on line 1 (n_expanded) so the parser can detect
+    # expanded mode by comparing it against the supercell size.
+    header_atom_count = num_atom
+    if forces_list:
+        header_atom_count = max(num_atom, forces_list[0].shape[0])
+
     lines = []
-    lines.append("%-5d" % num_atom)
+    lines.append("%-5d" % header_atom_count)
     lines.append("%-5d" % len(displacements))
     for count, disp in enumerate(displacements):
         lines.append("")
@@ -176,11 +185,23 @@ def _get_dataset(
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
     if len(first_line_ary) == 1:
-        if natom is None or int(first_line_ary[0]) == natom:
-            dataset = _get_dataset_type1(f)
+        file_natom = int(first_line_ary[0])
+        # For a mixed-species (site-mixture) supercell, the FORCE_SETS
+        # header carries n_expanded (the per-row count of forces) which
+        # is larger than the supercell site count ``natom`` passed in.
+        # The mismatch is the trigger for expanded-mode parsing.
+        if natom is None or file_natom == natom:
+            site_natom = file_natom
+        elif file_natom > natom:
+            site_natom = natom
         else:
             msg = "Number of forces is not consistent with supercell setting."
             raise RuntimeError(msg)
+
+        dataset = _get_dataset_type1(f)
+        # In expanded mode the file-level natom is n_expanded; restamp
+        # the dataset's natom to the caller-supplied site count.
+        dataset["natom"] = site_natom
 
         if to_type2:
             disps, forces = get_displacements_and_forces(dataset)  # type: ignore[arg-type]
