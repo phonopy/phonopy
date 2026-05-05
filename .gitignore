@@ -55,5 +55,9 @@ _sources
 # jupyter notebooks
 .ipynb_checkpoints
 
+# virtual environments
+venv/
+.venv/
+
 # uv
 uv.lock

@@ -140,6 +140,13 @@ class QlmStructureInfo(StructureInfo):
     qlm_ctx: Any
 
 
+@dataclass(frozen=True)
+class OctopusStructureInfo(StructureInfo):
+    """Octopus structure information."""
+
+    pass
+
+
 calculator_info = {
     "abacus": {"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
@@ -158,7 +165,11 @@ calculator_info = {
     "vasp": {"option": {"name": "--vasp", "help": "Invoke Vasp mode"}},
     "wien2k": {"option": {"name": "--wien2k", "help": "Invoke Wien2k mode"}},
     "pwmat": {"option": {"name": "--pwmat", "help": "Invoke PWmat mode"}},
+<<<<<<< HEAD
     "exciting": {"option": {"name": "--exciting", "help": "Invoke exciting mode"}},
+=======
+    "octopus": {"option": {"name": "--octopus", "help": "Invoke Octopus mode"}},
+>>>>>>> 9c7ca731 (Add Octopus interface on top of current develop)
 }
 
 
@@ -360,6 +371,10 @@ def write_crystal_structure(
         import phonopy.interface.pwmat as pwmat
 
         pwmat.write_atom_config(filename, cell)
+    elif interface_mode == "octopus":
+        import phonopy.interface.octopus as octopus
+
+        octopus.write_octopus(filename, cell)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -624,6 +639,10 @@ def _write_supercells_generic(
         import phonopy.interface.exciting as exciting
 
         writer = exciting.write_supercells_with_displacements
+    elif interface_mode == "octopus":
+        import phonopy.interface.octopus as octopus
+
+        writer = octopus.write_supercells_with_displacements
     else:
         msg = f"No handler found for calculator interface: {interface_mode}"
         raise RuntimeError(msg)
@@ -974,6 +993,15 @@ def read_crystal_structure(
         return unitcell, QlmStructureInfo(
             unitcell_filename=cell_filename, qlm_ctx=qlm_ctx
         )
+    elif interface_mode == "octopus":
+        # Octopus uses atomic units for lattice vectors. We reuse POSCAR parsing
+        # and convert only the lattice from Angstrom to Bohr units.
+        from phonopy.interface.vasp import read_vasp
+
+        bohr_angstrom = 1.0 / get_physical_units().Bohr
+        unitcell = read_vasp(cell_filename)
+        unitcell.cell *= bohr_angstrom
+        return unitcell, OctopusStructureInfo(unitcell_filename=cell_filename)
 
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -1015,6 +1043,8 @@ def get_default_cell_filename(interface_mode: str | None) -> str:
         return "site"
     elif interface_mode == "pwmat":
         return "atom.config"
+    elif interface_mode == "octopus":
+        return "POSCAR"
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -1148,6 +1178,8 @@ def get_calc_dataset(
         from phonopy.interface.qlm import parse_set_of_forces
     elif interface_mode == "pwmat":
         from phonopy.interface.pwmat import parse_set_of_forces
+    elif interface_mode == "octopus":
+        from phonopy.interface.octopus import parse_set_of_forces
     else:
         msg = f"No calculator interface was found: {interface_mode}"
         raise RuntimeError(msg)
