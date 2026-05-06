@@ -276,7 +276,7 @@ class QpointsPhonon:
         dynmat = run_dynamical_matrix_solver_c(
             self._dynamical_matrix, self._qpoints, self._nac_q_direction
         )
-        eigenvectors = dynmat
+        eigenvectors = dynmat.copy()
 
         for i, _q in enumerate(self._qpoints):
             dm = dynmat[i]
