@@ -249,31 +249,24 @@ class TetrahedronMethod:
 
     def _set_relative_grid_addresses(self, lang: Literal["C", "Python"] = "C") -> None:
         """Set dataset of relative grid addresses."""
+        if self._primitive_vectors is None:
+            (
+                self._relative_grid_addresses,
+                self._central_indices,
+            ) = _get_relative_grid_addresses_from_main_diagonal(0)
+            return
+
         if lang == "C":
-            if self._primitive_vectors is None:
-                rga = np.array(
-                    get_all_tetrahedra_relative_grid_address()[0],
-                    dtype="int64",
-                    order="C",
-                )
-            else:
-                rga = get_tetrahedra_relative_grid_address(self._primitive_vectors)
-            self._relative_grid_addresses = rga
+            self._relative_grid_addresses = get_tetrahedra_relative_grid_address(
+                self._primitive_vectors
+            )
         else:
-            if self._primitive_vectors is None:
-                (
-                    relative_grid_addresses,
-                    central_indices,
-                ) = _get_relative_grid_addresses_from_main_diagonal(0)
-            else:
-                (
-                    relative_grid_addresses,
-                    central_indices,
-                ) = _get_relative_grid_addresses_from_microzone_lattice(
-                    self._primitive_vectors
-                )
-            self._relative_grid_addresses = relative_grid_addresses
-            self._central_indices = central_indices
+            (
+                self._relative_grid_addresses,
+                self._central_indices,
+            ) = _get_relative_grid_addresses_from_microzone_lattice(
+                self._primitive_vectors
+            )
 
     def _run_c(
         self,
