@@ -1736,6 +1736,7 @@ def _init_phonopy(
     log_level: int,
 ):
     """Prepare phonopy object."""
+    lang = "Rust" if settings.use_rust else "C"
     if (
         settings.create_displacements
         and settings.random_displacement_temperature is None
@@ -1748,6 +1749,7 @@ def _init_phonopy(
             is_symmetry=settings.is_symmetry,
             calculator=cell_info.interface_mode,
             log_level=log_level,
+            lang=lang,
         )
     else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         phonon = Phonopy(
@@ -1759,6 +1761,7 @@ def _init_phonopy(
             is_symmetry=settings.is_symmetry,
             calculator=cell_info.interface_mode,
             log_level=log_level,
+            lang=lang,
         )
         if settings.frequency_conversion_factor is not None:
             phonon.unit_conversion_factor = settings.frequency_conversion_factor

@@ -120,6 +120,7 @@ class Settings:
         self.min_temperature: float = 0
         self.temperature_step: float = 10
         self.use_pypolymlp: bool = False
+        self.use_rust: bool = False
 
 
 # Parse phonopy setting filen
@@ -484,6 +485,12 @@ class ConfParser(Generic[TSettings]):
             if args.use_pypolymlp:
                 self._confs["use_pypolymlp"] = ".true."
 
+        if "use_rust" in arg_list:
+            if args.use_rust:
+                self._confs["use_rust"] = ".true."
+            elif args.use_rust is False:
+                self._confs["use_rust"] = ".false."
+
     def _parse_conf(self) -> None:
         """Add treatments to settings from conf file or command options.
 
@@ -844,6 +851,12 @@ class ConfParser(Generic[TSettings]):
                 elif confs["use_pypolymlp"].lower() == ".false.":
                     self._set_parameter("use_pypolymlp", False)
 
+            if conf_key == "use_rust":
+                if confs["use_rust"].lower() == ".true.":
+                    self._set_parameter("use_rust", True)
+                elif confs["use_rust"].lower() == ".false.":
+                    self._set_parameter("use_rust", False)
+
     def _set_parameter(self, key: str, val: object) -> None:
         """Pass to another data structure."""
         self._parameters[key] = val
@@ -1059,6 +1072,10 @@ class ConfParser(Generic[TSettings]):
         # Machine learning potential
         if "use_pypolymlp" in params:
             settings.use_pypolymlp = params["use_pypolymlp"]
+
+        # Use experimental Rust backend
+        if "use_rust" in params:
+            settings.use_rust = params["use_rust"]
 
 
 #

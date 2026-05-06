@@ -124,7 +124,8 @@ def get_integration_weights(
     """
     relative_grid_addresses = np.array(
         np.dot(
-            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice), bz_grid.P.T
+            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
+            bz_grid.P.T,
         ),
         dtype="int64",
         order="C",
@@ -264,7 +265,7 @@ class TetrahedronMethod:
         self,
         primitive_vectors: Sequence[Sequence[float]] | NDArray[np.double] | None,
         mesh: Sequence[int] | NDArray[np.int64] | None = None,
-        lang: Literal["C", "Python"] = "C",
+        lang: Literal["C", "Python", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -287,7 +288,7 @@ class TetrahedronMethod:
             self._primitive_vectors = (
                 np.array(primitive_vectors, dtype="double", order="C") / mesh
             )
-        self._lang = lang
+        self._lang: Literal["C", "Python", "Rust"] = lang
         self._vertices: NDArray[np.int64] | None = None
         self._relative_grid_addresses: NDArray[np.int64]
         self._central_indices: NDArray[np.int64] | None = None
@@ -318,7 +319,7 @@ class TetrahedronMethod:
         self._set_relative_grid_addresses().
 
         """
-        if self._lang == "C":
+        if self._lang in ("C", "Rust"):
             self._run_c(omegas, value=value)
         else:
             self._run_py(omegas, value=value)
@@ -355,7 +356,9 @@ class TetrahedronMethod:
         """Return integration weights."""
         return self._integration_weight
 
-    def _set_relative_grid_addresses(self, lang: Literal["C", "Python"] = "C") -> None:
+    def _set_relative_grid_addresses(
+        self, lang: Literal["C", "Python", "Rust"] = "C"
+    ) -> None:
         """Set dataset of relative grid addresses."""
         if self._primitive_vectors is None:
             (
@@ -364,9 +367,9 @@ class TetrahedronMethod:
             ) = _get_relative_grid_addresses_from_main_diagonal(0)
             return
 
-        if lang == "C":
+        if lang in ("C", "Rust"):
             self._relative_grid_addresses = get_tetrahedra_relative_grid_address(
-                self._primitive_vectors
+                self._primitive_vectors, lang=lang
             )
         else:
             (

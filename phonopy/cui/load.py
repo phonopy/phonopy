@@ -86,6 +86,7 @@ def load(
     use_SNF_supercell: bool = False,
     symprec: float = 1e-5,
     log_level: int = 0,
+    lang: Literal["C", "Rust"] = "C",
 ) -> Phonopy:
     """Create Phonopy instance from parameters and/or input files.
 
@@ -218,6 +219,10 @@ def load(
         Tolerance used to find crystal symmetry. Default is 1e-5.
     log_level : int, optional
         Verbosity control. Default is 0.
+    lang : Literal["C", "Rust"], optional
+        Backend implementation for compute-heavy kernels. "C" (default)
+        uses the existing C extension. "Rust" selects the experimental
+        phonors backend.
 
     """
     if (
@@ -286,6 +291,7 @@ def load(
         use_SNF_supercell=use_SNF_supercell,
         calculator=_calculator,
         log_level=log_level,
+        lang=lang,
     )
 
     units = get_calculator_physical_units(_calculator)
