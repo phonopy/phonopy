@@ -182,6 +182,7 @@ class Phonopy:
         hermitianize_dynamical_matrix: bool = True,
         calculator: str | None = None,
         log_level: int = 0,
+        lang: Literal["C", "Rust"] = "C",
     ):
         """Init method.
 
@@ -219,12 +220,20 @@ class Phonopy:
             Calculator name such as 'vasp', 'qe', etc. Default is None.
         log_level : int, optional
             Log level. Default is 0.
+        lang : Literal["C", "Rust"], optional
+            Backend implementation for compute-heavy kernels. "C" (default)
+            uses the existing C extension. "Rust" selects the experimental
+            phonors backend. Default is "C".
 
         """
+        from phonopy._lang import log_dispatch
+
+        log_dispatch(lang, "Phonopy.__init__")
         self._symprec = symprec
         self._is_symmetry = is_symmetry
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
+        self._lang: Literal["C", "Rust"] = lang
 
         if factor is not None:
             msg = (
@@ -404,6 +413,17 @@ class Phonopy:
 
         """
         return self._calculator
+
+    @property
+    def lang(self) -> Literal["C", "Rust"]:
+        """Return the selected backend implementation.
+
+        Literal["C", "Rust"]
+            "C" uses the C extension; "Rust" uses the experimental
+            phonors backend.
+
+        """
+        return self._lang
 
     @property
     def dataset(self) -> DisplacementDataset | None:
@@ -3407,6 +3427,7 @@ class Phonopy:
             hermitianize=self._hermitianize_dynamical_matrix,
             log_level=self._log_level,
             use_openmp=phonoc.use_openmp(),
+            lang=self._lang,
         )
         # DynamialMatrix instance transforms force constants in correct
         # type of numpy array.

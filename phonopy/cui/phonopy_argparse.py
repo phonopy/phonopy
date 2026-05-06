@@ -766,6 +766,13 @@ def get_parser(
         help="Relax atomic positions using polynomial MLPs",
     )
     parser.add_argument(
+        "--rust",
+        dest="use_rust",
+        action="store_true",
+        default=None,
+        help="Use experimental Rust backend instead of the C extension",
+    )
+    parser.add_argument(
         "-s",
         "--save",
         dest="is_graph_save",
@@ -988,6 +995,7 @@ class PhonopyMockArgs:
     supercell_dimension: str | None = None
     thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool | None = None
+    use_rust: bool | None = None
     write_dynamical_matrices: bool | None = None
     write_force_constants: bool | None = None
     writefc_format: str | None = None

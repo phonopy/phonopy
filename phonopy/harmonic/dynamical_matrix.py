@@ -98,6 +98,7 @@ class DynamicalMatrix:
         decimals: int | None = None,
         hermitianize: bool = True,
         use_openmp: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -119,6 +120,9 @@ class DynamicalMatrix:
             DM^H) / 2.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
+        lang : Literal["C", "Rust"], optional, default="C"
+            Backend implementation for compute-heavy kernels. "Rust" selects
+            the experimental phonors backend.
 
         """
         self._scell = supercell
@@ -126,6 +130,7 @@ class DynamicalMatrix:
         self._decimals = decimals
         self._hermitianize = hermitianize
         self._use_openmp = use_openmp
+        self._lang: Literal["C", "Rust"] = lang
         self._dynamical_matrix: NDArray[np.cdouble] | None = None
         self._force_constants = np.asarray(force_constants, dtype="double", order="C")
 
@@ -194,6 +199,11 @@ class DynamicalMatrix:
     def use_openmp(self) -> bool:
         """Return activate OpenMP or not."""
         return self._use_openmp
+
+    @property
+    def lang(self) -> Literal["C", "Rust"]:
+        """Return the selected backend implementation."""
+        return self._lang
 
     def run(
         self,
@@ -280,6 +290,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         hermitianize: bool = True,
         log_level: int = 0,
         use_openmp: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -301,6 +312,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
+        lang : Literal["C", "Rust"], optional, default="C"
+            Backend implementation for compute-heavy kernels.
 
         """
         super().__init__(
@@ -310,6 +323,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             decimals=decimals,
             hermitianize=hermitianize,
             use_openmp=use_openmp,
+            lang=lang,
         )
         self._log_level = log_level
         self._rec_lat = np.array(
@@ -429,6 +443,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         hermitianize: bool = True,
         log_level: int = 0,
         use_openmp: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -453,6 +468,8 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
+        lang : Literal["C", "Rust"], optional, default="C"
+            Backend implementation for compute-heavy kernels.
 
         """
         super().__init__(
@@ -463,6 +480,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             hermitianize=hermitianize,
             log_level=log_level,
             use_openmp=use_openmp,
+            lang=lang,
         )
 
         # For the method by Gonze et al.
@@ -693,7 +711,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         shape=(num_atom, 3, num_atom, 3), dtype="cdouble"
 
         """
-        import phonopy._phonopy as phonoc  # type: ignore
+        from phonopy._lang import log_dispatch
 
         pos = self._pcell.positions
         num_atom = len(pos)
@@ -705,28 +723,51 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         else:
             dd_q0 = self._dd_q0
 
-        if q_dir_cart is None:
-            is_nac_q_zero = True
-            _q_dir_cart = np.zeros(3, dtype="double")
-        else:
-            is_nac_q_zero = False
-            _q_dir_cart = q_dir_cart
+        factor = self._unit_conversion * 4.0 * np.pi / volume
 
-        phonoc.recip_dipole_dipole(
-            dd.view(dtype="double"),
-            dd_q0.view(dtype="double"),
-            self._G_list,
-            q_cart,
-            _q_dir_cart,
-            self._born,
-            self._dielectric,
-            np.array(pos, dtype="double", order="C"),
-            is_nac_q_zero * 1,
-            self._unit_conversion * 4.0 * np.pi / volume,
-            self._Lambda,
-            self.Q_DIRECTION_TOLERANCE,
-            self._use_openmp * 1,
-        )
+        if self._lang == "Rust":
+            log_dispatch("Rust", "DynamicalMatrixGL._get_c_recip_dipole_dipole")
+            import phonors  # type: ignore[import-untyped]
+
+            phonors.recip_dipole_dipole(
+                dd,
+                dd_q0,
+                self._G_list,
+                q_cart,
+                self._born,
+                self._dielectric,
+                pos,
+                factor,
+                self._Lambda,
+                self.Q_DIRECTION_TOLERANCE,
+                q_dir_cart,
+            )
+        else:
+            log_dispatch("C", "DynamicalMatrixGL._get_c_recip_dipole_dipole")
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            if q_dir_cart is None:
+                is_nac_q_zero = True
+                _q_dir_cart = np.zeros(3, dtype="double")
+            else:
+                is_nac_q_zero = False
+                _q_dir_cart = q_dir_cart
+
+            phonoc.recip_dipole_dipole(
+                dd.view(dtype="double"),
+                dd_q0.view(dtype="double"),
+                self._G_list,
+                q_cart,
+                _q_dir_cart,
+                self._born,
+                self._dielectric,
+                pos,
+                is_nac_q_zero * 1,
+                factor,
+                self._Lambda,
+                self.Q_DIRECTION_TOLERANCE,
+                self._use_openmp * 1,
+            )
         return dd
 
     def _run_c_recip_dipole_dipole_q0(self) -> None:
@@ -735,21 +776,38 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         Computed only once.
 
         """
-        import phonopy._phonopy as phonoc  # type: ignore
+        from phonopy._lang import log_dispatch
 
         pos = self._pcell.positions
         self._dd_q0 = np.zeros((len(pos), 3, 3), dtype="cdouble", order="C")
 
-        phonoc.recip_dipole_dipole_q0(
-            self._dd_q0.view(dtype="double"),
-            self._G_list,
-            self._born,
-            self._dielectric,
-            np.array(pos, dtype="double", order="C"),
-            self._Lambda,
-            self.Q_DIRECTION_TOLERANCE,
-            self._use_openmp * 1,
-        )
+        if self._lang == "Rust":
+            log_dispatch("Rust", "DynamicalMatrixGL._run_c_recip_dipole_dipole_q0")
+            import phonors  # type: ignore[import-untyped]
+
+            phonors.recip_dipole_dipole_q0(
+                self._dd_q0,
+                self._G_list,
+                self._born,
+                self._dielectric,
+                pos,
+                self._Lambda,
+                self.Q_DIRECTION_TOLERANCE,
+            )
+        else:
+            log_dispatch("C", "DynamicalMatrixGL._run_c_recip_dipole_dipole_q0")
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            phonoc.recip_dipole_dipole_q0(
+                self._dd_q0.view(dtype="double"),
+                self._G_list,
+                self._born,
+                self._dielectric,
+                pos,
+                self._Lambda,
+                self.Q_DIRECTION_TOLERANCE,
+                self._use_openmp * 1,
+            )
 
     def _get_real_dipole_dipole(self, q_red: NDArray[np.double]) -> NDArray[np.cdouble]:
         num_atom = len(self._pcell)
@@ -894,6 +952,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         hermitianize: bool = True,
         log_level: int = 0,
         use_openmp: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -915,6 +974,8 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             Log level.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix.
+        lang : Literal["C", "Rust"], optional, default="C"
+            Backend implementation for compute-heavy kernels.
 
         """
         super().__init__(
@@ -925,6 +986,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             hermitianize=hermitianize,
             log_level=log_level,
             use_openmp=use_openmp,
+            lang=lang,
         )
 
         if nac_params is not None:
@@ -978,11 +1040,22 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         q: NDArray[np.double],
         born: NDArray[np.double],
     ) -> NDArray[np.double]:
+        from phonopy._lang import log_dispatch
+
         nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double", order="C")
-        A = np.dot(q, born)
-        for i in range(num_atom):
-            for j in range(num_atom):
-                nac_q[i, j] = np.outer(A[i], A[j])
+        if self._lang == "Rust":
+            log_dispatch("Rust", "DynamicalMatrixWang._get_charge_sum")
+            import phonors  # type: ignore[import-untyped]
+
+            phonors.charge_sum(
+                nac_q, 1.0, np.ascontiguousarray(q, dtype="double"), born
+            )
+        else:
+            log_dispatch("Python", "DynamicalMatrixWang._get_charge_sum")
+            A = np.dot(q, born)
+            for i in range(num_atom):
+                for j in range(num_atom):
+                    nac_q[i, j] = np.outer(A[i], A[j])
         return nac_q
 
     def _get_constant_factor(
@@ -1023,6 +1096,7 @@ def get_dynamical_matrix(
     hermitianize: bool = True,
     log_level: int = 0,
     use_openmp: bool = False,
+    lang: Literal["C", "Rust"] = "C",
 ) -> DynamicalMatrix | DynamicalMatrixGL | DynamicalMatrixWang:
     """Return dynamical matrix.
 
@@ -1043,6 +1117,7 @@ def get_dynamical_matrix(
             decimals=decimals,
             hermitianize=hermitianize,
             use_openmp=use_openmp,
+            lang=lang,
         )
     else:
         if "method" not in nac_params:
@@ -1063,6 +1138,7 @@ def get_dynamical_matrix(
             hermitianize=hermitianize,
             log_level=log_level,
             use_openmp=use_openmp,
+            lang=lang,
         )
         dm.nac_params = nac_params
     return dm
