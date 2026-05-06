@@ -8,9 +8,9 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.other.tetrahedron_method import get_integration_weights
 from phonopy.phonon.dos import NormalDistribution
 from phonopy.phonon.grid import BZGrid
+from phonopy.phonon.tetrahedron_method import get_integration_weights
 
 epsilon = 1.0e-8
 

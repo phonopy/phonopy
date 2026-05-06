@@ -242,3 +242,75 @@ void recgrid_free_RotMats(RecgridMats *rotmats) {
     }
     free(rotmats);
 }
+
+static void get_neighboring_grid_points_type1(
+    int64_t *neighboring_grid_points, const int64_t grid_point,
+    const int64_t (*relative_grid_address)[3],
+    const int64_t num_relative_grid_address,
+    const RecgridConstBZGrid *bzgrid) {
+    int64_t bzmesh[3], bz_address[3];
+    int64_t i, j, bz_gp, prod_bz_mesh;
+
+    for (i = 0; i < 3; i++) {
+        bzmesh[i] = bzgrid->D_diag[i] * 2;
+    }
+    prod_bz_mesh = bzmesh[0] * bzmesh[1] * bzmesh[2];
+    for (i = 0; i < num_relative_grid_address; i++) {
+        for (j = 0; j < 3; j++) {
+            bz_address[j] =
+                bzgrid->addresses[grid_point][j] + relative_grid_address[i][j];
+        }
+        bz_gp = bzgrid->gp_map[recgrid_get_grid_index_from_address(bz_address,
+                                                                   bzmesh)];
+        if (bz_gp == prod_bz_mesh) {
+            neighboring_grid_points[i] =
+                recgrid_get_grid_index_from_address(bz_address, bzgrid->D_diag);
+        } else {
+            neighboring_grid_points[i] = bz_gp;
+        }
+    }
+}
+
+static void get_neighboring_grid_points_type2(
+    int64_t *neighboring_grid_points, const int64_t grid_point,
+    const int64_t (*relative_grid_address)[3],
+    const int64_t num_relative_grid_address,
+    const RecgridConstBZGrid *bzgrid) {
+    int64_t bz_address[3];
+    int64_t i, j, gp;
+
+    for (i = 0; i < num_relative_grid_address; i++) {
+        for (j = 0; j < 3; j++) {
+            bz_address[j] =
+                bzgrid->addresses[grid_point][j] + relative_grid_address[i][j];
+        }
+        gp = recgrid_get_grid_index_from_address(bz_address, bzgrid->D_diag);
+        neighboring_grid_points[i] = bzgrid->gp_map[gp];
+        if (bzgrid->gp_map[gp + 1] - bzgrid->gp_map[gp] > 1) {
+            for (j = bzgrid->gp_map[gp]; j < bzgrid->gp_map[gp + 1]; j++) {
+                if (bz_address[0] == bzgrid->addresses[j][0] &&
+                    bz_address[1] == bzgrid->addresses[j][1] &&
+                    bz_address[2] == bzgrid->addresses[j][2]) {
+                    neighboring_grid_points[i] = j;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void recgrid_get_neighboring_grid_points(
+    int64_t *neighboring_grid_points, const int64_t grid_point,
+    const int64_t (*relative_grid_address)[3],
+    const int64_t num_relative_grid_address,
+    const RecgridConstBZGrid *bzgrid) {
+    if (bzgrid->type == 1) {
+        get_neighboring_grid_points_type1(neighboring_grid_points, grid_point,
+                                          relative_grid_address,
+                                          num_relative_grid_address, bzgrid);
+    } else {
+        get_neighboring_grid_points_type2(neighboring_grid_points, grid_point,
+                                          relative_grid_address,
+                                          num_relative_grid_address, bzgrid);
+    }
+}

@@ -149,6 +149,14 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     const int64_t n_patom, const int64_t is_transpose);
 int64_t phpy_use_openmp(void);
 int64_t phpy_get_max_threads(void);
+int64_t phpy_get_thm_integration_weights_at_grid_points(
+    double *iw, const double *frequency_points,
+    const int64_t num_frequency_points, const int64_t num_band,
+    const int64_t num_gp, const int64_t (*relative_grid_address)[4][3],
+    const int64_t D_diag[3], const int64_t *grid_points,
+    const int64_t (*bz_grid_addresses)[3], const int64_t *bz_map,
+    const int64_t bz_grid_type, const double *frequencies,
+    const int64_t *gp2irgp_map, const char function);
 
 #ifdef __cplusplus
 }

@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.other.tetrahedron_method import get_tetrahedra_relative_grid_address
 from phonopy.phonon.grid import (
     BZGrid,
     GridMatrix,
@@ -20,6 +19,7 @@ from phonopy.phonon.grid import (
     get_grid_point_from_address_py,
     get_ir_grid_points,
 )
+from phonopy.phonon.tetrahedron_method import get_tetrahedra_relative_grid_address
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 

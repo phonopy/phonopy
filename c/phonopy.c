@@ -42,6 +42,8 @@
 
 #include "derivative_dynmat.h"
 #include "dynmat.h"
+#include "lagrid.h"
+#include "recgrid.h"
 #include "rgrid.h"
 #include "tetrahedron_method.h"
 
@@ -901,4 +903,65 @@ static int nint(const double a) {
         return (int)(a - 0.5);
     else
         return (int)(a + 0.5);
+}
+
+/* thm_get_integration_weight at multiple grid points for using openmp.
+ *
+ * relative_grid_addresses are given as P multiplied with those from dataset,
+ * i.e., np.dot(relative_grid_addresses, P.T). */
+int64_t phpy_get_thm_integration_weights_at_grid_points(
+    double *iw, const double *frequency_points,
+    const int64_t num_frequency_points, const int64_t num_band,
+    const int64_t num_gp, const int64_t (*relative_grid_address)[4][3],
+    const int64_t D_diag[3], const int64_t *grid_points,
+    const int64_t (*bz_grid_addresses)[3], const int64_t *bz_map,
+    const int64_t bz_grid_type, const double *frequencies,
+    const int64_t *gp2irgp_map, const char function) {
+    int64_t i, j, k, bi;
+    int64_t vertices[24][4];
+    double freq_vertices[24][4];
+    RecgridConstBZGrid *bzgrid;
+
+    if ((bzgrid = (RecgridConstBZGrid *)malloc(sizeof(RecgridConstBZGrid))) ==
+        NULL) {
+        warning_print("Memory could not be allocated.");
+        return 0;
+    }
+
+    bzgrid->addresses = bz_grid_addresses;
+    bzgrid->gp_map = bz_map;
+    bzgrid->type = bz_grid_type;
+    for (i = 0; i < 3; i++) {
+        bzgrid->D_diag[i] = D_diag[i];
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for private(j, k, bi, vertices, freq_vertices)
+#endif
+    for (i = 0; i < num_gp; i++) {
+        for (j = 0; j < 24; j++) {
+            recgrid_get_neighboring_grid_points(vertices[j], grid_points[i],
+                                                relative_grid_address[j], 4,
+                                                bzgrid);
+        }
+        for (bi = 0; bi < num_band; bi++) {
+            for (j = 0; j < 24; j++) {
+                for (k = 0; k < 4; k++) {
+                    freq_vertices[j][k] =
+                        frequencies[gp2irgp_map[vertices[j][k]] * num_band +
+                                    bi];
+                }
+            }
+            for (j = 0; j < num_frequency_points; j++) {
+                iw[i * num_frequency_points * num_band + j * num_band + bi] =
+                    thm_get_integration_weight(frequency_points[j],
+                                               freq_vertices, function);
+            }
+        }
+    }
+
+    free(bzgrid);
+    bzgrid = NULL;
+
+    return 1;
 }

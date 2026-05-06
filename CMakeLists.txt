@@ -73,8 +73,10 @@ if(BUILD_SHARED_LIBS)
     add_library(recgrid_lib SHARED ${SOURCES_RECGRID})
 
     if(OpenMP_FOUND)
-        target_link_libraries(phonopy_libs PRIVATE OpenMP::OpenMP_C)
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib OpenMP::OpenMP_C)
         target_link_libraries(recgrid_lib PRIVATE OpenMP::OpenMP_C)
+    else()
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
@@ -84,8 +86,10 @@ else()
     add_library(recgrid_lib STATIC ${SOURCES_RECGRID})
 
     if(OpenMP_FOUND)
-        target_link_libraries(phonopy_libs PRIVATE OpenMP::OpenMP_C)
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib OpenMP::OpenMP_C)
         target_link_libraries(recgrid_lib PRIVATE OpenMP::OpenMP_C)
+    else()
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)

@@ -288,6 +288,23 @@ double recgrid_get_tolerance_for_BZ_reduction(const RecgridBZGrid *bzgrid);
 RecgridMats *recgrid_alloc_RotMats(const int64_t size);
 void recgrid_free_RotMats(RecgridMats *rotmats);
 
+/**
+ * @brief Return grid points of relative grid addresses in BZ-grid.
+ *
+ * @param neighboring_grid_points Grid points of relative grid addresses in
+ * BZ-grid.
+ * @param grid_point Grid point of interest.
+ * @param relative_grid_address Relative grid address wrt grid point of
+ * interest.
+ * @param num_relative_grid_address Number of relative grid addresses.
+ * @param bzgrid BZ-grid information.
+ */
+void recgrid_get_neighboring_grid_points(
+    int64_t *neighboring_grid_points, const int64_t grid_point,
+    const int64_t (*relative_grid_address)[3],
+    const int64_t num_relative_grid_address,
+    const RecgridConstBZGrid *bzgrid);
+
 #ifdef __cplusplus
 }
 #endif
