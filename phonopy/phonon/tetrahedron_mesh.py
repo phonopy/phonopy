@@ -42,8 +42,8 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.phonon.tetrahedron_method import TetrahedronMethod
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 
 class TetrahedronMesh:

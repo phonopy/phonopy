@@ -45,7 +45,7 @@ from numpy.typing import NDArray
 
 from phonopy.phonon.mesh import Mesh
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
-from phonopy.structure.tetrahedron_method import TetrahedronMethod
+from phonopy.phonon.tetrahedron_method import TetrahedronMethod
 
 
 class TotalDosDict(TypedDict):

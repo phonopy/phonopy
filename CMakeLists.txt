@@ -62,21 +62,34 @@ set(SOURCES_PHONOPY
     ${PROJECT_SOURCE_DIR}/c/derivative_dynmat.c ${PROJECT_SOURCE_DIR}/c/rgrid.c
     ${PROJECT_SOURCE_DIR}/c/tetrahedron_method.c)
 
+set(SOURCES_RECGRID
+    ${PROJECT_SOURCE_DIR}/c/bzgrid.c ${PROJECT_SOURCE_DIR}/c/grgrid.c
+    ${PROJECT_SOURCE_DIR}/c/lagrid.c ${PROJECT_SOURCE_DIR}/c/snf3x3.c
+    ${PROJECT_SOURCE_DIR}/c/recgrid.c)
+
 if(BUILD_SHARED_LIBS)
     # Shared library
     add_library(phonopy_libs SHARED ${SOURCES_PHONOPY})
+    add_library(recgrid_lib SHARED ${SOURCES_RECGRID})
 
     if(OpenMP_FOUND)
-        target_link_libraries(phonopy_libs PRIVATE OpenMP::OpenMP_C)
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib OpenMP::OpenMP_C)
+        target_link_libraries(recgrid_lib PRIVATE OpenMP::OpenMP_C)
+    else()
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
 else()
     # Static link library
     add_library(phonopy_libs STATIC ${SOURCES_PHONOPY})
+    add_library(recgrid_lib STATIC ${SOURCES_RECGRID})
 
     if(OpenMP_FOUND)
-        target_link_libraries(phonopy_libs PRIVATE OpenMP::OpenMP_C)
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib OpenMP::OpenMP_C)
+        target_link_libraries(recgrid_lib PRIVATE OpenMP::OpenMP_C)
+    else()
+        target_link_libraries(phonopy_libs PRIVATE recgrid_lib)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
@@ -98,6 +111,7 @@ if(PHONOPY_LIBS)
     endif()
 else()
     set_target_properties(phonopy_libs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(recgrid_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     execute_process(
         COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
@@ -107,13 +121,19 @@ else()
     find_package(nanobind CONFIG REQUIRED)
     nanobind_add_module(_phonopy STABLE_ABI ${PROJECT_SOURCE_DIR}/c/phonopy.h
                         ${PROJECT_SOURCE_DIR}/c/_phonopy.cpp)
+    nanobind_add_module(_recgrid STABLE_ABI ${PROJECT_SOURCE_DIR}/c/recgrid.h
+                        ${PROJECT_SOURCE_DIR}/c/_recgrid.cpp)
 
     if(OpenMP_FOUND)
         target_link_libraries(_phonopy PRIVATE phonopy_libs OpenMP::OpenMP_C)
+        target_link_libraries(_recgrid PRIVATE recgrid_lib OpenMP::OpenMP_C)
     else()
         target_link_libraries(_phonopy PRIVATE phonopy_libs)
+        target_link_libraries(_recgrid PRIVATE recgrid_lib)
     endif()
 
     target_compile_definitions(_phonopy PRIVATE THM_EPSILON=1e-10)
+    target_compile_definitions(_recgrid PRIVATE THM_EPSILON=1e-10)
     install(TARGETS _phonopy LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})
+    install(TARGETS _recgrid LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})
 endif()
