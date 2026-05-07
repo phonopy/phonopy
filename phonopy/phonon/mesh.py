@@ -397,7 +397,9 @@ class Mesh(MeshBase):
         self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
         if phonoc.use_openmp():
             dynmat = run_dynamical_matrix_solver_c(
-                self._dynamical_matrix, self._qpoints
+                self._dynamical_matrix,
+                self._qpoints,
+                lang=self._dynamical_matrix.lang,
             )
             eigenvectors = dynmat
         elif self._with_eigenvectors:
