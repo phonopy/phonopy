@@ -304,6 +304,7 @@ def load(
             is_nac=is_nac,
             nac_factor=units.nac_factor,
             log_level=log_level,
+            lang=lang,
         )
         if ret_nac_params is not None:
             phonon.nac_params = ret_nac_params

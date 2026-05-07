@@ -774,6 +774,7 @@ def parse_BORN(
     symprec: float = 1e-5,
     is_symmetry: bool = True,
     filename: str | os.PathLike = "BORN",
+    lang: Literal["C", "Rust"] = "C",
 ) -> dict:
     """Parse BORN file.
 
@@ -787,10 +788,15 @@ def parse_BORN(
         When True, parse values are symmetrized. Default is True.
     filename : str, optional
         Filename.
+    lang : Literal["C", "Rust"], optional
+        Backend used by the internal ``Symmetry`` construction
+        (atomic-permutation matcher). Default is "C".
 
     """
     with open(filename, "r") as f:
-        return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
+        return _parse_BORN_from_file_object(
+            f, primitive, symprec, is_symmetry, lang=lang
+        )
 
 
 def parse_BORN_from_strings(
@@ -798,6 +804,7 @@ def parse_BORN_from_strings(
     primitive: PhonopyAtoms,
     symprec: float = 1e-5,
     is_symmetry: bool = True,
+    lang: Literal["C", "Rust"] = "C",
 ) -> dict:
     """Parse BORN file text.
 
@@ -805,13 +812,17 @@ def parse_BORN_from_strings(
 
     """
     f = io.StringIO(strings)
-    return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
+    return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry, lang=lang)
 
 
 def _parse_BORN_from_file_object(
-    f: typing.TextIO, primitive: PhonopyAtoms, symprec: float, is_symmetry: bool
+    f: typing.TextIO,
+    primitive: PhonopyAtoms,
+    symprec: float,
+    is_symmetry: bool,
+    lang: Literal["C", "Rust"] = "C",
 ) -> dict:
-    symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
+    symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry, lang=lang)
     return get_born_parameters(f, primitive, symmetry)
 
 

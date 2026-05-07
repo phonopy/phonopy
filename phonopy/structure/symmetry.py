@@ -539,6 +539,7 @@ def symmetrize_borns_and_epsilon(
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     symprec: float = 1e-5,
     is_symmetry: bool = True,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Symmetrize Born effective charges and dielectric tensor.
 
@@ -581,7 +582,7 @@ def symmetrize_borns_and_epsilon(
 
     """
     lattice = ucell.cell
-    u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
+    u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec, lang=lang)
     rotations = u_sym.symmetry_operations["rotations"]
     translations = u_sym.symmetry_operations["translations"]
     ptg_ops = u_sym.pointgroup_operations
@@ -612,6 +613,7 @@ def symmetrize_borns_and_epsilon(
             primitive_matrix=pmat,
             supercell_matrix=supercell_matrix,
             symprec=symprec,
+            lang=lang,
         )
 
         idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
@@ -708,6 +710,7 @@ def _get_supercell_and_primitive(
     primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     symprec: float = 1e-5,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[Supercell, Primitive]:
     if primitive_matrix is None:
         pmat = np.eye(3)
@@ -720,6 +723,6 @@ def _get_supercell_and_primitive(
 
     inv_smat = np.linalg.inv(smat)
     scell = get_supercell(ucell, smat, symprec=symprec)
-    pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec)
+    pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec, lang=lang)
 
     return scell, pcell

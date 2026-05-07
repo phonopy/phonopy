@@ -137,7 +137,12 @@ class FDFCSolver:
 
         # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
         atom_list_done = _get_force_constants_disps(
-            force_constants, supercell, dataset, symmetry, atom_list=atom_list
+            force_constants,
+            supercell,
+            dataset,
+            symmetry,
+            atom_list=atom_list,
+            lang=lang,
         )
         rotations = symmetry.symmetry_operations["rotations"]
         lattice = np.array(supercell.cell.T, dtype="double", order="C")
@@ -497,6 +502,7 @@ def solve_force_constants(
     site_symmetry: NDArray[np.int64],
     symprec: float,
     atom_list: NDArray[np.int64] | None = None,
+    lang: Literal["C", "Rust"] = "C",
 ) -> None:
     """Calculate force constants elements of pairs from an atom."""
     if atom_list is None:
@@ -516,6 +522,7 @@ def solve_force_constants(
         supercell,
         site_symmetry,
         symprec,
+        lang=lang,
     )
     return None
 
@@ -525,6 +532,7 @@ def get_positions_sent_by_rot_inv(
     positions: NDArray[np.double],
     site_symmetry: NDArray[np.int64],
     symprec: float,
+    lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.int64]:
     """Return atom indices of positions sent by inverse site symmetries.
 
@@ -549,7 +557,7 @@ def get_positions_sent_by_rot_inv(
     rot_map_syms = []
     for sym in site_symmetry:
         rot_map = compute_permutation_for_rotation(
-            np.dot(positions, sym.T), positions, lattice, symprec
+            np.dot(positions, sym.T), positions, lattice, symprec, lang=lang
         )
         rot_map_syms.append(rot_map)
 
@@ -881,13 +889,14 @@ def _solve_force_constants_svd(
     supercell: PhonopyAtoms,
     site_symmetry: NDArray[np.int64],
     symprec: float,
+    lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.double]:
     lattice = supercell.cell.T
     positions = supercell.scaled_positions
     pos_center = positions[disp_atom_number]
     positions -= pos_center
     rot_map_syms = get_positions_sent_by_rot_inv(
-        lattice, positions, site_symmetry, symprec
+        lattice, positions, site_symmetry, symprec, lang=lang
     )
     site_sym_cart = [similarity_transformation(lattice, sym) for sym in site_symmetry]
     rot_disps = get_rotated_displacement(displacements, site_sym_cart)
@@ -912,6 +921,7 @@ def _get_force_constants_disps(
     dataset: Type1DisplacementDataset,
     symmetry: Symmetry,
     atom_list: NDArray[np.int64] | None = None,
+    lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.int64]:
     """Calculate force constants Phi = -F / d.
 
@@ -958,6 +968,7 @@ def _get_force_constants_disps(
             site_symmetry,
             symprec,
             atom_list=atom_list,
+            lang=lang,
         )
 
     return disp_atom_list

@@ -151,6 +151,7 @@ def get_nac_params(
     is_nac: bool = True,
     nac_factor: float | None = None,
     log_level: int = 0,
+    lang: Literal["C", "Rust"] = "C",
 ) -> dict | None:
     """Look for and return NAC parameters.
 
@@ -187,7 +188,7 @@ def get_nac_params(
             raise ValueError(
                 "Primitive cell has to be specified when born_filename is given."
             )
-        _nac_params = parse_BORN(primitive, filename=born_filename)
+        _nac_params = parse_BORN(primitive, filename=born_filename, lang=lang)
         if log_level:
             print('NAC parameters were read from "%s".' % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
@@ -197,7 +198,7 @@ def get_nac_params(
             raise ValueError(
                 "Primitive cell has to be specified when born_filename is given."
             )
-        _nac_params = parse_BORN(primitive, filename="BORN")
+        _nac_params = parse_BORN(primitive, filename="BORN", lang=lang)
         if log_level:
             print('NAC params were read from "BORN".')
     else:
