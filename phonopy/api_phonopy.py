@@ -1057,7 +1057,9 @@ class Phonopy:
 
         if show_drift and self._log_level:
             assert self._force_constants is not None
-            show_drift_force_constants(self._force_constants, primitive=self._primitive)
+            show_drift_force_constants(
+                self._force_constants, primitive=self._primitive, lang=self._lang
+            )
 
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
@@ -1095,10 +1097,15 @@ class Phonopy:
             )
         else:
             if self._force_constants.shape[0] == self._force_constants.shape[1]:
-                symmetrize_force_constants(self._force_constants, level=level)
+                symmetrize_force_constants(
+                    self._force_constants, level=level, lang=self._lang
+                )
             else:
                 symmetrize_compact_force_constants(
-                    self._force_constants, self._primitive, level=level
+                    self._force_constants,
+                    self._primitive,
+                    level=level,
+                    lang=self._lang,
                 )
 
         if show_drift and self._log_level:
@@ -1107,7 +1114,10 @@ class Phonopy:
             else:
                 print("Max drift after traditional symmetrization: ", end="")
             show_drift_force_constants(
-                self._force_constants, primitive=self._primitive, values_only=True
+                self._force_constants,
+                primitive=self._primitive,
+                values_only=True,
+                lang=self._lang,
             )
 
         if self._primitive.masses is not None:
@@ -1140,7 +1150,10 @@ class Phonopy:
         if show_drift and self._log_level:
             sys.stdout.write("Max drift after symmetrization by space group: ")
             show_drift_force_constants(
-                self._force_constants, primitive=self._primitive, values_only=True
+                self._force_constants,
+                primitive=self._primitive,
+                values_only=True,
+                lang=self._lang,
             )
 
         if self._primitive.masses is not None:
@@ -3387,6 +3400,7 @@ class Phonopy:
             is_compact_fc=is_compact_fc,
             symmetry=self._symmetry,
             log_level=log_level,
+            lang=self._lang,
         )
         if decimals:
             self._force_constants = self._force_constants.round(decimals=decimals)
@@ -3470,11 +3484,12 @@ class Phonopy:
             self._symprec,
             self._is_symmetry,
             s2p_map=self._primitive.s2p_map,
+            lang=self._lang,
         )
 
     def _search_primitive_symmetry(self) -> None:
         self._primitive_symmetry = Symmetry(
-            self._primitive, self._symprec, self._is_symmetry
+            self._primitive, self._symprec, self._is_symmetry, lang=self._lang
         )
 
         if len(self._symmetry.pointgroup_operations) != len(
@@ -3545,6 +3560,7 @@ class Phonopy:
                 self._supercell,
                 trans_mat,
                 self._symprec,
+                lang=self._lang,
             )
         except ValueError as exc:
             msg = (
