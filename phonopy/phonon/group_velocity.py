@@ -115,7 +115,9 @@ class GroupVelocity:
 
         self._ddm: DerivativeOfDynamicalMatrix | None
         if self._q_length is None:
-            self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
+            self._ddm = DerivativeOfDynamicalMatrix(
+                dynamical_matrix, lang=dynamical_matrix.lang
+            )
         else:
             self._ddm = None
 

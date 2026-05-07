@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import itertools
 import sys
 import warnings
@@ -224,7 +225,7 @@ class DynamicalMatrix:
     ) -> None:
         """Run dynamical matrix calculation at a q-point without NAC."""
         if lang == "C":
-            self._dynamical_matrix = run_dynamical_matrix_solver_c(
+            self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
                 self,
                 q,
                 is_nac=False,
@@ -654,7 +655,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             dm_dd = self._get_Gonze_dipole_dipole(q_red, q_direction)
             self._dynamical_matrix += dm_dd
         else:
-            self._dynamical_matrix = run_dynamical_matrix_solver_c(
+            self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
                 self,
                 q_red,
                 q_direction,
@@ -1021,7 +1022,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         try:
             import phonopy._phonopy as phonoc  # noqa F401 # type: ignore
 
-            self._dynamical_matrix = run_dynamical_matrix_solver_c(
+            self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
                 self,
                 q_red,
                 q_direction,
@@ -1155,38 +1156,216 @@ def get_dynamical_matrix(
     return dm
 
 
-def run_dynamical_matrix_solver_c(
+def get_dynamical_matrices_at_qpoints(
     dm: DynamicalMatrix | DynamicalMatrixWang | DynamicalMatrixGL,
     qpoints: NDArray[np.double],
     nac_q_direction: NDArray[np.double] | None = None,
     is_nac: bool | None = None,
     hermitianize: bool = True,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] | None = None,
 ) -> NDArray[np.cdouble]:
-    """Build and solve dynamical matrices on grid in C-API.
+    """Build dynamical matrices at the given q-points.
 
-    If dynamical matrices at many qpoints are calculated, it is recommended not
-    to use this function one qpoint by one qpoint to avoid overhead in the
-    preparation steps.
+    Dispatches to the C or Rust backend based on ``dm.lang`` (or the
+    explicit ``lang`` override).  When many q-points need to be
+    processed, prefer this batched entry over one-q-at-a-time builds
+    so the preparation steps are amortized.
 
     Parameters
     ----------
     dm : DynamicalMatrix
         DynamicalMatrix instance.
-    qpoints : array_like,
-        q-points in crystallographic coordinates. shape=(n_qpoints, 3),
+    qpoints : array_like
+        q-points in crystallographic coordinates. shape=(n_qpoints, 3)
+        for batched build, or shape=(3,) for a single q-point (in which
+        case the leading axis is squeezed from the return value).
         dtype='double', order='C'
     nac_q_direction : array_like, optional
-        Direction of q from Gamma point given in reduced coordinates. This is
-        only activated when q-point->[0,0,0] case. For example, this is used for
-        q->[0,0,0] where approaching direction is known, e.g., band structure
-        calculation. Default is None.
+        Direction of q from Gamma point given in reduced coordinates.
+        This is only activated when q-point->[0,0,0] case. For example,
+        this is used for q->[0,0,0] where the approaching direction is
+        known, e.g., band-structure calculation. Default is None.
     is_nac : bool, optional
-        True if NAC is considered. Default is None. If None, it is determined
-        from dm.is_nac().
+        True if NAC is considered. Default is None. If None, it is
+        determined from ``isinstance(dm, DynamicalMatrixNAC)``.
+    hermitianize : bool, optional
+        Apply Hermitian symmetrization to each q-point block. Default
+        is True.
     lang : {"C", "Rust"}, optional
-        Backend for the dipole-dipole / dynamical-matrix kernel.
-        Default is "C".
+        Backend override.  When None (default), the value is inherited
+        from ``dm.lang``.
+
+    Returns
+    -------
+    ndarray
+        Stacked dynamical matrices.  Shape ``(n_qpoints, num_band,
+        num_band)`` when ``qpoints`` is 2-D, or ``(num_band, num_band)``
+        when ``qpoints`` is 1-D.  ``dtype='cdouble'``.
+
+    """
+    _lang = lang if lang is not None else dm.lang
+    if _lang == "Rust":
+        return get_dynamical_matrices_at_qpoints_rust(
+            dm,
+            qpoints,
+            nac_q_direction=nac_q_direction,
+            is_nac=is_nac,
+            hermitianize=hermitianize,
+        )
+    return get_dynamical_matrices_at_qpoints_c(
+        dm,
+        qpoints,
+        nac_q_direction=nac_q_direction,
+        is_nac=is_nac,
+        hermitianize=hermitianize,
+    )
+
+
+def get_dynamical_matrices_at_qpoints_c(
+    dm: DynamicalMatrix | DynamicalMatrixWang | DynamicalMatrixGL,
+    qpoints: NDArray[np.double],
+    nac_q_direction: NDArray[np.double] | None = None,
+    is_nac: bool | None = None,
+    hermitianize: bool = True,
+) -> NDArray[np.cdouble]:
+    """C backend for ``get_dynamical_matrices_at_qpoints``."""
+    import phonopy._phonopy as phonoc  # type: ignore
+
+    from phonopy._lang import log_dispatch
+
+    log_dispatch("C", "get_dynamical_matrices_at_qpoints_c")
+
+    args = _prepare_dynmat_qpoints_args(dm, qpoints, nac_q_direction, is_nac)
+    dynmat = np.zeros(
+        (args.qpoints.shape[0], args.num_band, args.num_band),
+        dtype="cdouble",
+        order="C",
+    )
+    phonoc.dynamical_matrices_with_dd_openmp_over_qpoints(
+        dynmat.view(dtype="double"),
+        args.qpoints,
+        args.fc,
+        args.svecs,
+        args.multi,
+        args.positions,
+        args.masses,
+        args.s2p,
+        args.p2s,
+        args.nac_q_direction,
+        args.born,
+        args.dielectric,
+        args.rec_lattice,
+        args.nac_factor,
+        args.dd_q0,
+        args.G_list,
+        args.Lambda,
+        args.is_nac * 1,
+        args.is_nac_q_zero * 1,
+        args.use_Wang_NAC * 1,
+        hermitianize * 1,
+    )
+    return dynmat[0] if args.qpoints_ndim == 1 else dynmat
+
+
+def get_dynamical_matrices_at_qpoints_rust(
+    dm: DynamicalMatrix | DynamicalMatrixWang | DynamicalMatrixGL,
+    qpoints: NDArray[np.double],
+    nac_q_direction: NDArray[np.double] | None = None,
+    is_nac: bool | None = None,
+    hermitianize: bool = True,
+) -> NDArray[np.cdouble]:
+    """Rust backend for ``get_dynamical_matrices_at_qpoints``."""
+    import phonors  # type: ignore[import-untyped]
+
+    from phonopy._lang import log_dispatch
+
+    log_dispatch("Rust", "get_dynamical_matrices_at_qpoints_rust")
+
+    args = _prepare_dynmat_qpoints_args(dm, qpoints, nac_q_direction, is_nac)
+    dynmat = np.zeros(
+        (args.qpoints.shape[0], args.num_band, args.num_band),
+        dtype="cdouble",
+        order="C",
+    )
+    if args.is_nac and not args.use_Wang_NAC:
+        phonors.dynamical_matrices_at_qpoints_gonze(
+            dynmat,
+            args.qpoints,
+            args.fc,
+            args.svecs,
+            args.multi,
+            args.masses,
+            args.p2s,
+            args.s2p,
+            args.born,
+            args.dielectric,
+            args.rec_lattice,
+            args.positions,
+            args.dd_q0,
+            args.G_list,
+            args.nac_factor,
+            args.Lambda,
+            args.nac_q_direction if not args.is_nac_q_zero else None,
+            hermitianize,
+        )
+    else:
+        phonors.dynamical_matrices_at_qpoints(
+            dynmat,
+            args.qpoints,
+            args.fc,
+            args.svecs,
+            args.multi,
+            args.masses,
+            args.p2s,
+            args.s2p,
+            args.born if args.use_Wang_NAC else None,
+            args.dielectric if args.use_Wang_NAC else None,
+            args.rec_lattice if args.use_Wang_NAC else None,
+            args.nac_q_direction
+            if (args.use_Wang_NAC and not args.is_nac_q_zero)
+            else None,
+            args.nac_factor,
+            hermitianize,
+        )
+    return dynmat[0] if args.qpoints_ndim == 1 else dynmat
+
+
+@dataclasses.dataclass
+class _DynmatQpointsArgs:
+    qpoints: NDArray[np.double]
+    qpoints_ndim: int
+    fc: NDArray[np.double]
+    svecs: NDArray[np.double]
+    multi: NDArray[np.int64]
+    masses: NDArray[np.double]
+    rec_lattice: NDArray[np.double]
+    positions: NDArray[np.double]
+    born: NDArray[np.double]
+    nac_factor: float
+    dielectric: NDArray[np.double]
+    nac_q_direction: NDArray[np.double]
+    is_nac_q_zero: bool
+    is_nac: bool
+    use_Wang_NAC: bool
+    dd_q0: NDArray[np.double]
+    G_list: NDArray[np.double]
+    Lambda: float
+    p2s: NDArray[np.int64]
+    s2p: NDArray[np.int64]
+    num_band: int
+
+
+def _prepare_dynmat_qpoints_args(
+    dm: DynamicalMatrix | DynamicalMatrixWang | DynamicalMatrixGL,
+    qpoints: NDArray[np.double],
+    nac_q_direction: NDArray[np.double] | None,
+    is_nac: bool | None,
+) -> _DynmatQpointsArgs:
+    """Build the shared argument bundle consumed by both backends.
+
+    Handles q-points reshaping, NAC mode detection (no NAC / Wang / Gonze),
+    Gonze short-range fc retrieval, p2s/s2p mapping, and the dummy
+    arrays that the C kernel signature requires when NAC is off.
 
     """
     if (
@@ -1211,8 +1390,8 @@ def run_dynamical_matrix_solver_c(
         svecs,
         multi,
         masses,
-        rec_lattice,  # column vectors
-        positions,  # primitive cell positions
+        rec_lattice,
+        positions,
         born,
         nac_factor,
         dielectric,
@@ -1223,120 +1402,57 @@ def run_dynamical_matrix_solver_c(
         if isinstance(dm, DynamicalMatrixGL):
             if dm.short_range_force_constants is None:
                 dm.make_Gonze_nac_dataset()
-
-            (
-                gonze_fc,  # fc where the dipole-diple contribution is removed.
-                dd_q0,  # second term of dipole-dipole expression.
-                G_cutoff,  # Cutoff radius in reciprocal space. This will not be used.
-                G_list,  # List of G points where d-d interactions are integrated.
-                Lambda,
-            ) = dm.Gonze_nac_dataset  # Convergence parameter
+            (gonze_fc, dd_q0, _G_cutoff, G_list, Lambda) = dm.Gonze_nac_dataset
             fc = gonze_fc
         elif isinstance(dm, DynamicalMatrixWang):
             use_Wang_NAC = True
             dd_q0 = np.zeros((len(positions), 3, 3), dtype="double", order="C")
-            G_list = np.zeros((1, 3), dtype="double", order="C")  # dummy value
+            G_list = np.zeros((1, 3), dtype="double", order="C")
+            Lambda = 0.0
+            fc = dm.force_constants
+        else:  # pragma: no cover - DynamicalMatrixNAC base, never instantiated
+            dd_q0 = np.zeros((len(positions), 3, 3), dtype="double", order="C")
+            G_list = np.zeros((1, 3), dtype="double", order="C")
             Lambda = 0.0
             fc = dm.force_constants
     else:
         dd_q0 = np.zeros((len(positions), 3, 3), dtype="double", order="C")
-        G_list = np.zeros((1, 3), dtype="double", order="C")  # dummy value
+        G_list = np.zeros((1, 3), dtype="double", order="C")
         Lambda = 0.0
         fc = dm.force_constants
 
     if nac_q_direction is None:
         is_nac_q_zero = True
-        _nac_q_direction = np.zeros(3, dtype="double")  # dummy variable
+        _nac_q_direction = np.zeros(3, dtype="double")
     else:
         is_nac_q_zero = False
         _nac_q_direction = np.array(nac_q_direction, dtype="double")
 
     p2s, s2p = _get_fc_elements_mapping(dm, fc)
 
-    dynmat = np.zeros(
-        (_qpoints.shape[0], len(p2s) * 3, len(p2s) * 3),
-        dtype="cdouble",
-        order="C",
+    return _DynmatQpointsArgs(
+        qpoints=_qpoints,
+        qpoints_ndim=qpoints_ndim,
+        fc=fc,
+        svecs=svecs,
+        multi=multi,
+        masses=masses,
+        rec_lattice=rec_lattice,
+        positions=positions,
+        born=born,
+        nac_factor=nac_factor,
+        dielectric=dielectric,
+        nac_q_direction=_nac_q_direction,
+        is_nac_q_zero=is_nac_q_zero,
+        is_nac=_is_nac,
+        use_Wang_NAC=use_Wang_NAC,
+        dd_q0=dd_q0,
+        G_list=G_list,
+        Lambda=Lambda,
+        p2s=p2s,
+        s2p=s2p,
+        num_band=len(p2s) * 3,
     )
-
-    from phonopy._lang import log_dispatch
-
-    if lang == "Rust":
-        log_dispatch(lang, "run_dynamical_matrix_solver_c")
-        import phonors  # type: ignore
-
-        if _is_nac and not use_Wang_NAC:
-            # Gonze-Lee NAC path.
-            phonors.dynamical_matrices_at_qpoints_gonze(
-                dynmat,
-                _qpoints,
-                fc,
-                svecs,
-                multi,
-                masses,
-                p2s,
-                s2p,
-                born,
-                dielectric,
-                rec_lattice,
-                positions,
-                dd_q0,
-                G_list,
-                nac_factor,
-                Lambda,
-                _nac_q_direction if not is_nac_q_zero else None,
-                hermitianize,
-            )
-        else:
-            # Wang NAC or no-NAC path.
-            phonors.dynamical_matrices_at_qpoints(
-                dynmat,
-                _qpoints,
-                fc,
-                svecs,
-                multi,
-                masses,
-                p2s,
-                s2p,
-                born if use_Wang_NAC else None,
-                dielectric if use_Wang_NAC else None,
-                rec_lattice if use_Wang_NAC else None,
-                _nac_q_direction if (use_Wang_NAC and not is_nac_q_zero) else None,
-                nac_factor,
-                hermitianize,
-            )
-    else:
-        log_dispatch(lang, "run_dynamical_matrix_solver_c")
-        import phonopy._phonopy as phonoc  # type: ignore
-
-        phonoc.dynamical_matrices_with_dd_openmp_over_qpoints(
-            dynmat.view(dtype="double"),
-            _qpoints,
-            fc,
-            svecs,
-            multi,
-            positions,
-            masses,
-            s2p,
-            p2s,
-            _nac_q_direction,
-            born,
-            dielectric,
-            rec_lattice,
-            nac_factor,
-            dd_q0,
-            G_list,
-            Lambda,
-            _is_nac * 1,
-            is_nac_q_zero * 1,
-            use_Wang_NAC * 1,  # use_Wang_NAC
-            hermitianize * 1,
-        )
-
-    if qpoints_ndim == 1:
-        return dynmat[0]
-    else:
-        return dynmat
 
 
 def _extract_params(
