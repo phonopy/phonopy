@@ -1684,6 +1684,7 @@ class Phonopy:
                 is_gamma_center=is_gamma_center,
                 rotations=self._primitive_symmetry.pointgroup_operations,
                 factor=self._unit_conversion_factor,
+                lang=self._lang,
             )
         else:
             self._mesh = Mesh(
@@ -1697,6 +1698,7 @@ class Phonopy:
                 group_velocity=group_velocity,
                 rotations=self._primitive_symmetry.pointgroup_operations,
                 factor=self._unit_conversion_factor,
+                lang=self._lang,
             )
 
     def run_mesh(
@@ -1926,6 +1928,7 @@ class Phonopy:
             group_velocity=group_velocity,
             with_dynamical_matrices=with_dynamical_matrices,
             factor=self._unit_conversion_factor,
+            lang=self._lang,
         )
 
     def get_qpoints_dict(self) -> QpointsDict:

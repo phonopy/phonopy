@@ -45,7 +45,9 @@ class Modulation:
             if nac_q_direction is not None
             else None
         )
-        self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
+        self._ddm = DerivativeOfDynamicalMatrix(
+            dynamical_matrix, lang=dynamical_matrix.lang
+        )
         self._derivative_order = derivative_order
 
         if factor is None:

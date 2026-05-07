@@ -45,7 +45,7 @@ from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
-    run_dynamical_matrix_solver_c,
+    get_dynamical_matrices_at_qpoints,
 )
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
@@ -117,8 +117,15 @@ class MeshBase:
         | NDArray[np.int64]
         | None = None,  # Point group operations in real space
         factor: float | None = None,
+        lang: Literal["C", "Rust"] | None = None,
     ) -> None:
-        """Init method."""
+        """Init method.
+
+        ``lang`` selects the backend for the batched dynamical-matrix
+        build.  When None (default) the value is inherited from
+        ``dynamical_matrix.lang``; pass an explicit string to override.
+
+        """
         self._mesh = np.array(mesh, dtype="int64")
         self._with_eigenvectors = with_eigenvectors
         if factor is None:
@@ -127,6 +134,9 @@ class MeshBase:
             self._factor = factor
         self._cell = dynamical_matrix.primitive
         self._dynamical_matrix = dynamical_matrix
+        self._lang: Literal["C", "Rust"] = (
+            lang if lang is not None else dynamical_matrix.lang
+        )
 
         self._gp = GridPoints(
             self._mesh,
@@ -229,6 +239,7 @@ class Mesh(MeshBase):
         | NDArray[np.int64]
         | None = None,  # Point group operations in real space
         factor: float | None = None,
+        lang: Literal["C", "Rust"] | None = None,
     ) -> None:
         """Init method."""
         super().__init__(
@@ -241,6 +252,7 @@ class Mesh(MeshBase):
             is_gamma_center=is_gamma_center,
             rotations=rotations,
             factor=factor,
+            lang=lang,
         )
 
         self._group_velocity = group_velocity
@@ -394,12 +406,17 @@ class Mesh(MeshBase):
         num_band = len(self._cell) * 3
         num_qpoints = len(self._qpoints)
 
+        # The batched DM build is used whenever a parallel kernel is
+        # available: the C path requires OpenMP (compile-time), but the
+        # Rust path is rayon-parallel without an extra runtime check.
+        use_batched_build = self._lang == "Rust" or phonoc.use_openmp()
+
         self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
-        if phonoc.use_openmp():
-            dynmat = run_dynamical_matrix_solver_c(
+        if use_batched_build:
+            dynmat = get_dynamical_matrices_at_qpoints(
                 self._dynamical_matrix,
                 self._qpoints,
-                lang=self._dynamical_matrix.lang,
+                lang=self._lang,
             )
             eigenvectors = dynmat
         elif self._with_eigenvectors:
@@ -415,7 +432,7 @@ class Mesh(MeshBase):
             )
 
         for i, q in enumerate(self._qpoints):
-            if phonoc.use_openmp():
+            if use_batched_build:
                 dm = dynmat[i]
             else:
                 self._dynamical_matrix.run(q)
@@ -469,6 +486,7 @@ class IterMesh(MeshBase):
         | NDArray[np.int64]
         | None = None,  # Point group operations in real space
         factor: float | None = None,
+        lang: Literal["C", "Rust"] | None = None,
     ) -> None:
         """Init method."""
         super().__init__(
@@ -481,6 +499,7 @@ class IterMesh(MeshBase):
             is_gamma_center=is_gamma_center,
             rotations=rotations,
             factor=factor,
+            lang=lang,
         )
 
     def __iter__(self) -> IterMesh:

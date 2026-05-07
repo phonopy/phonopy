@@ -120,7 +120,9 @@ class IrReps:
         self._degenerate_sets = get_degenerate_sets(
             self._freqs, cutoff=_degeneracy_tolerance
         )
-        self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
+        self._ddm = DerivativeOfDynamicalMatrix(
+            dynamical_matrix, lang=dynamical_matrix.lang
+        )
 
         self._transformation_matrix: NDArray[np.double]
         self._conventional_rotations: NDArray[np.int64]

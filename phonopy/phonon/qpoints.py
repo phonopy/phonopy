@@ -46,7 +46,7 @@ from numpy.typing import NDArray
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     DynamicalMatrixNAC,
-    run_dynamical_matrix_solver_c,
+    get_dynamical_matrices_at_qpoints,
 )
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
@@ -98,6 +98,7 @@ class QpointsPhonon:
         group_velocity: GroupVelocity | None = None,
         with_dynamical_matrices: bool = False,
         factor: float | None = None,
+        lang: Literal["C", "Rust"] | None = None,
     ) -> None:
         """Init method.
 
@@ -121,6 +122,11 @@ class QpointsPhonon:
         factor : float, optional
             Unit conversion factor for phonon frequencies. Default is
             DefaultToTHz of the physical units.
+        lang : Literal["C", "Rust"], optional
+            Backend for the batched dynamical-matrix build.  When None
+            (default) the value is inherited from
+            ``dynamical_matrix.lang``; pass an explicit string to
+            override.
 
         """
         primitive: Primitive = dynamical_matrix.primitive
@@ -132,6 +138,9 @@ class QpointsPhonon:
 
         self._qpoints = np.asarray(qpoints, dtype="double", order="C")
         self._dynamical_matrix = dynamical_matrix
+        self._lang: Literal["C", "Rust"] = (
+            lang if lang is not None else dynamical_matrix.lang
+        )
         self._nac_q_direction = (
             np.array(nac_q_direction, dtype="double")
             if nac_q_direction is not None
@@ -273,11 +282,11 @@ class QpointsPhonon:
         num_qpoints = len(self._qpoints)
         self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
         self._eigenvalues = np.zeros((num_qpoints, num_band), dtype="double")
-        dynmat = run_dynamical_matrix_solver_c(
+        dynmat = get_dynamical_matrices_at_qpoints(
             self._dynamical_matrix,
             self._qpoints,
             self._nac_q_direction,
-            lang=self._dynamical_matrix.lang,
+            lang=self._lang,
         )
         if self._with_eigenvectors:
             eigenvectors = np.zeros_like(dynmat)
