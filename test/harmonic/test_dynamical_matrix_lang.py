@@ -1,13 +1,13 @@
 """Parity tests comparing Rust and C dispatch paths in DynamicalMatrix.
 
-The dispatch sites covered here were added in Phase 1B of the phonopy
-adoption of the phonors crate (see ``phonopy_RUST_MIGRATION.md``):
+Covers the dipole-dipole and Wang-NAC charge-sum dispatch sites:
 
 * ``DynamicalMatrixGL._run_c_recip_dipole_dipole_q0``
 * ``DynamicalMatrixGL._get_c_recip_dipole_dipole``
 * ``DynamicalMatrixWang._get_charge_sum``
 
 The whole module is skipped when phonors is not importable.
+
 """
 
 from __future__ import annotations
@@ -117,6 +117,7 @@ def test_recip_dipole_dipole_rust_matches_c(
     Both ``q_dir_cart=None`` and an explicit direction array are
     exercised because the two Rust paths differ
     (``Option<arr>`` matching at the FFI boundary).
+
     """
     _, dm_c = gl_c
     _, dm_r = gl_rust

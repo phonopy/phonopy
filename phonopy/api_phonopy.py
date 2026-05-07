@@ -3279,6 +3279,7 @@ class Phonopy:
             ph.supercell,
             is_full_fc=(fc_shape[0] == fc_shape[1]),
             use_openmp=phonoc.use_openmp(),
+            lang=self._lang,
         )
         ph_copy.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
         dynmat = ph_copy.get_qpoints_dict()["dynamical_matrices"]

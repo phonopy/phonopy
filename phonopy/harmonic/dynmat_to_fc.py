@@ -264,6 +264,7 @@ class DynmatToForceConstants:
         commensurate_points: NDArray[np.double] | None = None,
         is_full_fc: bool = True,
         use_openmp: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -280,10 +281,13 @@ class DynmatToForceConstants:
             section of this class.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate force constants from dynamical matrix.
+        lang : Literal["C", "Rust"], optional, default="C"
+            Backend implementation for the inverse transformation.
 
         """
         self._pcell = primitive
         self._scell = supercell
+        self._lang: Literal["C", "Rust"] = lang
         supercell_matrix = np.linalg.inv(self._pcell.primitive_matrix)
         supercell_matrix = np.rint(supercell_matrix).astype("int64")
         if commensurate_points is None:
@@ -457,7 +461,14 @@ class DynmatToForceConstants:
             distribute_force_constants_by_translations(self._fc, self._pcell)
 
     def _c_inverse_transformation(self) -> None:
-        import phonopy._phonopy as phonoc  # type: ignore
+        """Run the inverse transformation through the C or Rust backend.
+
+        ``self._lang`` (set at construction time) chooses between the C
+        kernel (``phonopy._phonopy.transform_dynmat_to_fc``) and the Rust
+        kernel (``phonors.transform_dynmat_to_fc``).
+
+        """
+        from phonopy._lang import log_dispatch
 
         assert self._fc is not None
         assert self._dynmat is not None
@@ -471,17 +482,35 @@ class DynmatToForceConstants:
         else:
             fc_index_map = np.arange(self._fc.shape[0], dtype="int64")
 
-        phonoc.transform_dynmat_to_fc(
-            self._fc,
-            self._dynmat.view(dtype="double"),
-            self._commensurate_points,
-            self._svecs,
-            self._multi,
-            self._pcell.masses,
-            s2pp,
-            fc_index_map,
-            self._use_openmp * 1,
-        )
+        if self._lang == "Rust":
+            import phonors  # type: ignore[import-untyped]
+
+            log_dispatch(self._lang, "DynmatToForceConstants._c_inverse_transformation")
+            phonors.transform_dynmat_to_fc(
+                self._fc,
+                self._dynmat,
+                self._commensurate_points,
+                self._svecs,
+                self._multi,
+                self._pcell.masses,
+                s2pp,
+                fc_index_map,
+            )
+        else:
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            log_dispatch(self._lang, "DynmatToForceConstants._c_inverse_transformation")
+            phonoc.transform_dynmat_to_fc(
+                self._fc,
+                self._dynmat.view(dtype="double"),
+                self._commensurate_points,
+                self._svecs,
+                self._multi,
+                self._pcell.masses,
+                s2pp,
+                fc_index_map,
+                self._use_openmp * 1,
+            )
 
     def _py_inverse_transformation(self) -> None:
         assert self._fc is not None
