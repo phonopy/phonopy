@@ -132,24 +132,14 @@ def get_integration_weights(
     )
     if grid_points is None:
         _grid_points = bz_grid.grg2bzg
-    elif _check_ndarray_state(grid_points, "int64"):
-        _grid_points = grid_points
     else:
-        _grid_points = np.array(grid_points, dtype="int64")
-    if _check_ndarray_state(grid_values, "double"):
-        _grid_values = grid_values
-    else:
-        _grid_values = np.array(grid_values, dtype="double", order="C")
-    if _check_ndarray_state(sampling_points, "double"):
-        _sampling_points = sampling_points
-    else:
-        _sampling_points = np.array(sampling_points, dtype="double")
+        _grid_points = np.ascontiguousarray(grid_points, dtype="int64")
+    _grid_values = np.ascontiguousarray(grid_values, dtype="double")
+    _sampling_points = np.ascontiguousarray(sampling_points, dtype="double")
     if bzgp2irgp_map is None:
         _bzgp2irgp_map = np.arange(len(grid_values), dtype="int64")
-    elif _check_ndarray_state(bzgp2irgp_map, "int64"):
-        _bzgp2irgp_map = bzgp2irgp_map
     else:
-        _bzgp2irgp_map = np.array(bzgp2irgp_map, dtype="int64")
+        _bzgp2irgp_map = np.ascontiguousarray(bzgp2irgp_map, dtype="int64")
 
     num_grid_points = len(_grid_points)
     num_band = _grid_values.shape[1]
@@ -179,11 +169,6 @@ def get_integration_weights(
         phonoc.integration_weights_at_grid_points(*args)
 
     return integration_weights
-
-
-def _check_ndarray_state(array: np.ndarray, dtype: str) -> bool:
-    """Check contiguousness and dtype."""
-    return array.dtype == dtype and array.flags.c_contiguous
 
 
 def get_all_tetrahedra_relative_grid_address(
