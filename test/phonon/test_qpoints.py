@@ -19,18 +19,22 @@ from phonopy.physical_units import get_physical_units
 def test_Qpoints(ph_nacl_nofcsym: Phonopy):
     """Test phonon calculation at specific q-points by NaCl."""
     phonon = ph_nacl_nofcsym
-    qpoints = [[0, 0, 0], [0, 0, 0.5]]
-    phonon.run_qpoints(qpoints, with_dynamical_matrices=True)
+    qpoints = [[0, 0, 0], [0, 0, 0.5], [0.1, 0.2, 0.3]]
+    phonon.run_qpoints(qpoints, with_dynamical_matrices=True, with_eigenvectors=True)
     assert phonon.qpoints is not None
     assert phonon.qpoints.dynamical_matrices is not None
+    assert phonon.qpoints.eigenvectors is not None
 
     for i, _ in enumerate(qpoints):
         dm = phonon.qpoints.dynamical_matrices[i]
-        dm_eigs = np.linalg.eigvalsh(dm).real
+        dm_eigs, dm_eigvecs = np.linalg.eigh(dm)
         eigs = phonon.qpoints.eigenvalues[i]
         freqs = phonon.qpoints.frequencies[i] / get_physical_units().DefaultToTHz
-        np.testing.assert_allclose(dm_eigs, eigs)
+        np.testing.assert_allclose(dm_eigs.real, eigs)
         np.testing.assert_allclose(freqs**2 * np.sign(freqs), eigs)
+        eigvecs = phonon.qpoints.eigenvectors[i]
+        _dm = (eigvecs * eigs) @ eigvecs.T.conj()
+        np.testing.assert_allclose(dm[0], _dm[0], atol=1e-5)
 
 
 def test_Qpoints_with_NAC_qdirection(ph_nacl: Phonopy):
