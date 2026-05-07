@@ -37,10 +37,12 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import log_dispatch
 from phonopy.harmonic.displacement import Type1DisplacementDataset
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -68,6 +70,7 @@ class FDFCSolver:
         dataset: Type1DisplacementDataset,
         is_compact_fc: bool = False,
         log_level: int = 0,  # currently not used
+        lang: Literal["C", "Rust"] = "C",
     ):
         if is_compact_fc and primitive:
             atom_list = primitive.p2s_map
@@ -75,7 +78,12 @@ class FDFCSolver:
             atom_list = np.arange(len(supercell), dtype="int64")
 
         self._fc2 = self._run(
-            supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
+            supercell,
+            symmetry,
+            dataset,
+            atom_list=atom_list,
+            primitive=primitive,
+            lang=lang,
         )
 
     @property
@@ -97,6 +105,7 @@ class FDFCSolver:
         dataset: Type1DisplacementDataset,
         atom_list: NDArray[np.int64] | None = None,
         primitive: Primitive | None = None,
+        lang: Literal["C", "Rust"] = "C",
     ) -> NDArray[np.double]:
         """Force constants are computed.
 
@@ -144,8 +153,11 @@ class FDFCSolver:
                 permutations,
                 atom_list=primitive.p2s_map,
                 fc_indices_of_atom_list=primitive.p2s_map,
+                lang=lang,
             )
-            distribute_force_constants_by_translations(force_constants, primitive)
+            distribute_force_constants_by_translations(
+                force_constants, primitive, lang=lang
+            )
         else:
             distribute_force_constants(
                 force_constants,
@@ -154,6 +166,7 @@ class FDFCSolver:
                 rotations,
                 permutations,
                 atom_list=atom_list,
+                lang=lang,
             )
 
         return force_constants
@@ -259,7 +272,9 @@ def cutoff_force_constants(
 
 
 def symmetrize_force_constants(
-    force_constants: NDArray[np.double], level: int = 1
+    force_constants: NDArray[np.double],
+    level: int = 1,
+    lang: Literal["C", "Rust"] = "C",
 ) -> None:
     """Symmetry force constants by translational and permutation symmetries.
 
@@ -281,11 +296,23 @@ def symmetrize_force_constants(
         Controls the number of times the following steps repeated:
         1) Subtract drift force constants along row and column
         2) Average fc and fc.T
+    lang : {"C", "Rust"}
+        Backend for the symmetrization kernel. Default is "C".  Rust
+        falls back to the C path automatically if the phonors extension
+        is not importable.
 
     """
     try:
+        if lang == "Rust":
+            import phonors  # type: ignore
+
+            log_dispatch(lang, "symmetrize_force_constants")
+            phonors.perm_trans_symmetrize_fc(force_constants, level)
+            return
+
         import phonopy._phonopy as phonoc  # type: ignore
 
+        log_dispatch(lang, "symmetrize_force_constants")
         phonoc.perm_trans_symmetrize_fc(force_constants, level)
     except ImportError:
         for _ in range(level):
@@ -295,7 +322,10 @@ def symmetrize_force_constants(
 
 
 def symmetrize_compact_force_constants(
-    force_constants: NDArray[np.double], primitive: Primitive, level: int = 1
+    force_constants: NDArray[np.double],
+    primitive: Primitive,
+    level: int = 1,
+    lang: Literal["C", "Rust"] = "C",
 ) -> None:
     """Symmetry force constants by translational and permutation symmetries.
 
@@ -311,6 +341,8 @@ def symmetrize_compact_force_constants(
         Controls the number of times the following steps repeated:
         1) Subtract drift force constants along row and column
         2) Average fc and fc.T
+    lang : {"C", "Rust"}
+        Backend for the symmetrization kernel. Default is "C".
 
     """
     s2p_map = primitive.s2p_map
@@ -319,8 +351,23 @@ def symmetrize_compact_force_constants(
     permutations = primitive.atomic_permutations
     s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map, p2p_map, permutations)
     try:
+        if lang == "Rust":
+            import phonors  # type: ignore
+
+            log_dispatch(lang, "symmetrize_compact_force_constants")
+            phonors.perm_trans_symmetrize_compact_fc(
+                force_constants,
+                permutations,
+                s2pp_map,
+                p2s_map,
+                nsym_list,
+                level,
+            )
+            return
+
         import phonopy._phonopy as phonoc  # type: ignore
 
+        log_dispatch(lang, "symmetrize_compact_force_constants")
         phonoc.perm_trans_symmetrize_compact_fc(
             force_constants,
             permutations,
@@ -331,7 +378,7 @@ def symmetrize_compact_force_constants(
         )
     except ImportError as exc:
         text = (
-            "Import error at phonoc.perm_trans_symmetrize_compact_fc. "
+            "Import error at perm_trans_symmetrize_compact_fc. "
             "Corresponding pytono code is not implemented."
         )
         raise RuntimeError(text) from exc
@@ -345,6 +392,7 @@ def distribute_force_constants(
     permutations: NDArray[np.int64],
     atom_list: Sequence[int] | NDArray[np.int64] | None = None,
     fc_indices_of_atom_list: Sequence[int] | NDArray[np.int64] | None = None,
+    lang: Literal["C", "Rust"] = "C",
 ) -> None:
     """Fill force constants elements by symmetry.
 
@@ -356,6 +404,8 @@ def distribute_force_constants(
     fc_indices_of_atom_list : ndarray
         First fc3 indices corresponding to indices of target atoms. Unless
         specified, `range(len(atom_list))` is used.
+    lang : {"C", "Rust"}
+        Backend for the distribution kernel. Default is "C".
 
     """
     map_atoms, map_syms = _get_sym_mappings_from_permutations(
@@ -384,21 +434,38 @@ def distribute_force_constants(
     if rots_cartesian.shape[0] != permutations.shape[0]:
         raise ValueError("permutations and rotations are different length")
 
-    import phonopy._phonopy as phonoc  # type: ignore
+    if lang == "Rust":
+        import phonors  # type: ignore
 
-    phonoc.distribute_fc2(
-        force_constants,
-        targets,
-        _fc_indices_of_atom_list,
-        rots_cartesian,
-        permutations,
-        map_atoms,
-        map_syms,
-    )
+        log_dispatch(lang, "distribute_force_constants")
+        phonors.distribute_fc2(
+            force_constants,
+            targets,
+            _fc_indices_of_atom_list,
+            rots_cartesian,
+            permutations,
+            map_atoms,
+            map_syms,
+        )
+    else:
+        import phonopy._phonopy as phonoc  # type: ignore
+
+        log_dispatch(lang, "distribute_force_constants")
+        phonoc.distribute_fc2(
+            force_constants,
+            targets,
+            _fc_indices_of_atom_list,
+            rots_cartesian,
+            permutations,
+            map_atoms,
+            map_syms,
+        )
 
 
 def distribute_force_constants_by_translations(
-    fc: NDArray[np.double], primitive: Primitive
+    fc: NDArray[np.double],
+    primitive: Primitive,
+    lang: Literal["C", "Rust"] = "C",
 ) -> None:
     """Distribute compact fc data to full fc by pure translations.
 
@@ -418,7 +485,7 @@ def distribute_force_constants_by_translations(
         dtype="int64",
         order="C",
     )
-    distribute_force_constants(fc, p2s, lattice, rotations, permutations)
+    distribute_force_constants(fc, p2s, lattice, rotations, permutations, lang=lang)
 
 
 def solve_force_constants(
@@ -606,6 +673,7 @@ def set_permutation_symmetry(force_constants: NDArray[np.double]) -> None:
 def get_drift_force_constants(
     force_constants: NDArray[np.double],
     primitive: Primitive | None = None,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[float, float, list[int], list[int]]:
     """Get max drift of force constants."""
     if force_constants.shape[0] == force_constants.shape[1]:
@@ -635,9 +703,18 @@ def get_drift_force_constants(
         s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map, p2p_map, permutations)
 
         try:
-            import phonopy._phonopy as phonoc  # type: ignore
+            if lang == "Rust":
+                import phonors  # type: ignore
 
-            phonoc.transpose_compact_fc(
+                log_dispatch(lang, "get_drift_force_constants")
+                transpose = phonors.transpose_compact_fc
+            else:
+                import phonopy._phonopy as phonoc  # type: ignore
+
+                log_dispatch(lang, "get_drift_force_constants")
+                transpose = phonoc.transpose_compact_fc
+
+            transpose(
                 force_constants,
                 permutations,
                 s2pp_map,
@@ -645,7 +722,7 @@ def get_drift_force_constants(
                 nsym_list,
             )
             maxval1, xy1 = _get_drift_per_index(force_constants)
-            phonoc.transpose_compact_fc(
+            transpose(
                 force_constants,
                 permutations,
                 s2pp_map,
@@ -656,7 +733,7 @@ def get_drift_force_constants(
 
         except ImportError as exc:
             text = (
-                "Import error at phonoc.tranpose_compact_fc. "
+                "Import error at transpose_compact_fc. "
                 "Corresponding python code is not implemented."
             )
             raise RuntimeError(text) from exc
@@ -670,10 +747,11 @@ def show_drift_force_constants(
     name: str = "force constants",
     values_only: bool = False,
     digit: int = 8,
+    lang: Literal["C", "Rust"] = "C",
 ):
     """Show force constants drift."""
     maxval1, maxval2, xy1, xy2 = get_drift_force_constants(
-        force_constants, primitive=primitive
+        force_constants, primitive=primitive, lang=lang
     )
 
     if values_only:

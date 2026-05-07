@@ -50,6 +50,7 @@ except AttributeError:
 from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
+from phonopy._lang import log_dispatch
 from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
 from phonopy.structure.snf import SNF3x3
 
@@ -329,6 +330,7 @@ class Primitive(PhonopyAtoms):
         symprec: float = 1e-5,
         store_dense_svecs: bool = True,
         positions_to_reorder: NDArray[np.double] | None = None,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -352,11 +354,15 @@ class Primitive(PhonopyAtoms):
             order of atoms is expected to be sure, these positions with the
             specific order is used after position matching between this data and
             generated positions. Default is None.
+        lang : {"C", "Rust"}, optional
+            Backend used by helpers that have a Rust port (currently the
+            atomic-permutation matcher).  Default is "C".
 
         """
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
         self._symprec = symprec
         self._store_dense_svecs = store_dense_svecs
+        self._lang: Literal["C", "Rust"] = lang
         self._p2s_map: NDArray
         self._s2p_map: NDArray
         self._p2p_map: dict[int, int]
@@ -566,6 +572,7 @@ class Primitive(PhonopyAtoms):
             trans,
             np.array(supercell.cell.T, dtype="double", order="C"),
             self._symprec,
+            lang=self._lang,
         )
 
         return atomic_permutations
@@ -834,6 +841,7 @@ def get_primitive(
     symprec: float = 1e-5,
     store_dense_svecs: bool = True,
     positions_to_reorder: NDArray[np.double] | None = None,
+    lang: Literal["C", "Rust"] = "C",
 ) -> Primitive:
     """Create primitive cell."""
     pmat = get_primitive_matrix(primitive_matrix)
@@ -844,6 +852,7 @@ def get_primitive(
         symprec=symprec,
         store_dense_svecs=store_dense_svecs,
         positions_to_reorder=positions_to_reorder,
+        lang=lang,
     )
 
 
@@ -1516,6 +1525,7 @@ def compute_all_sg_permutations(
     translations: NDArray[np.double],  # scaled
     lattice: NDArray[np.double],  # column vectors
     symprec: float,
+    lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.int64]:
     """Compute permutations for space group operations.
 
@@ -1536,6 +1546,8 @@ def compute_all_sg_permutations(
         Basis vectors in column vectors (like PhonopyAtoms.cell.T)
     symprec : float
         Symmetry tolerance of the distance unit
+    lang : {"C", "Rust"}
+        Backend for the inner permutation matcher. Default is "C".
 
     Returns
     -------
@@ -1548,7 +1560,7 @@ def compute_all_sg_permutations(
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
-                positions, rotated_positions, lattice, symprec
+                positions, rotated_positions, lattice, symprec, lang=lang
             )
         )
     return np.array(out, dtype="int64", order="C")
@@ -1559,6 +1571,7 @@ def compute_permutation_for_rotation(
     positions_b: NDArray[np.double],
     lattice: NDArray[np.double],
     symprec: float,
+    lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.int64]:
     """Get the overall permutation such that.
 
@@ -1583,6 +1596,8 @@ def compute_permutation_for_rotation(
         Basis vectors in column vectors (like PhonopyAtoms.cell.T)
     symprec : float
         Symmetry tolerance of the distance unit
+    lang : {"C", "Rust"}
+        Backend for the inner permutation matcher. Default is "C".
 
     Returns
     -------
@@ -1614,8 +1629,7 @@ def compute_permutation_for_rotation(
     perm_a, sorted_a = sort_by_lattice_distance(positions_a)
     perm_b, sorted_b = sort_by_lattice_distance(positions_b)
 
-    # Call the C code on our conditioned inputs.
-    perm_between = _compute_permutation_c(sorted_a, sorted_b, lattice, symprec)
+    perm_between = _compute_permutation(sorted_a, sorted_b, lattice, symprec, lang=lang)
 
     # Compose all of the permutations for the full permutation.
     #
@@ -1626,16 +1640,17 @@ def compute_permutation_for_rotation(
     return perm_a[perm_between][np.argsort(perm_b)]
 
 
-def _compute_permutation_c(
+def _compute_permutation(
     positions_a: NDArray[np.double],
     positions_b: NDArray[np.double],
     lattice: NDArray[np.double],
     symprec: float,  # scaled positions  # column vectors
+    lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.int64]:
     """Return mapping defined by positions_a[perm[i]] == positions_b[i].
 
     Version of `_compute_permutation_for_rotation` which just directly
-    calls the C function, without any conditioning of the data.
+    calls the C/Rust function, without any conditioning of the data.
     Skipping the conditioning step makes this EXTREMELY slow on large
     structures.
 
@@ -1649,13 +1664,20 @@ def _compute_permutation_c(
         )
 
     try:
-        import phonopy._phonopy as phonoc  # type: ignore
+        if lang == "Rust":
+            import phonors  # type: ignore
+
+            log_dispatch(lang, "_compute_permutation")
+            kernel = phonors.compute_permutation
+        else:
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            log_dispatch(lang, "_compute_permutation")
+            kernel = phonoc.compute_permutation
 
         tolerance = symprec
         for _ in range(20):
-            is_found = phonoc.compute_permutation(
-                permutation, lattice, positions_a, positions_b, tolerance
-            )
+            is_found = kernel(permutation, lattice, positions_a, positions_b, tolerance)
             if is_found:
                 break
             else:

@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 import numpy as np
 import spglib
@@ -86,6 +86,7 @@ class Symmetry:
         symprec: float = 1e-5,
         is_symmetry: bool = True,
         s2p_map: NDArray[np.int64] | None = None,
+        lang: Literal["C", "Rust"] = "C",
     ):
         """Init method.
 
@@ -99,10 +100,14 @@ class Symmetry:
             as symmetry operations. Default is True.
         s2p_map : ndarray, optional
             This is equivalent to `Primitive.s2p_map`.
+        lang : {"C", "Rust"}, optional
+            Backend used by helpers that have a Rust port (currently the
+            atomic-permutation matcher).  Default is "C".
 
         """
         self._cell = cell
         self._symprec = symprec
+        self._lang: Literal["C", "Rust"] = lang
 
         self._symmetry_operations: _SymmetryOperations
         self._international_table = None
@@ -269,6 +274,7 @@ class Symmetry:
             translations,  # scaled
             lattice,  # column vectors
             self._symprec,
+            lang=self._lang,
         )
 
     def _get_site_symmetry(
