@@ -1,12 +1,11 @@
 """Parity tests comparing Rust and C dispatch paths for cells helpers.
 
-Phase 2.1 of the phonors adoption introduced a Rust port of
-``compute_permutation``.  These tests confirm bit-for-bit parity between
-``phonopy._phonopy.compute_permutation`` and
-``phonors.compute_permutation`` at the leaf, and end-to-end equivalence
-of the higher-level helpers (``compute_permutation_for_rotation``,
-``compute_all_sg_permutations``) and the data they fill on
-``Symmetry`` / ``Primitive`` when ``Phonopy(lang="Rust")`` is used.
+Confirms bit-for-bit parity between ``phonopy._phonopy.compute_permutation``
+and ``phonors.compute_permutation`` at the leaf, and end-to-end
+equivalence of the higher-level helpers
+(``compute_permutation_for_rotation``, ``compute_all_sg_permutations``)
+and the data they fill on ``Symmetry`` / ``Primitive`` when
+``Phonopy(lang="Rust")`` is used.
 
 Most tests reuse the session-scoped ``ph_nacl`` fixture from
 ``test/conftest.py`` since the Phonopy instance itself does not need
@@ -18,6 +17,7 @@ intentionally builds two ``Phonopy`` instances with different ``lang``
 values to confirm load-time plumbing.
 
 The whole module is skipped when phonors is not importable.
+
 """
 
 from __future__ import annotations

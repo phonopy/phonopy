@@ -1,23 +1,21 @@
 """Parity tests comparing Rust and C dispatch paths for fc helpers.
 
-Phase 2.2 of the phonors adoption introduced a Rust port of
-``perm_trans_symmetrize_fc``.  These tests confirm bit-for-bit parity
-between ``phonopy._phonopy.perm_trans_symmetrize_fc`` and
-``phonors.perm_trans_symmetrize_fc`` at the leaf, and end-to-end
-equivalence of ``Phonopy.symmetrize_force_constants`` under
-``lang="C"`` vs ``lang="Rust"``.
+Confirms bit-for-bit parity between ``phonopy._phonopy`` and
+``phonors`` at the leaf for ``perm_trans_symmetrize_fc``,
+``transpose_compact_fc``, and ``perm_trans_symmetrize_compact_fc``,
+plus end-to-end equivalence of ``Phonopy.symmetrize_force_constants``
+under ``lang="C"`` vs ``lang="Rust"``.
 
 Leaf parity reuses the session-scoped ``ph_nacl`` fixture from
 ``test/conftest.py`` since the kernel takes a numpy array and a
 ``lang`` keyword -- the Phonopy instance just provides representative
-fc data.  The end-to-end test
-``test_phonopy_symmetrize_force_constants_lang_rust_matches_c`` is the
-one case that intentionally builds two ``Phonopy`` instances (with
-``lang="C"`` and ``lang="Rust"``) to confirm
+fc data.  The end-to-end tests intentionally build two ``Phonopy``
+instances (with ``lang="C"`` and ``lang="Rust"``) to confirm
 ``Phonopy.symmetrize_force_constants`` plumbs ``self._lang`` to the
 module-level helper.
 
 The whole module is skipped when phonors is not importable.
+
 """
 
 from __future__ import annotations
@@ -71,6 +69,7 @@ def test_transpose_compact_fc_matches(ph_nacl_compact_fcsym: Phonopy):
 
     The drift query path applies the transpose twice, so this also covers
     the involution behaviour on real-world symmetry data.
+
     """
     fc_c = ph_nacl_compact_fcsym.force_constants.copy()
     fc_rust = ph_nacl_compact_fcsym.force_constants.copy()
@@ -90,6 +89,7 @@ def test_perm_trans_symmetrize_compact_fc_matches(
     Both backends iterate in the same loop order over the same atomic-
     permutation tables, so the floating-point operations occur in
     identical sequence and the result is bit-identical.
+
     """
     fc_c = ph_nacl_compact_fcsym.force_constants.copy()
     fc_rust = ph_nacl_compact_fcsym.force_constants.copy()
@@ -124,6 +124,7 @@ def test_phonopy_produce_force_constants_lang_rust_matches_c(is_compact_fc: bool
     parity is expected: both backends iterate over identical symmetry
     tables in the same order, so the rotation-by-block multiply-add
     proceeds in the same floating-point sequence.
+
     """
     common_kwargs = dict(
         force_sets_filename=cwd / "FORCE_SETS_NaCl",

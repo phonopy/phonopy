@@ -575,6 +575,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._scell,
             is_full_fc=(fc_shape[0] == fc_shape[1]),
             use_openmp=self._use_openmp,
+            lang=self._lang,
         )
 
         # Bring commensurate points into first-BZ because

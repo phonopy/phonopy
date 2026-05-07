@@ -1,13 +1,12 @@
-"""Parity tests for run_dynamical_matrix_solver_c (Phase 3A).
+"""Parity tests for run_dynamical_matrix_solver_c.
 
-Phase 3A added the arbitrary-q variants of the dipole-dipole dynamical-
-matrix builder to phonors (mesh-locked variants were already in place
-from earlier work).  These tests confirm bit-level (machine-epsilon)
-parity between the C kernel ``phonoc.dynamical_matrices_with_dd_openmp_over_qpoints``
-and the new Rust pair ``phonors.dynamical_matrices_at_qpoints[_gonze]``
-on real NaCl data, across the three NAC modes (no NAC, Wang, Gonze).
+Confirms bit-level (machine-epsilon) parity between the C kernel
+``phonoc.dynamical_matrices_with_dd_openmp_over_qpoints`` and the Rust
+pair ``phonors.dynamical_matrices_at_qpoints[_gonze]`` on real NaCl
+data, across the three NAC modes (no NAC, Wang, Gonze).
 
 The whole module is skipped when phonors is not importable.
+
 """
 
 from __future__ import annotations
