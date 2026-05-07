@@ -3425,6 +3425,7 @@ class Phonopy:
                 self._nac_params["dielectric"],
                 self._primitive,
                 symprec=self._symprec,
+                lang=self._lang,
             )
             nac_params = self._nac_params.copy()
             nac_params.update({"born": borns, "dielectric": epsilon})
