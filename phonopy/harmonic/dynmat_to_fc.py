@@ -458,7 +458,9 @@ class DynmatToForceConstants:
 
         assert self._fc is not None
         if self._fc.shape[0] == self._fc.shape[1]:
-            distribute_force_constants_by_translations(self._fc, self._pcell)
+            distribute_force_constants_by_translations(
+                self._fc, self._pcell, lang=self._lang
+            )
 
     def _inverse_transformation_compiled(self) -> None:
         """Dispatch to the C or Rust backend based on ``self._lang``."""
