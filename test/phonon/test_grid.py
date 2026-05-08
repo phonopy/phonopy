@@ -18,6 +18,7 @@ from phonopy.phonon.grid import (
     get_grid_point_from_address,
     get_grid_point_from_address_py,
     get_ir_grid_points,
+    length2mesh,
 )
 from phonopy.phonon.tetrahedron_method import get_tetrahedra_relative_grid_address
 from phonopy.structure.atoms import PhonopyAtoms
@@ -2506,3 +2507,17 @@ def test_GridMatrix_with_supercell_symmetry_grg_false(ph_nacl: Phonopy):
     )
     assert gm.grid_matrix is None
     np.testing.assert_array_equal(gm.D_diag, [4, 4, 4])
+
+
+def test_length2mesh(ph_nacl: Phonopy):
+    """Test of length2mesh."""
+    length = 50.0
+    mesh_numbers = length2mesh(length, ph_nacl.primitive.cell)
+    np.testing.assert_array_equal(mesh_numbers, [15, 15, 15])
+
+    mesh_numbers = length2mesh(
+        length,
+        ph_nacl.primitive.cell,
+        ph_nacl.primitive_symmetry.pointgroup_operations,
+    )
+    np.testing.assert_array_equal(mesh_numbers, [15, 15, 15])

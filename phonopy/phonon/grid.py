@@ -48,12 +48,105 @@ from spglib import SpglibDataset, SpglibMagneticDataset
 from phonopy.structure.cells import (
     determinant,
     estimate_supercell_matrix,
+    get_cell_parameters,
     get_reduced_bases,
     is_primitive_cell,
 )
-from phonopy.structure.grid_points import extract_ir_grid_points, length2mesh
-from phonopy.structure.symmetry import NosymDataset
+from phonopy.structure.symmetry import NosymDataset, get_lattice_vector_equivalence
 from phonopy.utils import similarity_transformation
+
+
+def length2mesh(
+    length: float,
+    lattice: Sequence[Sequence[float]] | NDArray[np.double],
+    rotations: NDArray[np.int64] | None = None,
+) -> NDArray[np.int64]:
+    """Convert length to mesh for q-point sampling.
+
+    This conversion for each reciprocal axis follows VASP convention by
+        N = max(1, int(l * |a|^* + 0.5))
+    'int' means rounding down, not rounding to nearest integer.
+
+    Parameters
+    ----------
+    length : float
+        Length having the unit of direct space length.
+    lattice : array_like
+        Basis vectors of primitive cell in row vectors.
+        dtype='double', shape=(3, 3)
+    rotations: array_like, optional
+        Rotation matrices in real space. When given, mesh numbers that are
+        symmetrically reasonable are returned. Default is None.
+        dtype='int64', shape=(rotations, 3, 3)
+
+    Returns
+    -------
+    array_like
+        dtype=int, shape=(3,)
+
+    """
+    rec_lattice = np.array(np.linalg.inv(lattice), dtype="double")
+    rec_lat_lengths = get_cell_parameters(rec_lattice.T)
+    mesh_numbers = np.rint(rec_lat_lengths * length).astype(int)
+
+    if rotations is not None:
+        reclat_equiv = get_lattice_vector_equivalence(
+            np.array([r.T for r in rotations], dtype="int64")
+        )
+        m = mesh_numbers
+        mesh_equiv = [m[1] == m[2], m[2] == m[0], m[0] == m[1]]
+        # Follow symmetry when distorted, and align to larger one.
+        for i, pair in enumerate(([1, 2], [2, 0], [0, 1])):
+            if reclat_equiv[i] and not mesh_equiv[i]:
+                m[pair] = max(m[pair])
+
+    return np.maximum(mesh_numbers, [1, 1, 1])
+
+
+def extract_ir_grid_points(
+    grid_mapping_table: NDArray[np.int64],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Return ir-grid points and weights in grid index mapping table."""
+    ir_grid_points = np.array(np.unique(grid_mapping_table), dtype="int64")
+    weights = np.zeros_like(grid_mapping_table)
+    for gp in grid_mapping_table:
+        weights[gp] += 1
+    ir_weights = np.array(weights[ir_grid_points], dtype="int64")
+
+    return ir_grid_points, ir_weights
+
+
+def get_ir_qpoints_and_weights(
+    mesh: Sequence[int] | NDArray[np.int64],
+    lattice: NDArray[np.double],
+    primitive_symmetry: object | None = None,
+    q_mesh_shift: Sequence[float] | NDArray[np.double] | None = None,
+    is_time_reversal: bool = True,
+    is_gamma_center: bool = True,
+    is_mesh_symmetry: bool = True,
+) -> tuple[NDArray[np.double], NDArray[np.int64]]:
+    """Return irreducible q-points and weights backed by BZGrid.
+
+    Replaces the legacy ``phonopy.structure.grid_points.get_qpoints`` for
+    consumers that only need (qpoints, weights).  When the requested shift
+    breaks point-group symmetry the BZGrid construction falls back to
+    time-reversal-only ir-grid reduction with a warning, mirroring the
+    behaviour of ``Mesh._MeshGrid``.
+
+    """
+    # Lazy import to avoid a circular dependency with mesh.py.
+    from phonopy.phonon.mesh import _MeshGrid
+
+    grid = _MeshGrid(
+        np.array(mesh, dtype="int64"),
+        lattice,
+        primitive_symmetry,  # type: ignore[arg-type]
+        q_mesh_shift=q_mesh_shift,
+        is_gamma_center=is_gamma_center,
+        is_time_reversal=is_time_reversal,
+        is_mesh_symmetry=is_mesh_symmetry,
+    )
+    return grid.qpoints, grid.weights
 
 
 @dataclasses.dataclass(frozen=True)

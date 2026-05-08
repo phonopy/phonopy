@@ -22,7 +22,6 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.phonon.dos import NormalDistribution
 from phonopy.phonon.grid import BZGrid
 from phonopy.phonon.tetrahedron_method import get_integration_weights
 
@@ -427,6 +426,10 @@ class SmearingDOSAccumulator:
             )
         else:
             self._sigma = sigma
+        # Local import to avoid a circular dependency with phonopy.phonon.dos
+        # (dos.py now imports TetrahedronDOSAccumulator from this module).
+        from phonopy.phonon.dos import NormalDistribution
+
         self._smearing = NormalDistribution(self._sigma)
         self._density = self._compute_density()
 

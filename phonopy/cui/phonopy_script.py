@@ -1794,6 +1794,44 @@ def _init_phonopy(
     return phonon
 
 
+_MESH_SYMMETRY_FALLBACK_LINES = (
+    "The mesh grid is incompatible with the primitive-cell point group.",
+    "Point-group symmetry reduction is disabled; time-reversal symmetry remains.",
+    "For better symmetry reduction, use a gamma-centered mesh.",
+)
+
+
+def _install_cli_warning_formatter() -> None:
+    """Render selected library warnings nicely instead of the default format.
+
+    Currently only ``MeshSymmetryFallbackWarning`` is special-cased: the
+    default Python format prepends the source file path and line number,
+    which clutters CLI output.  All other warnings keep their default
+    formatting.
+
+    """
+    import warnings
+
+    from phonopy.phonon.mesh import MeshSymmetryFallbackWarning
+
+    default_showwarning = warnings.showwarning
+
+    def showwarning(message, category, filename, lineno, file=None, line=None):
+        if isinstance(message, MeshSymmetryFallbackWarning) or (
+            isinstance(category, type)
+            and issubclass(category, MeshSymmetryFallbackWarning)
+        ):
+            stream = file if file is not None else sys.stderr
+            print("WARNING:", file=stream)
+            for body in _MESH_SYMMETRY_FALLBACK_LINES:
+                print(f"  {body}", file=stream)
+            print("", file=stream)
+            return
+        default_showwarning(message, category, filename, lineno, file, line)
+
+    warnings.showwarning = showwarning
+
+
 def main(**argparse_control: bool | PhonopyMockArgs):
     """Start phonopy.
 
@@ -1816,6 +1854,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         }
 
     """
+    _install_cli_warning_formatter()
     # import warnings
 
     # warnings.simplefilter("error")
