@@ -31,7 +31,9 @@ def _make_band(ph_nacl_gruneisen) -> PhonopyGruneisen:
 
 def _check_mesh_content(text: str) -> None:
     assert "mesh: [     4,     4,     4 ]" in text
-    assert "nqpoint: 10" in text
+    # The TR-only BZGrid fallback for [4,4,4] + shift produces 32 ir-qpoints;
+    # see the comment on g_mesh in test_gruneisen.py.
+    assert "nqpoint: 32" in text
     assert "reciprocal_lattice:" in text
     assert "natom:" in text
     assert "phonon:" in text

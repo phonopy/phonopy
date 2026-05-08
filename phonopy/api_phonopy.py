@@ -89,6 +89,7 @@ from phonopy.phonon.dos import (
     TotalDosDict,
     get_dos_frequency_range,
 )
+from phonopy.phonon.grid import length2mesh
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.mesh import IterMesh, IterMeshDict, Mesh, MeshDict
@@ -115,7 +116,6 @@ from phonopy.structure.cells import (
     shape_supercell_matrix,
 )
 from phonopy.structure.dataset import forces_in_dataset
-from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.mixture import reduce_mixture_forces
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.version import __version__
@@ -1683,6 +1683,7 @@ class Phonopy:
                 with_eigenvectors=with_eigenvectors,
                 is_gamma_center=is_gamma_center,
                 rotations=self._primitive_symmetry.pointgroup_operations,
+                primitive_symmetry=self._primitive_symmetry,
                 factor=self._unit_conversion_factor,
                 lang=self._lang,
             )
@@ -1697,6 +1698,7 @@ class Phonopy:
                 is_gamma_center=_is_gamma_center,
                 group_velocity=group_velocity,
                 rotations=self._primitive_symmetry.pointgroup_operations,
+                primitive_symmetry=self._primitive_symmetry,
                 factor=self._unit_conversion_factor,
                 lang=self._lang,
             )
