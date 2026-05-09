@@ -45,6 +45,7 @@ from typing import Literal
 import numpy as np
 import spglib
 
+from phonopy._lang import c_omp_max_threads, have_c_ext, rust_rayon_max_threads
 from phonopy.structure.symmetry import Symmetry
 
 try:
@@ -1556,12 +1557,6 @@ def _start_phonopy(**argparse_control):
     # Show phonopy logo
     if log_level:
         _print_phonopy()
-
-        from phonopy._lang import (
-            c_omp_max_threads,
-            have_c_ext,
-            rust_rayon_max_threads,
-        )
 
         # When --rust was requested, or when the C extension is missing
         # (and we are about to fall back to Rust), report rayon threads.

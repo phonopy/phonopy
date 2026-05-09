@@ -45,6 +45,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 import phonopy.cui.load_helper as load_helper
+from phonopy._lang import resolve_lang
 from phonopy.api_phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.physical_units import get_calculator_physical_units
@@ -225,8 +226,6 @@ def load(
         phonors backend.
 
     """
-    from phonopy._lang import resolve_lang
-
     lang = resolve_lang(lang)
     if (
         supercell is not None

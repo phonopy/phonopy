@@ -50,7 +50,7 @@ except AttributeError:
 from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
-from phonopy._lang import log_dispatch
+from phonopy._lang import log_dispatch, resolve_lang
 from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
 from phonopy.structure.snf import SNF3x3
 
@@ -359,8 +359,6 @@ class Primitive(PhonopyAtoms):
             atomic-permutation matcher).  Default is "C".
 
         """
-        from phonopy._lang import resolve_lang
-
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
         self._symprec = symprec
         self._store_dense_svecs = store_dense_svecs
@@ -1276,8 +1274,6 @@ class ShortestPairs:
             kernel.  Default is ``"C"``.
 
         """
-        from phonopy._lang import resolve_lang
-
         self._supercell_bases = supercell_bases
         self._supercell_pos = supercell_pos
         self._primitive_pos = primitive_pos

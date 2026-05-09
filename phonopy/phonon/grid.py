@@ -45,6 +45,7 @@ import numpy as np
 from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
+from phonopy._lang import log_dispatch, resolve_lang
 from phonopy.structure.cells import (
     determinant,
     estimate_supercell_matrix,
@@ -315,8 +316,6 @@ class BZGrid:
             "C".
 
         """
-        from phonopy._lang import log_dispatch, resolve_lang
-
         lang = resolve_lang(lang)
         log_dispatch(lang, "BZGrid.__init__")
 
@@ -743,8 +742,6 @@ class GridMatrix:
             uses ``phonors``. Default is "C".
 
         """
-        from phonopy._lang import log_dispatch
-
         log_dispatch(lang, "GridMatrix.__init__")
 
         self._lang: Literal["C", "Rust"] = lang
@@ -1123,8 +1120,6 @@ def get_grid_point_from_address(
         shape=(n, ), dtype='int64'
 
     """
-    from phonopy._lang import resolve_lang
-
     if resolve_lang(lang) == "Rust":
         import phonors as backend
     else:
@@ -1261,8 +1256,6 @@ def _get_grid_points_by_bz_rotations_c(
     rotations: NDArray,
     lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.int64]:
-    from phonopy._lang import resolve_lang
-
     if resolve_lang(lang) == "Rust":
         import phonors as backend
     else:
@@ -1356,8 +1349,6 @@ def _get_grid_address(
         shape=(prod(D_diag), 3), dtype='int64'
 
     """
-    from phonopy._lang import resolve_lang
-
     d_diag = np.ascontiguousarray(D_diag, dtype="int64")
     if resolve_lang(lang) == "Rust":
         import phonors
@@ -1444,8 +1435,6 @@ def _relocate_BZ_grid_address(
     d_diag = np.ascontiguousarray(D_diag, dtype="int64")
     rec = np.ascontiguousarray(reduced_basis, dtype="float64")
     bz_grid_type = int(store_dense_gp_map) + 1
-
-    from phonopy._lang import resolve_lang
 
     if resolve_lang(lang) == "Rust":
         import phonors
@@ -1554,8 +1543,6 @@ def _get_ir_grid_map(
     else:
         ps = np.ascontiguousarray(PS, dtype="int64")
     rots = np.ascontiguousarray(grg_rotations, dtype="int64")
-
-    from phonopy._lang import resolve_lang
 
     if resolve_lang(lang) == "Rust":
         import phonors

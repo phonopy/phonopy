@@ -48,6 +48,7 @@ from typing import Any, Literal, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import c_use_openmp, log_dispatch, resolve_lang
 from phonopy.exception import ForcesetsNotFoundError
 from phonopy.harmonic.displacement import (
     DisplacementDataset,
@@ -226,8 +227,6 @@ class Phonopy:
             phonors backend. Default is "C".
 
         """
-        from phonopy._lang import log_dispatch, resolve_lang
-
         lang = resolve_lang(lang)
         log_dispatch(lang, "Phonopy.__init__")
         self._symprec = symprec
@@ -3107,8 +3106,6 @@ class Phonopy:
             by d -> d / |d| * max_distance if |d| > max_distance.
 
         """
-        from phonopy._lang import c_use_openmp
-
         if self._force_constants is None:
             msg = "Force constants have not yet been set."
             raise RuntimeError(msg)
@@ -3274,8 +3271,6 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants are not prepared.")
 
-        from phonopy._lang import c_use_openmp
-
         fc_shape = self._force_constants.shape
         ph_copy = self._copy()
         ph_copy.force_constants = self._force_constants
@@ -3418,8 +3413,6 @@ class Phonopy:
             self._force_constants = self._force_constants.round(decimals=decimals)
 
     def _set_dynamical_matrix(self) -> None:
-        from phonopy._lang import c_use_openmp
-
         self._dynamical_matrix = None
 
         if self._is_symmetry and self._nac_params is not None:

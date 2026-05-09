@@ -45,6 +45,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import log_dispatch, resolve_lang
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.brillouin_zone import BrillouinZone
@@ -125,8 +126,6 @@ class DynamicalMatrix:
             the experimental phonors backend.
 
         """
-        from phonopy._lang import resolve_lang
-
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
@@ -706,8 +705,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         shape=(num_atom, 3, num_atom, 3), dtype="cdouble"
 
         """
-        from phonopy._lang import log_dispatch
-
         pos = self._pcell.positions
         num_atom = len(pos)
         volume = self._pcell.volume
@@ -770,8 +767,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         Computed only once.
 
         """
-        from phonopy._lang import log_dispatch
-
         pos = self._pcell.positions
         self._dd_q0 = np.zeros((len(pos), 3, 3), dtype="cdouble", order="C")
 
@@ -1045,8 +1040,6 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         q: NDArray[np.double],
         born: NDArray[np.double],
     ) -> NDArray[np.double]:
-        from phonopy._lang import log_dispatch
-
         nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double", order="C")
         if self._lang == "Rust":
             log_dispatch("Rust", "DynamicalMatrixWang._get_charge_sum")
@@ -1224,8 +1217,6 @@ def get_dynamical_matrices_at_qpoints_c(
     """C backend for ``get_dynamical_matrices_at_qpoints``."""
     import phonopy._phonopy as phonoc  # type: ignore
 
-    from phonopy._lang import log_dispatch
-
     log_dispatch("C", "get_dynamical_matrices_at_qpoints_c")
 
     args = _prepare_dynmat_qpoints_args(dm, qpoints, nac_q_direction, is_nac)
@@ -1269,8 +1260,6 @@ def get_dynamical_matrices_at_qpoints_rust(
 ) -> NDArray[np.cdouble]:
     """Rust backend for ``get_dynamical_matrices_at_qpoints``."""
     import phonors  # type: ignore[import-untyped]
-
-    from phonopy._lang import log_dispatch
 
     log_dispatch("Rust", "get_dynamical_matrices_at_qpoints_rust")
 
