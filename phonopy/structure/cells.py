@@ -363,6 +363,7 @@ class Primitive(PhonopyAtoms):
         self._symprec = symprec
         self._store_dense_svecs = store_dense_svecs
         self._lang: Literal["C", "Rust"] = lang
+        log_dispatch(lang, "Primitive.__init__")
         self._p2s_map: NDArray
         self._s2p_map: NDArray
         self._p2p_map: dict[int, int]
@@ -602,6 +603,7 @@ class Primitive(PhonopyAtoms):
             primitive_pos,
             store_dense_svecs=self._store_dense_svecs,
             symprec=self._symprec,
+            lang=self._lang,
         )
         trans_mat_float = np.dot(supercell_bases, np.linalg.inv(primitive_bases))
         trans_mat = np.rint(trans_mat_float).astype(int)
@@ -1137,20 +1139,6 @@ def is_primitive_cell(rotations: NDArray[np.int64] | NDArray[np.int32]) -> bool:
         return True
 
 
-def convert_to_phonopy_primitive(
-    supercell: PhonopyAtoms, primitive: PhonopyAtoms
-) -> Primitive:
-    """Convert PhonopyAtoms primitive cell to the Primitive instance."""
-    slat = supercell.cell.T
-    plat = primitive.cell.T
-    pmat = np.dot(np.linalg.inv(slat), plat)
-    _primitive = get_primitive(supercell, pmat)
-    if not isclose(primitive, _primitive):
-        msg = "Input primitive cell and generated one are inconsistent."
-        raise RuntimeError(msg)
-    return _primitive
-
-
 def _trim_cell(
     relative_axes: NDArray[np.double],
     cell: PhonopyAtoms,
@@ -1213,6 +1201,7 @@ def get_smallest_vectors(
     primitive_pos: NDArray[np.double],
     store_dense_svecs: bool = False,
     symprec: float = 1e-5,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return shortest vectors and multiplicities.
 
@@ -1225,6 +1214,7 @@ def get_smallest_vectors(
         primitive_pos,
         store_dense_svecs=store_dense_svecs,
         symprec=symprec,
+        lang=lang,
     )
     return spairs.shortest_vectors, spairs.multiplicities
 
@@ -1258,6 +1248,7 @@ class ShortestPairs:
         primitive_pos: NDArray[np.double],
         store_dense_svecs: bool = True,
         symprec: float = 1e-5,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -1278,12 +1269,17 @@ class ShortestPairs:
             Default is True.
         symprec : float, optional
             Tolerance to find equal distances of vectors. Default is 1e-5.
+        lang : {"C", "Rust"}, optional
+            Backend selector for the underlying ``gsv_set_smallest_vectors``
+            kernel.  Default is ``"C"``.
 
         """
         self._supercell_bases = supercell_bases
         self._supercell_pos = supercell_pos
         self._primitive_pos = primitive_pos
         self._symprec = symprec
+        self._lang: Literal["C", "Rust"] = lang
+        log_dispatch(lang, "ShortestPairs.__init__")
 
         if store_dense_svecs:
             svecs, multi = self._run_dense()
@@ -1345,35 +1341,65 @@ class ShortestPairs:
         multiplicity = np.zeros(
             (len(supercell_fracs), len(primitive_fracs), 2), dtype="int64", order="C"
         )
-        import phonopy._phonopy as phonoc  # type: ignore
+        reduced_bases_T = np.array(reduced_bases.T, dtype="double", order="C")
+        trans_mat_inv_T = np.array(trans_mat_inv.T, dtype="int64", order="C")
+        if self._lang == "Rust":
+            import phonors  # type: ignore[import-untyped]
 
-        phonoc.gsv_set_smallest_vectors_dense(
-            shortest_vectors,
-            multiplicity,
-            supercell_fracs,
-            primitive_fracs,
-            lattice_points,
-            np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int64", order="C"),
-            1,
-            self._symprec,
-        )
+            phonors.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                1,
+                self._symprec,
+            )
+        else:
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            phonoc.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                1,
+                self._symprec,
+            )
 
         # Phase 2 : Set shortest_vectors.
         shortest_vectors = np.zeros(
             (np.sum(multiplicity[:, :, 0]), 3), dtype="double", order="C"
         )
-        phonoc.gsv_set_smallest_vectors_dense(
-            shortest_vectors,
-            multiplicity,
-            supercell_fracs,
-            primitive_fracs,
-            lattice_points,
-            np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int64", order="C"),
-            0,
-            self._symprec,
-        )
+        if self._lang == "Rust":
+            phonors.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                0,
+                self._symprec,
+            )
+        else:
+            phonoc.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                0,
+                self._symprec,
+            )
 
         return shortest_vectors, multiplicity
 
@@ -1409,18 +1435,34 @@ class ShortestPairs:
         multiplicity = np.zeros(
             (len(supercell_fracs), len(primitive_fracs)), dtype="int64", order="C"
         )
-        import phonopy._phonopy as phonoc  # type: ignore
+        reduced_bases_T = np.array(reduced_bases.T, dtype="double", order="C")
+        trans_mat_inv_T = np.array(trans_mat_inv.T, dtype="int64", order="C")
+        if self._lang == "Rust":
+            import phonors  # type: ignore[import-untyped]
 
-        phonoc.gsv_set_smallest_vectors_sparse(
-            shortest_vectors,
-            multiplicity,
-            supercell_fracs,
-            primitive_fracs,
-            lattice_points,
-            np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int64", order="C"),
-            self._symprec,
-        )
+            phonors.gsv_set_smallest_vectors_sparse(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                self._symprec,
+            )
+        else:
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            phonoc.gsv_set_smallest_vectors_sparse(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                self._symprec,
+            )
 
         return shortest_vectors, multiplicity
 
