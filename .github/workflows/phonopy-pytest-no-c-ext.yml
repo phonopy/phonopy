@@ -21,6 +21,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # setuptools_scm needs tags to compute the phonopy version;
+          # actions/checkout's default shallow clone hides them.
+          fetch-depth: 0
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
@@ -28,7 +32,7 @@ jobs:
         run: |
           conda activate test
           conda install --yes -c conda-forge python=${{ matrix.python-version }}
-          conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest c-compiler cxx-compiler cmake ninja pypolymlp ase rust maturin
+          conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest pypolymlp ase rust maturin
       - name: Setup symfc
         run: |
           conda activate test
@@ -44,6 +48,10 @@ jobs:
       - name: Setup phonopy without C extension
         env:
           PHONOPY_NO_C_EXT: "1"
+          # Force the Make generator so scikit-build-core does not look
+          # for Ninja.  CMakeLists.txt early-returns under
+          # PHONOPY_NO_C_EXT=1, so no actual compilation happens.
+          CMAKE_GENERATOR: "Unix Makefiles"
         run: |
           conda activate test
           pip install -e . -vvv

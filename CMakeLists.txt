@@ -5,6 +5,10 @@ if(NOT SKBUILD_PROJECT_NAME)
 endif()
 
 if(DEFINED ENV{PHONOPY_NO_C_EXT} AND NOT "$ENV{PHONOPY_NO_C_EXT}" STREQUAL "0")
+    # Declare the project with no language so CMake skips C/C++ compiler detection.
+    # scikit-build-core's build step still calls CMake even with no targets, so the
+    # project() call has to happen before we bail out.
+    project(${SKBUILD_PROJECT_NAME} NONE)
     message(
         STATUS "PHONOPY_NO_C_EXT is set; skipping _phonopy and _recgrid C extensions"
     )
