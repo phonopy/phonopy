@@ -42,7 +42,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy._lang import log_dispatch
+from phonopy._lang import log_dispatch, resolve_lang
 from phonopy.harmonic.displacement import Type1DisplacementDataset
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -694,6 +694,7 @@ def get_drift_force_constants(
     lang: Literal["C", "Rust"] = "C",
 ) -> tuple[float, float, list[int], list[int]]:
     """Get max drift of force constants."""
+    lang = resolve_lang(lang)
     if force_constants.shape[0] == force_constants.shape[1]:
         num_atom = force_constants.shape[0]
         maxval1 = 0

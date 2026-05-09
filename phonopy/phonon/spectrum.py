@@ -22,6 +22,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import resolve_lang
 from phonopy.phonon.grid import BZGrid
 from phonopy.phonon.tetrahedron_method import get_integration_weights
 
@@ -146,8 +147,6 @@ class TetrahedronDOSAccumulator:
             Backend for the tetrahedron-weight kernel.
 
         """
-        from phonopy._lang import resolve_lang
-
         lang = resolve_lang(lang)
         bin_values_arr = np.asarray(bin_values, dtype="double")
         if bin_values_arr.ndim == 2:

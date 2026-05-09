@@ -42,6 +42,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import resolve_lang
 from phonopy.phonon.grid import BZGrid
 
 
@@ -63,6 +64,9 @@ def get_tetrahedra_relative_grid_address(
             microzone_lattice  # type: ignore[arg-type]
         )[0]
 
+    if lang in ("C", "Rust"):
+        lang = resolve_lang(lang)
+
     relative_grid_address = np.zeros((24, 4, 3), dtype="int64", order="C")
     lattice = np.array(microzone_lattice, dtype="double", order="C")
 
@@ -72,13 +76,7 @@ def get_tetrahedra_relative_grid_address(
         phonors.tetrahedra_relative_grid_address(relative_grid_address, lattice)
         return relative_grid_address
 
-    try:
-        import phonopy._phonopy as phonoc  # type: ignore
-    except ImportError:
-        import sys
-
-        print("Phonopy C-extension has to be built properly.")
-        sys.exit(1)
+    import phonopy._phonopy as phonoc  # type: ignore
 
     phonoc.tetrahedra_relative_grid_address(relative_grid_address, lattice)
     return relative_grid_address
@@ -122,6 +120,7 @@ def get_integration_weights(
         order='C'
 
     """
+    lang = resolve_lang(lang)
     relative_grid_addresses = np.array(
         np.dot(
             get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
@@ -274,8 +273,6 @@ class TetrahedronMethod:
                 np.array(primitive_vectors, dtype="double", order="C") / mesh
             )
         if lang in ("C", "Rust"):
-            from phonopy._lang import resolve_lang
-
             lang = resolve_lang(lang)
         self._lang: Literal["C", "Python", "Rust"] = lang
         self._vertices: NDArray[np.int64] | None = None

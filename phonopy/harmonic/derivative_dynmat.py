@@ -42,6 +42,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import log_dispatch
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     DynamicalMatrixNAC,
@@ -166,8 +167,6 @@ class DerivativeOfDynamicalMatrix:
         """Run the derivative through the C kernel."""
         import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
-        from phonopy._lang import log_dispatch
-
         log_dispatch("C", "DerivativeOfDynamicalMatrix._run_c")
 
         num_patom = len(self._p2s_map)
@@ -249,8 +248,6 @@ class DerivativeOfDynamicalMatrix:
     ) -> None:
         """Run the derivative through the Rust kernel (phonors)."""
         import phonors  # type: ignore[import-untyped]
-
-        from phonopy._lang import log_dispatch
 
         log_dispatch("Rust", "DerivativeOfDynamicalMatrix._run_rust")
 

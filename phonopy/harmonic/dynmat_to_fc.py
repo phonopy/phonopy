@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import log_dispatch, resolve_lang
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive, get_supercell, sparse_to_dense_svecs
@@ -285,8 +286,6 @@ class DynmatToForceConstants:
             Backend implementation for the inverse transformation.
 
         """
-        from phonopy._lang import resolve_lang
-
         self._pcell = primitive
         self._scell = supercell
         self._lang: Literal["C", "Rust"] = resolve_lang(lang)
@@ -475,8 +474,6 @@ class DynmatToForceConstants:
         """Run the inverse transformation through the C kernel."""
         import phonopy._phonopy as phonoc  # type: ignore
 
-        from phonopy._lang import log_dispatch
-
         log_dispatch("C", "DynmatToForceConstants._inverse_transformation_c")
         s2pp, fc_index_map = self._inverse_transformation_index_maps()
         assert self._fc is not None
@@ -496,8 +493,6 @@ class DynmatToForceConstants:
     def _inverse_transformation_rust(self) -> None:
         """Run the inverse transformation through the Rust kernel (phonors)."""
         import phonors  # type: ignore[import-untyped]
-
-        from phonopy._lang import log_dispatch
 
         log_dispatch("Rust", "DynmatToForceConstants._inverse_transformation_rust")
         s2pp, fc_index_map = self._inverse_transformation_index_maps()

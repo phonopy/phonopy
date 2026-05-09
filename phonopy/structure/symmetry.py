@@ -51,6 +51,7 @@ except AttributeError:
 from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
+from phonopy._lang import resolve_lang
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     Primitive,
@@ -105,8 +106,6 @@ class Symmetry:
             atomic-permutation matcher).  Default is "C".
 
         """
-        from phonopy._lang import resolve_lang
-
         self._cell = cell
         self._symprec = symprec
         self._lang: Literal["C", "Rust"] = resolve_lang(lang)
@@ -505,8 +504,6 @@ def elaborate_borns_and_epsilon(
     Broken symmetry of Born effective charges
 
     """
-    from phonopy._lang import resolve_lang
-
     lang = resolve_lang(lang)
 
     assert len(borns) == len(ucell), "num_atom %d != len(borns) %d" % (
@@ -589,8 +586,6 @@ def symmetrize_borns_and_epsilon(
         By setting False, symmetrization can be switched off. Default is True.
 
     """
-    from phonopy._lang import resolve_lang
-
     lang = resolve_lang(lang)
     lattice = ucell.cell
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec, lang=lang)

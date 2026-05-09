@@ -44,6 +44,7 @@ from typing import Literal, TypedDict
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import c_use_openmp
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     get_dynamical_matrices_at_qpoints,
@@ -576,8 +577,6 @@ class Mesh(MeshBase):
             w.write("\n".join(lines))
 
     def _set_phonon(self) -> None:
-        from phonopy._lang import c_use_openmp
-
         num_band = len(self._cell) * 3
         num_qpoints = len(self._qpoints)
 
