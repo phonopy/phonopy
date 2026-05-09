@@ -285,9 +285,11 @@ class DynmatToForceConstants:
             Backend implementation for the inverse transformation.
 
         """
+        from phonopy._lang import resolve_lang
+
         self._pcell = primitive
         self._scell = supercell
-        self._lang: Literal["C", "Rust"] = lang
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
         supercell_matrix = np.linalg.inv(self._pcell.primitive_matrix)
         supercell_matrix = np.rint(supercell_matrix).astype("int64")
         if commensurate_points is None:

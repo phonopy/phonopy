@@ -105,9 +105,11 @@ class Symmetry:
             atomic-permutation matcher).  Default is "C".
 
         """
+        from phonopy._lang import resolve_lang
+
         self._cell = cell
         self._symprec = symprec
-        self._lang: Literal["C", "Rust"] = lang
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
 
         self._symmetry_operations: _SymmetryOperations
         self._international_table = None
@@ -467,6 +469,7 @@ def elaborate_borns_and_epsilon(
     is_symmetry: bool = True,
     symmetrize_tensors: bool = False,
     symprec: float = 1e-5,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.int64]]:
     """Symmetrize Born effective charges and dielectric constants.
 
@@ -502,6 +505,10 @@ def elaborate_borns_and_epsilon(
     Broken symmetry of Born effective charges
 
     """
+    from phonopy._lang import resolve_lang
+
+    lang = resolve_lang(lang)
+
     assert len(borns) == len(ucell), "num_atom %d != len(borns) %d" % (
         len(ucell),
         len(borns),
@@ -509,7 +516,7 @@ def elaborate_borns_and_epsilon(
 
     if symmetrize_tensors:
         borns_, epsilon_ = symmetrize_borns_and_epsilon(
-            borns, epsilon, ucell, symprec=symprec, is_symmetry=is_symmetry
+            borns, epsilon, ucell, symprec=symprec, is_symmetry=is_symmetry, lang=lang
         )
     else:
         borns_ = borns
@@ -521,6 +528,7 @@ def elaborate_borns_and_epsilon(
         supercell_matrix=supercell_matrix,
         is_symmetry=is_symmetry,
         symprec=symprec,
+        lang=lang,
     )
 
     return (
@@ -581,6 +589,9 @@ def symmetrize_borns_and_epsilon(
         By setting False, symmetrization can be switched off. Default is True.
 
     """
+    from phonopy._lang import resolve_lang
+
+    lang = resolve_lang(lang)
     lattice = ucell.cell
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec, lang=lang)
     rotations = u_sym.symmetry_operations["rotations"]
@@ -689,14 +700,16 @@ def _extract_independent_atoms(
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     is_symmetry: bool = True,
     symprec: float = 1e-5,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[NDArray[np.int64], list[int]]:
     scell, pcell = _get_supercell_and_primitive(
         ucell,
         primitive_matrix=primitive_matrix,
         supercell_matrix=supercell_matrix,
         symprec=symprec,
+        lang=lang,
     )
-    p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
+    p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec, lang=lang)
     s_indep_atoms = np.array(
         pcell.p2s_map[p_sym.get_independent_atoms()], dtype="int64"
     )

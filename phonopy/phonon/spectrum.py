@@ -146,6 +146,9 @@ class TetrahedronDOSAccumulator:
             Backend for the tetrahedron-weight kernel.
 
         """
+        from phonopy._lang import resolve_lang
+
+        lang = resolve_lang(lang)
         bin_values_arr = np.asarray(bin_values, dtype="double")
         if bin_values_arr.ndim == 2:
             shared_bins = True

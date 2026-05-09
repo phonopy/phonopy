@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import dataclasses
 import itertools
-import sys
 import warnings
 from collections.abc import Sequence
 from typing import Literal
@@ -126,12 +125,14 @@ class DynamicalMatrix:
             the experimental phonors backend.
 
         """
+        from phonopy._lang import resolve_lang
+
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
         self._hermitianize = hermitianize
         self._use_openmp = use_openmp
-        self._lang: Literal["C", "Rust"] = lang
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
         self._dynamical_matrix: NDArray[np.cdouble] | None = None
         self._force_constants = np.asarray(force_constants, dtype="double", order="C")
 
@@ -555,15 +556,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         supercell force constants.
 
         """
-        try:
-            import phonopy._phonopy as phonoc  # type: ignore # noqa F401
-
-            self._run_c_recip_dipole_dipole_q0()
-        except ImportError:
-            print(
-                "Python version of dipole-dipole calculation is not well implemented."
-            )
-            sys.exit(1)
+        self._run_c_recip_dipole_dipole_q0()
 
         if self._with_full_terms:
             self._dd_limiting = self._run_limiting_dipole_dipole()
@@ -675,15 +668,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         else:
             q_dir_cart = np.array(np.dot(q_direction, self._rec_lat.T), dtype="double")
 
-        try:
-            import phonopy._phonopy as phonoc  # noqa F401 # type: ignore
-
-            C_recip = self._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
-        except ImportError:
-            print(
-                "Python version of dipole-dipole calculation is not well implemented."
-            )
-            sys.exit(1)
+        C_recip = self._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
 
         if self._with_full_terms:
             for i in range(num_atom):
@@ -1019,32 +1004,40 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         q_direction: NDArray[np.double] | None,
     ) -> None:
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        try:
-            import phonopy._phonopy as phonoc  # noqa F401 # type: ignore
+        self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
+            self,
+            q_red,
+            q_direction,
+            hermitianize=self._hermitianize,
+            lang=self._lang,
+        )
 
-            self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
-                self,
-                q_red,
-                q_direction,
-                hermitianize=self._hermitianize,
-                lang=self._lang,
-            )
-            # self._run_c_Wang_dynamical_matrix(q_red, q_cart, constant)
-        except ImportError:
-            if q_direction is None:
-                q_cart = np.dot(q_red, self._rec_lat.T)
-            else:
-                q_cart = np.dot(q_direction, self._rec_lat.T)
+    def _run_py_compute_dynamical_matrix(
+        self,
+        q_red: NDArray[np.double],
+        q_direction: NDArray[np.double] | None,
+    ) -> None:
+        """Pure-numpy reference Wang-NAC builder.
 
-            constant = self._get_constant_factor(
-                q_cart, self._dielectric, self._pcell.volume, self._unit_conversion
-            )
-            num_atom = len(self._pcell)
-            fc_backup = self._force_constants.copy()
-            nac_q = self._get_charge_sum(num_atom, q_cart, self._born) * constant
-            self._run_py_Wang_force_constants(self._force_constants, nac_q)
-            self._run_without_NAC(q_red)
-            self._force_constants = fc_backup
+        Kept as the readable counterpart to the C / Rust kernels.  Not on
+        the production path -- ``_compute_dynamical_matrix`` always
+        dispatches through ``get_dynamical_matrices_at_qpoints``.
+
+        """
+        if q_direction is None:
+            q_cart = np.dot(q_red, self._rec_lat.T)
+        else:
+            q_cart = np.dot(q_direction, self._rec_lat.T)
+
+        constant = self._get_constant_factor(
+            q_cart, self._dielectric, self._pcell.volume, self._unit_conversion
+        )
+        num_atom = len(self._pcell)
+        fc_backup = self._force_constants.copy()
+        nac_q = self._get_charge_sum(num_atom, q_cart, self._born) * constant
+        self._run_py_Wang_force_constants(self._force_constants, nac_q)
+        self._run_without_NAC(q_red)
+        self._force_constants = fc_backup
 
     def _get_charge_sum(
         self,

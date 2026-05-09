@@ -359,11 +359,13 @@ class Primitive(PhonopyAtoms):
             atomic-permutation matcher).  Default is "C".
 
         """
+        from phonopy._lang import resolve_lang
+
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
         self._symprec = symprec
         self._store_dense_svecs = store_dense_svecs
-        self._lang: Literal["C", "Rust"] = lang
-        log_dispatch(lang, "Primitive.__init__")
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
+        log_dispatch(self._lang, "Primitive.__init__")
         self._p2s_map: NDArray
         self._s2p_map: NDArray
         self._p2p_map: dict[int, int]
@@ -1274,12 +1276,14 @@ class ShortestPairs:
             kernel.  Default is ``"C"``.
 
         """
+        from phonopy._lang import resolve_lang
+
         self._supercell_bases = supercell_bases
         self._supercell_pos = supercell_pos
         self._primitive_pos = primitive_pos
         self._symprec = symprec
-        self._lang: Literal["C", "Rust"] = lang
-        log_dispatch(lang, "ShortestPairs.__init__")
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
+        log_dispatch(self._lang, "ShortestPairs.__init__")
 
         if store_dense_svecs:
             svecs, multi = self._run_dense()

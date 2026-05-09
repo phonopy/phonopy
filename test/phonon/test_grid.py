@@ -24,6 +24,11 @@ from phonopy.phonon.tetrahedron_method import get_tetrahedra_relative_grid_addre
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
+# Most tests poke the C kernels (`phonopy._recgrid` / `phonopy._phonopy`)
+# directly with default ``lang="C"`` -- skip the whole module without C.
+pytest.importorskip("phonopy._recgrid")
+pytest.importorskip("phonopy._phonopy")
+
 
 def _get_qpoints(adrs, bzgrid):
     return np.dot(

@@ -178,14 +178,24 @@ class FDFCSolver:
 
 
 def compact_fc_to_full_fc(
-    primitive: Primitive, compact_fc: NDArray[np.double], log_level: int = 0
+    primitive: Primitive,
+    compact_fc: NDArray[np.double],
+    log_level: int = 0,
+    lang: Literal["C", "Rust"] | None = None,
 ) -> NDArray[np.double]:
-    """Transform compact fc to full fc."""
+    """Transform compact fc to full fc.
+
+    ``lang`` defaults to ``primitive._lang`` (the backend already selected
+    on the input primitive), so callers don't have to thread it through.
+
+    """
     fc = np.zeros(
         (compact_fc.shape[1], compact_fc.shape[1], 3, 3), dtype="double", order="C"
     )
     fc[primitive.p2s_map] = compact_fc
-    distribute_force_constants_by_translations(fc, primitive)
+    distribute_force_constants_by_translations(
+        fc, primitive, lang=lang if lang is not None else primitive._lang
+    )
     if log_level:
         print("Force constants were expanded to full format.")
 

@@ -225,6 +225,9 @@ def load(
         phonors backend.
 
     """
+    from phonopy._lang import resolve_lang
+
+    lang = resolve_lang(lang)
     if (
         supercell is not None
         or supercell_filename is not None

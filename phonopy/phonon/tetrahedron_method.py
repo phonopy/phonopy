@@ -273,6 +273,10 @@ class TetrahedronMethod:
             self._primitive_vectors = (
                 np.array(primitive_vectors, dtype="double", order="C") / mesh
             )
+        if lang in ("C", "Rust"):
+            from phonopy._lang import resolve_lang
+
+            lang = resolve_lang(lang)
         self._lang: Literal["C", "Python", "Rust"] = lang
         self._vertices: NDArray[np.int64] | None = None
         self._relative_grid_addresses: NDArray[np.int64]
