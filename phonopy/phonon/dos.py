@@ -99,6 +99,7 @@ class Dos:
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -109,6 +110,9 @@ class Dos:
             pre-computed frequencies and weights are used.
         sigma : float, optional
             Sigma for smearing method. If None, tetrahedron method is used.
+        lang : {"C", "Rust"}, optional
+            Backend selector for the tetrahedron-method kernels.  Default
+            is "C".
 
         """
         self._mesh_object = mesh_object
@@ -117,6 +121,7 @@ class Dos:
         self._use_tetrahedron_method = use_tetrahedron_method
         self._frequency_points: NDArray[np.double]
         self._sigma = sigma
+        self._lang: Literal["C", "Rust"] = lang
 
         if use_tetrahedron_method:
             self.set_draw_area()
@@ -186,6 +191,7 @@ class Dos:
 
 def _bzgrid_and_full_grid_frequencies(
     mesh_object: Mesh,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[BZGrid, NDArray[np.double]]:
     """Return a BZGrid covering every regular-grid point with frequencies on it.
 
@@ -204,6 +210,7 @@ def _bzgrid_and_full_grid_frequencies(
         lattice=mesh_object.dynamical_matrix.primitive.cell,
         is_shift=mesh_object.is_shift,
         is_time_reversal=False,
+        lang=lang,
     )
     ir_position = {int(gp): i for i, gp in enumerate(mesh_object.ir_grid_points)}
     positions = np.array(
@@ -222,12 +229,14 @@ class TotalDos(Dos):
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method."""
         super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            lang=lang,
         )
         self._dos: NDArray[np.double] | None = None
         self._freq_Debye: float | None = None
@@ -333,11 +342,14 @@ class TotalDos(Dos):
         )
 
     def _run_tetrahedron_method_dos(self) -> None:
-        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(self._mesh_object)
+        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(
+            self._mesh_object, lang=self._lang
+        )
         res = TetrahedronDOSAccumulator(
             freqs_full,
             bzgrid,
             sampling_points=self._frequency_points,
+            lang=self._lang,
         ).result
         # res.density shape: (1, n_sampling, 1) for plain DOS.
         self._dos = res.density[0, :, 0]
@@ -369,12 +381,14 @@ class ProjectedDos(Dos):
         use_tetrahedron_method: bool = False,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method."""
         super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            lang=lang,
         )
         if self._mesh_object.eigenvectors is None:
             raise ValueError("Mesh object does not have eigenvectors.")
@@ -487,7 +501,9 @@ class ProjectedDos(Dos):
                 ).sum()
 
     def _run_tetrahedron_method_dos(self) -> None:
-        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(self._mesh_object)
+        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(
+            self._mesh_object, lang=self._lang
+        )
         # Replicate per-mode eigvecs2 to every grid point via the same ir
         # mapping that _bzgrid_and_full_grid_frequencies uses.
         ir_position = {
@@ -508,6 +524,7 @@ class ProjectedDos(Dos):
             bzgrid,
             mode_property=mode_property,
             sampling_points=self._frequency_points,
+            lang=self._lang,
         ).result
         # res.density shape: (1, n_sampling, num_pdos) -> (num_pdos, n_sampling).
         self._projected_dos = res.density[0].T

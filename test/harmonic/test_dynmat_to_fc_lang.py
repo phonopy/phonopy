@@ -20,6 +20,7 @@ from phonopy import Phonopy
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 
 pytest.importorskip("phonors")
+pytest.importorskip("phonopy._phonopy")
 
 cwd = pathlib.Path(__file__).parent.parent
 

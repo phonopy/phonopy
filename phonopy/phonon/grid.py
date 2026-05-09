@@ -124,6 +124,7 @@ def get_ir_qpoints_and_weights(
     is_time_reversal: bool = True,
     is_gamma_center: bool = True,
     is_mesh_symmetry: bool = True,
+    lang: Literal["C", "Rust"] = "C",
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return irreducible q-points and weights backed by BZGrid.
 
@@ -145,6 +146,7 @@ def get_ir_qpoints_and_weights(
         is_gamma_center=is_gamma_center,
         is_time_reversal=is_time_reversal,
         is_mesh_symmetry=is_mesh_symmetry,
+        lang=lang,
     )
     return grid.qpoints, grid.weights
 
@@ -313,8 +315,9 @@ class BZGrid:
             "C".
 
         """
-        from phonopy._lang import log_dispatch
+        from phonopy._lang import log_dispatch, resolve_lang
 
+        lang = resolve_lang(lang)
         log_dispatch(lang, "BZGrid.__init__")
 
         self._lang: Literal["C", "Rust"] = lang
@@ -1120,7 +1123,9 @@ def get_grid_point_from_address(
         shape=(n, ), dtype='int64'
 
     """
-    if lang == "Rust":
+    from phonopy._lang import resolve_lang
+
+    if resolve_lang(lang) == "Rust":
         import phonors as backend
     else:
         import phonopy._recgrid as backend  # type: ignore[import-untyped,no-redef]
@@ -1256,7 +1261,9 @@ def _get_grid_points_by_bz_rotations_c(
     rotations: NDArray,
     lang: Literal["C", "Rust"] = "C",
 ) -> NDArray[np.int64]:
-    if lang == "Rust":
+    from phonopy._lang import resolve_lang
+
+    if resolve_lang(lang) == "Rust":
         import phonors as backend
     else:
         import phonopy._recgrid as backend  # type: ignore[import-untyped,no-redef]
@@ -1349,8 +1356,10 @@ def _get_grid_address(
         shape=(prod(D_diag), 3), dtype='int64'
 
     """
+    from phonopy._lang import resolve_lang
+
     d_diag = np.ascontiguousarray(D_diag, dtype="int64")
-    if lang == "Rust":
+    if resolve_lang(lang) == "Rust":
         import phonors
 
         return np.asarray(phonors.gr_grid_addresses(d_diag), dtype="int64")
@@ -1436,7 +1445,9 @@ def _relocate_BZ_grid_address(
     rec = np.ascontiguousarray(reduced_basis, dtype="float64")
     bz_grid_type = int(store_dense_gp_map) + 1
 
-    if lang == "Rust":
+    from phonopy._lang import resolve_lang
+
+    if resolve_lang(lang) == "Rust":
         import phonors
 
         addresses, bz_map, bzg2grg = phonors.bz_grid_addresses(
@@ -1544,7 +1555,9 @@ def _get_ir_grid_map(
         ps = np.ascontiguousarray(PS, dtype="int64")
     rots = np.ascontiguousarray(grg_rotations, dtype="int64")
 
-    if lang == "Rust":
+    from phonopy._lang import resolve_lang
+
+    if resolve_lang(lang) == "Rust":
         import phonors
 
         map_vec, num_ir = phonors.ir_grid_map(rots, d_diag, ps)

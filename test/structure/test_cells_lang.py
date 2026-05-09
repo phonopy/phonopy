@@ -39,6 +39,7 @@ from phonopy.structure.cells import (
 from phonopy.structure.symmetry import Symmetry
 
 pytest.importorskip("phonors")
+pytest.importorskip("phonopy._phonopy")
 
 cwd = pathlib.Path(__file__).parent.parent
 

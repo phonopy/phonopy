@@ -11,6 +11,9 @@ from phonopy.file_IO import parse_FORCE_SETS
 from phonopy.interface.vasp import read_vasp
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 
+# All parametrizations cross the C path (lang="C") -- needs phonopy._phonopy.
+pytest.importorskip("phonopy._phonopy")
+
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.116998

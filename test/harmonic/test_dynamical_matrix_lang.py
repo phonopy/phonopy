@@ -24,6 +24,7 @@ from phonopy import Phonopy
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixGL, DynamicalMatrixWang
 
 pytest.importorskip("phonors")
+pytest.importorskip("phonopy._phonopy")
 
 cwd = pathlib.Path(__file__).parent.parent
 
@@ -243,3 +244,25 @@ def test_wang_dynmat_at_q_rust_matches_c(
     dm_c = ph_c.get_dynamical_matrix_at_q(q_red)
     dm_r = ph_r.get_dynamical_matrix_at_q(q_red)
     np.testing.assert_allclose(dm_c, dm_r, atol=1e-13)
+
+
+@pytest.mark.parametrize(
+    "q_red",
+    [(0.1, 0.2, 0.3), (0.5, 0.5, 0.0), (0.25, 0.25, 0.25)],
+)
+def test_wang_py_compute_dynamical_matrix_matches_c(
+    wang_c: tuple[Phonopy, DynamicalMatrixWang],
+    q_red: tuple[float, float, float],
+) -> None:
+    """Pure-Python Wang reference path must agree with the dispatched kernel.
+
+    ``DynamicalMatrixWang._run_py_compute_dynamical_matrix`` is kept as a
+    readable reference for the C / Rust kernels.  This locks it against
+    drift.
+
+    """
+    _, dm = wang_c
+    dm.run(q_red)
+    expected = np.array(dm.dynamical_matrix, copy=True)
+    dm._run_py_compute_dynamical_matrix(np.array(q_red, dtype="double"), None)
+    np.testing.assert_allclose(dm.dynamical_matrix, expected, atol=1e-13)

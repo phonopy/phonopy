@@ -34,6 +34,7 @@ from phonopy.harmonic.force_constants import (
 )
 
 pytest.importorskip("phonors")
+pytest.importorskip("phonopy._phonopy")
 
 cwd = pathlib.Path(__file__).parent.parent
 

@@ -1557,11 +1557,23 @@ def _start_phonopy(**argparse_control):
     if log_level:
         _print_phonopy()
 
-        import phonopy._phonopy as phonoc  # type: ignore[import]
+        from phonopy._lang import (
+            c_omp_max_threads,
+            have_c_ext,
+            rust_rayon_max_threads,
+        )
 
-        max_threads = phonoc.omp_max_threads()
-        if max_threads > 0:
-            print(f"Compiled with OpenMP support (max {max_threads} threads).")
+        # When --rust was requested, or when the C extension is missing
+        # (and we are about to fall back to Rust), report rayon threads.
+        # Otherwise report OpenMP threads from the C extension.
+        if args.use_rust or not have_c_ext():
+            rust_threads = rust_rayon_max_threads()
+            if rust_threads > 0:
+                print(f"Rust backend (phonors) using rayon ({rust_threads} threads).")
+        else:
+            max_threads = c_omp_max_threads()
+            if max_threads > 0:
+                print(f"Compiled with OpenMP support (max {max_threads} threads).")
 
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")

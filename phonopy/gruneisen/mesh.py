@@ -92,6 +92,7 @@ class GruneisenMesh(GruneisenBase):
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
             is_mesh_symmetry=is_mesh_symmetry,
+            lang=dynmat.lang,
         )
         self.set_qpoints(self._qpoints)
         assert self._gruneisen is not None

@@ -23,6 +23,7 @@ from phonopy import Phonopy
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 pytest.importorskip("phonors")
+pytest.importorskip("phonopy._phonopy")
 
 cwd = pathlib.Path(__file__).parent.parent
 

@@ -1,0 +1,72 @@
+name: phonopy test with PHONOPY_NO_C_EXT (Rust-only backend)
+
+# Run the test suite against a wheel built with PHONOPY_NO_C_EXT=1.  This
+# verifies that lang="Rust" via the phonors crate covers every dispatch
+# site that the C extension used to.  Anything that fails here is a
+# missing-Rust-port site (per phonopy_RUST_MIGRATION.md, Phase 6A).
+
+on:
+  pull_request:
+    branches: [develop]
+
+jobs:
+  build-linux-no-c:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # setuptools_scm needs tags to compute the phonopy version;
+          # actions/checkout's default shallow clone hides them.
+          fetch-depth: 0
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+      - name: Install dependencies
+        run: |
+          conda activate test
+          conda install --yes -c conda-forge python=${{ matrix.python-version }}
+          conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest pypolymlp ase rust maturin
+      - name: Setup symfc
+        run: |
+          conda activate test
+          git clone --depth 1 https://github.com/symfc/symfc.git
+          cd symfc
+          pip install -e . -vvv
+      - name: Setup phonors
+        run: |
+          conda activate test
+          git clone --depth 1 https://github.com/phonopy/phonors.git
+          cd phonors
+          maturin develop --release
+      - name: Setup phonopy without C extension
+        env:
+          PHONOPY_NO_C_EXT: "1"
+          # Force the Make generator so scikit-build-core does not look
+          # for Ninja.  CMakeLists.txt early-returns under
+          # PHONOPY_NO_C_EXT=1, so no actual compilation happens.
+          CMAKE_GENERATOR: "Unix Makefiles"
+        run: |
+          conda activate test
+          pip install -e . -vvv
+      - name: Verify _phonopy is absent
+        run: |
+          conda activate test
+          python -c "
+          try:
+              import phonopy._phonopy
+          except ImportError:
+              print('OK: phonopy._phonopy is absent.')
+          else:
+              raise SystemExit('phonopy._phonopy was unexpectedly built.')
+          "
+      - name: Test with pytest (Rust backend)
+        run: |
+          conda activate test
+          pytest test

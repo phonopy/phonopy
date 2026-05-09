@@ -237,6 +237,7 @@ class ThermalPropertiesBase:
         band_indices: Sequence[Sequence[int]] | None = None,
         is_projection: bool = False,
         classical: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -254,6 +255,7 @@ class ThermalPropertiesBase:
         self._is_projection = is_projection
         self._band_indices = None
         self._classical = classical
+        self._lang: Literal["C", "Rust"] = lang
 
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.0
@@ -368,6 +370,7 @@ class ThermalProperties(ThermalPropertiesBase):
         band_indices: Sequence[Sequence[int]] | None = None,
         is_projection: bool = False,
         classical: bool = False,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         """Init method.
 
@@ -389,6 +392,7 @@ class ThermalProperties(ThermalPropertiesBase):
             band_indices=band_indices,
             is_projection=is_projection,
             classical=classical,
+            lang=lang,
         )
         self._thermal_properties = None
         self._temperatures = None
@@ -570,9 +574,16 @@ class ThermalProperties(ThermalPropertiesBase):
         t_step: float | None = None,
         t_max: float | None = None,
         t_min: float | None = None,
-        lang: Literal["C", "Python"] = "C",
+        lang: Literal["C", "Python", "Rust"] | None = None,
     ) -> None:
-        """Run thermal property calculation."""
+        """Run thermal property calculation.
+
+        ``lang="Rust"`` is accepted for API consistency but routes to the
+        pure-Python implementation; the kernel is fast enough in numpy that
+        no Rust port exists.  When ``lang=None`` (default), the value is
+        taken from the ``lang`` argument passed at construction.
+
+        """
         if t_step is not None or t_max is not None or t_min is not None:
             warnings.warn(
                 "keywords for this method are depreciated. "
@@ -583,7 +594,8 @@ class ThermalProperties(ThermalPropertiesBase):
             )
             self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 
-        if lang == "C":
+        _lang = lang if lang is not None else self._lang
+        if _lang == "C":
             self._run_c_thermal_properties()
         else:
             self._run_py_thermal_properties()

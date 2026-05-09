@@ -115,6 +115,7 @@ class _MeshGrid:
         is_gamma_center: bool,
         is_time_reversal: bool,
         is_mesh_symmetry: bool,
+        lang: Literal["C", "Rust"] = "C",
     ) -> None:
         self._mesh = np.array(mesh, dtype="int64")
         self._reciprocal_lattice = np.linalg.inv(lattice)
@@ -132,6 +133,7 @@ class _MeshGrid:
                 symmetry_dataset=symmetry_dataset,
                 is_shift=self._is_shift,
                 is_time_reversal=is_time_reversal,
+                lang=lang,
             )
         except RuntimeError as exc:
             if "Grid symmetry is broken" in str(exc):
@@ -148,6 +150,7 @@ class _MeshGrid:
                     lattice=lattice,
                     is_shift=self._is_shift,
                     is_time_reversal=is_time_reversal,
+                    lang=lang,
                 )
             else:
                 raise
@@ -305,6 +308,7 @@ class MeshBase:
             is_gamma_center=is_gamma_center,
             is_time_reversal=(is_time_reversal and is_mesh_symmetry),
             is_mesh_symmetry=is_mesh_symmetry,
+            lang=self._lang,
         )
 
         self._qpoints = self._gp.qpoints
@@ -572,7 +576,7 @@ class Mesh(MeshBase):
             w.write("\n".join(lines))
 
     def _set_phonon(self) -> None:
-        import phonopy._phonopy as phonoc
+        from phonopy._lang import c_use_openmp
 
         num_band = len(self._cell) * 3
         num_qpoints = len(self._qpoints)
@@ -580,7 +584,7 @@ class Mesh(MeshBase):
         # The batched DM build is used whenever a parallel kernel is
         # available: the C path requires OpenMP (compile-time), but the
         # Rust path is rayon-parallel without an extra runtime check.
-        use_batched_build = self._lang == "Rust" or phonoc.use_openmp()
+        use_batched_build = self._lang == "Rust" or c_use_openmp()
 
         self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
         if use_batched_build:

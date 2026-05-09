@@ -125,6 +125,7 @@ class VelocityQpoints:
             self._primitive.cell,
             primitive_symmetry=self._symmetry,
             is_gamma_center=True,
+            lang=self._primitive._lang,
         )
 
     def set_qpoints(self, qpoints: NDArray[np.double]) -> None:

@@ -10,6 +10,10 @@ from phonopy.phonon.tetrahedron_method import (
     get_tetrahedra_relative_grid_address,
 )
 
+# These tests exercise the C kernels directly (default lang="C") and the
+# C/Rust parity helpers; both require phonopy._phonopy.
+pytest.importorskip("phonopy._phonopy")
+
 rel_ga_ref = [
     0,
     0,

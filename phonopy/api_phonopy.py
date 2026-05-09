@@ -226,8 +226,9 @@ class Phonopy:
             phonors backend. Default is "C".
 
         """
-        from phonopy._lang import log_dispatch
+        from phonopy._lang import log_dispatch, resolve_lang
 
+        lang = resolve_lang(lang)
         log_dispatch(lang, "Phonopy.__init__")
         self._symprec = symprec
         self._is_symmetry = is_symmetry
@@ -2019,7 +2020,10 @@ class Phonopy:
             raise RuntimeError(msg)
 
         total_dos = TotalDos(
-            self._mesh, sigma=sigma, use_tetrahedron_method=use_tetrahedron_method
+            self._mesh,
+            sigma=sigma,
+            use_tetrahedron_method=use_tetrahedron_method,
+            lang=self._lang,
         )
         total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
         total_dos.run()
@@ -2196,6 +2200,7 @@ class Phonopy:
             use_tetrahedron_method=use_tetrahedron_method,
             direction=direction_cart,
             xyz_projection=xyz_projection,
+            lang=self._lang,
         )
         self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
         self._pdos.run()
@@ -2426,12 +2431,13 @@ class Phonopy:
             band_indices=band_indices,
             is_projection=is_projection,
             classical=classical,
+            lang=self._lang,
         )
         if temperatures is None:
             tp.set_temperature_range(t_step=t_step, t_max=t_max, t_min=t_min)
         else:
             tp.temperatures = temperatures
-        tp.run()  # lang='C' if not classical else 'py')
+        tp.run()
         self._thermal_properties = tp
 
     def get_thermal_properties_dict(self) -> ThermalPropertiesDict:
@@ -3101,7 +3107,7 @@ class Phonopy:
             by d -> d / |d| * max_distance if |d| > max_distance.
 
         """
-        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
+        from phonopy._lang import c_use_openmp
 
         if self._force_constants is None:
             msg = "Force constants have not yet been set."
@@ -3115,7 +3121,7 @@ class Phonopy:
             cutoff_frequency=cutoff_frequency,
             max_distance=max_distance,
             factor=self._unit_conversion_factor,
-            use_openmp=phonoc.use_openmp(),
+            use_openmp=c_use_openmp(),
         )
 
     def get_random_displacements_at_temperature(
@@ -3268,7 +3274,7 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants are not prepared.")
 
-        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
+        from phonopy._lang import c_use_openmp
 
         fc_shape = self._force_constants.shape
         ph_copy = self._copy()
@@ -3283,7 +3289,7 @@ class Phonopy:
             ph.primitive,
             ph.supercell,
             is_full_fc=(fc_shape[0] == fc_shape[1]),
-            use_openmp=phonoc.use_openmp(),
+            use_openmp=c_use_openmp(),
             lang=self._lang,
         )
         ph_copy.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
@@ -3412,7 +3418,7 @@ class Phonopy:
             self._force_constants = self._force_constants.round(decimals=decimals)
 
     def _set_dynamical_matrix(self) -> None:
-        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
+        from phonopy._lang import c_use_openmp
 
         self._dynamical_matrix = None
 
@@ -3447,7 +3453,7 @@ class Phonopy:
             nac_params=nac_params,
             hermitianize=self._hermitianize_dynamical_matrix,
             log_level=self._log_level,
-            use_openmp=phonoc.use_openmp(),
+            use_openmp=c_use_openmp(),
             lang=self._lang,
         )
         # DynamialMatrix instance transforms force constants in correct

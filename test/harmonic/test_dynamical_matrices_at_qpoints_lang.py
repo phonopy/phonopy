@@ -25,6 +25,7 @@ from phonopy.harmonic.dynamical_matrix import (
 )
 
 pytest.importorskip("phonors")
+pytest.importorskip("phonopy._phonopy")
 
 cwd = pathlib.Path(__file__).parent.parent
 
