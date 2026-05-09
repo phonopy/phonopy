@@ -31,6 +31,7 @@ import phonopy
 from phonopy import Phonopy
 from phonopy.structure.cells import (
     Primitive,
+    ShortestPairs,
     _compute_permutation,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
@@ -106,6 +107,33 @@ def test_primitive_atomic_permutations_match(ph_nacl: Phonopy):
     np.testing.assert_array_equal(
         prim_c.atomic_permutations, prim_rust.atomic_permutations
     )
+
+
+@pytest.mark.parametrize("store_dense_svecs", [True, False])
+def test_shortest_pairs_lang_rust_matches_c(ph_nacl: Phonopy, store_dense_svecs):
+    """ShortestPairs gives identical (svecs, multi) under C and Rust paths."""
+    sc = ph_nacl.supercell
+    p2s = ph_nacl.primitive.p2s_map
+    supercell_pos = np.array(sc.scaled_positions, dtype="double", order="C")
+    primitive_pos = np.array(supercell_pos[p2s], dtype="double", order="C")
+    sp_c = ShortestPairs(
+        sc.cell,
+        supercell_pos,
+        primitive_pos,
+        store_dense_svecs=store_dense_svecs,
+        symprec=1e-5,
+        lang="C",
+    )
+    sp_rust = ShortestPairs(
+        sc.cell,
+        supercell_pos,
+        primitive_pos,
+        store_dense_svecs=store_dense_svecs,
+        symprec=1e-5,
+        lang="Rust",
+    )
+    np.testing.assert_array_equal(sp_c.shortest_vectors, sp_rust.shortest_vectors)
+    np.testing.assert_array_equal(sp_c.multiplicities, sp_rust.multiplicities)
 
 
 def test_phonopy_load_lang_rust_end_to_end():

@@ -16,7 +16,6 @@ from phonopy.structure.cells import (
     apply_site_mixture,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
-    convert_to_phonopy_primitive,
     dense_to_sparse_svecs,
     get_angles,
     get_cell_matrix_from_lattice,
@@ -463,22 +462,6 @@ def test_isclose_with_arbitrary_order(
     assert _isclose
     order = isclose(cell1, cell2, with_arbitrary_order=True, return_order=True)
     np.testing.assert_array_equal(order, [0, 4, 1, 5, 2, 6, 3, 7])
-
-
-def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
-    """Test for convert_to_phonopy_primitive."""
-    scell = ph_nacl.supercell
-    pcell = ph_nacl.primitive
-    _pcell = convert_to_phonopy_primitive(scell, pcell)
-    assert isclose(pcell, _pcell)
-
-    # Changing order of atoms is not allowed.
-    points = pcell.scaled_positions[[1, 0]]
-    symbols = [pcell.symbols[i] for i in (1, 0)]
-    cell = pcell.cell
-    pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, symbols=symbols)
-    with pytest.raises(RuntimeError):
-        _pcell = convert_to_phonopy_primitive(scell, pcell_mode)
 
 
 def test_get_cell_matrix_from_lattice(primcell_nacl: PhonopyAtoms):
