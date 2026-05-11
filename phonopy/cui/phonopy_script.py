@@ -1801,36 +1801,34 @@ def _init_phonopy(
     return phonon
 
 
-_MESH_SYMMETRY_FALLBACK_LINES = (
-    "The mesh grid is incompatible with the primitive-cell point group.",
-    "Point-group symmetry reduction is disabled; time-reversal symmetry remains.",
-    "For better symmetry reduction, use a gamma-centered mesh.",
-)
-
-
 def _install_cli_warning_formatter() -> None:
     """Render selected library warnings nicely instead of the default format.
 
-    Currently only ``MeshSymmetryFallbackWarning`` is special-cased: the
-    default Python format prepends the source file path and line number,
-    which clutters CLI output.  All other warnings keep their default
-    formatting.
+    ``MeshSymmetryFallbackWarning`` and ``MeshGRGridFallbackWarning`` are
+    special-cased: the default Python format prepends the source file path
+    and line number, which clutters CLI output.  All other warnings keep
+    their default formatting.
 
     """
+    import textwrap
     import warnings
 
-    from phonopy.phonon.mesh import MeshSymmetryFallbackWarning
+    from phonopy.phonon.mesh import (
+        MeshGRGridFallbackWarning,
+        MeshSymmetryFallbackWarning,
+    )
 
+    notice_classes = (MeshSymmetryFallbackWarning, MeshGRGridFallbackWarning)
     default_showwarning = warnings.showwarning
 
     def showwarning(message, category, filename, lineno, file=None, line=None):
-        if isinstance(message, MeshSymmetryFallbackWarning) or (
-            isinstance(category, type)
-            and issubclass(category, MeshSymmetryFallbackWarning)
-        ):
+        is_notice = isinstance(message, notice_classes) or (
+            isinstance(category, type) and issubclass(category, notice_classes)
+        )
+        if is_notice:
             stream = file if file is not None else sys.stderr
             print("WARNING:", file=stream)
-            for body in _MESH_SYMMETRY_FALLBACK_LINES:
+            for body in textwrap.wrap(str(message), width=76):
                 print(f"  {body}", file=stream)
             print("", file=stream)
             return

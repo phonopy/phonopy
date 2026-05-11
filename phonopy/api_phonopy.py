@@ -90,7 +90,6 @@ from phonopy.phonon.dos import (
     TotalDosDict,
     get_dos_frequency_range,
 )
-from phonopy.phonon.grid import length2mesh
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.mesh import IterMesh, IterMeshDict, Mesh, MeshDict
@@ -1645,27 +1644,6 @@ class Phonopy:
             msg = "Dynamical matrix has not yet built."
             raise RuntimeError(msg)
 
-        _mesh = np.array(mesh)
-        mesh_nums = None
-        _is_gamma_center = is_gamma_center
-        if _mesh.shape:
-            if _mesh.shape == (3,):
-                mesh_nums = mesh
-                _is_gamma_center = is_gamma_center
-        else:
-            _mesh_length = float(mesh)  # type: ignore[arg-type]
-            if self._primitive_symmetry is not None:
-                rots = self._primitive_symmetry.pointgroup_operations
-                mesh_nums = length2mesh(
-                    _mesh_length, self._primitive.cell, rotations=rots
-                )
-            else:
-                mesh_nums = length2mesh(_mesh_length, self._primitive.cell)
-            _is_gamma_center = True
-
-        assert not isinstance(mesh_nums, (int, float))
-        assert mesh_nums is not None
-
         if with_group_velocities:
             if self._group_velocity is None:
                 self._set_group_velocity()
@@ -1673,10 +1651,12 @@ class Phonopy:
         else:
             group_velocity = None
 
+        # Mesh / IterMesh accept a float (length) or a 3-tuple of ints and
+        # handle the float -> mesh-numbers conversion internally.
         if use_iter_mesh:
             self._mesh = IterMesh(
                 self._dynamical_matrix,
-                mesh_nums,
+                mesh,
                 shift=shift,
                 is_time_reversal=is_time_reversal,
                 is_mesh_symmetry=is_mesh_symmetry,
@@ -1690,12 +1670,12 @@ class Phonopy:
         else:
             self._mesh = Mesh(
                 self._dynamical_matrix,
-                mesh_nums,
+                mesh,
                 shift=shift,
                 is_time_reversal=is_time_reversal,
                 is_mesh_symmetry=is_mesh_symmetry,
                 with_eigenvectors=with_eigenvectors,
-                is_gamma_center=_is_gamma_center,
+                is_gamma_center=is_gamma_center,
                 group_velocity=group_velocity,
                 rotations=self._primitive_symmetry.pointgroup_operations,
                 primitive_symmetry=self._primitive_symmetry,

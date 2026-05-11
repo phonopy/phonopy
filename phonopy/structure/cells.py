@@ -1199,7 +1199,7 @@ def get_smallest_vectors(
     supercell_bases: NDArray[np.double],
     supercell_pos: NDArray[np.double],
     primitive_pos: NDArray[np.double],
-    store_dense_svecs: bool = False,
+    store_dense_svecs: bool = True,
     symprec: float = 1e-5,
     lang: Literal["C", "Rust"] = "C",
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:

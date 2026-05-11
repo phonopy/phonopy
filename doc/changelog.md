@@ -2,6 +2,23 @@
 
 # Change Log
 
+## Unreleased
+
+- Rust backend (`phonors` crate) introduced as an alternative to the C
+  extension.
+- The behaviour when a sampling mesh breaks the primitive-cell point-group
+  symmetry has changed. As a result, mesh-based calculations (DOS, thermal
+  properties, etc.) on such meshes may give different numerical results
+  from previous versions. When the mesh was specified by a length (float
+  input), the grid is now rebuilt as a generalized regular grid that keeps
+  full point-group symmetry; the resulting `mesh_numbers` may differ from
+  the regular-grid value.
+- VCA / mixed-species site support: `PhonopyAtoms` gains a species
+  table, `apply_vca()` helper, and `--site-mixture` CLI flag (was
+  initially `--vca`). VASP POSCAR writes expand mixed sites; force
+  I/O and FC-time computation handle site-mixture cells.
+- Bug fix: copy-by-reference issue in `qpoints.py`.
+
 ## Apr-23-2026: Version 3.5.1
 
 - Release to follow the change of symfc.
