@@ -43,6 +43,7 @@ The following features of phonopy are highlighted:
 ```{toctree}
 :hidden:
 install
+rust-backend
 symmetry
 workflow
 examples
