@@ -316,27 +316,65 @@ class FCSolver:
         options = parse_symfc_options(self._options, order)
         options.pop("memsize", None)
         if self._dataset is None:
+            # Estimation-only path; no FC to compute, so no compact/full
+            # decision to make.
             return SymfcFCSolver(
                 self._supercell,
                 symmetry=self._symmetry,
                 options=options,
-                is_compact_fc=self._is_compact_fc,
                 log_level=self._log_level,
             )
-        else:
-            displacements, forces = self._get_displacements_and_forces()
-            symfc_solver = SymfcFCSolver(
-                self._supercell,
-                displacements=displacements,
-                forces=forces,
-                symmetry=self._symmetry,
-                options=options,
-                is_compact_fc=self._is_compact_fc,
-                log_level=self._log_level,
+
+        displacements, forces = self._get_displacements_and_forces()
+        symfc_solver = SymfcFCSolver(
+            self._supercell,
+            displacements=displacements,
+            forces=forces,
+            symmetry=self._symmetry,
+            options=options,
+            log_level=self._log_level,
+        )
+        if self._orders is not None:
+            # Split the usual ``run`` into ``compute_basis_set + solve`` so
+            # we can inspect ``p2s_map`` between the two phases and switch
+            # to full FC if symfc's primitive disagrees with phonopy's.
+            symfc_solver.begin_run_log(self._orders)
+            symfc_solver.compute_basis_set(orders=self._orders)
+            is_compact_fc = self._resolve_compact_fc(symfc_solver)
+            symfc_solver.solve(orders=self._orders, is_compact_fc=is_compact_fc)
+            symfc_solver.end_run_log()
+        return symfc_solver
+
+    def _resolve_compact_fc(self, symfc_solver: SymfcFCSolver) -> bool:
+        """Decide ``is_compact_fc`` for ``solve``.
+
+        Falls back to full FC when symfc detects a smaller primitive cell
+        than the one recorded in the input.  In that case the compact FC
+        arrays returned by symfc cannot be stored in phonopy's compact
+        slots without a non-trivial re-mapping, so full FC is used to
+        keep the downstream code paths consistent.
+
+        Must be called after ``compute_basis_set`` so that ``p2s_map`` is
+        available.
+
+        """
+        if not self._is_compact_fc or self._primitive is None:
+            return self._is_compact_fc
+        symfc_p2s = symfc_solver.p2s_map
+        if symfc_p2s is None:
+            return self._is_compact_fc
+        phonopy_p2s = self._primitive.p2s_map
+        if len(symfc_p2s) == len(phonopy_p2s) and (symfc_p2s == phonopy_p2s).all():
+            return True
+        if self._log_level:
+            print("WARNING:")
+            print(f"  symfc detected a primitive cell with {len(symfc_p2s)} atoms,")
+            print(
+                f"    smaller than the input primitive cell ({len(phonopy_p2s)} atoms)."
             )
-            if self._orders is not None:
-                symfc_solver.run(orders=self._orders)
-            return symfc_solver
+            print("  Falling back to full force constants. For optimum performance,")
+            print("  regenerate the input with --pa auto.")
+        return False
 
     def _set_alm_solver(self) -> ALMFCSolver:
         if self._primitive is None:
