@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Auto-fall back to full force constants when the input "primitive" cell
+  is not actually primitive (e.g. an I-centered conventional cell) and
+  symfc detects a smaller true primitive cell. The previous behaviour
+  produced shape-mismatched compact force constants and crashed during
+  drift evaluation or post-symmetrisation.
 - Rust backend (`phonors` crate) introduced as an alternative to the C
   extension.
 - The behaviour when a sampling mesh breaks the primitive-cell point-group
