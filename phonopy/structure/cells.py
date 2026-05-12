@@ -2008,13 +2008,18 @@ def get_primitive_matrix_by_centring(centring: str) -> NDArray[np.double]:
 
 
 def guess_primitive_matrix(
-    unitcell: PhonopyAtoms, symprec: float = 1e-5, skip_exception: bool = False
+    unitcell: PhonopyAtoms, symprec: float = 1e-5
 ) -> NDArray[np.double]:
     """Guess primitive matrix from crystal symmetry.
 
-    Note
-    ----
-    Type-IV magnetic structures are not supported.
+    For unit cells with magnetic moments, the Hall number returned by
+    spglib's magnetic symmetry dataset is used. For Type-IV magnetic
+    space groups, this corresponds to the XSG (the unprimed subgroup
+    that does not include anti-translations), so the resulting
+    primitive cell preserves the input magnetic moments and may be
+    larger than the crystallographic primitive cell. In this case a
+    warning is emitted. See the documentation of ``PRIMITIVE_AXES =
+    AUTO`` for details.
 
     Parameters
     ----------
@@ -2022,15 +2027,8 @@ def guess_primitive_matrix(
         Unit cell.
     symprec : float
         Tolerance to find symmetry operations.
-    skip_exception : bool
-        Only effective for magnetic structures. If True, family space group is
-        used to guess primitive matrix, otherwise, exception is raised.
 
     """
-    if unitcell.magnetic_moments is not None and not skip_exception:
-        msg = "Can not be used with the unit cell having magnetic moments."
-        raise RuntimeError(msg)
-
     if unitcell.magnetic_moments is None:
         dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)  # type: ignore
     else:
@@ -2038,6 +2036,18 @@ def guess_primitive_matrix(
             unitcell.totuple(),  # type: ignore
             symprec=symprec,
         )
+        if isinstance(dataset, SpglibMagneticDataset) and dataset.msg_type == 4:
+            import warnings
+
+            msg = (
+                "The input unit cell has a magnetic ordering that breaks "
+                "some of the crystallographic translational symmetry "
+                "(a Type-IV magnetic space group). Phonopy chose the "
+                "primitive cell to preserve this magnetic ordering, which "
+                "may be larger than the crystallographic primitive cell. "
+                "See the `PRIMITIVE_AXES = AUTO` documentation for details."
+            )
+            warnings.warn(msg, stacklevel=2)
 
     if isinstance(dataset, (SpglibDataset, SpglibMagneticDataset)):
         tmat = dataset.transformation_matrix
