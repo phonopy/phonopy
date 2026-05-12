@@ -64,7 +64,7 @@ def load(
     primitive_matrix: Sequence[Sequence[float]]
     | Literal["P", "F", "I", "A", "C", "R", "auto"]
     | NDArray[np.double]
-    | None = None,
+    | None = "auto",
     is_nac: bool = True,
     calculator: str | None = None,
     unitcell: PhonopyAtoms | None = None,
@@ -145,10 +145,14 @@ def load(
         unit matrix. dtype=int
     primitive_matrix : array_like or str, optional
         Primitive matrix multiplied to input cell basis vectors. Default is
-        None, which is equivalent to 'auto'. For array_like, shape=(3, 3),
-        dtype=float. When 'F', 'I', 'A', 'C', or 'R' is given instead of a 3x3
-        matrix, the primitive matrix for the character found at
-        https://spglib.github.io/spglib/definition.html is used.
+        'auto', which guesses the primitive matrix from crystal symmetry.
+        None is treated the same as 'auto'. To use the unit cell as the
+        primitive cell (identity transformation), pass 'P'. For array_like,
+        shape=(3, 3), dtype=float. When 'F', 'I', 'A', 'C', or 'R' is given
+        instead of a 3x3 matrix, the primitive matrix for the character found
+        at https://spglib.github.io/spglib/definition.html is used. When a
+        "phonopy.yaml"-like file is loaded and it has a primitive_matrix
+        stored, that value takes priority over the default 'auto'.
     is_nac : bool, optional
         If True, look for 'BORN' file. If False, NAS is turned off. Default is
         True.
@@ -227,19 +231,17 @@ def load(
 
     """
     lang = resolve_lang(lang)
+    if primitive_matrix is None:
+        primitive_matrix = "auto"
     if (
         supercell is not None
         or supercell_filename is not None
         or unitcell is not None
         or unitcell_filename is not None
     ):
-        if primitive_matrix is None:
-            _primitive_matrix = "auto"
-        else:
-            _primitive_matrix = primitive_matrix
         cell, smat, pmat = load_helper.get_cell_settings(
             supercell_matrix=supercell_matrix,
-            primitive_matrix=_primitive_matrix,
+            primitive_matrix=primitive_matrix,
             unitcell=unitcell,
             supercell=supercell,
             unitcell_filename=unitcell_filename,
@@ -259,7 +261,10 @@ def load(
         smat = phpy_yaml.supercell_matrix
         if smat is None:
             smat = np.eye(3, dtype="int64", order="C")
-        if primitive_matrix is None:
+        # When the caller leaves primitive_matrix at the default "auto",
+        # a value stored in the yaml takes priority (preserves the cell
+        # transformation that was used originally).
+        if primitive_matrix == "auto" and phpy_yaml.primitive_matrix is not None:
             pmat = phpy_yaml.primitive_matrix
         else:
             pmat = primitive_matrix

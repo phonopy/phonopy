@@ -176,7 +176,7 @@ def test_phonopy_yaml_extended_symbol(nacl_unitcell_order1: PhonopyAtoms):
         scaled_positions=unitcell.scaled_positions,
         masses=unitcell.masses,
     )
-    ph = Phonopy(cell, supercell_matrix=[2, 2, 2])
+    ph = Phonopy(cell, supercell_matrix=[2, 2, 2], primitive_matrix="P")
     assert ph.primitive.symbols[:4] == ["Na"] * 4
     assert ph.primitive.symbols[4:7] == ["Cl"] * 3
     assert ph.primitive.symbols[-1] == "Cl1"

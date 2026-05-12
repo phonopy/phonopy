@@ -581,20 +581,6 @@ def _write_displacements_files_then_exit(
     )
 
     if log_level > 0:
-        identity = np.eye(3, dtype=int)
-        n_pure_trans = sum(
-            [
-                (r == identity).all()
-                for r in phonon.symmetry.symmetry_operations["rotations"]
-            ]
-        )
-        if len(phonon.supercell) // len(phonon.primitive) != n_pure_trans:
-            print("*" * 72)
-            print(
-                "Note: "
-                'A better primitive cell can be chosen by using "--pa auto" option.'
-            )
-            print("*" * 72)
         print(f'"{disp_filename}" and supercells have been created.')
 
     _finalize_phonopy(log_level, settings, confs, phonon, filename=disp_filename)

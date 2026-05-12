@@ -173,7 +173,7 @@ class Phonopy:
         primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
         | Sequence[Sequence[float]]
         | NDArray
-        | None = None,
+        | None = "auto",
         factor: float | None = None,
         group_velocity_delta_q: float | None = None,
         symprec: float = 1e-5,
@@ -195,7 +195,10 @@ class Phonopy:
             3), dtype=int.
         primitive_matrix : str or array_like, optional
             Transformation matrix to primitive cell from unit cell. shape=(3,
-            3), dtype=float.
+            3), dtype=float. Default is "auto", which guesses the primitive
+            matrix from crystal symmetry. To use the unit cell as the
+            primitive cell (identity transformation), pass "P". None is
+            treated the same as "auto".
         nac_params : None
             Deprecated.
         factor : None
@@ -251,6 +254,8 @@ class Phonopy:
         # Create supercell and primitive cell
         self._unitcell = unitcell.copy()
         self._supercell_matrix = shape_supercell_matrix(supercell_matrix)
+        if primitive_matrix is None:
+            primitive_matrix = "auto"
         self._primitive_matrix = get_primitive_matrix_with_auto(
             self._unitcell, primitive_matrix, symprec=self._symprec
         )
