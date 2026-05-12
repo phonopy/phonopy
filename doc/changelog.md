@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+- CLI split into `phonopy-init` (setup: displacements, FORCE_SETS /
+  FORCE_CONSTANTS conversion, `--symmetry`) and `phonopy` (phonon
+  calculation). `phonopy-load` is kept as a deprecated alias of
+  `phonopy`. The `phonopy` argument parser now rejects setup flags
+  (`-d`, `--rd`, `-f`, `--fz`, `--fc`, `--symmetry`) and points the user
+  to `phonopy-init`.
+- `primitive_matrix` default changed to `"auto"` across `Phonopy`,
+  `phonopy.load`, and the CLI (`--pa`). Pass `"P"` (or `--pa P`) for
+  the identity transformation. A value stored in a phonopy.yaml file
+  still takes priority over the default.
 - Auto-fall back to full force constants when the input "primitive" cell
   is not actually primitive (e.g. an I-centered conventional cell) and
   symfc detects a smaller true primitive cell. The previous behaviour
@@ -540,7 +550,8 @@
   spglib. So spglib has to be installed separately. But for normal cases, it is
   handled by the package manager.
 - A new way of using phonopy from command line is proposed at
-  {ref}`phonopy_load_command`.
+  {ref}`phonopy_command` (originally introduced as the `phonopy-load`
+  command).
 - Castep interface was added by @ladyteam.
 
 ## May-3-2020: Version 2.6.1

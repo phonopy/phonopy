@@ -10,7 +10,7 @@ at {ref}`setting_tags`. This file is passed to phonopy as the argument of
 `--conf` option, e.g.,
 
 ```bash
-% phonopy-load --config phonopy.conf [OPTIONS]
+% phonopy --config phonopy.conf [OPTIONS]
 ```
 
 where the configuration filename is arbitrary.
@@ -25,25 +25,25 @@ to specify those crystal structure related tags when running phonopy.
 current directory. Therefore, phonopy can be used as
 
 ```
-% phonopy-load [OPTIONS]
+% phonopy [OPTIONS]
 ```
 
-and `FORCE_SETS` and `BORN` are also searched automatically in the current
-directory. `FORCE_CONSTANTS` can be read `--readfc` option.
+and `FORCE_SETS`, `BORN`, and `FORCE_CONSTANTS` (if present) are searched
+automatically in the current directory.
 
 Other information such as forces (in `FORCE_SETS`), parameters for
 non-analytical term correction (in `BORN`) can be also stored in
 `phonopy_*.yaml` like file. If `phonopy_params.yaml` contains necessary
 information to run expected phonon calculation, it is unnecessary to have
 `FORCE_SETS` and `BORN` in the current directory when `phonopy_params.yaml` is
-passed as the first argument of `phonopy-load`
+passed as the first argument of `phonopy`
 
 ```
-% phonopy-load phonopy_params.yaml [OPTIONS]
+% phonopy phonopy_params.yaml [OPTIONS]
 ```
 
 can perform the phonon calculation. See more details in
-{ref}`phonopy_load_command`.
+{ref}`phonopy_command`.
 
 ## Structure file
 

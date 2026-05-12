@@ -104,7 +104,7 @@ Valid values are `"C"` (default) and `"Rust"`.
 
 ### Command line
 
-Pass `--rust` to the `phonopy` (or `phonopy-load`) command:
+Pass `--rust` to the `phonopy` command:
 
 ```bash
 % phonopy --rust ...

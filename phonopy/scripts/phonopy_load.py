@@ -41,5 +41,7 @@ def run():
     """Run phonopy-load script."""
     argparse_control = {
         "load_phonopy_yaml": True,
+        "mode": "run",
+        "deprecated_command": "phonopy-load",
     }
     main(**argparse_control)

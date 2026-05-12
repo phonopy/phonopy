@@ -21,7 +21,7 @@ A procedure of Elk-phonopy calculation is as follows:
 1) Read an Elk input file and create supercells with
    :ref:`elk_mode` option::
 
-   % phonopy --elk -d --dim="2 2 2" -c elk-unitcell.in
+   % phonopy-init --elk -d --dim="2 2 2" -c elk-unitcell.in
 
    In this example, 2x2x2 supercells are created. ``supercell.in`` and
    ``supercell-xxx.in`` (``xxx`` are numbers) give the perfect
@@ -44,7 +44,7 @@ A procedure of Elk-phonopy calculation is as follows:
 
    ::
 
-     % phonopy -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
+     % phonopy-init -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
    To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory because the atomic displacements are written into the
@@ -52,11 +52,11 @@ A procedure of Elk-phonopy calculation is as follows:
    :ref:`elk_force_sets_option`. An example is found in
    ``example/Si-elk``.
 
-4) Run post-process of phonopy with the Elk input file for the
-   unit cell used in the step 1::
+4) Run post-process of phonopy.  Crystal structure and calculator
+   interface are read from ``phonopy_disp.yaml``::
 
-   % phonopy --elk -c elk-unitcell.in -p band.conf
+   % phonopy -p band.conf
 
    or::
 
-   % phonopy --elk -c elk-unitcell.in --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy [other-OPTIONS] [setting-file]

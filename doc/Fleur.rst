@@ -35,7 +35,7 @@ A procedure of a Fleur-phonopy calculation may look as follows:
 1) Read a Fleur input file and create supercells with the
    :ref:`Fleur_mode` option::
 
-   % phonopy --fleur -d --dim="a b c" -c fleur_inpgen
+   % phonopy-init --fleur -d --dim="a b c" -c fleur_inpgen
 
    In this example several axbxc supercells are created. ``supercell.in``
    and ``supercell-XXX.in`` (``XXX`` enumerating the necessary displacements) give
@@ -55,7 +55,7 @@ A procedure of a Fleur-phonopy calculation may look as follows:
 
 3) Create ``FORCE_SETS`` by::
 
-     % phonopy --fleur -f disp-001/FORCES disp-002/FORCES ...
+     % phonopy-init --fleur -f disp-001/FORCES disp-002/FORCES ...
 
    To run this command, ``phonopy_disp.yaml`` has to be located in same
    directory because the atomic displacements need to be written into the
@@ -64,13 +64,13 @@ A procedure of a Fleur-phonopy calculation may look as follows:
    supercell and only one necessary displacement is found in
    ``example/Al-Fleur``.
 
-4) Run the post-process of phonopy with the Fleur input file for the
-   unit cell used in step 1::
+4) Run the post-process of phonopy.  Crystal structure and calculator
+   interface are read from ``phonopy_disp.yaml``::
 
-   % phonopy --fleur -c fleur_inpgen -p band.conf
+   % phonopy -p band.conf
 
    if you prepared a band.conf file or::
 
-   % phonopy --fleur -c fleur_inpgen --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy [other-OPTIONS] [setting-file]
 
    if you want to set the path directly or specify a different file.

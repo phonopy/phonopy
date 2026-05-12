@@ -27,6 +27,7 @@
 extensions = [
     "sphinx.ext.mathjax",
     "myst_parser",
+    "sphinxcontrib.mermaid",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
 ]

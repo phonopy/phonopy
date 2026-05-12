@@ -1787,6 +1787,36 @@ def _init_phonopy(
     return phonon
 
 
+def _detect_init_operation(
+    run_symmetry_info: bool, settings: PhonopySettings
+) -> str | None:
+    """Return a label of the setup ('init') operation requested, or None.
+
+    The setup operations are everything performed before phonon calculation
+    that exits the program once done: symmetry display, FORCE_SETS /
+    FORCE_CONSTANTS file creation from external calculator results, and
+    pre-calculation displacement generation. Finite-temperature random
+    displacements and pypolymlp-driven random displacements need phonon
+    information and are therefore not setup operations.
+
+    """
+    if run_symmetry_info:
+        return "--symmetry"
+    if settings.create_force_sets or settings.create_force_sets_zero:
+        return "-f / --fz"
+    if settings.create_force_constants:
+        return "--fc"
+    if settings.create_displacements:
+        return "-d"
+    if (
+        settings.random_displacements is not None
+        and settings.random_displacement_temperature is None
+        and not settings.use_pypolymlp
+    ):
+        return "--rd"
+    return None
+
+
 def _install_cli_warning_formatter() -> None:
     """Render selected library warnings nicely instead of the default format.
 
@@ -1835,13 +1865,22 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     In addition, the argparse_control parameter (argparse_control['args']) is
     implicitly used for running CUI tests via pytest. See test_phonopy_cui.py.
 
-    For the phonopy command:
-        argparse_control = {
-            "load_phonopy_yaml": False,
-        }
-    For the phonopy-load command:
+    For the phonopy command (phonon calculation from a phonopy.yaml file):
         argparse_control = {
             "load_phonopy_yaml": True,
+            "mode": "run",
+        }
+    For the phonopy-init command (supercells / displacements / FORCE_SETS /
+    FORCE_CONSTANTS file generation / symmetry display):
+        argparse_control = {
+            "load_phonopy_yaml": False,
+            "mode": "init",
+        }
+    For the phonopy-load command (deprecated alias of phonopy):
+        argparse_control = {
+            "load_phonopy_yaml": True,
+            "mode": "run",
+            "deprecated_command": "phonopy-load",
         }
 
     """
@@ -1859,6 +1898,18 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     else:
         load_phonopy_yaml = False
 
+    # CLI mode. "init" handles operations that run before phonon calculation
+    # and exit (displacement generation, FORCE_SETS/FORCE_CONSTANTS file
+    # creation from external calculator results, symmetry display). "run" is
+    # the phonon-calculation workflow. When unset (e.g. from pytest harnesses
+    # that exercise either flow), no mode-based enforcement happens.
+    mode: Literal["init", "run"] | None = argparse_control.get("mode")
+    deprecated_command = argparse_control.get("deprecated_command")
+    if deprecated_command is not None:
+        print("")
+        print(f"WARNING: '{deprecated_command}' is deprecated. Use 'phonopy' instead.")
+        print("")
+
     if "args" in argparse_control:  # For pytest
         assert isinstance(argparse_control["args"], PhonopyMockArgs)
         args = argparse_control["args"]
@@ -1866,7 +1917,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         if log_level is None:
             log_level = 1
     else:
-        args, log_level = _start_phonopy(**argparse_control)
+        args, log_level = _start_phonopy(load_phonopy_yaml=load_phonopy_yaml)
 
     plot_conf = {
         "plot_graph": args.is_graph_plot,
@@ -1894,6 +1945,29 @@ def main(**argparse_control: bool | PhonopyMockArgs):
 
     # phonopy --symmetry
     run_symmetry_info = args.is_check_symmetry
+
+    ##################################################
+    # Enforce CLI mode (phonopy / phonopy-init split) #
+    ##################################################
+    init_op_label = _detect_init_operation(run_symmetry_info, settings)
+    if mode == "run" and init_op_label is not None:
+        print_error_message(
+            f"'{init_op_label}' is a setup operation. "
+            "Use 'phonopy-init' for setup operations."
+        )
+        if log_level:
+            print_error()
+        sys.exit(1)
+    if mode == "init" and init_op_label is None:
+        print_error_message(
+            "No setup operation requested. 'phonopy-init' requires one of: "
+            "-d, --rd (without RANDOM_DISPLACEMENT_TEMPERATURE/PYPOLYMLP), "
+            "-f, --fz, --fc, or --symmetry. "
+            "For phonon calculations, use 'phonopy'."
+        )
+        if log_level:
+            print_error()
+        sys.exit(1)
 
     # -----------------------------------------------------------------------
     # ----------------- 'args' should not be used below. --------------------

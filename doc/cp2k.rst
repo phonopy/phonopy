@@ -70,7 +70,7 @@ A procedure of CP2K-phonopy calculation is as follows:
 
 1) Read a CP2K input file and create supercells with the :ref:`cp2k_mode` option::
 
-       % phonopy --cp2k -d --dim="2 2 2" -c NaCl.inp
+       % phonopy-init --cp2k -d --dim="2 2 2" -c NaCl.inp
 
    In this example, 2x2x2 supercells are created. ``NaCl-supercell.inp`` and
    ``NaCl-supercell-xxx.inp`` (``xxx`` are numbers) give the perfect
@@ -99,20 +99,20 @@ A procedure of CP2K-phonopy calculation is as follows:
 
 3) Create ``FORCE_SETS`` by running::
 
-       % phonopy --cp2k -f NaCl-supercell-001-forces-1_0.xyz NaCl-supercell-002-forces-1_0.xyz  ...
+       % phonopy-init --cp2k -f NaCl-supercell-001-forces-1_0.xyz NaCl-supercell-002-forces-1_0.xyz  ...
 
    To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory. More information about the configuration options can be found in :ref:`cp2k_force_sets_option`.
    The example outputs are located in ``example/NaCl-CP2K``.
 
-4) Run post-process of phonopy with the original CP2K main input file for the
-   unit cell used in step 1::
+4) Run post-process of phonopy.  Crystal structure and calculator
+   interface are read from ``phonopy_disp.yaml``::
 
-   % phonopy --cp2k -c NaCl.inp -p band.conf
+   % phonopy -p band.conf
 
    or::
 
-   % phonopy --cp2k -c NaCl.inp --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy [other-OPTIONS] [setting-file]
 
 Input files generation (alternative mode)
 -------------------------------------------

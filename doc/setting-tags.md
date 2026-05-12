@@ -12,7 +12,7 @@ setting tag. The configuration file is recommended to place at the first
 position for the mixed use of setting tags and command-line options, i.e.,
 
 ```bash
-% phonopy-load --config setting.conf [OPTIONS]
+% phonopy --config setting.conf [OPTIONS]
 ```
 
 For specifying real and reciprocal points, fractional values (e.g. `1/3`) are
@@ -322,7 +322,7 @@ For example in `example/NaCl` directory,
 ```bash
 % mkdir rd && cd rd
 % cp ../FORCE_SETS
-% phonopy-load ../phonopy_disp.yaml --rd 1000 --rd-temperature 300
+% phonopy ../phonopy_disp.yaml --rd 1000 --rd-temperature 300
 ```
 
 See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
@@ -336,7 +336,7 @@ respective forces, an external force constants calculator is necessary. See
 Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
 frequency at Gamma point due to violation of acoustic sum rule can induce very
 large displacements. Therefore, it is safer to use this feature with
-`FC_SYMMETRY = .TRUE.` (this is a default setting for `phonopy-load` command) or
+`FC_SYMMETRY = .TRUE.` (this is a default setting for `phonopy` command) or
 a force constants calculator (see {ref}`fc_calculator_tag`) that enforces
 acoustic sum rule. It is also possible to ignore phonons with frequencies below
 cutoff frequency specified by {ref}`cutoff_frequency_tags` tag. Phonon

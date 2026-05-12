@@ -22,7 +22,7 @@ be different.
 ### `FORCE_SETS` file creation for VASP
 
 ~~~
-% phonopy -f vasprun.xml
+% phonopy-init -f vasprun.xml
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -49,7 +49,7 @@ where `vasprun.xml` is the VASP output.
 ### DOS
 
 ~~~
-% phonopy-load --mesh 31 31 31 -p
+% phonopy --mesh 31 31 31 -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -102,7 +102,7 @@ Summary of calculation was written in "phonopy.yaml".
 ### Thermal properties
 
 ~~~
-% phonopy-load --mesh 31 31 31 -t -p
+% phonopy --mesh 31 31 31 -t -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -167,7 +167,7 @@ Number of phonon frequencies less than cutoff frequency: 1/178746
 This requires to prepare `BORN` file.
 
 ~~~
-% phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
+% phonopy --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -223,7 +223,7 @@ Summary of calculation was written in "phonopy.yaml".
 ### PDOS
 
 ~~~
-% phonopy-load --mesh 41 41 41 --pdos "1, 2" -p
+% phonopy --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -279,7 +279,7 @@ Summary of calculation was written in "phonopy.yaml".
 Band structure and DOS or PDOS can be plotted on one figure together by
 
 ~~~
-% phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" --mesh 41 41 41 --pdos "1, 2" -p
+% phonopy --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -338,7 +338,7 @@ Summary of calculation was written in "phonopy.yaml".
 ## MgB2 characters of ireducible representations
 
 ~~~bash
-% phonopy-load --irreps 0 0 0
+% phonopy --irreps 0 0 0
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |

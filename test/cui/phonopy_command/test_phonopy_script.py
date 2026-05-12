@@ -1083,6 +1083,74 @@ def test_use_pypolymlp_develop_error(error_class: type):
             os.chdir(original_cwd)
 
 
+def test_phonopy_run_mode_rejects_init_flag(capsys: pytest.CaptureFixture[str]):
+    """Phonopy in mode='run' errors when an init-only flag like -d is given."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "POSCAR-unitcell_Cr",
+                supercell_dimension="2 2 2",
+                is_displacement=True,
+                primitive_axes="P",
+            )
+            argparse_control["mode"] = "run"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+            captured = capsys.readouterr()
+            assert "phonopy-init" in captured.out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_phonopy_init_mode_requires_init_flag(capsys: pytest.CaptureFixture[str]):
+    """Phonopy-init (mode='init') errors when no init flag is given."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+            )
+            argparse_control["mode"] = "init"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+            captured = capsys.readouterr()
+            assert "No setup operation" in captured.out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_phonopy_load_deprecation_warning(capsys: pytest.CaptureFixture[str]):
+    """Phonopy-load prints a deprecation message pointing to phonopy."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                load_phonopy_yaml=True,
+            )
+            argparse_control["mode"] = "run"
+            argparse_control["deprecated_command"] = "phonopy-load"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+            captured = capsys.readouterr()
+            assert "phonopy-load' is deprecated" in captured.out
+
+            for created_filename in ("phonopy.yaml",):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+            _check_no_files()
+        finally:
+            os.chdir(original_cwd)
+
+
 def _ls():
     current_dir = pathlib.Path(".")
     for file in current_dir.iterdir():

@@ -60,7 +60,8 @@ auxiliary-tools
 external-tools
 phonopy-module
 phonopy-yaml
-phonopy-load
+phonopy
+phonopy-init
 mlp-sscha
 formulation
 citation

@@ -116,7 +116,7 @@ University](http://cms.mtl.kyoto-u.ac.jp/seko/mlp-repository/index.html).
 1. Read a lammps input structure file and create supercells with
 
    ```
-   % phonopy --lammps -c lammps_structure_Ti -d --dim 4 4 3
+   % phonopy-init --lammps -c lammps_structure_Ti -d --dim 4 4 3
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -160,7 +160,7 @@ University](http://cms.mtl.kyoto-u.ac.jp/seko/mlp-repository/index.html).
 3. Make `FORCE_SETS`
 
    ```
-   % phonopy -f lammps_forces_Ti.0
+   % phonopy-init -f lammps_forces_Ti.0
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |

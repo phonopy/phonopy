@@ -37,6 +37,7 @@ dev = [
 
 [project.scripts]
 phonopy = "phonopy.scripts.phonopy:run"
+phonopy-init = "phonopy.scripts.phonopy_init:run"
 phonopy-load = "phonopy.scripts.phonopy_load:run"
 phonopy-bandplot = "phonopy.scripts.phonopy_bandplot:run"
 phonopy-calc-convert = "phonopy.scripts.phonopy_calc_convert:run"

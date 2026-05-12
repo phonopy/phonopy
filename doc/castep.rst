@@ -21,7 +21,7 @@ CASTEP.
 1. Generate supercell based on structrural parameters given in
    ``unitcell.cell`` file by running::
 
-      % phonopy -d --dim="2 2 2" --castep -c unitcell.cell
+      % phonopy-init -d --dim="2 2 2" --castep -c unitcell.cell
 
    In this example file ``unitcell.cell`` contains initial spin values in
    ``positions_frac`` BLOCK. As well as the value of the U parameter in
@@ -43,11 +43,11 @@ CASTEP.
 
 4. Generate ``FORCE_SETS`` file by running::
 
-      % phonopy --castep -f displ-001/supercell.castep displ-002/supercell.castep
+      % phonopy-init --castep -f displ-001/supercell.castep displ-002/supercell.castep
 
 5. Finally plot phonon bandstructure by running the following command::
 
-      % phonopy --castep -c unitcell.cell -p band.conf
+      % phonopy -p band.conf
 
 
 Cr-castep
@@ -59,7 +59,7 @@ Spin-polarization example.
 1. Generate supercell based on structrural parameters given in
    ``unitcell.cell`` file by running::
 
-      % phonopy -d --dim="2 2 2" --castep -c unitcell.cell
+      % phonopy-init -d --dim="2 2 2" --castep -c unitcell.cell
 
    In this example file ``unitcell.cell`` contains initial spin values in
    ``positions_frac`` BLOCK. As well as the value of the U parameter in
@@ -81,10 +81,10 @@ Spin-polarization example.
 
 4. Generate ``FORCE_SETS`` file by running::
 
-      % phonopy --castep -f displ-001/supercell.castep
+      % phonopy-init --castep -f displ-001/supercell.castep
 
 5. Finally plot phonon bandstructure by running the following command:
 
    ::
 
-      % phonopy --dim="2 2 2" --pa="-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2" --castep -c unitcell.cell --band="1/2 -1/2 1/2 0 0 0 1/4 1/4 1/4" -p
+      % phonopy --pa="-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2" --band="1/2 -1/2 1/2 0 0 0 1/4 1/4 1/4" -p
