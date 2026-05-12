@@ -17,7 +17,7 @@ DFTB+ phonon band structures are created as follows:
 2) Generate the the required set of structures and the ``phonopy_disp.yaml``
    file by issuing the command ::
 
-   % phonopy -d --dim="4 4 4" --dftb+
+   % phonopy-init -d --dim="4 4 4" --dftb+
 
    This example builds 4 x 4 x 4 supercell files. The undistorted supercell is
    stored in ``geo.genS``, while the required displacements are stored in files
@@ -29,7 +29,7 @@ DFTB+ phonon band structures are created as follows:
 
 3) Create the ``FORCE_SETS`` file with the command ::
 
-     % phonopy -f disp-*/results.tag --dftb+  ...
+     % phonopy-init -f disp-*/results.tag --dftb+  ...
 
    Where the location of all of the ``results.tag`` files is given on the
    command line. To run this command, the ``phonopy_disp.yaml`` file has to be
@@ -41,7 +41,7 @@ DFTB+ phonon band structures are created as follows:
    data, either in the settings file (DIM) or by providing the dimensions of the
    the supercell repeat on the command line ::
 
-   % phonopy -p band.conf --dim="4 4 4" --dftb+
+   % phonopy -p band.conf
 
 
 5) Create a band structure in gnuplot format ::

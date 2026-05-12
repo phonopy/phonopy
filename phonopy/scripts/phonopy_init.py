@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Atsushi Togo
+# Copyright (C) 2025 Atsushi Togo
 # All rights reserved.
 #
 # This file is part of phonopy.
@@ -36,9 +36,9 @@ from phonopy.cui.phonopy_script import main
 
 
 def run():
-    """Run phonopy script."""
+    """Run phonopy-init script."""
     argparse_control = {
-        "load_phonopy_yaml": True,
-        "mode": "run",
+        "load_phonopy_yaml": False,
+        "mode": "init",
     }
     main(**argparse_control)

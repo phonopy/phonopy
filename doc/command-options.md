@@ -92,7 +92,7 @@ configuration file is recommended to place at the first position for the mixed
 use of setting tags and command-line options, i.e.,
 
 ```bash
-% phonopy-load --config setting.conf [OPTIONS]
+% phonopy --config setting.conf [OPTIONS]
 ```
 
 (force_calculators)=
@@ -172,12 +172,13 @@ This option invokes the Questaal/LMTO mode.
 
 ### `-c` or `--cell`
 
-**`phonopy-load` doesn't have this option.**
+**This option belongs to `phonopy-init`. The `phonopy` command reads the
+unit cell from `phonopy_*.yaml`.**
 
 Unit cell crystal structure file is specified with this tag.
 
 ```bash
-% phonopy -c POSCAR-unitcell [OPTIONS]
+% phonopy-init -c POSCAR-unitcell [OPTIONS]
 ```
 
 Without specifying this tag, default file name is searched in current directory.
@@ -346,13 +347,13 @@ Please note: the files containing the forces can be prefixed with the
 with:
 
 ```bash
-% phonopy --qlm -f supercell-001/force.lm supercell-002/force.lm ...
+% phonopy-init --qlm -f supercell-001/force.lm supercell-002/force.lm ...
 ```
 
 (fz_force_sets_option)=
 ### `--fz`
 
-**`phonopy-load` doesn't have this option.**
+**This option belongs to `phonopy-init`.**
 
 `--fz` option is used to subtract residual forces frown the forces calculated
 for the supercells with displacements. Here the residual forces mean that the
@@ -368,7 +369,7 @@ one more argument is inserted at the front. Mind that `--fz` is exclusively used
 with `-f` option. The example for the VASP interface is shown below:
 
 ```bash
-% phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
+% phonopy-init --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
 ```
 
 where `sposcar/vasprun.xml` assumes the output file for the perfect supercell
@@ -391,7 +392,7 @@ VASP output of force constants is imported from `vasprun.xml` and
 `FORCE_CONSTANTS` is created.
 
 ```bash
-% phonopy --fc vasprun.xml
+% phonopy-init --fc vasprun.xml
 ```
 
 This `FORCE_CONSTANTS` can be used instead of `FORCE_SETS`. For more details,
@@ -417,7 +418,7 @@ When using with `-f`, displacement-force dataset are stored in
 current directory, the parameters are also stored in `phonopy_params.yaml`.
 
 ```bash
-% phonopy --sp -f disp-001/vasprun.xml disp-002/vasprun.xml ...
+% phonopy-init --sp -f disp-001/vasprun.xml disp-002/vasprun.xml ...
 ```
 
 ## Graph plotting
@@ -427,7 +428,7 @@ current directory, the parameters are also stored in `phonopy_params.yaml`.
 Result is plotted.
 
 ```bash
-% phonopy-load -p
+% phonopy -p
 ```
 
 (graph_save_option)=
@@ -437,7 +438,7 @@ Result is plotted.
 Result is plotted (saved) to PDF file.
 
 ```bash
-% phonopy-load -p -s
+% phonopy -p -s
 ```
 
 ## Log level
