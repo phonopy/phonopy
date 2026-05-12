@@ -1,6 +1,7 @@
 """Tests of routines in cells.py."""
 
 import os
+import warnings
 from collections.abc import Callable
 
 import numpy as np
@@ -23,6 +24,7 @@ from phonopy.structure.cells import (
     get_primitive,
     get_primitive_matrix,
     get_supercell,
+    guess_primitive_matrix,
     isclose,
     sparse_to_dense_svecs,
 )
@@ -311,6 +313,30 @@ def test_get_primitive_convcell_Cr_with_magmoms(
     pcell = get_primitive(scell, primitive_matrix=pmat)
     helper_methods.compare_cells(convcell_cr, pcell)
     convcell_cr.magnetic_moments = None
+
+
+def test_guess_primitive_matrix_Cr_type_iv(convcell_cr: PhonopyAtoms):
+    """AFM bcc Cr is Type-IV; XSG primitive matrix is returned with warning."""
+    convcell_cr.magnetic_moments = [1, -1]
+    try:
+        with pytest.warns(UserWarning, match="magnetic"):
+            pmat = guess_primitive_matrix(convcell_cr)
+    finally:
+        convcell_cr.magnetic_moments = None
+    # By XSG as Pm-3m, the magnetic ordering is preserved.
+    np.testing.assert_allclose(abs(np.linalg.det(pmat)), 1.0, atol=1e-8)
+
+
+def test_guess_primitive_matrix_Cr_fm_no_warning(convcell_cr: PhonopyAtoms):
+    """FM bcc Cr is not Type-IV; no warning is emitted."""
+    convcell_cr.magnetic_moments = [1, 1]
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            pmat = guess_primitive_matrix(convcell_cr)
+    finally:
+        convcell_cr.magnetic_moments = None
+    np.testing.assert_allclose(abs(np.linalg.det(pmat)), 0.5, atol=1e-8)
 
 
 @pytest.mark.parametrize("store_dense_svecs", [True, False])
