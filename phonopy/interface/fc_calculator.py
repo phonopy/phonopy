@@ -373,7 +373,7 @@ class FCSolver:
                 f"    smaller than the input primitive cell ({len(phonopy_p2s)} atoms)."
             )
             print("  Falling back to full force constants. For optimum performance,")
-            print("  regenerate the input with --pa auto.")
+            print("  regenerate with the default primitive matrix.")
         return False
 
     def _set_alm_solver(self) -> ALMFCSolver:

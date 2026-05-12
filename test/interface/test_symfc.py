@@ -82,7 +82,7 @@ def test_symfc_auto_fallback_to_full_fc_on_primitive_mismatch(
     assert ph.force_constants.shape == (n_atoms, n_atoms, 3, 3)
     captured = capsys.readouterr()
     assert "Falling back to full force constants" in captured.out
-    assert "--pa auto" in captured.out
+    assert "default primitive matrix" in captured.out
 
 
 def test_symmetrize_by_projector(
