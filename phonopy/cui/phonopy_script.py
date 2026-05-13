@@ -1526,16 +1526,18 @@ def _start_phonopy(**argparse_control):
     parser, deprecated = get_parser(**argparse_control)
     args = parser.parse_args()
 
-    # Set log level
+    # Set log level. `is_check_symmetry` (phonopy-init only) and
+    # `is_graph_save` (phonopy only) live on different parsers after the
+    # v4 CLI split, so look them up defensively.
     log_level = 1
     if args.verbose:
         log_level = 2
-    if args.quiet or args.is_check_symmetry:
+    if args.quiet or getattr(args, "is_check_symmetry", False):
         log_level = 0
     if args.loglevel is not None:
         log_level = args.loglevel
 
-    if args.is_graph_save:
+    if getattr(args, "is_graph_save", False):
         import matplotlib
 
         matplotlib.use("Agg")
@@ -1833,8 +1835,13 @@ def _install_cli_warning_formatter() -> None:
         MeshGRGridFallbackWarning,
         MeshSymmetryFallbackWarning,
     )
+    from phonopy.structure.cells import PrimitiveMatrixAutoDefaultWarning
 
-    notice_classes = (MeshSymmetryFallbackWarning, MeshGRGridFallbackWarning)
+    notice_classes = (
+        MeshSymmetryFallbackWarning,
+        MeshGRGridFallbackWarning,
+        PrimitiveMatrixAutoDefaultWarning,
+    )
     default_showwarning = warnings.showwarning
 
     def showwarning(message, category, filename, lineno, file=None, line=None):
@@ -1844,8 +1851,15 @@ def _install_cli_warning_formatter() -> None:
         if is_notice:
             stream = file if file is not None else sys.stderr
             print("WARNING:", file=stream)
-            for body in textwrap.wrap(str(message), width=76):
-                print(f"  {body}", file=stream)
+            for raw_line in str(message).splitlines():
+                if raw_line.startswith("  "):
+                    # Preserve pre-formatted indented blocks (e.g. matrix rows).
+                    print(f"  {raw_line}", file=stream)
+                elif raw_line.strip() == "":
+                    print("", file=stream)
+                else:
+                    for body in textwrap.wrap(raw_line, width=76):
+                        print(f"  {body}", file=stream)
             print("", file=stream)
             return
         default_showwarning(message, category, filename, lineno, file, line)
@@ -1921,7 +1935,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
 
     plot_conf = {
         "plot_graph": args.is_graph_plot,
-        "save_graph": args.is_graph_save,
+        "save_graph": getattr(args, "is_graph_save", False),
         "with_legend": args.is_legend,
     }
 
@@ -1943,8 +1957,8 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             print("Pure and Applied Chemistry, 88(3), 265-291 (2016).")
             print("")
 
-    # phonopy --symmetry
-    run_symmetry_info = args.is_check_symmetry
+    # phonopy --symmetry (phonopy-init only)
+    run_symmetry_info = getattr(args, "is_check_symmetry", False)
 
     ##################################################
     # Enforce CLI mode (phonopy / phonopy-init split) #

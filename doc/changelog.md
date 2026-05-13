@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
+
 - CLI split into `phonopy-init` (setup: displacements, FORCE_SETS /
   FORCE_CONSTANTS conversion, `--symmetry`) and `phonopy` (phonon
   calculation). `phonopy-load` is kept as a deprecated alias of
