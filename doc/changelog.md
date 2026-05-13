@@ -16,6 +16,9 @@ Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
   `phonopy.load`, and the CLI (`--pa`). Pass `"P"` (or `--pa P`) for
   the identity transformation. A value stored in a phonopy.yaml file
   still takes priority over the default.
+- `--nac` was removed. NAC is now enabled automatically when a `BORN`
+  file is present or `nac_params` is stored in `phonopy.yaml`. Pass
+  `--nonac` to disable NAC explicitly.
 - Auto-fall back to full force constants when the input "primitive" cell
   is not actually primitive (e.g. an I-centered conventional cell) and
   symfc detects a smaller true primitive cell. The previous behaviour

@@ -126,6 +126,26 @@ If the calculation loads a `phonopy.yaml` that already records a
 default. Workflows driven by saved YAML files therefore reproduce v3
 results exactly.
 
+## `--nac` removed
+
+`--nac` was removed because non-analytical term correction is now
+enabled automatically whenever the necessary data is available: a
+`BORN` file in the working directory or `nac_params` stored in a
+`phonopy.yaml`-like file. Pass `--nonac` to disable NAC explicitly.
+
+**v3:**
+
+```bash
+phonopy --nac band.conf
+```
+
+**v4:**
+
+```bash
+phonopy band.conf           # NAC auto-detected from BORN / phonopy.yaml
+phonopy --nonac band.conf   # explicit opt-out
+```
+
 ## Mesh fallback for length-based input
 
 When a sampling mesh is specified by a length (float) and the resulting
