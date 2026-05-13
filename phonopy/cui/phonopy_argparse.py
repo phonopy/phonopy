@@ -344,13 +344,6 @@ def _add_init_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="Assume Wien2k structs with displacements are P1",
     )
-    parser.add_argument(
-        "--nac",
-        dest="is_nac",
-        action="store_true",
-        default=None,
-        help="Non-analytical term correction",
-    )
 
 
 def _add_run_options(parser: argparse.ArgumentParser) -> None:
@@ -943,6 +936,45 @@ class _MigratedToInitAction(argparse.Action):
         )
 
 
+def _make_removed_action(message: str) -> type[argparse.Action]:
+    """Build an argparse Action that rejects a removed-in-v4 flag."""
+
+    class _RemovedAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            parser.exit(
+                2,
+                f"phonopy: error: {message}\n"
+                "See https://phonopy.github.io/phonopy/migration-v4.html\n",
+            )
+
+    return _RemovedAction
+
+
+# Flags removed in phonopy v4. Mapping: option_strings -> (nargs, message).
+_REMOVED_OPTIONS: dict[tuple[str, ...], tuple[int | str, str]] = {
+    ("--nac",): (
+        0,
+        "'--nac' was removed in phonopy v4. NAC is now enabled "
+        "automatically when a BORN file is present or nac_params are "
+        "stored in phonopy.yaml. Use '--nonac' to disable NAC.",
+    ),
+}
+
+
+def _reject_removed_options(parser: argparse.ArgumentParser) -> None:
+    """Register removed-in-v4 flags so both parsers emit a friendly error."""
+    for option_strings, (nargs, message) in _REMOVED_OPTIONS.items():
+        kwargs: dict = {
+            "action": _make_removed_action(message),
+            "nargs": nargs,
+            "help": argparse.SUPPRESS,
+            "default": argparse.SUPPRESS,
+        }
+        if nargs == 0:
+            kwargs["const"] = True
+        parser.add_argument(*option_strings, **kwargs)
+
+
 def _reject_init_options(parser: argparse.ArgumentParser) -> None:
     """Register setup-only flags so phonopy emits a migration error.
 
@@ -983,6 +1015,7 @@ def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     )
     _add_shared_options(parser)
     _add_init_options(parser)
+    _reject_removed_options(parser)
     parser.add_argument(
         "filename",
         nargs="*",
@@ -1004,6 +1037,7 @@ def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     _add_shared_options(parser)
     _add_run_options(parser)
     _reject_init_options(parser)
+    _reject_removed_options(parser)
     parser.add_argument("filename", nargs="*", help="phonopy.yaml like file")
     return parser, deprecated
 
