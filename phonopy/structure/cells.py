@@ -1901,10 +1901,15 @@ def get_primitive_matrix_with_auto(
     | NDArray[np.double]
     | None,
     symprec: float = 1e-5,
-) -> NDArray[np.double] | None:
-    """Return primitive matrix that supports 'auto' option."""
+) -> NDArray[np.double]:
+    """Return primitive matrix that supports 'auto' option.
+
+    ``None`` is treated as ``"auto"`` so that an unspecified primitive
+    matrix is resolved from crystal symmetry.
+
+    """
     if primitive_matrix is None:
-        return None
+        return guess_primitive_matrix(unitcell, symprec=symprec)
     elif isinstance(primitive_matrix, str):
         if primitive_matrix == "auto":
             return guess_primitive_matrix(unitcell, symprec=symprec)

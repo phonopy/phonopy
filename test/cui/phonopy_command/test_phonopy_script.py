@@ -43,7 +43,6 @@ def test_phonopy_disp_Cr(is_ncl: bool):
                 supercell_dimension="2 2 2",
                 is_displacement=True,
                 magmoms=magmoms,
-                primitive_axes="P",
             )
             with pytest.raises(SystemExit) as excinfo:
                 main(**argparse_control)

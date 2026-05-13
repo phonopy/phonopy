@@ -15,6 +15,8 @@ _test_dir = pathlib.Path(__file__).parent.parent
 _poscar_nacl = _test_dir / "POSCAR_NaCl"
 # phonopy_NaCl_unitcell1.yaml has unit_cell but no supercell_matrix.
 _phonopy_yaml_nacl = _test_dir / "phonopy_NaCl_unitcell1.yaml"
+# phonopy_disp_NaCl.yaml carries an explicit F-centring primitive_matrix.
+_phonopy_disp_yaml_nacl = _test_dir / "phonopy_disp_NaCl.yaml"
 
 _supercell_matrix = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
 
@@ -138,6 +140,24 @@ def test_get_cell_info_poscar_success(monkeypatch, tmp_path):
     assert result.phonopy_yaml is None
 
 
+def test_get_cell_info_keeps_yaml_primitive_matrix_when_settings_unspecified(
+    monkeypatch, tmp_path
+):
+    """Settings.primitive_matrix=None (no --pa) preserves the YAML primitive_matrix."""
+    monkeypatch.chdir(tmp_path)
+    settings = _settings(supercell_matrix=_supercell_matrix)
+    assert settings.primitive_matrix is None
+
+    result = get_cell_info(
+        settings=settings,
+        cell_filename=_phonopy_disp_yaml_nacl,
+        load_phonopy_yaml=True,
+    )
+
+    expected = [[0.0, 0.5, 0.5], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]
+    np.testing.assert_allclose(result.primitive_matrix, expected)
+
+
 def test_get_cell_info_enforce_primitive_matrix_auto(monkeypatch, tmp_path):
     """enforce_primitive_matrix_auto=True forces primitive_matrix='auto'."""
     monkeypatch.chdir(tmp_path)
@@ -200,7 +220,7 @@ def test_get_cell_info_prints_primitive_overwrite_message(
 ):
     """Mismatched primitive matrix between YAML and settings is reported."""
     monkeypatch.chdir(tmp_path)
-    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="F")
+    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="P")
 
     get_cell_info(
         settings=settings,
@@ -219,7 +239,7 @@ def test_get_cell_info_no_primitive_overwrite_message_at_log_level_0(
 ):
     """Primitive overwrite message is suppressed at log_level=0."""
     monkeypatch.chdir(tmp_path)
-    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="F")
+    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="P")
 
     get_cell_info(
         settings=settings,
