@@ -255,11 +255,12 @@ class Phonopy:
         # Create supercell and primitive cell
         self._unitcell = unitcell.copy()
         self._supercell_matrix = shape_supercell_matrix(supercell_matrix)
-        _pmat_input = primitive_matrix
         self._primitive_matrix = get_primitive_matrix_with_auto(
             self._unitcell, primitive_matrix, symprec=self._symprec
         )
-        warn_if_primitive_matrix_auto_changed_cell(_pmat_input, self._primitive_matrix)
+        warn_if_primitive_matrix_auto_changed_cell(
+            primitive_matrix, self._primitive_matrix
+        )
         self._supercell: Supercell
         self._primitive: Primitive
         self._build_supercell()
