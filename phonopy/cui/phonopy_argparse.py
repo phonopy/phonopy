@@ -930,6 +930,47 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
+class _MigratedToInitAction(argparse.Action):
+    """Reject setup-only flags that moved to 'phonopy-init' in v4."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        parser.exit(
+            2,
+            f"phonopy: error: '{option_string}' is a setup operation that "
+            "moved to 'phonopy-init' in v4.\n"
+            "Replace 'phonopy' with 'phonopy-init' in your command.\n"
+            "See https://phonopy.github.io/phonopy/migration-v4.html\n",
+        )
+
+
+def _reject_init_options(parser: argparse.ArgumentParser) -> None:
+    """Register setup-only flags so phonopy emits a migration error.
+
+    Without this, argparse rejects unknown setup flags with a generic
+    'unrecognized arguments' message and a long usage dump.
+
+    """
+    specs: list[tuple[tuple[str, ...], int | str]] = [
+        (("-c", "--cell"), 1),
+        (("--dim",), "+"),
+        (("-d", "--displacement"), 0),
+        (("-f", "--force-sets"), "+"),
+        (("--fz", "--force-sets-zero"), "+"),
+        (("--fc", "--force-constants"), 1),
+        (("--symmetry",), 0),
+    ]
+    for option_strings, nargs in specs:
+        kwargs: dict = {
+            "action": _MigratedToInitAction,
+            "nargs": nargs,
+            "help": argparse.SUPPRESS,
+            "default": argparse.SUPPRESS,
+        }
+        if nargs == 0:
+            kwargs["const"] = True
+        parser.add_argument(*option_strings, **kwargs)
+
+
 def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     """Return argument parser for the phonopy-init command."""
     deprecated = fix_deprecated_option_names(sys.argv)
@@ -962,6 +1003,7 @@ def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     )
     _add_shared_options(parser)
     _add_run_options(parser)
+    _reject_init_options(parser)
     parser.add_argument("filename", nargs="*", help="phonopy.yaml like file")
     return parser, deprecated
 

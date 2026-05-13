@@ -1,5 +1,12 @@
 # Welcome to phonopy
 
+```{important}
+**Upgrading from phonopy v3?** Version 4 introduces several breaking
+changes, including a CLI split (`phonopy` and `phonopy-init`) and a new
+default `primitive_matrix="auto"`. See {ref}`migration_v4` before running
+existing scripts.
+```
+
 **Phonopy** is an open source package for phonon calculations at harmonic and
 quasi-harmonic levels.
 
@@ -66,6 +73,7 @@ mlp-sscha
 formulation
 citation
 reference
+migration-v4
 changelog
 ```
 

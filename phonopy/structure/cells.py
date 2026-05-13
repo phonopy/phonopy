@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 from typing import Literal
 
@@ -1892,6 +1893,57 @@ def determinant(
         + m[0][2] * m[1][0] * m[2][1]
         - m[0][2] * m[1][1] * m[2][0]
     )
+
+
+class PrimitiveMatrixAutoDefaultWarning(UserWarning):
+    """Issued when default ``primitive_matrix='auto'`` produces a non-identity cell.
+
+    The phonopy v3 default for ``primitive_matrix`` was the identity
+    matrix; v4 changed it to ``'auto'`` (detect the primitive cell from
+    crystal symmetry).  When the auto-detected matrix is not the identity,
+    the resulting q-point convention and folded-band layout differ from v3.
+    This warning is emitted so users running old scripts notice the change
+    instead of silently getting different numbers.  Pass
+    ``primitive_matrix='P'`` (or ``--pa P`` on the command line) to restore
+    the v3 behaviour.
+
+    """
+
+
+def warn_if_primitive_matrix_auto_changed_cell(
+    primitive_matrix_input: Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | Sequence[Sequence[float]]
+    | NDArray[np.double]
+    | None,
+    resolved_primitive_matrix: NDArray[np.double],
+) -> None:
+    """Emit ``PrimitiveMatrixAutoDefaultWarning`` if relevant.
+
+    The warning fires only when the caller relied on the ``'auto'``
+    default (``None`` or ``'auto'``) AND the auto-detected matrix is not
+    the identity.  Explicit choices (``'P'``, an explicit matrix, etc.)
+    are silent.
+
+    """
+    if primitive_matrix_input is not None and not (
+        isinstance(primitive_matrix_input, str) and primitive_matrix_input == "auto"
+    ):
+        return
+    if np.allclose(resolved_primitive_matrix, np.eye(3), atol=1e-5):
+        return
+    rows = "\n".join(
+        "  [" + ", ".join(f"{v: .5f}" for v in row) + "]"
+        for row in resolved_primitive_matrix
+    )
+    msg = (
+        "primitive_matrix defaulted to 'auto' and was resolved to a "
+        "non-identity matrix:\n"
+        f"{rows}\n"
+        "This differs from phonopy v3, whose default was the identity "
+        "matrix. Pass primitive_matrix='P' (or --pa P on the command "
+        "line) to restore the v3 behaviour."
+    )
+    warnings.warn(msg, PrimitiveMatrixAutoDefaultWarning, stacklevel=3)
 
 
 def get_primitive_matrix_with_auto(
