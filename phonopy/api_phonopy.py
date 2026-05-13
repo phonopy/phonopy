@@ -254,8 +254,6 @@ class Phonopy:
         # Create supercell and primitive cell
         self._unitcell = unitcell.copy()
         self._supercell_matrix = shape_supercell_matrix(supercell_matrix)
-        if primitive_matrix is None:
-            primitive_matrix = "auto"
         self._primitive_matrix = get_primitive_matrix_with_auto(
             self._unitcell, primitive_matrix, symprec=self._symprec
         )
@@ -376,7 +374,7 @@ class Phonopy:
         return self._supercell_matrix
 
     @property
-    def primitive_matrix(self) -> NDArray[np.double] | None:
+    def primitive_matrix(self) -> NDArray[np.double]:
         """Return transformation matrix to primitive cell from unit cell.
 
         ndarray
@@ -3541,10 +3539,7 @@ class Phonopy:
 
         """
         inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
-        if self._primitive_matrix is None:
-            trans_mat = inv_supercell_matrix
-        else:
-            trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
+        trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
 
         try:
             self._primitive = get_primitive(

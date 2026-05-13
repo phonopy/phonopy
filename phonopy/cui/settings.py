@@ -106,7 +106,7 @@ class Settings:
         self.relax_atomic_positions: bool = False
         self.primitive_matrix: (
             NDArray[np.double] | Literal["P", "F", "I", "A", "C", "R", "auto"] | None
-        ) = "auto"
+        ) = None
         self.qpoints: NDArray[np.double] | None = None
         self.random_displacements: Literal["auto"] | int | None = None
         self.random_seed: int | None = None

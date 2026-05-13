@@ -2021,27 +2021,6 @@ def main(**argparse_control: bool | PhonopyMockArgs):
 
     unitcell_filename = cell_info.optional_structure_info.unitcell_filename
 
-    if cell_info.unitcell.magnetic_moments is not None and _auto_primitive_axes(
-        cell_info.primitive_matrix
-    ):
-        print_error_message(f'Unit cell was read from "{unitcell_filename}".')
-
-        if cell_info.phonopy_yaml is None:
-            print_error_message(
-                "'PRIMITIVE_AXES = auto' and 'BAND = auto' "
-                "are not allowed using with MAGMOM."
-            )
-        else:
-            print_error_message(str(cell_info.phonopy_yaml.unitcell))
-            print_error_message("")
-            print_error_message(
-                "'PRIMITIVE_AXES = auto' and 'BAND = auto' "
-                "are not allowed using with magnetic_moments."
-            )
-        if log_level:
-            print_error()
-        sys.exit(1)
-
     ###########################################################
     # Show crystal symmetry information and exit (--symmetry) #
     ###########################################################

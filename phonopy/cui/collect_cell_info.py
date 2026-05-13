@@ -125,13 +125,9 @@ def get_cell_info(
         pmat_in_settings = get_primitive_matrix_with_auto(
             phpy_yaml.unitcell, cell_info.primitive_matrix
         )
-        if pmat_in_settings is None:
-            pmat_in_settings = np.eye(3, dtype="double", order="C")
         pmat_in_phpy_yaml = get_primitive_matrix_with_auto(
             phpy_yaml.unitcell, phpy_yaml.primitive_matrix
         )
-        if pmat_in_phpy_yaml is None:
-            pmat_in_phpy_yaml = np.eye(3, dtype="double", order="C")
         if log_level and not np.allclose(
             pmat_in_phpy_yaml, pmat_in_settings, atol=1e-5
         ):
