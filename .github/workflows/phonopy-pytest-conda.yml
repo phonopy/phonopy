@@ -18,7 +18,10 @@ jobs:
       - uses: actions/checkout@v6
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          activate-environment: test
+          auto-activate-base: false
           miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           conda activate test

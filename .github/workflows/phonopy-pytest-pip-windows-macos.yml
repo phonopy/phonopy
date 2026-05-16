@@ -29,16 +29,22 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
+    strategy:
+      matrix:
+        python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v6
       - uses: conda-incubator/setup-miniconda@v3
         with:
+          activate-environment: test
+          auto-activate-base: false
           miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           conda activate test
-          conda install --yes -c conda-forge python=3.13
+          conda install --yes -c conda-forge python=${{ matrix.python-version }}
           conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler cxx-compiler cmake pypolymlp ase maturin
       - name: Setup symfc
         run: |
