@@ -107,6 +107,68 @@ def testPartialDOSTetrahedron(ph_nacl_nofcsym: Phonopy):
     #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
 
 
+tdos_thm_even_str = """-0.005713 0.000000
+0.994287 0.071996
+1.994287 0.424551
+2.994287 2.048093
+3.994287 2.166890
+4.994287 1.684229
+5.994287 0.500183
+6.994287 0.126302
+7.994287 0.000000"""
+
+
+pdos_thm_even_str = """-0.005713 0.000000 0.000000
+0.994287 0.029538 0.042458
+1.994287 0.178648 0.245903
+2.994287 0.778448 1.269645
+3.994287 1.269147 0.897743
+4.994287 0.765973 0.918256
+5.994287 0.382650 0.117533
+6.994287 0.077068 0.049234
+7.994287 0.000000 0.000000"""
+
+
+def testTotalDOSTetrahedronEvenMesh(ph_nacl_nofcsym: Phonopy):
+    """Total DOS with tetrahedron method on an even mesh.
+
+    Even mesh numbers trigger the default ``is_gamma_center=False`` half-grid
+    shift in Mesh.  This regression test locks in the values produced when the
+    shift is propagated to BZGrid via ``Mesh.is_shift``.
+
+    """
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([6, 6, 6])
+    # Confirm the test exercises the shifted-grid (Gamma-less) setup.
+    assert list(phonon.mesh.is_shift) == [1, 1, 1]
+    min_q_norm = float(np.linalg.norm(phonon.mesh.qpoints, axis=1).min())
+    np.testing.assert_allclose(min_q_norm, np.sqrt(3) / 12, atol=1e-12)
+    phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=True)
+    dos = phonon.total_dos.dos
+    freqs = phonon.total_dos.frequency_points
+    data_ref = np.reshape([float(x) for x in tdos_thm_even_str.split()], (-1, 2))
+    np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
+
+
+def testPartialDOSTetrahedronEvenMesh(ph_nacl_nofcsym: Phonopy):
+    """Projected DOS with tetrahedron method on an even mesh.
+
+    Companion to ``testTotalDOSTetrahedronEvenMesh`` for the projected path.
+
+    """
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([6, 6, 6], is_mesh_symmetry=False, with_eigenvectors=True)
+    # Confirm the test exercises the shifted-grid (Gamma-less) setup.
+    assert list(phonon.mesh.is_shift) == [1, 1, 1]
+    min_q_norm = float(np.linalg.norm(phonon.mesh.qpoints, axis=1).min())
+    np.testing.assert_allclose(min_q_norm, np.sqrt(3) / 12, atol=1e-12)
+    phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=True)
+    pdos = phonon.projected_dos.projected_dos
+    freqs = phonon.projected_dos.frequency_points
+    data_ref = np.reshape([float(x) for x in pdos_thm_even_str.split()], (-1, 3)).T
+    np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
+
+
 def test_get_pdos_indices(ph_tio2: Phonopy):
     """Test get_pdos_indices by TiO2."""
     indices = _get_pdos_indices(ph_tio2.primitive_symmetry)

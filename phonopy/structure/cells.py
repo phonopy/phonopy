@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 from typing import Literal
 
@@ -50,7 +51,8 @@ except AttributeError:
 from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy._lang import log_dispatch, resolve_lang
+from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
 from phonopy.structure.snf import SNF3x3
 
 
@@ -219,7 +221,8 @@ class Supercell(PhonopyAtoms):
             raise RuntimeError(msg)
         else:
             super().__init__(
-                symbols=supercell.symbols,
+                species_table=supercell.species_table,
+                species_ids=supercell.species_ids,
                 masses=supercell.masses,
                 magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
@@ -243,7 +246,6 @@ class Supercell(PhonopyAtoms):
         # Scaled positions within the frame, i.e., create a supercell that
         # is made simply to multiply the input cell.
         positions = unitcell.scaled_positions
-        symbols = unitcell.symbols
         masses = unitcell.masses
         magmoms = unitcell.magnetic_moments
         lattice = unitcell.cell
@@ -271,7 +273,7 @@ class Supercell(PhonopyAtoms):
             np.tile(lattice_points, (n, 1)) + np.repeat(positions, n_l, axis=0),
             np.linalg.inv(mat).T,
         )
-        symbols_multi = [s for s in symbols for _ in range(n_l)]
+        species_ids_multi = np.repeat(unitcell.species_ids, n_l)
         atom_map = np.repeat(np.arange(n), n_l)
         if masses is None:
             masses_multi = None
@@ -285,7 +287,8 @@ class Supercell(PhonopyAtoms):
             magmoms_multi = [v for v in magmoms for _ in range(n_l)]
 
         simple_supercell = PhonopyAtoms(
-            symbols=symbols_multi,
+            species_table=unitcell.species_table,
+            species_ids=species_ids_multi,
             masses=masses_multi,
             magnetic_moments=magmoms_multi,
             scaled_positions=positions_multi,
@@ -328,6 +331,7 @@ class Primitive(PhonopyAtoms):
         symprec: float = 1e-5,
         store_dense_svecs: bool = True,
         positions_to_reorder: NDArray[np.double] | None = None,
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -351,11 +355,16 @@ class Primitive(PhonopyAtoms):
             order of atoms is expected to be sure, these positions with the
             specific order is used after position matching between this data and
             generated positions. Default is None.
+        lang : {"C", "Rust"}, optional
+            Backend used by helpers that have a Rust port (currently the
+            atomic-permutation matcher).  Default is "C".
 
         """
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
         self._symprec = symprec
         self._store_dense_svecs = store_dense_svecs
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
+        log_dispatch(self._lang, "Primitive.__init__")
         self._p2s_map: NDArray
         self._s2p_map: NDArray
         self._p2p_map: dict[int, int]
@@ -517,7 +526,8 @@ class Primitive(PhonopyAtoms):
                 msg.append(f"  {i + 1}: {s1} -> {s2}")
             raise RuntimeError("\n".join(msg))
         super().__init__(
-            symbols=trimmed_cell.symbols,
+            species_table=trimmed_cell.species_table,
+            species_ids=trimmed_cell.species_ids,
             masses=trimmed_cell.masses,
             magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
@@ -564,6 +574,7 @@ class Primitive(PhonopyAtoms):
             trans,
             np.array(supercell.cell.T, dtype="double", order="C"),
             self._symprec,
+            lang=self._lang,
         )
 
         return atomic_permutations
@@ -593,6 +604,7 @@ class Primitive(PhonopyAtoms):
             primitive_pos,
             store_dense_svecs=self._store_dense_svecs,
             symprec=self._symprec,
+            lang=self._lang,
         )
         trans_mat_float = np.dot(supercell_bases, np.linalg.inv(primitive_bases))
         trans_mat = np.rint(trans_mat_float).astype(int)
@@ -688,7 +700,6 @@ class TrimmedCell(PhonopyAtoms):
 
         (
             trimmed_positions,
-            trimmed_symbols,
             trimmed_masses,
             trimmed_magmoms,
             extracted_atoms,
@@ -696,7 +707,6 @@ class TrimmedCell(PhonopyAtoms):
         ) = self._extract(
             positions_in_new_lattice,
             trimmed_lattice,
-            cell.symbols,
             cell.masses,
             cell.magnetic_moments,
             check_overlap,
@@ -708,7 +718,6 @@ class TrimmedCell(PhonopyAtoms):
                 positions_to_reorder, trimmed_positions, trimmed_lattice, symprec
             )
             trimmed_positions = trimmed_positions[ids]
-            trimmed_symbols = [trimmed_symbols[i] for i in ids]
             if trimmed_masses is not None:
                 trimmed_masses = trimmed_masses[ids]
             if trimmed_magmoms is not None:
@@ -717,9 +726,10 @@ class TrimmedCell(PhonopyAtoms):
 
         # scale is not always to become integer.
         scale = 1.0 / np.linalg.det(relative_axes)
-        if len(cell) == int(np.rint(scale * len(trimmed_symbols))):
+        if len(cell) == int(np.rint(scale * len(extracted_atoms))):
             super().__init__(
-                symbols=trimmed_symbols,
+                species_table=cell.species_table,
+                species_ids=cell.species_ids[extracted_atoms],
                 masses=trimmed_masses,
                 magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
@@ -734,32 +744,23 @@ class TrimmedCell(PhonopyAtoms):
         self,
         positions_in_new_lattice: NDArray[np.double],
         trimmed_lattice: NDArray[np.double],
-        symbols: list[str],
         masses: NDArray[np.double] | None,
         magmoms: NDArray[np.double] | None,
         check_overlap: bool,
         symprec: float,
     ) -> tuple[
         NDArray[np.double],
-        list[str],
         NDArray[np.double] | None,
         NDArray[np.double] | None,
         NDArray[np.int64],
         NDArray[np.int64],
     ]:
         num_atoms = 0
-        extracted_atoms = []
+        extracted_atoms: list[int] = []
         mapping_table = np.arange(len(positions_in_new_lattice), dtype="int64")
         trimmed_positions = np.zeros_like(positions_in_new_lattice)
-        trimmed_symbols = []
-        if masses is None:
-            trimmed_masses = None
-        else:
-            trimmed_masses = []
-        if magmoms is None:
-            trimmed_magmoms = None
-        else:
-            trimmed_magmoms = []
+        trimmed_masses_list: list[float] | None = None if masses is None else []
+        trimmed_magmoms_list: list | None = None if magmoms is None else []
 
         for i, pos in enumerate(positions_in_new_lattice):
             found_overlap = False
@@ -777,23 +778,27 @@ class TrimmedCell(PhonopyAtoms):
             if not found_overlap:
                 trimmed_positions[num_atoms] = pos
                 num_atoms += 1
-                trimmed_symbols.append(symbols[i])
                 if masses is not None:
-                    assert trimmed_masses is not None
-                    trimmed_masses.append(masses[i])
+                    assert trimmed_masses_list is not None
+                    trimmed_masses_list.append(masses[i])
                 if magmoms is not None:
-                    assert trimmed_magmoms is not None
-                    trimmed_magmoms.append(magmoms[i])
+                    assert trimmed_magmoms_list is not None
+                    trimmed_magmoms_list.append(magmoms[i])
                 extracted_atoms.append(i)
 
-        if trimmed_masses is not None:
-            trimmed_masses = np.array(trimmed_masses, dtype="double")
-        if trimmed_magmoms is not None:
-            trimmed_magmoms = np.array(trimmed_magmoms, dtype="double", order="C")
+        trimmed_masses = (
+            None
+            if trimmed_masses_list is None
+            else np.array(trimmed_masses_list, dtype="double")
+        )
+        trimmed_magmoms = (
+            None
+            if trimmed_magmoms_list is None
+            else np.array(trimmed_magmoms_list, dtype="double", order="C")
+        )
 
         return (
             np.array(trimmed_positions[:num_atoms], dtype="double", order="C"),
-            trimmed_symbols,
             trimmed_masses,
             trimmed_magmoms,
             np.array(extracted_atoms, dtype="int64"),
@@ -839,6 +844,7 @@ def get_primitive(
     symprec: float = 1e-5,
     store_dense_svecs: bool = True,
     positions_to_reorder: NDArray[np.double] | None = None,
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> Primitive:
     """Create primitive cell."""
     pmat = get_primitive_matrix(primitive_matrix)
@@ -849,6 +855,116 @@ def get_primitive(
         symprec=symprec,
         store_dense_svecs=store_dense_svecs,
         positions_to_reorder=positions_to_reorder,
+        lang=lang,
+    )
+
+
+def apply_site_mixture(
+    cell: PhonopyAtoms,
+    weights: Sequence[float],
+    symprec: float = 1e-5,
+    sort_constituents: bool = True,
+) -> PhonopyAtoms:
+    """Merge overlapping atoms into mixed-species sites.
+
+    Atoms whose fractional positions agree (modulo lattice translations)
+    within ``symprec`` are collapsed into a single site whose species is the
+    weighted mixture of the constituents. The Virtual Crystal Approximation
+    (VCA) is the typical use case. Each non-overlapping atom is preserved
+    verbatim and its weight must equal 1.0.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Input unit cell. Must not already contain mixed-species sites.
+    weights : sequence of float
+        Per-atom mixture weights in the input order. Length must equal
+        ``len(cell)``. Within each overlapping atom group the weights must
+        sum to 1.0; for an isolated atom the weight must be exactly 1.0.
+        Note that this is a per-atom convention and is distinct from the
+        VASP ``INCAR`` ``VCA`` tag, which lists one weight per element row
+        in POSCAR.
+    symprec : float
+        Tolerance for treating two fractional positions as overlapping.
+    sort_constituents : bool, optional
+        Forwarded to ``build_species_table_from_mixtures``. When True
+        (default), constituents of every merged site are sorted
+        alphabetically by symbol so that two sites differing only in input
+        order share one species. Pass False to keep the input order.
+
+    Returns
+    -------
+    PhonopyAtoms
+        Cell with one atom per merged group. Mixed sites carry composite
+        symbols (e.g. ``"GeSn"``); when several distinct mixtures share the
+        same composite within the cell, all of them get 1-based suffixes
+        (``"GeSn1"``, ``"GeSn2"``, ...).
+
+    """
+    if cell.has_mixtures:
+        raise ValueError(
+            "apply_site_mixture cannot be applied to a cell that already "
+            "contains mixed-species sites."
+        )
+    if cell.magnetic_moments is not None:
+        raise ValueError(
+            "apply_site_mixture does not support cells carrying magnetic moments."
+        )
+    if len(weights) != len(cell):
+        raise ValueError(
+            f"Length of weights ({len(weights)}) must match number of atoms "
+            f"({len(cell)})."
+        )
+
+    weights_arr = np.asarray(weights, dtype="double")
+    scaled = cell.scaled_positions
+    symbols = cell.symbols
+    natom = len(cell)
+
+    visited = [False] * natom
+    groups: list[list[int]] = []
+    for i in range(natom):
+        if visited[i]:
+            continue
+        group = [i]
+        visited[i] = True
+        for j in range(i + 1, natom):
+            if visited[j]:
+                continue
+            diff = scaled[j] - scaled[i]
+            diff -= np.rint(diff)
+            if np.all(np.abs(diff) < symprec):
+                group.append(j)
+                visited[j] = True
+        groups.append(group)
+
+    mixtures: list[list[tuple[str, float]]] = []
+    new_scaled: list[NDArray[np.double]] = []
+    for group in groups:
+        wsum = float(weights_arr[group].sum())
+        if len(group) == 1:
+            if not np.isclose(weights_arr[group[0]], 1.0):
+                raise ValueError(
+                    f"Weight of non-overlapping atom at index {group[0]} "
+                    f"must be 1.0, got {weights_arr[group[0]]}."
+                )
+        elif not np.isclose(wsum, 1.0):
+            raise ValueError(
+                f"Weights of overlapping atoms at indices {group} must "
+                f"sum to 1.0, got {wsum}."
+            )
+        mixtures.append([(symbols[i], float(weights_arr[i])) for i in group])
+        new_scaled.append(scaled[group[0]])
+
+    species_table, species_ids = build_species_table_from_mixtures(
+        mixtures, sort_constituents=sort_constituents
+    )
+
+    return PhonopyAtoms(
+        cell=cell.cell,
+        scaled_positions=np.array(new_scaled, dtype="double"),
+        species_table=species_table,
+        species_ids=species_ids,
     )
 
 
@@ -957,7 +1073,8 @@ def isclose(
             indices.append(matches[0])
         if (np.sort(indices) != np.arange(len(indices))).all():
             return False
-        if (a.numbers[indices] != b.numbers).all():
+        a_symbols = a.symbols
+        if [a_symbols[i] for i in indices] != b.symbols:
             return False
         if not _magnetic_moments_all_close(
             a.magnetic_moments,
@@ -971,7 +1088,7 @@ def isclose(
             return indices
         return True
     else:
-        if (a.numbers != b.numbers).any():
+        if a.symbols != b.symbols:
             return False
         if not _magnetic_moments_all_close(
             a.magnetic_moments, b.magnetic_moments, rtol=rtol, atol=atol
@@ -1021,20 +1138,6 @@ def is_primitive_cell(rotations: NDArray[np.int64] | NDArray[np.int32]) -> bool:
                 return False
     else:
         return True
-
-
-def convert_to_phonopy_primitive(
-    supercell: PhonopyAtoms, primitive: PhonopyAtoms
-) -> Primitive:
-    """Convert PhonopyAtoms primitive cell to the Primitive instance."""
-    slat = supercell.cell.T
-    plat = primitive.cell.T
-    pmat = np.dot(np.linalg.inv(slat), plat)
-    _primitive = get_primitive(supercell, pmat)
-    if not isclose(primitive, _primitive):
-        msg = "Input primitive cell and generated one are inconsistent."
-        raise RuntimeError(msg)
-    return _primitive
 
 
 def _trim_cell(
@@ -1097,8 +1200,9 @@ def get_smallest_vectors(
     supercell_bases: NDArray[np.double],
     supercell_pos: NDArray[np.double],
     primitive_pos: NDArray[np.double],
-    store_dense_svecs: bool = False,
+    store_dense_svecs: bool = True,
     symprec: float = 1e-5,
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return shortest vectors and multiplicities.
 
@@ -1111,6 +1215,7 @@ def get_smallest_vectors(
         primitive_pos,
         store_dense_svecs=store_dense_svecs,
         symprec=symprec,
+        lang=lang,
     )
     return spairs.shortest_vectors, spairs.multiplicities
 
@@ -1144,6 +1249,7 @@ class ShortestPairs:
         primitive_pos: NDArray[np.double],
         store_dense_svecs: bool = True,
         symprec: float = 1e-5,
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -1164,12 +1270,17 @@ class ShortestPairs:
             Default is True.
         symprec : float, optional
             Tolerance to find equal distances of vectors. Default is 1e-5.
+        lang : {"C", "Rust"}, optional
+            Backend selector for the underlying ``gsv_set_smallest_vectors``
+            kernel.  Default is ``"C"``.
 
         """
         self._supercell_bases = supercell_bases
         self._supercell_pos = supercell_pos
         self._primitive_pos = primitive_pos
         self._symprec = symprec
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
+        log_dispatch(self._lang, "ShortestPairs.__init__")
 
         if store_dense_svecs:
             svecs, multi = self._run_dense()
@@ -1231,35 +1342,65 @@ class ShortestPairs:
         multiplicity = np.zeros(
             (len(supercell_fracs), len(primitive_fracs), 2), dtype="int64", order="C"
         )
-        import phonopy._phonopy as phonoc  # type: ignore
+        reduced_bases_T = np.array(reduced_bases.T, dtype="double", order="C")
+        trans_mat_inv_T = np.array(trans_mat_inv.T, dtype="int64", order="C")
+        if self._lang == "Rust":
+            import phonors  # type: ignore[import-untyped]
 
-        phonoc.gsv_set_smallest_vectors_dense(
-            shortest_vectors,
-            multiplicity,
-            supercell_fracs,
-            primitive_fracs,
-            lattice_points,
-            np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int64", order="C"),
-            1,
-            self._symprec,
-        )
+            phonors.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                1,
+                self._symprec,
+            )
+        else:
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            phonoc.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                1,
+                self._symprec,
+            )
 
         # Phase 2 : Set shortest_vectors.
         shortest_vectors = np.zeros(
             (np.sum(multiplicity[:, :, 0]), 3), dtype="double", order="C"
         )
-        phonoc.gsv_set_smallest_vectors_dense(
-            shortest_vectors,
-            multiplicity,
-            supercell_fracs,
-            primitive_fracs,
-            lattice_points,
-            np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int64", order="C"),
-            0,
-            self._symprec,
-        )
+        if self._lang == "Rust":
+            phonors.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                0,
+                self._symprec,
+            )
+        else:
+            phonoc.gsv_set_smallest_vectors_dense(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                0,
+                self._symprec,
+            )
 
         return shortest_vectors, multiplicity
 
@@ -1295,18 +1436,34 @@ class ShortestPairs:
         multiplicity = np.zeros(
             (len(supercell_fracs), len(primitive_fracs)), dtype="int64", order="C"
         )
-        import phonopy._phonopy as phonoc  # type: ignore
+        reduced_bases_T = np.array(reduced_bases.T, dtype="double", order="C")
+        trans_mat_inv_T = np.array(trans_mat_inv.T, dtype="int64", order="C")
+        if self._lang == "Rust":
+            import phonors  # type: ignore[import-untyped]
 
-        phonoc.gsv_set_smallest_vectors_sparse(
-            shortest_vectors,
-            multiplicity,
-            supercell_fracs,
-            primitive_fracs,
-            lattice_points,
-            np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int64", order="C"),
-            self._symprec,
-        )
+            phonors.gsv_set_smallest_vectors_sparse(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                self._symprec,
+            )
+        else:
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            phonoc.gsv_set_smallest_vectors_sparse(
+                shortest_vectors,
+                multiplicity,
+                supercell_fracs,
+                primitive_fracs,
+                lattice_points,
+                reduced_bases_T,
+                trans_mat_inv_T,
+                self._symprec,
+            )
 
         return shortest_vectors, multiplicity
 
@@ -1411,6 +1568,7 @@ def compute_all_sg_permutations(
     translations: NDArray[np.double],  # scaled
     lattice: NDArray[np.double],  # column vectors
     symprec: float,
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Compute permutations for space group operations.
 
@@ -1431,6 +1589,8 @@ def compute_all_sg_permutations(
         Basis vectors in column vectors (like PhonopyAtoms.cell.T)
     symprec : float
         Symmetry tolerance of the distance unit
+    lang : {"C", "Rust"}
+        Backend for the inner permutation matcher. Default is "C".
 
     Returns
     -------
@@ -1443,7 +1603,7 @@ def compute_all_sg_permutations(
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
-                positions, rotated_positions, lattice, symprec
+                positions, rotated_positions, lattice, symprec, lang=lang
             )
         )
     return np.array(out, dtype="int64", order="C")
@@ -1454,6 +1614,7 @@ def compute_permutation_for_rotation(
     positions_b: NDArray[np.double],
     lattice: NDArray[np.double],
     symprec: float,
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Get the overall permutation such that.
 
@@ -1478,6 +1639,8 @@ def compute_permutation_for_rotation(
         Basis vectors in column vectors (like PhonopyAtoms.cell.T)
     symprec : float
         Symmetry tolerance of the distance unit
+    lang : {"C", "Rust"}
+        Backend for the inner permutation matcher. Default is "C".
 
     Returns
     -------
@@ -1509,8 +1672,7 @@ def compute_permutation_for_rotation(
     perm_a, sorted_a = sort_by_lattice_distance(positions_a)
     perm_b, sorted_b = sort_by_lattice_distance(positions_b)
 
-    # Call the C code on our conditioned inputs.
-    perm_between = _compute_permutation_c(sorted_a, sorted_b, lattice, symprec)
+    perm_between = _compute_permutation(sorted_a, sorted_b, lattice, symprec, lang=lang)
 
     # Compose all of the permutations for the full permutation.
     #
@@ -1521,16 +1683,17 @@ def compute_permutation_for_rotation(
     return perm_a[perm_between][np.argsort(perm_b)]
 
 
-def _compute_permutation_c(
+def _compute_permutation(
     positions_a: NDArray[np.double],
     positions_b: NDArray[np.double],
     lattice: NDArray[np.double],
     symprec: float,  # scaled positions  # column vectors
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return mapping defined by positions_a[perm[i]] == positions_b[i].
 
     Version of `_compute_permutation_for_rotation` which just directly
-    calls the C function, without any conditioning of the data.
+    calls the C/Rust function, without any conditioning of the data.
     Skipping the conditioning step makes this EXTREMELY slow on large
     structures.
 
@@ -1544,13 +1707,20 @@ def _compute_permutation_c(
         )
 
     try:
-        import phonopy._phonopy as phonoc  # type: ignore
+        if lang == "Rust":
+            import phonors  # type: ignore
+
+            log_dispatch(lang, "_compute_permutation")
+            kernel = phonors.compute_permutation
+        else:
+            import phonopy._phonopy as phonoc  # type: ignore
+
+            log_dispatch(lang, "_compute_permutation")
+            kernel = phonoc.compute_permutation
 
         tolerance = symprec
         for _ in range(20):
-            is_found = phonoc.compute_permutation(
-                permutation, lattice, positions_a, positions_b, tolerance
-            )
+            is_found = kernel(permutation, lattice, positions_a, positions_b, tolerance)
             if is_found:
                 break
             else:
@@ -1725,6 +1895,57 @@ def determinant(
     )
 
 
+class PrimitiveMatrixAutoDefaultWarning(UserWarning):
+    """Issued when default ``primitive_matrix='auto'`` produces a non-identity cell.
+
+    The phonopy v3 default for ``primitive_matrix`` was the identity
+    matrix; v4 changed it to ``'auto'`` (detect the primitive cell from
+    crystal symmetry).  When the auto-detected matrix is not the identity,
+    the resulting q-point convention and folded-band layout differ from v3.
+    This warning is emitted so users running old scripts notice the change
+    instead of silently getting different numbers.  Pass
+    ``primitive_matrix='P'`` (or ``--pa P`` on the command line) to restore
+    the v3 behaviour.
+
+    """
+
+
+def warn_if_primitive_matrix_auto_changed_cell(
+    primitive_matrix_input: Literal["P", "F", "I", "A", "C", "R", "auto"]
+    | Sequence[Sequence[float]]
+    | NDArray[np.double]
+    | None,
+    resolved_primitive_matrix: NDArray[np.double],
+) -> None:
+    """Emit ``PrimitiveMatrixAutoDefaultWarning`` if relevant.
+
+    The warning fires only when the caller relied on the ``'auto'``
+    default (``None`` or ``'auto'``) AND the auto-detected matrix is not
+    the identity.  Explicit choices (``'P'``, an explicit matrix, etc.)
+    are silent.
+
+    """
+    if primitive_matrix_input is not None and not (
+        isinstance(primitive_matrix_input, str) and primitive_matrix_input == "auto"
+    ):
+        return
+    if np.allclose(resolved_primitive_matrix, np.eye(3), atol=1e-5):
+        return
+    rows = "\n".join(
+        "  [" + ", ".join(f"{v: .5f}" for v in row) + "]"
+        for row in resolved_primitive_matrix
+    )
+    msg = (
+        "primitive_matrix defaulted to 'auto' and was resolved to a "
+        "non-identity matrix:\n"
+        f"{rows}\n"
+        "This differs from phonopy v3, whose default was the identity "
+        "matrix. Pass primitive_matrix='P' (or --pa P on the command "
+        "line) to restore the v3 behaviour."
+    )
+    warnings.warn(msg, PrimitiveMatrixAutoDefaultWarning, stacklevel=3)
+
+
 def get_primitive_matrix_with_auto(
     unitcell: PhonopyAtoms,
     primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
@@ -1732,10 +1953,15 @@ def get_primitive_matrix_with_auto(
     | NDArray[np.double]
     | None,
     symprec: float = 1e-5,
-) -> NDArray[np.double] | None:
-    """Return primitive matrix that supports 'auto' option."""
+) -> NDArray[np.double]:
+    """Return primitive matrix that supports 'auto' option.
+
+    ``None`` is treated as ``"auto"`` so that an unspecified primitive
+    matrix is resolved from crystal symmetry.
+
+    """
     if primitive_matrix is None:
-        return None
+        return guess_primitive_matrix(unitcell, symprec=symprec)
     elif isinstance(primitive_matrix, str):
         if primitive_matrix == "auto":
             return guess_primitive_matrix(unitcell, symprec=symprec)
@@ -1839,13 +2065,18 @@ def get_primitive_matrix_by_centring(centring: str) -> NDArray[np.double]:
 
 
 def guess_primitive_matrix(
-    unitcell: PhonopyAtoms, symprec: float = 1e-5, skip_exception: bool = False
+    unitcell: PhonopyAtoms, symprec: float = 1e-5
 ) -> NDArray[np.double]:
     """Guess primitive matrix from crystal symmetry.
 
-    Note
-    ----
-    Type-IV magnetic structures are not supported.
+    For unit cells with magnetic moments, the Hall number returned by
+    spglib's magnetic symmetry dataset is used. For Type-IV magnetic
+    space groups, this corresponds to the XSG (the unprimed subgroup
+    that does not include anti-translations), so the resulting
+    primitive cell preserves the input magnetic moments and may be
+    larger than the crystallographic primitive cell. In this case a
+    warning is emitted. See the documentation of ``PRIMITIVE_AXES =
+    AUTO`` for details.
 
     Parameters
     ----------
@@ -1853,15 +2084,8 @@ def guess_primitive_matrix(
         Unit cell.
     symprec : float
         Tolerance to find symmetry operations.
-    skip_exception : bool
-        Only effective for magnetic structures. If True, family space group is
-        used to guess primitive matrix, otherwise, exception is raised.
 
     """
-    if unitcell.magnetic_moments is not None and not skip_exception:
-        msg = "Can not be used with the unit cell having magnetic moments."
-        raise RuntimeError(msg)
-
     if unitcell.magnetic_moments is None:
         dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)  # type: ignore
     else:
@@ -1869,6 +2093,18 @@ def guess_primitive_matrix(
             unitcell.totuple(),  # type: ignore
             symprec=symprec,
         )
+        if isinstance(dataset, SpglibMagneticDataset) and dataset.msg_type == 4:
+            import warnings
+
+            msg = (
+                "The input unit cell has a magnetic ordering that breaks "
+                "some of the crystallographic translational symmetry "
+                "(a Type-IV magnetic space group). Phonopy chose the "
+                "primitive cell to preserve this magnetic ordering, which "
+                "may be larger than the crystallographic primitive cell. "
+                "See the `PRIMITIVE_AXES = AUTO` documentation for details."
+            )
+            warnings.warn(msg, stacklevel=2)
 
     if isinstance(dataset, (SpglibDataset, SpglibMagneticDataset)):
         tmat = dataset.transformation_matrix

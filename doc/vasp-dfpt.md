@@ -31,14 +31,14 @@ procedure to calculate phonon properties may be as follows:
 2) Prepare a perfect supercell structure from `POSCAR-unitcell`,
 
    ```bash
-   % phonopy -d --dim 2 2 2 -c POSCAR-unitcell
+   % phonopy-init -d --dim 2 2 2 -c POSCAR-unitcell
    ```
 
 3) For later convenience, it is recommended to generate `phonopy_disp.yaml`
    using `SPOSCAR` file,
 
    ```bash
-   % phonopy -d --dim 1 1 1 --pa auto -c SPOSCAR
+   % phonopy-init -d --dim 1 1 1 --pa auto -c SPOSCAR
    ```
 
 4) Rename `SPOSCAR` created in (3) to `POSCAR` to be used in the VASP
@@ -71,13 +71,13 @@ procedure to calculate phonon properties may be as follows:
    contains `hessian` elements, and then create `FORCE_CONSTANTS` by
 
    ```bash
-   % phonopy --fc vasprun.xml
+   % phonopy-init --fc vasprun.xml
    ```
 
 6) Run phonopy
 
    ~~~
-   % phonopy-load --readfc --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
+   % phonopy --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
 
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
@@ -128,8 +128,10 @@ procedure to calculate phonon properties may be as follows:
    :scale: 50
    ```
 
-   When running with `phonopy` command, `--readfc` option is necessary:
+   `phonopy` reads `FORCE_CONSTANTS` automatically when the file is found
+   alongside `phonopy_disp.yaml`.  Settings can be supplied through a
+   configuration file:
 
    ```bash
-   % phonopy --readfc band.conf
+   % phonopy band.conf
    ```

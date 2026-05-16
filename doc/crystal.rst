@@ -39,7 +39,7 @@ parameter is not needed
 
 1) Create supercells with :ref:`crystal_mode` option::
 
-     % phonopy --crystal -d --dim="4 4 4"
+     % phonopy-init --crystal -d --dim="4 4 4"
 
    In this example, 4x4x4 supercells are created. For every supercell file, the
    interface creates a .d12 input file and an .ext structure file. The files
@@ -77,7 +77,7 @@ parameter is not needed
 3) To create ``FORCE_SETS`` file required by phonopy,
    the following command is executed::
 
-     % phonopy --crystal -f supercell-001.o
+     % phonopy-init --crystal -f supercell-001.o
 
    Here ``.o`` files are the CRYSTAL output files from the force
    calculations. All ``.o`` files corresponding to the generated
@@ -92,7 +92,7 @@ parameter is not needed
 
    ::
 
-     % phonopy --crystal --dim="4 4 4" -p -s band.conf
+     % phonopy -p -s band.conf
              _
        _ __ | |__   ___  _ __   ___   _ __  _   _
       | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -160,7 +160,7 @@ The workflow is very similar to the Si example below:
 
 1) Create displaced supercells::
 
-     phonopy --crystal --dim="4 4 4" -d
+     phonopy-init --crystal --dim="4 4 4" -d
 
    Note that now the CRYSTAL interface automatically creates the ``BORN``
    file. It should look like this::
@@ -196,12 +196,12 @@ The workflow is very similar to the Si example below:
 
 4) Collect forces::
 
-     phonopy --crystal -f supercell-*o
+     phonopy-init --crystal -f supercell-*o
 
 5) Calculate phonon dispersion data into band.yaml and save band.pdf,
    using non-analytical correction ``--nac``::
 
-     phonopy --crystal --dim="4 4 4" -p -s --nac band.conf
+     phonopy -p -s --nac band.conf
 
    |crystal-band-nac|
 

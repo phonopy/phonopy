@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import log_dispatch, resolve_lang
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive, get_supercell, sparse_to_dense_svecs
@@ -264,6 +265,7 @@ class DynmatToForceConstants:
         commensurate_points: NDArray[np.double] | None = None,
         is_full_fc: bool = True,
         use_openmp: bool = False,
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -280,10 +282,13 @@ class DynmatToForceConstants:
             section of this class.
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate force constants from dynamical matrix.
+        lang : Literal["C", "Rust"], optional, default="C"
+            Backend implementation for the inverse transformation.
 
         """
         self._pcell = primitive
         self._scell = supercell
+        self._lang: Literal["C", "Rust"] = resolve_lang(lang)
         supercell_matrix = np.linalg.inv(self._pcell.primitive_matrix)
         supercell_matrix = np.rint(supercell_matrix).astype("int64")
         if commensurate_points is None:
@@ -448,29 +453,31 @@ class DynmatToForceConstants:
 
     def _inverse_transformation(self, lang: Literal["C", "Python"] = "C") -> None:
         if lang == "C":
-            self._c_inverse_transformation()
+            self._inverse_transformation_compiled()
         else:
-            self._py_inverse_transformation()
+            self._inverse_transformation_py()
 
         assert self._fc is not None
         if self._fc.shape[0] == self._fc.shape[1]:
-            distribute_force_constants_by_translations(self._fc, self._pcell)
+            distribute_force_constants_by_translations(
+                self._fc, self._pcell, lang=self._lang
+            )
 
-    def _c_inverse_transformation(self) -> None:
+    def _inverse_transformation_compiled(self) -> None:
+        """Dispatch to the C or Rust backend based on ``self._lang``."""
+        if self._lang == "Rust":
+            self._inverse_transformation_rust()
+        else:
+            self._inverse_transformation_c()
+
+    def _inverse_transformation_c(self) -> None:
+        """Run the inverse transformation through the C kernel."""
         import phonopy._phonopy as phonoc  # type: ignore
 
+        log_dispatch("C", "DynmatToForceConstants._inverse_transformation_c")
+        s2pp, fc_index_map = self._inverse_transformation_index_maps()
         assert self._fc is not None
         assert self._dynmat is not None
-
-        s2p = np.array(self._pcell.s2p_map, dtype="int64")
-        p2p = self._pcell.p2p_map
-        s2pp = np.array([p2p[i] for i in s2p], dtype="int64")
-
-        if self._fc.shape[0] == self._fc.shape[1]:
-            fc_index_map = np.array(self._pcell.p2s_map, dtype="int64")
-        else:
-            fc_index_map = np.arange(self._fc.shape[0], dtype="int64")
-
         phonoc.transform_dynmat_to_fc(
             self._fc,
             self._dynmat.view(dtype="double"),
@@ -483,7 +490,40 @@ class DynmatToForceConstants:
             self._use_openmp * 1,
         )
 
-    def _py_inverse_transformation(self) -> None:
+    def _inverse_transformation_rust(self) -> None:
+        """Run the inverse transformation through the Rust kernel (phonors)."""
+        import phonors  # type: ignore[import-untyped]
+
+        log_dispatch("Rust", "DynmatToForceConstants._inverse_transformation_rust")
+        s2pp, fc_index_map = self._inverse_transformation_index_maps()
+        assert self._fc is not None
+        assert self._dynmat is not None
+        phonors.transform_dynmat_to_fc(
+            self._fc,
+            self._dynmat,
+            self._commensurate_points,
+            self._svecs,
+            self._multi,
+            self._pcell.masses,
+            s2pp,
+            fc_index_map,
+        )
+
+    def _inverse_transformation_index_maps(
+        self,
+    ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+        """Build the (s2pp, fc_index_map) pair shared by C and Rust paths."""
+        assert self._fc is not None
+        s2p = np.array(self._pcell.s2p_map, dtype="int64")
+        p2p = self._pcell.p2p_map
+        s2pp = np.array([p2p[i] for i in s2p], dtype="int64")
+        if self._fc.shape[0] == self._fc.shape[1]:
+            fc_index_map = np.array(self._pcell.p2s_map, dtype="int64")
+        else:
+            fc_index_map = np.arange(self._fc.shape[0], dtype="int64")
+        return s2pp, fc_index_map
+
+    def _inverse_transformation_py(self) -> None:
         assert self._fc is not None
         s2p = self._pcell.s2p_map
         p2s = self._pcell.p2s_map

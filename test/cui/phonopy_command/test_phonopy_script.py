@@ -117,6 +117,122 @@ def test_create_force_sets():
             os.chdir(original_cwd)
 
 
+def test_create_force_sets_GeSn_vca():
+    """Phonopy -f on a real GeSn 99/1 VCA vasprun.xml writes the expected FORCE_SETS.
+
+    Exercises the CLI ``phonopy -f vasprun.xml -c phonopy_disp.yaml`` path
+    on a mixture supercell. The supercell has 16 sites but the SPOSCAR
+    was written with ``expand_mixtures=True`` so VASP returned 32 force
+    rows; the writer must therefore emit Type-1 with line 1 = 32, and
+    the disp atom number must be a 1..16 site index (gamma layout).
+
+    """
+    fixtures = cwd / ".." / ".." / "interface"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                cell_filename=fixtures / "GeSn-vca-phonopy_disp.yaml",
+                create_force_sets=[fixtures / "GeSn-vca-vasprun-001.xml.xz"],
+                load_phonopy_yaml=False,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            written = pathlib.Path("FORCE_SETS")
+            assert written.exists()
+            lines = written.read_text().splitlines()
+            assert int(lines[0].strip()) == 32  # n_expanded on line 1
+            assert int(lines[1].strip()) == 1  # one displacement
+            body = [ln.strip() for ln in lines[2:] if ln.strip()]
+            atom_number = int(body[0])
+            assert 1 <= atom_number <= 16  # 1-based site index
+
+            # Compare against the bundled reference FORCE_SETS.
+            from phonopy.file_IO import parse_FORCE_SETS
+
+            ref = parse_FORCE_SETS(natom=16, filename=fixtures / "GeSn-vca-FORCE_SETS")
+            got = parse_FORCE_SETS(natom=16, filename=written)
+            assert got["natom"] == ref["natom"] == 16
+            assert got["first_atoms"][0]["number"] == ref["first_atoms"][0]["number"]
+            np.testing.assert_allclose(
+                got["first_atoms"][0]["displacement"],
+                ref["first_atoms"][0]["displacement"],
+                atol=1e-12,
+            )
+            np.testing.assert_allclose(
+                got["first_atoms"][0]["forces"],
+                ref["first_atoms"][0]["forces"],
+                atol=1e-9,
+            )
+            written.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_phonopy_load_GeSn_vca():
+    """Phonopy-load on a GeSn 99/1 VCA bundle writes valid force constants.
+
+    Drops phonopy_disp.yaml and FORCE_SETS into the cwd (mirroring how a
+    user would have them after running ``phonopy -f``) and invokes the
+    phonopy-load entry point with ``--writefc`` so that the resulting
+    force constants are persisted as ``FORCE_CONSTANTS``. Verifying the
+    written file's shape inside pytest exercises the entire mixture
+    pipeline (yaml round-trip, expanded FORCE_SETS parse, FC-time
+    reduction, default symfc fc-calculator, FC writer).
+
+    """
+    import shutil
+
+    from phonopy.file_IO import parse_FORCE_CONSTANTS
+
+    fixtures = cwd / ".." / ".." / "interface"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            shutil.copy(
+                fixtures / "GeSn-vca-phonopy_disp.yaml",
+                pathlib.Path("phonopy_disp.yaml"),
+            )
+            shutil.copy(fixtures / "GeSn-vca-FORCE_SETS", pathlib.Path("FORCE_SETS"))
+
+            argparse_control = _get_phonopy_args(
+                filename=pathlib.Path("phonopy_disp.yaml"),
+                load_phonopy_yaml=True,
+                write_force_constants=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            assert pathlib.Path("phonopy.yaml").exists()
+            assert pathlib.Path("FORCE_CONSTANTS").exists()
+
+            fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS")
+            n_sites = 16  # GeSn 2x2x2 mixture supercell
+            assert fc.ndim == 4
+            assert fc.shape[1] == n_sites
+            assert fc.shape[2:] == (3, 3)
+
+            pathlib.Path("phonopy.yaml").unlink()
+            pathlib.Path("FORCE_CONSTANTS").unlink()
+            pathlib.Path("phonopy_disp.yaml").unlink()
+            pathlib.Path("FORCE_SETS").unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_create_force_sets_zero():
     """Test phonopy --force-sets-zero command."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -966,6 +1082,74 @@ def test_use_pypolymlp_develop_error(error_class: type):
             os.chdir(original_cwd)
 
 
+def test_phonopy_run_mode_rejects_init_flag(capsys: pytest.CaptureFixture[str]):
+    """Phonopy in mode='run' errors when an init-only flag like -d is given."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                cell_filename=cwd / "POSCAR-unitcell_Cr",
+                supercell_dimension="2 2 2",
+                is_displacement=True,
+                primitive_axes="P",
+            )
+            argparse_control["mode"] = "run"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+            captured = capsys.readouterr()
+            assert "phonopy-init" in captured.out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_phonopy_init_mode_requires_init_flag(capsys: pytest.CaptureFixture[str]):
+    """Phonopy-init (mode='init') errors when no init flag is given."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+            )
+            argparse_control["mode"] = "init"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+            captured = capsys.readouterr()
+            assert "No setup operation" in captured.out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_phonopy_load_deprecation_warning(capsys: pytest.CaptureFixture[str]):
+    """Phonopy-load prints a deprecation message pointing to phonopy."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                load_phonopy_yaml=True,
+            )
+            argparse_control["mode"] = "run"
+            argparse_control["deprecated_command"] = "phonopy-load"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+            captured = capsys.readouterr()
+            assert "phonopy-load' is deprecated" in captured.out
+
+            for created_filename in ("phonopy.yaml",):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+            _check_no_files()
+        finally:
+            os.chdir(original_cwd)
+
+
 def _ls():
     current_dir = pathlib.Path(".")
     for file in current_dir.iterdir():
@@ -1005,6 +1189,8 @@ def _get_phonopy_args(
     thermal_displacement_matrices_cif: float | None = None,
     use_pypolymlp: bool | None = None,
     write_dynamical_matrices: bool | None = None,
+    write_force_constants: bool | None = None,
+    writefc_format: str | None = None,
 ):
     if filename is None:
         _filename = []
@@ -1040,6 +1226,8 @@ def _get_phonopy_args(
         supercell_dimension=supercell_dimension,
         use_pypolymlp=use_pypolymlp,
         write_dynamical_matrices=write_dynamical_matrices,
+        write_force_constants=write_force_constants,
+        writefc_format=writefc_format,
     )
 
     if load_phonopy_yaml:

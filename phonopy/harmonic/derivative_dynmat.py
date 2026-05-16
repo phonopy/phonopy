@@ -42,6 +42,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import log_dispatch
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     DynamicalMatrixNAC,
@@ -64,16 +65,27 @@ class DerivativeOfDynamicalMatrix:
 
     Q_DIRECTION_TOLERANCE = 1e-5
 
-    def __init__(self, dynamical_matrix: DynamicalMatrix) -> None:
+    def __init__(
+        self,
+        dynamical_matrix: DynamicalMatrix,
+        lang: Literal["C", "Rust"] | None = None,
+    ) -> None:
         """Init method.
 
         Parameters
         ----------
         dynamical_matrix : DynamicalMatrix
             A DynamicalMatrix instance.
+        lang : Literal["C", "Rust"], optional
+            Backend implementation.  When None (default) the value is
+            inherited from ``dynamical_matrix.lang``; pass an explicit
+            string to override.
 
         """
         self._dynmat = dynamical_matrix
+        self._lang: Literal["C", "Rust"] = (
+            lang if lang is not None else dynamical_matrix.lang
+        )
         self._force_constants = self._dynmat.force_constants
         self._scell = self._dynmat.supercell
         self._pcell = self._dynmat.primitive
@@ -117,7 +129,7 @@ class DerivativeOfDynamicalMatrix:
         if self._derivative_order is not None or lang != "C":
             self._run_py(_q, q_direction=_q_direction)
         else:
-            self._run_c(_q, q_direction=_q_direction)
+            self._run_compiled(_q, q_direction=_q_direction)
 
     def set_derivative_order(self, order: int) -> None:
         """Set order of derivative."""
@@ -140,10 +152,22 @@ class DerivativeOfDynamicalMatrix:
         """
         return self._ddm
 
+    def _run_compiled(
+        self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None
+    ) -> None:
+        """Dispatch to the C or Rust backend based on ``self._lang``."""
+        if self._lang == "Rust":
+            self._run_rust(q, q_direction=q_direction)
+        else:
+            self._run_c(q, q_direction=q_direction)
+
     def _run_c(
         self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None
     ) -> None:
+        """Run the derivative through the C kernel."""
         import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
+
+        log_dispatch("C", "DerivativeOfDynamicalMatrix._run_c")
 
         num_patom = len(self._p2s_map)
         fc = self._force_constants
@@ -216,6 +240,75 @@ class DerivativeOfDynamicalMatrix:
                 is_nac_q_zero * 1,
                 self._dynmat.use_openmp * 1,
             )
+
+        self._ddm = ddm
+
+    def _run_rust(
+        self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None
+    ) -> None:
+        """Run the derivative through the Rust kernel (phonors)."""
+        import phonors  # type: ignore[import-untyped]
+
+        log_dispatch("Rust", "DerivativeOfDynamicalMatrix._run_rust")
+
+        num_patom = len(self._p2s_map)
+        fc = self._force_constants
+        ddm = np.zeros(
+            (3, num_patom * 3, num_patom * 3),
+            dtype=("c%d" % (np.dtype("double").itemsize * 2)),
+        )
+        reclat = np.array(np.linalg.inv(self._pcell.cell), dtype="double", order="C")
+        lattice = np.array(self._pcell.cell.T, dtype="double", order="C")
+
+        born: NDArray[np.double] | None = None
+        dielectric: NDArray[np.double] | None = None
+        nac_factor = 0.0
+        q_dir: NDArray[np.double] | None = None
+        is_nac = False
+        is_nac_q_zero = True
+
+        if isinstance(self._dynmat, DynamicalMatrixNAC):
+            is_nac = True
+            born = self._dynmat.born
+            dielectric = self._dynmat.dielectric_constant
+            nac_factor = self._dynmat.nac_factor
+            if q_direction is None:
+                q_norm = np.linalg.norm(reclat @ q)
+                if q_norm < self.Q_DIRECTION_TOLERANCE:
+                    is_nac = False
+                else:
+                    is_nac_q_zero = True
+            else:
+                q_dir = np.array(q_direction, dtype="double")
+                is_nac_q_zero = False
+
+        # Full fc has shape (n_satom, n_satom, 3, 3); compact fc has
+        # (n_patom, n_satom, 3, 3).  ``s2_for_inner`` matches the inner
+        # supercell-to-primitive comparison in the kernel; ``fc_row``
+        # selects the row index into ``fc``.
+        if fc.shape[0] == fc.shape[1]:  # type: ignore
+            s2_for_inner = self._s2p_map
+            fc_row = self._p2s_map
+        else:
+            s2_for_inner = self._s2pp_map
+            fc_row = np.arange(len(self._p2s_map), dtype="int64")
+
+        phonors.derivative_dynmat_at_q(
+            ddm,
+            fc,
+            np.array(q, dtype="double"),
+            lattice,
+            reclat,
+            self._svecs,
+            self._multi,
+            self._pcell.masses,
+            s2_for_inner,
+            fc_row,
+            born=born if is_nac else None,
+            dielectric=dielectric if is_nac else None,
+            q_direction=q_dir if (is_nac and not is_nac_q_zero) else None,
+            nac_factor=nac_factor,
+        )
 
         self._ddm = ddm
 

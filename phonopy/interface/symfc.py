@@ -37,7 +37,6 @@
 from __future__ import annotations
 
 import math
-import warnings
 from collections.abc import Sequence
 from typing import Any
 
@@ -62,9 +61,7 @@ class SymfcFCSolver:
         displacements: NDArray[np.double] | None = None,
         forces: NDArray[np.double] | None = None,
         symmetry: Symmetry | None = None,
-        orders: Sequence[int] | None = None,
         options: dict[str, Any] | None = None,
-        is_compact_fc: bool = False,
         log_level: int = 0,
     ) -> None:
         """Init method.
@@ -79,16 +76,15 @@ class SymfcFCSolver:
             Forces. Default is None.
         symmetry : Symmetry, optional
             Symmetry of supercell. Default is None.
-        orders: Sequence[int], optional
-            Orders of force constants. Default is None.
         options : dict, optional
             Options for symfc. Default is None, which gives {}.
-        is_compact_fc : bool, optional
-            Whether force constants are compact or full. When True, check if
-            SymfcFCSolver.p2s_map is equal to primitive.p2s_map. Default is
-            False.
         log_level : int, optional
             Log level. Default is 0.
+
+        Notes
+        -----
+        ``is_compact_fc`` is not stored on the instance; pass it to
+        ``run`` or ``solve`` per call.
 
         """
         if options is None:
@@ -99,8 +95,7 @@ class SymfcFCSolver:
         self._supercell = supercell
         self._symmetry = symmetry
         self._log_level = log_level
-        self._orders = orders
-        self._is_compact_fc = is_compact_fc
+        self._orders: Sequence[int] | None = None  # set by run / solve
 
         import symfc  # type: ignore[import-untyped]
 
@@ -110,8 +105,6 @@ class SymfcFCSolver:
             displacements=displacements,
             forces=forces,
         )
-        if self._orders is not None:
-            self.run(self._orders)
 
     @property
     def supercell(self) -> PhonopyAtoms:
@@ -132,33 +125,51 @@ class SymfcFCSolver:
             raise RuntimeError("Run SymfcFCSolver.run() first.")
         return self._symfc.force_constants
 
-    def run(self, orders: Sequence[int]) -> None:
-        """Run symfc."""
-        if self._log_level:
-            print(
-                "--------------------------------"
-                " Symfc start "
-                "-------------------------------"
-            )
-            self.show_credit()
-            print(f"Computing {orders} order force constants.", flush=True)
-            if self._options:
-                print("Parameters:")
-                for key, val in self._options.items():
-                    print(f"  {key}: {val}", flush=True)
-
+    def run(self, orders: Sequence[int], is_compact_fc: bool = False) -> None:
+        """Run symfc (compute basis set and solve in one call)."""
+        self.begin_run_log(orders)
         self._orders = orders
-        self._symfc.run(orders=orders, is_compact_fc=self._is_compact_fc)
+        self._symfc.run(orders=orders, is_compact_fc=is_compact_fc)
+        self.end_run_log()
 
+    def solve(self, orders: Sequence[int], is_compact_fc: bool = False) -> None:
+        """Solve force constants given a pre-computed basis set.
+
+        Use this together with ``compute_basis_set(orders=...)`` when the
+        caller needs to inspect ``p2s_map`` or other basis-set-derived
+        data between the two phases.
+
+        """
+        self._orders = orders
+        self._symfc.solve(orders=orders, is_compact_fc=is_compact_fc)
+
+    def begin_run_log(self, orders: Sequence[int]) -> None:
+        """Print the symfc-start banner (no-op when log_level is 0)."""
+        if not self._log_level:
+            return
+        print(
+            "--------------------------------"
+            " Symfc start "
+            "-------------------------------"
+        )
+        self.show_credit()
+        print(f"Computing {orders} order force constants.", flush=True)
+        if self._options:
+            print("Parameters:")
+            for key, val in self._options.items():
+                print(f"  {key}: {val}", flush=True)
+
+    def end_run_log(self) -> None:
+        """Print the symfc-end banner (no-op when log_level is 0)."""
+        if not self._log_level:
+            return
         if self._log_level == 1:
             print("Increase log-level to watch detailed symfc log.")
-
-        if self._log_level:
-            print(
-                "---------------------------------"
-                " Symfc end "
-                "--------------------------------"
-            )
+        print(
+            "---------------------------------"
+            " Symfc end "
+            "--------------------------------"
+        )
 
     @property
     def version(self) -> str:
@@ -269,10 +280,18 @@ class SymfcFCSolver:
         except ImportError as exc:
             raise ModuleNotFoundError("Symfc python module was not found.") from exc
 
+        # Mixed-species (site-mixture) supercells have no per-site atomic
+        # number, so ``cell.numbers`` raises. Symfc only uses these as
+        # opaque integer type labels for symmetry, which is exactly what
+        # ``species_ids`` already encodes.
+        if self._supercell.has_mixtures:
+            numbers = self._supercell.species_ids
+        else:
+            numbers = self._supercell.numbers
         symfc_supercell = SymfcAtoms(
             cell=self._supercell.cell,
             scaled_positions=self._supercell.scaled_positions,
-            numbers=self._supercell.numbers,
+            numbers=numbers,
         )
         spacegroup_operations = (
             self._symmetry.symmetry_operations if self._symmetry else None
@@ -496,18 +515,22 @@ def symmetrize_by_projector(
             len(primitive.p2s_map) != len(symfc.p2s_map)
             or (primitive.p2s_map != symfc.p2s_map).any()
         ):
-            warnings.warn(
-                "p2s_map of primitive cell does not match with p2s_map of symfc.",
-                UserWarning,
-                stacklevel=2,
-            )
-            return _convert_compact_fc(
-                primitive,
-                fc,
+            # phonopy and symfc disagree on the primitive cell.  The
+            # compact projection cannot be applied directly because the
+            # input ``fc`` is laid out for phonopy's primitive while
+            # ``compact_compression_matrix`` is built for symfc's.  Expand
+            # to full FC, run the full-FC projection, then re-compact in
+            # phonopy's view.
+            full_fc = compact_fc_to_full_fc(primitive, fc)
+            full_fc = symmetrize_by_projector(
                 supercell,
+                full_fc,
                 order,
+                primitive=primitive,
+                options=options,
                 log_level=log_level,
             )
+            return full_fc_to_compact_fc(primitive, full_fc)
         compmat = basis_set.compact_compression_matrix.tocsc()
 
     # P = C.B.B^T.C^T, Phi <- P.Phi
@@ -519,29 +542,3 @@ def symmetrize_by_projector(
         n_lp = len(basis_set.translation_permutations)
         fc_sym *= n_lp
     return fc_sym.reshape(fc.shape)
-
-
-def _convert_compact_fc(
-    primitive: Primitive,
-    compact_fc: NDArray[np.double],
-    supercell: PhonopyAtoms,
-    order: int,
-    log_level: int = 0,
-) -> NDArray[np.double]:
-    full_fc = compact_fc_to_full_fc(
-        primitive,
-        compact_fc,
-        log_level=log_level,
-    )
-    full_fc = symmetrize_by_projector(
-        supercell=supercell,
-        fc=full_fc,
-        order=order,
-        primitive=primitive,
-        log_level=log_level,
-    )
-    return full_fc_to_compact_fc(
-        primitive,
-        full_fc,
-        log_level=log_level,
-    )

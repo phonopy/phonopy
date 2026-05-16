@@ -95,8 +95,6 @@ class PhonopyGruneisen:
                 print("Warning: Dynamical matrix has not yet built.")
                 return False
 
-        symmetry = phonon.primitive_symmetry
-        rotations = symmetry.pointgroup_operations
         assert self._phonon.dynamical_matrix is not None
         assert self._phonon_plus.dynamical_matrix is not None
         assert self._phonon_minus.dynamical_matrix is not None
@@ -110,7 +108,7 @@ class PhonopyGruneisen:
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
             is_mesh_symmetry=is_mesh_symmetry,
-            rotations=rotations,
+            primitive_symmetry=phonon.primitive_symmetry,
             factor=self._phonon.unit_conversion_factor,
         )
         return True

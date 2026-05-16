@@ -10,7 +10,7 @@ at {ref}`setting_tags`. This file is passed to phonopy as the argument of
 `--conf` option, e.g.,
 
 ```bash
-% phonopy-load --config phonopy.conf [OPTIONS]
+% phonopy --config phonopy.conf [OPTIONS]
 ```
 
 where the configuration filename is arbitrary.
@@ -25,25 +25,25 @@ to specify those crystal structure related tags when running phonopy.
 current directory. Therefore, phonopy can be used as
 
 ```
-% phonopy-load [OPTIONS]
+% phonopy [OPTIONS]
 ```
 
-and `FORCE_SETS` and `BORN` are also searched automatically in the current
-directory. `FORCE_CONSTANTS` can be read `--readfc` option.
+and `FORCE_SETS`, `BORN`, and `FORCE_CONSTANTS` (if present) are searched
+automatically in the current directory.
 
 Other information such as forces (in `FORCE_SETS`), parameters for
 non-analytical term correction (in `BORN`) can be also stored in
 `phonopy_*.yaml` like file. If `phonopy_params.yaml` contains necessary
 information to run expected phonon calculation, it is unnecessary to have
 `FORCE_SETS` and `BORN` in the current directory when `phonopy_params.yaml` is
-passed as the first argument of `phonopy-load`
+passed as the first argument of `phonopy`
 
 ```
-% phonopy-load phonopy_params.yaml [OPTIONS]
+% phonopy phonopy_params.yaml [OPTIONS]
 ```
 
 can perform the phonon calculation. See more details in
-{ref}`phonopy_load_command`.
+{ref}`phonopy_command`.
 
 ## Structure file
 
@@ -194,6 +194,94 @@ option). All the data are used for calculating force constants in the fitting
  0.00496785    -0.00596540    -0.00630352    -0.01882121    -0.00100787     0.01681980
 ...
 ```
+
+(file_forces_site_mixture)=
+
+### FORCE_SETS for mixed-species (site-mixture) cells
+
+```{warning}
+**Experimental.** The expanded `FORCE_SETS` formats described in this
+section, together with the underlying mixed-species / Virtual Crystal
+Approximation support, are experimental. The exact layout (line-1
+header, atom-index convention, Type-1 vs Type-2 expansion) and the
+companion CLI / API may change in upcoming releases. Currently only the
+VASP calculator interface emits mixture-expanded force files; for other
+calculators the support is not yet wired.
+```
+
+Cells built with {ref}`mixed-species sites <mixed_species_sites>` (e.g. via
+`--site-mixture` or `apply_site_mixture`) keep one phonopy site per
+crystallographic position, but the calculator (e.g. VASP) sees one row per
+constituent at the same fractional coordinate. Forces returned by the
+calculator therefore have one entry per constituent row, not per phonopy
+site. To preserve the raw calculator output (so that a different set of
+mixture weights can be applied later without re-running the calculator),
+phonopy stores forces in *expanded* form and only reduces them to per-site
+forces immediately before force-constant calculation.
+
+`FORCE_SETS` files for mixed-species cells must be paired with the
+`phonopy_disp.yaml` (or equivalent) that defines the mixture structure;
+without that, the mapping from expanded rows back to phonopy sites is not
+recoverable.
+
+Let `n_sites` be the number of phonopy supercell sites and `n_expanded` be
+the total number of constituent rows after expansion (e.g. for a GeSn 50/50
+2x2x2 supercell, `n_sites = 16` and `n_expanded = 32`).
+
+#### Type 1, expanded form
+
+- The first line is `n_expanded`.
+- The atom number above each displacement vector is the **site index**
+  in the phonopy supercell (1-based, in `1..n_sites`).
+- The force block under each displacement contains `n_expanded` rows.
+
+The mismatch between the header value (`n_expanded`) and the site index
+range (`1..n_sites`) is intentional and is how the parser detects expanded
+mode. The site index, rather than an expanded-row index, is used because
+phonopy's site-mixture model applies a single displacement to a whole site
+(all of its constituents share the same Cartesian displacement), and a
+site-based identifier is independent of the calculator-specific row
+ordering.
+
+#### Type 2, expanded form
+
+- The first line is `n_expanded`.
+- Each displacement set contains `n_expanded` lines of
+  `(dx, dy, dz, Fx, Fy, Fz)`.
+- Constituent rows belonging to the displaced site share the same
+  displacement vector; all other rows are zero displacement.
+- Forces are written verbatim (one calculator force per row).
+
+#### Reduction at FC build time
+
+Just before force constants are computed, expanded forces of shape
+`(num_supercells, n_expanded, 3)` are reduced to per-site forces of shape
+`(num_supercells, n_sites, 3)`. The reduction convention depends on the
+calculator:
+
+- VASP: per-site force is the plain sum across constituents,
+
+  ```
+  F_site = sum_k F_k
+  ```
+
+  because the VCA tag in INCAR averages potentials and the per-row forces
+  in `vasprun.xml` already incorporate the mixture weights. A second
+  multiplication would double-apply them.
+- Other calculators (default for non-VASP interfaces): per-site force is
+  the weighted sum,
+
+  ```
+  F_site = sum_k (w_k * F_k)
+  ```
+
+  where `w_k` is the constituent weight stored in the cell. Use this
+  when the calculator returns single-potential forces that have not yet
+  been folded with mixture weights.
+
+The raw expanded array is kept in the phonopy dataset so that the weights
+or the reduction convention can be edited and the reduction re-run
+without revisiting the calculator output.
 
 (file_force_constants)=
 

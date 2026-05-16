@@ -302,7 +302,7 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
         )
         sys.exit(1)
 
-    primitive_matrix = None
+    primitive_matrix: str | np.ndarray = "auto"
     if args.primitive_axes:
         if args.primitive_axes == "auto":
             primitive_matrix = "auto"

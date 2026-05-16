@@ -23,7 +23,7 @@ parameter is not needed.
 
 1) Create supercells with :ref:`turbomole_mode` option::
 
-     % phonopy --turbomole --dim="3 3 3" -d
+     % phonopy-init --turbomole --dim="3 3 3" -d
 
    In this example, the Si crystal structure is defined with the conventional
    unit cell of eight atoms and 3x3x3 supercells are created. For every supercell, the
@@ -53,7 +53,7 @@ parameter is not needed.
 3) To create ``FORCE_SETS`` file required by Phonopy,
    the following command is executed::
 
-     % phonopy --turbomole -f supercell-*
+     % phonopy-init --turbomole -f supercell-*
 
    Here ``supercell-*`` directories contain the TURBOMOLE output files
    from the force calculations (only the file ``gradient`` is required).
@@ -70,7 +70,7 @@ parameter is not needed.
 
    ::
 
-     % phonopy --turbomole --dim="3 3 3" -p -s band.conf
+     % phonopy -p -s band.conf
              _
        _ __ | |__   ___  _ __   ___   _ __  _   _
       | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |

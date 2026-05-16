@@ -72,11 +72,21 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
     assert spglib_cell is not None
     bravais_lattice, bravais_pos, bravais_numbers = spglib_cell
     _, _, _, perm = sort_positions_by_symbols(bravais_numbers)
-    bravais = PhonopyAtoms(
-        numbers=bravais_numbers[perm],
-        scaled_positions=bravais_pos[perm],
-        cell=bravais_lattice,
-    )
+    if phonon.primitive.has_mixtures:
+        # spglib returns species_ids verbatim when the input has mixtures, so
+        # rebuild PhonopyAtoms via the species table instead of atomic numbers.
+        bravais = PhonopyAtoms(
+            species_table=phonon.primitive.species_table,
+            species_ids=bravais_numbers[perm],
+            scaled_positions=bravais_pos[perm],
+            cell=bravais_lattice,
+        )
+    else:
+        bravais = PhonopyAtoms(
+            numbers=bravais_numbers[perm],
+            scaled_positions=bravais_pos[perm],
+            cell=bravais_lattice,
+        )
     trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
     ph = Phonopy(
         bravais,

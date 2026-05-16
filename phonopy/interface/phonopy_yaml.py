@@ -240,10 +240,14 @@ class PhonopyYamlLoaderBase(ABC):
         self, natom: int | None = None, key_prefix: str = ""
     ) -> Type1DisplacementDataset:
         key = f"{key_prefix}displacements"
-        if "forces" in self._yaml[key][0]:
-            _natom = len(self._yaml[key][0]["forces"])
-        elif natom is not None:
+        # Prefer the supercell-derived ``natom`` over the per-disp force
+        # row count: for mixed-species (site-mixture) supercells the
+        # forces block carries n_expanded rows, but the dataset's
+        # ``natom`` must be the supercell site count.
+        if natom is not None:
             _natom = natom
+        elif "forces" in self._yaml[key][0]:
+            _natom = len(self._yaml[key][0]["forces"])
         elif "natom" in self._yaml:
             _natom = self._yaml["natom"]
         else:

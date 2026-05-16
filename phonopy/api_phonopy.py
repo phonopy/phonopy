@@ -48,9 +48,11 @@ from typing import Any, Literal, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy._lang import c_use_openmp, log_dispatch, resolve_lang
 from phonopy.exception import ForcesetsNotFoundError
 from phonopy.harmonic.displacement import (
     DisplacementDataset,
+    Type1DisplacementDataset,
     Type2DisplacementDataset,
     directions_to_displacement_dataset,
     get_least_displacements,
@@ -112,9 +114,10 @@ from phonopy.structure.cells import (
     get_supercell,
     isclose,
     shape_supercell_matrix,
+    warn_if_primitive_matrix_auto_changed_cell,
 )
 from phonopy.structure.dataset import forces_in_dataset
-from phonopy.structure.grid_points import length2mesh
+from phonopy.structure.mixture import reduce_mixture_forces
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.version import __version__
 
@@ -171,7 +174,7 @@ class Phonopy:
         primitive_matrix: Literal["P", "F", "I", "A", "C", "R", "auto"]
         | Sequence[Sequence[float]]
         | NDArray
-        | None = None,
+        | None = "auto",
         factor: float | None = None,
         group_velocity_delta_q: float | None = None,
         symprec: float = 1e-5,
@@ -180,6 +183,7 @@ class Phonopy:
         hermitianize_dynamical_matrix: bool = True,
         calculator: str | None = None,
         log_level: int = 0,
+        lang: Literal["C", "Rust"] = "Rust",
     ):
         """Init method.
 
@@ -192,7 +196,10 @@ class Phonopy:
             3), dtype=int.
         primitive_matrix : str or array_like, optional
             Transformation matrix to primitive cell from unit cell. shape=(3,
-            3), dtype=float.
+            3), dtype=float. Default is "auto", which guesses the primitive
+            matrix from crystal symmetry. To use the unit cell as the
+            primitive cell (identity transformation), pass "P". None is
+            treated the same as "auto".
         nac_params : None
             Deprecated.
         factor : None
@@ -217,12 +224,19 @@ class Phonopy:
             Calculator name such as 'vasp', 'qe', etc. Default is None.
         log_level : int, optional
             Log level. Default is 0.
+        lang : Literal["C", "Rust"], optional
+            Backend implementation for compute-heavy kernels. "C" (default)
+            uses the existing C extension. "Rust" selects the experimental
+            phonors backend. Default is "C".
 
         """
+        lang = resolve_lang(lang)
+        log_dispatch(lang, "Phonopy.__init__")
         self._symprec = symprec
         self._is_symmetry = is_symmetry
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
+        self._lang: Literal["C", "Rust"] = lang
 
         if factor is not None:
             msg = (
@@ -243,6 +257,9 @@ class Phonopy:
         self._supercell_matrix = shape_supercell_matrix(supercell_matrix)
         self._primitive_matrix = get_primitive_matrix_with_auto(
             self._unitcell, primitive_matrix, symprec=self._symprec
+        )
+        warn_if_primitive_matrix_auto_changed_cell(
+            primitive_matrix, self._primitive_matrix
         )
         self._supercell: Supercell
         self._primitive: Primitive
@@ -361,7 +378,7 @@ class Phonopy:
         return self._supercell_matrix
 
     @property
-    def primitive_matrix(self) -> NDArray[np.double] | None:
+    def primitive_matrix(self) -> NDArray[np.double]:
         """Return transformation matrix to primitive cell from unit cell.
 
         ndarray
@@ -402,6 +419,17 @@ class Phonopy:
 
         """
         return self._calculator
+
+    @property
+    def lang(self) -> Literal["C", "Rust"]:
+        """Return the selected backend implementation.
+
+        Literal["C", "Rust"]
+            "C" uses the C extension; "Rust" uses the experimental
+            phonors backend.
+
+        """
+        return self._lang
 
     @property
     def dataset(self) -> DisplacementDataset | None:
@@ -1035,7 +1063,9 @@ class Phonopy:
 
         if show_drift and self._log_level:
             assert self._force_constants is not None
-            show_drift_force_constants(self._force_constants, primitive=self._primitive)
+            show_drift_force_constants(
+                self._force_constants, primitive=self._primitive, lang=self._lang
+            )
 
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
@@ -1073,10 +1103,15 @@ class Phonopy:
             )
         else:
             if self._force_constants.shape[0] == self._force_constants.shape[1]:
-                symmetrize_force_constants(self._force_constants, level=level)
+                symmetrize_force_constants(
+                    self._force_constants, level=level, lang=self._lang
+                )
             else:
                 symmetrize_compact_force_constants(
-                    self._force_constants, self._primitive, level=level
+                    self._force_constants,
+                    self._primitive,
+                    level=level,
+                    lang=self._lang,
                 )
 
         if show_drift and self._log_level:
@@ -1085,7 +1120,10 @@ class Phonopy:
             else:
                 print("Max drift after traditional symmetrization: ", end="")
             show_drift_force_constants(
-                self._force_constants, primitive=self._primitive, values_only=True
+                self._force_constants,
+                primitive=self._primitive,
+                values_only=True,
+                lang=self._lang,
             )
 
         if self._primitive.masses is not None:
@@ -1118,7 +1156,10 @@ class Phonopy:
         if show_drift and self._log_level:
             sys.stdout.write("Max drift after symmetrization by space group: ")
             show_drift_force_constants(
-                self._force_constants, primitive=self._primitive, values_only=True
+                self._force_constants,
+                primitive=self._primitive,
+                values_only=True,
+                lang=self._lang,
             )
 
         if self._primitive.masses is not None:
@@ -1610,27 +1651,6 @@ class Phonopy:
             msg = "Dynamical matrix has not yet built."
             raise RuntimeError(msg)
 
-        _mesh = np.array(mesh)
-        mesh_nums = None
-        _is_gamma_center = is_gamma_center
-        if _mesh.shape:
-            if _mesh.shape == (3,):
-                mesh_nums = mesh
-                _is_gamma_center = is_gamma_center
-        else:
-            _mesh_length = float(mesh)  # type: ignore[arg-type]
-            if self._primitive_symmetry is not None:
-                rots = self._primitive_symmetry.pointgroup_operations
-                mesh_nums = length2mesh(
-                    _mesh_length, self._primitive.cell, rotations=rots
-                )
-            else:
-                mesh_nums = length2mesh(_mesh_length, self._primitive.cell)
-            _is_gamma_center = True
-
-        assert not isinstance(mesh_nums, (int, float))
-        assert mesh_nums is not None
-
         if with_group_velocities:
             if self._group_velocity is None:
                 self._set_group_velocity()
@@ -1638,30 +1658,36 @@ class Phonopy:
         else:
             group_velocity = None
 
+        # Mesh / IterMesh accept a float (length) or a 3-tuple of ints and
+        # handle the float -> mesh-numbers conversion internally.
         if use_iter_mesh:
             self._mesh = IterMesh(
                 self._dynamical_matrix,
-                mesh_nums,
+                mesh,
                 shift=shift,
                 is_time_reversal=is_time_reversal,
                 is_mesh_symmetry=is_mesh_symmetry,
                 with_eigenvectors=with_eigenvectors,
                 is_gamma_center=is_gamma_center,
                 rotations=self._primitive_symmetry.pointgroup_operations,
+                primitive_symmetry=self._primitive_symmetry,
                 factor=self._unit_conversion_factor,
+                lang=self._lang,
             )
         else:
             self._mesh = Mesh(
                 self._dynamical_matrix,
-                mesh_nums,
+                mesh,
                 shift=shift,
                 is_time_reversal=is_time_reversal,
                 is_mesh_symmetry=is_mesh_symmetry,
                 with_eigenvectors=with_eigenvectors,
-                is_gamma_center=_is_gamma_center,
+                is_gamma_center=is_gamma_center,
                 group_velocity=group_velocity,
                 rotations=self._primitive_symmetry.pointgroup_operations,
+                primitive_symmetry=self._primitive_symmetry,
                 factor=self._unit_conversion_factor,
+                lang=self._lang,
             )
 
     def run_mesh(
@@ -1891,6 +1917,7 @@ class Phonopy:
             group_velocity=group_velocity,
             with_dynamical_matrices=with_dynamical_matrices,
             factor=self._unit_conversion_factor,
+            lang=self._lang,
         )
 
     def get_qpoints_dict(self) -> QpointsDict:
@@ -1979,7 +2006,10 @@ class Phonopy:
             raise RuntimeError(msg)
 
         total_dos = TotalDos(
-            self._mesh, sigma=sigma, use_tetrahedron_method=use_tetrahedron_method
+            self._mesh,
+            sigma=sigma,
+            use_tetrahedron_method=use_tetrahedron_method,
+            lang=self._lang,
         )
         total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
         total_dos.run()
@@ -2156,6 +2186,7 @@ class Phonopy:
             use_tetrahedron_method=use_tetrahedron_method,
             direction=direction_cart,
             xyz_projection=xyz_projection,
+            lang=self._lang,
         )
         self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
         self._pdos.run()
@@ -2386,12 +2417,13 @@ class Phonopy:
             band_indices=band_indices,
             is_projection=is_projection,
             classical=classical,
+            lang=self._lang,
         )
         if temperatures is None:
             tp.set_temperature_range(t_step=t_step, t_max=t_max, t_min=t_min)
         else:
             tp.temperatures = temperatures
-        tp.run()  # lang='C' if not classical else 'py')
+        tp.run()
         self._thermal_properties = tp
 
     def get_thermal_properties_dict(self) -> ThermalPropertiesDict:
@@ -3061,8 +3093,6 @@ class Phonopy:
             by d -> d / |d| * max_distance if |d| > max_distance.
 
         """
-        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
-
         if self._force_constants is None:
             msg = "Force constants have not yet been set."
             raise RuntimeError(msg)
@@ -3075,7 +3105,7 @@ class Phonopy:
             cutoff_frequency=cutoff_frequency,
             max_distance=max_distance,
             factor=self._unit_conversion_factor,
-            use_openmp=phonoc.use_openmp(),
+            use_openmp=c_use_openmp(),
         )
 
     def get_random_displacements_at_temperature(
@@ -3228,8 +3258,6 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants are not prepared.")
 
-        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
-
         fc_shape = self._force_constants.shape
         ph_copy = self._copy()
         ph_copy.force_constants = self._force_constants
@@ -3243,7 +3271,8 @@ class Phonopy:
             ph.primitive,
             ph.supercell,
             is_full_fc=(fc_shape[0] == fc_shape[1]),
-            use_openmp=phonoc.use_openmp(),
+            use_openmp=c_use_openmp(),
+            lang=self._lang,
         )
         ph_copy.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
         dynmat = ph_copy.get_qpoints_dict()["dynamical_matrices"]
@@ -3341,22 +3370,36 @@ class Phonopy:
         if self._dataset is None:
             return None
 
+        # For mixed-species (site-mixture) supercells, the stored dataset
+        # carries raw per-constituent forces shape (..., n_expanded, 3).
+        # Reduce them to per-site forces here so the existing FC
+        # calculator path remains unchanged. The raw forces in
+        # ``self._dataset`` are kept intact. Reduction convention is
+        # picked from the calculator: VASP uses a plain sum because its
+        # vasprun.xml forces already carry the VCA weight factor.
+        dataset_for_fc = self._dataset
+        if self._supercell.has_mixtures:
+            dataset_for_fc = _reduce_mixture_dataset_forces(
+                self._dataset,
+                self._supercell,
+                mode=_mixture_reduce_mode_for_calculator(self._calculator),
+            )
+
         self._force_constants = get_fc2(
             self._supercell,
-            self._dataset,
+            dataset_for_fc,
             primitive=self._primitive,
             fc_calculator=fc_calculator,
             fc_calculator_options=fc_calculator_options,
             is_compact_fc=is_compact_fc,
             symmetry=self._symmetry,
             log_level=log_level,
+            lang=self._lang,
         )
         if decimals:
             self._force_constants = self._force_constants.round(decimals=decimals)
 
     def _set_dynamical_matrix(self) -> None:
-        import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
-
         self._dynamical_matrix = None
 
         if self._is_symmetry and self._nac_params is not None:
@@ -3370,6 +3413,7 @@ class Phonopy:
                 self._nac_params["dielectric"],
                 self._primitive,
                 symprec=self._symprec,
+                lang=self._lang,
             )
             nac_params = self._nac_params.copy()
             nac_params.update({"born": borns, "dielectric": epsilon})
@@ -3389,7 +3433,8 @@ class Phonopy:
             nac_params=nac_params,
             hermitianize=self._hermitianize_dynamical_matrix,
             log_level=self._log_level,
-            use_openmp=phonoc.use_openmp(),
+            use_openmp=c_use_openmp(),
+            lang=self._lang,
         )
         # DynamialMatrix instance transforms force constants in correct
         # type of numpy array.
@@ -3432,11 +3477,12 @@ class Phonopy:
             self._symprec,
             self._is_symmetry,
             s2p_map=self._primitive.s2p_map,
+            lang=self._lang,
         )
 
     def _search_primitive_symmetry(self) -> None:
         self._primitive_symmetry = Symmetry(
-            self._primitive, self._symprec, self._is_symmetry
+            self._primitive, self._symprec, self._is_symmetry, lang=self._lang
         )
 
         if len(self._symmetry.pointgroup_operations) != len(
@@ -3475,7 +3521,8 @@ class Phonopy:
         for positions in all_positions:
             supercells.append(
                 PhonopyAtoms(
-                    symbols=self._supercell.symbols,
+                    species_table=self._supercell.species_table,
+                    species_ids=self._supercell.species_ids,
                     masses=self._supercell.masses,
                     magnetic_moments=self._supercell.magnetic_moments,
                     positions=positions,
@@ -3496,16 +3543,14 @@ class Phonopy:
 
         """
         inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
-        if self._primitive_matrix is None:
-            trans_mat = inv_supercell_matrix
-        else:
-            trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
+        trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
 
         try:
             self._primitive = get_primitive(
                 self._supercell,
                 trans_mat,
                 self._symprec,
+                lang=self._lang,
             )
         except ValueError as exc:
             msg = (
@@ -3568,6 +3613,57 @@ class Phonopy:
             self._dataset[target] = _values
         else:
             raise RuntimeError("Set of displacements is not available.")
+
+
+def _reduce_mixture_dataset_forces(
+    dataset: DisplacementDataset,
+    supercell: PhonopyAtoms,
+    mode: Literal["weighted_sum", "sum"] = "weighted_sum",
+) -> DisplacementDataset:
+    """Return a shallow-copied dataset with forces reduced to per-site values.
+
+    Used to feed the FC calculator a per-site force tensor while leaving the
+    raw expanded forces in the user-visible dataset. ``mode`` selects the
+    per-site reduction convention; see ``reduce_mixture_forces``.
+
+    """
+    if "first_atoms" in dataset:
+        d1 = cast(Type1DisplacementDataset, dataset)
+        new_first_atoms = []
+        for entry in d1["first_atoms"]:
+            new_entry = dict(entry)
+            if "forces" in entry:
+                new_entry["forces"] = reduce_mixture_forces(
+                    entry["forces"], supercell, mode=mode
+                )
+            new_first_atoms.append(new_entry)
+        new_dataset: dict = {"first_atoms": new_first_atoms, "natom": d1["natom"]}
+        return cast(DisplacementDataset, new_dataset)
+
+    d2 = cast(Type2DisplacementDataset, dataset)
+    new_dataset = dict(d2)
+    if "forces" in d2:
+        new_dataset["forces"] = reduce_mixture_forces(
+            d2["forces"], supercell, mode=mode
+        )
+    return cast(DisplacementDataset, new_dataset)
+
+
+def _mixture_reduce_mode_for_calculator(
+    calculator: str | None,
+) -> Literal["weighted_sum", "sum"]:
+    """Return the mixture-reduce convention appropriate for ``calculator``.
+
+    VASP applies the VCA weights inside the SCF, so the per-row forces in
+    vasprun.xml already carry the weight factor: a plain sum across
+    constituents is correct. Other calculators have not yet been wired
+    for site-mixture; for them we default to the explicit weighted sum
+    so the per-site force matches the standard VCA expression.
+
+    """
+    if calculator is None or calculator == "vasp":
+        return "sum"
+    return "weighted_sum"
 
 
 def set_data_to_phonopy_yaml(phpy_yaml: PhonopyYaml, self: Phonopy) -> None:

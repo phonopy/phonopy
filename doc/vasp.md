@@ -15,7 +15,7 @@ To obtain supercells ({math}`2\times 2\times 3`) with displacements,
 run phonopy,
 
 ```bash
-% phonopy -d --dim 2 2 3 --pa auto
+% phonopy-init -d --dim 2 2 3 --pa auto
 ```
 
 You should find the files, `SPOSCAR`, `phonopy_disp.yaml`, and
@@ -57,13 +57,13 @@ Be careful not to relax the structures. Then create `FORCE_SETS`
 file using {ref}`vasp_force_sets_option`:
 
 ```bash
-% phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml disp-003/vasprun.xml
+% phonopy-init -f disp-001/vasprun.xml disp-002/vasprun.xml disp-003/vasprun.xml
 ```
 
 or
 
 ```bash
-% phonopy -f disp-{001..003}/vasprun.xml
+% phonopy-init -f disp-{001..003}/vasprun.xml
 ```
 
 If you want to calculate force constants by VASP-DFPT directory, see
@@ -81,31 +81,31 @@ In the post-process,
 The density of states (DOS) is plotted by
 
 ```bash
-% phonopy-load --mesh 20 20 20 -p
+% phonopy --mesh 20 20 20 -p
 ```
 
 Thermal properties are calculated with the sampling mesh by
 ```bash
-% phonopy-load --mesh 20 20 20 -t
+% phonopy --mesh 20 20 20 -t
 ```
 
 You should check the convergence with respect to the mesh numbers.
 Thermal properties can be plotted by
 
 ```bash
-% phonopy-load --mesh 20 20 20 -t -p
+% phonopy --mesh 20 20 20 -t -p
 ```
 
 Projected DOS is calculated and plotted by
 
 ```bash
-% phonopy-load --mesh 20 20 20 --pdos "1 2, 3 4 5 6" -p
+% phonopy --mesh 20 20 20 --pdos "1 2, 3 4 5 6" -p
 ```
 
 Band structure is plotted by
 
 ```bash
-% phonopy-load --band "0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0" -p
+% phonopy --band "0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0" -p
 ```
 
 In either case, by setting the `-s` option, the plot is going to be

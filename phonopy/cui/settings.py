@@ -97,6 +97,7 @@ class Settings:
         self.is_trigonal_displacement: bool = False
         self.magnetic_moments: list[float] | None = None
         self.masses: list[float] | None = None
+        self.site_mixture: list[float] | None = None
         self.mesh_numbers: float | list[int] | list[list[int]] | None = None
         self.mlp_params: str | None = None
         self.nac_method: str | None = None
@@ -119,6 +120,7 @@ class Settings:
         self.min_temperature: float = 0
         self.temperature_step: float = 10
         self.use_pypolymlp: bool = False
+        self.use_legacy_backend: bool = False
 
 
 # Parse phonopy setting filen
@@ -338,6 +340,13 @@ class ConfParser(Generic[TSettings]):
                 else:
                     self._confs["magmom"] = args.magmoms
 
+        if "site_mixture" in arg_list:
+            if args.site_mixture is not None:
+                if isinstance(args.site_mixture, list):
+                    self._confs["site_mixture"] = " ".join(args.site_mixture)
+                else:
+                    self._confs["site_mixture"] = args.site_mixture
+
         if "mesh_numbers" in arg_list:
             mesh = args.mesh_numbers
             if mesh is not None:
@@ -475,6 +484,23 @@ class ConfParser(Generic[TSettings]):
         if "use_pypolymlp" in arg_list:
             if args.use_pypolymlp:
                 self._confs["use_pypolymlp"] = ".true."
+
+        if "use_rust" in arg_list and args.use_rust:
+            import warnings
+
+            warnings.warn(
+                "--rust is a deprecated no-op in phonopy v4; the Rust backend "
+                "is now the default. Pass --legacy-backend to opt back into "
+                "the C extension.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        if "use_legacy_backend" in arg_list:
+            if args.use_legacy_backend:
+                self._confs["use_legacy_backend"] = ".true."
+            elif args.use_legacy_backend is False:
+                self._confs["use_legacy_backend"] = ".false."
 
     def _parse_conf(self) -> None:
         """Add treatments to settings from conf file or command options.
@@ -636,6 +662,17 @@ class ConfParser(Generic[TSettings]):
                 self._set_parameter(
                     "magmom", [float(x) for x in confs["magmom"].split()]
                 )
+
+            if conf_key == "site_mixture":
+                site_mixture_str = confs["site_mixture"]
+                if isinstance(site_mixture_str, str):
+                    tokens = site_mixture_str.split()
+                else:
+                    tokens = list(site_mixture_str)
+                try:
+                    self._set_parameter("site_mixture", [float(x) for x in tokens])
+                except ValueError:
+                    self.setting_error("SITE_MIXTURE tag is incorrectly set.")
 
             if conf_key == "mass":
                 self._set_parameter("mass", [float(x) for x in confs["mass"].split()])
@@ -825,6 +862,12 @@ class ConfParser(Generic[TSettings]):
                 elif confs["use_pypolymlp"].lower() == ".false.":
                     self._set_parameter("use_pypolymlp", False)
 
+            if conf_key == "use_legacy_backend":
+                if confs["use_legacy_backend"].lower() == ".true.":
+                    self._set_parameter("use_legacy_backend", True)
+                elif confs["use_legacy_backend"].lower() == ".false.":
+                    self._set_parameter("use_legacy_backend", False)
+
     def _set_parameter(self, key: str, val: object) -> None:
         """Pass to another data structure."""
         self._parameters[key] = val
@@ -957,6 +1000,10 @@ class ConfParser(Generic[TSettings]):
         if "magmom" in params:
             settings.magnetic_moments = params["magmom"]
 
+        # Site mixture weights
+        if "site_mixture" in params:
+            settings.site_mixture = params["site_mixture"]
+
         # Atomic mass
         if "mass" in params:
             settings.masses = params["mass"]
@@ -1036,6 +1083,10 @@ class ConfParser(Generic[TSettings]):
         # Machine learning potential
         if "use_pypolymlp" in params:
             settings.use_pypolymlp = params["use_pypolymlp"]
+
+        # Opt-in for legacy C-extension backend (default is Rust in v4)
+        if "use_legacy_backend" in params:
+            settings.use_legacy_backend = params["use_legacy_backend"]
 
 
 #

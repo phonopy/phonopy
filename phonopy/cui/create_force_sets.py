@@ -51,6 +51,7 @@ from phonopy.interface.lammps import rotate_lammps_forces
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.dataset import get_displacements_and_forces
+from phonopy.structure.mixture import get_mixture_expansion
 
 
 def create_FORCE_SETS(
@@ -144,9 +145,18 @@ def create_FORCE_SETS(
             )
             force_sets = calc_dataset["forces"]
         else:
+            # Mixed-species (site-mixture) supercells: the calculator works
+            # on the constituent-expanded geometry, so each per-disp force
+            # entry has n_expanded rows even though the dataset's natom is
+            # n_sites. Inform the parser of the per-file row count it
+            # should expect.
+            num_atoms_in_file = num_atoms
+            if supercell is not None and supercell.has_mixtures:
+                site_indices, _ = get_mixture_expansion(supercell)
+                num_atoms_in_file = int(site_indices.size)
             calc_dataset = get_calc_dataset(
                 interface_mode,
-                num_atoms,
+                num_atoms_in_file,
                 force_filenames,
                 verbose=(log_level > 0),
             )
@@ -258,14 +268,24 @@ def check_agreements_of_displacements(
 
     Length of force_filenames can be less than that of displacements in dataset.
 
+    For mixed-species supercells the calculator emits one row per expanded
+    constituent, so reference positions and per-site displacements are
+    expanded to the same row order before comparison.
+
     """
     displacements = get_displacements_and_forces(dataset)[0][
         : len(force_filenames)
     ] @ np.linalg.inv(supercell.cell)
+    if supercell.has_mixtures:
+        site_indices, _ = get_mixture_expansion(supercell)
+        ref_positions = supercell.scaled_positions[site_indices]
+        displacements = displacements[:, site_indices, :]
+    else:
+        ref_positions = supercell.scaled_positions
     for disp, points, filename in zip(
         displacements, all_points, force_filenames, strict=True
     ):
-        diff = supercell.scaled_positions + disp - points
+        diff = ref_positions + disp - points
         diff -= np.rint(diff)
         if (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any():
             return filename
@@ -276,7 +296,12 @@ def check_agreement_of_supercell_positions(
     supercell: PhonopyAtoms, points: NDArray[np.double]
 ) -> bool:
     """Check agreement of supercell positions."""
-    diff = supercell.scaled_positions - points
+    if supercell.has_mixtures:
+        site_indices, _ = get_mixture_expansion(supercell)
+        ref_positions = supercell.scaled_positions[site_indices]
+    else:
+        ref_positions = supercell.scaled_positions
+    diff = ref_positions - points
     diff -= np.rint(diff)
     return (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any()
 

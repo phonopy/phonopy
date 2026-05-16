@@ -15,6 +15,8 @@ _test_dir = pathlib.Path(__file__).parent.parent
 _poscar_nacl = _test_dir / "POSCAR_NaCl"
 # phonopy_NaCl_unitcell1.yaml has unit_cell but no supercell_matrix.
 _phonopy_yaml_nacl = _test_dir / "phonopy_NaCl_unitcell1.yaml"
+# phonopy_disp_NaCl.yaml carries an explicit F-centring primitive_matrix.
+_phonopy_disp_yaml_nacl = _test_dir / "phonopy_disp_NaCl.yaml"
 
 _supercell_matrix = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
 
@@ -93,6 +95,7 @@ def _settings(
     supercell_matrix: list[list[int]] | None = None,
     primitive_matrix: str | list[list[float]] | None = None,
     magnetic_moments: list[float] | None = None,
+    site_mixture: list[float] | None = None,
 ) -> Settings:
     settings = Settings()
     settings.supercell_matrix = (
@@ -104,7 +107,24 @@ def _settings(
     settings.calculator = None
     settings.chemical_symbols = None
     settings.magnetic_moments = magnetic_moments
+    settings.site_mixture = site_mixture
     return settings
+
+
+_POSCAR_GeSn_VCA = """\
+Ge0.5Sn0.5
+1.00000000000000
+0.00000    2.82173    2.82173
+2.82173    0.00000    2.82173
+2.82173    2.82173    0.00000
+Ge   Sn
+2     2
+Direct
+0.00  0.00  0.00
+0.25  0.25  0.25
+0.00  0.00  0.00
+0.25  0.25  0.25
+"""
 
 
 def test_get_cell_info_poscar_success(monkeypatch, tmp_path):
@@ -118,6 +138,24 @@ def test_get_cell_info_poscar_success(monkeypatch, tmp_path):
     assert len(result.unitcell) == 8
     np.testing.assert_array_equal(result.supercell_matrix, _supercell_matrix)
     assert result.phonopy_yaml is None
+
+
+def test_get_cell_info_keeps_yaml_primitive_matrix_when_settings_unspecified(
+    monkeypatch, tmp_path
+):
+    """Settings.primitive_matrix=None (no --pa) preserves the YAML primitive_matrix."""
+    monkeypatch.chdir(tmp_path)
+    settings = _settings(supercell_matrix=_supercell_matrix)
+    assert settings.primitive_matrix is None
+
+    result = get_cell_info(
+        settings=settings,
+        cell_filename=_phonopy_disp_yaml_nacl,
+        load_phonopy_yaml=True,
+    )
+
+    expected = [[0.0, 0.5, 0.5], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]
+    np.testing.assert_allclose(result.primitive_matrix, expected)
 
 
 def test_get_cell_info_enforce_primitive_matrix_auto(monkeypatch, tmp_path):
@@ -135,6 +173,24 @@ def test_get_cell_info_enforce_primitive_matrix_auto(monkeypatch, tmp_path):
     )
 
     assert result.primitive_matrix == "auto"
+
+
+def test_get_cell_info_site_mixture_merges_overlapping_atoms(monkeypatch, tmp_path):
+    """--site-mixture merges overlapping atoms into mixed-species sites."""
+    monkeypatch.chdir(tmp_path)
+    poscar = tmp_path / "POSCAR_GeSn"
+    poscar.write_text(_POSCAR_GeSn_VCA)
+    settings = _settings(
+        supercell_matrix=_supercell_matrix,
+        site_mixture=[0.5, 0.5, 0.5, 0.5],
+    )
+
+    result = get_cell_info(settings=settings, cell_filename=poscar)
+
+    assert result.unitcell is not None
+    assert len(result.unitcell) == 2
+    assert result.unitcell.has_mixtures
+    assert result.unitcell.symbols == ["GeSn", "GeSn"]
 
 
 def test_get_cell_info_invalid_magnetic_moments_raises(monkeypatch, tmp_path):
@@ -164,7 +220,7 @@ def test_get_cell_info_prints_primitive_overwrite_message(
 ):
     """Mismatched primitive matrix between YAML and settings is reported."""
     monkeypatch.chdir(tmp_path)
-    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="F")
+    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="P")
 
     get_cell_info(
         settings=settings,
@@ -183,7 +239,7 @@ def test_get_cell_info_no_primitive_overwrite_message_at_log_level_0(
 ):
     """Primitive overwrite message is suppressed at log_level=0."""
     monkeypatch.chdir(tmp_path)
-    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="F")
+    settings = _settings(supercell_matrix=_supercell_matrix, primitive_matrix="P")
 
     get_cell_info(
         settings=settings,

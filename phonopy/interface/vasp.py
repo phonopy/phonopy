@@ -401,7 +401,10 @@ def _expand_symbols(
 # write vasp POSCAR
 #
 def write_vasp(
-    filename: str | os.PathLike, cell: PhonopyAtoms, direct: bool = True
+    filename: str | os.PathLike,
+    cell: PhonopyAtoms,
+    direct: bool = True,
+    expand_mixtures: bool = False,
 ) -> None:
     """Write crystal structure to a VASP POSCAR style file.
 
@@ -413,9 +416,16 @@ def write_vasp(
         Crystal structure.
     direct : bool, optional
         In 'Direct' or not in VASP POSCAR format. Default is True.
+    expand_mixtures : bool, optional
+        When True and ``cell`` has mixed-species sites, expand each mixture
+        into one POSCAR row per constituent at the same fractional
+        coordinates so the file is consumable by a VASP VCA calculation.
+        Has no effect on cells without mixtures. Default is False.
 
     """
-    lines = get_vasp_structure_lines(cell, direct=direct)
+    lines = get_vasp_structure_lines(
+        cell, direct=direct, expand_mixtures=expand_mixtures
+    )
     with open(filename, "w") as w:
         w.write("\n".join(lines))
 
@@ -426,6 +436,7 @@ def get_vasp_structure_lines(
     is_vasp5: bool = True,
     is_vasp4: bool = False,
     first_line_str: str | None = None,
+    expand_mixtures: bool = False,
 ) -> list[str]:
     """Generate POSCAR text lines as a list from PhonopyAtoms instance.
 
@@ -433,6 +444,9 @@ def get_vasp_structure_lines(
         Dummy argument. This does nothing.
     is_vasp5 : bool
         Deprecated. This is replaced by ``is_vasp4 = not is_vasp5``.
+    expand_mixtures : bool
+        Expand mixed-species sites into per-constituent POSCAR rows. See
+        ``write_vasp`` for details.
 
     """
     _is_vasp4 = is_vasp4
@@ -449,7 +463,10 @@ def get_vasp_structure_lines(
             "direct=False is not supported. ", DeprecationWarning, stacklevel=2
         )
     lines, scaled_positions = _get_vasp_structure_header_lines(
-        cell, is_vasp4=_is_vasp4, first_line_str=first_line_str
+        cell,
+        is_vasp4=_is_vasp4,
+        first_line_str=first_line_str,
+        expand_mixtures=expand_mixtures,
     )
     lines.append("Direct")
     lines += _get_scaled_positions_lines(scaled_positions)
@@ -467,20 +484,103 @@ def write_supercells_with_displacements(
     ids: NDArray[np.int64] | Sequence[int],
     pre_filename: str | os.PathLike = "POSCAR",
     width: int = 3,
+    expand_mixtures: bool = False,
 ) -> None:
     """Write supercells with displacements to files."""
     pre = pathlib.Path(pre_filename)
-    write_vasp(pre.parent / ("S" + pre.name), supercell, direct=True)
+    write_vasp(
+        pre.parent / ("S" + pre.name),
+        supercell,
+        direct=True,
+        expand_mixtures=expand_mixtures,
+    )
     for i, cell in zip(ids, cells_with_displacements, strict=True):
-        write_vasp(pre.parent / f"{pre.name}-{i:0{width}}", cell, direct=True)
+        write_vasp(
+            pre.parent / f"{pre.name}-{i:0{width}}",
+            cell,
+            direct=True,
+            expand_mixtures=expand_mixtures,
+        )
+
+
+def get_vasp_vca_hint_lines(cell: PhonopyAtoms) -> list[str]:
+    """Return advisory lines for a VASP VCA POSCAR derived from ``cell``.
+
+    Lines describe the POSCAR species rows and per-row counts, the matching
+    POTCAR concatenation order, and the INCAR ``VCA = ...`` line. The same
+    expansion is what ``write_vasp(..., expand_mixtures=True)`` produces.
+    """
+    row_symbols, row_counts, _, row_weights = _expand_mixtures_for_vasp(cell)
+    species_str = " ".join(row_symbols)
+    counts_str = " ".join(f"{n}" for n in row_counts)
+    weights_str = " ".join(f"{w:g}" for w in row_weights)
+    return [
+        "VASP VCA hint:",
+        f"  POSCAR species rows: {species_str}",
+        f"  POSCAR counts:       {counts_str}",
+        f"  POTCAR order:        {species_str}  "
+        "(concat one POTCAR per row; duplicate as needed)",
+        f"  INCAR:               VCA = {weights_str}",
+    ]
+
+
+def _expand_mixtures_for_vasp(
+    cell: PhonopyAtoms,
+) -> tuple[list[str], list[int], NDArray[np.double], list[float]]:
+    """Expand mixed-species sites into per-constituent POSCAR rows.
+
+    For each entry in ``cell.species_table``, emit one row per constituent
+    (length 1 for a non-mixture species, length n for an n-component
+    mixture). Atoms within each species keep their original positions and
+    those same positions are repeated for every constituent row. Returns
+    ``(row_symbols, row_counts, expanded_scaled_positions, row_weights)``.
+
+    """
+    species_table = cell.species_table
+    species_ids = cell.species_ids
+    scaled = cell.scaled_positions
+
+    row_symbols: list[str] = []
+    row_counts: list[int] = []
+    row_weights: list[float] = []
+    blocks: list[NDArray[np.double]] = []
+
+    for sid, sp in enumerate(species_table):
+        atom_idx = np.where(species_ids == sid)[0]
+        # Every species in the table is referenced by at least one atom in
+        # the standard construction paths (apply_site_mixture, Supercell,
+        # Primitive, displacement). A hand-crafted PhonopyAtoms with an
+        # orphan species would land here.
+        assert atom_idx.size > 0, f"species_table[{sid}]={sp.symbol!r} has no atoms"
+        positions = scaled[atom_idx]
+        if sp.mixture is None:
+            row_symbols.append(sp.symbol)
+            row_counts.append(int(atom_idx.size))
+            row_weights.append(1.0)
+            blocks.append(positions)
+        else:
+            for sym, weight in sp.mixture:
+                row_symbols.append(sym)
+                row_counts.append(int(atom_idx.size))
+                row_weights.append(float(weight))
+                blocks.append(positions)
+
+    expanded = np.concatenate(blocks, axis=0)
+    return row_symbols, row_counts, expanded, row_weights
 
 
 def _get_vasp_structure_header_lines(
-    cell: PhonopyAtoms, is_vasp4: bool = False, first_line_str: str | None = None
+    cell: PhonopyAtoms,
+    is_vasp4: bool = False,
+    first_line_str: str | None = None,
+    expand_mixtures: bool = False,
 ) -> tuple[list[str], NDArray[np.double]]:
-    num_atoms, symbols, scaled_positions, _ = sort_positions_by_symbols(
-        cell.symbols, cell.scaled_positions
-    )
+    if expand_mixtures and cell.has_mixtures:
+        symbols, num_atoms, scaled_positions, _ = _expand_mixtures_for_vasp(cell)
+    else:
+        num_atoms, symbols, scaled_positions, _ = sort_positions_by_symbols(
+            cell.symbols, cell.scaled_positions
+        )
     assert scaled_positions is not None
 
     lines = []

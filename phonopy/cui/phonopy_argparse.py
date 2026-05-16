@@ -77,24 +77,226 @@ def show_deprecated_option_warnings(deprecated: list[str]) -> None:
     print("")
 
 
-def get_parser(
-    load_phonopy_yaml: bool = False,
-) -> tuple[argparse.ArgumentParser, list[str]]:
-    """Return ArgumentParser instance."""
-    deprecated = fix_deprecated_option_names(sys.argv)
-
-    parser = argparse.ArgumentParser(
-        description="Phonopy command-line-tool", allow_abbrev=False
-    )
-
-    add_arguments_of_calculators(parser, calculator_info)
-
+def _add_shared_options(parser: argparse.ArgumentParser) -> None:
+    """Add options accepted by both phonopy-init and phonopy."""
     parser.add_argument(
-        "--alm",
-        dest="use_alm",
+        "--pa",
+        "--primitive-axis",
+        "--primitive-axes",
+        nargs="+",
+        dest="primitive_axes",
+        default=None,
+        help="Same as PRIMITIVE_AXES tag",
+    )
+    parser.add_argument(
+        "--tolerance",
+        dest="symmetry_tolerance",
+        type=float,
+        default=None,
+        help="Symmetry tolerance to search",
+    )
+    parser.add_argument(
+        "--nosym",
+        dest="is_nosym",
         action="store_true",
         default=None,
-        help="Use ALM for generating force constants",
+        help="Symmetry is not imposed.",
+    )
+    parser.add_argument(
+        "--magmom",
+        nargs="+",
+        dest="magmoms",
+        default=None,
+        help="Same as MAGMOM tag",
+    )
+    parser.add_argument(
+        "--site-mixture",
+        nargs="+",
+        dest="site_mixture",
+        default=None,
+        help=(
+            "Per-atom mixture weights in the order atoms appear in the "
+            "input cell. Overlapping atoms are merged into mixed-species "
+            "sites; weights within each overlapping group must sum to "
+            "1.0. The typical use case is the Virtual Crystal "
+            "Approximation. Note that this is per-atom and distinct from "
+            "the VASP INCAR VCA tag, which lists one weight per element "
+            "row in POSCAR."
+        ),
+    )
+    parser.add_argument(
+        "--mass",
+        nargs="+",
+        dest="masses",
+        default=None,
+        help="Same as MASS tag",
+    )
+    parser.add_argument(
+        "--mass-ase-iupac2016",
+        dest="import_ase_masses_iupac2016",
+        action="store_true",
+        default=None,
+        help="Import atomic weights from ASE according to IUPAC 2016",
+    )
+    parser.add_argument(
+        "--hdf5",
+        dest="is_hdf5",
+        action="store_true",
+        default=None,
+        help="Use hdf5 for force constants",
+    )
+    parser.add_argument(
+        "--hdf5-compression",
+        dest="hdf5_compression",
+        default=None,
+        help='hdf5 compression filter (default: "gzip") and "none" for no compression',
+    )
+    parser.add_argument(
+        "--include-fc",
+        dest="include_fc",
+        action="store_true",
+        default=None,
+        help="Include force constants in phonopy.yaml",
+    )
+    parser.add_argument(
+        "--include-fs",
+        dest="include_fs",
+        action="store_true",
+        default=None,
+        help="Include force sets in phonopy.yaml",
+    )
+    parser.add_argument(
+        "--include-disp",
+        dest="include_disp",
+        action="store_true",
+        default=None,
+        help="Include displacements in phonopy.yaml",
+    )
+    parser.add_argument(
+        "--include-all",
+        dest="include_all",
+        action="store_true",
+        default=None,
+        help="Include all output file data in phonopy.yaml",
+    )
+    parser.add_argument(
+        "--sp",
+        "--save-params",
+        dest="save_params",
+        action="store_true",
+        default=None,
+        help="Save parameters that can run phonopy in phonopy_params.yaml.",
+    )
+    parser.add_argument(
+        "--rd",
+        "--random-displacements",
+        dest="random_displacements",
+        default=None,
+        help='Number of supercells with random displacements or "auto".',
+    )
+    parser.add_argument(
+        "--random-seed",
+        dest="random_seed",
+        type=int,
+        default=None,
+        help="Random seed by a 32 bit unsigned integer",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        dest="quiet",
+        action="store_true",
+        default=None,
+        help="Print out smallest information",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=None,
+        help="Detailed information is shown.",
+    )
+    parser.add_argument(
+        "--loglevel",
+        dest="loglevel",
+        type=int,
+        default=None,
+        help="Log level",
+    )
+
+
+def _add_init_options(parser: argparse.ArgumentParser) -> None:
+    """Add options that only apply to phonopy-init."""
+    add_arguments_of_calculators(parser, calculator_info)
+    parser.add_argument(
+        "-c",
+        "--cell",
+        dest="cell_filename",
+        metavar="FILE",
+        default=None,
+        help="Read unit cell",
+    )
+    parser.add_argument(
+        "--dim",
+        nargs="+",
+        dest="supercell_dimension",
+        default=None,
+        help="Same behavior as DIM tag",
+    )
+    parser.add_argument(
+        "-d",
+        "--displacement",
+        dest="is_displacement",
+        action="store_true",
+        default=None,
+        help="Create supercells with displacements",
+    )
+    parser.add_argument(
+        "--rd-auto-factor",
+        dest="rd_number_estimation_factor",
+        type=float,
+        default=None,
+        help="Factor to estimate number of supercells with random displacements",
+    )
+    parser.add_argument(
+        "-f",
+        "--force-sets",
+        nargs="+",
+        dest="create_force_sets",
+        default=None,
+        help="Create FORCE_SETS",
+    )
+    parser.add_argument(
+        "--fz",
+        "--force-sets-zero",
+        nargs="+",
+        dest="create_force_sets_zero",
+        default=None,
+        help=(
+            "Create FORCE_SETS. disp.yaml in the current directory and "
+            "vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments "
+            "are required. The first argument is that of the perfect "
+            "supercell to subtract residual forces"
+        ),
+    )
+    parser.add_argument(
+        "--fc",
+        "--force-constants",
+        metavar="FILE",
+        dest="create_force_constants",
+        default=None,
+        help=(
+            "Create FORCE_CONSTANTS from vaspurn.xml. "
+            "vasprun.xml has to be passed as argument."
+        ),
+    )
+    parser.add_argument(
+        "--symmetry",
+        dest="is_check_symmetry",
+        action="store_true",
+        default=None,
+        help="Check crystal symmetry",
     )
     parser.add_argument(
         "--amplitude",
@@ -115,7 +317,57 @@ def get_parser(
         help="Maximum distance of displacements in random displacements",
     )
     parser.add_argument(
-        "--anime", nargs="+", dest="anime", default=None, help="Same as ANIME tag"
+        "--pm",
+        dest="is_plusminus_displacements",
+        action="store_true",
+        default=None,
+        help="Set plus minus displacements",
+    )
+    parser.add_argument(
+        "--nodiag",
+        dest="is_nodiag",
+        action="store_true",
+        default=None,
+        help="Set displacements parallel to axes",
+    )
+    parser.add_argument(
+        "--trigonal",
+        dest="is_trigonal_displacements",
+        action="store_true",
+        default=None,
+        help="Set displacements of all trigonal axes ",
+    )
+    parser.add_argument(
+        "--wien2k-p1",
+        dest="is_wien2k_p1",
+        action="store_true",
+        default=None,
+        help="Assume Wien2k structs with displacements are P1",
+    )
+
+
+def _add_run_options(parser: argparse.ArgumentParser) -> None:
+    """Add options that only apply to phonopy (phonon calculation)."""
+    parser.add_argument(
+        "--config",
+        dest="conf_filename",
+        metavar="FILE",
+        default=None,
+        help="Phonopy configuration file",
+    )
+    parser.add_argument(
+        "--alm",
+        dest="use_alm",
+        action="store_true",
+        default=None,
+        help="Use ALM for generating force constants",
+    )
+    parser.add_argument(
+        "--anime",
+        nargs="+",
+        dest="anime",
+        default=None,
+        help="Same as ANIME tag",
     )
     parser.add_argument(
         "--band",
@@ -168,23 +420,6 @@ def get_parser(
         default=None,
         help=("Band indices to be included to calculate thermal properties"),
     )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "-c",
-            "--cell",
-            dest="cell_filename",
-            metavar="FILE",
-            default=None,
-            help="Read unit cell",
-        )
-    if load_phonopy_yaml:
-        parser.add_argument(
-            "--config",
-            dest="conf_filename",
-            metavar="FILE",
-            default=None,
-            help="Phonopy configuration file",
-        )
     parser.add_argument(
         "--classical",
         dest="classical",
@@ -208,22 +443,6 @@ def get_parser(
         help="Out of cutoff radius, force constants are set zero.",
     )
     parser.add_argument(
-        "-d",
-        "--displacement",
-        dest="is_displacement",
-        action="store_true",
-        default=None,
-        help="Create supercells with displacements",
-    )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "--dim",
-            nargs="+",
-            dest="supercell_dimension",
-            default=None,
-            help="Same behavior as DIM tag",
-        )
-    parser.add_argument(
         "--dm-decimals",
         dest="dynamical_matrix_decimals",
         default=None,
@@ -245,24 +464,13 @@ def get_parser(
         default=None,
         help="Output eigenvectors",
     )
-    if load_phonopy_yaml:
-        parser.add_argument(
-            "--exclude-born",
-            "--exclude-nac-params",
-            dest="include_nac_params",
-            action="store_false",
-            default=None,
-            help=(
-                "Exclude born effective charge and dielectric tensor in phonopy.yaml"
-            ),
-        )
     parser.add_argument(
-        "-f",
-        "--force-sets",
-        nargs="+",
-        dest="create_force_sets",
+        "--exclude-born",
+        "--exclude-nac-params",
+        dest="include_nac_params",
+        action="store_false",
         default=None,
-        help="Create FORCE_SETS",
+        help=("Exclude born effective charge and dielectric tensor in phonopy.yaml"),
     )
     parser.add_argument(
         "--factor",
@@ -270,17 +478,6 @@ def get_parser(
         type=float,
         default=None,
         help="Frequency unit conversion factor",
-    )
-    parser.add_argument(
-        "--fc",
-        "--force-constants",
-        metavar="FILE",
-        dest="create_force_constants",
-        default=None,
-        help=(
-            "Create FORCE_CONSTANTS from vaspurn.xml. "
-            "vasprun.xml has to be passed as argument."
-        ),
     )
     parser.add_argument(
         "--fc-calc",
@@ -319,15 +516,6 @@ def get_parser(
         default=None,
         help="Enforce space group symmetry to force constants",
     )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "--fc-symmetry",
-            "--sym-fc",
-            dest="fc_symmetry",
-            action="store_true",
-            default=None,
-            help="Symmetrize force constants",
-        )
     parser.add_argument(
         "--fits-debye-model",
         dest="fits_debye_model",
@@ -341,19 +529,6 @@ def get_parser(
         action="store_true",
         default=None,
         help="Calculate full supercell force constants matrix",
-    )
-    parser.add_argument(
-        "--fz",
-        "--force-sets-zero",
-        nargs="+",
-        dest="create_force_sets_zero",
-        default=None,
-        help=(
-            "Create FORCE_SETS. disp.yaml in the current directory and "
-            "vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments "
-            "are required. The first argument is that of the perfect "
-            "supercell to subtract residual forces"
-        ),
     )
     parser.add_argument(
         "--fmax",
@@ -399,53 +574,12 @@ def get_parser(
         help="Delta-q distance used for group velocity calculation",
     )
     parser.add_argument(
-        "--hdf5",
-        dest="is_hdf5",
-        action="store_true",
-        default=None,
-        help="Use hdf5 for force constants",
-    )
-    parser.add_argument(
-        "--hdf5-compression",
-        dest="hdf5_compression",
-        default=None,
-        help='hdf5 compression filter (default: "gzip") and "none" for no compression',
-    )
-    parser.add_argument(
         "--irreps",
         "--irreps-qpoint",
         nargs="+",
         dest="irreps_qpoint",
         default=None,
         help="A q-point where characters of irreps are calculated",
-    )
-    parser.add_argument(
-        "--include-fc",
-        dest="include_fc",
-        action="store_true",
-        default=None,
-        help="Include force constants in phonopy.yaml",
-    )
-    parser.add_argument(
-        "--include-fs",
-        dest="include_fs",
-        action="store_true",
-        default=None,
-        help="Include force sets in phonopy.yaml",
-    )
-    parser.add_argument(
-        "--include-disp",
-        dest="include_disp",
-        action="store_true",
-        default=None,
-        help="Include displacements in phonopy.yaml",
-    )
-    parser.add_argument(
-        "--include-all",
-        dest="include_all",
-        action="store_true",
-        default=None,
-        help="Include all output file data in phonopy.yaml",
     )
     parser.add_argument(
         "--legend",
@@ -471,22 +605,6 @@ def get_parser(
             "Show irreps of little co-group (or point-group of "
             "wave vector q) instead of little group"
         ),
-    )
-    parser.add_argument(
-        "--loglevel", dest="loglevel", type=int, default=None, help="Log level"
-    )
-    parser.add_argument(
-        "--mass", nargs="+", dest="masses", default=None, help="Same as MASS tag"
-    )
-    parser.add_argument(
-        "--mass-ase-iupac2016",
-        dest="import_ase_masses_iupac2016",
-        action="store_true",
-        default=None,
-        help="Import atomic weights from ASE according to IUPAC 2016",
-    )
-    parser.add_argument(
-        "--magmom", nargs="+", dest="magmoms", default=None, help="Same as MAGMOM tag"
     )
     parser.add_argument(
         "--mesh-format",
@@ -532,35 +650,19 @@ def get_parser(
         type=int,
         help="Order of moment of phonon states distribution",
     )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "--nac",
-            dest="is_nac",
-            action="store_true",
-            default=None,
-            help="Non-analytical term correction",
-        )
     parser.add_argument(
         "--nac-method",
         dest="nac_method",
         default=None,
         help="Non-analytical term correction method: Gonze (default) or Wang",
     )
-    if load_phonopy_yaml:
-        parser.add_argument(
-            "--no-fc-symmetry",
-            "--no-sym-fc",
-            dest="fc_symmetry",
-            action="store_false",
-            default=None,
-            help="Do not symmetrize force constants",
-        )
     parser.add_argument(
-        "--nodiag",
-        dest="is_nodiag",
-        action="store_true",
+        "--no-fc-symmetry",
+        "--no-sym-fc",
+        dest="fc_symmetry",
+        action="store_false",
         default=None,
-        help="Set displacements parallel to axes",
+        help="Do not symmetrize force constants",
     )
     parser.add_argument(
         "--nomeshsym",
@@ -569,28 +671,19 @@ def get_parser(
         default=None,
         help="Symmetry is not imposed for mesh sampling.",
     )
-    if load_phonopy_yaml:
-        parser.add_argument(
-            "--nonac",
-            dest="is_nac",
-            action="store_false",
-            default=None,
-            help="Non-analytical term correction",
-        )
-        parser.add_argument(
-            "--noreadfc",
-            dest="read_force_constants",
-            action="store_false",
-            default=None,
-            help="Do not read force constants from file",
-        )
-
     parser.add_argument(
-        "--nosym",
-        dest="is_nosym",
-        action="store_true",
+        "--nonac",
+        dest="is_nac",
+        action="store_false",
         default=None,
-        help="Symmetry is not imposed.",
+        help="Non-analytical term correction",
+    )
+    parser.add_argument(
+        "--noreadfc",
+        dest="read_force_constants",
+        action="store_false",
+        default=None,
+        help="Do not read force constants from file",
     )
     parser.add_argument(
         "--nowritemesh",
@@ -608,15 +701,6 @@ def get_parser(
         help="Plot data",
     )
     parser.add_argument(
-        "--pa",
-        "--primitive-axis",
-        "--primitive-axes",
-        nargs="+",
-        dest="primitive_axes",
-        default=None,
-        help="Same as PRIMITIVE_AXES tag",
-    )
-    parser.add_argument(
         "--pd",
         "--projection-direction",
         nargs="+",
@@ -625,14 +709,11 @@ def get_parser(
         help="Same as PROJECTION_DIRECTION tag",
     )
     parser.add_argument(
-        "--pdos", nargs="+", dest="pdos", default=None, help="Same as PDOS tag"
-    )
-    parser.add_argument(
-        "--pm",
-        dest="is_plusminus_displacements",
-        action="store_true",
+        "--pdos",
+        nargs="+",
+        dest="pdos",
         default=None,
-        help="Set plus minus displacements",
+        help="Same as PDOS tag",
     )
     parser.add_argument(
         "--pr",
@@ -686,35 +767,6 @@ def get_parser(
         ),
     )
     parser.add_argument(
-        "-q",
-        "--quiet",
-        dest="quiet",
-        action="store_true",
-        default=None,
-        help="Print out smallest information",
-    )
-    parser.add_argument(
-        "--random-seed",
-        dest="random_seed",
-        type=int,
-        default=None,
-        help="Random seed by a 32 bit unsigned integer",
-    )
-    parser.add_argument(
-        "--rd",
-        "--random-displacements",
-        dest="random_displacements",
-        default=None,
-        help='Number of supercells with random displacements or "auto".',
-    )
-    parser.add_argument(
-        "--rd-auto-factor",
-        dest="rd_number_estimation_factor",
-        type=float,
-        default=None,
-        help="Factor to estimate number of supercells with random displacements",
-    )
-    parser.add_argument(
         "--rd-temperature",
         dest="rd_temperature",
         type=float,
@@ -722,14 +774,6 @@ def get_parser(
         metavar="TEMPERATURE",
         help="A temperature used to generate random displacements.",
     )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "--readfc",
-            dest="read_force_constants",
-            action="store_true",
-            default=None,
-            help="Read force constants from file",
-        )
     parser.add_argument(
         "--readfc-format",
         dest="readfc_format",
@@ -751,20 +795,30 @@ def get_parser(
         help="Relax atomic positions using polynomial MLPs",
     )
     parser.add_argument(
+        "--rust",
+        dest="use_rust",
+        action="store_true",
+        default=None,
+        help=(
+            "Deprecated no-op: the Rust backend (phonors) is the default in "
+            "phonopy v4. Pass --legacy-backend to opt back into the C "
+            "extension."
+        ),
+    )
+    parser.add_argument(
+        "--legacy-backend",
+        dest="use_legacy_backend",
+        action="store_true",
+        default=None,
+        help="Use the legacy C-extension backend instead of the default Rust backend",
+    )
+    parser.add_argument(
         "-s",
         "--save",
         dest="is_graph_save",
         action="store_true",
         default=None,
         help="Save plot data in pdf",
-    )
-    parser.add_argument(
-        "--sp",
-        "--save-params",
-        dest="save_params",
-        action="store_true",
-        default=None,
-        help="Save parameters that can run phonopy in phonopy_params.yaml.",
     )
     parser.add_argument(
         "--show-irreps",
@@ -774,7 +828,10 @@ def get_parser(
         help="Show IR-Reps along with characters",
     )
     parser.add_argument(
-        "--sigma", dest="sigma", default=None, help="Smearing width for DOS"
+        "--sigma",
+        dest="sigma",
+        default=None,
+        help="Smearing width for DOS",
     )
     parser.add_argument(
         "--sscha",
@@ -782,21 +839,6 @@ def get_parser(
         type=int,
         default=None,
         help="Number of iterations in SSCHA calculation",
-    )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "--symfc",
-            dest="use_symfc",
-            action="store_true",
-            default=None,
-            help="Use symfc for generating force constants",
-        )
-    parser.add_argument(
-        "--symmetry",
-        dest="is_check_symmetry",
-        action="store_true",
-        default=None,
-        help="Check crystal symmetry",
     )
     parser.add_argument(
         "-t",
@@ -854,40 +896,11 @@ def get_parser(
         help="Minimum calculated temperature",
     )
     parser.add_argument(
-        "--tolerance",
-        dest="symmetry_tolerance",
-        type=float,
-        default=None,
-        help="Symmetry tolerance to search",
-    )
-    parser.add_argument(
-        "--trigonal",
-        dest="is_trigonal_displacements",
-        action="store_true",
-        default=None,
-        help="Set displacements of all trigonal axes ",
-    )
-    parser.add_argument(
         "--tstep",
         dest="tstep",
         type=float,
         default=None,
         help="Calculated temperature step",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="verbose",
-        action="store_true",
-        default=None,
-        help="Detailed information is shown.",
-    )
-    parser.add_argument(
-        "--wien2k-p1",
-        dest="is_wien2k_p1",
-        action="store_true",
-        default=None,
-        help="Assume Wien2k structs with displacements are P1",
     )
     parser.add_argument(
         "--writefc",
@@ -919,19 +932,139 @@ def get_parser(
         default=None,
         help="Project PDOS x, y, z directions in Cartesian coordinates",
     )
-    if load_phonopy_yaml:
-        parser.add_argument("filename", nargs="*", help="phonopy.yaml like file")
-    else:
-        parser.add_argument(
-            "filename",
-            nargs="*",
-            help=(
-                "Phonopy configure file. However if the file is recognized as "
-                "phonopy.yaml like file, this file is read as phonopy.yaml like file."
-            ),
+
+
+class _MigratedToInitAction(argparse.Action):
+    """Reject setup-only flags that moved to 'phonopy-init' in v4."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        parser.exit(
+            2,
+            f"phonopy: error: '{option_string}' is a setup operation that "
+            "moved to 'phonopy-init' in v4.\n"
+            "Replace 'phonopy' with 'phonopy-init' in your command.\n"
+            "See https://phonopy.github.io/phonopy/migration-v4.html\n",
         )
 
+
+def _make_removed_action(message: str) -> type[argparse.Action]:
+    """Build an argparse Action that rejects a removed-in-v4 flag."""
+
+    class _RemovedAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            parser.exit(
+                2,
+                f"phonopy: error: {message}\n"
+                "See https://phonopy.github.io/phonopy/migration-v4.html\n",
+            )
+
+    return _RemovedAction
+
+
+# Flags removed in phonopy v4. Mapping: option_strings -> (nargs, message).
+_REMOVED_OPTIONS: dict[tuple[str, ...], tuple[int | str, str]] = {
+    ("--nac",): (
+        0,
+        "'--nac' was removed in phonopy v4. NAC is now enabled "
+        "automatically when a BORN file is present or nac_params are "
+        "stored in phonopy.yaml. Use '--nonac' to disable NAC.",
+    ),
+}
+
+
+def _reject_removed_options(parser: argparse.ArgumentParser) -> None:
+    """Register removed-in-v4 flags so both parsers emit a friendly error."""
+    for option_strings, (nargs, message) in _REMOVED_OPTIONS.items():
+        kwargs: dict = {
+            "action": _make_removed_action(message),
+            "nargs": nargs,
+            "help": argparse.SUPPRESS,
+            "default": argparse.SUPPRESS,
+        }
+        if nargs == 0:
+            kwargs["const"] = True
+        parser.add_argument(*option_strings, **kwargs)
+
+
+def _reject_init_options(parser: argparse.ArgumentParser) -> None:
+    """Register setup-only flags so phonopy emits a migration error.
+
+    Without this, argparse rejects unknown setup flags with a generic
+    'unrecognized arguments' message and a long usage dump.
+
+    """
+    specs: list[tuple[tuple[str, ...], int | str]] = [
+        (("-c", "--cell"), 1),
+        (("--dim",), "+"),
+        (("-d", "--displacement"), 0),
+        (("-f", "--force-sets"), "+"),
+        (("--fz", "--force-sets-zero"), "+"),
+        (("--fc", "--force-constants"), 1),
+        (("--symmetry",), 0),
+    ]
+    for option_strings, nargs in specs:
+        kwargs: dict = {
+            "action": _MigratedToInitAction,
+            "nargs": nargs,
+            "help": argparse.SUPPRESS,
+            "default": argparse.SUPPRESS,
+        }
+        if nargs == 0:
+            kwargs["const"] = True
+        parser.add_argument(*option_strings, **kwargs)
+
+
+def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
+    """Return argument parser for the phonopy-init command."""
+    deprecated = fix_deprecated_option_names(sys.argv)
+    parser = argparse.ArgumentParser(
+        description=(
+            "phonopy-init: set up supercells, displacements, FORCE_SETS or "
+            "FORCE_CONSTANTS files, and inspect crystal symmetry."
+        ),
+        allow_abbrev=False,
+    )
+    _add_shared_options(parser)
+    _add_init_options(parser)
+    _reject_removed_options(parser)
+    parser.add_argument(
+        "filename",
+        nargs="*",
+        help=(
+            "Phonopy configure file. However if the file is recognized as "
+            "phonopy.yaml like file, this file is read as phonopy.yaml like file."
+        ),
+    )
     return parser, deprecated
+
+
+def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
+    """Return argument parser for the phonopy command (phonon calculation)."""
+    deprecated = fix_deprecated_option_names(sys.argv)
+    parser = argparse.ArgumentParser(
+        description="phonopy: phonon calculation from a phonopy.yaml-like file.",
+        allow_abbrev=False,
+    )
+    _add_shared_options(parser)
+    _add_run_options(parser)
+    _reject_init_options(parser)
+    _reject_removed_options(parser)
+    parser.add_argument("filename", nargs="*", help="phonopy.yaml like file")
+    return parser, deprecated
+
+
+def get_parser(
+    load_phonopy_yaml: bool = False,
+) -> tuple[argparse.ArgumentParser, list[str]]:
+    """Return ArgumentParser instance for the requested command flavor.
+
+    This is kept for backward compatibility. New code should call
+    ``get_init_parser`` or ``get_run_parser`` directly.
+
+    """
+    if load_phonopy_yaml:
+        return get_run_parser()
+    return get_init_parser()
 
 
 @dataclasses.dataclass
@@ -966,10 +1099,15 @@ class PhonopyMockArgs:
     log_level: int | None = None
     magmoms: str | None = None
     mesh_numbers: str | None = None
+    site_mixture: str | None = None
     primitive_axes: str | None = None
     qpoints: str | None = None
     save_params: bool | None = None
     supercell_dimension: str | None = None
     thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool | None = None
+    use_rust: bool | None = None
+    use_legacy_backend: bool | None = None
     write_dynamical_matrices: bool | None = None
+    write_force_constants: bool | None = None
+    writefc_format: str | None = None

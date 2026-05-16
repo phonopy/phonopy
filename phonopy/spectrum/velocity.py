@@ -42,10 +42,10 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
+from phonopy.phonon.grid import get_ir_qpoints_and_weights
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
-from phonopy.structure.grid_points import get_qpoints
 from phonopy.structure.symmetry import Symmetry
 
 
@@ -95,10 +95,7 @@ class VelocityQpoints:
         symmetry: Symmetry | None = None,
     ) -> None:
         """Init method."""
-        if symmetry is not None:
-            self._polonggroup_opts = symmetry.pointgroup_operations
-        else:
-            self._polonggroup_opts = None
+        self._symmetry = symmetry
 
         self._supercell = supercell
         self._primitive = primitive
@@ -123,9 +120,12 @@ class VelocityQpoints:
 
     def set_mesh(self, mesh: list[int] | NDArray[np.int64]) -> None:
         """Set mesh."""
-        rec_lat = np.linalg.inv(self._primitive.cell)
-        self._qpoints, self._weights = get_qpoints(
-            mesh, rec_lat, is_gamma_center=True, rotations=self._polonggroup_opts
+        self._qpoints, self._weights = get_ir_qpoints_and_weights(
+            mesh,
+            self._primitive.cell,
+            primitive_symmetry=self._symmetry,
+            is_gamma_center=True,
+            lang=self._primitive._lang,
         )
 
     def set_qpoints(self, qpoints: NDArray[np.double]) -> None:

@@ -12,7 +12,7 @@ setting tag. The configuration file is recommended to place at the first
 position for the mixed use of setting tags and command-line options, i.e.,
 
 ```bash
-% phonopy-load --config setting.conf [OPTIONS]
+% phonopy --config setting.conf [OPTIONS]
 ```
 
 For specifying real and reciprocal points, fractional values (e.g. `1/3`) are
@@ -117,6 +117,47 @@ the transformation matrix automatically. Since the choice of the primitive cell
 is arbitrary, it is recommended to use `PRIMITIVE_AXES = AUTO` to check if a
 possible transformation matrix exists or not.
 
+**Changed in v4.0** `PRIMITIVE_AXES = AUTO` is the default when
+`PRIMITIVE_AXES` is not specified.
+
+(primitive_axes_auto_magnetic)=
+#### Magnetic unit cells
+
+When the input unit cell has magnetic moments (see {ref}`magmom_tag`), the
+primitive cell is determined from the magnetic space group (MSG) detected by
+spglib. The behavior depends on the MSG type:
+
+- **Type-I, II, III** MSGs are handled using the so-called FSG (family
+  space group). The primitive cell is determined as in the non-magnetic
+  case and the input magnetic moments are preserved.
+- **Type-IV** MSGs are handled using the so-called XSG, the subgroup of
+  the MSG obtained by removing the anti-translations (lattice
+  translations combined with time reversal). The resulting primitive
+  cell preserves the input magnetic moments and may be larger than the
+  crystallographic primitive cell. A warning is emitted in this case.
+
+For example, antiferromagnetic bcc Cr (with moments `[1, -1]` on the two
+sites of the conventional cubic cell) is a Type-IV MSG: the body-center
+translation combined with time reversal is an anti-translation. The XSG is
+Pm-3m, so with `PRIMITIVE_AXES = AUTO` the primitive cell equals the
+2-atom input cubic cell and the antiferromagnetic ordering is preserved.
+
+If a smaller primitive cell that ignores the magnetic ordering is desired
+(for example, in `phonopy` run mode where force constants are known to
+respect the higher non-magnetic symmetry), pass the centring of the FSG
+explicitly, e.g. `PRIMITIVE_AXES = I` for the bcc Cr example above. Note
+that this discards the input magnetic moments in the primitive cell, so it
+must not be used with `phonopy-init` when generating displacements for
+force calculations.
+
+See the references below for the definitions of FSG, XSG, and the MSG
+types.
+
+<!-- TODO(togo): fill in the full citations for the two IUCr papers
+(IUCr codes ib5106 and ib5114). -->
+- [TODO: citation for IUCr ib5106]
+- [TODO: citation for IUCr ib5114]
+
 ### `ATOM_NAME`
 
 When a crystal structure format has no information about chemical symbols, this
@@ -156,7 +197,8 @@ MASS = 28.085 28.085 16.000 16.000 16.000 16.000
 Symmetry of spin such as magnetic moments is specified using this tag. The
 number of values has to be equal to the number of atoms, or its three times for
 non-collinear-like case, in **the input unit cell**, not the primitive cell or
-supercell. If this tag is used with `-d` option (`CREATE_DISPLACEMENTS` tag),
+supercell. See also {ref}`primitive_axes_auto_magnetic` for how the primitive
+cell is determined when the input unit cell has magnetic moments. If this tag is used with `-d` option (`CREATE_DISPLACEMENTS` tag),
 `MAGMOM` file is created. This file contains the `MAGMOM` information of the
 supercell used for VASP. Unlike `MAGMOM` in VASP, `*` can not be used, i.e., all
 the values (the same number of times to the number of atoms in unit cell) have
@@ -322,7 +364,7 @@ For example in `example/NaCl` directory,
 ```bash
 % mkdir rd && cd rd
 % cp ../FORCE_SETS
-% phonopy-load ../phonopy_disp.yaml --rd 1000 --rd-temperature 300
+% phonopy ../phonopy_disp.yaml --rd 1000 --rd-temperature 300
 ```
 
 See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
@@ -336,7 +378,7 @@ respective forces, an external force constants calculator is necessary. See
 Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
 frequency at Gamma point due to violation of acoustic sum rule can induce very
 large displacements. Therefore, it is safer to use this feature with
-`FC_SYMMETRY = .TRUE.` (this is a default setting for `phonopy-load` command) or
+`FC_SYMMETRY = .TRUE.` (this is a default setting for `phonopy` command) or
 a force constants calculator (see {ref}`fc_calculator_tag`) that enforces
 acoustic sum rule. It is also possible to ignore phonons with frequencies below
 cutoff frequency specified by {ref}`cutoff_frequency_tags` tag. Phonon

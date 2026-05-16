@@ -10,7 +10,11 @@ import pytest
 import yaml
 
 from phonopy import Phonopy
-from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
+from phonopy.structure.atoms import (
+    PhonopyAtoms,
+    build_species_table_from_mixtures,
+    parse_cell_dict,
+)
 
 symbols_SiO2 = ["Si"] * 2 + ["O"] * 4
 symbols_AcO2 = ["Ac"] * 2 + ["O"] * 4
@@ -125,8 +129,6 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     symbols[-1] = "Cl1"
     masses = ph_nacl.unitcell.masses
     masses[-1] = 70.0
-    numbers = ph_nacl.unitcell.numbers
-    numbers[-1] = numbers[-1] + PhonopyAtoms._MOD_DIVISOR
 
     cell = PhonopyAtoms(
         cell=ph_nacl.unitcell.cell,
@@ -135,7 +137,9 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     )
     assert symbols == cell.symbols
     np.testing.assert_allclose(cell.masses, ph_nacl.unitcell.masses)
-    np.testing.assert_equal(cell.numbers_with_shifts, numbers)
+    # "Cl" and "Cl1" must get distinct species ids even though their atomic
+    # number is the same.
+    assert len(set(cell.species_ids.tolist())) == len(set(symbols))
     np.testing.assert_equal(cell.numbers, ph_nacl.unitcell.numbers)
 
     cell = PhonopyAtoms(
@@ -147,31 +151,31 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     assert symbols == cell.symbols
     np.testing.assert_allclose(cell.masses, masses)
 
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(ValueError) as e:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
-            numbers=numbers,
+            numbers=[200] * len(symbols),
         )
-    assert str(e.value) == "Atomic numbers cannot be larger than 118."
+    assert str(e.value) == "Atomic numbers must be in 1..118."
 
     symbols[-1] = "Cl_1"
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(RuntimeError) as e2:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
             symbols=symbols,
         )
-    assert str(e.value) == "Invalid symbol: Cl_1."
+    assert str(e2.value) == "Invalid symbol: Cl_1."
 
     symbols[-1] = "Cl_0"
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(RuntimeError) as e2:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
             symbols=symbols,
         )
-    assert str(e.value) == "Invalid symbol: Cl_0."
+    assert str(e2.value) == "Invalid symbol: Cl_0."
 
 
 def _test_phonopy_atoms(cell: PhonopyAtoms):
@@ -364,6 +368,98 @@ def test_formulas(symbols, expected_formula, expected_normalized):
 
     assert cell.formula == expected_formula
     assert cell.normalized_formula == expected_normalized
+
+
+def test_PhonopyAtoms_mixture_construct_and_yaml_roundtrip():
+    """PhonopyAtoms holds mixed-species sites and round-trips through YAML."""
+    species, ids = build_species_table_from_mixtures(
+        [[("Si", 1.0)], [("Ge", 0.5), ("Sn", 0.5)]]
+    )
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        species_table=species,
+        species_ids=ids,
+    )
+    assert cell.has_mixtures
+    assert cell.symbols == ["Si", "GeSn"]
+    np.testing.assert_allclose(cell.species_ids, [0, 1])
+    # Mass of a mixed-species site is the weighted average of constituents.
+    np.testing.assert_allclose(cell.masses[1], 0.5 * 72.64 + 0.5 * 118.710)
+    # cell.numbers is undefined for cells with mixed-species sites.
+    with pytest.raises(RuntimeError):
+        _ = cell.numbers
+
+    # YAML round-trip
+    data = yaml.safe_load(str(cell))
+    assert data["points"][0]["symbol"] == "Si"
+    assert "mixture" not in data["points"][0]
+    assert data["points"][1]["symbol"] == "GeSn"
+    assert data["points"][1]["mixture"] == [["Ge", 0.5], ["Sn", 0.5]]
+
+    cell2 = parse_cell_dict(data)
+    assert cell2 is not None
+    assert cell2.has_mixtures
+    assert cell2.symbols == ["Si", "GeSn"]
+    np.testing.assert_allclose(cell2.species_ids, [0, 1])
+    np.testing.assert_allclose(cell2.masses, cell.masses)
+
+
+def test_build_species_table_from_mixtures_weight_sum_error():
+    """Weights of each mixture entry must sum to 1.0."""
+    with pytest.raises(ValueError):
+        build_species_table_from_mixtures([[("Ge", 0.3), ("Sn", 0.6)]])
+
+
+def test_build_species_table_from_mixtures_sort_constituents_default():
+    """By default, constituents are sorted so input order does not matter."""
+    species_a, ids_a = build_species_table_from_mixtures([[("Ge", 0.5), ("Sn", 0.5)]])
+    species_b, ids_b = build_species_table_from_mixtures([[("Sn", 0.5), ("Ge", 0.5)]])
+    assert species_a == species_b
+    np.testing.assert_array_equal(ids_a, ids_b)
+    assert species_a[0].symbol == "GeSn"
+    assert species_a[0].mixture == (("Ge", 0.5), ("Sn", 0.5))
+
+
+def test_build_species_table_from_mixtures_sort_constituents_off():
+    """Passing sort_constituents=False preserves caller order."""
+    species, _ = build_species_table_from_mixtures(
+        [[("Sn", 0.5), ("Ge", 0.5)]], sort_constituents=False
+    )
+    assert species[0].symbol == "SnGe"
+    assert species[0].mixture == (("Sn", 0.5), ("Ge", 0.5))
+
+
+def test_build_species_table_from_mixtures_distinct_weights_get_suffixes():
+    """Same constituents, different weights produce distinct suffixed labels."""
+    species, ids = build_species_table_from_mixtures(
+        [
+            [("Ge", 0.5), ("Sn", 0.5)],
+            [("Ge", 0.25), ("Sn", 0.75)],
+        ]
+    )
+    assert [sp.symbol for sp in species] == ["GeSn1", "GeSn2"]
+    np.testing.assert_array_equal(ids, [0, 1])
+
+
+def test_PhonopyAtoms_input_mutual_exclusion():
+    """Reject simultaneous symbols / numbers / species_table."""
+    species, ids = build_species_table_from_mixtures([[("Si", 1.0)]])
+    with pytest.raises(ValueError):
+        PhonopyAtoms(
+            cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            scaled_positions=[[0, 0, 0]],
+            symbols=["Si"],
+            species_table=species,
+            species_ids=ids,
+        )
+    with pytest.raises(ValueError):
+        # species_table without species_ids is rejected.
+        PhonopyAtoms(
+            cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            scaled_positions=[[0, 0, 0]],
+            species_table=species,
+        )
 
 
 def test_import_deprecated_atom_data():
