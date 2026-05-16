@@ -24,8 +24,14 @@ Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
   symfc detects a smaller true primitive cell. The previous behaviour
   produced shape-mismatched compact force constants and crashed during
   drift evaluation or post-symmetrisation.
-- Rust backend (`phonors` crate) introduced as an alternative to the C
-  extension.
+- Rust backend (`phonors` crate) is now the default and a required
+  runtime dependency. `Phonopy()`, `phonopy.load()`, and the CLI run on
+  Rust out of the box. The C extension is retained as a legacy backend
+  selectable via `lang="C"` or the new `--legacy-backend` flag
+  (conf-file equivalent: `LEGACY_BACKEND = .true.`). The previous
+  `--rust` flag becomes a deprecated no-op. A no-C-extension build is
+  available via `PHONOPY_NO_C_EXT=1` at install time. See
+  {ref}`rust_backend`.
 - The behaviour when a sampling mesh breaks the primitive-cell point-group
   symmetry has changed. As a result, mesh-based calculations (DOS, thermal
   properties, etc.) on such meshes may give different numerical results

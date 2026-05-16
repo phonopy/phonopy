@@ -1,19 +1,23 @@
 (rust_backend)=
 
-# Rust backend (experimental)
+# Rust backend
 
 The computationally heavy parts of phonopy (dynamical-matrix builders,
 reciprocal dipole-dipole, force-constant symmetrization, BZ-grid helpers,
-smallest-vector search, tetrahedron-method weights, ...) have been
-implemented as a C extension module called from Python through the Python/C
-API. An alternative Rust implementation is now available experimentally.
-The Rust path is distributed as a separate Python extension module,
-`phonors`, maintained in its own top-level repository at
-[github.com/phonopy/phonors](https://github.com/phonopy/phonors) and built
-with [maturin](https://www.maturin.rs/) and [PyO3](https://pyo3.rs/). It is
-experimental: behaviour is validated against the C path by the regression
-tests under `test/`, but the C extension remains the default and both paths
-are kept in the source tree for cross-checking.
+smallest-vector search, tetrahedron-method weights, ...) are implemented
+as a Rust extension module called from Python through PyO3. The Rust
+path is distributed as a separate Python extension module, `phonors`,
+maintained in its own top-level repository at
+[github.com/phonopy/phonors](https://github.com/phonopy/phonors) and
+built with [maturin](https://www.maturin.rs/) and
+[PyO3](https://pyo3.rs/).
+
+Since v4, `phonors` is the default backend and a required runtime
+dependency of phonopy. The legacy C extension is still built by default
+and can be selected per call via `lang="C"` or the `--legacy-backend`
+CLI flag; both paths are kept in the source tree for cross-checking.
+Numerical parity with the C path is verified by the regression tests
+under `test/`.
 
 ```{contents}
 :depth: 2
@@ -22,12 +26,19 @@ are kept in the source tree for cross-checking.
 
 ## Installation
 
-The Rust backend is not bundled with the standard phonopy wheel and conda
-package. It is installed as the separate `phonors` package, which has to
-be built from a clone of the
-[phonors repository](https://github.com/phonopy/phonors).
+`phonors` is listed in `pyproject.toml` as a required dependency, so
+`pip install phonopy` (and the conda-forge package once updated)
+pulls it in automatically. No extra step is needed for normal use.
 
-### Requirements
+(rust_backend_install)=
+
+### Building `phonors` from source
+
+When you want to track the development version of `phonors`, or to
+build with custom Rust flags, install it from a source clone instead
+of the PyPI wheel.
+
+Requirements:
 
 - A Rust toolchain (stable, edition 2021, `rustc >= 1.75`). The
   easiest way to install it is via [rustup](https://rustup.rs/).
@@ -35,15 +46,8 @@ be built from a clone of the
   and conda-forge).
 - Python 3.10 or newer. The extension is built against the stable ABI
   (`abi3-py310`), so one build works for all Python 3.10+ interpreters.
-- A working phonopy source checkout and its usual build/runtime
-  dependencies (see {ref}`install_from_source`).
 
-(rust_backend_install)=
-
-### Build and install
-
-Clone the `phonors` repository alongside phonopy and build the extension
-in editable mode with `maturin develop`:
+Clone the repository and build the extension in editable mode:
 
 ```bash
 % git clone https://github.com/phonopy/phonors.git
@@ -56,10 +60,6 @@ After a successful build, the module should import from any Python process
 ```python
 import phonors
 ```
-
-The phonopy Python layer imports `phonors` lazily and only when the Rust
-backend is selected, so installations without the extension continue to
-work on the C path.
 
 ### Optional: native CPU tuning
 
@@ -75,9 +75,9 @@ instruction set can recover a few percent of wall-clock:
 
 ## Usage
 
-Once `phonors` is installed, the Rust backend is selected through the
-`--rust` flag on the command line or the `lang` keyword on the Python
-API. The C backend remains the default.
+The Rust backend is active by default; no flag or keyword is required.
+The legacy C backend is selected per call through the `lang` keyword on
+the Python API or the `--legacy-backend` flag on the CLI.
 
 (rust_backend_lang_dispatch)=
 
@@ -88,12 +88,12 @@ The constructor and loader take a `lang` keyword:
 ```python
 import phonopy
 
-ph_c = phonopy.load("phonopy_disp.yaml", lang="C")     # default
-ph_r = phonopy.load("phonopy_disp.yaml", lang="Rust")  # experimental
+ph = phonopy.load("phonopy_disp.yaml")                # lang="Rust" (default)
+ph_c = phonopy.load("phonopy_disp.yaml", lang="C")    # legacy C backend
 ```
 
 The current value is exposed as the read-only `Phonopy.lang` property.
-Valid values are `"C"` (default) and `"Rust"`.
+Valid values are `"Rust"` (default) and `"C"`.
 
 `lang` is threaded internally to every lang-aware consumer, including
 `Primitive`, `Symmetry`, `ShortestPairs`, `BZGrid`, `GridMatrix`,
@@ -104,20 +104,23 @@ Valid values are `"C"` (default) and `"Rust"`.
 
 ### Command line
 
-Pass `--rust` to the `phonopy` command:
-
-```bash
-% phonopy --rust ...
-```
-
-When the flag is set, the run header prints
+The default `phonopy` invocation runs on Rust and prints
 
 ```
 Rust backend (phonors) using rayon (N threads).
 ```
 
-instead of the OpenMP banner from the C build, where `N` follows rayon's
-defaults.
+in the run header, where `N` follows rayon's defaults. To opt back into
+the C extension, pass `--legacy-backend` (conf-file equivalent:
+`LEGACY_BACKEND = .true.`):
+
+```bash
+% phonopy --legacy-backend ...
+```
+
+The old `--rust` flag still parses but is a deprecated no-op (the Rust
+backend is already active) and emits a `DeprecationWarning`. It will be
+removed in a future release.
 
 ### Thread pool
 
@@ -127,7 +130,7 @@ which uses its own thread pool. The thread count is controlled by
 path):
 
 ```bash
-% RAYON_NUM_THREADS=8 phonopy --rust ...
+% RAYON_NUM_THREADS=8 phonopy ...
 ```
 
 NumPy/SciPy BLAS multithreading used by phonon diagonalization is
@@ -140,7 +143,7 @@ To verify that a given code path is actually running on the Rust
 backend, set `PHONOPY_TRACE_LANG=1` before launching:
 
 ```bash
-% PHONOPY_TRACE_LANG=1 phonopy --rust ...
+% PHONOPY_TRACE_LANG=1 phonopy ...
 [phonopy.lang] dispatch name=Phonopy.__init__ lang=Rust
 [phonopy.lang] dispatch name=Primitive.__init__ lang=Rust
 [phonopy.lang] dispatch name=BZGrid.__init__ lang=Rust
@@ -158,9 +161,7 @@ enabling it does not affect normal output.
 ## Building phonopy without the C extension
 
 For Rust-only deployments (or to validate that every dispatch site has
-a Rust path), phonopy can be installed with the C extension skipped.
-Install `phonors` first as described above, then build phonopy with
-the env var set:
+a Rust path), phonopy can be installed with the C extension skipped:
 
 ```bash
 % PHONOPY_NO_C_EXT=1 pip install -e . -vvv
@@ -171,9 +172,7 @@ When the env var is set, `CMakeLists.txt` returns early and neither
 `Phonopy()` and `phonopy.load()` detect the missing C extension, emit
 a one-time `[phonopy] C extension ... is not available; falling back
 to lang='Rust' ...` message, and silently flip `lang="C"` requests to
-`lang="Rust"`. `phonors` therefore becomes a hard requirement for
-this build; an informative `ImportError` is raised if neither backend
-is available.
+`lang="Rust"`.
 
 To restore the C extension, simply rebuild without the env var:
 
@@ -217,10 +216,3 @@ groups:
 
 If any of these code paths is reached with `lang="Rust"`, phonopy
 transparently uses the C (or Python) implementation for that step.
-
-```{warning}
-The Rust backend is experimental. The default in `Phonopy()` and
-`phonopy.load()` remains `lang="C"`. Numerical parity with the C path
-is verified for the dispatch sites that have been ported, but APIs and
-behaviour may still change.
-```
