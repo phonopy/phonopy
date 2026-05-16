@@ -57,6 +57,7 @@ jobs:
         run: |
           conda activate test
           git clone https://github.com/phonopy/phonors.git
+          cd phonors
           maturin develop --release
       - name: Setup phonopy
         run: |
