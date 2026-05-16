@@ -45,6 +45,7 @@ from typing import Literal
 import numpy as np
 import spglib
 
+from phonopy._lang import c_omp_max_threads, have_c_ext, rust_rayon_max_threads
 from phonopy.structure.symmetry import Symmetry
 
 try:
@@ -580,20 +581,6 @@ def _write_displacements_files_then_exit(
     )
 
     if log_level > 0:
-        identity = np.eye(3, dtype=int)
-        n_pure_trans = sum(
-            [
-                (r == identity).all()
-                for r in phonon.symmetry.symmetry_operations["rotations"]
-            ]
-        )
-        if len(phonon.supercell) // len(phonon.primitive) != n_pure_trans:
-            print("*" * 72)
-            print(
-                "Note: "
-                'A better primitive cell can be chosen by using "--pa auto" option.'
-            )
-            print("*" * 72)
         print(f'"{disp_filename}" and supercells have been created.')
 
     _finalize_phonopy(log_level, settings, confs, phonon, filename=disp_filename)
@@ -1539,16 +1526,18 @@ def _start_phonopy(**argparse_control):
     parser, deprecated = get_parser(**argparse_control)
     args = parser.parse_args()
 
-    # Set log level
+    # Set log level. `is_check_symmetry` (phonopy-init only) and
+    # `is_graph_save` (phonopy only) live on different parsers after the
+    # v4 CLI split, so look them up defensively.
     log_level = 1
     if args.verbose:
         log_level = 2
-    if args.quiet or args.is_check_symmetry:
+    if args.quiet or getattr(args, "is_check_symmetry", False):
         log_level = 0
     if args.loglevel is not None:
         log_level = args.loglevel
 
-    if args.is_graph_save:
+    if getattr(args, "is_graph_save", False):
         import matplotlib
 
         matplotlib.use("Agg")
@@ -1557,11 +1546,18 @@ def _start_phonopy(**argparse_control):
     if log_level:
         _print_phonopy()
 
-        import phonopy._phonopy as phonoc  # type: ignore[import]
-
-        max_threads = phonoc.omp_max_threads()
-        if max_threads > 0:
-            print(f"Compiled with OpenMP support (max {max_threads} threads).")
+        # Rust (phonors) is the default backend in v4. Only report OpenMP
+        # threads when --legacy-backend was requested and the C extension
+        # is available; otherwise report rayon threads from phonors.
+        use_legacy = getattr(args, "use_legacy_backend", False)
+        if use_legacy and have_c_ext():
+            max_threads = c_omp_max_threads()
+            if max_threads > 0:
+                print(f"Compiled with OpenMP support (max {max_threads} threads).")
+        else:
+            rust_threads = rust_rayon_max_threads()
+            if rust_threads > 0:
+                print(f"Rust backend (phonors) using rayon ({rust_threads} threads).")
 
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
@@ -1736,6 +1732,7 @@ def _init_phonopy(
     log_level: int,
 ):
     """Prepare phonopy object."""
+    lang = "C" if settings.use_legacy_backend else "Rust"
     if (
         settings.create_displacements
         and settings.random_displacement_temperature is None
@@ -1748,6 +1745,7 @@ def _init_phonopy(
             is_symmetry=settings.is_symmetry,
             calculator=cell_info.interface_mode,
             log_level=log_level,
+            lang=lang,
         )
     else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         phonon = Phonopy(
@@ -1759,6 +1757,7 @@ def _init_phonopy(
             is_symmetry=settings.is_symmetry,
             calculator=cell_info.interface_mode,
             log_level=log_level,
+            lang=lang,
         )
         if settings.frequency_conversion_factor is not None:
             phonon.unit_conversion_factor = settings.frequency_conversion_factor
@@ -1768,11 +1767,13 @@ def _init_phonopy(
     if settings.masses is not None:
         phonon.masses = settings.masses
 
-    # Atomic species without mass case
+    # Atomic species without mass case. VCA / mixed-species sites carry derived
+    # masses already, so the per-symbol lookup (which would fail on composite
+    # labels like "GeSn") is skipped for those cells.
     atom_data = get_atomic_data().atom_data
     symbol_map = get_atomic_data().symbol_map
     symbols_with_no_mass = []
-    if phonon.primitive.masses is None:
+    if phonon.primitive.masses is None and not phonon.primitive.has_mixtures:
         for s in phonon.primitive.symbols:
             if atom_data[symbol_map[s]][3] is None and s not in symbols_with_no_mass:
                 symbols_with_no_mass.append(s)
@@ -1789,6 +1790,84 @@ def _init_phonopy(
     return phonon
 
 
+def _detect_init_operation(
+    run_symmetry_info: bool, settings: PhonopySettings
+) -> str | None:
+    """Return a label of the setup ('init') operation requested, or None.
+
+    The setup operations are everything performed before phonon calculation
+    that exits the program once done: symmetry display, FORCE_SETS /
+    FORCE_CONSTANTS file creation from external calculator results, and
+    pre-calculation displacement generation. Finite-temperature random
+    displacements and pypolymlp-driven random displacements need phonon
+    information and are therefore not setup operations.
+
+    """
+    if run_symmetry_info:
+        return "--symmetry"
+    if settings.create_force_sets or settings.create_force_sets_zero:
+        return "-f / --fz"
+    if settings.create_force_constants:
+        return "--fc"
+    if settings.create_displacements:
+        return "-d"
+    if (
+        settings.random_displacements is not None
+        and settings.random_displacement_temperature is None
+        and not settings.use_pypolymlp
+    ):
+        return "--rd"
+    return None
+
+
+def _install_cli_warning_formatter() -> None:
+    """Render selected library warnings nicely instead of the default format.
+
+    ``MeshSymmetryFallbackWarning`` and ``MeshGRGridFallbackWarning`` are
+    special-cased: the default Python format prepends the source file path
+    and line number, which clutters CLI output.  All other warnings keep
+    their default formatting.
+
+    """
+    import textwrap
+    import warnings
+
+    from phonopy.phonon.mesh import (
+        MeshGRGridFallbackWarning,
+        MeshSymmetryFallbackWarning,
+    )
+    from phonopy.structure.cells import PrimitiveMatrixAutoDefaultWarning
+
+    notice_classes = (
+        MeshSymmetryFallbackWarning,
+        MeshGRGridFallbackWarning,
+        PrimitiveMatrixAutoDefaultWarning,
+    )
+    default_showwarning = warnings.showwarning
+
+    def showwarning(message, category, filename, lineno, file=None, line=None):
+        is_notice = isinstance(message, notice_classes) or (
+            isinstance(category, type) and issubclass(category, notice_classes)
+        )
+        if is_notice:
+            stream = file if file is not None else sys.stderr
+            print("WARNING:", file=stream)
+            for raw_line in str(message).splitlines():
+                if raw_line.startswith("  "):
+                    # Preserve pre-formatted indented blocks (e.g. matrix rows).
+                    print(f"  {raw_line}", file=stream)
+                elif raw_line.strip() == "":
+                    print("", file=stream)
+                else:
+                    for body in textwrap.wrap(raw_line, width=76):
+                        print(f"  {body}", file=stream)
+            print("", file=stream)
+            return
+        default_showwarning(message, category, filename, lineno, file, line)
+
+    warnings.showwarning = showwarning
+
+
 def main(**argparse_control: bool | PhonopyMockArgs):
     """Start phonopy.
 
@@ -1801,16 +1880,26 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     In addition, the argparse_control parameter (argparse_control['args']) is
     implicitly used for running CUI tests via pytest. See test_phonopy_cui.py.
 
-    For the phonopy command:
-        argparse_control = {
-            "load_phonopy_yaml": False,
-        }
-    For the phonopy-load command:
+    For the phonopy command (phonon calculation from a phonopy.yaml file):
         argparse_control = {
             "load_phonopy_yaml": True,
+            "mode": "run",
+        }
+    For the phonopy-init command (supercells / displacements / FORCE_SETS /
+    FORCE_CONSTANTS file generation / symmetry display):
+        argparse_control = {
+            "load_phonopy_yaml": False,
+            "mode": "init",
+        }
+    For the phonopy-load command (deprecated alias of phonopy):
+        argparse_control = {
+            "load_phonopy_yaml": True,
+            "mode": "run",
+            "deprecated_command": "phonopy-load",
         }
 
     """
+    _install_cli_warning_formatter()
     # import warnings
 
     # warnings.simplefilter("error")
@@ -1824,6 +1913,18 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     else:
         load_phonopy_yaml = False
 
+    # CLI mode. "init" handles operations that run before phonon calculation
+    # and exit (displacement generation, FORCE_SETS/FORCE_CONSTANTS file
+    # creation from external calculator results, symmetry display). "run" is
+    # the phonon-calculation workflow. When unset (e.g. from pytest harnesses
+    # that exercise either flow), no mode-based enforcement happens.
+    mode: Literal["init", "run"] | None = argparse_control.get("mode")
+    deprecated_command = argparse_control.get("deprecated_command")
+    if deprecated_command is not None:
+        print("")
+        print(f"WARNING: '{deprecated_command}' is deprecated. Use 'phonopy' instead.")
+        print("")
+
     if "args" in argparse_control:  # For pytest
         assert isinstance(argparse_control["args"], PhonopyMockArgs)
         args = argparse_control["args"]
@@ -1831,11 +1932,11 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         if log_level is None:
             log_level = 1
     else:
-        args, log_level = _start_phonopy(**argparse_control)
+        args, log_level = _start_phonopy(load_phonopy_yaml=load_phonopy_yaml)
 
     plot_conf = {
         "plot_graph": args.is_graph_plot,
-        "save_graph": args.is_graph_save,
+        "save_graph": getattr(args, "is_graph_save", False),
         "with_legend": args.is_legend,
     }
 
@@ -1857,8 +1958,31 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             print("Pure and Applied Chemistry, 88(3), 265-291 (2016).")
             print("")
 
-    # phonopy --symmetry
-    run_symmetry_info = args.is_check_symmetry
+    # phonopy --symmetry (phonopy-init only)
+    run_symmetry_info = getattr(args, "is_check_symmetry", False)
+
+    ##################################################
+    # Enforce CLI mode (phonopy / phonopy-init split) #
+    ##################################################
+    init_op_label = _detect_init_operation(run_symmetry_info, settings)
+    if mode == "run" and init_op_label is not None:
+        print_error_message(
+            f"'{init_op_label}' is a setup operation. "
+            "Use 'phonopy-init' for setup operations."
+        )
+        if log_level:
+            print_error()
+        sys.exit(1)
+    if mode == "init" and init_op_label is None:
+        print_error_message(
+            "No setup operation requested. 'phonopy-init' requires one of: "
+            "-d, --rd (without RANDOM_DISPLACEMENT_TEMPERATURE/PYPOLYMLP), "
+            "-f, --fz, --fc, or --symmetry. "
+            "For phonon calculations, use 'phonopy'."
+        )
+        if log_level:
+            print_error()
+        sys.exit(1)
 
     # -----------------------------------------------------------------------
     # ----------------- 'args' should not be used below. --------------------
@@ -1911,27 +2035,6 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         sys.exit(1)
 
     unitcell_filename = cell_info.optional_structure_info.unitcell_filename
-
-    if cell_info.unitcell.magnetic_moments is not None and _auto_primitive_axes(
-        cell_info.primitive_matrix
-    ):
-        print_error_message(f'Unit cell was read from "{unitcell_filename}".')
-
-        if cell_info.phonopy_yaml is None:
-            print_error_message(
-                "'PRIMITIVE_AXES = auto' and 'BAND = auto' "
-                "are not allowed using with MAGMOM."
-            )
-        else:
-            print_error_message(str(cell_info.phonopy_yaml.unitcell))
-            print_error_message("")
-            print_error_message(
-                "'PRIMITIVE_AXES = auto' and 'BAND = auto' "
-                "are not allowed using with magnetic_moments."
-            )
-        if log_level:
-            print_error()
-        sys.exit(1)
 
     ###########################################################
     # Show crystal symmetry information and exit (--symmetry) #

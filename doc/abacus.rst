@@ -10,7 +10,7 @@ A procedure of ABACUS-phonopy calculation is as follows:
 
 1) To obtain supercells with displacements, run phonopy::
 
-    % phonopy -d --dim="2 2 2" --abacus
+    % phonopy-init -d --dim="2 2 2" --abacus
 
    In this example, 2x2x2 supercells are created. ``STRU.in`` and
    ``STRU-{number}`` give the perfect supercell and supercells
@@ -23,6 +23,6 @@ A procedure of ABACUS-phonopy calculation is as follows:
 
 3) Then create ``FORCE_SETS`` file using ABACUS inteface::
 
-    % phonopy -f ./disp-001//OUT*/running*.log ./disp-002//OUT*/running*.log ...
+    % phonopy-init -f ./disp-001//OUT*/running*.log ./disp-002//OUT*/running*.log ...
 
    Two examples with different settings of basis sets are found in ``example/Al-ABACUS``.

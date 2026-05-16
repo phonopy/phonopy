@@ -47,8 +47,8 @@ from numpy.typing import NDArray
 
 from phonopy.gruneisen.core import GruneisenBase
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
+from phonopy.phonon.grid import get_ir_qpoints_and_weights
 from phonopy.physical_units import get_physical_units
-from phonopy.structure.grid_points import get_qpoints
 
 
 class GruneisenMesh(GruneisenBase):
@@ -66,9 +66,16 @@ class GruneisenMesh(GruneisenBase):
         is_gamma_center: bool = False,
         is_mesh_symmetry: bool = True,
         rotations: Sequence[Sequence[Sequence[int]]] | NDArray[np.int64] | None = None,
+        primitive_symmetry: object | None = None,
         factor: float | None = None,
     ) -> None:
-        """Init method."""
+        """Init method.
+
+        ``rotations`` is kept for backward compatibility and ignored;
+        ``primitive_symmetry`` (typically ``Phonopy.primitive_symmetry``) is
+        used instead for ir-grid reduction.
+
+        """
         super().__init__(dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain)
         self._mesh = np.array(mesh, dtype="int64")
         if factor is None:
@@ -76,14 +83,16 @@ class GruneisenMesh(GruneisenBase):
         else:
             self._factor = factor
         self._cell = dynmat.primitive
-        self._qpoints, self._weights = get_qpoints(
+        _ = rotations
+        self._qpoints, self._weights = get_ir_qpoints_and_weights(
             self._mesh,
-            np.linalg.inv(self._cell.cell),  # type: ignore[arg-type]
+            self._cell.cell,
+            primitive_symmetry=primitive_symmetry,
             q_mesh_shift=shift,
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
-            rotations=rotations,
             is_mesh_symmetry=is_mesh_symmetry,
+            lang=dynmat.lang,
         )
         self.set_qpoints(self._qpoints)
         assert self._gruneisen is not None

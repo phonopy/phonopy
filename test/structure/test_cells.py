@@ -1,6 +1,7 @@
 """Tests of routines in cells.py."""
 
 import os
+import warnings
 from collections.abc import Callable
 
 import numpy as np
@@ -13,9 +14,9 @@ from phonopy.structure.cells import (
     Primitive,
     ShortestPairs,
     TrimmedCell,
+    apply_site_mixture,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
-    convert_to_phonopy_primitive,
     dense_to_sparse_svecs,
     get_angles,
     get_cell_matrix_from_lattice,
@@ -23,9 +24,11 @@ from phonopy.structure.cells import (
     get_primitive,
     get_primitive_matrix,
     get_supercell,
+    guess_primitive_matrix,
     isclose,
     sparse_to_dense_svecs,
 )
+from phonopy.structure.mixture import get_mixture_expansion
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 primitive_matrix_nacl = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
@@ -312,6 +315,30 @@ def test_get_primitive_convcell_Cr_with_magmoms(
     convcell_cr.magnetic_moments = None
 
 
+def test_guess_primitive_matrix_Cr_type_iv(convcell_cr: PhonopyAtoms):
+    """AFM bcc Cr is Type-IV; XSG primitive matrix is returned with warning."""
+    convcell_cr.magnetic_moments = [1, -1]
+    try:
+        with pytest.warns(UserWarning, match="magnetic"):
+            pmat = guess_primitive_matrix(convcell_cr)
+    finally:
+        convcell_cr.magnetic_moments = None
+    # By XSG as Pm-3m, the magnetic ordering is preserved.
+    np.testing.assert_allclose(abs(np.linalg.det(pmat)), 1.0, atol=1e-8)
+
+
+def test_guess_primitive_matrix_Cr_fm_no_warning(convcell_cr: PhonopyAtoms):
+    """FM bcc Cr is not Type-IV; no warning is emitted."""
+    convcell_cr.magnetic_moments = [1, 1]
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            pmat = guess_primitive_matrix(convcell_cr)
+    finally:
+        convcell_cr.magnetic_moments = None
+    np.testing.assert_allclose(abs(np.linalg.det(pmat)), 0.5, atol=1e-8)
+
+
 @pytest.mark.parametrize("store_dense_svecs", [True, False])
 def test_get_primitive_convcell_nacl_svecs(
     nacl_unitcell_order1: PhonopyAtoms, store_dense_svecs
@@ -463,22 +490,6 @@ def test_isclose_with_arbitrary_order(
     np.testing.assert_array_equal(order, [0, 4, 1, 5, 2, 6, 3, 7])
 
 
-def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
-    """Test for convert_to_phonopy_primitive."""
-    scell = ph_nacl.supercell
-    pcell = ph_nacl.primitive
-    _pcell = convert_to_phonopy_primitive(scell, pcell)
-    assert isclose(pcell, _pcell)
-
-    # Changing order of atoms is not allowed.
-    points = pcell.scaled_positions[[1, 0]]
-    symbols = [pcell.symbols[i] for i in (1, 0)]
-    cell = pcell.cell
-    pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, symbols=symbols)
-    with pytest.raises(RuntimeError):
-        _pcell = convert_to_phonopy_primitive(scell, pcell_mode)
-
-
 def test_get_cell_matrix_from_lattice(primcell_nacl: PhonopyAtoms):
     """Test for test_get_cell_matrix_from_lattice."""
     pcell = primcell_nacl
@@ -546,3 +557,181 @@ def test_get_primitive_with_Xn_symbol(ph_nacl: Phonopy):
     with pytest.raises(RuntimeError) as e:
         get_primitive(cell, primitive_matrix="F")
     assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
+
+
+def test_apply_site_mixture_GeSn():
+    """Two overlapping Ge/Sn pairs collapse into two GeSn mixture sites."""
+    a = 2.82173
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+
+    assert len(mixed_cell) == 2
+    assert mixed_cell.has_mixtures
+    assert mixed_cell.symbols == ["GeSn", "GeSn"]
+    np.testing.assert_allclose(
+        mixed_cell.scaled_positions, [[0.0, 0.0, 0.0], [0.25, 0.25, 0.25]]
+    )
+    np.testing.assert_allclose(mixed_cell.species_ids, [0, 0])
+    expected_mass = 0.5 * 72.64 + 0.5 * 118.71
+    np.testing.assert_allclose(mixed_cell.masses, [expected_mass, expected_mass])
+
+
+def test_apply_site_mixture_distinct_mixtures_get_suffixes():
+    """When two distinct mixtures share a composite label, suffixes are added."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
+        ],
+        symbols=["Ge", "Sn", "Ge", "Sn"],
+    )
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.25, 0.75])
+
+    assert mixed_cell.has_mixtures
+    assert mixed_cell.symbols == ["GeSn1", "GeSn2"]
+
+
+def test_apply_site_mixture_unique_composite_no_suffix():
+    """A single GeSn mixture in the cell stays unsuffixed."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+        ],
+        symbols=["Ge", "Sn", "Si"],
+    )
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 1.0])
+
+    assert mixed_cell.symbols == ["GeSn", "Si"]
+
+
+def test_apply_site_mixture_weight_sum_error():
+    """Group weights must sum to 1.0."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        symbols=["Ge", "Sn"],
+    )
+    with pytest.raises(ValueError, match="sum to 1.0"):
+        apply_site_mixture(cell, [0.4, 0.4])
+
+
+def test_apply_site_mixture_isolated_atom_weight_must_be_one():
+    """A non-overlapping atom must carry weight 1.0."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+        symbols=["Ge", "Sn"],
+    )
+    with pytest.raises(ValueError, match="must be 1.0"):
+        apply_site_mixture(cell, [1.0, 0.5])
+
+
+def test_apply_site_mixture_length_mismatch():
+    """Weights length must match natoms."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[[0.0, 0.0, 0.0]],
+        symbols=["Si"],
+    )
+    with pytest.raises(ValueError, match="must match number of atoms"):
+        apply_site_mixture(cell, [1.0, 0.0])
+
+
+def test_apply_site_mixture_rejects_already_mixed_cell():
+    """Re-applying apply_site_mixture on a mixed cell raises."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        symbols=["Ge", "Sn"],
+    )
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5])
+    with pytest.raises(ValueError, match="already contains"):
+        apply_site_mixture(mixed_cell, [1.0])
+
+
+def test_apply_site_mixture_supercell_through_phonopy(ph_nacl: Phonopy):
+    """A mixed unitcell flows through Phonopy and produces a supercell with mixtures."""
+    a = 2.82173
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(mixed_cell, supercell_matrix=np.diag([2, 2, 2]))
+    assert ph.supercell.has_mixtures
+    assert ph.primitive.has_mixtures
+    assert len(ph.supercell) == 16
+
+
+def test_GeSn_mixture_force_constants_e2e():
+    """End-to-end: GeSn 50/50 supercell with raw expanded forces builds FC.
+
+    Construct the canonical GeSn 50/50 zincblende cell, generate
+    displacements through Phonopy, plug in synthetic *expanded* forces
+    of shape (num_supercells, n_expanded, 3) (the shape that VASP would
+    emit on a mixture-expanded SPOSCAR), and confirm produce_force_constants
+    runs end-to-end. The resulting FC has per-site shape, demonstrating
+    the FC-time reduction of raw forces.
+
+    """
+    a = 2.82173
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+    mixed = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(mixed, supercell_matrix=np.diag([2, 2, 2]))
+    ph.generate_displacements(distance=0.01)
+    n_sites = len(ph.supercell)
+    site_indices, _ = get_mixture_expansion(ph.supercell)
+    n_expanded = int(site_indices.size)
+    assert n_expanded == 2 * n_sites
+
+    rng = np.random.default_rng(seed=42)
+    dataset = ph.dataset
+    assert dataset is not None
+    for entry in dataset["first_atoms"]:
+        forces = rng.standard_normal((n_expanded, 3)) * 1e-3
+        forces -= forces.mean(axis=0)  # zero net force
+        entry["forces"] = forces
+
+    ph.dataset = dataset
+    ph.produce_force_constants()
+
+    fc = ph.force_constants
+    assert fc is not None
+    assert fc.shape == (n_sites, n_sites, 3, 3)
+    assert ph.dataset["first_atoms"][0]["forces"].shape == (n_expanded, 3)

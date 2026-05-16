@@ -55,7 +55,7 @@ from phonopy.interface.calculator import (
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_primitive_matrix_with_auto
+from phonopy.structure.cells import apply_site_mixture, get_primitive_matrix_with_auto
 
 _FallbackReason = Literal[
     "load_phonopy_yaml mode",
@@ -125,13 +125,9 @@ def get_cell_info(
         pmat_in_settings = get_primitive_matrix_with_auto(
             phpy_yaml.unitcell, cell_info.primitive_matrix
         )
-        if pmat_in_settings is None:
-            pmat_in_settings = np.eye(3, dtype="double", order="C")
         pmat_in_phpy_yaml = get_primitive_matrix_with_auto(
             phpy_yaml.unitcell, phpy_yaml.primitive_matrix
         )
-        if pmat_in_phpy_yaml is None:
-            pmat_in_phpy_yaml = np.eye(3, dtype="double", order="C")
         if log_level and not np.allclose(
             pmat_in_phpy_yaml, pmat_in_settings, atol=1e-5
         ):
@@ -145,6 +141,11 @@ def get_cell_info(
             for v in pmat_in_settings:
                 print(f"  {v}")
             print("")
+
+    if settings.site_mixture is not None:
+        cell_info.unitcell = apply_site_mixture(
+            cell_info.unitcell, settings.site_mixture
+        )
 
     set_magnetic_moments(cell_info.unitcell, settings.magnetic_moments, log_level)
 

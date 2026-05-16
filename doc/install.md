@@ -84,14 +84,15 @@ packages. Windows users should use conda (conda-forge channel) packages as well.
 
 Prepare the following Python libraries:
 
-- Python (>=3.9) and its header files
+- Python (>=3.10) and its header files
 - numpy (>=1.17)
 - matplotlib (>=2.2.2)
 - python-yaml (pyyaml>=5.3)
 - python-h5py (h5py>=3.0)
 - scipy
-- spglib (>=2.3)
-- symfc (>=1.2)
+- spglib (>=2.5)
+- symfc (>=1.7)
+- phonors (Rust backend; installed automatically by `pip install phonopy`)
 
 It is recommended to install seekpath to plot phonon band structure:
 
@@ -156,6 +157,14 @@ removed.
 
    The editable install (`pip install -e`) may not work depending on the
    computer environment.
+
+Since v4, `phonors` is the default backend and a required runtime
+dependency. It is installed automatically from PyPI by `pip install
+phonopy`. The C extension is still built by default and remains
+selectable as a legacy backend (`lang="C"` / `--legacy-backend`).
+A Rust-only build that skips the C extension entirely is available
+via `PHONOPY_NO_C_EXT=1` at install time. See {ref}`rust_backend`
+for details.
 
 (install_trouble_shooting)=
 

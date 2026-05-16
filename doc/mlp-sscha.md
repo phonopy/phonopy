@@ -5,8 +5,8 @@
 **This is an experimental feature, and its usage may change occasionally.**
 
 ```{note}
-This feature is supported through the `phonopy-load` command but not the `phonopy`
-command.
+This feature is supported through the `phonopy` command (`--pypolymlp` option).
+`phonopy-init` does not handle MLP-driven force-constant calculations.
 ```
 
 With the `--pypolymlp` option, phonopy can interface with the polynomial machine
@@ -164,7 +164,7 @@ assumed to use the VASP code. Once the calculations are complete, the data
 (forces and energies) can be extracted using the following command:
 
 ```bash
-% phonopy --sp -f vasprun_xmls/vasprun-{001..120}.xml
+% phonopy-init --sp -f vasprun_xmls/vasprun-{001..120}.xml
 ```
 
 This command extracts the necessary data and stores it in the
@@ -177,7 +177,7 @@ from calculator outputs is only supported when using the VASP interface.
 Having `phonopy_params.yaml`, phonopy is executed with `--pypolymlp` option,
 
 ```
-% phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --mlp-params="ntrain=100, ntest=20"
+% phonopy phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --mlp-params="ntrain=100, ntest=20"
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -271,7 +271,7 @@ displacements, temperature dependent force constants are calculated with the
 `--sscha NUMBER_OF_ITERATIONS` option.
 
 ```
-% phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd-temperature 300 --rd 1000
+% phonopy phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd-temperature 300 --rd 1000
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -528,7 +528,7 @@ structures corresponding to the SSCHA force constants at the iteration
 steps. For example:
 
 ```
-% for i in {0..10}; do phonopy-load phonopy_sscha_fc_$i.yaml.xz --band auto --band-points 101; mv band.yaml band-$i.yaml; done
+% for i in {0..10}; do phonopy phonopy_sscha_fc_$i.yaml.xz --band auto --band-points 101; mv band.yaml band-$i.yaml; done
 % phonopy-bandplot band-{0..10}.yaml --legend
 ```
 
@@ -538,7 +538,7 @@ A few parameters can be specified using the `--mlp-params` option for the
 development of MLPs. The parameters are provided as a string, e.g.,
 
 ```bash
-% phonopy-load phonopy_params.yaml --pypolymlp --mlp-params="ntrain=80, ntest=20"
+% phonopy phonopy_params.yaml --pypolymlp --mlp-params="ntrain=80, ntest=20"
 ```
 
 Parameters are separated by commas for configuration. A brief explanation of the
@@ -582,11 +582,11 @@ can then be performed by varying the size of the training dataset while keeping
 the test dataset unchanged as follows:
 
 ```bash
-% phonopy-load --pypolymlp --mlp-params="ntrain=20, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-20
-% phonopy-load --pypolymlp --mlp-params="ntrain=40, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-40
-% phonopy-load --pypolymlp --mlp-params="ntrain=60, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-60
-% phonopy-load --pypolymlp --mlp-params="ntrain=80, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-80
-% phonopy-load --pypolymlp --mlp-params="ntrain=100, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-100
+% phonopy --pypolymlp --mlp-params="ntrain=20, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-20
+% phonopy --pypolymlp --mlp-params="ntrain=40, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-40
+% phonopy --pypolymlp --mlp-params="ntrain=60, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-60
+% phonopy --pypolymlp --mlp-params="ntrain=80, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-80
+% phonopy --pypolymlp --mlp-params="ntrain=100, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-100
 ```
 
 The computed phonon band structures are plotted against the size of the training

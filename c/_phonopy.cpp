@@ -569,6 +569,42 @@ void py_tetrahedron_method_dos(nb::ndarray<> py_dos, nb::ndarray<> py_mesh,
                                 num_coef, num_gp);
 }
 
+void py_get_thm_integration_weights_at_grid_points(
+    nb::ndarray<> py_iw, nb::ndarray<> py_frequency_points,
+    nb::ndarray<> py_relative_grid_address, nb::ndarray<> py_D_diag,
+    nb::ndarray<> py_grid_points, nb::ndarray<> py_frequencies,
+    nb::ndarray<> py_bz_grid_address, nb::ndarray<> py_bz_map,
+    nb::ndarray<> py_gp2irgp_map, int64_t bz_grid_type, const char *function) {
+    double *iw;
+    double *frequency_points;
+    int64_t num_frequency_points, num_band, num_gp;
+    int64_t (*relative_grid_address)[4][3];
+    int64_t *D_diag;
+    int64_t *grid_points;
+    int64_t (*bz_grid_address)[3];
+    int64_t *bz_map;
+    int64_t *gp2irgp_map;
+    double *frequencies;
+
+    iw = (double *)py_iw.data();
+    frequency_points = (double *)py_frequency_points.data();
+    num_frequency_points = (int64_t)py_frequency_points.shape(0);
+    relative_grid_address = (int64_t (*)[4][3])py_relative_grid_address.data();
+    D_diag = (int64_t *)py_D_diag.data();
+    grid_points = (int64_t *)py_grid_points.data();
+    num_gp = (int64_t)py_grid_points.shape(0);
+    bz_grid_address = (int64_t (*)[3])py_bz_grid_address.data();
+    bz_map = (int64_t *)py_bz_map.data();
+    gp2irgp_map = (int64_t *)py_gp2irgp_map.data();
+    frequencies = (double *)py_frequencies.data();
+    num_band = (int64_t)py_frequencies.shape(1);
+
+    phpy_get_thm_integration_weights_at_grid_points(
+        iw, frequency_points, num_frequency_points, num_band, num_gp,
+        relative_grid_address, D_diag, grid_points, bz_grid_address, bz_map,
+        bz_grid_type, frequencies, gp2irgp_map, function[0]);
+}
+
 NB_MODULE(_phonopy, m) {
     m.def("transform_dynmat_to_fc", &py_transform_dynmat_to_fc);
     m.def("perm_trans_symmetrize_fc", &py_perm_trans_symmetrize_fc);
@@ -594,6 +630,8 @@ NB_MODULE(_phonopy, m) {
           &py_thm_integration_weight_at_omegas);
     m.def("tetrahedra_frequencies", &py_get_tetrahedra_frequenies);
     m.def("tetrahedron_method_dos", &py_tetrahedron_method_dos);
+    m.def("integration_weights_at_grid_points",
+          &py_get_thm_integration_weights_at_grid_points);
     m.def("use_openmp", &phpy_use_openmp);
     m.def("omp_max_threads", &phpy_get_max_threads);
 }

@@ -42,8 +42,8 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.phonon.tetrahedron_method import TetrahedronMethod
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 
 class TetrahedronMesh:
@@ -58,7 +58,7 @@ class TetrahedronMesh:
         grid_mapping_table: NDArray[np.int64],
         ir_grid_points: NDArray[np.int64],
         grid_order: list[int] | None = None,
-        lang: Literal["C", "Python"] = "C",
+        lang: Literal["C", "Python", "Rust"] = "Rust",
     ) -> None:
         """Linear tetrahedron method on uniform mesh for phonons.
 
@@ -100,8 +100,8 @@ class TetrahedronMesh:
         self._mesh = np.array(mesh, dtype="int64")
         self._grid_address = grid_address
         self._grid_mapping_table = grid_mapping_table
-        self._lang: Literal["C", "Python"] = lang
-        if lang == "C":
+        self._lang: Literal["C", "Python", "Rust"] = lang
+        if lang in ("C", "Rust"):
             self._grid_order = None
         else:
             if grid_order is None:
@@ -169,7 +169,7 @@ class TetrahedronMesh:
         value: Literal["I", "J"] = "I",
         division_number: int = 201,
         frequency_points: NDArray[np.double] | None = None,
-        lang: Literal["C", "Python"] = "C",
+        lang: Literal["C", "Python", "Rust"] = "Rust",
     ) -> None:
         """Prepare environment to perform linear tetrahedron method."""
         self._grid_point_count = 0
@@ -209,7 +209,7 @@ def get_tetrahedra_frequencies(
     gp_ir_index: NDArray[np.int64],
     frequencies: NDArray[np.double],
     grid_order: list[int] | None = None,
-    lang: Literal["C", "Python"] = "C",
+    lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.double]:
     """Return frequencies on the relative_grid_addresses.
 
@@ -249,7 +249,7 @@ def get_tetrahedra_frequencies(
         dtype='double', order='C'
 
     """
-    if lang == "C":
+    if lang in ("C", "Rust"):
         try:
             import phonopy._phonopy as phonoc  # noqa F401
 

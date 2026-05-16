@@ -132,6 +132,60 @@ def test_write_read_FORCE_SETS_type1(tmp_path):
     )
 
 
+def test_write_read_FORCE_SETS_type1_expanded(tmp_path):
+    """Expanded mixture-mode FORCE_SETS roundtrips with site-index disp atoms."""
+    n_sites = 2
+    n_expanded = 4
+    forces0 = np.array(
+        [
+            [0.10, 0.0, 0.0],
+            [0.00, 0.0, 0.0],
+            [0.20, 0.0, 0.0],
+            [0.00, 0.0, 0.0],
+        ],
+        dtype="double",
+    )
+    forces1 = np.array(
+        [
+            [0.0, 0.30, 0.0],
+            [0.0, 0.00, 0.0],
+            [0.0, 0.40, 0.0],
+            [0.0, 0.00, 0.0],
+        ],
+        dtype="double",
+    )
+    dataset = {
+        "natom": n_sites,
+        "first_atoms": [
+            {
+                "number": 0,
+                "displacement": np.array([0.01, 0.0, 0.0]),
+                "forces": forces0,
+            },
+            {
+                "number": 1,
+                "displacement": np.array([0.0, 0.01, 0.0]),
+                "forces": forces1,
+            },
+        ],
+    }
+
+    out = tmp_path / "FORCE_SETS"
+    write_FORCE_SETS(dataset, filename=out)
+
+    # Header line 1 must be n_expanded so the parser can detect the
+    # mismatch with the supercell site count.
+    first_line = out.read_text().splitlines()[0].strip()
+    assert int(first_line) == n_expanded
+
+    dataset2 = parse_FORCE_SETS(filename=out, natom=n_sites)
+    assert dataset2["natom"] == n_sites
+    assert dataset2["first_atoms"][0]["number"] == 0
+    assert dataset2["first_atoms"][1]["number"] == 1
+    np.testing.assert_allclose(dataset2["first_atoms"][0]["forces"], forces0)
+    np.testing.assert_allclose(dataset2["first_atoms"][1]["forces"], forces1)
+
+
 # ---------------------------------------------------------------------------
 # FORCE_SETS type2
 # ---------------------------------------------------------------------------

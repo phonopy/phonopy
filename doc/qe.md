@@ -34,7 +34,7 @@ NaCl example found in `example/NaCl-QE` directory.
    {ref}`qe_mode` option:
 
    ```bash
-   % phonopy --qe -d --dim="2 2 2" -c NaCl.in
+   % phonopy-init --qe -d --dim="2 2 2" -c NaCl.in
    ```
 
    In this example, 2x2x2 supercells are created. `supercell.in` and
@@ -73,7 +73,7 @@ NaCl example found in `example/NaCl-QE` directory.
    the following phonopy command is executed:
 
    ```bash
-   % phonopy -f NaCl-001.out NaCl-002.out
+   % phonopy-init -f NaCl-001.out NaCl-002.out
    ```
 
    Here `.out` files are the saved text files of standard outputs of the
@@ -90,7 +90,7 @@ NaCl example found in `example/NaCl-QE` directory.
    automatically read. Examples of post-process are shown below.
 
    ```
-   % phonopy-load -p --config band.conf
+   % phonopy -p --config band.conf
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -150,12 +150,13 @@ NaCl example found in `example/NaCl-QE` directory.
    :width: 50%
    ```
 
-   `--qe -c NaCl.in` is specific for the QE-phonopy
-   calculation but the other settings are totally common among calculator
-   interfaces such as
+   The calculator interface (`--qe`) was specified in the `phonopy-init`
+   step; the post-processing `phonopy` command reads the calculator name
+   from `phonopy_disp.yaml`. Phonon-calculation options can be supplied
+   directly on the command line:
 
    ```
-   % phonopy --qe -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy [other-OPTIONS] [setting-file]
    ```
 
    For settings and command options, see
@@ -259,7 +260,7 @@ Once this is made, the non-analytical term correction is included
 just adding the `--nac` option as follows:
 
 ```bash
-% phonopy-load -p --config band.conf
+% phonopy -p --config band.conf
 ```
 
 ```{image} NaCl-pwscf-band-NAC.png
@@ -452,7 +453,7 @@ NaCl example is found at
 <https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r>.
 
 ```bash
-% phonopy-load phonopy_params_q2r.yaml --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" -p
+% phonopy phonopy_params_q2r.yaml --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" -p
 ```
 
 ```{image} NaCl-q2r-band-NAC.png

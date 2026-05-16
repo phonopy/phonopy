@@ -20,7 +20,7 @@ The following is a walkthrough for a phonopy calculation with LM:
 2.  Read the LM site file and create supercells with a command of the form,
 
     ```bash
-        phonopy --qlm -d --dim='2 2 2' -c site.lm
+        phonopy-init --qlm -d --dim='2 2 2' -c site.lm
     ```
 
     In this example, 2x2x2 supercells are created. `supercell.lm` and
@@ -37,22 +37,22 @@ The following is a walkthrough for a phonopy calculation with LM:
 4.  Create `FORCE_SETS` by:
 
     ```bash
-        phonopy --qlm -f supercell-001/force.lm supercell-002/force.lm  ...
+        phonopy-init --qlm -f supercell-001/force.lm supercell-002/force.lm  ...
     ```
 
     To run this command, `phonopy_disp.yaml` has to be located in the current
     directory because the atomic displacements are written into the
     `FORCE_SETS` file.
 
-5. Run post-process of phonopy with the LM site file for the unit cell used in
-    the first step
+5. Run post-process of phonopy.  Crystal structure and calculator interface
+    are read from `phonopy_disp.yaml`:
 
     ```bash
-        phonopy --qlm -c site.lm -p band.conf
+        phonopy -p band.conf
     ```
 
     or
 
     ```bash
-        phonopy --qlm -c site.lm --dim="2 2 2" [other-OPTIONS] [setting-file]
+        phonopy [other-OPTIONS] [setting-file]
     ```

@@ -43,9 +43,9 @@ from typing import Literal, TypedDict
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.phonon.grid import BZGrid
 from phonopy.phonon.mesh import Mesh
-from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
-from phonopy.structure.tetrahedron_method import TetrahedronMethod
+from phonopy.phonon.spectrum import TetrahedronDOSAccumulator
 
 
 class TotalDosDict(TypedDict):
@@ -99,6 +99,7 @@ class Dos:
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -109,25 +110,21 @@ class Dos:
             pre-computed frequencies and weights are used.
         sigma : float, optional
             Sigma for smearing method. If None, tetrahedron method is used.
+        lang : {"C", "Rust"}, optional
+            Backend selector for the tetrahedron-method kernels.  Default
+            is "C".
 
         """
         self._mesh_object = mesh_object
         self._frequencies = mesh_object.frequencies
         self._weights = mesh_object.weights
-        self._tetrahedron_mesh = None
+        self._use_tetrahedron_method = use_tetrahedron_method
         self._frequency_points: NDArray[np.double]
         self._sigma = sigma
+        self._lang: Literal["C", "Rust"] = lang
 
         if use_tetrahedron_method:
             self.set_draw_area()
-            self._tetrahedron_mesh = TetrahedronMesh(
-                mesh_object.dynamical_matrix.primitive,
-                self._frequencies,
-                mesh_object.mesh_numbers,
-                mesh_object.grid_address,
-                mesh_object.grid_mapping_table,
-                mesh_object.ir_grid_points,
-            )
         else:
             self._sigma = self.set_draw_area()
             self.set_smearing_function("Normal")
@@ -192,6 +189,38 @@ class Dos:
         return sigma
 
 
+def _bzgrid_and_full_grid_frequencies(
+    mesh_object: Mesh,
+    lang: Literal["C", "Rust"] = "Rust",
+) -> tuple[BZGrid, NDArray[np.double]]:
+    """Return a BZGrid covering every regular-grid point with frequencies on it.
+
+    The Mesh stores ``frequencies`` only at ir-grid points but the Mesh's
+    symmetry resolution may differ from BZGrid's (e.g. NAC, slightly different
+    rotation reduction).  To avoid an alignment headache the BZGrid here is
+    built without point-group reduction; the per-mode frequencies are
+    replicated from the Mesh's ir-grid via ``grid_mapping_table`` so every GR
+    grid point gets its symmetry-equivalent frequency.  Numerically equivalent
+    to the legacy ``tetrahedron_method_dos`` C kernel which also iterated over
+    all grid points.
+
+    """
+    bzgrid = BZGrid(
+        mesh_object.mesh_numbers,
+        lattice=mesh_object.dynamical_matrix.primitive.cell,
+        is_shift=mesh_object.is_shift,
+        is_time_reversal=False,
+        lang=lang,
+    )
+    ir_position = {int(gp): i for i, gp in enumerate(mesh_object.ir_grid_points)}
+    positions = np.array(
+        [ir_position[int(gp)] for gp in mesh_object.grid_mapping_table],
+        dtype="int64",
+    )
+    frequencies_full = mesh_object.frequencies[positions]
+    return bzgrid, frequencies_full
+
+
 class TotalDos(Dos):
     """Class to calculate total DOS."""
 
@@ -200,17 +229,18 @@ class TotalDos(Dos):
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
         super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            lang=lang,
         )
         self._dos: NDArray[np.double] | None = None
         self._freq_Debye: float | None = None
         self._Debye_fit_coef = None
-        self._openmp_thm = True
 
     def run(self) -> None:
         """Calculate total DOS."""
@@ -219,15 +249,7 @@ class TotalDos(Dos):
                 [self._get_density_of_states_at_freq(f) for f in self._frequency_points]
             )
         else:
-            assert self._tetrahedron_mesh is not None
-            if self._openmp_thm:
-                self._run_tetrahedron_method_dos()
-            else:
-                self._dos = np.zeros_like(self._frequency_points)
-                thm = self._tetrahedron_mesh
-                thm.set(value="I", frequency_points=self._frequency_points)
-                for i, iw in enumerate(thm):
-                    self._dos += np.sum(iw * self._weights[i], axis=1)
+            self._run_tetrahedron_method_dos()
 
     @property
     def dos(self) -> NDArray[np.double] | None:
@@ -310,28 +332,27 @@ class TotalDos(Dos):
         if self._dos is None:
             raise RuntimeError("Run total DOS calculation first.")
 
-        if self._tetrahedron_mesh is None:
-            comment = "Sigma = %f" % self._sigma
-        else:
+        if self._use_tetrahedron_method:
             comment = "Tetrahedron method"
+        else:
+            comment = "Sigma = %f" % self._sigma
 
         write_total_dos(
             self._frequency_points, self._dos, comment=comment, filename=filename
         )
 
     def _run_tetrahedron_method_dos(self) -> None:
-        mesh_numbers = self._mesh_object.mesh_numbers
-        cell = self._mesh_object.dynamical_matrix.primitive
-        reciprocal_lattice = np.linalg.inv(cell.cell)
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
-        self._dos = run_tetrahedron_method_dos(
-            mesh_numbers,
-            self._frequency_points,
-            self._frequencies,
-            self._mesh_object.grid_address,
-            self._mesh_object.grid_mapping_table,
-            tm.tetrahedra,
+        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(
+            self._mesh_object, lang=self._lang
         )
+        res = TetrahedronDOSAccumulator(
+            freqs_full,
+            bzgrid,
+            sampling_points=self._frequency_points,
+            lang=self._lang,
+        ).result
+        # res.density shape: (1, n_sampling, 1) for plain DOS.
+        self._dos = res.density[0, :, 0]
 
     def _get_density_of_states_at_freq(self, f: float) -> np.double:
         return np.sum(
@@ -360,12 +381,14 @@ class ProjectedDos(Dos):
         use_tetrahedron_method: bool = False,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
         super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            lang=lang,
         )
         if self._mesh_object.eigenvectors is None:
             raise ValueError("Mesh object does not have eigenvectors.")
@@ -391,8 +414,6 @@ class ProjectedDos(Dos):
                 proj_eigvecs += self._eigenvectors[:, i_z, :] * d[2]
                 self._eigvecs2 = np.abs(proj_eigvecs) ** 2
 
-        self._openmp_thm = True
-
     @property
     def projected_dos(self) -> NDArray[np.double] | None:
         """Return projected DOS."""
@@ -400,15 +421,12 @@ class ProjectedDos(Dos):
 
     def run(self) -> None:
         """Calculate projected DOS."""
-        if self._tetrahedron_mesh is None:
+        if self._use_tetrahedron_method:
+            self._run_tetrahedron_method_dos()
+        else:
             if self._frequency_points is None:
                 raise RuntimeError("Run projected DOS calculation first.")
             self._run_smearing_method()
-        else:
-            if self._openmp_thm:
-                self._run_tetrahedron_method_dos()
-            else:
-                self._run_tetrahedron_method()
 
     def plot(
         self,
@@ -457,10 +475,10 @@ class ProjectedDos(Dos):
         if self._frequency_points is None or self._projected_dos is None:
             raise RuntimeError("Run projected DOS calculation first.")
 
-        if self._tetrahedron_mesh is None:
-            comment = "Sigma = %f" % self._sigma
-        else:
+        if self._use_tetrahedron_method:
             comment = "Tetrahedron method"
+        else:
+            comment = "Sigma = %f" % self._sigma
 
         write_projected_dos(
             self._frequency_points,
@@ -482,33 +500,34 @@ class ProjectedDos(Dos):
                     weights, self._eigvecs2[:, j, :] * amplitudes
                 ).sum()
 
-    def _run_tetrahedron_method(self) -> None:
-        assert self._tetrahedron_mesh is not None
-
-        num_pdos = self._eigvecs2.shape[1]
-        num_freqs = len(self._frequency_points)
-        self._projected_dos = np.zeros((num_pdos, num_freqs), dtype="double")
-        thm = self._tetrahedron_mesh
-        thm.set(value="I", frequency_points=self._frequency_points)
-        for i, iw in enumerate(thm):
-            w = self._weights[i]
-            self._projected_dos += np.dot(iw * w, self._eigvecs2[i].T).T
-
     def _run_tetrahedron_method_dos(self) -> None:
-        mesh_numbers = self._mesh_object.mesh_numbers
-        cell = self._mesh_object.dynamical_matrix.primitive
-        reciprocal_lattice = np.linalg.inv(cell.cell)
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
-        pdos = run_tetrahedron_method_dos(
-            mesh_numbers,
-            self._frequency_points,
-            self._frequencies,
-            self._mesh_object.grid_address,
-            self._mesh_object.grid_mapping_table,
-            tm.tetrahedra,
-            coef=self._eigvecs2,
+        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(
+            self._mesh_object, lang=self._lang
         )
-        self._projected_dos = pdos.T
+        # Replicate per-mode eigvecs2 to every grid point via the same ir
+        # mapping that _bzgrid_and_full_grid_frequencies uses.
+        ir_position = {
+            int(gp): i for i, gp in enumerate(self._mesh_object.ir_grid_points)
+        }
+        positions = np.array(
+            [ir_position[int(gp)] for gp in self._mesh_object.grid_mapping_table],
+            dtype="int64",
+        )
+        # eigvecs2 shape: (n_ir, num_pdos, n_band).  Replicate to (n_grid,
+        # num_pdos, n_band) then reshape to (1, n_grid, n_band, num_pdos)
+        # for TetrahedronDOSAccumulator.
+        mode_property = np.ascontiguousarray(
+            self._eigvecs2[positions].transpose(0, 2, 1)[None]
+        )
+        res = TetrahedronDOSAccumulator(
+            freqs_full,
+            bzgrid,
+            mode_property=mode_property,
+            sampling_points=self._frequency_points,
+            lang=self._lang,
+        ).result
+        # res.density shape: (1, n_sampling, num_pdos) -> (num_pdos, n_sampling).
+        self._projected_dos = res.density[0].T
 
 
 def write_total_dos(
@@ -665,44 +684,6 @@ def plot_projected_dos(
         ax.set_ylabel(ylabel)
 
     ax.grid(draw_grid)
-
-
-def run_tetrahedron_method_dos(
-    mesh: NDArray[np.int64],
-    frequency_points: NDArray[np.double],
-    frequencies: NDArray[np.double],
-    grid_address: NDArray[np.int64],
-    grid_mapping_table: NDArray[np.int64],
-    relative_grid_address: NDArray[np.int64],
-    coef: NDArray[np.double] | None = None,
-) -> NDArray[np.double]:
-    """Return (P)DOS calculated by tetrahedron method in C."""
-    try:
-        import phonopy._phonopy as phonoc
-    except ImportError as exc:
-        raise RuntimeError("Phonopy C-extension has to be built properly.") from exc
-
-    if coef is None:
-        _coef = np.ones((frequencies.shape[0], 1, frequencies.shape[1]), dtype="double")
-    else:
-        _coef = np.array(coef, dtype="double", order="C")
-    arr_shape = frequencies.shape + (len(frequency_points), _coef.shape[1])
-    dos = np.zeros(arr_shape, dtype="double")
-
-    phonoc.tetrahedron_method_dos(
-        dos,
-        mesh,
-        frequency_points,
-        frequencies,
-        _coef,
-        grid_address,
-        grid_mapping_table,
-        relative_grid_address,
-    )
-    if coef is None:
-        return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
-    else:
-        return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
 
 
 def get_dos_frequency_range(

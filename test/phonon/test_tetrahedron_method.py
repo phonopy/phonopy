@@ -1,11 +1,18 @@
 """Tests for routines in tetrahedron_method.py."""
 
 import numpy as np
+import pytest
 
-from phonopy.structure.tetrahedron_method import (
+from phonopy.phonon.tetrahedron_method import (
+    TetrahedronMethod,
     get_all_tetrahedra_relative_grid_address,
     get_tetrahedra_integration_weight,
+    get_tetrahedra_relative_grid_address,
 )
+
+# These tests exercise the C kernels directly (default lang="C") and the
+# C/Rust parity helpers; both require phonopy._phonopy.
+pytest.importorskip("phonopy._phonopy")
 
 rel_ga_ref = [
     0,
@@ -1223,3 +1230,37 @@ def test_get_tetrahedra_integration_weight_one_freq():
         )
     np.testing.assert_allclose(iw_I_ref, iw_I, atol=1e-5)
     np.testing.assert_allclose(iw_J_ref, iw_J, atol=1e-5)
+
+
+# Microzone lattices spanning a few cell shapes (cubic, distorted, monoclinic-ish).
+# get_tetrahedra_relative_grid_address picks a main diagonal whose orientation
+# depends on the metric, so different lattices exercise different code paths.
+_MICROZONE_LATTICES = [
+    np.eye(3) / 4,
+    np.diag([1.0, 1.5, 2.0]) / 4,
+    np.array([[1.0, 0.1, 0.0], [0.0, 1.0, 0.0], [0.2, 0.0, 1.0]]) / 4,
+    np.array(
+        [[1.0, 0.5, 0.0], [0.0, np.sqrt(3) / 2, 0.0], [0.0, 0.0, 1.6]],
+    )
+    / 4,
+]
+
+
+@pytest.mark.parametrize("lat", _MICROZONE_LATTICES)
+def test_get_tetrahedra_relative_grid_address_rust_matches_c(
+    lat: np.ndarray,
+) -> None:
+    """phonors.tetrahedra_relative_grid_address must agree with the C kernel."""
+    pytest.importorskip("phonors")
+    ga_c = get_tetrahedra_relative_grid_address(lat, lang="C")
+    ga_r = get_tetrahedra_relative_grid_address(lat, lang="Rust")
+    np.testing.assert_array_equal(ga_c, ga_r)
+
+
+@pytest.mark.parametrize("lat", _MICROZONE_LATTICES)
+def test_TetrahedronMethod_rust_matches_c(lat: np.ndarray) -> None:
+    """TetrahedronMethod with lang='Rust' must produce identical tetrahedra."""
+    pytest.importorskip("phonors")
+    tm_c = TetrahedronMethod(lat, mesh=[4, 4, 4], lang="C")
+    tm_r = TetrahedronMethod(lat, mesh=[4, 4, 4], lang="Rust")
+    np.testing.assert_array_equal(tm_c.tetrahedra, tm_r.tetrahedra)

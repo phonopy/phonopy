@@ -22,7 +22,7 @@ The procedure of a Siesta-phonopy calculation is the following:
 1) Read a Siesta input file and create supercells with
    :ref:`siesta_mode` option::
 
-   % phonopy --siesta -d --dim="2 2 2" -c Si.fdf
+   % phonopy-init --siesta -d --dim="2 2 2" -c Si.fdf
 
    In this example, 2x2x2 supercells are created. ``supercell.fdf`` and
    ``supercell-xxx.fdf`` (``xxx`` are numbers) give the perfect
@@ -43,7 +43,7 @@ The procedure of a Siesta-phonopy calculation is the following:
 
    ::
 
-     % phonopy --siesta -f disp-001/Si.FA ...
+     % phonopy-init --siesta -f disp-001/Si.FA ...
 
    Here ``*.FA`` files are the forces files created by Siesta.
    To run this command, ``phonopy_disp.yaml`` has to be
@@ -51,11 +51,11 @@ The procedure of a Siesta-phonopy calculation is the following:
    written into the FORCE_SETS file. An example is found in
    ``example/Si-siesta``.
 
-4) Run post-process of phonopy with the Siesta input file for the
-   unit cell used in the step 1::
+4) Run post-process of phonopy.  Crystal structure and calculator
+   interface are read from ``phonopy_disp.yaml``::
 
-   % phonopy --siesta -c Si.fdf -p band.conf
+   % phonopy -p band.conf
 
    or::
 
-   % phonopy --siesta -c Si.fdf --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy [other-OPTIONS] [setting-file]

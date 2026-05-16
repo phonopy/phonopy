@@ -6,6 +6,7 @@ import itertools
 import os
 import pathlib
 import tempfile
+import warnings
 from typing import Literal
 
 import h5py
@@ -13,7 +14,13 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.phonon.mesh import IterMesh, Mesh
+from phonopy.phonon.mesh import (
+    IterMesh,
+    Mesh,
+    MeshGRGridFallbackWarning,
+    MeshSymmetryFallbackWarning,
+)
+from phonopy.structure.atoms import PhonopyAtoms
 
 freqs_full_fcsym_ref = [
     0.000000,
@@ -293,3 +300,49 @@ def _test_IterMesh(ph_nacl: Phonopy, freqs_ref):
 
 def _check_no_files():
     assert not list(pathlib.Path(".").iterdir())
+
+
+def _agno2_phonopy(agno2_cell: PhonopyAtoms) -> Phonopy:
+    """Build a minimal Phonopy on the AgNO2 (Imm2) primitive cell.
+
+    Force constants are zeroed because the fallback path is exercised at
+    Mesh construction; no real phonons are needed.
+
+    """
+    ph = Phonopy(agno2_cell, supercell_matrix=[1, 1, 1], primitive_matrix="auto")
+    n_atoms = len(ph.supercell)
+    ph.force_constants = np.zeros((n_atoms, n_atoms, 3, 3))
+    return ph
+
+
+def test_mesh_grg_fallback_on_float_input(agno2_cell: PhonopyAtoms):
+    """Float input on body-centered primitive triggers GR-grid fallback."""
+    ph = _agno2_phonopy(agno2_cell)
+    with pytest.warns(MeshGRGridFallbackWarning):
+        ph.init_mesh(mesh=20.0)
+    # GR-grid result for length=20 on AgNO2 Imm2 primitive.
+    np.testing.assert_array_equal(ph.mesh.mesh_numbers, [1, 6, 24])
+    assert len(ph.mesh.qpoints) == 36
+    # Total weight equals prod(D_diag) (all GR points covered).
+    assert int(ph.mesh.weights.sum()) == int(np.prod(ph.mesh.mesh_numbers))
+
+
+def test_mesh_tr_only_fallback_on_tuple_input(agno2_cell: PhonopyAtoms):
+    """3-tuple input keeps the legacy time-reversal-only fallback."""
+    ph = _agno2_phonopy(agno2_cell)
+    with pytest.warns(MeshSymmetryFallbackWarning):
+        ph.init_mesh(mesh=[5, 7, 7])
+    # mesh_numbers must match the user-requested 3-tuple (no GR-grid swap).
+    np.testing.assert_array_equal(ph.mesh.mesh_numbers, [5, 7, 7])
+    # TR-only on [5, 7, 7] = 245 grid points -> 123 ir-qpoints.
+    assert len(ph.mesh.qpoints) == 123
+
+
+def test_mesh_no_fallback_on_uniform_tuple(agno2_cell: PhonopyAtoms):
+    """Uniform [N, N, N] is compatible with Imm2 primitive: no fallback."""
+    ph = _agno2_phonopy(agno2_cell)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", MeshGRGridFallbackWarning)
+        warnings.simplefilter("error", MeshSymmetryFallbackWarning)
+        ph.init_mesh(mesh=[4, 4, 4])
+    np.testing.assert_array_equal(ph.mesh.mesh_numbers, [4, 4, 4])

@@ -2,6 +2,49 @@
 
 # Change Log
 
+## May-16-2026: Version 4.0.0
+
+Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
+
+- CLI split into `phonopy-init` (setup: displacements, FORCE_SETS /
+  FORCE_CONSTANTS conversion, `--symmetry`) and `phonopy` (phonon
+  calculation). `phonopy-load` is kept as a deprecated alias of
+  `phonopy`. The `phonopy` argument parser now rejects setup flags
+  (`-d`, `--rd`, `-f`, `--fz`, `--fc`, `--symmetry`) and points the user
+  to `phonopy-init`.
+- `primitive_matrix` default changed to `"auto"` across `Phonopy`,
+  `phonopy.load`, and the CLI (`--pa`). Pass `"P"` (or `--pa P`) for
+  the identity transformation. A value stored in a phonopy.yaml file
+  still takes priority over the default.
+- `--nac` was removed. NAC is now enabled automatically when a `BORN`
+  file is present or `nac_params` is stored in `phonopy.yaml`. Pass
+  `--nonac` to disable NAC explicitly.
+- Auto-fall back to full force constants when the input "primitive" cell
+  is not actually primitive (e.g. an I-centered conventional cell) and
+  symfc detects a smaller true primitive cell. The previous behaviour
+  produced shape-mismatched compact force constants and crashed during
+  drift evaluation or post-symmetrisation.
+- Rust backend (`phonors` crate) is now the default and a required
+  runtime dependency. `Phonopy()`, `phonopy.load()`, and the CLI run on
+  Rust out of the box. The C extension is retained as a legacy backend
+  selectable via `lang="C"` or the new `--legacy-backend` flag
+  (conf-file equivalent: `LEGACY_BACKEND = .true.`). The previous
+  `--rust` flag becomes a deprecated no-op. A no-C-extension build is
+  available via `PHONOPY_NO_C_EXT=1` at install time. See
+  {ref}`rust_backend`.
+- The behaviour when a sampling mesh breaks the primitive-cell point-group
+  symmetry has changed. As a result, mesh-based calculations (DOS, thermal
+  properties, etc.) on such meshes may give different numerical results
+  from previous versions. When the mesh was specified by a length (float
+  input), the grid is now rebuilt as a generalized regular grid that keeps
+  full point-group symmetry; the resulting `mesh_numbers` may differ from
+  the regular-grid value.
+- VCA / mixed-species site support: `PhonopyAtoms` gains a species
+  table, `apply_vca()` helper, and `--site-mixture` CLI flag (was
+  initially `--vca`). VASP POSCAR writes expand mixed sites; force
+  I/O and FC-time computation handle site-mixture cells.
+- Bug fix: copy-by-reference issue in `qpoints.py`.
+
 ## Apr-23-2026: Version 3.5.1
 
 - Release to follow the change of symfc.
@@ -518,7 +561,8 @@
   spglib. So spglib has to be installed separately. But for normal cases, it is
   handled by the package manager.
 - A new way of using phonopy from command line is proposed at
-  {ref}`phonopy_load_command`.
+  {ref}`phonopy_command` (originally introduced as the `phonopy-load`
+  command).
 - Castep interface was added by @ladyteam.
 
 ## May-3-2020: Version 2.6.1
