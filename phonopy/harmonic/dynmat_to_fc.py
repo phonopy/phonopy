@@ -265,7 +265,7 @@ class DynmatToForceConstants:
         commensurate_points: NDArray[np.double] | None = None,
         is_full_fc: bool = True,
         use_openmp: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 

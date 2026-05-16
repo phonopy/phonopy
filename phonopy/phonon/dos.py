@@ -99,7 +99,7 @@ class Dos:
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -191,7 +191,7 @@ class Dos:
 
 def _bzgrid_and_full_grid_frequencies(
     mesh_object: Mesh,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[BZGrid, NDArray[np.double]]:
     """Return a BZGrid covering every regular-grid point with frequencies on it.
 
@@ -229,7 +229,7 @@ class TotalDos(Dos):
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
         super().__init__(
@@ -381,7 +381,7 @@ class ProjectedDos(Dos):
         use_tetrahedron_method: bool = False,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
         super().__init__(

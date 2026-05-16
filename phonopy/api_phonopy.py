@@ -183,7 +183,7 @@ class Phonopy:
         hermitianize_dynamical_matrix: bool = True,
         calculator: str | None = None,
         log_level: int = 0,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ):
         """Init method.
 

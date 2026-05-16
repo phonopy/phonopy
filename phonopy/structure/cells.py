@@ -331,7 +331,7 @@ class Primitive(PhonopyAtoms):
         symprec: float = 1e-5,
         store_dense_svecs: bool = True,
         positions_to_reorder: NDArray[np.double] | None = None,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -844,7 +844,7 @@ def get_primitive(
     symprec: float = 1e-5,
     store_dense_svecs: bool = True,
     positions_to_reorder: NDArray[np.double] | None = None,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> Primitive:
     """Create primitive cell."""
     pmat = get_primitive_matrix(primitive_matrix)
@@ -1202,7 +1202,7 @@ def get_smallest_vectors(
     primitive_pos: NDArray[np.double],
     store_dense_svecs: bool = True,
     symprec: float = 1e-5,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return shortest vectors and multiplicities.
 
@@ -1249,7 +1249,7 @@ class ShortestPairs:
         primitive_pos: NDArray[np.double],
         store_dense_svecs: bool = True,
         symprec: float = 1e-5,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -1568,7 +1568,7 @@ def compute_all_sg_permutations(
     translations: NDArray[np.double],  # scaled
     lattice: NDArray[np.double],  # column vectors
     symprec: float,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Compute permutations for space group operations.
 
@@ -1614,7 +1614,7 @@ def compute_permutation_for_rotation(
     positions_b: NDArray[np.double],
     lattice: NDArray[np.double],
     symprec: float,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Get the overall permutation such that.
 
@@ -1688,7 +1688,7 @@ def _compute_permutation(
     positions_b: NDArray[np.double],
     lattice: NDArray[np.double],
     symprec: float,  # scaled positions  # column vectors
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return mapping defined by positions_a[perm[i]] == positions_b[i].
 

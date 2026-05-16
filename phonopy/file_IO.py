@@ -774,7 +774,7 @@ def parse_BORN(
     symprec: float = 1e-5,
     is_symmetry: bool = True,
     filename: str | os.PathLike = "BORN",
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> dict:
     """Parse BORN file.
 
@@ -804,7 +804,7 @@ def parse_BORN_from_strings(
     primitive: PhonopyAtoms,
     symprec: float = 1e-5,
     is_symmetry: bool = True,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> dict:
     """Parse BORN file text.
 
@@ -820,7 +820,7 @@ def _parse_BORN_from_file_object(
     primitive: PhonopyAtoms,
     symprec: float,
     is_symmetry: bool,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> dict:
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry, lang=lang)
     return get_born_parameters(f, primitive, symmetry)

@@ -70,7 +70,7 @@ class FDFCSolver:
         dataset: Type1DisplacementDataset,
         is_compact_fc: bool = False,
         log_level: int = 0,  # currently not used
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ):
         if is_compact_fc and primitive:
             atom_list = primitive.p2s_map
@@ -105,7 +105,7 @@ class FDFCSolver:
         dataset: Type1DisplacementDataset,
         atom_list: NDArray[np.int64] | None = None,
         primitive: Primitive | None = None,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> NDArray[np.double]:
         """Force constants are computed.
 
@@ -289,7 +289,7 @@ def cutoff_force_constants(
 def symmetrize_force_constants(
     force_constants: NDArray[np.double],
     level: int = 1,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> None:
     """Symmetry force constants by translational and permutation symmetries.
 
@@ -340,7 +340,7 @@ def symmetrize_compact_force_constants(
     force_constants: NDArray[np.double],
     primitive: Primitive,
     level: int = 1,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> None:
     """Symmetry force constants by translational and permutation symmetries.
 
@@ -407,7 +407,7 @@ def distribute_force_constants(
     permutations: NDArray[np.int64],
     atom_list: Sequence[int] | NDArray[np.int64] | None = None,
     fc_indices_of_atom_list: Sequence[int] | NDArray[np.int64] | None = None,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> None:
     """Fill force constants elements by symmetry.
 
@@ -480,7 +480,7 @@ def distribute_force_constants(
 def distribute_force_constants_by_translations(
     fc: NDArray[np.double],
     primitive: Primitive,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> None:
     """Distribute compact fc data to full fc by pure translations.
 
@@ -512,7 +512,7 @@ def solve_force_constants(
     site_symmetry: NDArray[np.int64],
     symprec: float,
     atom_list: NDArray[np.int64] | None = None,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> None:
     """Calculate force constants elements of pairs from an atom."""
     if atom_list is None:
@@ -542,7 +542,7 @@ def get_positions_sent_by_rot_inv(
     positions: NDArray[np.double],
     site_symmetry: NDArray[np.int64],
     symprec: float,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return atom indices of positions sent by inverse site symmetries.
 
@@ -691,7 +691,7 @@ def set_permutation_symmetry(force_constants: NDArray[np.double]) -> None:
 def get_drift_force_constants(
     force_constants: NDArray[np.double],
     primitive: Primitive | None = None,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[float, float, list[int], list[int]]:
     """Get max drift of force constants."""
     lang = resolve_lang(lang)
@@ -766,7 +766,7 @@ def show_drift_force_constants(
     name: str = "force constants",
     values_only: bool = False,
     digit: int = 8,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ):
     """Show force constants drift."""
     maxval1, maxval2, xy1, xy2 = get_drift_force_constants(
@@ -900,7 +900,7 @@ def _solve_force_constants_svd(
     supercell: PhonopyAtoms,
     site_symmetry: NDArray[np.int64],
     symprec: float,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.double]:
     lattice = supercell.cell.T
     positions = supercell.scaled_positions
@@ -932,7 +932,7 @@ def _get_force_constants_disps(
     dataset: Type1DisplacementDataset,
     symmetry: Symmetry,
     atom_list: NDArray[np.int64] | None = None,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Calculate force constants Phi = -F / d.
 

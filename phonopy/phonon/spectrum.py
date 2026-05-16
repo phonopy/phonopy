@@ -103,7 +103,7 @@ class TetrahedronDOSAccumulator:
         ir_grid_map: NDArray[np.int64] | None = None,
         sampling_points: NDArray[np.double] | Sequence[float] | None = None,
         num_sampling_points: int = 100,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 

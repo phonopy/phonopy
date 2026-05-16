@@ -237,7 +237,7 @@ class ThermalPropertiesBase:
         band_indices: Sequence[Sequence[int]] | None = None,
         is_projection: bool = False,
         classical: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -370,7 +370,7 @@ class ThermalProperties(ThermalPropertiesBase):
         band_indices: Sequence[Sequence[int]] | None = None,
         is_projection: bool = False,
         classical: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 

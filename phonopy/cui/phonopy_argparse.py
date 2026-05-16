@@ -799,7 +799,18 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
         dest="use_rust",
         action="store_true",
         default=None,
-        help="Use experimental Rust backend instead of the C extension",
+        help=(
+            "Deprecated no-op: the Rust backend (phonors) is the default in "
+            "phonopy v4. Pass --legacy-backend to opt back into the C "
+            "extension."
+        ),
+    )
+    parser.add_argument(
+        "--legacy-backend",
+        dest="use_legacy_backend",
+        action="store_true",
+        default=None,
+        help="Use the legacy C-extension backend instead of the default Rust backend",
     )
     parser.add_argument(
         "-s",
@@ -1096,6 +1107,7 @@ class PhonopyMockArgs:
     thermal_displacement_matrices_cif: float | None = None
     use_pypolymlp: bool | None = None
     use_rust: bool | None = None
+    use_legacy_backend: bool | None = None
     write_dynamical_matrices: bool | None = None
     write_force_constants: bool | None = None
     writefc_format: str | None = None

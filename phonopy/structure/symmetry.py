@@ -87,7 +87,7 @@ class Symmetry:
         symprec: float = 1e-5,
         is_symmetry: bool = True,
         s2p_map: NDArray[np.int64] | None = None,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ):
         """Init method.
 
@@ -468,7 +468,7 @@ def elaborate_borns_and_epsilon(
     is_symmetry: bool = True,
     symmetrize_tensors: bool = False,
     symprec: float = 1e-5,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.int64]]:
     """Symmetrize Born effective charges and dielectric constants.
 
@@ -544,7 +544,7 @@ def symmetrize_borns_and_epsilon(
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     symprec: float = 1e-5,
     is_symmetry: bool = True,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Symmetrize Born effective charges and dielectric tensor.
 
@@ -695,7 +695,7 @@ def _extract_independent_atoms(
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     is_symmetry: bool = True,
     symprec: float = 1e-5,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.int64], list[int]]:
     scell, pcell = _get_supercell_and_primitive(
         ucell,
@@ -718,7 +718,7 @@ def _get_supercell_and_primitive(
     primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
     supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
     symprec: float = 1e-5,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[Supercell, Primitive]:
     if primitive_matrix is None:
         pmat = np.eye(3)

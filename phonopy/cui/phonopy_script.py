@@ -1546,17 +1546,18 @@ def _start_phonopy(**argparse_control):
     if log_level:
         _print_phonopy()
 
-        # When --rust was requested, or when the C extension is missing
-        # (and we are about to fall back to Rust), report rayon threads.
-        # Otherwise report OpenMP threads from the C extension.
-        if args.use_rust or not have_c_ext():
-            rust_threads = rust_rayon_max_threads()
-            if rust_threads > 0:
-                print(f"Rust backend (phonors) using rayon ({rust_threads} threads).")
-        else:
+        # Rust (phonors) is the default backend in v4. Only report OpenMP
+        # threads when --legacy-backend was requested and the C extension
+        # is available; otherwise report rayon threads from phonors.
+        use_legacy = getattr(args, "use_legacy_backend", False)
+        if use_legacy and have_c_ext():
             max_threads = c_omp_max_threads()
             if max_threads > 0:
                 print(f"Compiled with OpenMP support (max {max_threads} threads).")
+        else:
+            rust_threads = rust_rayon_max_threads()
+            if rust_threads > 0:
+                print(f"Rust backend (phonors) using rayon ({rust_threads} threads).")
 
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
@@ -1731,7 +1732,7 @@ def _init_phonopy(
     log_level: int,
 ):
     """Prepare phonopy object."""
-    lang = "Rust" if settings.use_rust else "C"
+    lang = "C" if settings.use_legacy_backend else "Rust"
     if (
         settings.create_displacements
         and settings.random_displacement_temperature is None

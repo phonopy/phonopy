@@ -120,7 +120,7 @@ class Settings:
         self.min_temperature: float = 0
         self.temperature_step: float = 10
         self.use_pypolymlp: bool = False
-        self.use_rust: bool = False
+        self.use_legacy_backend: bool = False
 
 
 # Parse phonopy setting filen
@@ -485,11 +485,22 @@ class ConfParser(Generic[TSettings]):
             if args.use_pypolymlp:
                 self._confs["use_pypolymlp"] = ".true."
 
-        if "use_rust" in arg_list:
-            if args.use_rust:
-                self._confs["use_rust"] = ".true."
-            elif args.use_rust is False:
-                self._confs["use_rust"] = ".false."
+        if "use_rust" in arg_list and args.use_rust:
+            import warnings
+
+            warnings.warn(
+                "--rust is a deprecated no-op in phonopy v4; the Rust backend "
+                "is now the default. Pass --legacy-backend to opt back into "
+                "the C extension.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        if "use_legacy_backend" in arg_list:
+            if args.use_legacy_backend:
+                self._confs["use_legacy_backend"] = ".true."
+            elif args.use_legacy_backend is False:
+                self._confs["use_legacy_backend"] = ".false."
 
     def _parse_conf(self) -> None:
         """Add treatments to settings from conf file or command options.
@@ -851,11 +862,11 @@ class ConfParser(Generic[TSettings]):
                 elif confs["use_pypolymlp"].lower() == ".false.":
                     self._set_parameter("use_pypolymlp", False)
 
-            if conf_key == "use_rust":
-                if confs["use_rust"].lower() == ".true.":
-                    self._set_parameter("use_rust", True)
-                elif confs["use_rust"].lower() == ".false.":
-                    self._set_parameter("use_rust", False)
+            if conf_key == "use_legacy_backend":
+                if confs["use_legacy_backend"].lower() == ".true.":
+                    self._set_parameter("use_legacy_backend", True)
+                elif confs["use_legacy_backend"].lower() == ".false.":
+                    self._set_parameter("use_legacy_backend", False)
 
     def _set_parameter(self, key: str, val: object) -> None:
         """Pass to another data structure."""
@@ -1073,9 +1084,9 @@ class ConfParser(Generic[TSettings]):
         if "use_pypolymlp" in params:
             settings.use_pypolymlp = params["use_pypolymlp"]
 
-        # Use experimental Rust backend
-        if "use_rust" in params:
-            settings.use_rust = params["use_rust"]
+        # Opt-in for legacy C-extension backend (default is Rust in v4)
+        if "use_legacy_backend" in params:
+            settings.use_legacy_backend = params["use_legacy_backend"]
 
 
 #

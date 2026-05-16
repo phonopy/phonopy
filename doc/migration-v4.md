@@ -192,12 +192,51 @@ The following Python imports changed:
 
 There are no deprecation shims; the old names are gone in v4.
 
-## New optional features (no breakage)
+## Rust backend (`phonors`) is now the default
 
-The following are additive and do not affect existing workflows:
+The Rust kernels in [phonors](https://github.com/phonopy/phonors) are
+the default backend in v4. `phonors` is a required runtime dependency
+and is installed automatically with phonopy. The C extension is still
+built and kept as a legacy backend that users can opt back into.
 
-- **Rust backend**: a `phonors` Rust extension can replace the C
-  extension for performance-critical kernels. Enable per call with
-  `lang="Rust"` / `--rust`. See {ref}`rust_backend`.
-- **Optional C extension**: setting `PHONOPY_NO_C_EXT=1` at build time
-  skips the C extension entirely, leaving the Python and Rust paths.
+What this means for existing code:
+
+- `Phonopy(...)`, `phonopy.load(...)`, and the CLI all run on the Rust
+  backend out of the box. Numerical results are bit-identical to the
+  C path on every kernel that has parity tests.
+- Performance is generally similar to or better than the C extension
+  thanks to rayon-based parallelism. The startup banner now prints
+  `Rust backend (phonors) using rayon (N threads).`
+- The C extension is still built by default and remains selectable
+  per call via `lang="C"` / `--legacy-backend`.
+
+### `--rust` is deprecated (no-op)
+
+`--rust` used to enable the experimental Rust backend. In v4 it is a
+deprecated no-op: the Rust backend is already active. The flag still
+parses (so v3 command lines do not error) but emits a
+`DeprecationWarning` and will be removed in a future release.
+
+### `--legacy-backend` opts back into the C extension
+
+To keep using the C kernels (for example to compare against v3
+numerical output, or to work around a hypothetical phonors regression),
+pass `--legacy-backend` on the CLI or `lang="C"` in the Python API.
+The conf-file equivalent is `LEGACY_BACKEND = .true.`.
+
+**v3 (or v4 with explicit opt-in):**
+
+```bash
+phonopy --legacy-backend band.conf
+```
+
+```python
+ph = Phonopy(unitcell, supercell_matrix, lang="C")
+ph = phonopy.load("phonopy.yaml", lang="C")
+```
+
+### Optional C-extension builds
+
+Setting `PHONOPY_NO_C_EXT=1` at build time still skips the C extension
+entirely; in that case `lang="C"` silently falls back to Rust with a
+one-time notice.
