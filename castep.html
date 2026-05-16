@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CASTEP &amp; phonopy calculation &#8212; Phonopy v.3.5.1</title>
+    <title>CASTEP &amp; phonopy calculation &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="FHI-aims &amp; phonopy calculations" href="aims.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -355,7 +358,7 @@ CASTEP.</p>
 <ol class="arabic">
 <li><p>Generate supercell based on structrural parameters given in
 <code class="docutils literal notranslate"><span class="pre">unitcell.cell</span></code> file by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span>
 </pre></div>
 </div>
 <p>In this example file <code class="docutils literal notranslate"><span class="pre">unitcell.cell</span></code> contains initial spin values in
@@ -374,12 +377,12 @@ value, symmetry operation E, and name of pseudopotential.</p>
 </li>
 <li><p>Run CASTEP calculation in <code class="docutils literal notranslate"><span class="pre">displ-001</span></code> directory</p></li>
 <li><p>Generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">f</span> <span class="n">displ</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span> <span class="n">displ</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">f</span> <span class="n">displ</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span> <span class="n">displ</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span>
 </pre></div>
 </div>
 </li>
 <li><p>Finally plot phonon bandstructure by running the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </li>
@@ -392,7 +395,7 @@ Spin-polarization example.</p>
 <ol class="arabic">
 <li><p>Generate supercell based on structrural parameters given in
 <code class="docutils literal notranslate"><span class="pre">unitcell.cell</span></code> file by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span>
 </pre></div>
 </div>
 <p>In this example file <code class="docutils literal notranslate"><span class="pre">unitcell.cell</span></code> contains initial spin values in
@@ -411,12 +414,12 @@ value, symmetry operation E, and name of pseudopotential.</p>
 </li>
 <li><p>Run CASTEP calculation in <code class="docutils literal notranslate"><span class="pre">displ-001</span></code> directory</p></li>
 <li><p>Generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">f</span> <span class="n">displ</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">f</span> <span class="n">displ</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span>
 </pre></div>
 </div>
 </li>
 <li><p>Finally plot phonon bandstructure by running the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span> <span class="o">--</span><span class="n">band</span><span class="o">=</span><span class="s2">&quot;1/2 -1/2 1/2 0 0 0 1/4 1/4 1/4&quot;</span> <span class="o">-</span><span class="n">p</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2&quot;</span> <span class="o">--</span><span class="n">band</span><span class="o">=</span><span class="s2">&quot;1/2 -1/2 1/2 0 0 0 1/4 1/4 1/4&quot;</span> <span class="o">-</span><span class="n">p</span>
 </pre></div>
 </div>
 </li>

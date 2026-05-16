@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Fleur &amp; phonopy calculation &#8212; Phonopy v.3.5.1</title>
+    <title>Fleur &amp; phonopy calculation &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="CASTEP &amp; phonopy calculation" href="castep.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -367,7 +370,7 @@ line of the Bravais matrix and ‘! num atoms’ after the atom count.</p>
 <ol class="arabic">
 <li><p>Read a Fleur input file and create supercells with the
 <a class="reference internal" href="command-options.html#fleur-mode"><span class="std std-ref">--fleur</span></a> option:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fleur</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;a b c&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">fleur_inpgen</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">fleur</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;a b c&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">fleur_inpgen</span>
 </pre></div>
 </div>
 <p>In this example several axbxc supercells are created. <code class="docutils literal notranslate"><span class="pre">supercell.in</span></code>
@@ -386,7 +389,7 @@ and add ‘f_level=”n”’ behind it with n from {0,1,2,3}. This optional
 tag ensures the write-out of the ‘FORCES’ file and setting it to
 {1,2,3} calculates additional refined force contibutions.</p></li>
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fleur</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">FORCES</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">FORCES</span> <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">fleur</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">FORCES</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">FORCES</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be located in same
@@ -396,13 +399,13 @@ FORCE_SETS file. See some more detail at
 supercell and only one necessary displacement is found in
 <code class="docutils literal notranslate"><span class="pre">example/Al-Fleur</span></code>.</p>
 </li>
-<li><p>Run the post-process of phonopy with the Fleur input file for the
-unit cell used in step 1:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fleur</span> <span class="o">-</span><span class="n">c</span> <span class="n">fleur_inpgen</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<li><p>Run the post-process of phonopy.  Crystal structure and calculator
+interface are read from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>if you prepared a band.conf file or:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fleur</span> <span class="o">-</span><span class="n">c</span> <span class="n">fleur_inpgen</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>if you want to set the path directly or specify a different file.</p>

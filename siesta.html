@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Siesta &amp; phonopy calculation &#8212; Phonopy v.3.5.1</title>
+    <title>Siesta &amp; phonopy calculation &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Abinit &amp; phonopy calculation" href="abinit.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -358,7 +361,7 @@ More tags may be supported on request.</p>
 <ol class="arabic">
 <li><p>Read a Siesta input file and create supercells with
 <a class="reference internal" href="command-options.html#siesta-mode"><span class="std std-ref">--siesta</span></a> option:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span>
 </pre></div>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">supercell.fdf</span></code> and
@@ -376,7 +379,7 @@ displacements. Calculation specification tags have to be added to
 in the force calculations, because atomic forces induced by a small
 atomic displacement are what we need for the phonon calculation.</p></li>
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">Si</span><span class="o">.</span><span class="n">FA</span> <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">Si</span><span class="o">.</span><span class="n">FA</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">*.FA</span></code> files are the forces files created by Siesta.
@@ -385,13 +388,13 @@ located in the current directory because the atomic displacements are
 written into the FORCE_SETS file. An example is found in
 <code class="docutils literal notranslate"><span class="pre">example/Si-siesta</span></code>.</p>
 </li>
-<li><p>Run post-process of phonopy with the Siesta input file for the
-unit cell used in the step 1:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<li><p>Run post-process of phonopy.  Crystal structure and calculator
+interface are read from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>or:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
 </pre></div>
 </div>
 </li>

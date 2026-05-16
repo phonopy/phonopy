@@ -11,16 +11,10 @@ for phonopy. This file can contain the following information:
 - Energies of supercells
 - Parameters used for non-analytical term correction
 
-`phonopy-load` command ({ref}`phonopy_load_command`) can read this type of file, e.g.,
+The `phonopy` command ({ref}`phonopy_command`) reads this type of file, e.g.,
 
 ```bash
-% phonopy-load phonopy_params.yaml [OPTIONS]
-```
-
-`phonopy` command can read this file with `-c` option
-
-```bash
-% phonopy -c phonopy_params.yaml CONFIG_FILE [OPTIONS]
+% phonopy phonopy_params.yaml [OPTIONS]
 ```
 
 ## Compression support
@@ -34,13 +28,13 @@ read in the same way as shown above.
 PhononDB data downloaded from <https://doi.org/10.48505/nims.4197> (its list of
 crystals <https://github.com/atztogo/phonondb/blob/main/mdr/phonondb/README.md>)
 are given in `phonopy_xxx.yaml.xz`. Therefore these are readily used with
-`phonopy-load` or `phonopy -c` commands. For example,
+the `phonopy` command. For example,
 
 ```bash
 % wget https://mdr.nims.go.jp/download_all/9306t5111.zip
 % unzip -d mp-661 9306t5111.zip
 % cd mp-661
-% phonopy-load phonopy_params.yaml.xz --band auto -p --pdos auto
+% phonopy phonopy_params.yaml.xz --band auto -p --pdos auto
 ```
 
 ```{image} phonondb-mp-661.png

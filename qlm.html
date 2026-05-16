@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Questaal &amp; phonopy calculation &#8212; Phonopy v.3.5.1</title>
+    <title>Questaal &amp; phonopy calculation &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="LAMMPS &amp; phonopy calculation" href="lammps.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -355,7 +358,7 @@ ctrl files is planned.</p>
 section in the ctrl file. Both relative and cartesian coordinates are
 supported. Remember to set <code class="docutils literal notranslate"><span class="pre">forces=1</span></code> in section <code class="docutils literal notranslate"><span class="pre">ham</span></code> of the ctrl file.</p></li>
 <li><p>Read the LM site file and create supercells with a command of the form,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy<span class="w"> </span>--qlm<span class="w"> </span>-d<span class="w"> </span>--dim<span class="o">=</span><span class="s1">&#39;2 2 2&#39;</span><span class="w"> </span>-c<span class="w"> </span>site.lm
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy-init<span class="w"> </span>--qlm<span class="w"> </span>-d<span class="w"> </span>--dim<span class="o">=</span><span class="s1">&#39;2 2 2&#39;</span><span class="w"> </span>-c<span class="w"> </span>site.lm
 </pre></div>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">supercell.lm</span></code> and
@@ -369,20 +372,20 @@ directory. This file contains information pertaining to displacements.</p>
 use the <code class="docutils literal notranslate"><span class="pre">--wforce=force</span></code> flag. This will write a file containing forces.
 Phonopy will require this file to be read in the next step.</p></li>
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy<span class="w"> </span>--qlm<span class="w"> </span>-f<span class="w"> </span>supercell-001/force.lm<span class="w"> </span>supercell-002/force.lm<span class="w">  </span>...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy-init<span class="w"> </span>--qlm<span class="w"> </span>-f<span class="w"> </span>supercell-001/force.lm<span class="w"> </span>supercell-002/force.lm<span class="w">  </span>...
 </pre></div>
 </div>
 <p>To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be located in the current
 directory because the atomic displacements are written into the
 <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file.</p>
 </li>
-<li><p>Run post-process of phonopy with the LM site file for the unit cell used in
-the first step</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy<span class="w"> </span>--qlm<span class="w"> </span>-c<span class="w"> </span>site.lm<span class="w"> </span>-p<span class="w"> </span>band.conf
+<li><p>Run post-process of phonopy.  Crystal structure and calculator interface
+are read from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy<span class="w"> </span>-p<span class="w"> </span>band.conf
 </pre></div>
 </div>
 <p>or</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy<span class="w"> </span>--qlm<span class="w"> </span>-c<span class="w"> </span>site.lm<span class="w"> </span>--dim<span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span><span class="w"> </span><span class="o">[</span>other-OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>setting-file<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy<span class="w"> </span><span class="o">[</span>other-OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>setting-file<span class="o">]</span>
 </pre></div>
 </div>
 </li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Phonopy API for Python &#8212; Phonopy v.3.5.1</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="External tools" href="external-tools.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -141,6 +141,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -179,11 +180,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -366,11 +369,22 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#positions"><code class="docutils literal notranslate"><span class="pre">positions</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symbols"><code class="docutils literal notranslate"><span class="pre">symbols</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#numbers"><code class="docutils literal notranslate"><span class="pre">numbers</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#species-ids"><code class="docutils literal notranslate"><span class="pre">species_ids</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#species-table"><code class="docutils literal notranslate"><span class="pre">species_table</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#has-mixtures"><code class="docutils literal notranslate"><span class="pre">has_mixtures</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#masses"><code class="docutils literal notranslate"><span class="pre">masses</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods">Methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-species-sites-and-the-virtual-crystal-approximation">Mixed-species sites and the Virtual Crystal Approximation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-cell-with-mixed-sites">Building a cell with mixed sites</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-site-mixture-utility"><code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code> utility</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-site-mixture">CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#forces-for-mixed-species-cells">Forces for mixed-species cells</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#expansion-ordering">Expansion ordering</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">
@@ -816,14 +830,20 @@ the convention of LAPACK, which can be shown at
 <span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="n">masses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="n">magnetic_moments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="n">species_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="n">species_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 </pre></div>
 </div>
 <p>At least three arguments have to be given at the initialization, which are</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cell</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">positions</span></code> or <code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">symbols</span></code> or <code class="docutils literal notranslate"><span class="pre">numbers</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">symbols</span></code>, or <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, or (<code class="docutils literal notranslate"><span class="pre">species_table</span></code> and <code class="docutils literal notranslate"><span class="pre">species_ids</span></code>)</p></li>
 </ul>
+<p><code class="docutils literal notranslate"><span class="pre">symbols</span></code>, <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, and <code class="docutils literal notranslate"><span class="pre">species_table</span></code> are mutually exclusive. The
+<code class="docutils literal notranslate"><span class="pre">species_table</span></code> / <code class="docutils literal notranslate"><span class="pre">species_ids</span></code> pair is the canonical internal representation
+and is required to construct cells with mixed-species sites such as those
+arising from the Virtual Crystal Approximation; see <a class="reference internal" href="#mixed-species-sites"><span class="std std-ref">Mixed-species sites and the Virtual Crystal Approximation</span></a>.</p>
 </section>
 <section id="variables">
 <span id="phonopy-atoms-variables"></span><h3>Variables<a class="headerlink" href="#variables" title="Link to this heading">#</a></h3>
@@ -866,6 +886,30 @@ the convention of LAPACK, which can be shown at
 </pre></div>
 </div>
 <p>for the ZnO unit cell.</p>
+<p>For cells that contain mixed-species sites (e.g. VCA), <code class="docutils literal notranslate"><span class="pre">cell.numbers</span></code> raises
+<code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> because a mixture has no single atomic number; use
+<code class="docutils literal notranslate"><span class="pre">cell.species_ids</span></code> instead.</p>
+</section>
+<section id="species-ids">
+<h4><code class="docutils literal notranslate"><span class="pre">species_ids</span></code><a class="headerlink" href="#species-ids" title="Link to this heading">#</a></h4>
+<p>Per-atom indices into <code class="docutils literal notranslate"><span class="pre">cell.species_table</span></code>. Each id is an opaque
+non-negative integer that refers to a <code class="docutils literal notranslate"><span class="pre">_Species</span></code> entry; two atoms share
+an id iff they are the same chemical species (including any suffix index
+or mixture content). Available on every cell, including those without
+mixed sites.</p>
+</section>
+<section id="species-table">
+<h4><code class="docutils literal notranslate"><span class="pre">species_table</span></code><a class="headerlink" href="#species-table" title="Link to this heading">#</a></h4>
+<p>Deduplicated list of <code class="docutils literal notranslate"><span class="pre">_Species</span></code> entries indexed by <code class="docutils literal notranslate"><span class="pre">species_ids</span></code>. Each
+entry holds either a single-element species (<code class="docutils literal notranslate"><span class="pre">atomic_number</span></code> set) or a
+mixed-species site (<code class="docutils literal notranslate"><span class="pre">mixture</span></code> set to a tuple of <code class="docutils literal notranslate"><span class="pre">(symbol,</span> <span class="pre">weight)</span></code> pairs
+summing to 1.0). The list is a shallow copy on each access; entries are
+frozen and safe to share.</p>
+</section>
+<section id="has-mixtures">
+<h4><code class="docutils literal notranslate"><span class="pre">has_mixtures</span></code><a class="headerlink" href="#has-mixtures" title="Link to this heading">#</a></h4>
+<p>Boolean property. <code class="docutils literal notranslate"><span class="pre">True</span></code> when any species in the cell is a weighted mixture
+of constituents (e.g. a VCA virtual-crystal site).</p>
 </section>
 <section id="masses">
 <h4><code class="docutils literal notranslate"><span class="pre">masses</span></code><a class="headerlink" href="#masses" title="Link to this heading">#</a></h4>
@@ -885,6 +929,9 @@ the convention of LAPACK, which can be shown at
 <span class="n">magnetic_moments</span>
 <span class="n">symbols</span>
 <span class="n">numbers</span>
+<span class="n">species_ids</span>
+<span class="n">species_table</span>
+<span class="n">has_mixtures</span>
 <span class="n">volume</span>
 </pre></div>
 </div>
@@ -897,6 +944,151 @@ can be deep-copied by <code class="docutils literal notranslate"><span class="pr
 Yaml format is shown by <code class="docutils literal notranslate"><span class="pre">print(unitcell)</span></code>. <code class="docutils literal notranslate"><span class="pre">unitcell.to_tuple</span></code> converts to
 spglib crystal structure
 (<a class="reference external" href="https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell">https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell</a>).</p>
+</section>
+<section id="mixed-species-sites-and-the-virtual-crystal-approximation">
+<span id="mixed-species-sites"></span><h3>Mixed-species sites and the Virtual Crystal Approximation<a class="headerlink" href="#mixed-species-sites-and-the-virtual-crystal-approximation" title="Link to this heading">#</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>Experimental.</strong> The mixed-species / Virtual Crystal Approximation
+(VCA) support — including <code class="docutils literal notranslate"><span class="pre">species_table</span></code> / <code class="docutils literal notranslate"><span class="pre">species_ids</span></code> /
+<code class="docutils literal notranslate"><span class="pre">has_mixtures</span></code> on <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code>, <code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code>,
+<code class="docutils literal notranslate"><span class="pre">build_species_table_from_mixtures</span></code>, the <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code> CLI option,
+the FC-time mixture-force reduction, and the VASP <code class="docutils literal notranslate"><span class="pre">expand_mixtures</span></code>
+writer — is experimental. APIs, file layouts (including the expanded
+<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> format), and CLI flags may change without notice in
+upcoming releases. Currently only the VASP calculator interface is
+wired for mixture-expanded I/O.</p>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> instance owns a deduplicated species table plus a
+per-atom index list (<code class="docutils literal notranslate"><span class="pre">species_ids</span></code>). A species can either be an ordinary
+chemical element or a weighted mixture of elements; the latter represents a
+single crystallographic site shared by several species in fixed proportions
+(e.g. a Virtual Crystal Approximation site for a Ge/Sn alloy). Mixed-site
+masses are the weight-averaged sum of constituent atomic masses.</p>
+<section id="building-a-cell-with-mixed-sites">
+<h4>Building a cell with mixed sites<a class="headerlink" href="#building-a-cell-with-mixed-sites" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">build_species_table_from_mixtures</span></code> packs a per-atom list of <code class="docutils literal notranslate"><span class="pre">(symbol,</span> <span class="pre">weight)</span></code> tuples into the canonical <code class="docutils literal notranslate"><span class="pre">(species_table,</span> <span class="pre">species_ids)</span></code> pair:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PhonopyAtoms</span><span class="p">,</span>
+    <span class="n">build_species_table_from_mixtures</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">species_table</span><span class="p">,</span> <span class="n">species_ids</span> <span class="o">=</span> <span class="n">build_species_table_from_mixtures</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">[(</span><span class="s2">&quot;Si&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>                  <span class="c1"># ordinary Si</span>
+        <span class="p">[(</span><span class="s2">&quot;Ge&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Sn&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span>     <span class="c1"># GeSn mixed-species site</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
+    <span class="n">cell</span><span class="o">=</span><span class="p">[[</span><span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="p">]],</span>
+    <span class="n">scaled_positions</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+    <span class="n">species_table</span><span class="o">=</span><span class="n">species_table</span><span class="p">,</span>
+    <span class="n">species_ids</span><span class="o">=</span><span class="n">species_ids</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">cell</span><span class="o">.</span><span class="n">has_mixtures</span>
+</pre></div>
+</div>
+<p>Constituent weights of each entry must sum to 1.0; a single-component entry
+of weight 1.0 is canonicalized to a normal (single-element) species. Mixed
+species carry composite labels formed by concatenating constituent symbols
+in input order (“GeSn”); two distinct mixtures that would share the same
+composite label still get distinct ids because the underlying
+<code class="docutils literal notranslate"><span class="pre">(symbol,</span> <span class="pre">weight)</span></code> tuples differ.</p>
+</section>
+<section id="apply-site-mixture-utility">
+<h4><code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code> utility<a class="headerlink" href="#apply-site-mixture-utility" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy.structure.cells.apply_site_mixture</span></code> collapses overlapping atoms in
+an ordinary cell into mixed-species sites. The Virtual Crystal
+Approximation (VCA) is the typical use case.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.cells</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_site_mixture</span>
+
+<span class="n">mixed_cell</span> <span class="o">=</span> <span class="n">apply_site_mixture</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">weights</span></code> must have one entry per atom in the input order. Atoms whose
+fractional positions agree (modulo lattice translations) within <code class="docutils literal notranslate"><span class="pre">symprec</span></code>
+are merged into a single site whose weights must sum to 1.0; isolated
+atoms must carry weight 1.0. When several distinct mixtures within the same
+cell would collide on the same composite label, all colliding sites get
+1-based suffixes (<code class="docutils literal notranslate"><span class="pre">&quot;GeSn1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;GeSn2&quot;</span></code>, …). The returned cell can be
+fed to <code class="docutils literal notranslate"><span class="pre">Phonopy(...)</span></code> as a unit cell.</p>
+<p>The per-atom convention here is distinct from VASP’s INCAR <code class="docutils literal notranslate"><span class="pre">VCA</span></code> tag, which
+lists one weight per element row in POSCAR; see the CLI section below for
+how <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> generates a VASP-compatible POSCAR/INCAR pair.</p>
+</section>
+<section id="cli-site-mixture">
+<h4>CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code><a class="headerlink" href="#cli-site-mixture" title="Link to this heading">#</a></h4>
+<p>The same merge can be requested at the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>--dim<span class="w"> </span><span class="s2">&quot;2 2 2&quot;</span><span class="w"> </span>--site-mixture<span class="w"> </span><span class="s2">&quot;0.5 0.5 0.5 0.5&quot;</span><span class="w"> </span>-d
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code> takes a space-separated list of per-atom weights in the
+input order, with the same validation rules as <code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code>. The
+merge is applied immediately after the unit cell is read, so the rest of
+the workflow (displacement generation, supercell construction,
+force-constant building) sees only the merged cell.</p>
+<p>When the calculator is VASP, the supercell and displaced supercells are
+written with each mixed-species site expanded into one POSCAR row per
+constituent at the same fractional coordinates, and a hint is printed
+showing the matching POTCAR concatenation order and the INCAR <code class="docutils literal notranslate"><span class="pre">VCA</span> <span class="pre">=</span> <span class="pre">...</span></code>
+line. For example, a 50/50 GeSn cell with <code class="docutils literal notranslate"><span class="pre">--dim</span> <span class="pre">&quot;2</span> <span class="pre">2</span> <span class="pre">2&quot;</span></code> produces
+<code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> with <code class="docutils literal notranslate"><span class="pre">Ge</span> <span class="pre">Sn</span> <span class="pre">/</span> <span class="pre">16</span> <span class="pre">16</span></code> and prints <code class="docutils literal notranslate"><span class="pre">INCAR:</span> <span class="pre">VCA</span> <span class="pre">=</span> <span class="pre">0.5</span> <span class="pre">0.5</span></code>.</p>
+</section>
+<section id="forces-for-mixed-species-cells">
+<h4>Forces for mixed-species cells<a class="headerlink" href="#forces-for-mixed-species-cells" title="Link to this heading">#</a></h4>
+<p>A VASP run on a mixture-expanded supercell returns one force vector per
+expanded constituent row (<code class="docutils literal notranslate"><span class="pre">n_expanded</span></code> per displacement). Because every
+constituent at a shared crystallographic site is governed by its own
+POTCAR, those forces differ between constituents and carry the raw
+single-potential information from the SCF calculation.</p>
+<p>Phonopy preserves this raw output: <code class="docutils literal notranslate"><span class="pre">parse_set_of_forces</span></code> (and
+<code class="docutils literal notranslate"><span class="pre">get_forces_vasprunxml</span></code>) for a mixed-species cell return forces of shape
+<code class="docutils literal notranslate"><span class="pre">(num_supercells,</span> <span class="pre">n_expanded,</span> <span class="pre">3)</span></code> and store them as-is in the
+<code class="docutils literal notranslate"><span class="pre">Phonopy.dataset</span></code>. The corresponding displacement entries remain on a
+per-site basis in <code class="docutils literal notranslate"><span class="pre">1..n_sites</span></code>, so the dataset is asymmetric in shape
+between displacements and forces; this is intentional and preserved by
+<code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> round-trips and by the <a class="reference internal" href="input-files.html#file-forces-site-mixture"><span class="std std-ref">expanded FORCE_SETS format</span></a>.</p>
+<p>The conversion to per-site forces is deferred to immediately before
+force-constant calculation. The reduction utility is
+<code class="docutils literal notranslate"><span class="pre">phonopy.structure.cells.reduce_mixture_forces(forces,</span> <span class="pre">cell,</span> <span class="pre">mode=...)</span></code>,
+which supports two conventions selected through the <code class="docutils literal notranslate"><span class="pre">mode</span></code> keyword:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">mode=&quot;sum&quot;</span></code> produces the plain sum,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">F_site</span> <span class="o">=</span> <span class="n">sum_k</span> <span class="n">F_k</span>
+</pre></div>
+</div>
+<p>used for VASP because its <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> per-row forces already
+incorporate the VCA weights through the averaged potential.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mode=&quot;weighted_sum&quot;</span></code> (the default) produces the weighted sum,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">F_site</span> <span class="o">=</span> <span class="n">sum_k</span> <span class="p">(</span><span class="n">w_k</span> <span class="o">*</span> <span class="n">F_k</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">w_k</span></code> is the constituent weight stored in the mixture entry of
+<code class="docutils literal notranslate"><span class="pre">cell.species_table</span></code>. Use this when the calculator returns
+single-potential forces that have not yet been folded with mixture
+weights.</p>
+</li>
+</ul>
+<p>The Phonopy FC pipeline picks the convention based on
+<code class="docutils literal notranslate"><span class="pre">Phonopy.calculator</span></code>: VASP (and the default <code class="docutils literal notranslate"><span class="pre">None</span></code> calculator) maps
+to <code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code>; all other interfaces map to <code class="docutils literal notranslate"><span class="pre">&quot;weighted_sum&quot;</span></code>. Because the
+raw forces are preserved in the dataset, applying a different reduction
+convention or different weights only requires re-running the reduction
+and the force-constant build, not the calculator.</p>
+</section>
+<section id="expansion-ordering">
+<h4>Expansion ordering<a class="headerlink" href="#expansion-ordering" title="Link to this heading">#</a></h4>
+<p>The mapping from expanded row indices back to phonopy sites is fixed by
+the same routine that writes the VASP POSCAR: for each entry in
+<code class="docutils literal notranslate"><span class="pre">cell.species_table</span></code>, the atoms belonging to that entry are emitted once
+per constituent (in <code class="docutils literal notranslate"><span class="pre">mixture</span></code> order) at the original site coordinates.
+The shared helper
+<code class="docutils literal notranslate"><span class="pre">phonopy.structure.cells.get_mixture_expansion(cell)</span></code> returns the
+ordered list of <code class="docutils literal notranslate"><span class="pre">(site_index,</span> <span class="pre">weight)</span></code> pairs that this row order
+corresponds to, and is used by both the writer and the force/FORCE_SETS
+parser so the two stay in lockstep.</p>
+</section>
 </section>
 </section>
 <section id="definitions-of-variables">
@@ -1183,11 +1375,22 @@ VASP code by the unit cell.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#positions"><code class="docutils literal notranslate"><span class="pre">positions</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symbols"><code class="docutils literal notranslate"><span class="pre">symbols</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#numbers"><code class="docutils literal notranslate"><span class="pre">numbers</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#species-ids"><code class="docutils literal notranslate"><span class="pre">species_ids</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#species-table"><code class="docutils literal notranslate"><span class="pre">species_table</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#has-mixtures"><code class="docutils literal notranslate"><span class="pre">has_mixtures</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#masses"><code class="docutils literal notranslate"><span class="pre">masses</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods">Methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-species-sites-and-the-virtual-crystal-approximation">Mixed-species sites and the Virtual Crystal Approximation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-cell-with-mixed-sites">Building a cell with mixed sites</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-site-mixture-utility"><code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code> utility</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-site-mixture">CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#forces-for-mixed-species-cells">Forces for mixed-species cells</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#expansion-ordering">Expansion ordering</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">

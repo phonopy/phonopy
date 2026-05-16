@@ -1,0 +1,732 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Migrating from phonopy v3 to v4 &#8212; Phonopy v.4.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'migration-v4';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Change Log" href="changelog.html" />
+    <link rel="prev" title="References" href="reference.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.0.0</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/migration-v4.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Migrating from phonopy v3 to v4</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-split-phonopy-and-phonopy-init">Command line split: <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-existing-shell-scripts">Update existing shell scripts</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix-default-changed-to-auto"><code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> default changed to <code class="docutils literal notranslate"><span class="pre">"auto"</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-existing-command-lines">Update existing command lines</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-existing-api-calls">Update existing API calls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-the-default-does-not-change-behaviour">When the default does not change behaviour</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-removed"><code class="docutils literal notranslate"><span class="pre">--nac</span></code> removed</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-fallback-for-length-based-input">Mesh fallback for length-based input</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc-primitive-cell-fallback">symfc primitive-cell fallback</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#renamed-relocated-modules-and-functions">Renamed / relocated modules and functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-phonors-is-now-the-default">Rust backend (<code class="docutils literal notranslate"><span class="pre">phonors</span></code>) is now the default</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-is-deprecated-no-op"><code class="docutils literal notranslate"><span class="pre">--rust</span></code> is deprecated (no-op)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#legacy-backend-opts-back-into-the-c-extension"><code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> opts back into the C extension</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-c-extension-builds">Optional C-extension builds</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="migrating-from-phonopy-v3-to-v4">
+<span id="migration-v4"></span><h1>Migrating from phonopy v3 to v4<a class="headerlink" href="#migrating-from-phonopy-v3-to-v4" title="Link to this heading">#</a></h1>
+<p>Phonopy v4 introduces several behaviour changes that affect existing
+command lines, scripts, and saved workflows. This page lists the changes
+in roughly decreasing order of user impact and shows how to update
+existing usage.</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#command-line-split-phonopy-and-phonopy-init" id="id1">Command line split: <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="#update-existing-shell-scripts" id="id2">Update existing shell scripts</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#primitive-matrix-default-changed-to-auto" id="id3"><code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> default changed to <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="#update-existing-command-lines" id="id4">Update existing command lines</a></p></li>
+<li><p><a class="reference internal" href="#update-existing-api-calls" id="id5">Update existing API calls</a></p></li>
+<li><p><a class="reference internal" href="#when-the-default-does-not-change-behaviour" id="id6">When the default does not change behaviour</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#nac-removed" id="id7"><code class="docutils literal notranslate"><span class="pre">--nac</span></code> removed</a></p></li>
+<li><p><a class="reference internal" href="#mesh-fallback-for-length-based-input" id="id8">Mesh fallback for length-based input</a></p></li>
+<li><p><a class="reference internal" href="#symfc-primitive-cell-fallback" id="id9">symfc primitive-cell fallback</a></p></li>
+<li><p><a class="reference internal" href="#renamed-relocated-modules-and-functions" id="id10">Renamed / relocated modules and functions</a></p></li>
+<li><p><a class="reference internal" href="#rust-backend-phonors-is-now-the-default" id="id11">Rust backend (<code class="docutils literal notranslate"><span class="pre">phonors</span></code>) is now the default</a></p>
+<ul>
+<li><p><a class="reference internal" href="#rust-is-deprecated-no-op" id="id12"><code class="docutils literal notranslate"><span class="pre">--rust</span></code> is deprecated (no-op)</a></p></li>
+<li><p><a class="reference internal" href="#legacy-backend-opts-back-into-the-c-extension" id="id13"><code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> opts back into the C extension</a></p></li>
+<li><p><a class="reference internal" href="#optional-c-extension-builds" id="id14">Optional C-extension builds</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="command-line-split-phonopy-and-phonopy-init">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Command line split: <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code></a><a class="headerlink" href="#command-line-split-phonopy-and-phonopy-init" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command has been split into two commands:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> – setup operations: generate supercells with
+displacements, create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> / <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> files from
+external calculator results, inspect crystal symmetry.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy</span></code> – phonon calculation from a <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>-like file.</p></li>
+</ul>
+<p>The deprecated <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> command is kept as an alias of <code class="docutils literal notranslate"><span class="pre">phonopy</span></code>.</p>
+<p>Practically, setup-related flags (<code class="docutils literal notranslate"><span class="pre">-d</span></code>, <code class="docutils literal notranslate"><span class="pre">--rd</span></code>, <code class="docutils literal notranslate"><span class="pre">-c</span></code>, <code class="docutils literal notranslate"><span class="pre">--dim</span></code>, <code class="docutils literal notranslate"><span class="pre">-f</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--fz</span></code>, <code class="docutils literal notranslate"><span class="pre">--fc</span></code>, <code class="docutils literal notranslate"><span class="pre">--symmetry</span></code>) moved from <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> to <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>.
+Running them on <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> reports a migration error pointing here.</p>
+<section id="update-existing-shell-scripts">
+<h3><a class="toc-backref" href="#id2" role="doc-backlink">Update existing shell scripts</a><a class="headerlink" href="#update-existing-shell-scripts" title="Link to this heading">#</a></h3>
+<p><strong>v3:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell
+phonopy<span class="w"> </span>-f<span class="w"> </span>vasprun.xml-<span class="o">{</span><span class="m">001</span>,002<span class="o">}</span>
+phonopy<span class="w"> </span>--fc<span class="w"> </span>vasprun.xml
+phonopy<span class="w"> </span>--symmetry<span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell
+</pre></div>
+</div>
+<p><strong>v4:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-init<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell
+phonopy-init<span class="w"> </span>-f<span class="w"> </span>vasprun.xml-<span class="o">{</span><span class="m">001</span>,002<span class="o">}</span>
+phonopy-init<span class="w"> </span>--fc<span class="w"> </span>vasprun.xml
+phonopy-init<span class="w"> </span>--symmetry<span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell
+</pre></div>
+</div>
+<p>For phonon calculation (band structure, DOS, thermal properties, …)
+nothing changes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>band.conf
+</pre></div>
+</div>
+</section>
+</section>
+<section id="primitive-matrix-default-changed-to-auto">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> default changed to <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></a><a class="headerlink" href="#primitive-matrix-default-changed-to-auto" title="Link to this heading">#</a></h2>
+<p>In v3 the default for <code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> was the 3x3 identity matrix,
+i.e. no transformation was applied and the input unit cell was used
+as the primitive cell as-is. In v4 the default is <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>: phonopy
+detects the primitive cell from crystal symmetry via spglib and
+transforms the input cell accordingly.</p>
+<p>When the auto-detected matrix is not the identity, the q-point
+convention and band layout differ from v3 even though the input file
+and command line are unchanged. Phonopy emits a runtime warning
+(<code class="docutils literal notranslate"><span class="pre">PrimitiveMatrixAutoDefaultWarning</span></code>) in that situation, showing the
+resolved matrix and pointing to this page.</p>
+<section id="update-existing-command-lines">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Update existing command lines</a><a class="headerlink" href="#update-existing-command-lines" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">--pa</span></code> option (alias of <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code>) now defaults to <code class="docutils literal notranslate"><span class="pre">auto</span></code>
+instead of the identity matrix. Existing command lines that relied on
+the v3 default and did not pass <code class="docutils literal notranslate"><span class="pre">--pa</span></code> will silently switch to
+auto-detection.</p>
+<p><strong>v3</strong> (no flag; input cell used as the primitive cell):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>band.conf
+</pre></div>
+</div>
+<p><strong>v4</strong> (recommended new default, automatic primitive detection):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>band.conf
+</pre></div>
+</div>
+<p><strong>v4</strong> (to keep v3 behaviour explicitly):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>--pa<span class="w"> </span>P<span class="w"> </span>band.conf
+</pre></div>
+</div>
+</section>
+<section id="update-existing-api-calls">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Update existing API calls</a><a class="headerlink" href="#update-existing-api-calls" title="Link to this heading">#</a></h3>
+<p><strong>v3:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">)</span>  <span class="c1"># input cell used as the primitive cell</span>
+</pre></div>
+</div>
+<p><strong>v4 (recommended new default, automatic primitive detection):</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">)</span>
+<span class="c1"># or, equivalently</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>v4 (to keep v3 behaviour explicitly):</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="o">=</span><span class="s2">&quot;P&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="when-the-default-does-not-change-behaviour">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">When the default does not change behaviour</a><a class="headerlink" href="#when-the-default-does-not-change-behaviour" title="Link to this heading">#</a></h3>
+<p>If the input unit cell is already the primitive cell, auto-detection
+returns the identity matrix (i.e. the input cell is used unchanged)
+and no warning is emitted.</p>
+<p>If the calculation loads a <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> that already records a
+<code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code>, that stored value takes priority over the new
+default. Workflows driven by saved YAML files therefore reproduce v3
+results exactly.</p>
+</section>
+</section>
+<section id="nac-removed">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">--nac</span></code> removed</a><a class="headerlink" href="#nac-removed" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">--nac</span></code> was removed because non-analytical term correction is now
+enabled automatically whenever the necessary data is available: a
+<code class="docutils literal notranslate"><span class="pre">BORN</span></code> file in the working directory or <code class="docutils literal notranslate"><span class="pre">nac_params</span></code> stored in a
+<code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>-like file. Pass <code class="docutils literal notranslate"><span class="pre">--nonac</span></code> to disable NAC explicitly.</p>
+<p><strong>v3:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>--nac<span class="w"> </span>band.conf
+</pre></div>
+</div>
+<p><strong>v4:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>band.conf<span class="w">           </span><span class="c1"># NAC auto-detected from BORN / phonopy.yaml</span>
+phonopy<span class="w"> </span>--nonac<span class="w"> </span>band.conf<span class="w">   </span><span class="c1"># explicit opt-out</span>
+</pre></div>
+</div>
+</section>
+<section id="mesh-fallback-for-length-based-input">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Mesh fallback for length-based input</a><a class="headerlink" href="#mesh-fallback-for-length-based-input" title="Link to this heading">#</a></h2>
+<p>When a sampling mesh is specified by a length (float) and the resulting
+regular grid breaks the primitive-cell point-group symmetry, v4 rebuilds
+the grid as a <em>generalized regular grid</em> (GR-grid) anchored to the
+conventional cell, in order to keep full point-group symmetry. The
+actual <code class="docutils literal notranslate"><span class="pre">mesh_numbers</span></code> (<code class="docutils literal notranslate"><span class="pre">D_diag</span></code>) used internally may differ from the
+naive regular grid that <code class="docutils literal notranslate"><span class="pre">length2mesh</span></code> would have produced.</p>
+<p>v3 instead kept the requested regular grid but handled the broken
+symmetry incorrectly: incompatible rotations were silently dropped
+inside spglib, and the resulting ir-grid did not actually respect the
+symmetry it claimed. v4 fixes this. For the same length input, v4
+therefore yields:</p>
+<ul class="simple">
+<li><p>different <code class="docutils literal notranslate"><span class="pre">mesh_numbers</span></code> (those of the GR-grid),</p></li>
+<li><p>somewhat different DOS and thermal-property values, reflecting the
+corrected symmetry handling.</p></li>
+</ul>
+<p>The change is announced at runtime via <code class="docutils literal notranslate"><span class="pre">MeshGRGridFallbackWarning</span></code>,
+which reports the requested mesh, the GR-grid <code class="docutils literal notranslate"><span class="pre">D_diag</span></code>, and the reason
+for the substitution.</p>
+<p>When the grid symmetry is broken, the v3 numerical results cannot be
+exactly reproduced under v4. As a workaround, specifying the mesh
+explicitly by integer numbers (e.g. <code class="docutils literal notranslate"><span class="pre">MESH</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span> <span class="pre">12</span></code> or
+<code class="docutils literal notranslate"><span class="pre">mesh=[12,</span> <span class="pre">12,</span> <span class="pre">12]</span></code>) keeps the requested grid and falls back to
+time-reversal-only symmetry.</p>
+</section>
+<section id="symfc-primitive-cell-fallback">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">symfc primitive-cell fallback</a><a class="headerlink" href="#symfc-primitive-cell-fallback" title="Link to this heading">#</a></h2>
+<p>When the input “primitive” cell does not match the primitive cell that
+symfc finds internally, v4 automatically falls back to full force
+constants instead of compact ones.</p>
+</section>
+<section id="renamed-relocated-modules-and-functions">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Renamed / relocated modules and functions</a><a class="headerlink" href="#renamed-relocated-modules-and-functions" title="Link to this heading">#</a></h2>
+<p>The following Python imports changed:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>v3</p></th>
+<th class="head"><p>v4</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">phonopy.structure.grid_points</span> <span class="pre">import</span> <span class="pre">...</span></code></p></td>
+<td><p>replaced by <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.grid.BZGrid</span></code> (migrated from phono3py)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Phonopy.run_dynamical_matrix_solver_c(...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Phonopy.get_dynamical_matrices_at_qpoints(...)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>There are no deprecation shims; the old names are gone in v4.</p>
+</section>
+<section id="rust-backend-phonors-is-now-the-default">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Rust backend (<code class="docutils literal notranslate"><span class="pre">phonors</span></code>) is now the default</a><a class="headerlink" href="#rust-backend-phonors-is-now-the-default" title="Link to this heading">#</a></h2>
+<p>The Rust kernels in <a class="reference external" href="https://github.com/phonopy/phonors">phonors</a> are
+the default backend in v4. <code class="docutils literal notranslate"><span class="pre">phonors</span></code> is a required runtime dependency
+and is installed automatically with phonopy. The C extension is still
+built and kept as a legacy backend that users can opt back into.</p>
+<p>What this means for existing code:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Phonopy(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy.load(...)</span></code>, and the CLI all run on the Rust
+backend out of the box. Numerical results are bit-identical to the
+C path on every kernel that has parity tests.</p></li>
+<li><p>Performance is generally similar to or better than the C extension
+thanks to rayon-based parallelism. The startup banner now prints
+<code class="docutils literal notranslate"><span class="pre">Rust</span> <span class="pre">backend</span> <span class="pre">(phonors)</span> <span class="pre">using</span> <span class="pre">rayon</span> <span class="pre">(N</span> <span class="pre">threads).</span></code></p></li>
+<li><p>The C extension is still built by default and remains selectable
+per call via <code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code>.</p></li>
+</ul>
+<section id="rust-is-deprecated-no-op">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">--rust</span></code> is deprecated (no-op)</a><a class="headerlink" href="#rust-is-deprecated-no-op" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">--rust</span></code> used to enable the experimental Rust backend. In v4 it is a
+deprecated no-op: the Rust backend is already active. The flag still
+parses (so v3 command lines do not error) but emits a
+<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> and will be removed in a future release.</p>
+</section>
+<section id="legacy-backend-opts-back-into-the-c-extension">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> opts back into the C extension</a><a class="headerlink" href="#legacy-backend-opts-back-into-the-c-extension" title="Link to this heading">#</a></h3>
+<p>To keep using the C kernels (for example to compare against v3
+numerical output, or to work around a hypothetical phonors regression),
+pass <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> on the CLI or <code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> in the Python API.
+The conf-file equivalent is <code class="docutils literal notranslate"><span class="pre">LEGACY_BACKEND</span> <span class="pre">=</span> <span class="pre">.true.</span></code>.</p>
+<p><strong>v3 (or v4 with explicit opt-in):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>--legacy-backend<span class="w"> </span>band.conf
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy.yaml&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="optional-c-extension-builds">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Optional C-extension builds</a><a class="headerlink" href="#optional-c-extension-builds" title="Link to this heading">#</a></h3>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">PHONOPY_NO_C_EXT=1</span></code> at build time still skips the C extension
+entirely; in that case <code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> silently falls back to Rust with a
+one-time notice.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="reference.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">References</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="changelog.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Change Log</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-split-phonopy-and-phonopy-init">Command line split: <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-existing-shell-scripts">Update existing shell scripts</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix-default-changed-to-auto"><code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> default changed to <code class="docutils literal notranslate"><span class="pre">"auto"</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-existing-command-lines">Update existing command lines</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#update-existing-api-calls">Update existing API calls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-the-default-does-not-change-behaviour">When the default does not change behaviour</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-removed"><code class="docutils literal notranslate"><span class="pre">--nac</span></code> removed</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-fallback-for-length-based-input">Mesh fallback for length-based input</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc-primitive-cell-fallback">symfc primitive-cell fallback</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#renamed-relocated-modules-and-functions">Renamed / relocated modules and functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-backend-phonors-is-now-the-default">Rust backend (<code class="docutils literal notranslate"><span class="pre">phonors</span></code>) is now the default</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-is-deprecated-no-op"><code class="docutils literal notranslate"><span class="pre">--rust</span></code> is deprecated (no-op)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#legacy-backend-opts-back-into-the-c-extension"><code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> opts back into the C extension</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-c-extension-builds">Optional C-extension builds</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

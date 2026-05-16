@@ -21,7 +21,7 @@ A procedure of Abinit-phonopy calculation is as follows:
 1) Read an Abinit main input file and create
    supercells with :ref:`abinit_mode` option::
 
-   % phonopy --abinit -d --dim="2 2 2" -c NaCl.in
+   % phonopy-init --abinit -d --dim="2 2 2" -c NaCl.in
 
    In this example, 2x2x2 supercells are created. ``supercell.in`` and
    ``supercell-xxx.in`` (``xxx`` are numbers) give the perfect
@@ -43,7 +43,7 @@ A procedure of Abinit-phonopy calculation is as follows:
 
    ::
 
-     % phonopy -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
+     % phonopy-init -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
 
    To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory because the atomic displacements are written into the
@@ -51,11 +51,12 @@ A procedure of Abinit-phonopy calculation is as follows:
    :ref:`abinit_force_sets_option`. An example is found in
    ``example/NaCl-abinit``.
 
-4) Run post-process of phonopy with the Abinit main input file for the
-   unit cell used in the step 1::
+4) Run post-process of phonopy.  Crystal structure and calculator
+   interface are read from ``phonopy_disp.yaml``, so ``-c`` and
+   ``--abinit`` are no longer needed::
 
-   % phonopy --abinit -c NaCl.in -p band.conf
+   % phonopy -p band.conf
 
    or::
 
-   % phonopy --abinit -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy [other-OPTIONS] [setting-file]

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.3.5.1</title>
+    <title>Setting tags &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="Output files" href="output-files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -141,6 +141,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -179,11 +180,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -333,7 +336,10 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-file">Configuration file</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-tags">Basic tags</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dim"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#magnetic-unit-cells">Magnetic unit cells</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atom-name"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
@@ -496,7 +502,7 @@
 setting tag are set simultaneously, the command-line option supersedes the
 setting tag. The configuration file is recommended to place at the first
 position for the mixed use of setting tags and command-line options, i.e.,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>setting.conf<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--config<span class="w"> </span>setting.conf<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p>For specifying real and reciprocal points, fractional values (e.g. <code class="docutils literal notranslate"><span class="pre">1/3</span></code>) are
@@ -575,6 +581,44 @@ of numbers, respectively.</p>
 the transformation matrix automatically. Since the choice of the primitive cell
 is arbitrary, it is recommended to use <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span> <span class="pre">=</span> <span class="pre">AUTO</span></code> to check if a
 possible transformation matrix exists or not.</p>
+<p><strong>Changed in v4.0</strong> <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span> <span class="pre">=</span> <span class="pre">AUTO</span></code> is the default when
+<code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> is not specified.</p>
+<section id="magnetic-unit-cells">
+<span id="primitive-axes-auto-magnetic"></span><h4>Magnetic unit cells<a class="headerlink" href="#magnetic-unit-cells" title="Link to this heading">#</a></h4>
+<p>When the input unit cell has magnetic moments (see <a class="reference internal" href="#magmom-tag"><span class="std std-ref">MAGMOM</span></a>), the
+primitive cell is determined from the magnetic space group (MSG) detected by
+spglib. The behavior depends on the MSG type:</p>
+<ul class="simple">
+<li><p><strong>Type-I, II, III</strong> MSGs are handled using the so-called FSG (family
+space group). The primitive cell is determined as in the non-magnetic
+case and the input magnetic moments are preserved.</p></li>
+<li><p><strong>Type-IV</strong> MSGs are handled using the so-called XSG, the subgroup of
+the MSG obtained by removing the anti-translations (lattice
+translations combined with time reversal). The resulting primitive
+cell preserves the input magnetic moments and may be larger than the
+crystallographic primitive cell. A warning is emitted in this case.</p></li>
+</ul>
+<p>For example, antiferromagnetic bcc Cr (with moments <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">-1]</span></code> on the two
+sites of the conventional cubic cell) is a Type-IV MSG: the body-center
+translation combined with time reversal is an anti-translation. The XSG is
+Pm-3m, so with <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span> <span class="pre">=</span> <span class="pre">AUTO</span></code> the primitive cell equals the
+2-atom input cubic cell and the antiferromagnetic ordering is preserved.</p>
+<p>If a smaller primitive cell that ignores the magnetic ordering is desired
+(for example, in <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> run mode where force constants are known to
+respect the higher non-magnetic symmetry), pass the centring of the FSG
+explicitly, e.g. <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span> <span class="pre">=</span> <span class="pre">I</span></code> for the bcc Cr example above. Note
+that this discards the input magnetic moments in the primitive cell, so it
+must not be used with <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> when generating displacements for
+force calculations.</p>
+<p>See the references below for the definitions of FSG, XSG, and the MSG
+types.</p>
+<!-- TODO(togo): fill in the full citations for the two IUCr papers
+(IUCr codes ib5106 and ib5114). -->
+<ul class="simple">
+<li><p>[TODO: citation for IUCr ib5106]</p></li>
+<li><p>[TODO: citation for IUCr ib5114]</p></li>
+</ul>
+</section>
 </section>
 <section id="atom-name">
 <h3><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code><a class="headerlink" href="#atom-name" title="Link to this heading">#</a></h3>
@@ -607,7 +651,8 @@ follows :</p>
 <p>Symmetry of spin such as magnetic moments is specified using this tag. The
 number of values has to be equal to the number of atoms, or its three times for
 non-collinear-like case, in <strong>the input unit cell</strong>, not the primitive cell or
-supercell. If this tag is used with <code class="docutils literal notranslate"><span class="pre">-d</span></code> option (<code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code> tag),
+supercell. See also <a class="reference internal" href="#primitive-axes-auto-magnetic"><span class="std std-ref">Magnetic unit cells</span></a> for how the primitive
+cell is determined when the input unit cell has magnetic moments. If this tag is used with <code class="docutils literal notranslate"><span class="pre">-d</span></code> option (<code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code> tag),
 <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> file is created. This file contains the <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> information of the
 supercell used for VASP. Unlike <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> in VASP, <code class="docutils literal notranslate"><span class="pre">*</span></code> can not be used, i.e., all
 the values (the same number of times to the number of atoms in unit cell) have
@@ -748,7 +793,7 @@ generated in the current directory.</p>
 <p>For example in <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code> directory,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mkdir<span class="w"> </span>rd<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>rd
 %<span class="w"> </span>cp<span class="w"> </span>../FORCE_SETS
-%<span class="w"> </span>phonopy-load<span class="w"> </span>../phonopy_disp.yaml<span class="w"> </span>--rd<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--rd-temperature<span class="w"> </span><span class="m">300</span>
+%<span class="w"> </span>phonopy<span class="w"> </span>../phonopy_disp.yaml<span class="w"> </span>--rd<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--rd-temperature<span class="w"> </span><span class="m">300</span>
 </pre></div>
 </div>
 <p>See also <a class="reference internal" href="command-options.html#f-force-sets-option"><span class="std std-ref">-f or --forces</span></a> for creating <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> from a series of
@@ -760,7 +805,7 @@ respective forces, an external force constants calculator is necessary. See
 <p>Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
 frequency at Gamma point due to violation of acoustic sum rule can induce very
 large displacements. Therefore, it is safer to use this feature with
-<code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> (this is a default setting for <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> command) or
+<code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> (this is a default setting for <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command) or
 a force constants calculator (see <a class="reference internal" href="#fc-calculator-tag"><span class="std std-ref">FC_CALCULATOR</span></a>) that enforces
 acoustic sum rule. It is also possible to ignore phonons with frequencies below
 cutoff frequency specified by <a class="reference internal" href="#cutoff-frequency-tags"><span class="std std-ref">CUTOFF_FREQUENCY</span></a> tag. Phonon
@@ -1776,7 +1821,10 @@ file.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-file">Configuration file</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-tags">Basic tags</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dim"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#magnetic-unit-cells">Magnetic unit cells</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atom-name"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>

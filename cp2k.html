@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CP2K &amp; phonopy calculation &#8212; Phonopy v.3.5.1</title>
+    <title>CP2K &amp; phonopy calculation &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="TURBOMOLE &amp; phonopy calculation" href="turbomole.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -406,7 +409,7 @@ except for the functionality to load cell information or coordinates from extern
 <p>A procedure of CP2K-phonopy calculation is as follows:</p>
 <ol class="arabic">
 <li><p>Read a CP2K input file and create supercells with the <a class="reference internal" href="command-options.html#cp2k-mode"><span class="std std-ref">--cp2k</span></a> option:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">inp</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">inp</span>
 </pre></div>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">NaCl-supercell.inp</span></code> and
@@ -434,20 +437,20 @@ because atomic forces induced by a small atomic displacement are
 what is need for phonon calculation.</p>
 </li>
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mi">001</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mi">002</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span>  <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mi">001</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mi">002</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span>  <span class="o">...</span>
 </pre></div>
 </div>
 <p>To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be located in the current
 directory. More information about the configuration options can be found in <a class="reference internal" href="command-options.html#cp2k-force-sets-option"><span class="std std-ref">CP2K interface</span></a>.
 The example outputs are located in <code class="docutils literal notranslate"><span class="pre">example/NaCl-CP2K</span></code>.</p>
 </li>
-<li><p>Run post-process of phonopy with the original CP2K main input file for the
-unit cell used in step 1:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">inp</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<li><p>Run post-process of phonopy.  Crystal structure and calculator
+interface are read from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>or:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">inp</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
 </pre></div>
 </div>
 </li>

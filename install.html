@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; Phonopy v.3.5.1</title>
+    <title>Installation &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,18 +39,18 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'install';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Crystal symmetry" href="symmetry.html" />
+    <link rel="next" title="Rust backend" href="rust-backend.html" />
     <link rel="prev" title="Welcome to phonopy" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -428,14 +431,15 @@ Python version 3.8 or later. Mac OS X users may use conda (conda-forge channel)
 packages. Windows users should use conda (conda-forge channel) packages as well.</p>
 <p>Prepare the following Python libraries:</p>
 <ul class="simple">
-<li><p>Python (&gt;=3.9) and its header files</p></li>
+<li><p>Python (&gt;=3.10) and its header files</p></li>
 <li><p>numpy (&gt;=1.17)</p></li>
 <li><p>matplotlib (&gt;=2.2.2)</p></li>
 <li><p>python-yaml (pyyaml&gt;=5.3)</p></li>
 <li><p>python-h5py (h5py&gt;=3.0)</p></li>
 <li><p>scipy</p></li>
-<li><p>spglib (&gt;=2.3)</p></li>
-<li><p>symfc (&gt;=1.2)</p></li>
+<li><p>spglib (&gt;=2.5)</p></li>
+<li><p>symfc (&gt;=1.7)</p></li>
+<li><p>phonors (Rust backend; installed automatically by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">phonopy</span></code>)</p></li>
 </ul>
 <p>It is recommended to install seekpath to plot phonon band structure:</p>
 <ul class="simple">
@@ -492,6 +496,12 @@ removed.</p>
 computer environment.</p>
 </li>
 </ol>
+<p>Since v4, <code class="docutils literal notranslate"><span class="pre">phonors</span></code> is the default backend and a required runtime
+dependency. It is installed automatically from PyPI by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">phonopy</span></code>. The C extension is still built by default and remains
+selectable as a legacy backend (<code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code>).
+A Rust-only build that skips the C extension entirely is available
+via <code class="docutils literal notranslate"><span class="pre">PHONOPY_NO_C_EXT=1</span></code> at install time. See <a class="reference internal" href="rust-backend.html#rust-backend"><span class="std std-ref">Rust backend</span></a>
+for details.</p>
 </section>
 </section>
 <section id="trouble-shooting">
@@ -573,11 +583,11 @@ that the CXX environment variable
       </div>
     </a>
     <a class="right-next"
-       href="symmetry.html"
+       href="rust-backend.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Crystal symmetry</p>
+        <p class="prev-next-title">Rust backend</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

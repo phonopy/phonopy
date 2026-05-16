@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Command options &#8212; Phonopy v.3.5.1</title>
+    <title>Command options &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="How to watch animation" href="animation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -486,7 +489,7 @@ by those with dashes <code class="docutils literal notranslate"><span class="pre
 simultaneously, the command-line option supersedes the setting tag. The
 configuration file is recommended to place at the first position for the mixed
 use of setting tags and command-line options, i.e.,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>setting.conf<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--config<span class="w"> </span>setting.conf<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <section id="choice-of-force-calculator">
@@ -550,9 +553,10 @@ files.</p>
 <span id="cell-filename-option"></span><h2>Input cell<a class="headerlink" href="#input-cell" title="Link to this heading">#</a></h2>
 <section id="c-or-cell">
 <h3><code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--cell</span></code><a class="headerlink" href="#c-or-cell" title="Link to this heading">#</a></h3>
-<p><strong><code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> doesn’t have this option.</strong></p>
+<p><strong>This option belongs to <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>. The <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command reads the
+unit cell from <code class="docutils literal notranslate"><span class="pre">phonopy_*.yaml</span></code>.</strong></p>
 <p>Unit cell crystal structure file is specified with this tag.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p>Without specifying this tag, default file name is searched in current directory.
@@ -715,14 +719,14 @@ with:</p>
 <h4>Questaal/LMTO interface<a class="headerlink" href="#questaal-lmto-interface" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and force files,
 with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--qlm<span class="w"> </span>-f<span class="w"> </span>supercell-001/force.lm<span class="w"> </span>supercell-002/force.lm<span class="w"> </span>...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--qlm<span class="w"> </span>-f<span class="w"> </span>supercell-001/force.lm<span class="w"> </span>supercell-002/force.lm<span class="w"> </span>...
 </pre></div>
 </div>
 </section>
 </section>
 <section id="fz">
 <span id="fz-force-sets-option"></span><h3><code class="docutils literal notranslate"><span class="pre">--fz</span></code><a class="headerlink" href="#fz" title="Link to this heading">#</a></h3>
-<p><strong><code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> doesn’t have this option.</strong></p>
+<p><strong>This option belongs to <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>.</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">--fz</span></code> option is used to subtract residual forces frown the forces calculated
 for the supercells with displacements. Here the residual forces mean that the
 forces calculated for the perfect supercell for which the number of atoms has to
@@ -734,7 +738,7 @@ useful when <code class="docutils literal notranslate"><span class="pre">PM</spa
 <p>The usage of this option is almost the same as that of <code class="docutils literal notranslate"><span class="pre">-f</span></code> option except that
 one more argument is inserted at the front. Mind that <code class="docutils literal notranslate"><span class="pre">--fz</span></code> is exclusively used
 with <code class="docutils literal notranslate"><span class="pre">-f</span></code> option. The example for the VASP interface is shown below:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--fz<span class="w"> </span>sposcar/vasprun.xml<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--fz<span class="w"> </span>sposcar/vasprun.xml<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>...
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">sposcar/vasprun.xml</span></code> assumes the output file for the perfect supercell
@@ -752,7 +756,7 @@ calculator interfaces.</p>
 <p><strong>Currently this option supports only VASP output.</strong></p>
 <p>VASP output of force constants is imported from <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> and
 <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> is created.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--fc<span class="w"> </span>vasprun.xml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--fc<span class="w"> </span>vasprun.xml
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> can be used instead of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. For more details,
@@ -772,7 +776,7 @@ parameters for non-analytical term correction are written in
 <p>When using with <code class="docutils literal notranslate"><span class="pre">-f</span></code>, displacement-force dataset are stored in
 <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> instead of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. When <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file is found in the
 current directory, the parameters are also stored in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--sp<span class="w"> </span>-f<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>disp-002/vasprun.xml<span class="w"> </span>...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--sp<span class="w"> </span>-f<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>disp-002/vasprun.xml<span class="w"> </span>...
 </pre></div>
 </div>
 </section>
@@ -782,14 +786,14 @@ current directory, the parameters are also stored in <code class="docutils liter
 <section id="p">
 <h3><code class="docutils literal notranslate"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Link to this heading">#</a></h3>
 <p>Result is plotted.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>-p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-p
 </pre></div>
 </div>
 </section>
 <section id="p-s">
 <span id="graph-save-option"></span><h3><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">-s</span></code><a class="headerlink" href="#p-s" title="Link to this heading">#</a></h3>
 <p>Result is plotted (saved) to PDF file.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>-p<span class="w"> </span>-s
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-p<span class="w"> </span>-s
 </pre></div>
 </div>
 </section>

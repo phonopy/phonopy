@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.3.5.1</title>
+    <title>Change Log &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,17 +39,17 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'changelog';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="References" href="reference.html" />
+    <link rel="prev" title="Migrating from phonopy v3 to v4" href="migration-v4.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -124,7 +124,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -138,6 +138,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -176,11 +177,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Change Log</a></li>
 </ul>
 
@@ -327,6 +330,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-16-2026-version-4-0-0">May-16-2026: Version 4.0.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apr-23-2026-version-3-5-1">Apr-23-2026: Version 3.5.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apr-9-2026-version-3-5-0">Apr-9-2026: Version 3.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-28-2026-version-3-4-0">Mar-28-2026: Version 3.4.0</a></li>
@@ -547,6 +551,50 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="may-16-2026-version-4-0-0">
+<h2>May-16-2026: Version 4.0.0<a class="headerlink" href="#may-16-2026-version-4-0-0" title="Link to this heading">#</a></h2>
+<p>Major breaking changes. See <a class="reference internal" href="migration-v4.html#migration-v4"><span class="std std-ref">Migrating from phonopy v3 to v4</span></a> for the upgrade guide.</p>
+<ul class="simple">
+<li><p>CLI split into <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> (setup: displacements, FORCE_SETS /
+FORCE_CONSTANTS conversion, <code class="docutils literal notranslate"><span class="pre">--symmetry</span></code>) and <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> (phonon
+calculation). <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> is kept as a deprecated alias of
+<code class="docutils literal notranslate"><span class="pre">phonopy</span></code>. The <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> argument parser now rejects setup flags
+(<code class="docutils literal notranslate"><span class="pre">-d</span></code>, <code class="docutils literal notranslate"><span class="pre">--rd</span></code>, <code class="docutils literal notranslate"><span class="pre">-f</span></code>, <code class="docutils literal notranslate"><span class="pre">--fz</span></code>, <code class="docutils literal notranslate"><span class="pre">--fc</span></code>, <code class="docutils literal notranslate"><span class="pre">--symmetry</span></code>) and points the user
+to <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> default changed to <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> across <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>, and the CLI (<code class="docutils literal notranslate"><span class="pre">--pa</span></code>). Pass <code class="docutils literal notranslate"><span class="pre">&quot;P&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">--pa</span> <span class="pre">P</span></code>) for
+the identity transformation. A value stored in a phonopy.yaml file
+still takes priority over the default.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--nac</span></code> was removed. NAC is now enabled automatically when a <code class="docutils literal notranslate"><span class="pre">BORN</span></code>
+file is present or <code class="docutils literal notranslate"><span class="pre">nac_params</span></code> is stored in <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>. Pass
+<code class="docutils literal notranslate"><span class="pre">--nonac</span></code> to disable NAC explicitly.</p></li>
+<li><p>Auto-fall back to full force constants when the input “primitive” cell
+is not actually primitive (e.g. an I-centered conventional cell) and
+symfc detects a smaller true primitive cell. The previous behaviour
+produced shape-mismatched compact force constants and crashed during
+drift evaluation or post-symmetrisation.</p></li>
+<li><p>Rust backend (<code class="docutils literal notranslate"><span class="pre">phonors</span></code> crate) is now the default and a required
+runtime dependency. <code class="docutils literal notranslate"><span class="pre">Phonopy()</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy.load()</span></code>, and the CLI run on
+Rust out of the box. The C extension is retained as a legacy backend
+selectable via <code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> or the new <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> flag
+(conf-file equivalent: <code class="docutils literal notranslate"><span class="pre">LEGACY_BACKEND</span> <span class="pre">=</span> <span class="pre">.true.</span></code>). The previous
+<code class="docutils literal notranslate"><span class="pre">--rust</span></code> flag becomes a deprecated no-op. A no-C-extension build is
+available via <code class="docutils literal notranslate"><span class="pre">PHONOPY_NO_C_EXT=1</span></code> at install time. See
+<a class="reference internal" href="rust-backend.html#rust-backend"><span class="std std-ref">Rust backend</span></a>.</p></li>
+<li><p>The behaviour when a sampling mesh breaks the primitive-cell point-group
+symmetry has changed. As a result, mesh-based calculations (DOS, thermal
+properties, etc.) on such meshes may give different numerical results
+from previous versions. When the mesh was specified by a length (float
+input), the grid is now rebuilt as a generalized regular grid that keeps
+full point-group symmetry; the resulting <code class="docutils literal notranslate"><span class="pre">mesh_numbers</span></code> may differ from
+the regular-grid value.</p></li>
+<li><p>VCA / mixed-species site support: <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> gains a species
+table, <code class="docutils literal notranslate"><span class="pre">apply_vca()</span></code> helper, and <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code> CLI flag (was
+initially <code class="docutils literal notranslate"><span class="pre">--vca</span></code>). VASP POSCAR writes expand mixed sites; force
+I/O and FC-time computation handle site-mixture cells.</p></li>
+<li><p>Bug fix: copy-by-reference issue in <code class="docutils literal notranslate"><span class="pre">qpoints.py</span></code>.</p></li>
+</ul>
+</section>
 <section id="apr-23-2026-version-3-5-1">
 <h2>Apr-23-2026: Version 3.5.1<a class="headerlink" href="#apr-23-2026-version-3-5-1" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -1267,7 +1315,8 @@ swapped. (Issue #144 by &#64;prnvrvs)</p></li>
 spglib. So spglib has to be installed separately. But for normal cases, it is
 handled by the package manager.</p></li>
 <li><p>A new way of using phonopy from command line is proposed at
-<a class="reference internal" href="phonopy-load.html#phonopy-load-command"><span class="std std-ref">phonopy-load command</span></a>.</p></li>
+<a class="reference internal" href="phonopy.html#phonopy-command"><span class="std std-ref">phonopy command</span></a> (originally introduced as the <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code>
+command).</p></li>
 <li><p>Castep interface was added by &#64;ladyteam.</p></li>
 </ul>
 </section>
@@ -2388,12 +2437,12 @@ structure with atomic displacements.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="reference.html"
+       href="migration-v4.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">References</p>
+        <p class="prev-next-title">Migrating from phonopy v3 to v4</p>
       </div>
     </a>
 </div>
@@ -2414,6 +2463,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-16-2026-version-4-0-0">May-16-2026: Version 4.0.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apr-23-2026-version-3-5-1">Apr-23-2026: Version 3.5.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apr-9-2026-version-3-5-0">Apr-9-2026: Version 3.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-28-2026-version-3-4-0">Mar-28-2026: Version 3.4.0</a></li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.3.5.1</title>
+    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Questaal &amp; phonopy calculation" href="qlm.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -368,13 +371,13 @@ following structure is a conventional unit cell of NaCl.</p>
 </div>
 </li>
 <li><p>Prepare a perfect supercell structure from <code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code>,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell
 </pre></div>
 </div>
 </li>
 <li><p>For later convenience, it is recommended to generate <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>
 using <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> file,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>--pa<span class="w"> </span>auto<span class="w"> </span>-c<span class="w"> </span>SPOSCAR
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>--pa<span class="w"> </span>auto<span class="w"> </span>-c<span class="w"> </span>SPOSCAR
 </pre></div>
 </div>
 </li>
@@ -403,12 +406,12 @@ insulator may be such like (<strong>just an example!</strong>)</p>
 </li>
 <li><p>After finishing the VASP calculation, confirm <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>
 contains <code class="docutils literal notranslate"><span class="pre">hessian</span></code> elements, and then create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--fc<span class="w"> </span>vasprun.xml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--fc<span class="w"> </span>vasprun.xml
 </pre></div>
 </div>
 </li>
 <li><p>Run phonopy</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="o">--</span><span class="n">readfc</span> <span class="o">--</span><span class="n">band</span> <span class="s2">&quot;0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5&quot;</span> <span class="o">-</span><span class="n">p</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">band</span> <span class="s2">&quot;0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5&quot;</span> <span class="o">-</span><span class="n">p</span>
 
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -457,8 +460,10 @@ contains <code class="docutils literal notranslate"><span class="pre">hessian</s
 </div>
 <a class="reference internal image-reference" href="_images/NaCl-VASPdfpt.png"><img alt="_images/NaCl-VASPdfpt.png" height="306" src="_images/NaCl-VASPdfpt.png" width="406" />
 </a>
-<p>When running with <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command, <code class="docutils literal notranslate"><span class="pre">--readfc</span></code> option is necessary:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--readfc<span class="w"> </span>band.conf
+<p><code class="docutils literal notranslate"><span class="pre">phonopy</span></code> reads <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> automatically when the file is found
+alongside <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>.  Settings can be supplied through a
+configuration file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>band.conf
 </pre></div>
 </div>
 </li>

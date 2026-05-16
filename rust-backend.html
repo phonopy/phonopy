@@ -1,0 +1,691 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Rust backend &#8212; Phonopy v.4.0.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'rust-backend';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Crystal symmetry" href="symmetry.html" />
+    <link rel="prev" title="Installation" href="install.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.0.0</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/rust-backend.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Rust backend</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonors-from-source">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-native-cpu-tuning">Optional: native CPU tuning</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line">Command line</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thread-pool">Thread pool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dispatch-tracing">Dispatch tracing</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonopy-without-the-c-extension">Building phonopy without the C extension</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known limitations</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="rust-backend">
+<span id="id1"></span><h1>Rust backend<a class="headerlink" href="#rust-backend" title="Link to this heading">#</a></h1>
+<p>The computationally heavy parts of phonopy (dynamical-matrix builders,
+reciprocal dipole-dipole, force-constant symmetrization, BZ-grid helpers,
+smallest-vector search, tetrahedron-method weights, …) are implemented
+as a Rust extension module called from Python through PyO3. The Rust
+path is distributed as a separate Python extension module, <code class="docutils literal notranslate"><span class="pre">phonors</span></code>,
+maintained in its own top-level repository at
+<a class="reference external" href="https://github.com/phonopy/phonors">github.com/phonopy/phonors</a> and
+built with <a class="reference external" href="https://www.maturin.rs/">maturin</a> and
+<a class="reference external" href="https://pyo3.rs/">PyO3</a>.</p>
+<p>Since v4, <code class="docutils literal notranslate"><span class="pre">phonors</span></code> is the default backend and a required runtime
+dependency of phonopy. The legacy C extension is still built by default
+and can be selected per call via <code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> or the <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code>
+CLI flag; both paths are kept in the source tree for cross-checking.
+Numerical parity with the C path is verified by the regression tests
+under <code class="docutils literal notranslate"><span class="pre">test/</span></code>.</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#installation" id="id2">Installation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#building-phonors-from-source" id="id3">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></p></li>
+<li><p><a class="reference internal" href="#optional-native-cpu-tuning" id="id4">Optional: native CPU tuning</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#usage" id="id5">Usage</a></p>
+<ul>
+<li><p><a class="reference internal" href="#python-api" id="id6">Python API</a></p></li>
+<li><p><a class="reference internal" href="#command-line" id="id7">Command line</a></p></li>
+<li><p><a class="reference internal" href="#thread-pool" id="id8">Thread pool</a></p></li>
+<li><p><a class="reference internal" href="#dispatch-tracing" id="id9">Dispatch tracing</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#building-phonopy-without-the-c-extension" id="id10">Building phonopy without the C extension</a></p></li>
+<li><p><a class="reference internal" href="#scope" id="id11">Scope</a></p>
+<ul>
+<li><p><a class="reference internal" href="#known-limitations" id="id12">Known limitations</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="installation">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Installation</a><a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">phonors</span></code> is listed in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> as a required dependency, so
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">phonopy</span></code> (and the conda-forge package once updated)
+pulls it in automatically. No extra step is needed for normal use.</p>
+<section id="building-phonors-from-source">
+<span id="rust-backend-install"></span><h3><a class="toc-backref" href="#id3" role="doc-backlink">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a><a class="headerlink" href="#building-phonors-from-source" title="Link to this heading">#</a></h3>
+<p>When you want to track the development version of <code class="docutils literal notranslate"><span class="pre">phonors</span></code>, or to
+build with custom Rust flags, install it from a source clone instead
+of the PyPI wheel.</p>
+<p>Requirements:</p>
+<ul class="simple">
+<li><p>A Rust toolchain (stable, edition 2021, <code class="docutils literal notranslate"><span class="pre">rustc</span> <span class="pre">&gt;=</span> <span class="pre">1.75</span></code>). The
+easiest way to install it is via <a class="reference external" href="https://rustup.rs/">rustup</a>.</p></li>
+<li><p><a class="reference external" href="https://www.maturin.rs/">maturin</a> 1.7 or newer (available on PyPI
+and conda-forge).</p></li>
+<li><p>Python 3.10 or newer. The extension is built against the stable ABI
+(<code class="docutils literal notranslate"><span class="pre">abi3-py310</span></code>), so one build works for all Python 3.10+ interpreters.</p></li>
+</ul>
+<p>Clone the repository and build the extension in editable mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/phonopy/phonors.git
+%<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>phonors
+%<span class="w"> </span>maturin<span class="w"> </span>develop<span class="w"> </span>--release
+</pre></div>
+</div>
+<p>After a successful build, the module should import from any Python process</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonors</span>
+</pre></div>
+</div>
+</section>
+<section id="optional-native-cpu-tuning">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Optional: native CPU tuning</a><a class="headerlink" href="#optional-native-cpu-tuning" title="Link to this heading">#</a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">maturin</span> <span class="pre">develop</span> <span class="pre">--release</span></code> builds with the Rust baseline
+target (x86-64 v1 on x86_64, Armv8.0 on aarch64), so the resulting
+module runs on any CPU of that architecture. For a local build that
+will only run on the current machine, enabling the host CPU’s full
+instruction set can recover a few percent of wall-clock:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span><span class="nv">RUSTFLAGS</span><span class="o">=</span><span class="s1">&#39;-C target-cpu=native&#39;</span><span class="w"> </span>maturin<span class="w"> </span>develop<span class="w"> </span>--release
+</pre></div>
+</div>
+</section>
+</section>
+<section id="usage">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Usage</a><a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
+<p>The Rust backend is active by default; no flag or keyword is required.
+The legacy C backend is selected per call through the <code class="docutils literal notranslate"><span class="pre">lang</span></code> keyword on
+the Python API or the <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> flag on the CLI.</p>
+<section id="python-api">
+<span id="rust-backend-lang-dispatch"></span><h3><a class="toc-backref" href="#id6" role="doc-backlink">Python API</a><a class="headerlink" href="#python-api" title="Link to this heading">#</a></h3>
+<p>The constructor and loader take a <code class="docutils literal notranslate"><span class="pre">lang</span></code> keyword:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>                <span class="c1"># lang=&quot;Rust&quot; (default)</span>
+<span class="n">ph_c</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>    <span class="c1"># legacy C backend</span>
+</pre></div>
+</div>
+<p>The current value is exposed as the read-only <code class="docutils literal notranslate"><span class="pre">Phonopy.lang</span></code> property.
+Valid values are <code class="docutils literal notranslate"><span class="pre">&quot;Rust&quot;</span></code> (default) and <code class="docutils literal notranslate"><span class="pre">&quot;C&quot;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">lang</span></code> is threaded internally to every lang-aware consumer, including
+<code class="docutils literal notranslate"><span class="pre">Primitive</span></code>, <code class="docutils literal notranslate"><span class="pre">Symmetry</span></code>, <code class="docutils literal notranslate"><span class="pre">ShortestPairs</span></code>, <code class="docutils literal notranslate"><span class="pre">BZGrid</span></code>, <code class="docutils literal notranslate"><span class="pre">GridMatrix</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DynamicalMatrix*</span></code>, <code class="docutils literal notranslate"><span class="pre">DynmatToForceConstants</span></code>, <code class="docutils literal notranslate"><span class="pre">Mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">IterMesh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">QpointsPhonon</span></code>, <code class="docutils literal notranslate"><span class="pre">DerivativeOfDynamicalMatrix</span></code>, <code class="docutils literal notranslate"><span class="pre">TetrahedronMethod</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TetrahedronDOSAccumulator</span></code>, <code class="docutils literal notranslate"><span class="pre">TotalDos</span></code>, <code class="docutils literal notranslate"><span class="pre">ProjectedDos</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">ThermalProperties</span></code>. No per-call plumbing from the user side is required.</p>
+</section>
+<section id="command-line">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Command line</a><a class="headerlink" href="#command-line" title="Link to this heading">#</a></h3>
+<p>The default <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> invocation runs on Rust and prints</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Rust</span> <span class="n">backend</span> <span class="p">(</span><span class="n">phonors</span><span class="p">)</span> <span class="n">using</span> <span class="n">rayon</span> <span class="p">(</span><span class="n">N</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>in the run header, where <code class="docutils literal notranslate"><span class="pre">N</span></code> follows rayon’s defaults. To opt back into
+the C extension, pass <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code> (conf-file equivalent:
+<code class="docutils literal notranslate"><span class="pre">LEGACY_BACKEND</span> <span class="pre">=</span> <span class="pre">.true.</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--legacy-backend<span class="w"> </span>...
+</pre></div>
+</div>
+<p>The old <code class="docutils literal notranslate"><span class="pre">--rust</span></code> flag still parses but is a deprecated no-op (the Rust
+backend is already active) and emits a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. It will be
+removed in a future release.</p>
+</section>
+<section id="thread-pool">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Thread pool</a><a class="headerlink" href="#thread-pool" title="Link to this heading">#</a></h3>
+<p>The Rust kernels parallelize with <a class="reference external" href="https://docs.rs/rayon/">rayon</a>,
+which uses its own thread pool. The thread count is controlled by
+<code class="docutils literal notranslate"><span class="pre">RAYON_NUM_THREADS</span></code> (not <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, which only affects the C
+path):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span><span class="nv">RAYON_NUM_THREADS</span><span class="o">=</span><span class="m">8</span><span class="w"> </span>phonopy<span class="w"> </span>...
+</pre></div>
+</div>
+<p>NumPy/SciPy BLAS multithreading used by phonon diagonalization is
+independent and is controlled by the BLAS library’s own variables
+(e.g. <code class="docutils literal notranslate"><span class="pre">OPENBLAS_NUM_THREADS</span></code>, <code class="docutils literal notranslate"><span class="pre">MKL_NUM_THREADS</span></code>).</p>
+</section>
+<section id="dispatch-tracing">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Dispatch tracing</a><a class="headerlink" href="#dispatch-tracing" title="Link to this heading">#</a></h3>
+<p>To verify that a given code path is actually running on the Rust
+backend, set <code class="docutils literal notranslate"><span class="pre">PHONOPY_TRACE_LANG=1</span></code> before launching:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span><span class="nv">PHONOPY_TRACE_LANG</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>phonopy<span class="w"> </span>...
+<span class="o">[</span>phonopy.lang<span class="o">]</span><span class="w"> </span>dispatch<span class="w"> </span><span class="nv">name</span><span class="o">=</span>Phonopy.__init__<span class="w"> </span><span class="nv">lang</span><span class="o">=</span>Rust
+<span class="o">[</span>phonopy.lang<span class="o">]</span><span class="w"> </span>dispatch<span class="w"> </span><span class="nv">name</span><span class="o">=</span>Primitive.__init__<span class="w"> </span><span class="nv">lang</span><span class="o">=</span>Rust
+<span class="o">[</span>phonopy.lang<span class="o">]</span><span class="w"> </span>dispatch<span class="w"> </span><span class="nv">name</span><span class="o">=</span>BZGrid.__init__<span class="w"> </span><span class="nv">lang</span><span class="o">=</span>Rust
+...
+</pre></div>
+</div>
+<p>Each lang-aware call site emits one line to stderr at construction time
+(and the dynamical-matrix builders emit one per call). The trace is
+silent by default. It is attached to a dedicated logger
+(<code class="docutils literal notranslate"><span class="pre">phonopy.lang</span></code>) and is independent of the rest of the run log, so
+enabling it does not affect normal output.</p>
+</section>
+</section>
+<section id="building-phonopy-without-the-c-extension">
+<span id="rust-backend-no-c-ext"></span><h2><a class="toc-backref" href="#id10" role="doc-backlink">Building phonopy without the C extension</a><a class="headerlink" href="#building-phonopy-without-the-c-extension" title="Link to this heading">#</a></h2>
+<p>For Rust-only deployments (or to validate that every dispatch site has
+a Rust path), phonopy can be installed with the C extension skipped:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span><span class="nv">PHONOPY_NO_C_EXT</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-vvv
+</pre></div>
+</div>
+<p>When the env var is set, <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> returns early and neither
+<code class="docutils literal notranslate"><span class="pre">phonopy._phonopy</span></code> nor <code class="docutils literal notranslate"><span class="pre">phonopy._recgrid</span></code> is built. At runtime,
+<code class="docutils literal notranslate"><span class="pre">Phonopy()</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy.load()</span></code> detect the missing C extension, emit
+a one-time <code class="docutils literal notranslate"><span class="pre">[phonopy]</span> <span class="pre">C</span> <span class="pre">extension</span> <span class="pre">...</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">available;</span> <span class="pre">falling</span> <span class="pre">back</span> <span class="pre">to</span> <span class="pre">lang='Rust'</span> <span class="pre">...</span></code> message, and silently flip <code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> requests to
+<code class="docutils literal notranslate"><span class="pre">lang=&quot;Rust&quot;</span></code>.</p>
+<p>To restore the C extension, simply rebuild without the env var:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>-vvv
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This option is intended for testing the Rust path and for packagers
+who want a Rust-only wheel. For day-to-day use the regular install
+(with the C extension) remains the recommended path.</p>
+</div>
+</section>
+<section id="scope">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Scope</a><a class="headerlink" href="#scope" title="Link to this heading">#</a></h2>
+<p>Rust kernels are wired through the lang dispatch for the following
+groups:</p>
+<ul class="simple">
+<li><p>Grid construction (<code class="docutils literal notranslate"><span class="pre">BZGrid</span></code>, <code class="docutils literal notranslate"><span class="pre">GridMatrix</span></code>: SNF, grid addresses,
+reciprocal / transform rotations, ir-grid mapping).</p></li>
+<li><p>Dipole-dipole and charge-sum kernels for the non-analytical term
+correction (Wang and Gonze variants).</p></li>
+<li><p>Tetrahedron-method weights (<code class="docutils literal notranslate"><span class="pre">tetrahedra_relative_grid_address</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TetrahedronDOSAccumulator</span></code>).</p></li>
+<li><p>Force-constant utilities (<code class="docutils literal notranslate"><span class="pre">compute_permutation</span></code>,
+<code class="docutils literal notranslate"><span class="pre">perm_trans_symmetrize_fc</span></code> / <code class="docutils literal notranslate"><span class="pre">_compact_fc</span></code>, <code class="docutils literal notranslate"><span class="pre">transpose_compact_fc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">distribute_fc2</span></code>, drift FC computation).</p></li>
+<li><p>Smallest-vector search (<code class="docutils literal notranslate"><span class="pre">set_smallest_vectors_{sparse,dense}</span></code>).</p></li>
+<li><p>Dynamical-matrix construction at arbitrary q-points
+(<code class="docutils literal notranslate"><span class="pre">dynamical_matrices_at_qpoints[_gonze]</span></code>), <code class="docutils literal notranslate"><span class="pre">transform_dynmat_to_fc</span></code>,
+and the derivative of the dynamical matrix (<code class="docutils literal notranslate"><span class="pre">derivative_dynmat</span></code>).</p></li>
+</ul>
+<section id="known-limitations">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Known limitations</a><a class="headerlink" href="#known-limitations" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Dynamical-matrix diagonalization.</strong> LAPACK calls (phonon
+eigenproblem) stay in Python/NumPy by design. They are not part of
+the Rust port.</p></li>
+<li><p><strong>Pure-numpy paths.</strong> Routines that are already light-weight in
+NumPy (<code class="docutils literal notranslate"><span class="pre">ThermalProperties</span></code>, per-omega tetrahedron lookups) accept
+<code class="docutils literal notranslate"><span class="pre">lang</span></code> for API consistency but do not call into <code class="docutils literal notranslate"><span class="pre">phonors</span></code>.</p></li>
+</ul>
+<p>If any of these code paths is reached with <code class="docutils literal notranslate"><span class="pre">lang=&quot;Rust&quot;</span></code>, phonopy
+transparently uses the C (or Python) implementation for that step.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="install.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="symmetry.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Crystal symmetry</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonors-from-source">Building <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-native-cpu-tuning">Optional: native CPU tuning</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line">Command line</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thread-pool">Thread pool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dispatch-tracing">Dispatch tracing</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonopy-without-the-c-extension">Building phonopy without the C extension</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known limitations</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

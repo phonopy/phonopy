@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.3.5.1</title>
+    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.4.0.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=68edac4e"></script>
+    <script src="_static/documentation_options.js?v=a1c85040"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -47,10 +47,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Formulations" href="formulation.html" />
-    <link rel="prev" title="phonopy-load command" href="phonopy-load.html" />
+    <link rel="prev" title="phonopy-init command" href="phonopy-init.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="3.5" />
+  <meta name="docsearch:version" content="4.0" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.3.5.1</p>
+    <p class="title logo__title">Phonopy v.4.0.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -139,6 +139,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -177,11 +178,13 @@
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -362,8 +365,8 @@
 <p><strong>This is an experimental feature, and its usage may change occasionally.</strong></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This feature is supported through the <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> command but not the <code class="docutils literal notranslate"><span class="pre">phonopy</span></code>
-command.</p>
+<p>This feature is supported through the <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command (<code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code> option).
+<code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> does not handle MLP-driven force-constant calculations.</p>
 </div>
 <p>With the <code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code> option, phonopy can interface with the polynomial machine
 learning potential (MLP) code,
@@ -509,7 +512,7 @@ setting to use pypolymlp:</p>
 <p>For the generated supercells, forces and energies are calculated. Here it is
 assumed to use the VASP code. Once the calculations are complete, the data
 (forces and energies) can be extracted using the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--sp<span class="w"> </span>-f<span class="w"> </span>vasprun_xmls/vasprun-<span class="o">{</span><span class="m">001</span>..120<span class="o">}</span>.xml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--sp<span class="w"> </span>-f<span class="w"> </span>vasprun_xmls/vasprun-<span class="o">{</span><span class="m">001</span>..120<span class="o">}</span>.xml
 </pre></div>
 </div>
 <p>This command extracts the necessary data and stores it in the
@@ -520,7 +523,7 @@ from calculator outputs is only supported when using the VASP interface.</p>
 <section id="steps-4-develop-mlps">
 <h3>Steps 4: Develop MLPs<a class="headerlink" href="#steps-4-develop-mlps" title="Link to this heading">#</a></h3>
 <p>Having <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>, phonopy is executed with <code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code> option,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="n">phonopy_mlpsscha_params_KCl</span><span class="o">-</span><span class="mf">120.</span><span class="n">yaml</span><span class="o">.</span><span class="n">xz</span> <span class="o">--</span><span class="n">pypolymlp</span> <span class="o">--</span><span class="n">mlp</span><span class="o">-</span><span class="n">params</span><span class="o">=</span><span class="s2">&quot;ntrain=100, ntest=20&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="n">phonopy_mlpsscha_params_KCl</span><span class="o">-</span><span class="mf">120.</span><span class="n">yaml</span><span class="o">.</span><span class="n">xz</span> <span class="o">--</span><span class="n">pypolymlp</span> <span class="o">--</span><span class="n">mlp</span><span class="o">-</span><span class="n">params</span><span class="o">=</span><span class="s2">&quot;ntrain=100, ntest=20&quot;</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
  <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
@@ -609,7 +612,7 @@ This file is read automatically in the next calculation with the <code class="do
 option. If the developed MLPs can predict well forces at relatively large
 displacements, temperature dependent force constants are calculated with the
 <code class="docutils literal notranslate"><span class="pre">--sscha</span> <span class="pre">NUMBER_OF_ITERATIONS</span></code> option.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="n">phonopy_mlpsscha_params_KCl</span><span class="o">-</span><span class="mf">120.</span><span class="n">yaml</span><span class="o">.</span><span class="n">xz</span> <span class="o">--</span><span class="n">pypolymlp</span> <span class="o">--</span><span class="n">sscha</span> <span class="mi">10</span> <span class="o">--</span><span class="n">rd</span><span class="o">-</span><span class="n">temperature</span> <span class="mi">300</span> <span class="o">--</span><span class="n">rd</span> <span class="mi">1000</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="n">phonopy_mlpsscha_params_KCl</span><span class="o">-</span><span class="mf">120.</span><span class="n">yaml</span><span class="o">.</span><span class="n">xz</span> <span class="o">--</span><span class="n">pypolymlp</span> <span class="o">--</span><span class="n">sscha</span> <span class="mi">10</span> <span class="o">--</span><span class="n">rd</span><span class="o">-</span><span class="n">temperature</span> <span class="mi">300</span> <span class="o">--</span><span class="n">rd</span> <span class="mi">1000</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
  <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
@@ -864,7 +867,7 @@ convergence of these force constants can be monitored through the SSCHA free
 energy. Additionally, convergence can be assessed by plotting the phonon band
 structures corresponding to the SSCHA force constants at the iteration
 steps. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>% for i in {0..10}; do phonopy-load phonopy_sscha_fc_$i.yaml.xz --band auto --band-points 101; mv band.yaml band-$i.yaml; done
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>% for i in {0..10}; do phonopy phonopy_sscha_fc_$i.yaml.xz --band auto --band-points 101; mv band.yaml band-$i.yaml; done
 % phonopy-bandplot band-{0..10}.yaml --legend
 </pre></div>
 </div>
@@ -875,7 +878,7 @@ steps. For example:</p>
 <h2>Parameters for developing MLPs<a class="headerlink" href="#parameters-for-developing-mlps" title="Link to this heading">#</a></h2>
 <p>A few parameters can be specified using the <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> option for the
 development of MLPs. The parameters are provided as a string, e.g.,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>phonopy_params.yaml<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=80, ntest=20&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>phonopy_params.yaml<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=80, ntest=20&quot;</span>
 </pre></div>
 </div>
 <p>Parameters are separated by commas for configuration. A brief explanation of the
@@ -913,11 +916,11 @@ when assessing convergence.</p>
 <p>For example, by preparing an initial set with 100 supercell data, calculations
 can then be performed by varying the size of the training dataset while keeping
 the test dataset unchanged as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=20, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-20
-%<span class="w"> </span>phonopy-load<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=40, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-40
-%<span class="w"> </span>phonopy-load<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=60, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-60
-%<span class="w"> </span>phonopy-load<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=80, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-80
-%<span class="w"> </span>phonopy-load<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=100, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-100
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=20, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-20
+%<span class="w"> </span>phonopy<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=40, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-40
+%<span class="w"> </span>phonopy<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=60, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-60
+%<span class="w"> </span>phonopy<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=80, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-80
+%<span class="w"> </span>phonopy<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">&quot;ntrain=100, ntest=20&quot;</span><span class="w"> </span>--br<span class="w"> </span>--mesh<span class="w"> </span><span class="m">40</span><span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>log-100
 </pre></div>
 </div>
 <p>The computed phonon band structures are plotted against the size of the training
@@ -952,12 +955,12 @@ be converted to <code class="docutils literal notranslate"><span class="pre">pol
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="phonopy-load.html"
+       href="phonopy-init.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">phonopy-load command</p>
+        <p class="prev-next-title">phonopy-init command</p>
       </div>
     </a>
     <a class="right-next"
