@@ -36,13 +36,13 @@ jobs:
       - name: Setup symfc
         run: |
           conda activate test
-          git clone --depth 1 https://github.com/symfc/symfc.git
+          git clone https://github.com/symfc/symfc.git
           cd symfc
           pip install -e . -vvv
       - name: Setup phonors
         run: |
           conda activate test
-          git clone --depth 1 https://github.com/phonopy/phonors.git
+          git clone https://github.com/phonopy/phonors.git
           cd phonors
           maturin develop --release
       - name: Setup phonopy without C extension
