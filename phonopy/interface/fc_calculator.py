@@ -86,7 +86,7 @@ def get_fc_solver(
     is_compact_fc: bool = False,
     symmetry: Symmetry | None = None,
     log_level: int = 0,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> FCSolver:
     """Return force constants solver class instance.
 
@@ -145,7 +145,7 @@ def get_fc2(
     is_compact_fc: bool = False,
     symmetry: Symmetry | None = None,
     log_level: int = 0,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.double]:
     """Supercell 2nd order force constants (fc2) are calculated.
 
@@ -210,7 +210,7 @@ class FCSolver:
         orders: Sequence[int] | None = None,
         options: str | None = None,
         log_level: int = 0,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 

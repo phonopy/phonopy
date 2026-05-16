@@ -125,7 +125,7 @@ def get_ir_qpoints_and_weights(
     is_time_reversal: bool = True,
     is_gamma_center: bool = True,
     is_mesh_symmetry: bool = True,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return irreducible q-points and weights backed by BZGrid.
 
@@ -270,7 +270,7 @@ class BZGrid:
         force_SNF: bool = False,
         SNF_coordinates: Literal["reciprocal", "direct"] = "reciprocal",
         store_dense_gp_map: bool = True,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ):
         """Init method.
 
@@ -708,7 +708,7 @@ class GridMatrix:
         use_grg: bool = True,
         force_SNF: bool = False,
         SNF_coordinates: Literal["reciprocal", "direct"] = "reciprocal",
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -1091,7 +1091,7 @@ def get_grid_point_from_address_py(
 def get_grid_point_from_address(
     address: Sequence[int] | NDArray[np.int64],
     D_diag: Sequence[int] | NDArray[np.int64],
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return GR grid-point indices of grid addresses.
 
@@ -1224,7 +1224,7 @@ def _get_grid_points_by_rotations(
     bz_gp: int,
     bz_grid: BZGrid,
     rotations: NDArray[np.int64],
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray:
     """Grid point rotations without surface treatment."""
     rot_adrs = np.dot(rotations, bz_grid.addresses[bz_gp])
@@ -1236,7 +1236,7 @@ def _get_grid_points_by_bz_rotations(
     bz_gp: int,
     bz_grid: BZGrid,
     rotations: NDArray[np.int64],
-    lang: Literal["C", "Python", "Rust"] = "C",
+    lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Grid point rotations with surface treatment.
 
@@ -1254,7 +1254,7 @@ def _get_grid_points_by_bz_rotations_c(
     bz_gp: int,
     bz_grid: BZGrid,
     rotations: NDArray,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     if resolve_lang(lang) == "Rust":
         import phonors as backend
@@ -1329,7 +1329,7 @@ def _get_grid_points_by_bz_rotations_py(
 
 def _get_grid_address(
     D_diag: NDArray[np.int64] | Sequence[int],
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return generalized regular grid addresses.
 
@@ -1368,7 +1368,7 @@ def _relocate_BZ_grid_address(
     reciprocal_lattice: NDArray[np.double],  # column vectors
     PS: NDArray[np.int64] | None = None,
     store_dense_gp_map: bool = False,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
     """Grid addresses are relocated to be inside first Brillouin zone.
 
@@ -1510,7 +1510,7 @@ def _get_ir_grid_map(
     D_diag: NDArray[np.int64] | Sequence[int],
     grg_rotations: NDArray[np.int64],
     PS: NDArray[np.int64] | None = None,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return mapping to irreducible grid points in GR-grid.
 

@@ -87,7 +87,7 @@ def load(
     use_SNF_supercell: bool = False,
     symprec: float = 1e-5,
     log_level: int = 0,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> Phonopy:
     """Create Phonopy instance from parameters and/or input files.
 

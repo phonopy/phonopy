@@ -99,7 +99,7 @@ class DynamicalMatrix:
         decimals: int | None = None,
         hermitianize: bool = True,
         use_openmp: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -295,7 +295,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         hermitianize: bool = True,
         log_level: int = 0,
         use_openmp: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -448,7 +448,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         hermitianize: bool = True,
         log_level: int = 0,
         use_openmp: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -940,7 +940,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         hermitianize: bool = True,
         log_level: int = 0,
         use_openmp: bool = False,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -1094,7 +1094,7 @@ def get_dynamical_matrix(
     hermitianize: bool = True,
     log_level: int = 0,
     use_openmp: bool = False,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> DynamicalMatrix | DynamicalMatrixGL | DynamicalMatrixWang:
     """Return dynamical matrix.
 

@@ -128,7 +128,7 @@ class _MeshGrid:
         is_gamma_center: bool,
         is_time_reversal: bool,
         is_mesh_symmetry: bool,
-        lang: Literal["C", "Rust"] = "C",
+        lang: Literal["C", "Rust"] = "Rust",
         mesh_length: float | None = None,
     ) -> None:
         self._mesh = np.array(mesh, dtype="int64")

@@ -48,7 +48,7 @@ from phonopy.phonon.grid import BZGrid
 
 def get_tetrahedra_relative_grid_address(
     microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
-    lang: Literal["C", "Python", "Rust"] = "C",
+    lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return relative (differences of) grid addresses from the central.
 
@@ -89,7 +89,7 @@ def get_integration_weights(
     grid_points: NDArray[np.int64] | None = None,
     bzgp2irgp_map: NDArray[np.int64] | None = None,
     function: Literal["I", "J"] = "I",
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> NDArray[np.double]:
     """Return tetrahedron method integration weights.
 
@@ -249,7 +249,7 @@ class TetrahedronMethod:
         self,
         primitive_vectors: Sequence[Sequence[float]] | NDArray[np.double] | None,
         mesh: Sequence[int] | NDArray[np.int64] | None = None,
-        lang: Literal["C", "Python", "Rust"] = "C",
+        lang: Literal["C", "Python", "Rust"] = "Rust",
     ) -> None:
         """Init method.
 
@@ -343,7 +343,7 @@ class TetrahedronMethod:
         return self._integration_weight
 
     def _set_relative_grid_addresses(
-        self, lang: Literal["C", "Python", "Rust"] = "C"
+        self, lang: Literal["C", "Python", "Rust"] = "Rust"
     ) -> None:
         """Set dataset of relative grid addresses."""
         if self._primitive_vectors is None:

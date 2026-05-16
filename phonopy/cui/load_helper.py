@@ -151,7 +151,7 @@ def get_nac_params(
     is_nac: bool = True,
     nac_factor: float | None = None,
     log_level: int = 0,
-    lang: Literal["C", "Rust"] = "C",
+    lang: Literal["C", "Rust"] = "Rust",
 ) -> dict | None:
     """Look for and return NAC parameters.
 
