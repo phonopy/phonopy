@@ -2,7 +2,7 @@ name: phonopy test using conda-forge environment
 
 on:
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
 
 jobs:
   build-linux:
@@ -15,33 +15,38 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v6
-    - uses: conda-incubator/setup-miniconda@v3
-      with:
-        miniforge-version: latest
-    - name: Install dependencies
-      run: |
-        conda activate test
-        conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler cxx-compiler cmake pypolymlp ase
-    - name: Setup symfc
-      run: |
-        conda activate test
-        git clone --depth 1 https://github.com/symfc/symfc.git
-        cd symfc
-        pip install -e . -vvv
-        cd ..
-    - name: Setup phonopy
-      run: |
-        conda activate test
-        pip install -e . -vvv
-    - name: Test with pytest
-      run: |
-        conda activate test
-        pytest --cov=./ --cov-report=xml test
-    - name: Upload coverage to Codecov
-      if: matrix.python-version == '3.14'
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        verbose: true
+      - uses: actions/checkout@v6
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+      - name: Install dependencies
+        run: |
+          conda activate test
+          conda install --yes -c conda-forge python=${{ matrix.python-version }}
+          conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler cxx-compiler cmake pypolymlp ase maturin
+      - name: Setup symfc
+        run: |
+          conda activate test
+          git clone https://github.com/symfc/symfc.git
+          cd symfc
+          pip install -e . -vvv
+          cd ..
+      - name: Build and install phonors
+        run: |
+          conda activate test
+          git clone https://github.com/phonopy/phonors.git
+          maturin develop --release
+      - name: Setup phonopy
+        run: |
+          conda activate test
+          pip install -e . -vvv
+      - name: Test with pytest
+        run: |
+          conda activate test
+          pytest --cov=./ --cov-report=xml test
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.14'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
