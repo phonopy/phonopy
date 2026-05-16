@@ -2,7 +2,7 @@
 
 # Change Log
 
-## Unreleased
+## May-16-2026: Version 4.0.0
 
 Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
 
