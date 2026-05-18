@@ -1083,6 +1083,8 @@ def _run_band_structure(
         plot = phonon.plot_band_structure()
         if plot_conf["save_graph"]:
             plot.savefig("band.pdf")
+            if log_level:
+                print('Plot has been saved to "band.pdf".')
         else:
             plot.show()
 
@@ -1197,6 +1199,8 @@ def _run_thermal_properties(
         plot = phonon.plot_thermal_properties()
         if plot_conf["save_graph"]:
             plot.savefig("thermal_properties.pdf")
+            if log_level:
+                print('Plot has been saved to "thermal_properties.pdf".')
         else:
             plot.show()
 
@@ -1231,6 +1235,8 @@ def _run_thermal_displacements(
         plot = phonon.plot_thermal_displacements(plot_conf["with_legend"])
         if plot_conf["save_graph"]:
             plot.savefig("thermal_displacement.pdf")
+            if log_level:
+                print('Plot has been saved to "thermal_displacement.pdf".')
         else:
             plot.show()
 
@@ -1288,7 +1294,9 @@ def _run_projected_dos(
         _pdos_indices, legend = _get_pdos_indices_and_legend(settings, phonon)
         plot = phonon.plot_projected_dos(pdos_indices=_pdos_indices, legend=legend)
         if plot_conf["save_graph"]:
-            plot.savefig("partial_dos.pdf")
+            plot.savefig("projected_dos.pdf")
+            if log_level:
+                print('Plot has been saved to "projected_dos.pdf".')
         else:
             plot.show()
 
@@ -1316,6 +1324,8 @@ def _run_total_dos(
         plot = phonon.plot_total_dos()
         if plot_conf["save_graph"]:
             plot.savefig("total_dos.pdf")
+            if log_level:
+                print('Plot has been saved to "total_dos.pdf".')
         else:
             plot.show()
 
@@ -1394,6 +1404,8 @@ def _run_mesh(
             plot = phonon.plot_band_structure_and_dos()
         if plot_conf["save_graph"]:
             plot.savefig("band_dos.pdf")
+            if log_level:
+                print('Plot has been saved to "band_dos.pdf".')
         else:
             plot.show()
 
@@ -1935,9 +1947,9 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         args, log_level = _start_phonopy(load_phonopy_yaml=load_phonopy_yaml)
 
     plot_conf = {
-        "plot_graph": args.is_graph_plot,
+        "plot_graph": getattr(args, "is_graph_plot", False),
         "save_graph": getattr(args, "is_graph_save", False),
-        "with_legend": args.is_legend,
+        "with_legend": getattr(args, "is_legend", False),
     }
 
     settings, confs, cell_filename = _read_phonopy_settings(
