@@ -2,6 +2,11 @@
 
 # Change Log
 
+## May-18-2026: Version 4.0.1
+
+- Bug fix: `AttributeError` in `phonopy-init` when plotting with certain
+  graph attributes.
+
 ## May-16-2026: Version 4.0.0
 
 Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
