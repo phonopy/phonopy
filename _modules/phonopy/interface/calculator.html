@@ -1,0 +1,2002 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>phonopy.interface.calculator &#8212; Phonopy v.4.0.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=1a34d25d"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}`;
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        all_mermaids.forEach((el) => {
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+        await mermaid.run();
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+const load = async () => {
+    initStyles();
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...JSON.parse(
+                    `{"startOnLoad": false}`
+                ),
+                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...JSON.parse(
+        `{"startOnLoad": false}`
+    ),
+    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/phonopy/interface/calculator';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.0.1</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for phonopy.interface.calculator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Routines to handle various calculator interfaces.&quot;&quot;&quot;</span>
+
+<span class="c1"># Copyright (C) 2014 Atsushi Togo</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of phonopy.</span>
+<span class="c1">#</span>
+<span class="c1"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c1"># modification, are permitted provided that the following conditions</span>
+<span class="c1"># are met:</span>
+<span class="c1">#</span>
+<span class="c1"># * Redistributions of source code must retain the above copyright</span>
+<span class="c1">#   notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1"># * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#   notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#   the documentation and/or other materials provided with the</span>
+<span class="c1">#   distribution.</span>
+<span class="c1">#</span>
+<span class="c1"># * Neither the name of the phonopy project nor the names of its</span>
+<span class="c1">#   contributors may be used to endorse or promote products derived</span>
+<span class="c1">#   from this software without specific prior written permission.</span>
+<span class="c1">#</span>
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="c1"># &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="c1"># LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE</span>
+<span class="c1"># COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c1"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,</span>
+<span class="c1"># BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c1"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c1"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</span>
+<span class="c1"># LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN</span>
+<span class="c1"># ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.file_IO</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_supported_file_extensions_for_compression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.displacement</span><span class="w"> </span><span class="kn">import</span> <span class="n">DisplacementDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.phonopy_yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyYaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">sort_positions_by_symbols</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.physical_units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CalculatorPhysicalUnits</span><span class="p">,</span>
+    <span class="n">get_calculator_physical_units</span><span class="p">,</span>
+    <span class="n">get_physical_units</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.cells</span><span class="w"> </span><span class="kn">import</span> <span class="n">determinant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_displacements_and_forces</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupercellWriterConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for writing supercells with displacements.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    supercell : PhonopyAtoms</span>
+<span class="sd">        Supercell.</span>
+<span class="sd">    cells_with_disps : Sequence[PhonopyAtoms]</span>
+<span class="sd">        Supercells with displacements.</span>
+<span class="sd">    displacement_ids : NDArray</span>
+<span class="sd">        Integer 1d array with the length of cells_with_disps, containing</span>
+<span class="sd">        numbers to be assigned to the supercells with displacements.</span>
+<span class="sd">    zfill_width : int</span>
+<span class="sd">        Supercell numbers are filled by zeros from the left with the digits</span>
+<span class="sd">        as given, which results in 001, 002, ..., when zfill_width=3.</span>
+<span class="sd">    additional_info : dict | None</span>
+<span class="sd">        Any information expected to be given to writers of calculators.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span>
+    <span class="n">cells_with_disps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">PhonopyAtoms</span><span class="p">]</span>
+    <span class="n">displacement_ids</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">zfill_width</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">additional_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StructureInfo</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for interface-specific structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">unitcell_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PhonopyYamlStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;PhonopyYaml structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">phonopy_yaml</span><span class="p">:</span> <span class="n">PhonopyYaml</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VaspStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;VASP structure information.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QeStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantum Espresso structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">pp_filenames</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Wien2kStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wien2k structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">npts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">r0s</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">rmts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ElkStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Elk structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">sp_filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cp2kStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CP2K structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">config_tree</span><span class="p">:</span> <span class="nb">dict</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CrystalStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CRYSTAL structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">conv_numbers</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FleurStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fleur structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">speci</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">restlines</span><span class="p">:</span> <span class="nb">list</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbacusStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ABACUS structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">pps</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">orbitals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">abfs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QlmStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;QLM structure information.&quot;&quot;&quot;</span>
+
+    <span class="n">qlm_ctx</span><span class="p">:</span> <span class="n">Any</span>
+
+
+<span class="n">calculator_info</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;abacus&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--abacus&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke ABACUS mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;abinit&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--abinit&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Abinit mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;aims&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--aims&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke FHI-aims mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;castep&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--castep&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke CASTEP mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--cp2k&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke CP2K mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;crystal&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--crystal&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke CRYSTAL mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--dftb+&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke dftb+ mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;elk&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--elk&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke elk mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;fleur&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--fleur&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Fleur mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;lammps&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--lammps&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Lammps mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;qlm&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--qlm&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Questaal/LMTO mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;qe&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--qe&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Quantum espresso (QE) mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;siesta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--siesta&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Siesta mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--turbomole&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke TURBOMOLE mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;vasp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--vasp&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Vasp mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--wien2k&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Wien2k mode&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--pwmat&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke PWmat mode&quot;</span><span class="p">}},</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">add_arguments_of_calculators</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">calculator_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add options of calculators to ArgumentParser class instance.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">calculator</span> <span class="ow">in</span> <span class="n">calculator_info</span><span class="p">:</span>
+        <span class="n">option</span> <span class="o">=</span> <span class="n">calculator_info</span><span class="p">[</span><span class="n">calculator</span><span class="p">][</span><span class="s2">&quot;option&quot;</span><span class="p">]</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="n">option</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_mode&quot;</span> <span class="o">%</span> <span class="n">calculator</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="n">option</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_interface_mode</span><span class="p">(</span><span class="n">args_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return calculator name.</span>
+
+<span class="sd">    The calculator name is obtained from command option arguments where</span>
+<span class="sd">    argparse is used. The argument attribute name has to be</span>
+<span class="sd">    &quot;{calculator}_mode&quot;. Then this method returns &quot;{calculator}&quot;.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">calculator</span> <span class="ow">in</span> <span class="n">calculator_info</span><span class="p">:</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_mode&quot;</span> <span class="o">%</span> <span class="n">calculator</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">args_dict</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="p">[</span><span class="n">mode</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">calculator</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_crystal_structure</span><span class="p">(</span>
+    <span class="n">filename_in</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
+    <span class="n">interface_in</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">filename_out</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
+    <span class="n">interface_out</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">optional_structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert crystal structures between different calculator interfaces.</span>
+
+<span class="sd">    optional_structure_info: Some interfaces may take additional information,</span>
+<span class="sd">    such as the pseudopotential files for Quantum Espresso (&quot;qe&quot;).</span>
+<span class="sd">    Pass this info explicitly. The type of data depends on the calculator used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename_in</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="n">interface_in</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to read the input file: </span><span class="si">{</span><span class="n">filename_in</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">units_in</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_in</span><span class="p">)</span>
+    <span class="n">units_out</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_out</span><span class="p">)</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="n">units_in</span><span class="o">.</span><span class="n">distance_to_A</span> <span class="o">/</span> <span class="n">units_out</span><span class="o">.</span><span class="n">distance_to_A</span>
+    <span class="n">cell</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">cell</span> <span class="o">*</span> <span class="n">factor</span>
+    <span class="n">write_crystal_structure</span><span class="p">(</span>
+        <span class="n">filename_out</span><span class="p">,</span>
+        <span class="n">cell</span><span class="p">,</span>
+        <span class="n">interface_mode</span><span class="o">=</span><span class="n">interface_out</span><span class="p">,</span>
+        <span class="n">optional_structure_info</span><span class="o">=</span><span class="n">optional_structure_info</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="write_crystal_structure">
+<a class="viewcode-back" href="../../../api-reference.html#phonopy.interface.calculator.write_crystal_structure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_crystal_structure</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
+    <span class="n">cell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span>
+    <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">optional_structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write crystal structure to file in each calculator format.</span>
+
+<span class="sd">    filename : str or os.PathLike</span>
+<span class="sd">        File name to be used to write out the crystal structure.</span>
+<span class="sd">    cell : PhonopyAtoms</span>
+<span class="sd">        Crystal structure</span>
+<span class="sd">    interface_mode : str, optional</span>
+<span class="sd">        Calculator interface such as &#39;vasp&#39;, &#39;qe&#39;, ... Default is None,</span>
+<span class="sd">        that is equivalent to &#39;vasp&#39;.</span>
+<span class="sd">    optional_structure_info : StructureInfo, optional</span>
+<span class="sd">        Information returned by the method `read_crystal_structure`.</span>
+<span class="sd">        See the docstring. Default is None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">vasp</span>
+
+        <span class="n">vasp</span><span class="o">.</span><span class="n">write_vasp</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abinit</span>
+
+        <span class="n">abinit</span><span class="o">.</span><span class="n">write_abinit</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qe&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qe</span>
+
+        <span class="n">pp_filenames</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">pp_filenames</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">QeStructureInfo</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">qe</span><span class="o">.</span><span class="n">write_pwscf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pp_filenames</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">wien2k</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">Wien2kStructureInfo</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Optional structure information (npts, r0s, rmts) is missing.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">wien2k</span><span class="o">.</span><span class="n">write_wein2k</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">cell</span><span class="p">,</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">npts</span><span class="p">,</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">r0s</span><span class="p">,</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">rmts</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">elk</span>
+
+        <span class="n">sp_filenames</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">sp_filenames</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">ElkStructureInfo</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">elk</span><span class="o">.</span><span class="n">write_elk</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">sp_filenames</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">siesta</span>
+
+        <span class="n">siesta</span><span class="o">.</span><span class="n">write_siesta</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp2k</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">Cp2kStructureInfo</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Optional structure information (config_tree) is missing.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">cp2k</span><span class="o">.</span><span class="n">write_cp2k_by_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">config_tree</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crystal</span>
+
+        <span class="n">conv_numbers</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">conv_numbers</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">CrystalStructureInfo</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">crystal</span><span class="o">.</span><span class="n">write_crystal</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">conv_numbers</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dftbp</span>
+
+        <span class="n">dftbp</span><span class="o">.</span><span class="n">write_dftbp</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">turbomole</span>
+
+        <span class="n">turbomole</span><span class="o">.</span><span class="n">write_turbomole</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">aims</span>
+
+        <span class="n">aims</span><span class="o">.</span><span class="n">write_aims</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">castep</span>
+
+        <span class="n">castep</span><span class="o">.</span><span class="n">write_castep</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fleur</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">FleurStructureInfo</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Optional structure information (speci, restlines) is missing.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">fleur</span><span class="o">.</span><span class="n">write_fleur</span><span class="p">(</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">cell</span><span class="p">,</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">speci</span><span class="p">,</span>
+            <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">restlines</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abacus</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">AbacusStructureInfo</span><span class="p">):</span>
+            <span class="n">pps</span> <span class="o">=</span> <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">pps</span>
+            <span class="n">orbitals</span> <span class="o">=</span> <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">orbitals</span>
+            <span class="n">abfs</span> <span class="o">=</span> <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">abfs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pps</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">orbitals</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">abfs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">abacus</span><span class="o">.</span><span class="n">write_abacus</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pps</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">,</span> <span class="n">abfs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lammps</span>
+
+        <span class="n">lammps</span><span class="o">.</span><span class="n">write_lammps</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_qlm</span>
+
+        <span class="n">write_qlm</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pwmat</span>
+
+        <span class="n">pwmat</span><span class="o">.</span><span class="n">write_atom_config</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No calculator interface was found.&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_vasp</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for VASP interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">vasp</span>
+
+    <span class="n">expand</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_mixtures</span>
+    <span class="n">vasp</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">expand_mixtures</span><span class="o">=</span><span class="n">expand</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">write_magnetic_moments</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">sort_by_elements</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expand</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">vasp</span><span class="o">.</span><span class="n">get_vasp_vca_hint_lines</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_qe</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">QeStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Quantum Espresso interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qe</span>
+
+    <span class="n">qe</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">pp_filenames</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">write_magnetic_moments</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">sort_by_elements</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_wien2k</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">Wien2kStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Wien2k interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">wien2k</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for wien2k.&quot;</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;supercell_matrix&quot;</span><span class="p">]))</span>
+    <span class="n">wien2k</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">npts</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">r0s</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">rmts</span><span class="p">,</span>
+        <span class="n">N</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_elk</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">ElkStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Elk interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">elk</span>
+
+    <span class="n">elk</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">sp_filenames</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_cp2k</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">Cp2kStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for CP2K interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp2k</span>
+
+    <span class="n">cp2k</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="p">(</span><span class="n">structure_info</span><span class="o">.</span><span class="n">unitcell_filename</span><span class="p">,</span> <span class="n">structure_info</span><span class="o">.</span><span class="n">config_tree</span><span class="p">),</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_crystal</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">CrystalStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for CRYSTAL interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crystal</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for crystal.&quot;</span><span class="p">)</span>
+
+    <span class="n">template_file</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;template_file&quot;</span><span class="p">,</span> <span class="s2">&quot;TEMPLATE&quot;</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;supercell_matrix&quot;</span><span class="p">]))</span>
+    <span class="n">crystal</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">conv_numbers</span><span class="p">,</span>
+        <span class="n">N</span><span class="p">,</span>
+        <span class="n">template_file</span><span class="o">=</span><span class="n">template_file</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_fleur</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">FleurStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Fleur interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fleur</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for fleur.&quot;</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;supercell_matrix&quot;</span><span class="p">]))</span>
+    <span class="n">fleur</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">speci</span><span class="p">,</span>
+        <span class="n">N</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">restlines</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_abacus</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">AbacusStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for ABACUS interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abacus</span>
+
+    <span class="n">abacus</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">pps</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">orbitals</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">abfs</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_qlm</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">QlmStructureInfo</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for QLM interface.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qlm</span>
+
+    <span class="n">qlm</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="n">structure_info</span><span class="o">.</span><span class="n">qlm_ctx</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_generic</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span><span class="p">,</span> <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for generic interfaces (no special handling).&quot;&quot;&quot;</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">siesta</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">siesta</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dftbp</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">dftbp</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">turbomole</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">turbomole</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">aims</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">aims</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">castep</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">castep</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lammps</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">lammps</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pwmat</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">pwmat</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abinit</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">abinit</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No handler found for calculator interface: </span><span class="si">{</span><span class="n">interface_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">writer</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">writer_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">zfill_width</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">and</span> <span class="s2">&quot;pre_filename&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">:</span>
+        <span class="n">writer_kwargs</span><span class="p">[</span><span class="s2">&quot;pre_filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;pre_filename&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">writer_kwargs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_writer_handler</span><span class="p">(</span>
+    <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the appropriate handler function for the given interface mode.</span>
+
+<span class="sd">    This function implements the Strategy pattern to dispatch handler functions</span>
+<span class="sd">    based on the calculator interface. Handlers are categorized into two types:</span>
+
+<span class="sd">    1. Specialized handlers (dedicated functions):</span>
+<span class="sd">       - Require custom argument construction or additional post-processing</span>
+<span class="sd">       - Examples: VASP (MAGMOM output), Wien2k (N calculation), QE, ELK, CP2K,</span>
+<span class="sd">         CRYSTAL, FLEUR, ABACUS, QLM</span>
+<span class="sd">       - Each has a dedicated handler function like _write_supercells_vasp()</span>
+
+<span class="sd">    2. Generic handlers (unified implementation):</span>
+<span class="sd">       - Use a standard call pattern without special processing</span>
+<span class="sd">       - Examples: ABINIT, SIESTA, DFTB+, TURBOMOLE, FHI-aims, CASTEP, LAMMPS, PWmat</span>
+<span class="sd">       - Share a single generic handler via _write_supercells_generic()</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    interface_mode : str | None</span>
+<span class="sd">        Calculator interface mode. If None, defaults to VASP.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Callable</span>
+<span class="sd">        A handler function that accepts (SupercellWriterConfig, StructureInfo)</span>
+<span class="sd">        and performs the appropriate write operation for the given interface.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        If the interface_mode is not recognized and not handled by generic handler.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Type is Any because subtype handlers are compatible at runtime</span>
+    <span class="n">handlers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="kc">None</span><span class="p">:</span> <span class="n">_write_supercells_vasp</span><span class="p">,</span>  <span class="c1"># VASP is default</span>
+        <span class="s2">&quot;vasp&quot;</span><span class="p">:</span> <span class="n">_write_supercells_vasp</span><span class="p">,</span>
+        <span class="s2">&quot;qe&quot;</span><span class="p">:</span> <span class="n">_write_supercells_qe</span><span class="p">,</span>
+        <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span> <span class="n">_write_supercells_wien2k</span><span class="p">,</span>
+        <span class="s2">&quot;elk&quot;</span><span class="p">:</span> <span class="n">_write_supercells_elk</span><span class="p">,</span>
+        <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span> <span class="n">_write_supercells_cp2k</span><span class="p">,</span>
+        <span class="s2">&quot;crystal&quot;</span><span class="p">:</span> <span class="n">_write_supercells_crystal</span><span class="p">,</span>
+        <span class="s2">&quot;fleur&quot;</span><span class="p">:</span> <span class="n">_write_supercells_fleur</span><span class="p">,</span>
+        <span class="s2">&quot;abacus&quot;</span><span class="p">:</span> <span class="n">_write_supercells_abacus</span><span class="p">,</span>
+        <span class="s2">&quot;qlm&quot;</span><span class="p">:</span> <span class="n">_write_supercells_qlm</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Return specialized handler if available</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="n">handlers</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">handlers</span><span class="p">[</span><span class="n">interface_mode</span><span class="p">]</span>
+
+    <span class="k">assert</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="c1"># Return generic handler for remaining interfaces</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generic_handler</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_write_supercells_generic</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">structure_info</span><span class="p">,</span> <span class="n">interface_mode</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">generic_handler</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">write_supercells_with_displacements</span><span class="p">(</span>
+    <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span>
+    <span class="n">cells_with_disps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">PhonopyAtoms</span><span class="p">],</span>
+    <span class="n">optional_structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span><span class="p">,</span>
+    <span class="n">displacement_ids</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">zfill_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">additional_info</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercell with displacements to files in each calculator format.</span>
+
+<span class="sd">    This function provides a unified interface for writing supercells with</span>
+<span class="sd">    displacements across different calculator backends. It uses a strategy</span>
+<span class="sd">    pattern with typed configuration objects to ensure type safety and clarity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    interface_mode : str | None</span>
+<span class="sd">        Calculator interface such as &#39;vasp&#39;, &#39;qe&#39;, etc. Default is None,</span>
+<span class="sd">        which is equivalent to &#39;vasp&#39;.</span>
+<span class="sd">    supercell : PhonopyAtoms</span>
+<span class="sd">        Supercell to write.</span>
+<span class="sd">    cells_with_disps : Sequence[PhonopyAtoms]</span>
+<span class="sd">        Supercells with displacements to write.</span>
+<span class="sd">    optional_structure_info : StructureInfo</span>
+<span class="sd">        Interface-specific structure information returned by</span>
+<span class="sd">        ``read_crystal_structure``.</span>
+<span class="sd">    displacement_ids : Sequence | NDArray | None, optional</span>
+<span class="sd">        Integer 1d array with the length of cells_with_disps, containing</span>
+<span class="sd">        numbers to be assigned to the supercells with displacements.</span>
+<span class="sd">        Default is None, which gives [1, 2, 3, ...].</span>
+<span class="sd">    zfill_width : int, optional</span>
+<span class="sd">        Supercell numbers are filled by zeros from the left with the digits</span>
+<span class="sd">        as given, which results in 001, 002, ..., when zfill_width=3.</span>
+<span class="sd">        Default is 3.</span>
+<span class="sd">    additional_info : dict | None, optional</span>
+<span class="sd">        Interface-specific configuration such as &quot;supercell_matrix&quot; or</span>
+<span class="sd">        &quot;template_file&quot;. Default is None.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        If the calculator interface is not recognized or if required</span>
+<span class="sd">        structure information is missing.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If required additional information is missing for certain interfaces.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Prepare displacement IDs</span>
+    <span class="k">if</span> <span class="n">displacement_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cells_with_disps</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">displacement_ids</span><span class="p">)</span>
+
+    <span class="c1"># Create configuration object (type-safe, immutable)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">SupercellWriterConfig</span><span class="p">(</span>
+        <span class="n">supercell</span><span class="o">=</span><span class="n">supercell</span><span class="p">,</span>
+        <span class="n">cells_with_disps</span><span class="o">=</span><span class="n">cells_with_disps</span><span class="p">,</span>
+        <span class="n">displacement_ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span>
+        <span class="n">zfill_width</span><span class="o">=</span><span class="n">zfill_width</span><span class="p">,</span>
+        <span class="n">additional_info</span><span class="o">=</span><span class="n">additional_info</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get and invoke the appropriate handler</span>
+    <span class="n">handler</span> <span class="o">=</span> <span class="n">_get_writer_handler</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">)</span>
+    <span class="n">handler</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">optional_structure_info</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">write_magnetic_moments</span><span class="p">(</span><span class="n">cell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span> <span class="n">sort_by_elements</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write MAGMOM file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cell : PhonopyAtoms</span>
+<span class="sd">        Supercell with magnetic moments information.</span>
+<span class="sd">    sort_by_elements : bool, optional</span>
+<span class="sd">        Whether to sort magnetic moments by elements. Default is False.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">magmoms</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">magnetic_moments</span>
+    <span class="k">if</span> <span class="n">magmoms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sort_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sort_by_elements</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sort_list</span> <span class="o">=</span> <span class="n">sort_positions_by_symbols</span><span class="p">(</span>
+                <span class="n">cell</span><span class="o">.</span><span class="n">symbols</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">scaled_positions</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sort_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">)))</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot; MAGMOM = &quot;</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">magmoms</span><span class="p">[</span><span class="n">sort_list</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;MAGMOM&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="read_crystal_structure">
+<a class="viewcode-back" href="../../../api-reference.html#phonopy.interface.calculator.read_crystal_structure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_crystal_structure</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chemical_symbols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">phonopy_yaml_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">PhonopyYaml</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return crystal structure from file in each calculator format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str, optional</span>
+<span class="sd">        Filename that contains cell structure information. Default is None. The</span>
+<span class="sd">        predetermined filename for each interface_mode is used.</span>
+<span class="sd">    interface_mode : str, optional</span>
+<span class="sd">        This is used to recognize the file format. Default is None, which is</span>
+<span class="sd">        equivalent to &#39;vasp&#39; mode.</span>
+<span class="sd">    chemical_symbols : list of str, optional</span>
+<span class="sd">        This is only used for &#39;vasp&#39; mode. VASP POSCAR file format can be</span>
+<span class="sd">        written without chemical symbol information. With this option, chemical</span>
+<span class="sd">        symbols can be given.</span>
+<span class="sd">    phonopy_yaml_cls : PhonopyYaml, optional</span>
+<span class="sd">        This brings PhonopyYaml-like class dependent parameters. Here, currently</span>
+<span class="sd">        only the default filenames are provided by this. Default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[PhonopyAtoms | None, StructureInfo]</span>
+<span class="sd">        (Unit cell, structure info)</span>
+
+<span class="sd">        The StructureInfo contains unitcell_filename and, depending on the</span>
+<span class="sd">        interface, additional calculator-specific fields.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;phonopy_yaml&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_read_phonopy_yaml</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">phonopy_yaml_cls</span><span class="p">)</span>
+
+    <span class="n">cell_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cell_filename</span> <span class="o">=</span> <span class="n">get_default_cell_filename</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cell_filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_vasp</span>
+
+        <span class="k">if</span> <span class="n">chemical_symbols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_vasp</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_vasp</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="n">chemical_symbols</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">VaspStructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_abinit</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_abinit</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qe&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_pwscf</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="n">pp_filenames</span> <span class="o">=</span> <span class="n">read_pwscf</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">QeStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">pp_filenames</span><span class="o">=</span><span class="n">pp_filenames</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_atom_config</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_atom_config</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_wien2k_struct</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="n">npts</span><span class="p">,</span> <span class="n">r0s</span><span class="p">,</span> <span class="n">rmts</span> <span class="o">=</span> <span class="n">parse_wien2k_struct</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">Wien2kStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">npts</span><span class="o">=</span><span class="n">npts</span><span class="p">,</span> <span class="n">r0s</span><span class="o">=</span><span class="n">r0s</span><span class="p">,</span> <span class="n">rmts</span><span class="o">=</span><span class="n">rmts</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_elk</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="n">sp_filenames</span> <span class="o">=</span> <span class="n">read_elk</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">ElkStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">sp_filenames</span><span class="o">=</span><span class="n">sp_filenames</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_siesta</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_siesta</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cp2k</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="n">config_tree</span> <span class="o">=</span> <span class="n">read_cp2k</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">Cp2kStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">config_tree</span><span class="o">=</span><span class="n">config_tree</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="n">conv_numbers</span> <span class="o">=</span> <span class="n">read_crystal</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">CrystalStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">conv_numbers</span><span class="o">=</span><span class="n">conv_numbers</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_dftbp</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_dftbp</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_turbomole</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_turbomole</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aims</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_aims</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_castep</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_castep</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_fleur</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="n">speci</span><span class="p">,</span> <span class="n">restlines</span> <span class="o">=</span> <span class="n">read_fleur</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">FleurStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">speci</span><span class="o">=</span><span class="n">speci</span><span class="p">,</span> <span class="n">restlines</span><span class="o">=</span><span class="n">restlines</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_abacus</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="n">pps</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">,</span> <span class="n">abfs</span> <span class="o">=</span> <span class="n">read_abacus</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">AbacusStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">pps</span><span class="o">=</span><span class="n">pps</span><span class="p">,</span> <span class="n">orbitals</span><span class="o">=</span><span class="n">orbitals</span><span class="p">,</span> <span class="n">abfs</span><span class="o">=</span><span class="n">abfs</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_lammps</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_lammps</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_qlm</span>
+
+        <span class="n">unitcell</span><span class="p">,</span> <span class="p">(</span><span class="n">qlm_ctx</span><span class="p">,)</span> <span class="o">=</span> <span class="n">read_qlm</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">QlmStructureInfo</span><span class="p">(</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">qlm_ctx</span><span class="o">=</span><span class="n">qlm_ctx</span>
+        <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No calculator interface was found.&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_default_cell_filename</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default filename of unit cell structure of each calculator.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;POSCAR&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;abinit&quot;</span><span class="p">,</span> <span class="s2">&quot;qe&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;unitcell.in&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;case.struct&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;elk.in&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;input.fdf&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;unitcell.inp&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;crystal.o&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;geo.gen&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;control&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;geometry.in&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;unitcell.cell&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;fleur.in&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;STRU&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;unitcell&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;site&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;atom.config&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No calculator interface was found.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_default_supercell_filename</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default filename of supercell structure of each calculator.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;phonopy_yaml&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;SPOSCAR&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;abinit&quot;</span><span class="p">,</span> <span class="s2">&quot;elk&quot;</span><span class="p">,</span> <span class="s2">&quot;qe&quot;</span><span class="p">,</span> <span class="s2">&quot;fleur&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;supercell.in&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;case.structS&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;supercell.fdf&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+        <span class="c1"># CP2K interface generates filenames based on original project name</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># supercell.ext can not be parsed by crystal interface.</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;geo.genS&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># TURBOMOLE interface generates directories with inputs</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;geometry.in.supercell&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;supercell.cell&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;sSTRU&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;supercell&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;supercell&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;supercell.config&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_default_displacement_distance</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default displacement distance of each calculator.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="s2">&quot;wien2k&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;abinit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;elk&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;qe&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;siesta&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;turbomole&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fleur&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;abacus&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;qlm&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">displacement_distance</span> <span class="o">=</span> <span class="mf">0.02</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># default or vasp, crystal, cp2k, pwmat</span>
+        <span class="n">displacement_distance</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="k">return</span> <span class="n">displacement_distance</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_default_physical_units</span><span class="p">(</span>
+    <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalculatorPhysicalUnits</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Replace get_calculator_get_physical_units().&quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;get_default_physical_units is deprecated. &quot;</span>
+            <span class="s2">&quot;Use get_calculator_physical_units instead.&quot;</span>
+        <span class="p">),</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_mode</span><span class="o">=</span><span class="n">interface_mode</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_calc_dataset</span><span class="p">(</span>
+    <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_atoms</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">force_filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read calculator output files and parse force sets.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Wien2k output is treated by ``get_calc_datasets_wien2k``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict:</span>
+<span class="sd">        &quot;forces&quot;: List of forces in supercells.</span>
+<span class="sd">        &quot;supercell_energies&quot;: List of supercell energies.</span>
+<span class="sd">        &quot;points&quot;: List of points in the supercells with displacements.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parse_set_of_forces</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qe&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No calculator interface was found: </span><span class="si">{</span><span class="n">interface_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">data_sets</span> <span class="o">=</span> <span class="n">parse_set_of_forces</span><span class="p">(</span><span class="n">num_atoms</span><span class="p">,</span> <span class="n">force_filenames</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_sets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">data_sets</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;forces&quot;</span><span class="p">:</span> <span class="n">data_sets</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_calc_dataset_wien2k</span><span class="p">(</span>
+    <span class="n">force_filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
+    <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span>
+    <span class="n">disp_dataset</span><span class="p">:</span> <span class="n">DisplacementDataset</span><span class="p">,</span>
+    <span class="n">wien2k_P1_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">symmetry_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read Wien2k output files and parse force sets.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+
+    <span class="n">disps</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_displacements_and_forces</span><span class="p">(</span><span class="n">disp_dataset</span><span class="p">)</span>
+    <span class="n">force_sets</span> <span class="o">=</span> <span class="n">parse_set_of_forces</span><span class="p">(</span>
+        <span class="n">disps</span><span class="p">,</span>
+        <span class="n">force_filenames</span><span class="p">,</span>
+        <span class="n">supercell</span><span class="p">,</span>
+        <span class="n">wien2k_P1_mode</span><span class="o">=</span><span class="n">wien2k_P1_mode</span><span class="p">,</span>
+        <span class="n">symmetry_tolerance</span><span class="o">=</span><span class="n">symmetry_tolerance</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;forces&quot;</span><span class="p">:</span> <span class="n">force_sets</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_force_constant_conversion_factor</span><span class="p">(</span>
+    <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return unit conversion factor of force constants.&quot;&quot;&quot;</span>
+    <span class="n">_unit</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Angstrom&quot;</span><span class="p">,</span> <span class="s2">&quot;angstrom&quot;</span><span class="p">)</span>  <span class="c1"># for backward compatibility</span>
+    <span class="n">interface_default_units</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">)</span>
+    <span class="n">default_unit</span> <span class="o">=</span> <span class="n">interface_default_units</span><span class="o">.</span><span class="n">force_constants_unit</span>
+    <span class="n">physical_units</span> <span class="o">=</span> <span class="n">get_physical_units</span><span class="p">()</span>
+    <span class="n">factor_to_eVperA2</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;eV/angstrom^2&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;eV/angstrom.au&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
+        <span class="s2">&quot;Ry/au^2&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Rydberg</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;mRy/au^2&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Rydberg</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="s2">&quot;hartree/au^2&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;hartree/angstrom.au&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">default_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">factor_to_eVperA2</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Force constant conversion for </span><span class="si">%s</span><span class="s2"> unit is not implemented.&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">default_unit</span> <span class="o">!=</span> <span class="n">_unit</span><span class="p">:</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">factor_to_eVperA2</span><span class="p">[</span><span class="n">_unit</span><span class="p">]</span> <span class="o">/</span> <span class="n">factor_to_eVperA2</span><span class="p">[</span><span class="n">default_unit</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">factor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">1.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_phonopy_yaml</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">phonopy_yaml_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">PhonopyYaml</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">PhonopyYamlStructureInfo</span><span class="p">]:</span>
+    <span class="n">cell_filename</span> <span class="o">=</span> <span class="n">_get_cell_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">phonopy_yaml_cls</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cell_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">PhonopyYamlStructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">phonopy_yaml_cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">phyml</span> <span class="o">=</span> <span class="n">PhonopyYaml</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">phyml</span> <span class="o">=</span> <span class="n">phonopy_yaml_cls</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">phyml</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># yaml.load returns str: File format seems not YAML.</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">PhonopyYamlStructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">ParserError</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">PhonopyYamlStructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
+
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">phyml</span><span class="o">.</span><span class="n">unitcell</span>
+    <span class="k">return</span> <span class="n">cell</span><span class="p">,</span> <span class="n">PhonopyYamlStructureInfo</span><span class="p">(</span>
+        <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">phonopy_yaml</span><span class="o">=</span><span class="n">phyml</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_cell_filename</span><span class="p">(</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">phonopy_yaml_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">PhonopyYaml</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">cell_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">default_filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">phonopy_yaml_cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">phonopy_yaml_cls</span><span class="o">.</span><span class="n">default_filenames</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">get_supported_file_extensions_for_compression</span><span class="p">():</span>
+                <span class="n">default_filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">default_filenames</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">candidate</span> <span class="ow">and</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">cell_filename</span> <span class="o">=</span> <span class="n">candidate</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">cell_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

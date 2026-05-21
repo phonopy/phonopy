@@ -1,0 +1,1172 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>phonopy.cui.load &#8212; Phonopy v.4.0.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=1a34d25d"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}`;
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        all_mermaids.forEach((el) => {
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+        await mermaid.run();
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+const load = async () => {
+    initStyles();
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...JSON.parse(
+                    `{"startOnLoad": false}`
+                ),
+                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...JSON.parse(
+        `{"startOnLoad": false}`
+    ),
+    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/phonopy/cui/load';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.0.1</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for phonopy.cui.load</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Phonopy loader.&quot;&quot;&quot;</span>
+
+<span class="c1"># Copyright (C) 2018 Atsushi Togo</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of phonopy.</span>
+<span class="c1">#</span>
+<span class="c1"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c1"># modification, are permitted provided that the following conditions</span>
+<span class="c1"># are met:</span>
+<span class="c1">#</span>
+<span class="c1"># * Redistributions of source code must retain the above copyright</span>
+<span class="c1">#   notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1"># * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#   notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#   the documentation and/or other materials provided with the</span>
+<span class="c1">#   distribution.</span>
+<span class="c1">#</span>
+<span class="c1"># * Neither the name of the phonopy project nor the names of its</span>
+<span class="c1">#   contributors may be used to endorse or promote products derived</span>
+<span class="c1">#   from this software without specific prior written permission.</span>
+<span class="c1">#</span>
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="c1"># &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="c1"># LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE</span>
+<span class="c1"># COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c1"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,</span>
+<span class="c1"># BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c1"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c1"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</span>
+<span class="c1"># LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN</span>
+<span class="c1"># ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.cui.load_helper</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">load_helper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy._lang</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_lang</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.api_phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.phonopy_yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyYaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.physical_units</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_calculator_physical_units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">forces_in_dataset</span>
+
+
+<div class="viewcode-block" id="load">
+<a class="viewcode-back" href="../../../api-reference.html#phonopy.load">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span>
+    <span class="n">phonopy_yaml</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span>
+    <span class="o">|</span> <span class="n">typing</span><span class="o">.</span><span class="n">IO</span>
+    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># phonopy.yaml-like must be the first argument.</span>
+    <span class="n">supercell_matrix</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">primitive_matrix</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+    <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">]</span>
+    <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">is_nac</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">calculator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">unitcell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">nac_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">unitcell_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">supercell_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">born_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">force_sets_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">force_constants_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fc_calculator</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;traditional&quot;</span><span class="p">,</span> <span class="s2">&quot;symfc&quot;</span><span class="p">,</span> <span class="s2">&quot;alm&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fc_calculator_options</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">produce_fc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">is_symmetry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">symmetrize_fc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">is_compact_fc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">use_pypolymlp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mlp_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_SNF_supercell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">symprec</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">lang</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;Rust&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Rust&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Phonopy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a ``Phonopy`` instance from parameters and/or input files.</span>
+
+<span class="sd">    A &quot;phonopy_yaml&quot;-like file is parsed unless crystal structure</span>
+<span class="sd">    information is given through ``unitcell_filename``,</span>
+<span class="sd">    ``supercell_filename``, ``unitcell`` (``PhonopyAtoms``-like), or</span>
+<span class="sd">    ``supercell`` (``PhonopyAtoms``-like). Even when a &quot;phonopy_yaml&quot;-like</span>
+<span class="sd">    file is parsed, parameters other than crystal structure can be</span>
+<span class="sd">    overwritten.</span>
+
+<span class="sd">    Phonopy&#39;s default ``FORCE_SETS`` and ``BORN`` files are parsed when</span>
+<span class="sd">    they are found in the current directory and the corresponding data</span>
+<span class="sd">    are not yet provided by other means.</span>
+
+<span class="sd">    **Crystal structure**</span>
+
+<span class="sd">    Means to provide crystal structure(s), in order of priority:</span>
+
+<span class="sd">    1. ``unitcell_filename`` (with ``supercell_matrix``)</span>
+<span class="sd">    2. ``supercell_filename``</span>
+<span class="sd">    3. ``unitcell`` (with ``supercell_matrix``)</span>
+<span class="sd">    4. ``supercell``</span>
+<span class="sd">    5. ``phonopy_yaml``</span>
+
+<span class="sd">    **Force sets or force constants**</span>
+
+<span class="sd">    Optional. Means to provide information used to generate force</span>
+<span class="sd">    constants, in order of priority:</span>
+
+<span class="sd">    1. ``force_constants_filename``</span>
+<span class="sd">    2. ``force_sets_filename``</span>
+<span class="sd">    3. ``phonopy_yaml`` if force constants are found in it.</span>
+<span class="sd">    4. ``phonopy_yaml`` if forces are found in ``phonopy_yaml.dataset``.</span>
+<span class="sd">    5. ``FORCE_CONSTANTS`` is searched in the current directory.</span>
+<span class="sd">    6. ``force_constants.hdf5`` is searched in the current directory.</span>
+<span class="sd">    7. ``FORCE_SETS`` is searched in the current directory.</span>
+
+<span class="sd">    When both 3 and 4 are satisfied but not the others, force constants</span>
+<span class="sd">    and dataset are both stored on the ``Phonopy`` instance, but force</span>
+<span class="sd">    constants are not produced from the dataset.</span>
+
+<span class="sd">    **Parameters for non-analytical term correction (NAC)**</span>
+
+<span class="sd">    Optional. Means to provide NAC parameters, in order of priority:</span>
+
+<span class="sd">    1. ``born_filename``</span>
+<span class="sd">    2. ``nac_params``</span>
+<span class="sd">    3. ``phonopy_yaml.nac_params`` if present and ``is_nac=True``.</span>
+<span class="sd">    4. ``BORN`` is searched in the current directory when ``is_nac=True``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phonopy_yaml : str, os.PathLike, typing.IO, optional</span>
+<span class="sd">        Filename of a &quot;phonopy.yaml&quot;-like file (``str`` / ``bytes``) or</span>
+<span class="sd">        a file-pointer-like object. If given, the data in the file are</span>
+<span class="sd">        parsed. Default is None.</span>
+<span class="sd">    supercell_matrix : array_like, optional</span>
+<span class="sd">        Supercell matrix multiplied to the input cell basis vectors.</span>
+<span class="sd">        ``shape=(3,)`` or ``(3, 3)``; the former is interpreted as a</span>
+<span class="sd">        diagonal matrix. ``dtype=int``. Default is the identity matrix.</span>
+<span class="sd">    primitive_matrix : array_like or str, optional</span>
+<span class="sd">        Primitive matrix multiplied to the input cell basis vectors.</span>
+<span class="sd">        Default is ``&#39;auto&#39;``, which guesses the primitive matrix from</span>
+<span class="sd">        crystal symmetry. ``None`` is treated the same as ``&#39;auto&#39;``.</span>
+<span class="sd">        To use the unit cell as the primitive cell (identity</span>
+<span class="sd">        transformation), pass ``&#39;P&#39;``. For array_like input,</span>
+<span class="sd">        ``shape=(3, 3)``, ``dtype=float``. When ``&#39;F&#39;``, ``&#39;I&#39;``,</span>
+<span class="sd">        ``&#39;A&#39;``, ``&#39;C&#39;``, or ``&#39;R&#39;`` is given instead of a 3x3 matrix,</span>
+<span class="sd">        the primitive matrix for the character found at</span>
+<span class="sd">        https://spglib.github.io/spglib/definition.html is used. When a</span>
+<span class="sd">        &quot;phonopy.yaml&quot;-like file is loaded and it carries a</span>
+<span class="sd">        ``primitive_matrix``, that value takes priority over the</span>
+<span class="sd">        default ``&#39;auto&#39;``.</span>
+<span class="sd">    is_nac : bool, optional</span>
+<span class="sd">        If True, look for a ``BORN`` file. If False, NAC is turned off.</span>
+<span class="sd">        Default is True.</span>
+<span class="sd">    calculator : str, optional</span>
+<span class="sd">        Calculator used for computing forces. This is used to switch</span>
+<span class="sd">        the set of physical units. Default is None, which is equivalent</span>
+<span class="sd">        to ``&quot;vasp&quot;``.</span>
+<span class="sd">    unitcell : PhonopyAtoms, optional</span>
+<span class="sd">        Input unit cell. Default is None.</span>
+<span class="sd">    supercell : PhonopyAtoms, optional</span>
+<span class="sd">        Input supercell. When given, the default value of</span>
+<span class="sd">        ``primitive_matrix`` is set to ``&#39;auto&#39;`` (can be overwritten),</span>
+<span class="sd">        and ``supercell_matrix`` is ignored. Default is None.</span>
+<span class="sd">    nac_params : dict, optional</span>
+<span class="sd">        Parameters required for non-analytical term correction. Default</span>
+<span class="sd">        is None. Expected structure::</span>
+
+<span class="sd">            {&#39;born&#39;: Born effective charges</span>
+<span class="sd">                     (array_like, shape=(primitive cell atoms, 3, 3),</span>
+<span class="sd">                      dtype=float),</span>
+<span class="sd">             &#39;dielectric&#39;: Dielectric constant matrix</span>
+<span class="sd">                           (array_like, shape=(3, 3), dtype=float),</span>
+<span class="sd">             &#39;factor&#39;: unit conversion factor (float)}</span>
+
+<span class="sd">    unitcell_filename : str, optional</span>
+<span class="sd">        Input unit cell filename. Default is None.</span>
+<span class="sd">    supercell_filename : str, optional</span>
+<span class="sd">        Input supercell filename. When specified, ``supercell_matrix``</span>
+<span class="sd">        is ignored. Default is None.</span>
+<span class="sd">    born_filename : str, optional</span>
+<span class="sd">        Filename of a ``BORN``-format file containing non-analytical</span>
+<span class="sd">        term correction parameters.</span>
+<span class="sd">    force_sets_filename : str, optional</span>
+<span class="sd">        Filename of a file in ``FORCE_SETS`` format containing sets of</span>
+<span class="sd">        forces and displacements. Default is None.</span>
+<span class="sd">    force_constants_filename : str, optional</span>
+<span class="sd">        Filename of a file in ``FORCE_CONSTANTS`` or</span>
+<span class="sd">        ``force_constants.hdf5`` format containing force constants.</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    fc_calculator : {&quot;traditional&quot;, &quot;symfc&quot;, &quot;alm&quot;, None}, optional</span>
+<span class="sd">        Force constants calculator backend. Default is None.</span>
+<span class="sd">    fc_calculator_options : str, optional</span>
+<span class="sd">        Optional parameters passed to the external fc-calculator as a</span>
+<span class="sd">        single text string. Parsing rules depend on the calculator.</span>
+<span class="sd">        For ``alm``, each parameter is split by ``&#39;,&#39;`` and each</span>
+<span class="sd">        key-value pair is written as ``&#39;key = value&#39;``.</span>
+<span class="sd">    factor : float, optional</span>
+<span class="sd">        Deprecated. The conversion factor is selected based on</span>
+<span class="sd">        ``calculator``.</span>
+<span class="sd">    produce_fc : bool, optional</span>
+<span class="sd">        When False, force constants are not calculated from the dataset</span>
+<span class="sd">        of displacements and forces even if the dataset exists. Default</span>
+<span class="sd">        is True.</span>
+<span class="sd">    is_symmetry : bool, optional</span>
+<span class="sd">        When False, crystal symmetry (except for lattice translation)</span>
+<span class="sd">        is not considered. Default is True.</span>
+<span class="sd">    symmetrize_fc : bool, optional</span>
+<span class="sd">        When False, force constants are not symmetrized when creating</span>
+<span class="sd">        them from displacements and forces. Default is True.</span>
+<span class="sd">    is_compact_fc : bool, optional</span>
+<span class="sd">        When True, force constants are produced with</span>
+<span class="sd">        ``shape=(primitive, supercell, 3, 3)``; when False, with</span>
+<span class="sd">        ``shape=(supercell, supercell, 3, 3)``. ``supercell`` and</span>
+<span class="sd">        ``primitive`` indicate the number of atoms in those cells.</span>
+<span class="sd">        Default is True.</span>
+<span class="sd">    use_pypolymlp : bool, optional</span>
+<span class="sd">        Use pypolymlp for generating force constants. Default is False.</span>
+<span class="sd">    mlp_params : dict, optional</span>
+<span class="sd">        A set of parameters used by machine-learning potentials.</span>
+<span class="sd">    use_SNF_supercell : bool, optional</span>
+<span class="sd">        Build the supercell with the SNF algorithm when True. Default</span>
+<span class="sd">        is False. The SNF algorithm is faster than the original one,</span>
+<span class="sd">        but the order of atoms in the supercell can be different.</span>
+<span class="sd">        Backward compatibility with old data (e.g., force constants)</span>
+<span class="sd">        is therefore not guaranteed.</span>
+<span class="sd">    symprec : float, optional</span>
+<span class="sd">        Tolerance used to find crystal symmetry. Default is 1e-5.</span>
+<span class="sd">    log_level : int, optional</span>
+<span class="sd">        Verbosity control. Default is 0.</span>
+<span class="sd">    lang : Literal[&quot;C&quot;, &quot;Rust&quot;], optional</span>
+<span class="sd">        Backend implementation for compute-heavy kernels. ``&quot;C&quot;`` uses</span>
+<span class="sd">        the existing C extension; ``&quot;Rust&quot;`` selects the experimental</span>
+<span class="sd">        phonors backend. Default is ``&quot;Rust&quot;``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lang</span> <span class="o">=</span> <span class="n">resolve_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">primitive_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">primitive_matrix</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">supercell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">or</span> <span class="n">supercell_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">or</span> <span class="n">unitcell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">or</span> <span class="n">unitcell_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="n">cell</span><span class="p">,</span> <span class="n">smat</span><span class="p">,</span> <span class="n">pmat</span> <span class="o">=</span> <span class="n">load_helper</span><span class="o">.</span><span class="n">get_cell_settings</span><span class="p">(</span>
+            <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">supercell_matrix</span><span class="p">,</span>
+            <span class="n">primitive_matrix</span><span class="o">=</span><span class="n">primitive_matrix</span><span class="p">,</span>
+            <span class="n">unitcell</span><span class="o">=</span><span class="n">unitcell</span><span class="p">,</span>
+            <span class="n">supercell</span><span class="o">=</span><span class="n">supercell</span><span class="p">,</span>
+            <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">unitcell_filename</span><span class="p">,</span>
+            <span class="n">supercell_filename</span><span class="o">=</span><span class="n">supercell_filename</span><span class="p">,</span>
+            <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">,</span>
+            <span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">_calculator</span> <span class="o">=</span> <span class="n">calculator</span>
+        <span class="n">_nac_params</span> <span class="o">=</span> <span class="n">nac_params</span>
+        <span class="n">_dataset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">_fc</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">phonopy_yaml</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">phpy_yaml</span> <span class="o">=</span> <span class="n">PhonopyYaml</span><span class="p">()</span>
+        <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">phonopy_yaml</span><span class="p">)</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">unitcell</span>
+        <span class="n">smat</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">supercell_matrix</span>
+        <span class="k">if</span> <span class="n">smat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">smat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="c1"># When the caller leaves primitive_matrix at the default &quot;auto&quot;,</span>
+        <span class="c1"># a value stored in the yaml takes priority (preserves the cell</span>
+        <span class="c1"># transformation that was used originally).</span>
+        <span class="k">if</span> <span class="n">primitive_matrix</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">and</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pmat</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive_matrix</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pmat</span> <span class="o">=</span> <span class="n">primitive_matrix</span>
+        <span class="k">if</span> <span class="n">nac_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_nac_params</span> <span class="o">=</span> <span class="n">nac_params</span>
+        <span class="k">elif</span> <span class="n">is_nac</span><span class="p">:</span>
+            <span class="n">_nac_params</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">nac_params</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_nac_params</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">_dataset</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="n">_fc</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">force_constants</span>
+        <span class="k">if</span> <span class="n">calculator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_calculator</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">calculator</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_calculator</span> <span class="o">=</span> <span class="n">calculator</span>
+
+    <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cell information could not found. Phonopy instance loading failed.&quot;</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">log_level</span> <span class="ow">and</span> <span class="n">_calculator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Set &quot;</span><span class="si">{</span><span class="n">_calculator</span><span class="si">}</span><span class="s1">&quot; mode.&#39;</span><span class="p">)</span>
+
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span>
+        <span class="n">cell</span><span class="p">,</span>
+        <span class="n">smat</span><span class="p">,</span>
+        <span class="n">primitive_matrix</span><span class="o">=</span><span class="n">pmat</span><span class="p">,</span>
+        <span class="n">factor</span><span class="o">=</span><span class="n">factor</span><span class="p">,</span>
+        <span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">,</span>
+        <span class="n">is_symmetry</span><span class="o">=</span><span class="n">is_symmetry</span><span class="p">,</span>
+        <span class="n">use_SNF_supercell</span><span class="o">=</span><span class="n">use_SNF_supercell</span><span class="p">,</span>
+        <span class="n">calculator</span><span class="o">=</span><span class="n">_calculator</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="n">lang</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">units</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">_calculator</span><span class="p">)</span>
+    <span class="c1"># NAC params</span>
+    <span class="k">if</span> <span class="n">born_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">_nac_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">is_nac</span><span class="p">:</span>
+        <span class="n">ret_nac_params</span> <span class="o">=</span> <span class="n">load_helper</span><span class="o">.</span><span class="n">get_nac_params</span><span class="p">(</span>
+            <span class="n">primitive</span><span class="o">=</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span>
+            <span class="n">nac_params</span><span class="o">=</span><span class="n">_nac_params</span><span class="p">,</span>
+            <span class="n">born_filename</span><span class="o">=</span><span class="n">born_filename</span><span class="p">,</span>
+            <span class="n">is_nac</span><span class="o">=</span><span class="n">is_nac</span><span class="p">,</span>
+            <span class="n">nac_factor</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">nac_factor</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+            <span class="n">lang</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">ret_nac_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="n">ret_nac_params</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_helper</span><span class="o">.</span><span class="n">select_and_load_dataset</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">supercell</span><span class="p">),</span>
+        <span class="n">_dataset</span><span class="p">,</span>
+        <span class="n">phonopy_yaml_filename</span><span class="o">=</span><span class="n">phonopy_yaml</span><span class="p">,</span>
+        <span class="n">force_sets_filename</span><span class="o">=</span><span class="n">force_sets_filename</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+
+    <span class="n">fc</span> <span class="o">=</span> <span class="n">load_helper</span><span class="o">.</span><span class="n">select_and_extract_force_constants</span><span class="p">(</span>
+        <span class="n">phonon</span><span class="p">,</span>
+        <span class="n">force_constants</span><span class="o">=</span><span class="n">_fc</span><span class="p">,</span>
+        <span class="n">force_constants_filename</span><span class="o">=</span><span class="n">force_constants_filename</span><span class="p">,</span>
+        <span class="n">is_compact_fc</span><span class="o">=</span><span class="n">is_compact_fc</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">fc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="n">fc</span>
+
+    <span class="k">if</span> <span class="n">use_pypolymlp</span> <span class="ow">and</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">mlp_dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">load_helper</span><span class="o">.</span><span class="n">develop_or_load_pypolymlp</span><span class="p">(</span>
+            <span class="n">phonon</span><span class="p">,</span> <span class="n">mlp_params</span><span class="o">=</span><span class="n">mlp_params</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">force_constants</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">produce_fc</span>
+        <span class="ow">and</span> <span class="n">forces_in_dataset</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">load_helper</span><span class="o">.</span><span class="n">produce_force_constants</span><span class="p">(</span>
+            <span class="n">phonon</span><span class="p">,</span>
+            <span class="n">fc_calculator</span><span class="o">=</span><span class="n">fc_calculator</span><span class="p">,</span>
+            <span class="n">fc_calculator_options</span><span class="o">=</span><span class="n">fc_calculator_options</span><span class="p">,</span>
+            <span class="n">symmetrize_fc</span><span class="o">=</span><span class="n">symmetrize_fc</span><span class="p">,</span>
+            <span class="n">is_compact_fc</span><span class="o">=</span><span class="n">is_compact_fc</span><span class="p">,</span>
+            <span class="n">use_symfc_projector</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">phonon</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

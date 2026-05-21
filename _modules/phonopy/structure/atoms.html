@@ -1,0 +1,1846 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>phonopy.structure.atoms &#8212; Phonopy v.4.0.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=1a34d25d"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}`;
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        all_mermaids.forEach((el) => {
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+        await mermaid.run();
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+const load = async () => {
+    initStyles();
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...JSON.parse(
+                    `{"startOnLoad": false}`
+                ),
+                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...JSON.parse(
+        `{"startOnLoad": false}`
+    ),
+    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/phonopy/structure/atoms';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.0.1</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for phonopy.structure.atoms</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;PhonopyAtoms class and routines related to atoms.&quot;&quot;&quot;</span>
+
+<span class="c1"># Copyright (C) 2011 Atsushi Togo</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of phonopy.</span>
+<span class="c1">#</span>
+<span class="c1"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c1"># modification, are permitted provided that the following conditions</span>
+<span class="c1"># are met:</span>
+<span class="c1">#</span>
+<span class="c1"># * Redistributions of source code must retain the above copyright</span>
+<span class="c1">#   notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1"># * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#   notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#   the documentation and/or other materials provided with the</span>
+<span class="c1">#   distribution.</span>
+<span class="c1">#</span>
+<span class="c1"># * Neither the name of the phonopy project nor the names of its</span>
+<span class="c1">#   contributors may be used to endorse or promote products derived</span>
+<span class="c1">#   from this software without specific prior written permission.</span>
+<span class="c1">#</span>
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="c1"># &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="c1"># LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE</span>
+<span class="c1"># COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
+<span class="c1"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,</span>
+<span class="c1"># BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c1"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c1"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</span>
+<span class="c1"># LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN</span>
+<span class="c1"># ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">gcd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypedDict</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atomic_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_atomic_data</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_PointEntry</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">coordinates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">extended_symbol</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">mass</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">magnetic_moment</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">mixture</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span>  <span class="c1"># [[symbol_str, weight_float], ...] for a mixed-species site</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_CellDictBase</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class holding the required field of CellDict.</span>
+
+<span class="sd">    Separated from CellDict because TypedDict does not support mixing required</span>
+<span class="sd">    and optional fields in a single class (Python &lt; 3.11). Required fields are</span>
+<span class="sd">    defined here with the default total=True, while optional fields are added</span>
+<span class="sd">    in the subclass with total=False.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lattice</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CellDict</span><span class="p">(</span><span class="n">_CellDictBase</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dict representation of a crystal cell as parsed from phonopy YAML.&quot;&quot;&quot;</span>
+
+    <span class="n">points</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_PointEntry</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">Atoms</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PhonopyAtoms&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Atoms class that is same as PhonopyAtoms class.</span>
+
+<span class="sd">    This exists backward compatibility.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;phonopy.atoms.Atoms is deprecated. Please use PhonopyAtoms instead of Atoms.&quot;</span><span class="p">,</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">PhonopyAtoms</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="n">_SYMBOL_INDEX_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^([A-Z][a-z]{0,2})([0-9]*)$&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">split_symbol_and_index</span><span class="p">(</span><span class="n">symnum</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split a single-element symbol with an optional natural-number suffix.</span>
+
+<span class="sd">    Accepted: a single chemical symbol (1 uppercase letter, optionally followed</span>
+<span class="sd">    by up to 2 lowercase letters — Uuo etc.), optionally followed by digits</span>
+<span class="sd">    forming a positive integer suffix.</span>
+
+<span class="sd">    H --&gt; H, 0</span>
+<span class="sd">    H2 --&gt; H, 2</span>
+<span class="sd">    Cl1 --&gt; Cl, 1</span>
+<span class="sd">    Uuo --&gt; Uuo, 0</span>
+
+<span class="sd">    Composite symbols like &quot;GeSn&quot; or invalid forms like &quot;Cl_1&quot; raise</span>
+<span class="sd">    RuntimeError.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">_SYMBOL_INDEX_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">symnum</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="n">symbol</span><span class="p">,</span> <span class="n">index_str</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">index_str</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">index_str</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid symbol. Index has to be greater than 0: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">index</span>
+
+
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Species</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Identity of a chemical species used inside PhonopyAtoms.</span>
+
+<span class="sd">    Two atoms share a species iff all fields are equal.</span>
+
+<span class="sd">    For a normal (single-element) species, ``atomic_number`` is set and</span>
+<span class="sd">    ``mixture`` is None. ``symbol`` carries the suffix (&quot;Cl1&quot;) so that</span>
+<span class="sd">    &quot;Cl&quot; and &quot;Cl1&quot; are distinct species that share the same atomic number.</span>
+
+<span class="sd">    For a mixed-species site (e.g. a VCA virtual crystal site, an alloy</span>
+<span class="sd">    site, a solid-solution site), ``atomic_number`` is None and ``mixture``</span>
+<span class="sd">    holds the constituent (symbol, weight) pairs with weights summing to</span>
+<span class="sd">    1.0. ``symbol`` is the composite label (e.g. &quot;GeSn&quot;, or &quot;GeSn1&quot;/&quot;GeSn2&quot;</span>
+<span class="sd">    if the cell has multiple distinct GeSn mixtures).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">atomic_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">mixture</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Exactly one of atomic_number or mixture must be set.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_species_table_from_mixtures</span><span class="p">(</span>
+    <span class="n">mixtures</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]],</span>
+    <span class="n">sort_constituents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert per-atom species mixtures into a (species_table, species_ids) pair.</span>
+
+<span class="sd">    Each entry of ``mixtures`` is a list of ``(symbol, weight)`` pairs</span>
+<span class="sd">    describing the constituents of one atomic site. Weights must sum to 1.0.</span>
+<span class="sd">    A single-component entry of weight 1.0 is canonicalized to a normal</span>
+<span class="sd">    (single-element) species. The composite symbol of a true mixture is</span>
+<span class="sd">    derived as the concatenation of constituent symbols (e.g. &quot;GeSn&quot;); when</span>
+<span class="sd">    several distinct mixtures within the same cell would collide on the same</span>
+<span class="sd">    composite label, every colliding mixed species receives a 1-based suffix</span>
+<span class="sd">    (``&quot;GeSn1&quot;``, ``&quot;GeSn2&quot;``, ...) in table order while unique composites</span>
+<span class="sd">    stay unsuffixed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mixtures :</span>
+<span class="sd">        Per-site lists of ``(symbol, weight)`` pairs.</span>
+<span class="sd">    sort_constituents :</span>
+<span class="sd">        If True (default), each per-site mixture is reordered alphabetically</span>
+<span class="sd">        by symbol before deriving species identity and the composite label.</span>
+<span class="sd">        This treats two physically equivalent sites that differ only in the</span>
+<span class="sd">        order constituents were listed (e.g. ``[(&quot;Ge&quot;, 0.5), (&quot;Sn&quot;, 0.5)]``</span>
+<span class="sd">        and ``[(&quot;Sn&quot;, 0.5), (&quot;Ge&quot;, 0.5)]``) as the same species. Pass False</span>
+<span class="sd">        to preserve the caller&#39;s order verbatim.</span>
+
+<span class="sd">    The returned pair can be passed to ``PhonopyAtoms(species_table=...,</span>
+<span class="sd">    species_ids=...)``. Use cases include the Virtual Crystal Approximation</span>
+<span class="sd">    (see ``apply_site_mixture``) and any other site-disorder model</span>
+<span class="sd">    expressible as weighted constituent symbols.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">species_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">atom_mixture</span> <span class="ow">in</span> <span class="n">mixtures</span><span class="p">:</span>
+        <span class="n">mix</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">atom_mixture</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mix</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mixture entry must be non-empty.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sort_constituents</span><span class="p">:</span>
+            <span class="n">mix</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">mix</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sw</span><span class="p">:</span> <span class="n">sw</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">wsum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">wsum</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mixture weights must sum to 1.0, got </span><span class="si">{</span><span class="n">wsum</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">mix</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="c1"># Each component symbol may carry a suffix like &quot;Cl1&quot;; validate the</span>
+        <span class="c1"># base part exists in the periodic table.</span>
+        <span class="k">for</span> <span class="n">sym</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">sym</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mix</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">sym</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mix</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">sym</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">composite</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">)</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">composite</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mixture</span><span class="o">=</span><span class="n">mix</span><span class="p">)</span>
+        <span class="n">sid</span> <span class="o">=</span> <span class="n">seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
+            <span class="n">species_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+            <span class="n">seen</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
+        <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+    <span class="n">species_list</span> <span class="o">=</span> <span class="n">_disambiguate_composite_labels</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">species_list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_disambiguate_composite_labels</span><span class="p">(</span>
+    <span class="n">species_table</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append 1-based suffixes to mixed-species symbols that collide.</span>
+
+<span class="sd">    Distinct mixtures may produce the same composite label</span>
+<span class="sd">    (e.g. two GeSn mixtures with different ratios both yield ``&quot;GeSn&quot;``).</span>
+<span class="sd">    When that happens within a single species table, every colliding mixed</span>
+<span class="sd">    species is renamed to ``&quot;GeSn1&quot;`` / ``&quot;GeSn2&quot;`` / ... in table order,</span>
+<span class="sd">    while unique composites stay unsuffixed. Non-mixture species are</span>
+<span class="sd">    untouched.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">label_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">species_table</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">label_counts</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span> <span class="o">=</span> <span class="n">label_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">duplicates</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">label_counts</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">duplicates</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">species_table</span>
+
+    <span class="n">counters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">new_table</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">species_table</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="n">duplicates</span><span class="p">:</span>
+            <span class="n">counters</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span> <span class="o">=</span> <span class="n">counters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">new_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}{</span><span class="n">counters</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">new_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">new_label</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_table</span>
+
+
+<div class="viewcode-block" id="PhonopyAtoms">
+<a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PhonopyAtoms</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to represent crystal structure.</span>
+
+<span class="sd">    Originally this class aimed to be compatible with the ASE ``Atoms``</span>
+<span class="sd">    class, but the APIs have since diverged.</span>
+
+<span class="sd">    A cell is described by basis vectors (``cell``), per-atom positions</span>
+<span class="sd">    (``positions`` / ``scaled_positions``), and per-atom species</span>
+<span class="sd">    information. Species can be expressed either as plain chemical</span>
+<span class="sd">    symbols (``symbols``) / atomic numbers (``numbers``) for ordinary</span>
+<span class="sd">    cells, or as a deduplicated table plus per-atom indices</span>
+<span class="sd">    (``species_table`` / ``species_ids``) which additionally supports</span>
+<span class="sd">    mixed-species sites for the Virtual Crystal Approximation. See</span>
+<span class="sd">    :ref:`phonopy_Atoms` for the tutorial-style overview and per-attribute</span>
+<span class="sd">    documentation below for details.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">symbols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">numbers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">masses</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">magnetic_moments</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+        <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+        <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+        <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">scaled_positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cell</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">species_table</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">species_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pbc is dummy argument, and never used.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set crystal structure parameters.</span>
+
+<span class="sd">        Exactly one of the species inputs (``symbols``, ``numbers``, or</span>
+<span class="sd">        the ``species_table`` / ``species_ids`` pair) must be supplied.</span>
+<span class="sd">        Exactly one of the position inputs (``positions`` or</span>
+<span class="sd">        ``scaled_positions``) must be supplied.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        symbols : sequence of str, optional</span>
+<span class="sd">            Per-atom chemical symbols (``&quot;Si&quot;``, ``&quot;Cl1&quot;``, ...).</span>
+<span class="sd">            Shorthand for non-VCA cells. Atomic numbers and default</span>
+<span class="sd">            masses are derived from these.</span>
+<span class="sd">        numbers : sequence of int, optional</span>
+<span class="sd">            Per-atom atomic numbers in 1..118. Shorthand alternative to</span>
+<span class="sd">            ``symbols``.</span>
+<span class="sd">        species_table : sequence of _Species, optional</span>
+<span class="sd">            Canonical deduplicated species table. Used together with</span>
+<span class="sd">            ``species_ids``. Required for cells containing mixed-species</span>
+<span class="sd">            sites (see</span>
+<span class="sd">            :func:`build_species_table_from_mixtures`) and by</span>
+<span class="sd">            cell-manipulation helpers (supercell, primitive, trimmed</span>
+<span class="sd">            cell) that already know the species identity.</span>
+<span class="sd">        species_ids : sequence of int, optional</span>
+<span class="sd">            Per-atom index into ``species_table``. Used together with</span>
+<span class="sd">            ``species_table``.</span>
+<span class="sd">        masses : sequence of float, optional</span>
+<span class="sd">            Per-atom atomic masses. If omitted, masses are derived from</span>
+<span class="sd">            the species.</span>
+<span class="sd">        magnetic_moments : array_like, optional</span>
+<span class="sd">            Per-atom magnetic moments. ``shape=(natom,)`` for scalar</span>
+<span class="sd">            moments or ``shape=(natom, 3)`` for vector moments.</span>
+<span class="sd">        cell : array_like</span>
+<span class="sd">            Basis vectors as row vectors. ``shape=(3, 3)``.</span>
+<span class="sd">        positions : array_like, optional</span>
+<span class="sd">            Per-atom positions in Cartesian coordinates.</span>
+<span class="sd">            ``shape=(natom, 3)``. Mutually exclusive with</span>
+<span class="sd">            ``scaled_positions``.</span>
+<span class="sd">        scaled_positions : array_like, optional</span>
+<span class="sd">            Per-atom positions in fractional (crystallographic)</span>
+<span class="sd">            coordinates. ``shape=(natom, 3)``. Mutually exclusive with</span>
+<span class="sd">            ``positions``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_cell_and_positions</span><span class="p">(</span>
+            <span class="n">cell</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span> <span class="n">scaled_positions</span><span class="o">=</span><span class="n">scaled_positions</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">species_table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">species_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;species_table and species_ids must be specified together.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">n_specified</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">species_table</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">n_specified</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;One of symbols, numbers, or (species_table, species_ids) &quot;</span>
+                <span class="s2">&quot;has to be specified.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_specified</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;symbols, numbers, and species_table are mutually exclusive.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">symbols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_species_from_symbols</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">symbols</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">numbers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_species_from_numbers</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">species_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">species_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_species</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">species_table</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">species_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">masses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_masses</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_default_masses</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_magnetic_moments</span><span class="p">(</span><span class="n">magnetic_moments</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of atoms in the cell.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cell</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of basis vectors.</span>
+
+<span class="sd">        Basis vectors (a, b, c) given as row vectors.</span>
+<span class="sd">        ``shape=(3, 3)``, ``dtype=&#39;double&#39;``, ``order=&#39;C&#39;``.</span>
+<span class="sd">        For getter, a copy is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@cell</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_cell</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">positions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of positions in Cartesian coordinates.</span>
+
+<span class="sd">        ``shape=(natom, 3)``, ``dtype=&#39;double&#39;``, ``order=&#39;C&#39;``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@positions</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_positions</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scaled_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of scaled positions.</span>
+
+<span class="sd">        Positions of atoms in fractional (crystallographic) coordinates.</span>
+<span class="sd">        ``shape=(natom, 3)``, ``dtype=&#39;double&#39;``, ``order=&#39;C&#39;``.</span>
+<span class="sd">        For getter, a copy is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@scaled_positions</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scaled_positions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">scaled_positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_scaled_positions</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Chemical symbols per atom.</span>
+
+<span class="sd">        Chemical symbol with an appended natural number is allowed, e.g.,</span>
+<span class="sd">        ``&quot;Cl1&quot;``. Mixed-species sites carry a composite label formed by</span>
+<span class="sd">        concatenating constituent symbols (e.g., ``&quot;GeSn&quot;``).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">species_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Per-atom index into ``species_table``.</span>
+
+<span class="sd">        Atoms that reference the same ``species_table`` entry share the</span>
+<span class="sd">        same id; ordinary ``&quot;Cl&quot;`` and labeled ``&quot;Cl1&quot;`` get different</span>
+<span class="sd">        ids, and two atoms differing only in mixture composition or</span>
+<span class="sd">        weights also get different ids. Suitable as the ``types``</span>
+<span class="sd">        argument for spglib when atoms with the same atomic number but</span>
+<span class="sd">        different symbol suffix must be distinguished.</span>
+<span class="sd">        ``shape=(natom,)``, ``dtype=&#39;int64&#39;``.</span>
+<span class="sd">        For getter, a copy is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">species_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deduplicated species table indexed by ``species_ids``.</span>
+
+<span class="sd">        Each entry is either an ordinary single-element species (with</span>
+<span class="sd">        ``atomic_number`` set) or a weighted mixture (``mixture`` set to</span>
+<span class="sd">        a tuple of ``(symbol, weight)`` pairs summing to 1.0). See</span>
+<span class="sd">        :func:`phonopy.structure.atoms.build_species_table_from_mixtures`.</span>
+<span class="sd">        For getter, a shallow list copy is returned; ``_Species`` entries</span>
+<span class="sd">        are frozen dataclasses so the list elements are themselves</span>
+<span class="sd">        immutable.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Atomic numbers per atom in 1..118.</span>
+
+<span class="sd">        ``shape=(natom,)``, ``dtype=&#39;int64&#39;``.</span>
+<span class="sd">        For getter, a new array is returned.</span>
+
+<span class="sd">        Raises ``RuntimeError`` if the cell contains any mixed-species</span>
+<span class="sd">        site, since a mixture has no single atomic number. Use</span>
+<span class="sd">        ``species_ids`` instead when an opaque per-atom species</span>
+<span class="sd">        discriminator is needed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nums</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">:</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;cell.numbers is undefined for cells containing mixed-species &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;sites (species &#39;</span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">&#39;). Use cell.species_ids instead.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">nums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_mixtures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the cell contains any mixed-species site.</span>
+
+<span class="sd">        ``True`` when any species in the cell is a weighted mixture of</span>
+<span class="sd">        constituents (e.g., a Virtual Crystal Approximation site).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">masses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of atomic masses.</span>
+
+<span class="sd">        For a mixed-species site, the mass is the weight-averaged sum</span>
+<span class="sd">        over its constituents.</span>
+<span class="sd">        ``shape=(natom,)``, ``dtype=&#39;double&#39;``.</span>
+<span class="sd">        For getter, a copy is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="nd">@masses</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">masses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masses</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_masses</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">magnetic_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of magnetic moments.</span>
+
+<span class="sd">        ``shape=(natom,)`` or ``(natom, 3)``, ``dtype=&#39;double&#39;``,</span>
+<span class="sd">        ``order=&#39;C&#39;``.</span>
+
+<span class="sd">        For the setter, the former can also be specified as</span>
+<span class="sd">        ``(natom, 1)`` (recognized as ``(natom,)``) and the latter as</span>
+<span class="sd">        ``(natom * 3,)`` (converted to ``(natom, 3)``).</span>
+<span class="sd">        For getter, a copy is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;_magnetic_moments has to have shape=(natom,) or (natom*3).&quot;</span>
+                <span class="p">)</span>
+
+    <span class="nd">@magnetic_moments</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">magnetic_moments</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">magnetic_moments</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+        <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+        <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+        <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_magnetic_moments</span><span class="p">(</span><span class="n">magnetic_moments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the cell volume.</span>
+
+<span class="sd">        Computed as the determinant of the basis-vector matrix. The unit</span>
+<span class="sd">        follows that of the input ``cell`` (e.g., Angstrom^3 for an</span>
+<span class="sd">        Angstrom-valued ``cell``).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Z</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of formula units in this cell.</span>
+
+<span class="sd">        Computed as the GCD of the per-species atom counts. For example,</span>
+<span class="sd">        a cell with 4 Fe and 8 O atoms returns 4.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">count</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">:</span>
+            <span class="n">count</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">count</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">gcd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_cell</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span> <span class="o">=</span> <span class="n">_cell</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Array shape of cell is not 3x3.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_positions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cart_positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cart_positions</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_scaled_positions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">scaled_positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_masses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masses</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_magnetic_moments</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">magmoms</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+        <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+        <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
+        <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set magnetic moments in 1D array of shape=(natom,) or (natom*3).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">magmoms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">magmoms</span><span class="p">))</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;magnetic_moments has to have shape=(natom,) or (natom*3).&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">magmoms</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_cell_and_positions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cell</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">scaled_positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_cell</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">positions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_positions</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">scaled_positions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_scaled_positions</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse symbol strings and populate _species and _species_ids.&quot;&quot;&quot;</span>
+        <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
+        <span class="n">species_table</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">species_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">symnum</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">symnum</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symnum</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">])</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="n">species_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
+                <span class="n">species_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+                <span class="n">species_table</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
+            <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span> <span class="o">=</span> <span class="n">species_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numbers</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate _species and _species_ids from atomic numbers (1..118).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">numbers</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="p">((</span><span class="n">numbers</span> <span class="o">&gt;</span> <span class="mi">118</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">numbers</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Atomic numbers must be in 1..118.&quot;</span><span class="p">)</span>
+        <span class="n">atom_data</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
+        <span class="n">species_table</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">species_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">:</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">atom_data</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">atomic_number</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="n">species_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
+                <span class="n">species_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+                <span class="n">species_table</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
+            <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span> <span class="o">=</span> <span class="n">species_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_default_masses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set _masses from the periodic table using each atom&#39;s species.</span>
+
+<span class="sd">        For a mixed-species site the mass is the weight-averaged sum of</span>
+<span class="sd">        constituent atomic masses (sum_j w_j * m_j).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">atom_data</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
+        <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
+        <span class="n">masses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">undefined</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">:</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">m_total</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">bad</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">sym</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span><span class="p">:</span>
+                    <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+                    <span class="n">cm</span> <span class="o">=</span> <span class="n">atom_data</span><span class="p">[</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">]][</span><span class="mi">3</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">cm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">undefined</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+                        <span class="n">bad</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">m_total</span> <span class="o">+=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">cm</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">bad</span><span class="p">:</span>
+                    <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_total</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">atom_data</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">undefined</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">undefined</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Masses of </span><span class="si">{</span><span class="n">undefined</span><span class="si">}</span><span class="s2"> are undefined. &quot;</span>
+                <span class="s2">&quot;These have to be specified by masses parameter.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check number of elements in arrays.</span>
+
+<span class="sd">        Do not modify the arrays.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;cell is not set.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;scaled_positions (positions) is not set.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;species_ids is not set.&quot;</span><span class="p">)</span>
+        <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="n">natom</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;len(species_ids) != len(scaled_positions).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="p">)</span> <span class="o">!=</span> <span class="n">natom</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;len(masses) != len(scaled_positions).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;species_ids out of range of species table.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;_magnetic_moments has to have shape=(natom,) or (natom*3).&quot;</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="PhonopyAtoms.copy">
+<a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms.copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhonopyAtoms</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an independent copy of this cell.</span>
+
+<span class="sd">        Internal arrays (cell, scaled positions, masses, magnetic</span>
+<span class="sd">        moments, species ids) are re-allocated by the constructor so</span>
+<span class="sd">        that mutating one cell does not affect the other. The species</span>
+<span class="sd">        table entries themselves are frozen dataclasses and are safe to</span>
+<span class="sd">        share.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
+            <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">,</span>
+            <span class="n">scaled_positions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">,</span>
+            <span class="n">masses</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="p">,</span>
+            <span class="n">magnetic_moments</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="p">,</span>
+            <span class="n">species_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">,</span>
+            <span class="n">species_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PhonopyAtoms.totuple">
+<a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms.totuple">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">totuple</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">distinguish_symbol_index</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span>
+        <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span>
+        <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span>
+            <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">],</span>
+            <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">],</span>
+            <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
+            <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(cell, scaled_positions, numbers)``.</span>
+
+<span class="sd">        If ``magnetic_moments`` is set,</span>
+<span class="sd">        ``(cell, scaled_positions, numbers, magnetic_moments)`` is</span>
+<span class="sd">        returned instead.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        distinguish_symbol_index : bool, optional</span>
+<span class="sd">            If True, the per-atom integer is the species id (atoms with</span>
+<span class="sd">            the same symbol but different suffix get different ids);</span>
+<span class="sd">            suitable as the ``types`` argument for spglib when</span>
+<span class="sd">            symbol-suffix groupings must be preserved. If False</span>
+<span class="sd">            (default), the per-atom integer is the atomic number. VCA</span>
+<span class="sd">            cells always use ``species_ids`` regardless, since a VCA</span>
+<span class="sd">            mixture has no single atomic number.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            ``(cell, scaled_positions, numbers)`` or</span>
+<span class="sd">            ``(cell, scaled_positions, numbers, magnetic_moments)``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">distinguish_symbol_index</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_mixtures</span><span class="p">:</span>
+            <span class="n">numbers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_ids</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">numbers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">numbers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scaled_positions</span><span class="p">,</span>
+                <span class="n">numbers</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">magnetic_moments</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PhonopyAtoms.get_yaml_lines">
+<a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms.get_yaml_lines">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_yaml_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the crystal structure as a list of yaml text lines.&quot;&quot;&quot;</span>
+        <span class="n">_atom_data</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;lattice:&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;- [ </span><span class="si">%21.15f</span><span class="s2">, </span><span class="si">%21.15f</span><span class="s2">, </span><span class="si">%21.15f</span><span class="s2"> ] # </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">a</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;points:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">magnetic_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">magmoms</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">magmoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">magnetic_moments</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">mag</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scaled_positions</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">masses</span><span class="p">,</span>
+                <span class="n">magmoms</span><span class="p">,</span>
+                <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">mix_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  mixture: [ </span><span class="si">{</span><span class="n">mix_str</span><span class="si">}</span><span class="s2"> ]&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="n">formal_s</span> <span class="o">=</span> <span class="n">_atom_data</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">formal_s</span><span class="p">:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- symbol: </span><span class="si">{</span><span class="n">formal_s</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  extended_symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  coordinates: [ </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2"> ]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  mass: </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mass</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">mag</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">mag_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mag</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mag_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">]&quot;</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  magnetic_moment: </span><span class="si">{</span><span class="n">mag_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the crystal structure as yaml text.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_yaml_lines</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_element_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dict of element counts, with indices stripped from symbols.&quot;&quot;&quot;</span>
+        <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">:</span>
+            <span class="n">base_symbol</span> <span class="o">=</span> <span class="n">symbol</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;0123456789&quot;</span><span class="p">)</span>
+            <span class="n">counts</span><span class="p">[</span><span class="n">base_symbol</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base_symbol</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">counts</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_formula</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">divisor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build formula string from element counts and optional divisor.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        counts : dict</span>
+<span class="sd">            Dictionary mapping element symbols to their counts</span>
+<span class="sd">        divisor : int, optional</span>
+<span class="sd">            Number to divide counts by, defaults to 1</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Formula string with elements in alphabetical order</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">counts</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">formula_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">//</span> <span class="n">divisor</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">element</span><span class="si">}{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formula_parts</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">formula</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return chemical formula as a string.</span>
+
+<span class="sd">        The formula is constructed by sorting elements alphabetically and</span>
+<span class="sd">        appending numbers for elements that appear more than once.</span>
+<span class="sd">        E.g., &quot;Si2O4&quot; for two Si and four O atoms.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_element_counts</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_formula</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reduced_formula</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return reduced chemical formula as a string.</span>
+
+<span class="sd">        The reduced formula divides all element counts by their GCD.</span>
+<span class="sd">        E.g., &quot;Fe4O8&quot; becomes &quot;Fe2O4&quot;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_element_counts</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">counts</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Find GCD of all counts</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">divisor</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">divisor</span> <span class="o">=</span> <span class="n">gcd</span><span class="p">(</span><span class="n">divisor</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_formula</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">divisor</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalized_formula</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return normalized formula as a string.</span>
+
+<span class="sd">        The normalized formula scales all element counts so they sum to 1.</span>
+<span class="sd">        E.g., &quot;Fe2O3&quot; becomes &quot;Fe0.4O0.6&quot;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_element_counts</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">counts</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Get total count</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="c1"># Build normalized formula string</span>
+        <span class="n">formula_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">/</span> <span class="n">total</span>
+            <span class="c1"># Always show decimal for normalized formula</span>
+            <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">element</span><span class="si">}{</span><span class="n">count</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formula_parts</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_cell_dict</span><span class="p">(</span><span class="n">cell_dict</span><span class="p">:</span> <span class="n">CellDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse cell dict.&quot;&quot;&quot;</span>
+    <span class="n">lattice</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;lattice&quot;</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">:</span>
+        <span class="n">lattice</span> <span class="o">=</span> <span class="n">cell_dict</span><span class="p">[</span><span class="s2">&quot;lattice&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">points</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">symbols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">masses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">magnetic_moments</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">mixture_per_atom</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">has_any_mixture</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="s2">&quot;points&quot;</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="s2">&quot;coordinates&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;coordinates&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;extended_symbol&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>  <span class="c1"># like Fe1</span>
+                <span class="n">symbols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;extended_symbol&quot;</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="s2">&quot;symbol&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>  <span class="c1"># like Fe</span>
+                <span class="n">symbols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;symbol&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;mixture&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">mix</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;mixture&quot;</span><span class="p">]]</span>
+                <span class="n">mixture_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mix</span><span class="p">)</span>
+                <span class="n">has_any_mixture</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mixture_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;mass&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;mass&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;magnetic_moment&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">magnetic_moments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;magnetic_moment&quot;</span><span class="p">])</span>
+
+    <span class="n">masses_arg</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">masses</span> <span class="k">if</span> <span class="n">masses</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">magmoms_arg</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">magnetic_moments</span> <span class="k">if</span> <span class="n">magnetic_moments</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">points</span> <span class="ow">and</span> <span class="n">symbols</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">has_any_mixture</span><span class="p">:</span>
+        <span class="c1"># Cells with any mixed-species site route through</span>
+        <span class="c1"># build_species_table_from_mixtures; non-mixture atoms become</span>
+        <span class="c1"># single-component entries of weight 1.0 (canonicalized back to a</span>
+        <span class="c1"># normal species inside the factory). Composite symbols of true</span>
+        <span class="c1"># mixtures are re-derived, so suffix-numbered labels (e.g.</span>
+        <span class="c1"># &quot;GeSn1&quot;/&quot;GeSn2&quot;) from the YAML are not preserved -- the species</span>
+        <span class="c1"># table still distinguishes them by mixture content.</span>
+        <span class="n">mixtures</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mixture_per_atom</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">mixtures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[(</span><span class="n">s</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)])</span>
+        <span class="n">species_table</span><span class="p">,</span> <span class="n">species_ids</span> <span class="o">=</span> <span class="n">build_species_table_from_mixtures</span><span class="p">(</span><span class="n">mixtures</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
+            <span class="n">cell</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">scaled_positions</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+            <span class="n">masses</span><span class="o">=</span><span class="n">masses_arg</span><span class="p">,</span>
+            <span class="n">magnetic_moments</span><span class="o">=</span><span class="n">magmoms_arg</span><span class="p">,</span>
+            <span class="n">species_table</span><span class="o">=</span><span class="n">species_table</span><span class="p">,</span>
+            <span class="n">species_ids</span><span class="o">=</span><span class="n">species_ids</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
+        <span class="n">symbols</span><span class="o">=</span><span class="n">symbols</span><span class="p">,</span>
+        <span class="n">cell</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+        <span class="n">masses</span><span class="o">=</span><span class="n">masses_arg</span><span class="p">,</span>
+        <span class="n">scaled_positions</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+        <span class="n">magnetic_moments</span><span class="o">=</span><span class="n">magmoms_arg</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;symbol_map&quot;</span><span class="p">,</span> <span class="s2">&quot;atom_data&quot;</span><span class="p">,</span> <span class="s2">&quot;isotope_data&quot;</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;symbol_map, atom_data, and isotope_data are deprecated. &quot;</span>
+            <span class="s2">&quot;Use phonopy.atomic_data.get_atomic_data() dataclass instead.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;atom_data&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;isotope_data&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">isotope_data</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;symbol_map&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

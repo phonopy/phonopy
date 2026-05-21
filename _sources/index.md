@@ -66,6 +66,7 @@ interfaces
 auxiliary-tools
 external-tools
 phonopy-module
+api-reference
 phonopy-yaml
 phonopy
 phonopy-init
@@ -76,15 +77,6 @@ reference
 migration-v4
 changelog
 ```
-
-<!-- Latex master doc is documentation.md. But documentation.md is not included
-for html. Uncomment below when generating latex documentation. -->
-
-<!-- ```{toctree}
-:hidden:
-documentation
-```
--->
 
 (mailinglist)=
 

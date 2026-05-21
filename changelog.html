@@ -176,6 +176,7 @@
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
@@ -596,10 +597,10 @@ from previous versions. When the mesh was specified by a length (float
 input), the grid is now rebuilt as a generalized regular grid that keeps
 full point-group symmetry; the resulting <code class="docutils literal notranslate"><span class="pre">mesh_numbers</span></code> may differ from
 the regular-grid value.</p></li>
-<li><p>VCA / mixed-species site support: <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> gains a species
-table, <code class="docutils literal notranslate"><span class="pre">apply_vca()</span></code> helper, and <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code> CLI flag (was
-initially <code class="docutils literal notranslate"><span class="pre">--vca</span></code>). VASP POSCAR writes expand mixed sites; force
-I/O and FC-time computation handle site-mixture cells.</p></li>
+<li><p>Mixed-species site support (initial): <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> gains a species
+table, the <code class="docutils literal notranslate"><span class="pre">apply_site_mixture()</span></code> helper, and a <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code> CLI
+flag. VASP POSCAR writes expand mixed sites. The force-I/O and
+FC-build pipeline for site-mixture cells is still under development.</p></li>
 <li><p>Bug fix: copy-by-reference issue in <code class="docutils literal notranslate"><span class="pre">qpoints.py</span></code>.</p></li>
 </ul>
 </section>

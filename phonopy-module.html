@@ -48,7 +48,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'phonopy-module';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="phonopy-yaml format" href="phonopy-yaml.html" />
+    <link rel="next" title="API reference" href="api-reference.html" />
     <link rel="prev" title="External tools" href="external-tools.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -179,6 +179,7 @@
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
@@ -351,6 +352,14 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-and-pdos">DOS and PDOS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties">Thermal properties</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-at-arbitrary-q-points">Phonon at arbitrary q-points</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulations">Modulations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreducible-representations">Irreducible representations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-structure-factor">Dynamic structure factor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-at-finite-temperature">Random displacements at finite temperature</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-learning-potentials">Machine learning potentials</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-symmetrization">Force-constants symmetrization</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structure">Data structure</a><ul class="nav section-nav flex-column">
@@ -381,7 +390,6 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-cell-with-mixed-sites">Building a cell with mixed sites</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-site-mixture-utility"><code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code> utility</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-site-mixture">CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#forces-for-mixed-species-cells">Forces for mixed-species cells</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#expansion-ordering">Expansion ordering</a></li>
 </ul>
 </li>
@@ -629,13 +637,13 @@ that expect a particular filename</p>
 <p>Set band paths (<code class="docutils literal notranslate"><span class="pre">run_band_structure()</span></code>) and get the results
 (<code class="docutils literal notranslate"><span class="pre">get_band_structure_dict()</span></code>).</p>
 <p>A dictionary with <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">distances</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>,
-<code class="docutils literal notranslate"><span class="pre">group_velocities</span></code> is returned by <code class="docutils literal notranslate"><span class="pre">get_band_structure_dict()</span></code>. Eigenvectors can
-be obtained when <code class="docutils literal notranslate"><span class="pre">with_eigenvectors=True</span></code> at <code class="docutils literal notranslate"><span class="pre">run_band_structure()</span></code>. See the
-details at docstring of <code class="docutils literal notranslate"><span class="pre">Phonopy.get_band_structure_dict</span></code>. Phonon frequency is
-sqrt(eigenvalue). A negative eigenvalue has to correspond to the imaginary
-frequency, but for the plotting, it is set as the negative value in the above
-example. In addition, you need to multiply by your unit conversion factor. In
-the case of VASP to transform to THz, the factor is 15.633302.</p>
+and <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code> is returned by <code class="docutils literal notranslate"><span class="pre">get_band_structure_dict()</span></code>.
+Eigenvectors are included when <code class="docutils literal notranslate"><span class="pre">with_eigenvectors=True</span></code> is passed to
+<code class="docutils literal notranslate"><span class="pre">run_band_structure()</span></code>. See the docstring of
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_band_structure_dict</span></code> for details. Frequencies are returned
+in the unit set by <code class="docutils literal notranslate"><span class="pre">Phonopy.unit_conversion_factor</span></code> (THz by default for
+the VASP calculator with displacements in Angstrom and forces in
+eV/Angstrom). Imaginary frequencies are encoded as negative real numbers.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code>, the phonopy is executed from python script, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.band_structure</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_band_qpoints_and_path_connections</span>
@@ -682,11 +690,12 @@ keyword argument must be set:</p>
 </section>
 <section id="mesh-sampling">
 <h3>Mesh sampling<a class="headerlink" href="#mesh-sampling" title="Link to this heading">#</a></h3>
-<p>Set sampling mesh (<code class="docutils literal notranslate"><span class="pre">set_mesh</span></code>) in reciprocal space. The irreducible <em>q</em>-points
-and corresponding <em>q</em>-point weights, eigenvalues, and eigenvectors are obtained
-by <code class="docutils literal notranslate"><span class="pre">get_mesh_dict()</span></code>. <code class="docutils literal notranslate"><span class="pre">mesh</span></code> gives the sampling mesh with Monkhorst-Pack scheme.
-The keyword <code class="docutils literal notranslate"><span class="pre">shift</span></code> gives the fractional mesh shift with respect to the
-neighboring grid points.</p>
+<p>Run the sampling-mesh phonon calculation with <code class="docutils literal notranslate"><span class="pre">run_mesh()</span></code> in
+reciprocal space. The irreducible <em>q</em>-points and corresponding
+<em>q</em>-point weights, eigenvalues, and eigenvectors are obtained by
+<code class="docutils literal notranslate"><span class="pre">get_mesh_dict()</span></code>. <code class="docutils literal notranslate"><span class="pre">mesh</span></code> gives the sampling mesh in the Monkhorst-Pack
+scheme. The keyword <code class="docutils literal notranslate"><span class="pre">shift</span></code> gives the fractional mesh shift with
+respect to the neighboring grid points.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
 <span class="n">phonon</span><span class="o">.</span><span class="n">run_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
 <span class="n">mesh_dict</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_mesh_dict</span><span class="p">()</span>
@@ -719,7 +728,8 @@ measure as explained at <a class="reference internal" href="setting-tags.html#me
 eigenvectors have to be calculated in the mesh sampling. To get the results
 <code class="docutils literal notranslate"><span class="pre">get_total_dos_dict()</span></code> and <code class="docutils literal notranslate"><span class="pre">get_projected_dos_dict()</span></code> can be used.</p>
 <p>To plot total DOS,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">run_mesh</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span> <span class="n">phonon</span><span class="o">.</span><span class="n">run_total_dos</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">run_mesh</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">run_total_dos</span><span class="p">()</span>
 <span class="n">phonon</span><span class="o">.</span><span class="n">plot_total_dos</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -784,6 +794,119 @@ factor have to be correctly set. The tensors are given in Cartesian coordinates.
 <span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">born</span><span class="p">,</span>
                      <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span>
                      <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">epsilon</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="phonon-at-arbitrary-q-points">
+<h3>Phonon at arbitrary q-points<a class="headerlink" href="#phonon-at-arbitrary-q-points" title="Link to this heading">#</a></h3>
+<p>To evaluate phonons at an explicit list of q-points (without imposing
+a band path or a mesh), use <code class="docutils literal notranslate"><span class="pre">run_qpoints()</span></code>. The result is retrieved
+through <code class="docutils literal notranslate"><span class="pre">get_qpoints_dict()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">run_qpoints</span><span class="p">(</span>
+    <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+     <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+     <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+    <span class="n">with_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">with_group_velocities</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">qpts_dict</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_qpoints_dict</span><span class="p">()</span>
+<span class="n">frequencies</span> <span class="o">=</span> <span class="n">qpts_dict</span><span class="p">[</span><span class="s1">&#39;frequencies&#39;</span><span class="p">]</span>
+<span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">qpts_dict</span><span class="p">[</span><span class="s1">&#39;eigenvectors&#39;</span><span class="p">]</span>
+<span class="n">group_velocities</span> <span class="o">=</span> <span class="n">qpts_dict</span><span class="p">[</span><span class="s1">&#39;group_velocities&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>For one-off evaluations at a single q-point, the lightweight helpers
+<code class="docutils literal notranslate"><span class="pre">get_frequencies(q)</span></code> and <code class="docutils literal notranslate"><span class="pre">get_frequencies_with_eigenvectors(q)</span></code> return
+arrays directly, while <code class="docutils literal notranslate"><span class="pre">get_group_velocity_at_q(q)</span></code> returns group
+velocities. <code class="docutils literal notranslate"><span class="pre">get_dynamical_matrix_at_q(q)</span></code> returns the (non-mass-weighted)
+dynamical matrix itself.</p>
+</section>
+<section id="thermal-displacements">
+<h3>Thermal displacements<a class="headerlink" href="#thermal-displacements" title="Link to this heading">#</a></h3>
+<p>Mean-square atomic displacements and the corresponding 3x3 matrices
+(useful for cif export) are calculated from a converged mesh sampling.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">run_mesh</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">with_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_mesh_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">run_thermal_displacements</span><span class="p">(</span><span class="n">t_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">t_max</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">t_step</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">td_dict</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_thermal_displacements_dict</span><span class="p">()</span>
+<span class="n">temperatures</span> <span class="o">=</span> <span class="n">td_dict</span><span class="p">[</span><span class="s1">&#39;temperatures&#39;</span><span class="p">]</span>
+<span class="n">u2</span> <span class="o">=</span> <span class="n">td_dict</span><span class="p">[</span><span class="s1">&#39;thermal_displacements&#39;</span><span class="p">]</span>  <span class="c1"># shape=(temperatures, atoms*3)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">run_thermal_displacement_matrices</span><span class="p">(</span><span class="n">t_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">t_max</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">t_step</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">tdm_dict</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_thermal_displacement_matrices_dict</span><span class="p">()</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">write_thermal_displacement_matrix_to_cif</span><span class="p">(</span><span class="n">temperature_index</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="modulations">
+<h3>Modulations<a class="headerlink" href="#modulations" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">run_modulations()</span></code> builds atomic-displacement patterns of selected
+phonon modes on a chosen supercell. Each requested mode is a list
+<code class="docutils literal notranslate"><span class="pre">[q-point,</span> <span class="pre">band_index,</span> <span class="pre">amplitude,</span> <span class="pre">phase]</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">run_modulations</span><span class="p">(</span>
+    <span class="n">dimension</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="n">phonon_modes</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="n">modulated_cells</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_modulated_supercells</span><span class="p">()</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">write_modulations</span><span class="p">()</span>  <span class="c1"># MPOSCAR-001, MPOSCAR-002, ...</span>
+</pre></div>
+</div>
+</section>
+<section id="irreducible-representations">
+<h3>Irreducible representations<a class="headerlink" href="#irreducible-representations" title="Link to this heading">#</a></h3>
+<p>For mode analysis at a chosen q-point, irreducible representations of
+the little co-group can be computed.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_irreps</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">show_irreps</span><span class="p">(</span><span class="n">show_irreps</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">write_yaml_irreps</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="dynamic-structure-factor">
+<h3>Dynamic structure factor<a class="headerlink" href="#dynamic-structure-factor" title="Link to this heading">#</a></h3>
+<p>See <a class="reference internal" href="dynamic-structure-factor.html#dynamic-structure-factor"><span class="std std-ref">Dynamic structure factor</span></a> for the formulation and the
+<code class="docutils literal notranslate"><span class="pre">run_dynamic_structure_factor()</span></code> / <code class="docutils literal notranslate"><span class="pre">init_dynamic_structure_factor()</span></code>
+workflow. A mesh calculation with eigenvectors and without mesh
+symmetry is required as a prerequisite.</p>
+</section>
+<section id="random-displacements-at-finite-temperature">
+<h3>Random displacements at finite temperature<a class="headerlink" href="#random-displacements-at-finite-temperature" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> can sample displacement snapshots from the canonical
+ensemble of harmonic oscillators (<code class="docutils literal notranslate"><span class="pre">init_random_displacements()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_random_displacements_at_temperature()</span></code>). The same functionality
+is also exposed through <code class="docutils literal notranslate"><span class="pre">generate_displacements(temperature=...)</span></code>. See
+<a class="reference internal" href="random-displacements.html#random-displacements"><span class="std std-ref">Random displacements</span></a> for details and recommended use.</p>
+</section>
+<section id="machine-learning-potentials">
+<h3>Machine learning potentials<a class="headerlink" href="#machine-learning-potentials" title="Link to this heading">#</a></h3>
+<p>Force constants can be obtained via a machine-learning potential
+trained on a type-2 displacement-force dataset. The relevant methods
+are <code class="docutils literal notranslate"><span class="pre">develop_mlp()</span></code>, <code class="docutils literal notranslate"><span class="pre">save_mlp()</span></code>, <code class="docutils literal notranslate"><span class="pre">load_mlp()</span></code>, and <code class="docutils literal notranslate"><span class="pre">evaluate_mlp()</span></code>,
+which work in concert with the <code class="docutils literal notranslate"><span class="pre">mlp_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">mlp</span></code> attributes. See
+<a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a> for a worked example.</p>
+</section>
+<section id="force-constants-symmetrization">
+<h3>Force-constants symmetrization<a class="headerlink" href="#force-constants-symmetrization" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">symmetrize_force_constants()</span></code> refines force constants produced from
+displacements and forces. Two schemes are available.</p>
+<p><strong>Traditional scheme</strong> (default). Translational and permutation
+symmetries are applied successively. The <code class="docutils literal notranslate"><span class="pre">level</span></code> keyword sets how
+many times this successive (translation -&gt; permutation) application
+is repeated. Because the two symmetries are applied one after the
+other rather than simultaneously, the resulting force constants can
+break space-group symmetry slightly.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">symmetrize_force_constants</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>symfc projector</strong>. Set <code class="docutils literal notranslate"><span class="pre">use_symfc_projector=True</span></code> to apply the
+symfc projector instead. Space-group, translational, and permutation
+symmetries are imposed simultaneously in a single shot, so no
+trade-off is made between them. The <code class="docutils literal notranslate"><span class="pre">level</span></code> keyword is not used in
+this mode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">symmetrize_force_constants</span><span class="p">(</span><span class="n">use_symfc_projector</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -1033,49 +1156,59 @@ constituent at the same fractional coordinates, and a hint is printed
 showing the matching POTCAR concatenation order and the INCAR <code class="docutils literal notranslate"><span class="pre">VCA</span> <span class="pre">=</span> <span class="pre">...</span></code>
 line. For example, a 50/50 GeSn cell with <code class="docutils literal notranslate"><span class="pre">--dim</span> <span class="pre">&quot;2</span> <span class="pre">2</span> <span class="pre">2&quot;</span></code> produces
 <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> with <code class="docutils literal notranslate"><span class="pre">Ge</span> <span class="pre">Sn</span> <span class="pre">/</span> <span class="pre">16</span> <span class="pre">16</span></code> and prints <code class="docutils literal notranslate"><span class="pre">INCAR:</span> <span class="pre">VCA</span> <span class="pre">=</span> <span class="pre">0.5</span> <span class="pre">0.5</span></code>.</p>
-</section>
-<section id="forces-for-mixed-species-cells">
-<h4>Forces for mixed-species cells<a class="headerlink" href="#forces-for-mixed-species-cells" title="Link to this heading">#</a></h4>
-<p>A VASP run on a mixture-expanded supercell returns one force vector per
-expanded constituent row (<code class="docutils literal notranslate"><span class="pre">n_expanded</span></code> per displacement). Because every
+<!-- "Forces for mixed-species cells" describes the force-reduction
+pipeline at FC build time, which is still under development. The
+content is preserved here for future reuse.
+
+#### Forces for mixed-species cells
+
+A VASP run on a mixture-expanded supercell returns one force vector per
+expanded constituent row (`n_expanded` per displacement). Because every
 constituent at a shared crystallographic site is governed by its own
 POTCAR, those forces differ between constituents and carry the raw
-single-potential information from the SCF calculation.</p>
-<p>Phonopy preserves this raw output: <code class="docutils literal notranslate"><span class="pre">parse_set_of_forces</span></code> (and
-<code class="docutils literal notranslate"><span class="pre">get_forces_vasprunxml</span></code>) for a mixed-species cell return forces of shape
-<code class="docutils literal notranslate"><span class="pre">(num_supercells,</span> <span class="pre">n_expanded,</span> <span class="pre">3)</span></code> and store them as-is in the
-<code class="docutils literal notranslate"><span class="pre">Phonopy.dataset</span></code>. The corresponding displacement entries remain on a
-per-site basis in <code class="docutils literal notranslate"><span class="pre">1..n_sites</span></code>, so the dataset is asymmetric in shape
+single-potential information from the SCF calculation.
+
+Phonopy preserves this raw output: `parse_set_of_forces` (and
+`get_forces_vasprunxml`) for a mixed-species cell return forces of shape
+`(num_supercells, n_expanded, 3)` and store them as-is in the
+`Phonopy.dataset`. The corresponding displacement entries remain on a
+per-site basis in `1..n_sites`, so the dataset is asymmetric in shape
 between displacements and forces; this is intentional and preserved by
-<code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> round-trips and by the <a class="reference internal" href="input-files.html#file-forces-site-mixture"><span class="std std-ref">expanded FORCE_SETS format</span></a>.</p>
-<p>The conversion to per-site forces is deferred to immediately before
+`phonopy.yaml` round-trips and by the {ref}`expanded FORCE_SETS format
+<file_forces_site_mixture>`.
+
+The conversion to per-site forces is deferred to immediately before
 force-constant calculation. The reduction utility is
-<code class="docutils literal notranslate"><span class="pre">phonopy.structure.cells.reduce_mixture_forces(forces,</span> <span class="pre">cell,</span> <span class="pre">mode=...)</span></code>,
-which supports two conventions selected through the <code class="docutils literal notranslate"><span class="pre">mode</span></code> keyword:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">mode=&quot;sum&quot;</span></code> produces the plain sum,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">F_site</span> <span class="o">=</span> <span class="n">sum_k</span> <span class="n">F_k</span>
-</pre></div>
-</div>
-<p>used for VASP because its <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> per-row forces already
-incorporate the VCA weights through the averaged potential.</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mode=&quot;weighted_sum&quot;</span></code> (the default) produces the weighted sum,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">F_site</span> <span class="o">=</span> <span class="n">sum_k</span> <span class="p">(</span><span class="n">w_k</span> <span class="o">*</span> <span class="n">F_k</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>where <code class="docutils literal notranslate"><span class="pre">w_k</span></code> is the constituent weight stored in the mixture entry of
-<code class="docutils literal notranslate"><span class="pre">cell.species_table</span></code>. Use this when the calculator returns
-single-potential forces that have not yet been folded with mixture
-weights.</p>
-</li>
-</ul>
-<p>The Phonopy FC pipeline picks the convention based on
-<code class="docutils literal notranslate"><span class="pre">Phonopy.calculator</span></code>: VASP (and the default <code class="docutils literal notranslate"><span class="pre">None</span></code> calculator) maps
-to <code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code>; all other interfaces map to <code class="docutils literal notranslate"><span class="pre">&quot;weighted_sum&quot;</span></code>. Because the
+`phonopy.structure.cells.reduce_mixture_forces(forces, cell, mode=...)`,
+which supports two conventions selected through the ``mode`` keyword:
+
+- ``mode="sum"`` produces the plain sum,
+
+  ```python
+  F_site = sum_k F_k
+  ```
+
+  used for VASP because its `vasprun.xml` per-row forces already
+  incorporate the VCA weights through the averaged potential.
+- ``mode="weighted_sum"`` (the default) produces the weighted sum,
+
+  ```python
+  F_site = sum_k (w_k * F_k)
+  ```
+
+  where ``w_k`` is the constituent weight stored in the mixture entry of
+  ``cell.species_table``. Use this when the calculator returns
+  single-potential forces that have not yet been folded with mixture
+  weights.
+
+The Phonopy FC pipeline picks the convention based on
+``Phonopy.calculator``: VASP (and the default ``None`` calculator) maps
+to ``"sum"``; all other interfaces map to ``"weighted_sum"``. Because the
 raw forces are preserved in the dataset, applying a different reduction
 convention or different weights only requires re-running the reduction
-and the force-constant build, not the calculator.</p>
+and the force-constant build, not the calculator.
+
+-->
 </section>
 <section id="expansion-ordering">
 <h4>Expansion ordering<a class="headerlink" href="#expansion-ordering" title="Link to this heading">#</a></h4>
@@ -1086,8 +1219,7 @@ per constituent (in <code class="docutils literal notranslate"><span class="pre"
 The shared helper
 <code class="docutils literal notranslate"><span class="pre">phonopy.structure.cells.get_mixture_expansion(cell)</span></code> returns the
 ordered list of <code class="docutils literal notranslate"><span class="pre">(site_index,</span> <span class="pre">weight)</span></code> pairs that this row order
-corresponds to, and is used by both the writer and the force/FORCE_SETS
-parser so the two stay in lockstep.</p>
+corresponds to.</p>
 </section>
 </section>
 </section>
@@ -1115,7 +1247,7 @@ relies on the <code class="docutils literal notranslate"><span class="pre">Phono
 </section>
 <section id="primitive-matrix">
 <span id="variable-primitive-matrix"></span><h3>Primitive matrix<a class="headerlink" href="#primitive-matrix" title="Link to this heading">#</a></h3>
-<p>Primitive matrix <span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{p}\)</span> is a tranformation matrix from lattice
+<p>Primitive matrix <span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{p}\)</span> is a transformation matrix from lattice
 vectors to those of a primitive cell if there exists the primitive cell in the
 lattice vectors. Following a crystallography convention, the transformation is
 given by</p>
@@ -1313,11 +1445,11 @@ VASP code by the unit cell.</p>
       </div>
     </a>
     <a class="right-next"
-       href="phonopy-yaml.html"
+       href="api-reference.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">phonopy-yaml format</p>
+        <p class="prev-next-title">API reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1357,6 +1489,14 @@ VASP code by the unit cell.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-and-pdos">DOS and PDOS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties">Thermal properties</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-at-arbitrary-q-points">Phonon at arbitrary q-points</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulations">Modulations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreducible-representations">Irreducible representations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-structure-factor">Dynamic structure factor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements-at-finite-temperature">Random displacements at finite temperature</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-learning-potentials">Machine learning potentials</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-symmetrization">Force-constants symmetrization</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structure">Data structure</a><ul class="nav section-nav flex-column">
@@ -1387,7 +1527,6 @@ VASP code by the unit cell.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#building-a-cell-with-mixed-sites">Building a cell with mixed sites</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-site-mixture-utility"><code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code> utility</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-site-mixture">CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#forces-for-mixed-species-cells">Forces for mixed-species cells</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#expansion-ordering">Expansion ordering</a></li>
 </ul>
 </li>
