@@ -123,44 +123,42 @@ from phonopy.version import __version__
 
 
 class Phonopy:
-    """Phonopy main API given as a class.
+    """Phonopy main API.
 
-    Attributes
-    ----------
-    version : str
-    unitcell : PhonopyAtoms
-    primitive : Primitive
-    supercell : Supercell
-    symmetry : Symmetry
-        Symmetry of supercell.
-    primitive_symmetry : Symmetry
-        Symmetry of primitive cell.
-    supercell_matrix : ndarray
-        shape=(3,) or (3, 3), dtype='int64', order='C'.
-    primitive_matrix : ndarray
-        shape=(3, 3), dtype='double', order='C'.
-    unit_conversion_factor : float
-        Phonon frequency unit conversion factor.
-    calculator : str
-    dataset : dict
-    displacements : ndarray or list of list (getter) and array-like (setter).
-    forces : ndarray (getter) or array_like (setter).
-    force_constants : ndarray (getter) and array_like (setter).
-    nac_params : dict (Deprecated)
-    supercells_with_displacements : list of PhonopyAtoms.
-    dynamical_matrix : DynamicalMatrix
+    A ``Phonopy`` instance is created from a unit cell and a supercell
+    matrix. It manages displacement generation, force-constant
+    construction, and derived phonon quantities such as band structure,
+    mesh sampling, DOS, thermal properties, group velocity, irreducible
+    representations, modulations, dynamic structure factor, and finite-
+    temperature random displacements.
 
-    qpoints : QpointsPhonon
-    band_structure : BandStructure
-    mesh : Mesh or IterMesh
-    thermal_properties : ThermalProperties
-    thermal_displacements : ThermalDisplacements
-    thermal_displacement_matrix : ThermalDisplacementMatrices
-    random_displacements : RandomDisplacements
-    dynamic_structure_factor : DynamicStructureFactor.
-    irreps : IrReps
-    moment : PhononMoment
-    total_dos : TotalDos
+    Most attributes are exposed as ``@property`` accessors documented
+    individually below. See :ref:`phonopy_module` for a tutorial-style
+    overview of the typical workflow.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from phonopy import Phonopy
+    >>> from phonopy.structure.atoms import PhonopyAtoms
+    >>> a = 5.404
+    >>> unitcell = PhonopyAtoms(
+    ...     symbols=["Si"] * 8,
+    ...     cell=np.eye(3) * a,
+    ...     scaled_positions=[
+    ...         [0, 0, 0], [0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0],
+    ...         [0.25, 0.25, 0.25], [0.25, 0.75, 0.75],
+    ...         [0.75, 0.25, 0.75], [0.75, 0.75, 0.25],
+    ...     ],
+    ... )
+    >>> phonon = Phonopy(unitcell, supercell_matrix=[2, 2, 2])
+    >>> phonon.generate_displacements(distance=0.03)
+    >>> # Obtain forces by running an external calculator on
+    >>> # phonon.supercells_with_displacements, then:
+    >>> # phonon.forces = sets_of_forces
+    >>> # phonon.produce_force_constants()
+    >>> # phonon.run_mesh([20, 20, 20])
+    >>> # phonon.run_thermal_properties(t_step=10, t_max=1000, t_min=0)
 
     """
 
@@ -192,42 +190,44 @@ class Phonopy:
         unitcell : PhonopyAtoms
             Input unit cell.
         supercell_matrix : array_like, optional
-            Transformation matrix to supercell cell from unit cell. shape=(3,
-            3), dtype=int.
+            Transformation matrix to the supercell from the unit cell.
+            ``shape=(3, 3)``, ``dtype=int``.
         primitive_matrix : str or array_like, optional
-            Transformation matrix to primitive cell from unit cell. shape=(3,
-            3), dtype=float. Default is "auto", which guesses the primitive
-            matrix from crystal symmetry. To use the unit cell as the
-            primitive cell (identity transformation), pass "P". None is
-            treated the same as "auto".
-        nac_params : None
-            Deprecated.
-        factor : None
-            Deprecated at v2.24. The default frequency conversion factor is that
-            to THz for given displacements in Angstroms and forces in eV/Angstrom.
+            Transformation matrix to the primitive cell from the unit
+            cell. ``shape=(3, 3)``, ``dtype=float``. Default is
+            ``"auto"``, which guesses the primitive matrix from crystal
+            symmetry. To use the unit cell as the primitive cell
+            (identity transformation), pass ``"P"``. ``None`` is treated
+            the same as ``"auto"``.
+        factor : float, optional
+            Deprecated. Passing a non-``None`` value raises
+            ``RuntimeError``. Use the
+            :attr:`unit_conversion_factor` setter instead.
         group_velocity_delta_q : float, optional
             Delta-q distance to calculate group velocity.
         symprec : float, optional
             Symmetry search precision. Default is 1e-5.
         is_symmetry : bool, optional
-            Whether to search symmetry of supercell. Default is True.
+            Whether to search symmetry of the supercell. Default is
+            True.
         use_SNF_supercell : bool, optional
-            Supercell is built by SNF algorithm when True. Default is False. SNF
-            algorithm is faster than the original one, but the order of atoms in
-            the supercell can be different from the original one. So the
-            backward compatibility to the old data (e.g., force constants) may
-            not be preserved.
+            Build the supercell with the SNF algorithm when True.
+            Default is False. The SNF algorithm is faster than the
+            original one, but the order of atoms in the supercell can
+            be different. Backward compatibility with old data (e.g.,
+            force constants) is therefore not guaranteed.
         hermitianize_dynamical_matrix : bool, optional
-            Whether to force-Hermitianize dynamical matrix. Default is True,
-            i.e., D <- (D+D^H)/2.
+            Whether to force-Hermitianize the dynamical matrix. Default
+            is True, i.e., ``D <- (D + D^H) / 2``.
         calculator : str, optional
-            Calculator name such as 'vasp', 'qe', etc. Default is None.
+            Calculator name such as ``'vasp'``, ``'qe'``, etc. Default
+            is None.
         log_level : int, optional
             Log level. Default is 0.
         lang : Literal["C", "Rust"], optional
-            Backend implementation for compute-heavy kernels. "C" (default)
-            uses the existing C extension. "Rust" selects the experimental
-            phonors backend. Default is "C".
+            Backend implementation for compute-heavy kernels. ``"C"``
+            uses the existing C extension; ``"Rust"`` selects the
+            experimental phonors backend. Default is ``"Rust"``.
 
         """
         lang = resolve_lang(lang)
@@ -308,71 +308,40 @@ class Phonopy:
 
     @property
     def version(self) -> str:
-        """Return phonopy release version number.
-
-        str
-            Phonopy release version number
-
-        """
+        """Return phonopy release version number."""
         return __version__
 
     @property
     def primitive(self) -> Primitive:
-        """Return primitive cell.
-
-        Primitive
-            Primitive cell.
-
-        """
+        """Return primitive cell."""
         return self._primitive
 
     @property
     def unitcell(self) -> PhonopyAtoms:
-        """Return input unit cell.
-
-        PhonopyAtoms
-            Input unit cell.
-
-        """
+        """Return input unit cell."""
         return self._unitcell
 
     @property
     def supercell(self) -> Supercell:
-        """Return supercell.
-
-        Supercell
-            Supercell.
-
-        """
+        """Return supercell."""
         return self._supercell
 
     @property
     def symmetry(self) -> Symmetry:
-        """Return symmetry of supercell.
-
-        Symmetry
-            Symmetry of supercell.
-
-        """
+        """Return symmetry of the supercell."""
         return self._symmetry
 
     @property
     def primitive_symmetry(self) -> Symmetry:
-        """Return symmetry of primitive cell.
-
-        Symmetry
-            Symmetry of primitive cell.
-
-        """
+        """Return symmetry of the primitive cell."""
         return self._primitive_symmetry
 
     @property
     def supercell_matrix(self) -> NDArray[np.int64]:
-        """Return transformation matrix to supercell cell from unit cell.
+        """Return transformation matrix to supercell from unit cell.
 
-        ndarray
-            Supercell matrix with respect to unit cell.
-            shape=(3, 3), dtype='int64', order='C'.
+        Supercell matrix with respect to the unit cell.
+        ``shape=(3, 3)``, ``dtype='int64'``, ``order='C'``.
 
         """
         return self._supercell_matrix
@@ -381,9 +350,8 @@ class Phonopy:
     def primitive_matrix(self) -> NDArray[np.double]:
         """Return transformation matrix to primitive cell from unit cell.
 
-        ndarray
-            Primitive matrix with respect to unit cell.
-            shape=(3, 3), dtype='double', order='C'.
+        Primitive matrix with respect to the unit cell.
+        ``shape=(3, 3)``, ``dtype='double'``, ``order='C'``.
 
         """
         return self._primitive_matrix
@@ -392,15 +360,14 @@ class Phonopy:
     def unit_conversion_factor(self) -> float:
         """Return phonon frequency unit conversion factor.
 
-        float
-            Phonon frequency unit conversion factor. This factor converts
-            sqrt(<force>/<distance>/<AMU>)/2pi/1e12 to another preferred phonon
-            frequency unit. This factor should convert to THz (ordinary
-            frequency) to calculate various phonon properties that assume input
-            phonon frequencies are in THz units. When only frequencies are
-            necessary as output, this factor may be used for getting results in
-            other units. The default frequency conversion factor is that to THz
-            for given displacements in Angstroms and forces in eV/Angstrom.
+        This factor converts ``sqrt(<force> / <distance> / <AMU>) / 2pi /
+        1e12`` to another preferred phonon frequency unit. It should
+        convert to THz (ordinary frequency) when calculating various
+        phonon properties that assume input phonon frequencies are in
+        THz units. When only frequencies are necessary as output, this
+        factor may be used to get results in other units. The default
+        frequency conversion factor is the one to THz for displacements
+        in Angstroms and forces in eV/Angstrom.
 
         """
         return self._unit_conversion_factor
@@ -412,12 +379,7 @@ class Phonopy:
 
     @property
     def calculator(self) -> str | None:
-        """Return calculator name.
-
-        str
-            Calculator name such as 'vasp', 'qe', etc.
-
-        """
+        """Return calculator name such as ``'vasp'``, ``'qe'``, etc."""
         return self._calculator
 
     @property
@@ -436,34 +398,35 @@ class Phonopy:
         """Return displacement-force dataset.
 
         Dataset containing information of displacements in supercells.
-        This optionally contains energies and forces of respective supercells.
+        This optionally contains energies and forces of respective
+        supercells. The format is either one of two types.
 
-        dataset : DisplacementDataset or None
-            The format can be either one of two types
+        **Type 1. One atomic displacement in each supercell**::
 
-            Type 1. One atomic displacement in each supercell:
-                {'natom': number of atoms in supercell,
-                 'first_atoms': [
-                   {'number': atom index of displaced atom,
-                    'displacement': displacement in Cartesian coordinates,
-                    'forces': forces on atoms in supercell,
-                    'supercell_energy': energy of supercell},
-                   {...}, ...]}
-            Elements of the list accessed by 'first_atoms' corresponds to each
-            displaced supercell. Each displaced supercell contains only one
-            displacement. dict['first_atoms']['forces'] gives atomic forces in
-            each displaced supercell.
+            {'natom': number of atoms in supercell,
+             'first_atoms': [
+               {'number': atom index of displaced atom,
+                'displacement': displacement in Cartesian coordinates,
+                'forces': forces on atoms in supercell,
+                'supercell_energy': energy of supercell},
+               {...}, ...]}
 
-            Type 2. All atomic displacements in each supercell:
-                {'displacements': ndarray, dtype='double', order='C',
-                                  shape=(supercells, natom, 3)
-                 'forces': ndarray, dtype='double', order='C',
-                                  shape=(supercells, natom, 3),
-                 'supercell_energies': ndarray, dtype='double'}
+        Elements of the list accessed by ``'first_atoms'`` correspond to
+        each displaced supercell. Each displaced supercell contains only
+        one displacement. ``dict['first_atoms']['forces']`` gives atomic
+        forces in each displaced supercell.
 
-            To set in type 2, displacements and forces can be given by numpy
-            array with different shape but that can be reshaped to
-            (supercells, natom, 3).
+        **Type 2. All atomic displacements in each supercell**::
+
+            {'displacements': ndarray, dtype='double', order='C',
+                              shape=(supercells, natom, 3),
+             'forces': ndarray, dtype='double', order='C',
+                              shape=(supercells, natom, 3),
+             'supercell_energies': ndarray, dtype='double'}
+
+        To set in type 2, displacements and forces can be given by numpy
+        arrays with different shape that can be reshaped to
+        ``(supercells, natom, 3)``.
 
         """
         return self._dataset
@@ -488,11 +451,12 @@ class Phonopy:
 
     @property
     def mlp_dataset(self) -> Type2DisplacementDataset | None:
-        """Return displacement-force dataset.
+        """Return displacement-force dataset used to train an MLP.
 
-        The supercell matrix is equal to that of usual displacement-force
-        dataset. Only type 2 format is supported. "displacements",
-        "forces", and "supercell_energies" should be contained.
+        The supercell matrix matches that of the usual
+        displacement-force dataset. Only the type-2 format is supported;
+        the dict must contain ``"displacements"``, ``"forces"``, and
+        ``"supercell_energies"``.
 
         """
         return self._mlp_dataset
@@ -520,7 +484,7 @@ class Phonopy:
 
     @property
     def mlp(self) -> PhonopyMLP | None:
-        """Setter and getter of PhonopyMLP dataclass."""
+        """Setter and getter of the ``PhonopyMLP`` machine-learning potential."""
         return self._mlp
 
     @mlp.setter
@@ -531,30 +495,24 @@ class Phonopy:
     def displacements(self) -> NDArray[np.double] | list:
         """Getter and setter of displacements in supercells.
 
-        There are two types of displacement dataset. See the docstring
-        of dataset about types 1 and 2 for the displacement dataset formats.
-        Displacements set returned depends on either type-1 or type-2 as
-        follows:
+        There are two types of displacement dataset; see the docstring
+        of :attr:`dataset` for the type-1 and type-2 formats. The
+        returned displacements depend on the dataset type:
 
-        Type-1, List of list
-            The internal list has 4 elements such as [32, 0.01, 0.0, 0.0]].
-            The first element is the supercell atom index starting with 0.
-            The remaining three elements give the displacement in Cartesian
+        **Type 1** (list of list)
+            Each inner list has 4 elements, e.g.
+            ``[32, 0.01, 0.0, 0.0]``. The first element is the
+            supercell atom index starting with 0; the remaining three
+            elements give the displacement in Cartesian coordinates.
+
+        **Type 2** (ndarray)
+            Displacements of all atoms in all supercells in Cartesian
             coordinates.
-        Type-2, array_like
-            Displacements of all atoms of all supercells in Cartesian
-            coordinates.
-            shape=(supercells, natom, 3)
-            dtype='double'
+            ``shape=(supercells, natom, 3)``, ``dtype='double'``.
 
-
-        For setter, only type-2 dataset format is allowed.
-
-        displacements : array_like
-            Atomic displacements of all atoms of all supercells.
-            Only all displacements in each supercell case (type-2) is
-            supported.
-            shape=(supercells, natom, 3), dtype='double', order='C'
+        The setter accepts only the type-2 format
+        (``shape=(supercells, natom, 3)``, ``dtype='double'``,
+        ``order='C'``).
 
         """
         if self._dataset is None:
@@ -593,20 +551,19 @@ class Phonopy:
 
         Force constants matrix.
 
-        ndarray to get
-            There are two shapes:
-            full:
-                shape=(atoms in supercell, atoms in supercell, 3, 3)
-            compact:
-                shape=(atoms in primitive cell, atoms in supercell, 3, 3)
-            dtype='double', order='C'
+        **Getter** returns an ``ndarray`` with one of two shapes:
 
-        array_like to set
-            If this is given in own condiguous ndarray with order='C' and
-            dtype='double', internal copy of data is avoided. Therefore
-            some computational resources are saved.
-            shape=(atoms in supercell, atoms in supercell, 3, 3),
-            dtype='double'
+        - full: ``shape=(atoms in supercell, atoms in supercell, 3, 3)``
+        - compact: ``shape=(atoms in primitive cell, atoms in supercell, 3, 3)``
+
+        with ``dtype='double'``, ``order='C'``.
+
+        **Setter** accepts any array-like. If given as an own-contiguous
+        ndarray with ``order='C'`` and ``dtype='double'``, an internal
+        copy of the data is avoided and some computational resources are
+        saved. Expected shape is
+        ``(atoms in supercell, atoms in supercell, 3, 3)``,
+        ``dtype='double'``.
 
         """
         return self._force_constants
@@ -653,7 +610,7 @@ class Phonopy:
         Returns
         -------
         ndarray
-            shape=(len(supercells),)
+            ``shape=(len(supercells),)``, ``dtype='double'``.
 
         """
         return self._get_forces_energies(target="supercell_energies")
@@ -668,17 +625,21 @@ class Phonopy:
     def forces(self) -> NDArray[np.double]:
         """Return forces of supercells.
 
-        ndarray to get and array_like to set
-            A set of atomic forces in displaced supercells. The order of
-            displaced supercells has to match with that in displacement
-            dataset.
-            shape=(supercells with displacements, atoms in supercell, 3)
-            dtype='double', order='C'
+        A set of atomic forces in displaced supercells. The order of
+        displaced supercells has to match with that in the displacement
+        dataset.
 
-            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
-             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
-             ...
-            ]
+        The getter returns an ``ndarray`` and the setter accepts any
+        array-like with::
+
+            shape=(supercells with displacements, atoms in supercell, 3),
+            dtype='double', order='C'.
+
+        That is::
+
+            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...],  # first supercell
+             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...],  # second supercell
+             ...]
 
         """
         return self._get_forces_energies(target="forces")
@@ -694,10 +655,11 @@ class Phonopy:
 
     @property
     def dynamical_matrix(self) -> DynamicalMatrix | None:
-        """Return DynamicalMatrix instance.
+        """Return the ``DynamicalMatrix`` instance.
 
-        This is not dynamical matrices but the instance of DynamicalMatrix
-        class.
+        This is the dynamical-matrix builder object, not the matrix
+        itself. Call ``dm.run(q)`` and then access ``dm.dynamical_matrix``
+        to obtain the matrix at a given q-point.
 
         """
         return self._dynamical_matrix
@@ -706,18 +668,19 @@ class Phonopy:
     def nac_params(self) -> dict | None:
         """Getter and setter of parameters for non-analytical term correction.
 
-        dict
-            Parameters used for non-analytical term correction
-            'born': ndarray
-                Born effective charges.
-                shape=(primitive cell atoms, 3, 3), dtype='double', order='C'
-            'dielectric': ndarray
-                Dielectric constant tensor.
-                shape=(3, 3), dtype='double', order='C'
-            'factor': float, optional
-                Unit conversion factor.
-            'method': str, optional
-                Method to calculate NAC.
+        A ``dict`` with the following entries:
+
+        ``'born'`` : ndarray
+            Born effective charges.
+            ``shape=(primitive cell atoms, 3, 3)``, ``dtype='double'``,
+            ``order='C'``.
+        ``'dielectric'`` : ndarray
+            Dielectric constant tensor.
+            ``shape=(3, 3)``, ``dtype='double'``, ``order='C'``.
+        ``'factor'`` : float, optional
+            Unit conversion factor.
+        ``'method'`` : str, optional
+            Method to calculate NAC.
 
         """
         return self._nac_params
@@ -730,11 +693,9 @@ class Phonopy:
 
     @property
     def supercells_with_displacements(self) -> list[PhonopyAtoms] | None:
-        """Return supercells with displacements.
+        """Return supercells with displacements as a list of ``PhonopyAtoms``.
 
-        list of PhonopyAtoms
-            Supercells with displacements generated by
-            Phonopy.generate_displacements.
+        Generated by :meth:`generate_displacements`.
 
         """
         if self._dataset is None:
@@ -746,7 +707,12 @@ class Phonopy:
 
     @property
     def mesh_numbers(self) -> NDArray[np.int64] | None:
-        """Return sampling mesh numbers in reciprocal space."""
+        """Return sampling mesh numbers in reciprocal space.
+
+        ``shape=(3,)``, ``dtype='int64'``. ``None`` if ``run_mesh`` /
+        ``init_mesh`` has not been called.
+
+        """
         if self._mesh is None:
             return None
         else:
@@ -814,7 +780,7 @@ class Phonopy:
 
     @property
     def projected_dos(self) -> ProjectedDos | None:
-        """Return ProjectedDOS instance."""
+        """Return ``ProjectedDos`` instance."""
         return self._pdos
 
     @property
@@ -868,51 +834,55 @@ class Phonopy:
         Parameters
         ----------
         distance : float, optional
-            Displacement distance. Unit is the same as that used for crystal
-            structure. Default is 0.01. For random direction and random distance
-            displacements generation, this value is also used as `min_distance`,
-            is used to replace generated random distances smaller than this
-            value by this value.
+            Displacement distance. Unit is the same as that used for the
+            crystal structure. Default is 0.01. For random-direction
+            random-distance displacement generation, this value is also
+            used as ``min_distance``: any generated random distance
+            smaller than this value is replaced by this value.
         is_plusminus : 'auto', True, or False, optional
-            For each atom, displacement of one direction (False), both
-            direction, i.e., one direction and its opposite direction (True),
-            and both direction if symmetry requires ('auto'). Default is 'auto'.
+            For each atom, generate displacements in one direction
+            (False), in both directions (True), or in both directions
+            only when symmetry requires it (``'auto'``). Default is
+            ``'auto'``.
         is_diagonal : bool, optional
-            Displacements are made only along basis vectors (False) and can be
-            made not being along basis vectors if the number of displacements
-            can be reduced by symmetry (True). Default is True.
+            When False, displacements are made only along basis vectors;
+            when True, displacements may be off the basis vectors if
+            doing so reduces the number of displacements by symmetry.
+            Default is True.
         is_trigonal : bool, optional
-            Existing only testing purpose. Default is False.
+            Exists only for testing purposes. Default is False.
         number_of_snapshots : int, "auto", or None, optional
-            Number of snapshots of supercells with random displacements. Random
-            displacements are generated by shifting all atoms in random
-            directions by a fixed distance specified by the `distance`
-            parameter. In other words, all atoms in the supercell are displaced
-            by the same distance in direct space. When “auto”, the minimum
-            required number of snapshots is estimated using symfc and then
-            doubled. The default is None.
+            Number of snapshots of supercells with random displacements.
+            Random displacements are generated by shifting all atoms in
+            random directions by a fixed distance specified by the
+            ``distance`` parameter. In other words, all atoms in the
+            supercell are displaced by the same distance in direct space.
+            When ``"auto"``, the minimum required number of snapshots is
+            estimated using symfc and then doubled. The default is None.
         random_seed : int or None, optional
-            Random seed for random displacements generation. Default is None.
-        temperature : float or None, optional
-            With given temperature, random displacements at temperature is
-            generated by sampling probability distribution from canonical
-            ensemble of harmonic oscillators (harmonic phonons). Default is
+            Random seed for random displacements generation. Default is
             None.
+        temperature : float or None, optional
+            When given, random displacements at this temperature are
+            generated by sampling the canonical ensemble of harmonic
+            oscillators (harmonic phonons). Default is None.
         cutoff_frequency : float or None, optional
-            In random displacements generation from canonical ensemble of
-            harmonic phonons, phonon occupation number is used to determine the
-            deviation of the distribution function. To avoid too large
-            deviation, this value is used to exclude the phonon modes whose
-            absolute frequency are smaller than this value. Default is None.
+            In random displacements generation from the canonical
+            ensemble of harmonic phonons, the phonon occupation number
+            is used to determine the deviation of the distribution
+            function. To avoid too large deviation, this value is used
+            to exclude phonon modes whose absolute frequencies are
+            smaller than this value. Default is None.
         max_distance : float or None, optional
             In random displacements generation from canonical ensemble of
             harmonic phonons, displacements larger than max distance are
-            renormalized to the max distance, i.e., a displacement d is shorten
-            by d -> d / |d| * max_distance if |d| > max_distance. In
-            random displacements without using temperature, this value serves as
-            the maximum distance, while the `distance` parameter sets the
-            minimum distance. The displacement distance is randomly sampled from
-            a uniform distribution between these two bounds.
+            renormalized to the max distance, i.e., a displacement ``d`` is
+            shortened by ``d -> d / norm(d) * max_distance`` if
+            ``norm(d) > max_distance``. In random displacements without using
+            temperature, this value serves as the maximum distance, while the
+            ``distance`` parameter sets the minimum distance. The displacement
+            distance is randomly sampled from a uniform distribution between
+            these two bounds.
         number_estimation_factor : float, optional
             This factor multiplies the number of snapshots estimated by symfc
             when `number_of_snapshots` is set to "auto". Default is None, which
@@ -1010,21 +980,29 @@ class Phonopy:
         Parameters
         ----------
         forces : array_like, optional
-            Deprecated. Use Phonopy.forces setter instead. Default is None.
-        calculate_full_force_constants : Bool, optional
-            With setting True, full force constants matrix is stored.
-            With setting False, compact force constants matrix is stored.
-            For more detail, see docstring of Phonopy.force_constants.
+            Deprecated. Use the :attr:`forces` setter instead. Default
+            is None.
+        calculate_full_force_constants : bool, optional
+            When True, the full force-constants matrix is stored. When
+            False, the compact force-constants matrix is stored. See
+            the docstring of :attr:`force_constants` for details.
             Default is True.
-        fc_calculator : str, optional
+        fc_calculator : {"traditional", "symfc", "alm", None}, optional
+            Force constants calculator backend. ``"traditional"`` uses
+            phonopy's built-in least-squares fit. ``"symfc"`` and
+            ``"alm"`` delegate to external packages. Default is None
+            (use the traditional backend).
         fc_calculator_options : str, optional
-            External force constants calculator is used. Currently,
-            'alm' is supported. See more detail at the docstring of
-            phonopy.interface.fc_calculator.get_fc2. Default is None.
-        show_drift : Bool, optional
-            With setting
+            Backend-specific options string passed to the chosen
+            ``fc_calculator``. See the docstring of
+            :func:`phonopy.interface.fc_calculator.get_fc2`. Default is
+            None.
+        show_drift : bool, optional
+            Display residual translational drift of force constants
+            after computation. Default is True.
         fc_calculator_log_level : int, optional
-            Log level for force constants calculator.
+            Log level for the force-constants calculator. Default is
+            None (use the Phonopy instance's ``log_level``).
 
         """
         if forces is not None:
@@ -1075,19 +1053,28 @@ class Phonopy:
     ) -> None:
         """Symmetrize force constants.
 
-        This applies translational and permutation symmetries successfully,
-        but not simultaneously, or symfc projector if use_symfc_projector is True.
+        Two schemes are available.
+
+        - Default (``use_symfc_projector=False``): translational and
+          permutation symmetries are applied successively, not
+          simultaneously. The resulting force constants can break
+          space-group symmetry slightly.
+        - ``use_symfc_projector=True``: the symfc projector imposes
+          space-group, translational, and permutation symmetries
+          simultaneously in a single shot.
 
         Parameters
         ----------
         level : int, optional
-            Application of translational and permulation symmetries is
-            repeated by this number. Default is 1.
+            Number of times the successive (translation -> permutation)
+            application is repeated. Only used when
+            ``use_symfc_projector=False``. Default is 1.
         show_drift : bool, optional
-            Drift forces are displayed when True. Default is True.
+            Display residual drift when True. Default is True.
         use_symfc_projector : bool, optional
-            If True, the force constants are symmetrized by symfc projector
-            instead of traditional approach.
+            If True, force constants are symmetrized by the symfc
+            projector instead of the traditional approach. Default is
+            False.
 
         """
         if self._force_constants is None:
@@ -1245,17 +1232,15 @@ class Phonopy:
 
         Parameters
         ----------
-        q: array_like
-            A q-vector.
-            shape=(3,), dtype='double'
+        q : array_like
+            A q-vector. ``shape=(3,)``, ``dtype='double'``.
 
         Returns
         -------
-        dynamical_matrix: ndarray
-            Dynamical matrix.
-            shape=(bands, bands)
-            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
-            order='C'
+        ndarray
+            Dynamical matrix. ``shape=(bands, bands)``, complex dtype
+            (``"c%d" % (np.dtype('double').itemsize * 2)``),
+            ``order='C'``.
 
         """
         self._set_dynamical_matrix()
@@ -1274,16 +1259,14 @@ class Phonopy:
 
         Parameters
         ----------
-        q: array_like
-            A q-vector.
-            shape=(3,), dtype='double'
+        q : array_like
+            A q-vector. ``shape=(3,)``, ``dtype='double'``.
 
         Returns
         -------
-        frequencies: ndarray
+        ndarray
             Phonon frequencies. Imaginary frequencies are represented by
-            negative real numbers.
-            shape=(bands, ), dtype='double'
+            negative real numbers. ``shape=(bands,)``, ``dtype='double'``.
 
         """
         self._set_dynamical_matrix()
@@ -1312,23 +1295,19 @@ class Phonopy:
 
         Parameters
         ----------
-        q: array_like
-            A q-vector.
-            shape=(3,)
+        q : array_like
+            A q-vector. ``shape=(3,)``.
 
         Returns
         -------
-        (frequencies, eigenvectors)
-
-        frequencies: ndarray
+        frequencies : ndarray
             Phonon frequencies. Imaginary frequencies are represented by
-            negative real numbers.
-            shape=(bands, ), dtype='double', order='C'
-        eigenvectors: ndarray
-            Phonon eigenvectors.
-            shape=(bands, bands)
-            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
-            order='C'
+            negative real numbers. ``shape=(bands,)``, ``dtype='double'``,
+            ``order='C'``.
+        eigenvectors : ndarray
+            Phonon eigenvectors. ``shape=(bands, bands)``, complex
+            dtype (``"c%d" % (np.dtype('double').itemsize * 2)``),
+            ``order='C'``.
 
         """
         self._set_dynamical_matrix()
@@ -1366,30 +1345,29 @@ class Phonopy:
 
         Parameters
         ----------
-        paths : List of array_like
-            Sets of qpoints that can be passed to phonopy.set_band_structure().
-            Numbers of qpoints can be different.
-            shape of each array_like : (qpoints, 3)
+        paths : list of array_like
+            Sets of q-points defining each band path. The number of
+            q-points can differ between paths. Each array has shape
+            ``(qpoints, 3)``.
         with_eigenvectors : bool, optional
-            Flag whether eigenvectors are calculated or not. Default is False.
+            Whether eigenvectors are calculated. Default is False.
         with_group_velocities : bool, optional
-            Flag whether group velocities are calculated or not. Default is
-            False.
+            Whether group velocities are calculated. Default is False.
         is_band_connection : bool, optional
-            Flag whether each band is connected or not. This is achieved by
-            comparing similarity of eigenvectors of neighboring points. Sometimes
-            this fails. Default is False.
-        path_connections : List of bool, optional
-            This is only used in graphical plot of band structure and gives
-            whether each path is connected to the next path or not,
-            i.e., if False, there is a jump of q-points. Number of elements is
-            the same at that of paths. Default is None.
-        labels : List of str, optional
-            This is only used in graphical plot of band structure and gives
-            labels of end points of each path. The number of labels is equal
-            to (2 - np.array(path_connections)).sum().
-        is_legacy_plot: bool, optional
-            This makes the old style band structure plot. Default is False.
+            Whether to connect bands across neighboring q-points by
+            comparing the similarity of their eigenvectors. This
+            sometimes fails. Default is False.
+        path_connections : list of bool, optional
+            Used only when plotting; indicates whether each path is
+            connected to the next path (i.e., False means there is a
+            jump of q-points between them). The number of elements
+            matches that of ``paths``. Default is None.
+        labels : list of str, optional
+            Used only when plotting; labels of the end points of each
+            path. The number of labels equals
+            ``(2 - np.array(path_connections)).sum()``.
+        is_legacy_plot : bool, optional
+            Use the old-style band-structure plot. Default is False.
 
         """
         if self._dynamical_matrix is None:
@@ -1421,33 +1399,33 @@ class Phonopy:
         Returns
         -------
         dict
-            keys: qpoints, distances, frequencies, eigenvectors, and
-                  group_velocities
-            Each dict value is a list containing properties on number of paths.
-            The number of q-points on one path can be different from that on
-            the other path. Each set of properties on a path is ndarray and is
-            explained as below:
+            Keys are ``qpoints``, ``distances``, ``frequencies``,
+            ``eigenvectors``, and ``group_velocities``. Each value is a
+            list containing the property along one band path. The number
+            of q-points along one path can be different from that of
+            other paths. Each per-path entry is an ``ndarray``:
 
-            qpoints[i]: ndarray
-                q-points in reduced coordinates of reciprocal space without
-                2pi.
-                shape=(q-points, 3), dtype='double'
-            distances[i]: ndarray
+            ``qpoints[i]`` : ndarray
+                q-points in reduced coordinates of reciprocal space
+                without 2 pi.
+                ``shape=(q-points, 3)``, ``dtype='double'``.
+            ``distances[i]`` : ndarray
                 Distances in reciprocal space along paths.
-                shape=(q-points,), dtype='double'
-            frequencies[i]: ndarray
-                Phonon frequencies. Imaginary frequencies are represented by
-                negative real numbers.
-                shape=(q-points, bands), dtype='double'
-            eigenvectors[i]: ndarray
-                Phonon eigenvectors. None if eigenvectors are not stored.
-                shape=(q-points, bands, bands)
-                dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
-                order='C'
-            group_velocities[i]: ndarray
-                Phonon group velocities. None if group velocities are not
-                calculated.
-                shape=(q-points, bands, 3), dtype='double'
+                ``shape=(q-points,)``, ``dtype='double'``.
+            ``frequencies[i]`` : ndarray
+                Phonon frequencies. Imaginary frequencies are represented
+                by negative real numbers.
+                ``shape=(q-points, bands)``, ``dtype='double'``.
+            ``eigenvectors[i]`` : ndarray
+                Phonon eigenvectors. ``None`` if eigenvectors are not
+                stored.
+                ``shape=(q-points, bands, bands)``,
+                ``dtype=complex`` (``"c%d" % (np.dtype('double').itemsize * 2)``),
+                ``order='C'``.
+            ``group_velocities[i]`` : ndarray
+                Phonon group velocities. ``None`` if group velocities
+                are not calculated.
+                ``shape=(q-points, bands, 3)``, ``dtype='double'``.
 
         """
         if self._band_structure is None:
@@ -1473,26 +1451,27 @@ class Phonopy:
     ) -> Any | None:
         """Conveniently calculate and draw band structure.
 
+        See the docstring of :meth:`run_band_structure` for the
+        parameters ``with_eigenvectors`` (default False) and
+        ``with_group_velocities`` (default False).
+
         Parameters
         ----------
-        See docstring of ``Phonopy.run_band_structure`` for the parameters of
-        ``with_eigenvectors`` (default is False) and ``with_group_velocities``
-        (default is False).
-
         npoints : int, optional
-            Number of q-points in each segment of band structure paths.
-            The number includes end points. Default is 101.
-        plot : Bool, optional
-            With setting True, band structure is plotted using matplotlib and
-            the matplotlib module (plt) is returned. To watch the result,
-            usually ``show()`` has to be called. Default is False.
-        write_yaml : Bool
-            With setting True, ``band.yaml`` like file is written out. The
+            Number of q-points in each segment of the band-structure
+            paths. The number includes end points. Default is 101.
+        plot : bool, optional
+            When True, band structure is plotted using matplotlib and
+            the matplotlib module (``plt``) is returned. To watch the
+            result, usually ``show()`` has to be called. Default is
+            False.
+        write_yaml : bool, optional
+            When True, a ``band.yaml`` like file is written out. The
             file name can be specified with the ``filename`` parameter.
             Default is False.
         filename : str, optional
-            File name used to write ``band.yaml`` like file. Default is
-            ``band.yaml``.
+            File name used to write the ``band.yaml`` like file. Default
+            is ``band.yaml``.
 
         """
         bands, labels, path_connections = get_band_qpoints_by_seekpath(
@@ -1516,7 +1495,9 @@ class Phonopy:
 
         Returns
         -------
-        matplotlib.pyplot.
+        matplotlib.pyplot
+            The ``matplotlib.pyplot`` module. Call ``.show()`` on it to
+            display the figure.
 
         """
         import matplotlib.pyplot as plt
@@ -1580,8 +1561,9 @@ class Phonopy:
             With compression, an extension of filename is added such as
             'band.yaml.xz'.
         compression : None, 'gzip', or 'lzma'
-            None gives usual text file. 'gzip and 'lzma' compresse yaml
-            text in respective compression methods.
+            None gives a plain text file. ``'gzip'`` and ``'lzma'``
+            compress the yaml text with the respective compression
+            method.
 
         """
         if self._band_structure is None:
@@ -1612,39 +1594,40 @@ class Phonopy:
         ----------
         mesh: array_like or float, optional
             Mesh numbers along a, b, c axes when array_like object is given.
-            dtype='int64', shape=(3,)
-            When float value is given, uniform mesh is generated following
-            VASP convention by
-                N = max(1, nint(l * |a|^*))
-            where 'nint' is the function to return the nearest integer. In this
-            case, it is forced to set is_gamma_center=True.
+            ``dtype='int64'``, ``shape=(3,)``.
+            When a float value is given, a uniform mesh is generated
+            following the VASP convention by
+            ``N = max(1, nint(l * norm(a*)))``,
+            where ``nint`` is the function that returns the nearest
+            integer and ``a*`` is each reciprocal basis vector. In this
+            case, ``is_gamma_center=True`` is enforced.
             Default value is 100.0.
-        shift: array_like, optional
-            Mesh shifts along a*, b*, c* axes with respect to neighboring grid
-            points from the original mesh (Monkhorst-Pack or Gamma center).
-            0.5 gives half grid shift. Normally 0 or 0.5 is given.
-            Otherwise q-points symmetry search is not performed.
+        shift : array_like, optional
+            Mesh shifts along a*, b*, c* axes with respect to neighboring
+            grid points from the original mesh (Monkhorst-Pack or Gamma
+            center). 0.5 gives a half-grid shift. Normally 0 or 0.5 is
+            given; otherwise q-point symmetry search is not performed.
             Default is None (no additional shift).
-            dtype='double', shape=(3, )
-        is_time_reversal: bool, optional
-            Time reversal symmetry is considered in symmetry search. By this,
-            inversion symmetry is always included. Default is True.
-        is_mesh_symmetry: bool, optional
-            Whether symmetry search is done or not. Default is True
-        with_eigenvectors: bool, optional
-            Eigenvectors are stored by setting True. Default False.
+            ``shape=(3,)``, ``dtype='double'``.
+        is_time_reversal : bool, optional
+            Whether to include time-reversal symmetry in the symmetry
+            search. Default is True.
+        is_mesh_symmetry : bool, optional
+            Whether mesh symmetry search is performed. Default is True.
+        with_eigenvectors : bool, optional
+            Store eigenvectors when True. Default is False.
         with_group_velocities : bool, optional
-            Group velocities are calculated by setting True. Default is
-            False.
-        is_gamma_center: bool, default False
-            Uniform mesh grids are generated centring at Gamma point but not
-            the Monkhorst-Pack scheme. When type(mesh) is float, this parameter
-            setting is ignored and it is forced to set is_gamma_center=True.
-        use_iter_mesh: bool
-            Use IterMesh instead of Mesh class not to store phonon properties
-            in its instance to save memory consumption. This is used with
-            ThermalDisplacements and ThermalDisplacementMatrices.
-            Default is False.
+            Calculate group velocities when True. Default is False.
+        is_gamma_center : bool, optional
+            Generate a uniform mesh centered at Gamma instead of using
+            the Monkhorst-Pack scheme. When ``mesh`` is given as a float
+            (length measure), this setting is ignored and
+            ``is_gamma_center=True`` is enforced. Default is False.
+        use_iter_mesh : bool, optional
+            Use ``IterMesh`` instead of ``Mesh`` so that phonon
+            properties are not stored on the instance, saving memory.
+            Used with ``ThermalDisplacements`` and
+            ``ThermalDisplacementMatrices``. Default is False.
 
         """
         if self._dynamical_matrix is None:
@@ -1723,35 +1706,30 @@ class Phonopy:
         Returns
         -------
         dict
-            keys: qpoints, weights, frequencies, eigenvectors, and
-                  group_velocities
+            Keys are ``qpoints``, ``weights``, ``frequencies``,
+            ``eigenvectors``, and ``group_velocities``.
 
-            Each value for the corresponding key is explained as below.
-
-            qpoints: ndarray
-                q-points in reduced coordinates of reciprocal lattice
-                dtype='double'
-                shape=(ir-grid points, 3)
-            weights: ndarray
-                Geometric q-point weights. Its sum is the number of grid
-                points.
-                dtype='int64'
-                shape=(ir-grid points,)
-            frequencies: ndarray
-                Phonon frequencies at ir-grid points. Imaginary frequencies are
-                represented by negative real numbers.
-                dtype='double'
-                shape=(ir-grid points, bands)
-            eigenvectors: ndarray
-                Phonon eigenvectors at ir-grid points. See the data structure
-                at np.linalg.eigh.
-                shape=(ir-grid points, bands, bands)
-                dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
-                order='C'
-            group_velocities: ndarray
+            ``qpoints`` : ndarray
+                q-points in reduced coordinates of the reciprocal
+                lattice. ``shape=(ir-grid points, 3)``,
+                ``dtype='double'``.
+            ``weights`` : ndarray
+                Geometric q-point weights. The sum equals the number of
+                grid points. ``shape=(ir-grid points,)``,
+                ``dtype='int64'``.
+            ``frequencies`` : ndarray
+                Phonon frequencies at ir-grid points. Imaginary
+                frequencies are represented by negative real numbers.
+                ``shape=(ir-grid points, bands)``, ``dtype='double'``.
+            ``eigenvectors`` : ndarray
+                Phonon eigenvectors at ir-grid points. See the data
+                structure of ``np.linalg.eigh``.
+                ``shape=(ir-grid points, bands, bands)``, complex dtype
+                (``"c%d" % (np.dtype('double').itemsize * 2)``),
+                ``order='C'``.
+            ``group_velocities`` : ndarray
                 Phonon group velocities at ir-grid points.
-                dtype='double'
-                shape=(ir-grid points, bands, 3)
+                ``shape=(ir-grid points, bands, 3)``, ``dtype='double'``.
 
         """
         if isinstance(self._mesh, Mesh):
@@ -1891,11 +1869,11 @@ class Phonopy:
             Calculated dynamical matrices are stored by setting True.
             Default is False.
         nac_q_direction : array_like, optional
-            q-point direction from Gamma-point in fractional coordinates of
-            reciprocal basis vectors. Only the direction is used, i.e.,
-            (q_direction / |q_direction|) is computed and used. This parameter
-            is activated only at q=(0, 0, 0).
-            shape=(3,), dtype='double'
+            q-point direction from Gamma-point in fractional coordinates
+            of reciprocal basis vectors. Only the direction is used, i.e.,
+            ``q_direction / norm(q_direction)`` is computed and used. This
+            parameter is activated only at q=(0, 0, 0).
+            ``shape=(3,)``, ``dtype='double'``.
 
         """
         if self._dynamical_matrix is None:
@@ -1926,24 +1904,25 @@ class Phonopy:
         Returns
         -------
         dict
-            keys: frequencies, eigenvectors, and dynamical_matrices
+            Keys are ``frequencies``, ``eigenvectors``,
+            ``group_velocities``, and ``dynamical_matrices``.
 
-            frequencies : ndarray
-                Phonon frequencies. Imaginary frequencies are represented by
-                negative real numbers.
-                shape=(qpoints, bands), dtype='double'
-            eigenvectors : ndarray
-                Phonon eigenvectors. None if eigenvectors are not stored.
-                shape=(qpoints, bands, bands)
-                dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
-                order='C'
-            group_velocities : ndarray
-                Phonon group velocities. None if group velocities are not
-                calculated.
-                shape=(qpoints, bands, 3), dtype='double'
-            dynamical_matrices : ndarray
+            ``frequencies`` : ndarray
+                Phonon frequencies. Imaginary frequencies are represented
+                by negative real numbers.
+                ``shape=(qpoints, bands)``, ``dtype='double'``.
+            ``eigenvectors`` : ndarray or None
+                Phonon eigenvectors. ``None`` if eigenvectors are not
+                stored. ``shape=(qpoints, bands, bands)``, complex dtype
+                (``"c%d" % (np.dtype('double').itemsize * 2)``),
+                ``order='C'``.
+            ``group_velocities`` : ndarray or None
+                Phonon group velocities. ``None`` if group velocities
+                are not calculated.
+                ``shape=(qpoints, bands, 3)``, ``dtype='double'``.
+            ``dynamical_matrices`` : ndarray
                 Dynamical matrices at q-points.
-                shape=(qpoints, bands, bands), dtype='double'
+                ``shape=(qpoints, bands, bands)``, ``dtype='double'``.
 
         """
         if self._qpoints is None:
@@ -1988,14 +1967,15 @@ class Phonopy:
         Parameters
         ----------
         sigma : float, optional
-            Smearing width for smearing method. Default is None
+            Smearing width for the smearing method. Default is None.
         freq_min, freq_max, freq_pitch : float, optional
-            Minimum and maximum frequencies in which range DOS is computed
-            with the specified interval (freq_pitch).
-            Defaults are None and they are automatically determined.
-        use_tetrahedron_method : float, optional
-            Use tetrahedron method when this is True. When sigma is set,
-            smearing method is used.
+            Minimum and maximum frequencies of the frequency range in
+            which DOS is computed, and the sampling interval
+            (``freq_pitch``). Defaults are None and they are
+            automatically determined.
+        use_tetrahedron_method : bool, optional
+            Use the tetrahedron method when True. When ``sigma`` is
+            set, the smearing method is used instead. Default is True.
 
         """
         if self._mesh is None:
@@ -2092,12 +2072,16 @@ class Phonopy:
     ) -> Any:
         """Plot total DOS.
 
+        Parameters
+        ----------
         xlabel : str, optional
-            x-label of plot. Default is None, which puts a default x-label.
+            x-label of the plot. Default is None, which puts a default
+            x-label.
         ylabel : str, optional
-            y-label of plot. Default is None, which puts a default y-label.
+            y-label of the plot. Default is None, which puts a default
+            y-label.
         with_tight_frequency_range : bool, optional
-            Plot with tight frequency range. Default is False.
+            Plot with a tight frequency range. Default is False.
 
         """
         if self._total_dos is None:
@@ -2141,21 +2125,22 @@ class Phonopy:
         Parameters
         ----------
         sigma : float, optional
-            Smearing width for smearing method. Default is None
+            Smearing width for the smearing method. Default is None.
         freq_min, freq_max, freq_pitch : float, optional
-            Minimum and maximum frequencies in which range DOS is computed
-            with the specified interval (freq_pitch).
-            Defaults are None and they are automatically determined.
-        use_tetrahedron_method : float, optional
-            Use tetrahedron method when this is True. When sigma is set,
-            smearing method is used.
+            Minimum and maximum frequencies of the frequency range in
+            which DOS is computed, and the sampling interval
+            (``freq_pitch``). Defaults are None and they are
+            automatically determined.
+        use_tetrahedron_method : bool, optional
+            Use the tetrahedron method when True. When ``sigma`` is
+            set, the smearing method is used instead. Default is True.
         direction : array_like, optional
-            Specific projection direction. This is specified three values
-            along basis vectors or the primitive cell. Default is None,
-            i.e., no projection.
+            Projection direction given as three values along the
+            primitive cell basis vectors. Default is None (no
+            projection).
         xyz_projection : bool, optional
-            This determines whether projected along Cartesian directions or
-            not. Default is False, i.e., no projection.
+            Whether to project along Cartesian directions. Default is
+            False.
 
         """
         self._pdos = None
@@ -2209,25 +2194,25 @@ class Phonopy:
     ) -> Any | None:
         """Conveniently calculate and draw projected DOS.
 
+        See the docstring of ``Phonopy.init_mesh`` for the parameters
+        ``mesh`` (default 100.0), ``is_time_reversal`` (default True), and
+        ``is_gamma_center`` (default False). See the docstring of
+        ``Phonopy.plot_projected_dos`` for ``pdos_indices``, ``legend``,
+        ``xlabel``, ``ylabel``, and ``with_tight_frequency_range``.
+
         Parameters
         ----------
-        See docstring of ``Phonopy.init_mesh`` for the parameters of ``mesh``
-        (default is 100.0), ``is_time_reversal`` (default is True), and
-        ``is_gamma_center`` (default is False). See docstring of
-        ``Phonopy.plot_projected_dos`` for the parameters ``pdos_indices``,
-        ``legend``, ``xlabel``, ``ylabel``, ``with_tight_frequency_range``.
-
-        plot : Bool, optional
+        plot : bool, optional
             With setting True, PDOS is plotted using matplotlib and the
-            matplotlib module (plt) is returned. To watch the result, usually
-            ``show()`` has to be called. Default is False.
-        write_dat : Bool
-            With setting True, ``projected_dos.dat`` like file is written out.
-            The  file name can be specified with the ``filename`` parameter.
-            Default is False.
+            matplotlib module (``plt``) is returned. To watch the result,
+            usually ``show()`` has to be called. Default is False.
+        write_dat : bool, optional
+            With setting True, a ``projected_dos.dat`` like file is
+            written out. The file name can be specified with the
+            ``filename`` parameter. Default is False.
         filename : str, optional
-            File name used to write ``projected_dos.dat`` like file. Default is
-            ``projected_dos.dat``.
+            File name used to write the ``projected_dos.dat`` like file.
+            Default is ``projected_dos.dat``.
 
         """
         self.run_mesh(
@@ -2292,10 +2277,9 @@ class Phonopy:
         ----------
         pdos_indices : list of list, optional
             Sets of indices of atoms whose projected DOS are summed over.
-            The indices start with 0. An example is as follows:
-                pdos_indices=[[0, 1], [2, 3, 4, 5]]
-            Default is None, which means
-                pdos_indices=[[i] for i in range(natom)]
+            The indices start with 0. An example is
+            ``pdos_indices=[[0, 1], [2, 3, 4, 5]]``. Default is None,
+            which means ``pdos_indices=[[i] for i in range(natom)]``.
         legend : list of instances such as str or int, optional
             The str(instance) are shown in legend.
             It has to be len(pdos_indices)==len(legend). Default is None.
@@ -2393,13 +2377,14 @@ class Phonopy:
             Note that use of this results in unphysical values, and it is not
             recommended to use this feature. Default is None.
         is_projection : bool, optional
-            When True, fractions of squeared eigenvector elements are
-            multiplied to mode thermal property quantities at respective phonon
-            modes. Note that use of this results in unphysical values, and it
-            is not recommended to use this feature. Default is False.
-        classical : bool optional
-            If True use classical statistics.
-            If False use quantum statistics.
+            When True, fractions of squared eigenvector elements are
+            multiplied with the mode thermal-property quantities at the
+            respective phonon modes. Note that using this results in
+            unphysical values, so this feature is not recommended.
+            Default is False.
+        classical : bool, optional
+            If True, use classical statistics; if False, use quantum
+            statistics. Default is False.
 
         """
         if self._mesh is None:
@@ -2545,17 +2530,17 @@ class Phonopy:
         ----------
         t_min, t_max, t_step : float, optional
             Minimum and maximum temperatures and the interval in this
-            temperature range. Default valuues are 0, 1000, and 10.
+            temperature range. Default values are 0, 1000, and 10.
         temperatures : array_like, optional
             Temperature points where thermal properties are calculated.
             When this is set, t_min, t_max, and t_step are ignored.
         direction : array_like, optional
-            Projection direction in reduced coordinates. Default is None,
-            i.e., no projection.
-            dtype=float, shape=(3,)
+            Projection direction in reduced coordinates.
+            ``shape=(3,)``, ``dtype='double'``. Default is None
+            (no projection).
         freq_min, freq_max : float, optional
-            Phonon frequencies larger than freq_min and smaller than
-            freq_max are included. Default is None, i.e., all phonons.
+            Only phonon frequencies between ``freq_min`` and
+            ``freq_max`` are included. Default is None (all phonons).
 
         """
         if self._dynamical_matrix is None:
@@ -2649,7 +2634,7 @@ class Phonopy:
         ----------
         t_min, t_max, t_step : float, optional
             Minimum and maximum temperatures and the interval in this
-            temperature range. Default valuues are 0, 1000, and 10.
+            temperature range. Default values are 0, 1000, and 10.
         freq_min, freq_max : float, optional
             Phonon frequencies larger than freq_min and smaller than
             freq_max are included. Default is None, i.e., all phonons.
@@ -2767,29 +2752,30 @@ class Phonopy:
     ) -> None:
         """Generate atomic displacements of phonon modes.
 
-        The design of this feature is not very satisfactory, and thus API.
-        Therefore it should be reconsidered someday in the future.
+        The design of this feature, and thus its API, is not very
+        satisfactory. It should be reconsidered someday in the future.
 
         Parameters
         ----------
         dimension : array_like
             Supercell dimension with respect to the primitive cell.
-            dtype='int64', shape=(3, ), (3, 3), (9, )
+            ``shape=(3,)``, ``(3, 3)``, or ``(9,)``,
+            ``dtype='int64'``.
         phonon_modes : list of phonon mode settings
-            Each element of the outer list gives one phonon mode information:
+            Each element of the outer list specifies one phonon mode::
 
-                [q-point, band index (int), amplitude (float), phase (float)]
+                [q-point, band index (int), amplitude (float),
+                 phase (float)]
 
-            In each list of the phonon mode information, the first element is
-            a list that represents q-point in reduced coordinates. The second,
-            third, and fourth elements show the band index starting with 0,
-            amplitude, and phase factor, respectively.
+            The first element is a list representing the q-point in
+            reduced coordinates. The remaining elements are the band
+            index (starting with 0), amplitude, and phase factor.
         nac_q_direction : array_like
-            q-point direction from Gamma-point in fractional coordinates of
-            reciprocal basis vectors. Only the direction is used, i.e.,
-            (q_direction / |q_direction|) is computed and used. This parameter
-            is activated only at q=(0, 0, 0).
-            shape=(3,), dtype='double'
+            q-point direction from Gamma-point in fractional coordinates
+            of reciprocal basis vectors. Only the direction is used, i.e.,
+            ``q_direction / norm(q_direction)`` is computed and used. This
+            parameter is activated only at q=(0, 0, 0).
+            ``shape=(3,)``, ``dtype='double'``.
 
         """
         if self._dynamical_matrix is None:
@@ -2808,24 +2794,22 @@ class Phonopy:
         self._modulation.run()
 
     def get_modulated_supercells(self) -> list[PhonopyAtoms]:
-        """Return cells with atom modulations.
-
-        list of PhonopyAtoms
-            Modulated structures.
-
-        """
+        """Return modulated structures as a list of ``PhonopyAtoms``."""
         if self._modulation is None:
             msg = "run_modulations has to be done before getting modulated supercells."
             raise RuntimeError(msg)
         return self._modulation.get_modulated_supercells()
 
     def get_modulations_and_supercell(self) -> tuple[NDArray[np.cdouble], PhonopyAtoms]:
-        """Return atomic modulations and perfect supercell.
+        """Return atomic modulations and the perfect supercell.
 
-        (modulations, supercell)
-
-        modulations: Atomic modulations of supercell in Cartesian coordinates
-        supercell: Supercell as an PhonopyAtoms instance.
+        Returns
+        -------
+        modulations : ndarray
+            Atomic modulations of the supercell in Cartesian
+            coordinates.
+        supercell : PhonopyAtoms
+            The (unmodulated) supercell.
 
         """
         if self._modulation is None:
@@ -2838,7 +2822,7 @@ class Phonopy:
         calculator: str | None = None,
         optional_structure_info: StructureInfo | None = None,
     ) -> None:
-        """Write modulated structures to MPOSCAR's."""
+        """Write modulated structures to MPOSCAR files."""
         if self._modulation is None:
             msg = "run_modulations has to be done before writing modulations."
             raise RuntimeError(msg)
@@ -2865,15 +2849,17 @@ class Phonopy:
         """Identify ir-reps of phonon modes.
 
         The design of this API is not very satisfactory and is expected
-        to be redesined in the next major versions once the use case
-        of the API for ir-reps feature becomes clearer.
+        to be redesigned in the next major versions once the use case
+        of the API for the ir-reps feature becomes clearer.
 
+        Parameters
+        ----------
         nac_q_direction : array_like
-            q-point direction from Gamma-point in fractional coordinates of
-            reciprocal basis vectors. Only the direction is used, i.e.,
-            (q_direction / |q_direction|) is computed and used. This parameter
-            is activated only at q=(0, 0, 0).
-            shape=(3,), dtype='double'
+            q-point direction from Gamma-point in fractional coordinates
+            of reciprocal basis vectors. Only the direction is used, i.e.,
+            ``q_direction / norm(q_direction)`` is computed and used. This
+            parameter is activated only at q=(0, 0, 0).
+            ``shape=(3,)``, ``dtype='double'``.
 
         """
         if self._dynamical_matrix is None:
@@ -2970,46 +2956,44 @@ class Phonopy:
     ) -> None:
         """Initialize dynamic structure factor calculation.
 
-        *******************************************************************
-         This is still an experimental feature. API can be changed without
-         notification.
-        *******************************************************************
-
-        Need to call DynamicStructureFactor.run() to start calculation.
+        Call ``DynamicStructureFactor.run()`` to start the calculation.
 
         Parameters
         ----------
-        Qpoints: array_like
+        Qpoints : array_like
             Q-points in any Brillouin zone.
-            dtype='double'
-            shape=(qpoints, 3)
-        T: float
+            ``shape=(qpoints, 3)``, ``dtype='double'``.
+        T : float
             Temperature in K.
-        atomic_form_factor_func: Function object
-            Function that returns atomic form factor (``func`` below):
+        atomic_form_factor_func : callable
+            Function that returns the atomic form factor (``func`` below)::
 
-                f_params = {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
-                                   0.767888, 0.070139, 0.995612, 14.1226457,
-                                   0.968249, 0.217037, 0.045300],
-                            'Cl': [1.061802, 0.144727, 7.139886, 1.171795,
-                                   6.524271, 19.467656, 2.355626, 60.320301,
-                                   35.829404, 0.000436, -34.916604],b|
+                f_params = {
+                    'Na': [3.148690, 2.594987, 4.073989, 6.046925,
+                           0.767888, 0.070139, 0.995612, 14.1226457,
+                           0.968249, 0.217037, 0.045300],
+                    'Cl': [1.061802, 0.144727, 7.139886, 1.171795,
+                           6.524271, 19.467656, 2.355626, 60.320301,
+                           35.829404, 0.000436, -34.916604],
+                }
 
                 def get_func_AFF(f_params):
                     def func(symbol, Q):
                         return atomic_form_factor_WK1995(Q, f_params[symbol])
                     return func
 
-        scattering_lengths: dictionary
+        scattering_lengths : dict
             Coherent scattering lengths averaged over isotopes and spins.
-            Supposed for INS. For example, {'Na': 3.63, 'Cl': 9.5770}.
-        freq_min, freq_min: float
+            Supposed for INS. For example, ``{'Na': 3.63, 'Cl': 9.5770}``.
+        freq_min, freq_max : float
             Minimum and maximum phonon frequencies to determine whether
             phonons are included in the calculation.
 
         """
         if self._mesh is None:
-            msg = "run_mesh has to be done before initializing dynamicstructure factor."
+            msg = (
+                "run_mesh has to be done before initializing dynamic structure factor."
+            )
             raise RuntimeError(msg)
 
         if not self._mesh.with_eigenvectors:
@@ -3079,18 +3063,21 @@ class Phonopy:
     ) -> None:
         """Initialize random displacements at finite temperature.
 
+        Parameters
+        ----------
         dist_func : str or None, optional
-            Harmonic oscillator distribution function either by 'quantum'
-            or 'classical'. Default is None, corresponding to 'quantum'.
-            Default is None.
+            Harmonic oscillator distribution function: either
+            ``'quantum'`` or ``'classical'``. Default is None,
+            corresponding to ``'quantum'``.
         cutoff_frequency : float or None
-            Phonon frequency in THz below that phonons are ignored
-            to generate random displacements. Default is None.
+            Phonon frequency in THz below which phonons are ignored when
+            generating random displacements. Default is None.
         max_distance : float or None, optional
             In random displacements generation from canonical ensemble of
             harmonic phonons, displacements larger than max distance are
-            renormalized to the max distance, i.e., a disptalcement d is shorten
-            by d -> d / |d| * max_distance if |d| > max_distance.
+            renormalized to the max distance, i.e., a displacement ``d``
+            is shortened by ``d -> d / norm(d) * max_distance`` if
+            ``norm(d) > max_distance``.
 
         """
         if self._force_constants is None:
@@ -3117,14 +3104,20 @@ class Phonopy:
     ) -> np.ndarray:
         """Generate random displacements from phonon structure.
 
-        Some more details are written at generate_displacements.
+        See :meth:`generate_displacements` for related details.
 
+        Parameters
+        ----------
         temperature : float
-            Temperature.
+            Temperature in K.
         number_of_snapshots : int
-            Number of snapshots with random displacements created.
-        random_seed : 32bit unsigned int or None, optional
-            Random seed. Default is None
+            Number of snapshots with random displacements to create.
+        is_plusminus : bool, optional
+            If True, concatenate the displacements with their
+            opposites, doubling the number of snapshots. Default is
+            False.
+        random_seed : 32-bit unsigned int or None, optional
+            Random seed. Default is None.
 
         """
         if self._random_displacements is None:
@@ -3163,35 +3156,41 @@ class Phonopy:
 
         Parameters
         ----------
-        filename: str, optional
-            File name. Default is "phonopy_params.yaml"
-        settings: dict, optional
-            It is described which parameters are written out. Only the settings
-            expected to be updated from the following default settings are
-            needed to be set in the dictionary.  The possible parameters and
-            their default settings are:
+        filename : str, optional
+            File name. Default is ``"phonopy_params.yaml"``.
+        settings : dict, optional
+            Selects which parameters are written out. Only the entries
+            to be changed from the defaults need to be set. The
+            available parameters and their default settings are::
+
                 {'force_sets': True,
-                 'displacements': True, 'force_constants': False,
-                 'born_effective_charge': True, 'dielectric_constant': True}
-            This default settings are updated by {'force_constants': True} when
-            dataset is None and force_constants is not None unless
-            {'force_constants': False} is specified.
-        hdf5_settings: dict, optional (To be implemented)
-            Force constants and force_sets are stored in hdf5 file when they are
-            activated in the dict. The dict has the following keys. The default
-            filename is the filename of yaml file where '.yaml' is replaced by
-            '.hdf5'.
-                'filename' : str 'force_constants': bool (default=False)
-                'force_sets': bool (default=False)
+                 'displacements': True,
+                 'force_constants': False,
+                 'born_effective_charge': True,
+                 'dielectric_constant': True}
+
+            The default settings are updated by ``{'force_constants': True}``
+            when ``dataset`` is None and ``force_constants`` is not None,
+            unless ``{'force_constants': False}`` is specified explicitly.
+        hdf5_settings : dict, optional (to be implemented)
+            Force constants and force sets are stored in an HDF5 file when
+            activated in the dict. The default filename is the filename of
+            the yaml file with ``.yaml`` replaced by ``.hdf5``. Keys::
+
+                {'filename': str,
+                 'force_constants': bool (default=False),
+                 'force_sets': bool (default=False)}
+
         compression : bool or str
-            If True, phonopy_params.yaml like file is compressed by xz. When
-            compression=='xz', the file is compressed by xz. Default is False.
+            If True, the ``phonopy_params.yaml`` like file is compressed
+            by xz. When ``compression == 'xz'``, the file is compressed
+            by xz. Default is False.
 
         Returns
         -------
-        str :
-            File name of the saved phonopy_params.yaml like file. If it is
-            compressed,
+        str
+            File name of the saved ``phonopy_params.yaml`` like file
+            (with an ``.xz`` suffix if compressed).
 
         """
         if hdf5_settings is not None:
@@ -3224,35 +3223,36 @@ class Phonopy:
         supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64],
         with_nac: bool = False,
     ) -> Phonopy:
-        """Transform force constants in Phonopy class instance to other shape.
+        """Transform force constants in this Phonopy instance to another shape.
 
-        Fourier interpolation of force constants is performed. This Phonopy
-        class instance has to have force constants in it. Returned init
-        parameters of this Phonopy class instance are copied to returned Phonopy
-        class instance.
+        Force constants are Fourier-interpolated. This Phonopy instance
+        must already hold force constants. The init parameters of this
+        instance are copied to the returned instance.
 
-        For example, if self._supercell_matrix is [2, 2, 2] and given
-        supercell_matrix is [4, 4, 4], the former force constants are Fourier
-        interpolated sampling at the commensurate points of the supercell of
-        the latter and new Phonopy class instance with the Fourier
-        interpolated force constants is returned.
+        For example, if the current ``supercell_matrix`` is ``[2, 2, 2]``
+        and the given ``supercell_matrix`` is ``[4, 4, 4]``, the
+        existing force constants are Fourier-interpolated by sampling at
+        the commensurate points of the latter supercell, and a new
+        Phonopy instance carrying the interpolated force constants is
+        returned.
 
         Parameters
         ----------
         supercell_matrix : array_like
-            This specifies array shape of the force constants.
+            Specifies the shape of the new force constants.
         with_nac : bool, optional
-            Non-analytical term correction (NAC) is used under the Fourier
-            interpolation, i.e., dynamical matrices at commensurate points
-            are computed with NAC, then they are Fourier transform back to
-            force constants of supercell_matrix. NAC parameters are not
-            copied to returned Phonopy class instance.
+            Use non-analytical term correction (NAC) under the Fourier
+            interpolation: dynamical matrices at commensurate points
+            are computed with NAC, then Fourier-transformed back to
+            force constants of the requested ``supercell_matrix``. NAC
+            parameters are not copied to the returned Phonopy instance.
 
         Returns
         -------
-        ph : Phonopy
-            Phonopy class instance with init parameters of this Phonopy class
-            instance and transformed force constants of `supercell_matrix`.
+        Phonopy
+            Phonopy instance carrying the init parameters of this
+            instance and the transformed force constants for the given
+            ``supercell_matrix``.
 
         """
         if self._force_constants is None:
@@ -3284,18 +3284,18 @@ class Phonopy:
         return ph
 
     def copy(self, log_level: int | None = None) -> Phonopy:
-        """Copy this Phonopy class instance with init parameters.
+        """Copy this Phonopy instance carrying only the init parameters.
 
-        Note
-        ----
-        Phonopy class instance with the initial parameters is returned, but
-        internal variables such as force constants, NAC params, MLP parameters, etc,
-        are not stored.
+        Notes
+        -----
+        The returned instance is constructed with the same init
+        parameters as this one, but internal state such as force
+        constants, NAC parameters, MLP, etc. is **not** copied.
 
         Returns
         -------
-        ph : Phonopy
-            Copied phonopy class instance.
+        Phonopy
+            New Phonopy instance.
 
         """
         return self._copy(log_level=log_level)

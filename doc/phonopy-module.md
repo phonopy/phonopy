@@ -74,6 +74,7 @@ unitcell, optional_structure_info = read_crystal_structure("NaCl.in", interface_
 
 Note that `read_crystal_structure` returns a tuple and the first element is the
 `PhonopyAtoms` instance.
+
 ## Work flow
 
 The work flow is schematically shown in {ref}`workflow`.
@@ -259,13 +260,13 @@ Set band paths (`run_band_structure()`) and get the results
 (`get_band_structure_dict()`).
 
 A dictionary with `qpoints`, `distances`, `frequencies`, `eigenvectors`,
-`group_velocities` is returned by `get_band_structure_dict()`. Eigenvectors can
-be obtained when `with_eigenvectors=True` at `run_band_structure()`. See the
-details at docstring of `Phonopy.get_band_structure_dict`. Phonon frequency is
-sqrt(eigenvalue). A negative eigenvalue has to correspond to the imaginary
-frequency, but for the plotting, it is set as the negative value in the above
-example. In addition, you need to multiply by your unit conversion factor. In
-the case of VASP to transform to THz, the factor is 15.633302.
+and `group_velocities` is returned by `get_band_structure_dict()`.
+Eigenvectors are included when `with_eigenvectors=True` is passed to
+`run_band_structure()`. See the docstring of
+`Phonopy.get_band_structure_dict` for details. Frequencies are returned
+in the unit set by `Phonopy.unit_conversion_factor` (THz by default for
+the VASP calculator with displacements in Angstrom and forces in
+eV/Angstrom). Imaginary frequencies are encoded as negative real numbers.
 
 In `example/NaCl`, the phonopy is executed from python script, e.g.,
 
@@ -323,11 +324,12 @@ To use this method, `seekpath` python module is needed.
 
 ### Mesh sampling
 
-Set sampling mesh (`set_mesh`) in reciprocal space. The irreducible _q_-points
-and corresponding _q_-point weights, eigenvalues, and eigenvectors are obtained
-by `get_mesh_dict()`. `mesh` gives the sampling mesh with Monkhorst-Pack scheme.
-The keyword `shift` gives the fractional mesh shift with respect to the
-neighboring grid points.
+Run the sampling-mesh phonon calculation with `run_mesh()` in
+reciprocal space. The irreducible _q_-points and corresponding
+_q_-point weights, eigenvalues, and eigenvectors are obtained by
+`get_mesh_dict()`. `mesh` gives the sampling mesh in the Monkhorst-Pack
+scheme. The keyword `shift` gives the fractional mesh shift with
+respect to the neighboring grid points.
 
 ```python
 mesh = [20, 20, 20]
@@ -370,7 +372,8 @@ eigenvectors have to be calculated in the mesh sampling. To get the results
 To plot total DOS,
 
 ```python
-phonon.run_mesh([20, 20, 20]) phonon.run_total_dos()
+phonon.run_mesh([20, 20, 20])
+phonon.run_total_dos()
 phonon.plot_total_dos().show()
 ```
 
@@ -443,6 +446,129 @@ factors = 14.400
 phonon.nac_params = {'born': born,
                      'factor': factors,
                      'dielectric': epsilon}
+```
+
+### Phonon at arbitrary q-points
+
+To evaluate phonons at an explicit list of q-points (without imposing
+a band path or a mesh), use `run_qpoints()`. The result is retrieved
+through `get_qpoints_dict()`.
+
+```python
+phonon.run_qpoints(
+    [[0.0, 0.0, 0.0],
+     [0.5, 0.0, 0.0],
+     [0.5, 0.5, 0.5]],
+    with_eigenvectors=True,
+    with_group_velocities=True,
+)
+qpts_dict = phonon.get_qpoints_dict()
+frequencies = qpts_dict['frequencies']
+eigenvectors = qpts_dict['eigenvectors']
+group_velocities = qpts_dict['group_velocities']
+```
+
+For one-off evaluations at a single q-point, the lightweight helpers
+`get_frequencies(q)` and `get_frequencies_with_eigenvectors(q)` return
+arrays directly, while `get_group_velocity_at_q(q)` returns group
+velocities. `get_dynamical_matrix_at_q(q)` returns the (non-mass-weighted)
+dynamical matrix itself.
+
+### Thermal displacements
+
+Mean-square atomic displacements and the corresponding 3x3 matrices
+(useful for cif export) are calculated from a converged mesh sampling.
+
+```python
+phonon.run_mesh([20, 20, 20], with_eigenvectors=True, is_mesh_symmetry=False)
+phonon.run_thermal_displacements(t_min=0, t_max=1000, t_step=10)
+td_dict = phonon.get_thermal_displacements_dict()
+temperatures = td_dict['temperatures']
+u2 = td_dict['thermal_displacements']  # shape=(temperatures, atoms*3)
+```
+
+```python
+phonon.run_thermal_displacement_matrices(t_min=0, t_max=1000, t_step=10)
+tdm_dict = phonon.get_thermal_displacement_matrices_dict()
+phonon.write_thermal_displacement_matrix_to_cif(temperature_index=10)
+```
+
+### Modulations
+
+`run_modulations()` builds atomic-displacement patterns of selected
+phonon modes on a chosen supercell. Each requested mode is a list
+`[q-point, band_index, amplitude, phase]`.
+
+```python
+phonon.run_modulations(
+    dimension=[2, 2, 2],
+    phonon_modes=[
+        [[0.0, 0.0, 0.0], 0, 1.0, 0.0],
+        [[0.5, 0.5, 0.5], 3, 0.5, 0.0],
+    ],
+)
+modulated_cells = phonon.get_modulated_supercells()
+phonon.write_modulations()  # MPOSCAR-001, MPOSCAR-002, ...
+```
+
+### Irreducible representations
+
+For mode analysis at a chosen q-point, irreducible representations of
+the little co-group can be computed.
+
+```python
+phonon.set_irreps(q=[0.0, 0.0, 0.0])
+phonon.show_irreps(show_irreps=True)
+phonon.write_yaml_irreps()
+```
+
+### Dynamic structure factor
+
+See {ref}`dynamic_structure_factor` for the formulation and the
+`run_dynamic_structure_factor()` / `init_dynamic_structure_factor()`
+workflow. A mesh calculation with eigenvectors and without mesh
+symmetry is required as a prerequisite.
+
+### Random displacements at finite temperature
+
+`Phonopy` can sample displacement snapshots from the canonical
+ensemble of harmonic oscillators (`init_random_displacements()` and
+`get_random_displacements_at_temperature()`). The same functionality
+is also exposed through `generate_displacements(temperature=...)`. See
+{ref}`random_displacements` for details and recommended use.
+
+### Machine learning potentials
+
+Force constants can be obtained via a machine-learning potential
+trained on a type-2 displacement-force dataset. The relevant methods
+are `develop_mlp()`, `save_mlp()`, `load_mlp()`, and `evaluate_mlp()`,
+which work in concert with the `mlp_dataset` and `mlp` attributes. See
+{ref}`mlp-sscha` for a worked example.
+
+### Force-constants symmetrization
+
+`symmetrize_force_constants()` refines force constants produced from
+displacements and forces. Two schemes are available.
+
+**Traditional scheme** (default). Translational and permutation
+symmetries are applied successively. The `level` keyword sets how
+many times this successive (translation -> permutation) application
+is repeated. Because the two symmetries are applied one after the
+other rather than simultaneously, the resulting force constants can
+break space-group symmetry slightly.
+
+```python
+phonon.symmetrize_force_constants(level=1)
+```
+
+**symfc projector**. Set `use_symfc_projector=True` to apply the
+symfc projector instead. Space-group, translational, and permutation
+symmetries are imposed simultaneously in a single shot, so no
+trade-off is made between them. The `level` keyword is not used in
+this mode.
+
+```python
+phonon.symmetrize_force_constants(use_symfc_projector=True)
 ```
 
 ## Data structure
@@ -720,6 +846,10 @@ showing the matching POTCAR concatenation order and the INCAR `VCA = ...`
 line. For example, a 50/50 GeSn cell with `--dim "2 2 2"` produces
 `SPOSCAR` with `Ge Sn / 16 16` and prints `INCAR: VCA = 0.5 0.5`.
 
+<!-- "Forces for mixed-species cells" describes the force-reduction
+pipeline at FC build time, which is still under development. The
+content is preserved here for future reuse.
+
 #### Forces for mixed-species cells
 
 A VASP run on a mixture-expanded supercell returns one force vector per
@@ -768,6 +898,8 @@ raw forces are preserved in the dataset, applying a different reduction
 convention or different weights only requires re-running the reduction
 and the force-constant build, not the calculator.
 
+-->
+
 #### Expansion ordering
 
 The mapping from expanded row indices back to phonopy sites is fixed by
@@ -777,8 +909,7 @@ per constituent (in `mixture` order) at the original site coordinates.
 The shared helper
 `phonopy.structure.cells.get_mixture_expansion(cell)` returns the
 ordered list of `(site_index, weight)` pairs that this row order
-corresponds to, and is used by both the writer and the force/FORCE_SETS
-parser so the two stay in lockstep.
+corresponds to.
 
 ## Definitions of variables
 
@@ -810,7 +941,7 @@ supercell_lattice = (original_lattice.T @ supercell_matrix).T,
 (variable_primitive_matrix)=
 ### Primitive matrix
 
-Primitive matrix {math}`\mathrm{M}_\mathrm{p}` is a tranformation matrix from lattice
+Primitive matrix {math}`\mathrm{M}_\mathrm{p}` is a transformation matrix from lattice
 vectors to those of a primitive cell if there exists the primitive cell in the
 lattice vectors. Following a crystallography convention, the transformation is
 given by
