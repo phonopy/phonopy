@@ -26,12 +26,36 @@
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "sphinx.ext.mathjax",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
     "myst_parser",
     "sphinxcontrib.mermaid",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
 ]
 myst_enable_extensions = ["linkify", "dollarmath", "amsmath"]
+
+# autodoc / autosummary
+autosummary_generate = True
+autodoc_default_options = {
+    "members": True,
+    "show-inheritance": True,
+}
+autodoc_typehints = "description"
+autodoc_member_order = "bysource"
+
+# napoleon (NumPy-style docstrings)
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+
+# intersphinx
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -232,35 +256,3 @@ html_static_path = ["_static"]
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "phonopydoc"
-
-
-# -- Options for LaTeX output --------------------------------------------------
-
-# The paper size ('letter' or 'a4').
-# latex_paper_size = 'letter'
-
-# The font size ('10pt', '11pt' or '12pt').
-# latex_font_size = '10pt'
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [
-    ("documentation", "phonopy.tex", "phonopy manual", "Atsushi Togo", "manual"),
-]
-
-# The name of an image file (relative to this directory) to place at the top of
-# the title page.
-# latex_logo = None
-
-# For "manual" documents, if this is true, then toplevel headings are parts,
-# not chapters.
-# latex_use_parts = False
-
-# Additional stuff for the LaTeX preamble.
-# latex_preamble = ''
-
-# Documents to append as an appendix to all manuals.
-# latex_appendices = []
-
-# If false, no module index is generated.
-# latex_use_modindex = True

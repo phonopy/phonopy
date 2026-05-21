@@ -44,6 +44,7 @@ nosetests.xml
 .buildinfo
 .doctrees
 _build
+doc/_autosummary
 
 # VSCode
 .vscode

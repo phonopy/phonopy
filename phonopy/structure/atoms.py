@@ -258,54 +258,18 @@ def _disambiguate_composite_labels(
 class PhonopyAtoms:
     """Class to represent crystal structure.
 
-    Originally this aimed to be compatible ASE Atoms class, but now not.
+    Originally this class aimed to be compatible with the ASE ``Atoms``
+    class, but the APIs have since diverged.
 
-    Attributes
-    ----------
-    cell : np.ndarray
-        Basis vectors (a, b, c) given in row vectors.
-    positions : np.ndarray
-        Positions of atoms in Cartesian coordinates. shape=(natom, 3),
-        dtype='double', order='C'
-    scaled_positions : np.ndarray
-        Positions of atoms in fractional (crystallographic) coordinates.
-        shape=(natom, 3), dtype='double', order='C'
-    symbols : list[str]
-        List of chemical symbols of atoms. Chemical symbol + natural number is
-        allowed, e.g., "Cl1". Mixed-species sites carry a composite label
-        formed by concatenating constituent symbols (e.g., "GeSn").
-    numbers : np.ndarray
-        Atomic numbers per atom in 1..118. shape=(natom,), dtype='int64'.
-        Raises RuntimeError when the cell contains a mixed-species site,
-        since a mixture has no single atomic number; use ``species_ids``
-        in that case.
-    species_ids : np.ndarray
-        Per-atom index into ``species_table``. Atoms that reference the same
-        ``species_table`` entry get the same id; ordinary "Cl" and labeled
-        "Cl1" get different ids, and two atoms differing only in mixture
-        composition or weights also get different ids. Suitable as the
-        ``types`` argument for spglib. shape=(natom,), dtype='int64'
-    species_table : list[_Species]
-        Deduplicated table of species entries indexed by ``species_ids``.
-        Each entry is either an ordinary single-element species (with
-        ``atomic_number`` set) or a weighted mixture
-        (``mixture`` set to a tuple of ``(symbol, weight)`` pairs summing
-        to 1.0). Returned as a shallow copy on each access; entries are
-        frozen and safe to share. See
-        ``build_species_table_from_mixtures``.
-    has_mixtures : bool
-        True when any species in the cell is a weighted mixture of
-        constituents (e.g., a Virtual Crystal Approximation site).
-    masses : np.ndarray, optional
-        Atomic masses. For a mixed-species site this is the
-        weight-averaged sum over its constituents. shape=(natom,),
-        dtype='double'
-    magnetic_moments : np.ndarray, optional
-        shape=(natom,), (natom*3), (natom, 3), dtype='double', order='C'
-    volume : float
-        Cell volume.
-    Z : int
-        Number of formula units in this cell.
+    A cell is described by basis vectors (``cell``), per-atom positions
+    (``positions`` / ``scaled_positions``), and per-atom species
+    information. Species can be expressed either as plain chemical
+    symbols (``symbols``) / atomic numbers (``numbers``) for ordinary
+    cells, or as a deduplicated table plus per-atom indices
+    (``species_table`` / ``species_ids``) which additionally supports
+    mixed-species sites for the Virtual Crystal Approximation. See
+    :ref:`phonopy_Atoms` for the tutorial-style overview and per-attribute
+    documentation below for details.
 
     """
 
@@ -326,18 +290,46 @@ class PhonopyAtoms:
     ) -> None:  # pbc is dummy argument, and never used.
         """Set crystal structure parameters.
 
-        Exactly one of these inputs must be supplied:
+        Exactly one of the species inputs (``symbols``, ``numbers``, or
+        the ``species_table`` / ``species_ids`` pair) must be supplied.
+        Exactly one of the position inputs (``positions`` or
+        ``scaled_positions``) must be supplied.
 
-        - ``symbols``: per-atom chemical symbols ("Si", "Cl1", ...). Shorthand
-          for non-VCA cells. Atomic numbers and masses are derived.
-        - ``numbers``: per-atom atomic numbers in 1..118. Shorthand alternative
-          to ``symbols``.
-        - ``species_table`` + ``species_ids``: the canonical internal
-          representation (a deduplicated species table plus per-atom indices
-          into it). Used by mixed-site construction (see
-          ``build_species_table_from_mixtures``) and by cell-manipulation
-          helpers (supercell / primitive / trimmed cell) that already know
-          the species identity.
+        Parameters
+        ----------
+        symbols : sequence of str, optional
+            Per-atom chemical symbols (``"Si"``, ``"Cl1"``, ...).
+            Shorthand for non-VCA cells. Atomic numbers and default
+            masses are derived from these.
+        numbers : sequence of int, optional
+            Per-atom atomic numbers in 1..118. Shorthand alternative to
+            ``symbols``.
+        species_table : sequence of _Species, optional
+            Canonical deduplicated species table. Used together with
+            ``species_ids``. Required for cells containing mixed-species
+            sites (see
+            :func:`build_species_table_from_mixtures`) and by
+            cell-manipulation helpers (supercell, primitive, trimmed
+            cell) that already know the species identity.
+        species_ids : sequence of int, optional
+            Per-atom index into ``species_table``. Used together with
+            ``species_table``.
+        masses : sequence of float, optional
+            Per-atom atomic masses. If omitted, masses are derived from
+            the species.
+        magnetic_moments : array_like, optional
+            Per-atom magnetic moments. ``shape=(natom,)`` for scalar
+            moments or ``shape=(natom, 3)`` for vector moments.
+        cell : array_like
+            Basis vectors as row vectors. ``shape=(3, 3)``.
+        positions : array_like, optional
+            Per-atom positions in Cartesian coordinates.
+            ``shape=(natom, 3)``. Mutually exclusive with
+            ``scaled_positions``.
+        scaled_positions : array_like, optional
+            Per-atom positions in fractional (crystallographic)
+            coordinates. ``shape=(natom, 3)``. Mutually exclusive with
+            ``positions``.
 
         """
         self._cell: NDArray[np.double]
@@ -385,12 +377,18 @@ class PhonopyAtoms:
         self._check()
 
     def __len__(self) -> int:
-        """Return number of atoms."""
+        """Return the number of atoms in the cell."""
         return len(self._species_ids)
 
     @property
     def cell(self) -> NDArray[np.double]:
-        """Setter and getter of basis vectors. For getter, copy is returned."""
+        """Setter and getter of basis vectors.
+
+        Basis vectors (a, b, c) given as row vectors.
+        ``shape=(3, 3)``, ``dtype='double'``, ``order='C'``.
+        For getter, a copy is returned.
+
+        """
         return self._cell.copy()
 
     @cell.setter
@@ -400,7 +398,11 @@ class PhonopyAtoms:
 
     @property
     def positions(self) -> NDArray[np.double]:
-        """Setter and getter of positions in Cartesian coordinates."""
+        """Setter and getter of positions in Cartesian coordinates.
+
+        ``shape=(natom, 3)``, ``dtype='double'``, ``order='C'``.
+
+        """
         return np.array(
             np.dot(self._scaled_positions, self._cell), dtype="double", order="C"
         )
@@ -412,7 +414,13 @@ class PhonopyAtoms:
 
     @property
     def scaled_positions(self) -> NDArray[np.double]:
-        """Setter and getter of scaled positions. For getter, copy is returned."""
+        """Setter and getter of scaled positions.
+
+        Positions of atoms in fractional (crystallographic) coordinates.
+        ``shape=(natom, 3)``, ``dtype='double'``, ``order='C'``.
+        For getter, a copy is returned.
+
+        """
         return self._scaled_positions.copy()
 
     @scaled_positions.setter
@@ -424,17 +432,27 @@ class PhonopyAtoms:
 
     @property
     def symbols(self) -> list[str]:
-        """Chemical symbols per atom."""
+        """Chemical symbols per atom.
+
+        Chemical symbol with an appended natural number is allowed, e.g.,
+        ``"Cl1"``. Mixed-species sites carry a composite label formed by
+        concatenating constituent symbols (e.g., ``"GeSn"``).
+
+        """
         return [self._species[sid].symbol for sid in self._species_ids]
 
     @property
     def species_ids(self) -> NDArray[np.int64]:
-        """Per-atom unique species index. For getter, copy is returned.
+        """Per-atom index into ``species_table``.
 
-        Atoms with the same (symbol, atomic_number) pair share an id; "Cl"
-        and "Cl1" get different ids. Suitable as the ``types`` argument for
-        spglib when atoms with the same atomic number but different symbol
-        suffix must be distinguished.
+        Atoms that reference the same ``species_table`` entry share the
+        same id; ordinary ``"Cl"`` and labeled ``"Cl1"`` get different
+        ids, and two atoms differing only in mixture composition or
+        weights also get different ids. Suitable as the ``types``
+        argument for spglib when atoms with the same atomic number but
+        different symbol suffix must be distinguished.
+        ``shape=(natom,)``, ``dtype='int64'``.
+        For getter, a copy is returned.
 
         """
         return self._species_ids.copy()
@@ -443,6 +461,10 @@ class PhonopyAtoms:
     def species_table(self) -> list[_Species]:
         """Deduplicated species table indexed by ``species_ids``.
 
+        Each entry is either an ordinary single-element species (with
+        ``atomic_number`` set) or a weighted mixture (``mixture`` set to
+        a tuple of ``(symbol, weight)`` pairs summing to 1.0). See
+        :func:`phonopy.structure.atoms.build_species_table_from_mixtures`.
         For getter, a shallow list copy is returned; ``_Species`` entries
         are frozen dataclasses so the list elements are themselves
         immutable.
@@ -452,11 +474,15 @@ class PhonopyAtoms:
 
     @property
     def numbers(self) -> NDArray[np.int64]:
-        """Atomic numbers per atom in 1..118. For getter, new array is returned.
+        """Atomic numbers per atom in 1..118.
 
-        Raises RuntimeError if the cell contains any mixed-species site,
-        since a mixture has no single atomic number. Use ``species_ids``
-        instead when an opaque per-atom species discriminator is needed.
+        ``shape=(natom,)``, ``dtype='int64'``.
+        For getter, a new array is returned.
+
+        Raises ``RuntimeError`` if the cell contains any mixed-species
+        site, since a mixture has no single atomic number. Use
+        ``species_ids`` instead when an opaque per-atom species
+        discriminator is needed.
 
         """
         nums = []
@@ -472,12 +498,24 @@ class PhonopyAtoms:
 
     @property
     def has_mixtures(self) -> bool:
-        """Return True if the cell contains any mixed-species site."""
+        """Return True if the cell contains any mixed-species site.
+
+        ``True`` when any species in the cell is a weighted mixture of
+        constituents (e.g., a Virtual Crystal Approximation site).
+
+        """
         return any(sp.mixture is not None for sp in self._species)
 
     @property
     def masses(self) -> NDArray[np.double]:
-        """Setter and getter of atomic masses. For getter copy is returned."""
+        """Setter and getter of atomic masses.
+
+        For a mixed-species site, the mass is the weight-averaged sum
+        over its constituents.
+        ``shape=(natom,)``, ``dtype='double'``.
+        For getter, a copy is returned.
+
+        """
         return self._masses.copy()
 
     @masses.setter
@@ -487,13 +525,15 @@ class PhonopyAtoms:
 
     @property
     def magnetic_moments(self) -> NDArray[np.double] | None:
-        """Setter and getter of magnetic moments. For getter, copy is returned.
+        """Setter and getter of magnetic moments.
 
-        shape=(natom,) or (natom, 3), dtype='double', order='C'
+        ``shape=(natom,)`` or ``(natom, 3)``, ``dtype='double'``,
+        ``order='C'``.
 
-        For setter, the formar can be specified by (natom, 1), which will be
-        recognized as (natom,) and the latter can be specified by (natom * 3,),
-        which will be converted to (natom, 3).
+        For the setter, the former can also be specified as
+        ``(natom, 1)`` (recognized as ``(natom,)``) and the latter as
+        ``(natom * 3,)`` (converted to ``(natom, 3)``).
+        For getter, a copy is returned.
 
         """
         if self._magnetic_moments is None:
@@ -521,12 +561,23 @@ class PhonopyAtoms:
 
     @property
     def volume(self) -> float:
-        """Return cell volume."""
+        """Return the cell volume.
+
+        Computed as the determinant of the basis-vector matrix. The unit
+        follows that of the input ``cell`` (e.g., Angstrom^3 for an
+        Angstrom-valued ``cell``).
+
+        """
         return float(np.linalg.det(self._cell))
 
     @property
     def Z(self) -> int:
-        """Return number of formula units in this cell."""
+        """Return the number of formula units in this cell.
+
+        Computed as the GCD of the per-species atom counts. For example,
+        a cell with 4 Fe and 8 O atoms returns 4.
+
+        """
         count: dict[int, int] = {}
         for sid in self._species_ids:
             count[sid] = count.get(sid, 0) + 1
@@ -695,7 +746,15 @@ class PhonopyAtoms:
                 )
 
     def copy(self) -> PhonopyAtoms:
-        """Return copy of itself."""
+        """Return an independent copy of this cell.
+
+        Internal arrays (cell, scaled positions, masses, magnetic
+        moments, species ids) are re-allocated by the constructor so
+        that mutating one cell does not affect the other. The species
+        table entries themselves are frozen dataclasses and are safe to
+        share.
+
+        """
         return PhonopyAtoms(
             cell=self._cell,
             scaled_positions=self._scaled_positions,
@@ -716,20 +775,28 @@ class PhonopyAtoms:
             NDArray[np.double] | None,
         ]
     ):
-        """Return (cell, scaled_position, numbers).
+        """Return ``(cell, scaled_positions, numbers)``.
 
-        If magmoms is set, (cell, scaled_position, numbers, magmoms) is
-        returned.
+        If ``magnetic_moments`` is set,
+        ``(cell, scaled_positions, numbers, magnetic_moments)`` is
+        returned instead.
 
         Parameters
         ----------
-        distinguish_symbol_index : bool
-            If True, the per-atom integer is the species id (atoms with the
-            same symbol but different suffix get different ids); suitable as
-            the ``types`` argument for spglib when symbol-suffix groupings
-            must be preserved. If False (default), the per-atom integer is
-            the atomic number. VCA cells always use species_ids regardless,
-            since a VCA mixture has no single atomic number.
+        distinguish_symbol_index : bool, optional
+            If True, the per-atom integer is the species id (atoms with
+            the same symbol but different suffix get different ids);
+            suitable as the ``types`` argument for spglib when
+            symbol-suffix groupings must be preserved. If False
+            (default), the per-atom integer is the atomic number. VCA
+            cells always use ``species_ids`` regardless, since a VCA
+            mixture has no single atomic number.
+
+        Returns
+        -------
+        tuple
+            ``(cell, scaled_positions, numbers)`` or
+            ``(cell, scaled_positions, numbers, magnetic_moments)``.
 
         """
         if distinguish_symbol_index or self.has_mixtures:
@@ -748,7 +815,7 @@ class PhonopyAtoms:
             )
 
     def get_yaml_lines(self) -> list[str]:
-        """Return list of text lines of crystal structure in yaml."""
+        """Return the crystal structure as a list of yaml text lines."""
         _atom_data = get_atomic_data().atom_data
         lines = ["lattice:"]
         for pos, a in zip(self._cell, ("a", "b", "c"), strict=True):
@@ -794,7 +861,7 @@ class PhonopyAtoms:
         return lines
 
     def __str__(self) -> str:
-        """Return text lines of crystal structure in yaml."""
+        """Return the crystal structure as yaml text."""
         return "\n".join(self.get_yaml_lines())
 
     def _get_element_counts(self) -> dict[str, int]:

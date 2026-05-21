@@ -70,7 +70,13 @@ class _SymmetryOperations(TypedDict):
 
 @dataclasses.dataclass(eq=False, frozen=True)
 class NosymDataset:
-    """Dataset for no symmetry case."""
+    """Symmetry dataset substitute used when symmetry analysis is disabled.
+
+    Mimics the parts of an ``spglib`` dataset that phonopy consumes,
+    populated with only the identity operation (and pure lattice
+    translations of the supercell when applicable).
+
+    """
 
     rotations: NDArray[np.int64]
     translations: NDArray[np.double]
@@ -79,7 +85,16 @@ class NosymDataset:
 
 
 class Symmetry:
-    """Class to find and store crystal symmetry information."""
+    """Find and store crystal symmetry information of a cell.
+
+    A ``Symmetry`` instance is built from a :class:`PhonopyAtoms` cell.
+    It exposes the space-group and point-group operations, the
+    international symbol, Wyckoff letters, atom-to-representative
+    mapping, and related quantities. Backed by ``spglib`` for ordinary
+    and magnetic cells, and falls back to a no-symmetry dataset when
+    ``is_symmetry=False``.
+
+    """
 
     def __init__(
         self,
@@ -91,19 +106,22 @@ class Symmetry:
     ):
         """Init method.
 
+        Parameters
+        ----------
         cell : PhonopyAtoms
             Crystal structure whose symmetry is analyzed.
         symprec : float, optional
             Tolerance used to find crystal symmetry. Default is 1e-5.
         is_symmetry : bool, optional
-            With or without symmetry analysis. When `is_symmetry=False` and
-            `p2s_map` is given, pure translations inside `cell` is registered
-            as symmetry operations. Default is True.
+            Whether to perform symmetry analysis. When
+            ``is_symmetry=False`` and ``s2p_map`` is given, pure
+            translations inside ``cell`` are registered as symmetry
+            operations. Default is True.
         s2p_map : ndarray, optional
-            This is equivalent to `Primitive.s2p_map`.
+            Equivalent to :attr:`phonopy.structure.cells.Primitive.s2p_map`.
         lang : {"C", "Rust"}, optional
-            Backend used by helpers that have a Rust port (currently the
-            atomic-permutation matcher).  Default is "C".
+            Backend used by helpers that have a Rust port (currently
+            the atomic-permutation matcher). Default is ``"Rust"``.
 
         """
         self._cell = cell
@@ -149,18 +167,25 @@ class Symmetry:
         Returns
         -------
         dict
-            'rotations': ndarray
-                Matrix parts.
-                shape(num_operations, 3, 3), dtype='int64',
-             'translations': ndarray
-                Vector parts.
-                shape(num_operations, 3), dtype='double',
+            ``'rotations'`` : ndarray
+                Matrix parts of the operations.
+                ``shape=(num_operations, 3, 3)``, ``dtype='int64'``.
+            ``'translations'`` : ndarray
+                Vector parts of the operations.
+                ``shape=(num_operations, 3)``, ``dtype='double'``.
 
         """
         return self._symmetry_operations
 
     def get_symmetry_operation(self, operation_number: int) -> _SymmetryOperations:
-        """Return one symmetry operation."""
+        """Return one symmetry operation as a ``{rotations, translations}`` dict.
+
+        Parameters
+        ----------
+        operation_number : int
+            Zero-based index of the operation in :attr:`symmetry_operations`.
+
+        """
         operation = self._symmetry_operations
         return {
             "rotations": operation["rotations"][operation_number],
@@ -169,64 +194,95 @@ class Symmetry:
 
     @property
     def pointgroup_operations(self) -> NDArray[np.int64]:
-        """Return crystallographic point group operations."""
+        """Return the crystallographic point-group operations.
+
+        ``shape=(n_ops, 3, 3)``, ``dtype='int64'``.
+
+        """
         return self._pointgroup_operations
 
     @property
     def pointgroup_symbol(self) -> str:
-        """Return symbol of crystallographic point group."""
+        """Return the Hermann-Mauguin symbol of the crystallographic point group."""
         return self._pointgroup_symbol
 
     def get_international_table(self) -> str | None:
-        """Return international symbol of space group."""
+        """Return the international symbol of the space group.
+
+        Returns a string like ``"Fm-3m (225)"`` (Hermann-Mauguin symbol
+        followed by the space-group number), or ``None`` when symmetry
+        analysis has been disabled.
+
+        """
         return self._international_table
 
     def get_Wyckoff_letters(self) -> list[str] | None:
-        """Return Wycloff letters."""
+        """Return Wyckoff letters of the atoms, or ``None`` if not available."""
         return self._wyckoff_letters
 
     @property
     def dataset(self) -> SpglibDataset | SpglibMagneticDataset | NosymDataset:
-        """Return spglib dataset.
+        """Return the raw spglib symmetry dataset.
 
-        This is raw data of symmetry.
+        ``SpglibDataset`` for ordinary cells,
+        ``SpglibMagneticDataset`` for cells with magnetic moments, or
+        ``NosymDataset`` when ``is_symmetry=False``.
 
         """
         return self._dataset
 
     def get_independent_atoms(self) -> NDArray[np.int64]:
-        """Return symmetrically unique atoms."""
+        """Return indices of symmetrically inequivalent atoms.
+
+        ``shape=(n_independent,)``, ``dtype='int64'``.
+
+        """
         return self._independent_atoms
 
     def get_map_atoms(self) -> NDArray[np.int64]:
-        """Return equivalent_atoms of spglib dataset.
+        """Return ``equivalent_atoms`` of the spglib dataset.
 
-        Returns
-        -------
-        spglib_dataset.equivalent_atoms
-        e.g.,
-            [0, 0, 0, 0, 4, 4, 4, 4]
+        For each atom, returns the index of the symmetrically
+        equivalent representative. For example, an 8-atom cell with two
+        symmetrically distinct sites might give
+        ``[0, 0, 0, 0, 4, 4, 4, 4]``.
+        ``shape=(natom,)``, ``dtype='int64'``.
 
         """
         return self._map_atoms
 
     def get_map_operations(self) -> NDArray[np.int64]:
-        """Return symmetry operation indices that map to respective equivalent atoms.
+        """Return per-atom indices of operations mapping to the representative atom.
 
         Returns
         -------
-        operations : ndarray
-            Indices of symmetry operations that sent atoms to respective
-            equivalent atoms. For each atom, only one of those symmetry
-            operations is stored. When all symmetry mapping information
-            is needed, ``atomic_permulations`` is used.
-            shape=(atoms,), dtype='int64'
+        ndarray
+            For each atom, the index (into :attr:`symmetry_operations`)
+            of one symmetry operation that sends it to its equivalent
+            representative atom. Only one such operation per atom is
+            stored. Use :attr:`atomic_permutations` when all symmetry
+            mapping information is needed.
+            ``shape=(natom,)``, ``dtype='int64'``.
 
         """
         return self._map_operations
 
     def get_site_symmetry(self, atom_number: int) -> NDArray[np.int64]:
-        """Return matrix parts of site symmetry operations."""
+        """Return matrix parts of site-symmetry operations of one atom.
+
+        Parameters
+        ----------
+        atom_number : int
+            Zero-based atom index.
+
+        Returns
+        -------
+        ndarray
+            Rotation matrices that fix the given site (modulo lattice
+            translation). ``shape=(n_site_ops, 3, 3)``,
+            ``dtype='int64'``.
+
+        """
         positions = self._cell.scaled_positions
         lattice = self._cell.cell
         rotations = self._symmetry_operations["rotations"]
@@ -238,28 +294,30 @@ class Symmetry:
 
     @property
     def tolerance(self) -> float:
-        """Return symmetry tolerance."""
+        """Return the symmetry-search tolerance (``symprec``) used at construction."""
         return self._symprec
 
     @property
     def reciprocal_operations(self) -> NDArray[np.int64]:
-        """Return reciprocal space point group operations.
+        """Return reciprocal-space point-group operations.
 
-        Definition of operation:
-        q' = Rq
-
-        This is transpose of that shown in ITA (q' = qR).
+        Operations act on q-vectors as ``q' = R q``. This is the
+        transpose of the convention shown in ITA (``q' = q R``).
+        ``shape=(n_ops, 3, 3)``, ``dtype='int64'``.
 
         """
         return self._reciprocal_operations
 
     @property
     def atomic_permutations(self) -> NDArray[np.int64]:
-        """Return atomic index permutations by space group operations.
+        """Return per-operation atomic-index permutations.
 
-        shape=(operations, positions)
-
-        See compute_all_sg_permutations.
+        For each space-group operation, the new index of every atom
+        under that operation, computed in real space (modulo lattice
+        translation). ``shape=(n_operations, n_atoms)``,
+        ``dtype='int64'``. See
+        :func:`phonopy.utils.compute_all_sg_permutations` for the
+        underlying routine.
 
         """
         return self._atomic_permutations
@@ -390,7 +448,29 @@ class Symmetry:
 def get_pointgroup_operations(
     rotations: NDArray[np.int64], is_time_reversal: bool = True
 ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
-    """Return direct and reciprocal point group operations."""
+    """Return direct-space and reciprocal-space point-group operations.
+
+    Parameters
+    ----------
+    rotations : ndarray
+        Rotation matrices from space-group operations.
+        ``shape=(n_sg, 3, 3)``, ``dtype='int64'``.
+    is_time_reversal : bool, optional
+        If True and inversion is not already present, the inversion of
+        each rotation is added to the reciprocal operations to account
+        for time-reversal symmetry. Default is True.
+
+    Returns
+    -------
+    ptg_ops : ndarray
+        Direct-space point-group operations (deduplicated rotations).
+        ``shape=(n_ptg, 3, 3)``, ``dtype='int64'``.
+    reciprocal_ops : ndarray
+        Reciprocal-space point-group operations (transposes of
+        ``ptg_ops``, optionally with their inversions appended).
+        ``dtype='int64'``, ``order='C'``.
+
+    """
     ptg_ops = collect_unique_rotations(rotations)
     reciprocal_rotations = [rot.T for rot in ptg_ops]
 
@@ -407,7 +487,21 @@ def get_pointgroup_operations(
 
 
 def collect_unique_rotations(rotations: NDArray[np.int64]) -> NDArray[np.int64]:
-    """Collect unique rotations in input rotation matrices."""
+    """Deduplicate a list of rotation matrices.
+
+    Parameters
+    ----------
+    rotations : ndarray
+        Rotation matrices, possibly with duplicates.
+        ``shape=(n, 3, 3)``, ``dtype='int64'``.
+
+    Returns
+    -------
+    ndarray
+        Unique rotation matrices in input order.
+        ``shape=(n_unique, 3, 3)``, ``dtype='int64'``, ``order='C'``.
+
+    """
     ptg_ops = []
     for rot in rotations:
         is_same = False
@@ -422,21 +516,23 @@ def collect_unique_rotations(rotations: NDArray[np.int64]) -> NDArray[np.int64]:
 
 
 def get_lattice_vector_equivalence(point_symmetry: NDArray[np.int64]) -> list[bool]:
-    """Return equivalences of basis vector length pairs, (b==c, c==a, a==b).
+    """Return equivalences of basis-vector length pairs, ``(b==c, c==a, a==b)``.
 
-    Change of basis is defined by
-
-    (a', b', c') = (a, b, c) R.
-
-    Then, check rotation matrices if
-        a -> b, b -> c, c -> a, a -> -b, b -> -c, and c -> -a,
-    can happen.
+    Change of basis is defined by ``(a', b', c') = (a, b, c) R``. The
+    rotation matrices are scanned to see whether any of
+    ``a -> b``, ``b -> c``, ``c -> a``, ``a -> -b``, ``b -> -c``, or
+    ``c -> -a`` occurs.
 
     Parameters
     ----------
     point_symmetry : array_like
-        Rotation matrices.
-        shape=(n_rot, 3, 3), dtype=int.
+        Rotation matrices. ``shape=(n_rot, 3, 3)``, ``dtype=int``.
+
+    Returns
+    -------
+    list of bool
+        ``[b == c, c == a, a == b]``: True when the corresponding basis
+        vectors are symmetry-equivalent in length.
 
     """
     # primitive_vectors: column vectors
@@ -470,38 +566,60 @@ def elaborate_borns_and_epsilon(
     symprec: float = 1e-5,
     lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.int64]]:
-    """Symmetrize Born effective charges and dielectric constants.
+    """Symmetrize Born effective charges and the dielectric tensor.
 
-    Born effective charges of symmetrically independent atoms
-    for primitive cell are extracted.
-
+    Born effective charges of the symmetrically independent atoms in
+    the primitive cell are extracted.
 
     Parameters
     ----------
     ucell : PhonopyAtoms
-        Unit cell structure
+        Unit cell.
     borns : array_like
-        Born effective charges of ucell
+        Born effective charges of ``ucell``.
+        ``shape=(n_atoms, 3, 3)``, ``dtype='double'``.
     epsilon : array_like
-        Dielectric constant tensor
+        Dielectric constant tensor.
+        ``shape=(3, 3)``, ``dtype='double'``.
+    primitive_matrix : array_like, optional
+        Primitive matrix used to construct the primitive cell. Default
+        is None.
+    supercell_matrix : array_like, optional
+        Supercell matrix used together with ``primitive_matrix`` to
+        build the primitive cell. Default is None (1x1x1).
+    is_symmetry : bool, optional
+        Whether to use symmetry when extracting independent atoms.
+        Default is True.
+    symmetrize_tensors : bool, optional
+        If True, also symmetrize the input ``borns`` and ``epsilon`` via
+        :func:`symmetrize_borns_and_epsilon` before extracting the
+        independent set. Default is False.
+    symprec : float, optional
+        Symmetry tolerance. Default is 1e-5.
+    lang : {"C", "Rust"}, optional
+        Backend implementation. Default is ``"Rust"``.
 
     Returns
     -------
-    ndarray
-        Born effective charges of symmetrically independent atoms in primitive cell
-        Dielectric constant
-    ndarray
-        Atomic index mapping table from supercell to primitive cell
-        of independent atoms
+    borns_indep : ndarray
+        Born effective charges of the symmetrically independent atoms
+        in the primitive cell.
+        ``shape=(n_indep, 3, 3)``, ``dtype='double'``, ``order='C'``.
+    epsilon : ndarray
+        Dielectric constant tensor (symmetrized if
+        ``symmetrize_tensors=True``, otherwise as given).
+    indeps_in_supercell : ndarray
+        Atom indices of the independent atoms in the supercell.
 
     Raises
     ------
     AssertionError
-        Inconsistency of number of atoms or Born effective charges.
+        If the number of atoms in ``ucell`` and ``borns`` disagree.
 
-    Warning
-    -------
-    Broken symmetry of Born effective charges
+    Warns
+    -----
+    Emits a ``UserWarning`` if the input Born effective charges deviate
+    significantly from their symmetrized values.
 
     """
     lang = resolve_lang(lang)
@@ -546,44 +664,48 @@ def symmetrize_borns_and_epsilon(
     is_symmetry: bool = True,
     lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
-    """Symmetrize Born effective charges and dielectric tensor.
+    """Symmetrize Born effective charges and the dielectric tensor.
 
     Parameters
     ----------
-    borns: array_like
+    borns : array_like
         Born effective charges.
-        shape=(unitcell_atoms, 3, 3)
-        dtype='double'
-    epsilon: array_like
-        Dielectric constant
-        shape=(3, 3)
-        dtype='double'
-    ucell: PhonopyAtoms
-        Unit cell
-    primitive_matrix: array_like, optional
-        Primitive matrix. This is used to select Born effective charges in
-        primitive cell. If None (default), Born effective charges in unit cell
-        are returned.
-        shape=(3, 3)
-        dtype='double'
-    primitive : PhonopyAtoms
-        This is an alternative of giving primitive_matrix (Mp). Mp is given as
-            Mp = (a_u, b_u, c_u)^-1 * (a_p, b_p, c_p).
-        In addition, the order of atoms is aligned to those of atoms in this
-        primitive cell for Born effective charges. No rigid rotation of
-        crystal structure is assumed.
-    supercell_matrix: array_like, optional
-        Supercell matrix. This is used to select Born effective charges in
-        **primitive cell**. Supercell matrix is needed because primitive
-        cell is created first creating supercell from unit cell, then
-        the primitive cell is created from the supercell. If None (default),
-        1x1x1 supercell is created.
-        shape=(3, 3)
-        dtype='int'
-    symprec: float, optional
-        Symmetry tolerance. Default is 1e-5
-    is_symmetry: bool, optional
-        By setting False, symmetrization can be switched off. Default is True.
+        ``shape=(unitcell_atoms, 3, 3)``, ``dtype='double'``.
+    epsilon : array_like
+        Dielectric constant tensor.
+        ``shape=(3, 3)``, ``dtype='double'``.
+    ucell : PhonopyAtoms
+        Unit cell.
+    primitive_matrix : array_like, optional
+        Primitive matrix used to select Born effective charges in the
+        primitive cell. ``shape=(3, 3)``, ``dtype='double'``. If None
+        (default), Born effective charges in the unit cell are returned.
+    primitive : PhonopyAtoms, optional
+        Alternative to ``primitive_matrix``. Mp is given as
+        ``Mp = (a_u, b_u, c_u)^-1 (a_p, b_p, c_p)``. The order of atoms
+        in the returned Born effective charges is aligned with the
+        atoms in this primitive cell. No rigid rotation of the crystal
+        structure is assumed.
+    supercell_matrix : array_like, optional
+        Supercell matrix used to select Born effective charges in the
+        primitive cell. The supercell matrix is needed because the
+        primitive cell is constructed by first building the supercell
+        from the unit cell and then extracting the primitive cell from
+        the supercell. ``shape=(3, 3)``, ``dtype='int'``. If None
+        (default), a 1x1x1 supercell is assumed.
+    symprec : float, optional
+        Symmetry tolerance. Default is 1e-5.
+    is_symmetry : bool, optional
+        Set to False to disable symmetrization. Default is True.
+    lang : {"C", "Rust"}, optional
+        Backend implementation. Default is ``"Rust"``.
+
+    Returns
+    -------
+    borns : ndarray
+        Symmetrized Born effective charges.
+    epsilon : ndarray
+        Symmetrized dielectric tensor.
 
     """
     lang = resolve_lang(lang)
