@@ -195,6 +195,9 @@ option). All the data are used for calculating force constants in the fitting
 ...
 ```
 
+<!-- VCA / mixed-species documentation is hidden until the feature is
+officially published. The content is preserved here for future reuse.
+
 (file_forces_site_mixture)=
 
 ### FORCE_SETS for mixed-species (site-mixture) cells
@@ -282,6 +285,8 @@ calculator:
 The raw expanded array is kept in the phonopy dataset so that the weights
 or the reduction convention can be edited and the reduction re-run
 without revisiting the calculator output.
+
+-->
 
 (file_force_constants)=
 
