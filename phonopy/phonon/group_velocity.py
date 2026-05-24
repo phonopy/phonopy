@@ -42,12 +42,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixGL
-from phonopy.phonon.degeneracy import (
-    DEFAULT_Q_LENGTH,
-    degenerate_sets,
-    delta_dynamical_matrix,
-)
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
+from phonopy.phonon.degeneracy import degenerate_sets, delta_dynamical_matrix
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -89,10 +85,12 @@ class GroupVelocity:
 
         dynamical_matrix : DynamicalMatrix
             Dynamical matrix class instance.
-        q_length : float
-            This is used such as D(q + q_length) - D(q - q_length) for
-            calculating finite difference of dynamical matrix.
-            Default is None, which gives 1e-5.
+        q_length : float, optional
+            When set, the dynamical-matrix derivative is approximated by a
+            central finite difference ``D(q + q_length) - D(q - q_length)``.
+            Default is None, which selects the analytical derivative via
+            ``DerivativeOfDynamicalMatrix`` (including Gonze-Lee NAC, since
+            the dipole-dipole derivative kernel is now available).
         symmetry : Symmetry
             This is used to symmetrize group velocity at each q-points.
             Default is None, which means no symmetrization.
@@ -109,9 +107,6 @@ class GroupVelocity:
             self._reciprocal_lattice_inv
         )  # type: ignore
         self._q_length = q_length
-        if isinstance(self._dynmat, DynamicalMatrixGL):
-            if self._q_length is None:
-                self._q_length = DEFAULT_Q_LENGTH
 
         self._ddm: DerivativeOfDynamicalMatrix | None
         if self._q_length is None:
