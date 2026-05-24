@@ -12,12 +12,36 @@ jobs:
         shell: bash -l {0}
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v5
+      # Use conda-incubator/setup-miniconda for precise control of conda infrastructure
+      - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.12" # Use 3.12 to avoid _tkinter.TclError: Can't find a usable init.tcl in the following directories at python 3.13
+          activate-environment: test
+          auto-activate-base: false
+          miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install dependent packages
+        run: |
+          conda activate test
+          conda install --yes python=${{ matrix.python-version }}
+          conda install --yes matplotlib-base pyyaml h5py numpy scipy pytest spglib cmake c-compiler cxx-compiler maturin
+      - name: Install symfc develop branch
+        run: |
+          conda activate test
+          git clone https://github.com/symfc/symfc.git
+          cd symfc
+          pip install -e . -vvv
+      - name: Build and install phonors
+        run: |
+          conda activate test
+          git clone --depth 1 https://github.com/phonopy/phonors.git
+          cd phonors
+          maturin develop --release
       - name: Setup phonopy
         run: |
+          conda activate test
           pip install -e . -v
       - name: Test with pytest
         run: |
