@@ -60,7 +60,6 @@ from phonopy.harmonic.displacement import (
 )
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
-    DynamicalMatrixGL,
     get_dynamical_matrix,
 )
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
@@ -3453,23 +3452,6 @@ class Phonopy:
             symmetry=self._primitive_symmetry,
             frequency_factor_to_THz=self._unit_conversion_factor,
         )
-
-        if (
-            isinstance(self._dynamical_matrix, DynamicalMatrixGL)
-            and self._gv_delta_q is None
-        ):
-            if self._log_level:
-                msg = "Group velocity calculation:\n"
-                text = (
-                    "Analytical derivative of dynamical matrix is not "
-                    "implemented for NAC by Gonze et al. Instead "
-                    "numerical derivative of it is used with dq=%.1e "
-                    "for group velocity calculation." % self._group_velocity.q_length
-                )
-                msg += textwrap.fill(
-                    text, initial_indent="  ", subsequent_indent="  ", width=70
-                )
-                print(msg)
 
     def _search_symmetry(self) -> None:
         self._symmetry = Symmetry(
