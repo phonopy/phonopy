@@ -189,6 +189,15 @@ class DerivativeOfDynamicalMatrix:
         self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None
     ) -> None:
         """Run the derivative through the C kernel."""
+        if isinstance(self._dynmat, DynamicalMatrixGL):
+            # The C kernel only knows the Wang-style NAC formula; applying it
+            # to a Gonze-Lee dynmat silently returns physically wrong values.
+            # Use the Rust path or force_python=True instead.
+            raise NotImplementedError(
+                "Gonze-Lee NAC derivative is not implemented in the C path. "
+                "Use lang='Rust' or call run(..., force_python=True)."
+            )
+
         import phonopy._phonopy as phonoc  # type: ignore[import-untyped]
 
         log_dispatch("C", "DerivativeOfDynamicalMatrix._run_c")
@@ -270,17 +279,22 @@ class DerivativeOfDynamicalMatrix:
     def _run_rust(
         self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None
     ) -> None:
-        """Run the derivative through the Rust kernel (phonors)."""
+        """Run the derivative through the Rust kernel (phonors).
+
+        For Gonze-Lee NAC, the real-space loop is called with the
+        short-range FC and ``is_nac=False`` (the existing kernel would
+        otherwise apply the Wang-style formula), and the analytic
+        dipole-dipole derivative is added via the dedicated
+        ``phonors.derivative_recip_dipole_dipole`` kernel.
+
+        """
         import phonors  # type: ignore[import-untyped]
 
         log_dispatch("Rust", "DerivativeOfDynamicalMatrix._run_rust")
 
+        is_gonze = isinstance(self._dynmat, DynamicalMatrixGL)
         num_patom = len(self._p2s_map)
-        fc = self._force_constants
-        ddm = np.zeros(
-            (3, num_patom * 3, num_patom * 3),
-            dtype=("c%d" % (np.dtype("double").itemsize * 2)),
-        )
+        ddm = np.zeros((3, num_patom * 3, num_patom * 3), dtype=np.cdouble)
         reclat = np.array(np.linalg.inv(self._pcell.cell), dtype="double", order="C")
         lattice = np.array(self._pcell.cell.T, dtype="double", order="C")
 
@@ -306,6 +320,21 @@ class DerivativeOfDynamicalMatrix:
                 q_dir = np.array(q_direction, dtype="double")
                 is_nac_q_zero = False
 
+        if is_gonze:
+            # Use short-range FC for the real-space SR derivative, and add
+            # the analytic Ewald derivative separately below.  The existing
+            # kernel must NOT apply the Wang formula here, so suppress NAC.
+            dm_gl = self._dynmat
+            assert isinstance(dm_gl, DynamicalMatrixGL)
+            if dm_gl.short_range_force_constants is None:
+                dm_gl.make_Gonze_nac_dataset()
+            assert dm_gl.short_range_force_constants is not None
+            fc = dm_gl.short_range_force_constants
+            kernel_is_nac = False
+        else:
+            fc = self._force_constants
+            kernel_is_nac = is_nac
+
         # Full fc has shape (n_satom, n_satom, 3, 3); compact fc has
         # (n_patom, n_satom, 3, 3).  ``s2_for_inner`` matches the inner
         # supercell-to-primitive comparison in the kernel; ``fc_row``
@@ -328,13 +357,65 @@ class DerivativeOfDynamicalMatrix:
             self._pcell.masses,
             s2_for_inner,
             fc_row,
-            born=born if is_nac else None,
-            dielectric=dielectric if is_nac else None,
-            q_direction=q_dir if (is_nac and not is_nac_q_zero) else None,
+            born=born if kernel_is_nac else None,
+            dielectric=dielectric if kernel_is_nac else None,
+            q_direction=q_dir if (kernel_is_nac and not is_nac_q_zero) else None,
             nac_factor=nac_factor,
         )
 
+        if is_gonze:
+            ddm += self._gonze_lee_d_recip_dipole_dipole_rust(q, q_direction)
+
         self._ddm = ddm
+
+    def _gonze_lee_d_recip_dipole_dipole_rust(
+        self,
+        q_red: NDArray[np.double],
+        q_direction: NDArray[np.double] | None,
+    ) -> NDArray[np.cdouble]:
+        """Rust-backed analytic dD_DD/dq for Gonze-Lee NAC.
+
+        Mirrors the Python helper but dispatches to
+        ``phonors.derivative_recip_dipole_dipole``.
+
+        """
+        import phonors  # type: ignore[import-untyped]
+
+        assert isinstance(self._dynmat, DynamicalMatrixGL)
+        dm = self._dynmat
+
+        pos = np.array(self._pcell.positions, dtype="double", order="C")
+        num_atom = len(pos)
+        rec_lat = np.linalg.inv(self._pcell.cell)
+        q_cart = np.array(np.dot(q_red, rec_lat.T), dtype="double")
+
+        is_q_gamma = np.linalg.norm(q_cart) < self.Q_DIRECTION_TOLERANCE
+        if is_q_gamma and q_direction is not None:
+            q_dir_cart = np.array(np.dot(q_direction, rec_lat.T), dtype="double")
+            q_dir_cart = q_dir_cart / np.linalg.norm(q_dir_cart)
+        else:
+            q_dir_cart = None
+
+        dd = np.zeros((3, num_atom, 3, num_atom, 3), dtype=np.cdouble, order="C")
+        phonors.derivative_recip_dipole_dipole(
+            dd,
+            dm._G_list,
+            q_cart,
+            np.array(dm.born, dtype="double", order="C"),
+            np.array(dm.dielectric_constant, dtype="double", order="C"),
+            pos,
+            dm.nac_factor,
+            dm._Lambda,
+            q_direction_cart=q_dir_cart,
+        )
+
+        # Mass weighting: the kernel returns without 1/sqrt(m_k m_k'),
+        # matching the value-side `get_recip_dipole_dipole` convention.
+        inv_sqrt_m = 1.0 / np.sqrt(self._pcell.masses)
+        mass_pair = np.outer(inv_sqrt_m, inv_sqrt_m)
+        dd *= mass_pair[None, :, None, :, None]
+
+        return dd.reshape(3, num_atom * 3, num_atom * 3)
 
     def _run_py(
         self, q: NDArray[np.double], q_direction: NDArray[np.double] | None = None

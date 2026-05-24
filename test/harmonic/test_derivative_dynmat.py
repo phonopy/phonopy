@@ -6,7 +6,8 @@ from phonopy import Phonopy
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixGL
 
-ddm_ph_nacl = [
+# Wang NAC reference values (the C kernel computes Wang correctly).
+ddm_ph_nacl_wang = [
     [
         -0.2568036,
         0.6947168,
@@ -66,6 +67,72 @@ ddm_ph_nacl = [
         0.4540728,
         -0.2136538,
         0.4540728,
+    ],
+]
+
+# Gonze-Lee NAC reference values (Rust kernel +
+# _gonze_lee_d_recip_dipole_dipole, validated against central FD in
+# test_ddm_gonze_lee_matches_fd).
+ddm_ph_nacl_gonze = [
+    [
+        -0.2568989,
+        0.6946391,
+        0.0338302,
+        0.0342899,
+        0.0338302,
+        0.0342899,
+        0.6946391,
+        0.0560808,
+        0.0342899,
+        0.1430933,
+        0.0342899,
+        0.1430933,
+        2.3669647,
+        -1.7615471,
+        2.3669647,
+        -1.7615471,
+        -1.7615471,
+        1.5752198,
+        -1.7615471,
+        1.5752198,
+        2.3669647,
+        -1.7615471,
+        2.3669647,
+        -1.7615471,
+        -1.7615471,
+        1.5752198,
+        -1.7615471,
+        1.5752198,
+    ],
+    [
+        -0.4580575,
+        1.1734573,
+        0.0782656,
+        0.0543037,
+        0.0782656,
+        0.0543037,
+        1.1734573,
+        0.0725238,
+        0.0543037,
+        0.2215042,
+        0.0543037,
+        0.2215042,
+        0.8931162,
+        -0.4662398,
+        0.8931162,
+        -0.4662398,
+        -0.4662398,
+        0.6477843,
+        -0.4662398,
+        0.6477843,
+        0.8931162,
+        -0.4662398,
+        0.8931162,
+        -0.4662398,
+        -0.4662398,
+        0.6477843,
+        -0.4662398,
+        0.6477843,
     ],
 ]
 
@@ -134,19 +201,19 @@ ddm_ph_nacl_nonac = [
 
 
 def test_ddm_nac(ph_nacl: Phonopy):
-    """Test by NaCl."""
-    _assert(ph_nacl, ddm_ph_nacl)
+    """Test by NaCl with Gonze-Lee NAC."""
+    _assert(ph_nacl, ddm_ph_nacl_gonze)
 
 
 def test_ddm_nac_wang(ph_nacl_wang: Phonopy):
     """Test by NaCl with Wang's NAC (C and Python paths)."""
-    _assert(ph_nacl_wang, ddm_ph_nacl, show=True)
-    _assert(ph_nacl_wang, ddm_ph_nacl, show=True, force_python=True)
+    _assert(ph_nacl_wang, ddm_ph_nacl_wang, show=True)
+    _assert(ph_nacl_wang, ddm_ph_nacl_wang, show=True, force_python=True)
 
 
 def test_ddm_nac_compact(ph_nacl_compact_fcsym: Phonopy):
-    """Test by NaCl with compact fc."""
-    _assert(ph_nacl_compact_fcsym, ddm_ph_nacl)
+    """Test by NaCl with Gonze-Lee NAC and compact fc."""
+    _assert(ph_nacl_compact_fcsym, ddm_ph_nacl_gonze)
 
 
 def test_ddm_nonac(ph_nacl_nonac: Phonopy):
