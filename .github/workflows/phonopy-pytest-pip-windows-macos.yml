@@ -36,7 +36,7 @@ jobs:
       - name: Build and install phonors
         run: |
           conda activate test
-          git clone --depth 1 https://github.com/phonopy/phonors.git
+          git clone https://github.com/phonopy/phonors.git
           cd phonors
           maturin develop --release
       - name: Setup phonopy
