@@ -118,7 +118,6 @@ from phonopy.structure.cells import (
 from phonopy.structure.dataset import forces_in_dataset
 from phonopy.structure.mixture import reduce_mixture_forces
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.version import __version__
 
 
 class Phonopy:
@@ -308,6 +307,8 @@ class Phonopy:
     @property
     def version(self) -> str:
         """Return phonopy release version number."""
+        from phonopy import __version__
+
         return __version__
 
     @property

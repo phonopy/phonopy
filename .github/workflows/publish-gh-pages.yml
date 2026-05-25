@@ -53,7 +53,7 @@ jobs:
           conda activate test
           sphinx-build doc docs_build
 
-      - name: Deploy docs at develop branch
+      - name: Deploy docs to gh-pages
         if: ${{ github.ref == 'refs/heads/publish-gh-pages' }}
         uses: peaceiris/actions-gh-pages@v3
         with:

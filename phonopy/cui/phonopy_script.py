@@ -142,20 +142,10 @@ def _print_phonopy_end():
 
 def print_version(version: str, package_name: str = "phonopy", rjust_length: int = 44):
     """Show phonopy version number."""
-    try:
-        version_text = version.rjust(rjust_length)
-        import importlib.metadata
-
-        if importlib.metadata.version(package_name):
-            ver = importlib.metadata.version(package_name).split(".")
-            if len(ver) > 3:
-                rev = ver[3]
-                version_text = ("%s-%s" % (version, rev)).rjust(44)
-    except (ImportError, importlib.metadata.PackageNotFoundError):
-        pass
-    finally:
-        print(version_text)
-        print("")
+    # Show only the public version, dropping any local segment that
+    # setuptools_scm appends to dev builds (e.g. "+g1234abcd.d20260525").
+    print(version.split("+")[0].rjust(rjust_length))
+    print("")
 
 
 def print_end():
