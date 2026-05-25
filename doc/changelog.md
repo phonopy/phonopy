@@ -2,7 +2,7 @@
 
 # Change Log
 
-## Unreleased
+## May-25-2026: Version 4.1.0
 
 - Analytical derivative of the dynamical matrix is now available for
   Gonze-Lee non-analytical term correction. The dipole-dipole derivative

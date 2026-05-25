@@ -16,7 +16,7 @@ dependencies = [
     "h5py>=3.0",
     "spglib>=2.5",
     "symfc>=1.7",
-    "phonors"
+    "phonors>=0.2.0"
 ]
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
