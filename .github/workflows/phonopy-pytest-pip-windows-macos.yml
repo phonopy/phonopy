@@ -2,7 +2,7 @@ name: phonopy test on windows and macos
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [main]
 
 jobs:
   build-windows:
