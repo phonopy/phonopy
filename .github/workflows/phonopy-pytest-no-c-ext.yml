@@ -7,7 +7,7 @@ name: phonopy test with PHONOPY_NO_C_EXT (Rust-only backend)
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [main]
 
 jobs:
   build-linux-no-c:
