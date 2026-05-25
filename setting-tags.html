@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.4.0.1</title>
+    <title>Setting tags &#8212; Phonopy v.4.1.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=1a34d25d"></script>
+    <script src="_static/documentation_options.js?v=5d1265ac"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="Output files" href="output-files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.0" />
+  <meta name="docsearch:version" content="4.1" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.0.1</p>
+    <p class="title logo__title">Phonopy v.4.1.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -1360,10 +1360,15 @@ calculators are listed at <a class="reference internal" href="interfaces.html#in
 </section>
 <section id="gv-delta-q">
 <span id="gv-delta-q-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code><a class="headerlink" href="#gv-delta-q" title="Link to this heading">#</a></h3>
-<p>The reciprocal distance used for finite difference method is specified. The
-default value is <code class="docutils literal notranslate"><span class="pre">1e-5</span></code> for the method of non-analytical term correction by
-Gonze <em>et al.</em>. In other case, unless this tag is specified, analytical
-derivative is used instead of the finite difference method.</p>
+<p>The reciprocal distance used for the finite difference method is specified.
+Unless this tag is set, the analytical derivative of the dynamical matrix
+is used (including the Gonze-Lee non-analytical term correction, for which
+the analytical dipole-dipole derivative is now available).  Set this tag to
+fall back to the finite-difference path with the given step.</p>
+<p>In earlier versions (v4.0.1 and earlier) the finite-difference path was
+used implicitly with <code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span> <span class="pre">=</span> <span class="pre">1e-5</span></code> whenever the Gonze-Lee
+non-analytical term correction was active.  Set <code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span> <span class="pre">=</span> <span class="pre">1e-5</span></code>
+explicitly to reproduce that behavior.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GV_DELTA_Q</span> <span class="o">=</span> <span class="mf">0.01</span>
 </pre></div>
 </div>

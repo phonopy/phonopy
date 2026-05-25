@@ -368,10 +368,79 @@ Phonopy calculates group velocity of phonon as follows:
 
 where the meanings of the variables are found at {ref}`formulations`.
 
+### Analytical derivative
+
+By default the dynamical-matrix derivative
+{math}`\partial D(\mathbf{q})/\partial\mathbf{q}` is evaluated analytically.
+The non-NAC and Wang-NAC paths use the real-space sum of force constants
+weighted by the position-derivative phase factor.  The Gonze-Lee NAC path
+adds the analytical reciprocal dipole-dipole derivative obtained by
+differentiating Eq. (51) of Togo _et al._, J. Phys.: Condens. Matter
+**35**, 353001 (2023) with respect to {math}`\mathbf{q}`.  The
+dipole-dipole part of the dynamical matrix itself is
+
+```{math}
+D^{\mathrm{DD}}_{\kappa\alpha,\kappa'\alpha'}(\mathbf{q})
+&= \frac{4\pi}{V_c}\frac{e^2}{4\pi\epsilon_0}
+   \frac{1}{\sqrt{m_\kappa m_{\kappa'}}}
+   \sum_{\beta\beta'} Z^{*}_{\kappa,\beta\alpha}\,
+                      Z^{*}_{\kappa',\beta'\alpha'}
+   \\
+&\quad \times \sum_{\mathbf{Q}=\mathbf{G}+\mathbf{q}}
+   \frac{Q_\beta Q_{\beta'}}{B(\mathbf{Q})}\,
+   e^{i\mathbf{G}\cdot(\mathbf{R}^{0}_{0\kappa}-\mathbf{R}^{0}_{0\kappa'})}\,
+   \exp\!\left(-\frac{B(\mathbf{Q})}{4\Lambda^{2}}\right).
+```
+
+The {math}`\mathbf{q}`-derivative acts on
+{math}`\mathbf{Q}=\mathbf{G}+\mathbf{q}` and gives
+
+```{math}
+\frac{\partial D^{\mathrm{DD}}_{\kappa\alpha,\kappa'\alpha'}(\mathbf{q})}
+     {\partial q_\mu}
+&= \frac{4\pi}{V_c}\frac{e^2}{4\pi\epsilon_0}
+   \frac{1}{\sqrt{m_\kappa m_{\kappa'}}}
+   \sum_{\beta\beta'} Z^{*}_{\kappa,\beta\alpha}\,
+                       Z^{*}_{\kappa',\beta'\alpha'}\,
+   e^{i\mathbf{G}\cdot(\mathbf{R}^{0}_{0\kappa}-\mathbf{R}^{0}_{0\kappa'})}
+   \\
+&\quad \times \sum_{\mathbf{Q}=\mathbf{G}+\mathbf{q}}
+   T_\mu(\mathbf{Q};\beta,\beta')\,
+   \exp\!\left(-\frac{B(\mathbf{Q})}{4\Lambda^{2}}\right),
+```
+
+where
+
+```{math}
+T_\mu(\mathbf{Q};\beta,\beta')
+= \frac{\delta_{\mu\beta}\,Q_{\beta'} + Q_\beta\,\delta_{\mu\beta'}}
+       {B(\mathbf{Q})}
+- Q_\beta Q_{\beta'}\,(\epsilon\mathbf{Q})_\mu\!\left(
+   \frac{2}{B(\mathbf{Q})^{2}}
+   + \frac{1}{2\Lambda^{2}\,B(\mathbf{Q})}
+\right),
+```
+
+with the abbreviations
+
+```{math}
+B(\mathbf{Q}) = \sum_{\gamma\gamma'} Q_\gamma\,\epsilon_{\gamma\gamma'}\,
+                                     Q_{\gamma'},
+\qquad
+(\epsilon\mathbf{Q})_\mu = \sum_{\gamma}\epsilon_{\mu\gamma}\,Q_\gamma.
+```
+
+The phase
+{math}`e^{i\mathbf{G}\cdot(\mathbf{R}^{0}_{0\kappa}-\mathbf{R}^{0}_{0\kappa'})}`
+depends on {math}`\mathbf{G}` only and is not differentiated.  The
+translational-invariance correction (Eq. (52) of the reference) is
+{math}`\mathbf{q}`-independent and contributes zero to the derivative,
+so the same expression holds for the NAC-corrected dynamical matrix.
+
 ### Finite difference method
 
-In the previous versions, group velocity was calculated using finite difference
-method:
+The finite-difference path is still available and is activated by the
+`GV_DELTA_Q` tag or the `--gv_delta_q` option:
 
 ```{math}
 \mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
@@ -383,16 +452,13 @@ method:
 \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right>.
 ```
 
-Group velocity calculation with the finite difference method is still able to be
-activated using `GV_DELTA_Q` tag or `--gv_delta_q` option.
 {math}`\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta q_z)` is described in
-Cartesian coordinated in reciprocal space. In the implementation, central
+Cartesian coordinates in reciprocal space.  In the implementation, central
 difference is employed, and {math}`+\Delta q_\alpha` and
 {math}`-\Delta q_\alpha` are taken to calculate group velocity, where
 {math}`\alpha` is the Cartesian index in reciprocal space.
 {math}`\Delta q_\alpha` is specified in the unit of reciprocal space distance
- by `--gv_delta_q` option or
-`GV_DELTA_Q` tag.
+by the `--gv_delta_q` option or the `GV_DELTA_Q` tag.
 
 (physical_unit_conversion)=
 ## Physical unit conversion

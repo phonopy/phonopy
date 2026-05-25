@@ -2,6 +2,18 @@
 
 # Change Log
 
+## May-25-2026: Version 4.1.0
+
+- Analytical derivative of the dynamical matrix is now available for
+  Gonze-Lee non-analytical term correction. The dipole-dipole derivative
+  is implemented in Python and in the Rust backend
+  (`phonors.derivative_recip_dipole_dipole`); group-velocity calculation
+  with Gonze-Lee NAC now uses the analytical derivative by default. The
+  finite-difference path is still available by setting `GV_DELTA_Q` (or
+  `--gv-delta-q`). To reproduce the previous behavior (v4.0.1 and
+  earlier), set `GV_DELTA_Q = 1e-5` (the former implicit default for
+  Gonze-Lee NAC).
+
 ## May-18-2026: Version 4.0.1
 
 - Bug fix: `AttributeError` in `phonopy-init` when plotting with certain

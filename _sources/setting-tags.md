@@ -1061,10 +1061,16 @@ Technical details are shown at {ref}`group_velocity`.
 (gv_delta_q_tag)=
 ### `GV_DELTA_Q`
 
-The reciprocal distance used for finite difference method is specified. The
-default value is `1e-5` for the method of non-analytical term correction by
-Gonze _et al._. In other case, unless this tag is specified, analytical
-derivative is used instead of the finite difference method.
+The reciprocal distance used for the finite difference method is specified.
+Unless this tag is set, the analytical derivative of the dynamical matrix
+is used (including the Gonze-Lee non-analytical term correction, for which
+the analytical dipole-dipole derivative is now available).  Set this tag to
+fall back to the finite-difference path with the given step.
+
+In earlier versions (v4.0.1 and earlier) the finite-difference path was
+used implicitly with `GV_DELTA_Q = 1e-5` whenever the Gonze-Lee
+non-analytical term correction was active.  Set `GV_DELTA_Q = 1e-5`
+explicitly to reproduce that behavior.
 
 ```
 GV_DELTA_Q = 0.01

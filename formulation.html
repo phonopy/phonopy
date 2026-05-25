@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Formulations &#8212; Phonopy v.4.0.1</title>
+    <title>Formulations &#8212; Phonopy v.4.1.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=1a34d25d"></script>
+    <script src="_static/documentation_options.js?v=5d1265ac"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="Temperature dependent force constants calculation using pypolymlp and symfc" href="mlp-sscha.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.0" />
+  <meta name="docsearch:version" content="4.1" />
   </head>
   
   
@@ -127,7 +127,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.0.1</p>
+    <p class="title logo__title">Phonopy v.4.1.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -356,6 +356,7 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity">Group velocity</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">Method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#analytical-derivative">Analytical derivative</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finite-difference-method">Finite difference method</a></li>
 </ul>
 </li>
@@ -651,10 +652,67 @@ c_z \end{pmatrix}\end{split}\]</div>
 \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,\end{split}\]</div>
 <p>where the meanings of the variables are found at <a class="reference internal" href="#formulations"><span class="std std-ref">Formulations</span></a>.</p>
 </section>
+<section id="analytical-derivative">
+<h3>Analytical derivative<a class="headerlink" href="#analytical-derivative" title="Link to this heading">#</a></h3>
+<p>By default the dynamical-matrix derivative
+<span class="math notranslate nohighlight">\(\partial D(\mathbf{q})/\partial\mathbf{q}\)</span> is evaluated analytically.
+The non-NAC and Wang-NAC paths use the real-space sum of force constants
+weighted by the position-derivative phase factor.  The Gonze-Lee NAC path
+adds the analytical reciprocal dipole-dipole derivative obtained by
+differentiating Eq. (51) of Togo <em>et al.</em>, J. Phys.: Condens. Matter
+<strong>35</strong>, 353001 (2023) with respect to <span class="math notranslate nohighlight">\(\mathbf{q}\)</span>.  The
+dipole-dipole part of the dynamical matrix itself is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}D^{\mathrm{DD}}_{\kappa\alpha,\kappa'\alpha'}(\mathbf{q})
+&amp;= \frac{4\pi}{V_c}\frac{e^2}{4\pi\epsilon_0}
+   \frac{1}{\sqrt{m_\kappa m_{\kappa'}}}
+   \sum_{\beta\beta'} Z^{*}_{\kappa,\beta\alpha}\,
+                      Z^{*}_{\kappa',\beta'\alpha'}
+   \\
+&amp;\quad \times \sum_{\mathbf{Q}=\mathbf{G}+\mathbf{q}}
+   \frac{Q_\beta Q_{\beta'}}{B(\mathbf{Q})}\,
+   e^{i\mathbf{G}\cdot(\mathbf{R}^{0}_{0\kappa}-\mathbf{R}^{0}_{0\kappa'})}\,
+   \exp\!\left(-\frac{B(\mathbf{Q})}{4\Lambda^{2}}\right).\end{split}\]</div>
+<p>The <span class="math notranslate nohighlight">\(\mathbf{q}\)</span>-derivative acts on
+<span class="math notranslate nohighlight">\(\mathbf{Q}=\mathbf{G}+\mathbf{q}\)</span> and gives</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\frac{\partial D^{\mathrm{DD}}_{\kappa\alpha,\kappa'\alpha'}(\mathbf{q})}
+     {\partial q_\mu}
+&amp;= \frac{4\pi}{V_c}\frac{e^2}{4\pi\epsilon_0}
+   \frac{1}{\sqrt{m_\kappa m_{\kappa'}}}
+   \sum_{\beta\beta'} Z^{*}_{\kappa,\beta\alpha}\,
+                       Z^{*}_{\kappa',\beta'\alpha'}\,
+   e^{i\mathbf{G}\cdot(\mathbf{R}^{0}_{0\kappa}-\mathbf{R}^{0}_{0\kappa'})}
+   \\
+&amp;\quad \times \sum_{\mathbf{Q}=\mathbf{G}+\mathbf{q}}
+   T_\mu(\mathbf{Q};\beta,\beta')\,
+   \exp\!\left(-\frac{B(\mathbf{Q})}{4\Lambda^{2}}\right),\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[T_\mu(\mathbf{Q};\beta,\beta')
+= \frac{\delta_{\mu\beta}\,Q_{\beta'} + Q_\beta\,\delta_{\mu\beta'}}
+       {B(\mathbf{Q})}
+- Q_\beta Q_{\beta'}\,(\epsilon\mathbf{Q})_\mu\!\left(
+   \frac{2}{B(\mathbf{Q})^{2}}
+   + \frac{1}{2\Lambda^{2}\,B(\mathbf{Q})}
+\right),\]</div>
+<p>with the abbreviations</p>
+<div class="math notranslate nohighlight">
+\[B(\mathbf{Q}) = \sum_{\gamma\gamma'} Q_\gamma\,\epsilon_{\gamma\gamma'}\,
+                                     Q_{\gamma'},
+\qquad
+(\epsilon\mathbf{Q})_\mu = \sum_{\gamma}\epsilon_{\mu\gamma}\,Q_\gamma.\]</div>
+<p>The phase
+<span class="math notranslate nohighlight">\(e^{i\mathbf{G}\cdot(\mathbf{R}^{0}_{0\kappa}-\mathbf{R}^{0}_{0\kappa'})}\)</span>
+depends on <span class="math notranslate nohighlight">\(\mathbf{G}\)</span> only and is not differentiated.  The
+translational-invariance correction (Eq. (52) of the reference) is
+<span class="math notranslate nohighlight">\(\mathbf{q}\)</span>-independent and contributes zero to the derivative,
+so the same expression holds for the NAC-corrected dynamical matrix.</p>
+</section>
 <section id="finite-difference-method">
 <h3>Finite difference method<a class="headerlink" href="#finite-difference-method" title="Link to this heading">#</a></h3>
-<p>In the previous versions, group velocity was calculated using finite difference
-method:</p>
+<p>The finite-difference path is still available and is activated by the
+<code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code> tag or the <code class="docutils literal notranslate"><span class="pre">--gv_delta_q</span></code> option:</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
 \frac{1}{2\omega(\mathbf{q}\nu)}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
@@ -663,16 +721,13 @@ method:</p>
 \frac{1}{2\omega(\mathbf{q}\nu)} \left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\Delta D(\mathbf{q})} {\Delta
 \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;.\]</div>
-<p>Group velocity calculation with the finite difference method is still able to be
-activated using <code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code> tag or <code class="docutils literal notranslate"><span class="pre">--gv_delta_q</span></code> option.
-<span class="math notranslate nohighlight">\(\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta q_z)\)</span> is described in
-Cartesian coordinated in reciprocal space. In the implementation, central
+<p><span class="math notranslate nohighlight">\(\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta q_z)\)</span> is described in
+Cartesian coordinates in reciprocal space.  In the implementation, central
 difference is employed, and <span class="math notranslate nohighlight">\(+\Delta q_\alpha\)</span> and
 <span class="math notranslate nohighlight">\(-\Delta q_\alpha\)</span> are taken to calculate group velocity, where
 <span class="math notranslate nohighlight">\(\alpha\)</span> is the Cartesian index in reciprocal space.
 <span class="math notranslate nohighlight">\(\Delta q_\alpha\)</span> is specified in the unit of reciprocal space distance
-by <code class="docutils literal notranslate"><span class="pre">--gv_delta_q</span></code> option or
-<code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code> tag.</p>
+by the <code class="docutils literal notranslate"><span class="pre">--gv_delta_q</span></code> option or the <code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code> tag.</p>
 </section>
 </section>
 <section id="physical-unit-conversion">
@@ -889,6 +944,7 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity">Group velocity</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">Method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#analytical-derivative">Analytical derivative</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finite-difference-method">Finite difference method</a></li>
 </ul>
 </li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.0.1</title>
+    <title>Change Log &#8212; Phonopy v.4.1.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=1a34d25d"></script>
+    <script src="_static/documentation_options.js?v=5d1265ac"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -49,7 +49,7 @@
     <link rel="prev" title="Migrating from phonopy v3 to v4" href="migration-v4.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.0" />
+  <meta name="docsearch:version" content="4.1" />
   </head>
   
   
@@ -124,7 +124,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.0.1</p>
+    <p class="title logo__title">Phonopy v.4.1.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -331,6 +331,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-25-2026-version-4-1-0">May-25-2026: Version 4.1.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-18-2026-version-4-0-1">May-18-2026: Version 4.0.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-16-2026-version-4-0-0">May-16-2026: Version 4.0.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apr-23-2026-version-3-5-1">Apr-23-2026: Version 3.5.1</a></li>
@@ -553,6 +554,20 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="may-25-2026-version-4-1-0">
+<h2>May-25-2026: Version 4.1.0<a class="headerlink" href="#may-25-2026-version-4-1-0" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Analytical derivative of the dynamical matrix is now available for
+Gonze-Lee non-analytical term correction. The dipole-dipole derivative
+is implemented in Python and in the Rust backend
+(<code class="docutils literal notranslate"><span class="pre">phonors.derivative_recip_dipole_dipole</span></code>); group-velocity calculation
+with Gonze-Lee NAC now uses the analytical derivative by default. The
+finite-difference path is still available by setting <code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">--gv-delta-q</span></code>). To reproduce the previous behavior (v4.0.1 and
+earlier), set <code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span> <span class="pre">=</span> <span class="pre">1e-5</span></code> (the former implicit default for
+Gonze-Lee NAC).</p></li>
+</ul>
+</section>
 <section id="may-18-2026-version-4-0-1">
 <h2>May-18-2026: Version 4.0.1<a class="headerlink" href="#may-18-2026-version-4-0-1" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2472,6 +2487,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-25-2026-version-4-1-0">May-25-2026: Version 4.1.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-18-2026-version-4-0-1">May-18-2026: Version 4.0.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-16-2026-version-4-0-0">May-16-2026: Version 4.0.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apr-23-2026-version-3-5-1">Apr-23-2026: Version 3.5.1</a></li>
