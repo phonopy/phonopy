@@ -7,9 +7,12 @@ from phonopy.phonon.group_velocity import GroupVelocity
 
 
 def test_gv_nacl(ph_nacl: Phonopy):
-    """Test of GroupVelocity by NaCl.
+    """Test of GroupVelocity by NaCl (Gonze-Lee NAC).
 
-    This test should pass _get_dD_FD.
+    With the analytic Gonze-Lee derivative now available, this test
+    goes through ``_get_dD_analytical``.  The reference values were
+    originally captured against ``_get_dD_FD`` and agree with the
+    analytic path to within ``atol=1e-5``.
 
     """
     gv_ref = [

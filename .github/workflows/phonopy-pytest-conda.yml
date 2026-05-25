@@ -2,7 +2,7 @@ name: phonopy test using conda-forge environment
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [main]
 
 jobs:
   build-linux:
