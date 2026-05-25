@@ -15,31 +15,12 @@ if(DEFINED ENV{PHONOPY_NO_C_EXT} AND NOT "$ENV{PHONOPY_NO_C_EXT}" STREQUAL "0")
     return()
 endif()
 
-if(PHONOPY_LIBS)
-    project(phonopy LANGUAGES C)
-    set(CMAKE_MACOSX_RPATH 1)
-    set(CMAKE_C_FLAGS_RELEASE "-Wall -O2")
-    set(CMAKE_C_FLAGS_DEBUG "-g -DTHMWARNING")
-    include(GNUInstallDirs)
-
-    # Version numbers
-    file(READ ${PROJECT_SOURCE_DIR}/phonopy/version.py VERSION_FILE)
-    string(REGEX MATCH "__version__.*([0-9]+)[.]([0-9]+)[.]([0-9]+)" phonopy_version
-                 ${VERSION_FILE})
-    set(PHONOPY_MAJOR_VERSION ${CMAKE_MATCH_1})
-    set(PHONOPY_MINOR_VERSION ${CMAKE_MATCH_2})
-    set(PHONOPY_MICRO_VERSION ${CMAKE_MATCH_3})
-    set(SERIAL
-        "${PHONOPY_MAJOR_VERSION}.${PHONOPY_MINOR_VERSION}.${PHONOPY_MICRO_VERSION}")
-    set(SOSERIAL "1")
-else()
-    project(${SKBUILD_PROJECT_NAME})
-    set(DEV_MODULE Development.Module)
-    find_package(
-        Python 3.9 REQUIRED
-        COMPONENTS Interpreter ${DEV_MODULE}
-        OPTIONAL_COMPONENTS Development.SABIModule)
-endif()
+project(${SKBUILD_PROJECT_NAME})
+set(DEV_MODULE Development.Module)
+find_package(
+    Python 3.9 REQUIRED
+    COMPONENTS Interpreter ${DEV_MODULE}
+    OPTIONAL_COMPONENTS Development.SABIModule)
 
 cmake_policy(SET CMP0007 NEW)
 
@@ -106,45 +87,29 @@ else()
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
 endif()
 
-if(PHONOPY_LIBS)
-    install(FILES ${PROJECT_SOURCE_DIR}/c/phonopy.h
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+set_target_properties(phonopy_libs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(recgrid_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    if(BUILD_SHARED_LIBS)
-        install(TARGETS phonopy_libs LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-        set_property(TARGET phonopy_libs PROPERTY VERSION ${SERIAL})
-        set_property(TARGET phonopy_libs PROPERTY SOVERSION ${SOSERIAL})
-    else()
-        install(TARGETS phonopy_libs ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-        set_property(TARGET phonopy_libs PROPERTY VERSION ${SERIAL})
-        set_property(TARGET phonopy_libs PROPERTY SOVERSION ${SOSERIAL})
-        set_property(TARGET phonopy_libs PROPERTY OUTPUT_NAME phonopy_libs)
-    endif()
+execute_process(
+    COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE NB_DIR)
+list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
+find_package(nanobind CONFIG REQUIRED)
+nanobind_add_module(_phonopy STABLE_ABI ${PROJECT_SOURCE_DIR}/c/phonopy.h
+                    ${PROJECT_SOURCE_DIR}/c/_phonopy.cpp)
+nanobind_add_module(_recgrid STABLE_ABI ${PROJECT_SOURCE_DIR}/c/recgrid.h
+                    ${PROJECT_SOURCE_DIR}/c/_recgrid.cpp)
+
+if(OpenMP_FOUND)
+    target_link_libraries(_phonopy PRIVATE phonopy_libs OpenMP::OpenMP_C)
+    target_link_libraries(_recgrid PRIVATE recgrid_lib OpenMP::OpenMP_C)
 else()
-    set_target_properties(phonopy_libs PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    set_target_properties(recgrid_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-    execute_process(
-        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        OUTPUT_VARIABLE NB_DIR)
-    list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
-    find_package(nanobind CONFIG REQUIRED)
-    nanobind_add_module(_phonopy STABLE_ABI ${PROJECT_SOURCE_DIR}/c/phonopy.h
-                        ${PROJECT_SOURCE_DIR}/c/_phonopy.cpp)
-    nanobind_add_module(_recgrid STABLE_ABI ${PROJECT_SOURCE_DIR}/c/recgrid.h
-                        ${PROJECT_SOURCE_DIR}/c/_recgrid.cpp)
-
-    if(OpenMP_FOUND)
-        target_link_libraries(_phonopy PRIVATE phonopy_libs OpenMP::OpenMP_C)
-        target_link_libraries(_recgrid PRIVATE recgrid_lib OpenMP::OpenMP_C)
-    else()
-        target_link_libraries(_phonopy PRIVATE phonopy_libs)
-        target_link_libraries(_recgrid PRIVATE recgrid_lib)
-    endif()
-
-    target_compile_definitions(_phonopy PRIVATE THM_EPSILON=1e-10)
-    target_compile_definitions(_recgrid PRIVATE THM_EPSILON=1e-10)
-    install(TARGETS _phonopy LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})
-    install(TARGETS _recgrid LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})
+    target_link_libraries(_phonopy PRIVATE phonopy_libs)
+    target_link_libraries(_recgrid PRIVATE recgrid_lib)
 endif()
+
+target_compile_definitions(_phonopy PRIVATE THM_EPSILON=1e-10)
+target_compile_definitions(_recgrid PRIVATE THM_EPSILON=1e-10)
+install(TARGETS _phonopy LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})
+install(TARGETS _recgrid LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})

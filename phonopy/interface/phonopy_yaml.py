@@ -440,7 +440,7 @@ class PhonopyYamlDumperBase(ABC):
         lines = []
         lines.append("%s:" % self._data.command_name)
         if self._data.version is None:
-            from phonopy.version import __version__
+            from phonopy import __version__
 
             version = __version__
         else:
