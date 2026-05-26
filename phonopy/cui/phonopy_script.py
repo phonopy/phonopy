@@ -59,6 +59,7 @@ from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
     develop_or_load_pypolymlp,
     get_nac_params,
+    move_force_dataset_to_mlp_dataset,
     prepare_dataset_by_pypolymlp,
     produce_force_constants,
     select_and_extract_force_constants,
@@ -82,6 +83,7 @@ from phonopy.exception import (
     PypolymlpDevelopmentError,
     PypolymlpFileNotFoundError,
     PypolymlpRelaxationError,
+    PypolymlpTrainingDatasetNotFoundError,
 )
 from phonopy.file_IO import (
     get_supported_file_extensions_for_compression,
@@ -2169,16 +2171,17 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         # Prepare polynomial MLPs #
         ###########################
         if settings.use_pypolymlp:
-            if phonon.dataset is not None:
-                assert "forces" in phonon.dataset
-                phonon.mlp_dataset = phonon.dataset
-                phonon.dataset = None
+            move_force_dataset_to_mlp_dataset(phonon)
 
             try:
                 develop_or_load_pypolymlp(
                     phonon, mlp_params=settings.mlp_params, log_level=log_level
                 )
-            except (PypolymlpDevelopmentError, PypolymlpFileNotFoundError) as e:
+            except (
+                PypolymlpDevelopmentError,
+                PypolymlpFileNotFoundError,
+                PypolymlpTrainingDatasetNotFoundError,
+            ) as e:
                 print_error_message(str(e))
                 if log_level:
                     print_error()

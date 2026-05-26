@@ -1047,6 +1047,61 @@ def test_use_pypolymlp_develop(load_phonopy_yaml: bool):
             os.chdir(original_cwd)
 
 
+@pytest.mark.parametrize("load_phonopy_yaml", [False, True])
+def test_use_pypolymlp_load_with_displacement_only_dataset(load_phonopy_yaml: bool):
+    """Test phonopy --pypolymlp with a displacement-only dataset.
+
+    When use_pypolymlp=True and the dataset contains displacements but no forces
+    (e.g. from phonopy_disp.yaml), the dataset must not be moved to mlp_dataset.
+    It is discarded so that an existing MLP (polymlp.yaml) is loaded instead of
+    triggering training. This used to raise AssertionError before the MLP was
+    even loaded.
+
+    Since develop_or_load_pypolymlp is replaced by MagicMock, polymlp.yaml is
+    neither read nor created.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_disp_NaCl.yaml",
+                use_pypolymlp=True,
+                load_phonopy_yaml=load_phonopy_yaml,
+            )
+
+            captured = {}
+
+            def _capture(phonon, *args, **kwargs):
+                captured["mlp_dataset"] = phonon.mlp_dataset
+                captured["dataset"] = phonon.dataset
+
+            with patch(
+                "phonopy.cui.phonopy_script.develop_or_load_pypolymlp",
+                side_effect=_capture,
+            ) as mock_develop:
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
+                assert excinfo.value.code == 0
+                mock_develop.assert_called_once()
+
+            # Displacement-only dataset is discarded, not used as training data.
+            assert captured["mlp_dataset"] is None
+            assert captured["dataset"] is None
+
+            for created_filename in ("phonopy.yaml",):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 @pytest.mark.parametrize(
     "error_class",
     [PypolymlpDevelopmentError, PypolymlpFileNotFoundError],
