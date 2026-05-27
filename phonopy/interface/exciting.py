@@ -135,7 +135,7 @@ def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
     if len(basevects) != 3:
         raise ValueError(f"Expected 3 basis vectors, got {len(basevects)}")
     
-    lattice         = np.array(basevects).T * scale  # Apply scale factor
+    lattice         = np.array(basevects) * scale  # Apply scale factor
     inverse_lattice = np.linalg.inv(lattice)
     
     # Get speciespath from structure element
@@ -207,7 +207,7 @@ def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
                 if cartesian:
                     # coords are in Cartesian, convert to fractional
                     cart_coords = np.array(coords)
-                    frac_coords = np.dot(inverse_lattice, cart_coords)
+                    frac_coords = np.dot(inverse_lattice.T, cart_coords)
                 else:
                     # coords are already fractional
                     frac_coords = coords
@@ -231,7 +231,7 @@ def get_exciting_structure(cell: PhonopyAtoms) -> str:
     """Return exciting structure in xml tree."""
     
     # Extract data from PhonopyAtoms object
-    lattice = cell.cell.T
+    lattice = cell.cell
     scaled_positions = cell.scaled_positions
     chemical_symbols = cell.symbols
     
