@@ -37,27 +37,23 @@ A procedure of exciting-phonopy calculation is as follows:
    supercell and supercells with displacements, respectively. In these
    supercell files, lines only relevant to crystal structures are
    generated. ``phonopy_disp.yaml`` is also created. This file contains
-   information on displacements. Note that the generated files are missing 
-   the ``groundstate`` block XXXX. Also, any extra ta
+   information on displacements. Put those files in folders ``001 002 ...``
+   and create a symbolic link called ``input.xml`` to those. Morever,
+   if needed copy the species files, 
 
 2) Calculate forces on atoms in the supercells with
-   displacements. Calculation specification tags have to be added to
-   each ``elk.in`` file. Crystal structure is not allowed to
-   relaxed in the force calculations, because atomic forces induced by
-   a small atomic displacement are what we need for phonon
-   calculation.
+   displacements. Calculation block ``groundstate`` have to be added to
+   each ``supercell.xml`` file. 
 
 3) Create ``FORCE_SETS`` by
 
    ::
 
-     % phonopy-init -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
+     % phonopy-init --exciting -f 001/INFO.OUT 002/INFO.OUT  ...
 
    To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory because the atomic displacements are written into the
-   FORCE_SETS file. See some more detail at
-   :ref:`elk_force_sets_option`. An example is found in
-   ``example/Si-elk``.
+   FORCE_SETS file.
 
 4) Run post-process of phonopy.  Crystal structure and calculator
    interface are read from ``phonopy_disp.yaml``::
