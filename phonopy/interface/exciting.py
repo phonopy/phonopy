@@ -49,12 +49,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy import Phonopy
-from phonopy.file_IO import (
-    iter_collect_forces,
-    write_FORCE_CONSTANTS,
-    write_force_constants_to_hdf5,
-)
+
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
+from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import (
     check_forces,
     get_drift_forces,
@@ -230,51 +227,20 @@ def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
         scaled_positions=scaled_positions
     )
 
-
 def get_exciting_structure(cell: PhonopyAtoms) -> str:
     """Return exciting structure in xml tree."""
     
     # Extract data from PhonopyAtoms object
-    lattice = phonopy_atoms.cell.T
-    scaled_positions = phonopy_atoms.scaled_positions
-    chemical_symbols = phonopy_atoms.symbols
+    lattice = cell.cell.T
+    scaled_positions = cell.scaled_positions
+    chemical_symbols = cell.symbols
     
     # Create root element
     root = ET.Element('input')
     
     # Add title
-    title_el#
-# write vasp POSCAR
-#
-def write_vasp(
-    filename: str | os.PathLike,
-    cell: PhonopyAtoms,
-    direct: bool = True,
-    expand_mixtures: bool = False,
-) -> None:
-    """Write crystal structure to a VASP POSCAR style file.
-
-    Parameters
-    ----------
-    filename : str
-        Filename.
-    cell : PhonopyAtoms
-        Crystal structure.
-    direct : bool, optional
-        In 'Direct' or not in VASP POSCAR format. Default is True.
-    expand_mixtures : bool, optional
-        When True and ``cell`` has mixed-species sites, expand each mixture
-        into one POSCAR row per constituent at the same fractional
-        coordinates so the file is consumable by a VASP VCA calculation.
-        Has no effect on cells without mixtures. Default is False.
-
-    """
-    lines = get_vasp_structure_lines(
-        cell, direct=direct, expand_mixtures=expand_mixtures
-    )
-    with open(filename, "w") as w:
-        w.write("\n".join(lines))em = ET.SubElement(root, 'title')
-    title_elem.text = title
+    title_elem = ET.SubElement(root, 'title')
+    title_elem.text = "Phonopy generated structure"
     
     # Create structure element with all attributes
     structure_attrib = {
@@ -302,7 +268,7 @@ def write_vasp(
     for i, symbol in enumerate(chemical_symbols):
         if symbol not in species_dict:
             species_dict[symbol] = []
-        species_dict[symbol].append(positions[i])
+        species_dict[symbol].append(scaled_positions[i,:])
     
     # Create species elements
     for symbol, atom_positions in species_dict.items():
@@ -325,16 +291,16 @@ def write_vasp(
                 )
             )
 
-    return ET.tostring(root, encoding="unicode")
-
+    return ET.ElementTree(root)
 
 def write_exciting(
     filename: str | os.PathLike,
     cell: PhonopyAtoms
 ) -> None:
-    lines = get_exciting_structure(cell)
-    with open(filename, "w") as w:
-        w.write("\n".join(lines))
+    tree = get_exciting_structure(cell)
+    ET.indent(tree, space="  ", level=0)
+    tree.write(filename, encoding="utf-8", xml_declaration=True)
+    
 
 def write_supercells_with_displacements(
     supercell: PhonopyAtoms,
@@ -346,7 +312,7 @@ def write_supercells_with_displacements(
     """Write supercells with displacements to files."""
     write_exciting("%s.xml" % pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
-        filename = "{pre_filename}-{0:0{width}}.in".format(
+        filename = "{pre_filename}-{0:0{width}}.xml".format(
             i, pre_filename=pre_filename, width=width
         )
         write_exciting(filename, cell)
