@@ -324,6 +324,7 @@ def get_calculator_physical_units(
     wien2k        : Ry,      au(=borh), AMU,         mRy/au,       mRy/au^2
     abinit        : hartree, au,        AMU,         eV/angstrom,  eV/angstrom.au
     elk           : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    exciting      : hartree, au,        AMU,         hartree/au,   hartree/au^2
     qe            : Ry,      au,        AMU,         Ry/au,        Ry/au^2
     siesta        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
     CRYSTAL       : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
@@ -418,7 +419,7 @@ def get_calculator_physical_units(
             force_unit="mRy/au",
             energy_unit="Ry",
         )
-    elif interface_mode in ("elk", "dftbp", "turbomole", "fleur"):
+    elif interface_mode in ("elk", "dftbp", "turbomole", "fleur", "exciting"):
         ElkToTHz = (
             sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
             / (physical_units.Bohr * 1e-10)
