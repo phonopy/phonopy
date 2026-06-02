@@ -8,6 +8,7 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.random_displacements import RandomDisplacements
+from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -1017,6 +1018,68 @@ def test_treat_imaginary_modes(ph_srtio3: Phonopy):
     ]
     np.testing.assert_allclose(ref0, rd.frequencies[0], atol=1e-5)
     np.testing.assert_allclose(ref13, rd.frequencies[-1], atol=1e-5)
+
+
+def _get_random_displacements_no_ij() -> RandomDisplacements:
+    """Return a RandomDisplacements whose commensurate points have no ij pairs.
+
+    A diagonal 2x2x2 supercell of a simple-cubic primitive cell places every
+    commensurate point at a TRIM point (fractional coordinate 0 or 1/2), so all
+    points are self-conjugate. This exercises the ``self._ij`` empty branch of
+    the ``frequencies`` setter/getter.
+
+    """
+    cell = PhonopyAtoms(
+        symbols=["H"], cell=np.eye(3) * 3.0, scaled_positions=[[0, 0, 0]]
+    )
+    ph = Phonopy(
+        cell, supercell_matrix=np.eye(3, dtype=int) * 2, primitive_matrix="auto"
+    )
+    nsc = len(ph.supercell)
+    fc = np.zeros((nsc, nsc, 3, 3))
+    for i in range(nsc):
+        fc[i, i] = np.eye(3) * 2.0
+    return RandomDisplacements(ph.supercell, ph.primitive, fc)
+
+
+def test_frequencies_setter_roundtrip_with_ij(ph_tipn3: Phonopy):
+    """Setting frequencies back unchanged must preserve them (ij pairs present)."""
+    ph = ph_tipn3
+    rd = RandomDisplacements(ph.supercell, ph.primitive, ph.force_constants)
+    assert len(rd._ij) > 0
+    freqs = rd.frequencies.copy()
+    rd.frequencies = freqs
+    np.testing.assert_allclose(rd.frequencies, freqs, atol=1e-8)
+
+    # Modified frequencies are reflected by the getter.
+    shifted = freqs + 1.0
+    rd.frequencies = shifted
+    np.testing.assert_allclose(rd.frequencies, shifted, atol=1e-8)
+
+
+def test_frequencies_setter_roundtrip_without_ij():
+    """Setting frequencies back unchanged must preserve them (no ij pairs).
+
+    Regression test: the setter used to assume ij pairs always exist and
+    raised when ``self._ij`` was empty.
+
+    """
+    rd = _get_random_displacements_no_ij()
+    assert len(rd._ij) == 0
+    freqs = rd.frequencies.copy()
+    rd.frequencies = freqs
+    np.testing.assert_allclose(rd.frequencies, freqs, atol=1e-8)
+
+    shifted = freqs + 1.0
+    rd.frequencies = shifted
+    np.testing.assert_allclose(rd.frequencies, shifted, atol=1e-8)
+
+
+def test_frequencies_setter_wrong_dimension():
+    """The setter rejects frequencies of the wrong length in both branches."""
+    rd = _get_random_displacements_no_ij()
+    with pytest.raises(RuntimeError):
+        rd.frequencies = rd.frequencies.ravel()[:-1]
 
 
 def _mass_sand(matrix, mass):
