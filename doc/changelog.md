@@ -56,10 +56,6 @@ Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
   input), the grid is now rebuilt as a generalized regular grid that keeps
   full point-group symmetry; the resulting `mesh_numbers` may differ from
   the regular-grid value.
-- Mixed-species site support (initial): `PhonopyAtoms` gains a species
-  table, the `apply_site_mixture()` helper, and a `--site-mixture` CLI
-  flag. VASP POSCAR writes expand mixed sites. The force-I/O and
-  FC-build pipeline for site-mixture cells is still under development.
 - Bug fix: copy-by-reference issue in `qpoints.py`.
 
 ## Apr-23-2026: Version 3.5.1

@@ -182,7 +182,7 @@ def build_species_table_from_mixtures(
 
     The returned pair can be passed to ``PhonopyAtoms(species_table=...,
     species_ids=...)``. Use cases include the Virtual Crystal Approximation
-    (see ``apply_site_mixture``) and any other site-disorder model
+    (see ``build_mixture_cell``) and any other site-disorder model
     expressible as weighted constituent symbols.
 
     """

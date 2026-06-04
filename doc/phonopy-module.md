@@ -752,7 +752,7 @@ spglib crystal structure
 ```{warning}
 **Experimental.** The mixed-species / Virtual Crystal Approximation
 (VCA) support — including `species_table` / `species_ids` /
-`has_mixtures` on `PhonopyAtoms`, `apply_site_mixture`,
+`has_mixtures` on `PhonopyAtoms`, `build_mixture_cell`,
 `build_species_table_from_mixtures`, the `--site-mixture` CLI option,
 the FC-time mixture-force reduction, and the VASP `expand_mixtures`
 writer — is experimental. APIs, file layouts (including the expanded
@@ -801,16 +801,16 @@ in input order ("GeSn"); two distinct mixtures that would share the same
 composite label still get distinct ids because the underlying
 `(symbol, weight)` tuples differ.
 
-#### `apply_site_mixture` utility
+#### `build_mixture_cell` utility
 
-`phonopy.structure.cells.apply_site_mixture` collapses overlapping atoms in
+`phonopy.structure.cells.build_mixture_cell` collapses overlapping atoms in
 an ordinary cell into mixed-species sites. The Virtual Crystal
 Approximation (VCA) is the typical use case.
 
 ```python
-from phonopy.structure.cells import apply_site_mixture
+from phonopy.structure.cells import build_mixture_cell
 
-mixed_cell = apply_site_mixture(cell, weights=[0.5, 0.5, 0.5, 0.5])
+mixed_cell = build_mixture_cell(cell, weights=[0.5, 0.5, 0.5, 0.5])
 ```
 
 `weights` must have one entry per atom in the input order. Atoms whose
@@ -834,7 +834,7 @@ phonopy --dim "2 2 2" --site-mixture "0.5 0.5 0.5 0.5" -d
 ```
 
 `--site-mixture` takes a space-separated list of per-atom weights in the
-input order, with the same validation rules as `apply_site_mixture`. The
+input order, with the same validation rules as `build_mixture_cell`. The
 merge is applied immediately after the unit cell is read, so the rest of
 the workflow (displacement generation, supercell construction,
 force-constant building) sees only the merged cell.

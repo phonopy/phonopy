@@ -14,7 +14,7 @@ from phonopy.structure.cells import (
     Primitive,
     ShortestPairs,
     TrimmedCell,
-    apply_site_mixture,
+    build_mixture_cell,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
     dense_to_sparse_svecs,
@@ -559,7 +559,7 @@ def test_get_primitive_with_Xn_symbol(ph_nacl: Phonopy):
     assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
 
 
-def test_apply_site_mixture_GeSn():
+def test_build_mixture_cell_GeSn():
     """Two overlapping Ge/Sn pairs collapse into two GeSn mixture sites."""
     a = 2.82173
     cell = PhonopyAtoms(
@@ -572,7 +572,7 @@ def test_apply_site_mixture_GeSn():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
 
     assert len(mixed_cell) == 2
     assert mixed_cell.has_mixtures
@@ -585,7 +585,7 @@ def test_apply_site_mixture_GeSn():
     np.testing.assert_allclose(mixed_cell.masses, [expected_mass, expected_mass])
 
 
-def test_apply_site_mixture_distinct_mixtures_get_suffixes():
+def test_build_mixture_cell_distinct_mixtures_get_suffixes():
     """When two distinct mixtures share a composite label, suffixes are added."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -598,13 +598,13 @@ def test_apply_site_mixture_distinct_mixtures_get_suffixes():
         ],
         symbols=["Ge", "Sn", "Ge", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.25, 0.75])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.25, 0.75])
 
     assert mixed_cell.has_mixtures
     assert mixed_cell.symbols == ["GeSn1", "GeSn2"]
 
 
-def test_apply_site_mixture_unique_composite_no_suffix():
+def test_build_mixture_cell_unique_composite_no_suffix():
     """A single GeSn mixture in the cell stays unsuffixed."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -616,12 +616,12 @@ def test_apply_site_mixture_unique_composite_no_suffix():
         ],
         symbols=["Ge", "Sn", "Si"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 1.0])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 1.0])
 
     assert mixed_cell.symbols == ["GeSn", "Si"]
 
 
-def test_apply_site_mixture_weight_sum_error():
+def test_build_mixture_cell_weight_sum_error():
     """Group weights must sum to 1.0."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -630,10 +630,10 @@ def test_apply_site_mixture_weight_sum_error():
         symbols=["Ge", "Sn"],
     )
     with pytest.raises(ValueError, match="sum to 1.0"):
-        apply_site_mixture(cell, [0.4, 0.4])
+        build_mixture_cell(cell, [0.4, 0.4])
 
 
-def test_apply_site_mixture_isolated_atom_weight_must_be_one():
+def test_build_mixture_cell_isolated_atom_weight_must_be_one():
     """A non-overlapping atom must carry weight 1.0."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -642,10 +642,10 @@ def test_apply_site_mixture_isolated_atom_weight_must_be_one():
         symbols=["Ge", "Sn"],
     )
     with pytest.raises(ValueError, match="must be 1.0"):
-        apply_site_mixture(cell, [1.0, 0.5])
+        build_mixture_cell(cell, [1.0, 0.5])
 
 
-def test_apply_site_mixture_length_mismatch():
+def test_build_mixture_cell_length_mismatch():
     """Weights length must match natoms."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -654,23 +654,23 @@ def test_apply_site_mixture_length_mismatch():
         symbols=["Si"],
     )
     with pytest.raises(ValueError, match="must match number of atoms"):
-        apply_site_mixture(cell, [1.0, 0.0])
+        build_mixture_cell(cell, [1.0, 0.0])
 
 
-def test_apply_site_mixture_rejects_already_mixed_cell():
-    """Re-applying apply_site_mixture on a mixed cell raises."""
+def test_build_mixture_cell_rejects_already_mixed_cell():
+    """Re-applying build_mixture_cell on a mixed cell raises."""
     a = 4.0
     cell = PhonopyAtoms(
         cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
         scaled_positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
         symbols=["Ge", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5])
     with pytest.raises(ValueError, match="already contains"):
-        apply_site_mixture(mixed_cell, [1.0])
+        build_mixture_cell(mixed_cell, [1.0])
 
 
-def test_apply_site_mixture_supercell_through_phonopy(ph_nacl: Phonopy):
+def test_build_mixture_cell_supercell_through_phonopy(ph_nacl: Phonopy):
     """A mixed unitcell flows through Phonopy and produces a supercell with mixtures."""
     a = 2.82173
     cell = PhonopyAtoms(
@@ -683,7 +683,7 @@ def test_apply_site_mixture_supercell_through_phonopy(ph_nacl: Phonopy):
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
     ph = Phonopy(mixed_cell, supercell_matrix=np.diag([2, 2, 2]))
     assert ph.supercell.has_mixtures
     assert ph.primitive.has_mixtures
@@ -712,7 +712,7 @@ def test_GeSn_mixture_force_constants_e2e():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
     ph = Phonopy(mixed, supercell_matrix=np.diag([2, 2, 2]))
     ph.generate_displacements(distance=0.01)
     n_sites = len(ph.supercell)

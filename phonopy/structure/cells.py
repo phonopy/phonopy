@@ -53,6 +53,7 @@ from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy._lang import log_dispatch, resolve_lang
 from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
+from phonopy.structure.mixture import build_mixtures_from_groups
 from phonopy.structure.snf import SNF3x3
 
 
@@ -859,7 +860,7 @@ def get_primitive(
     )
 
 
-def apply_site_mixture(
+def build_mixture_cell(
     cell: PhonopyAtoms,
     weights: Sequence[float],
     symprec: float = 1e-5,
@@ -903,12 +904,12 @@ def apply_site_mixture(
     """
     if cell.has_mixtures:
         raise ValueError(
-            "apply_site_mixture cannot be applied to a cell that already "
+            "build_mixture_cell cannot be applied to a cell that already "
             "contains mixed-species sites."
         )
     if cell.magnetic_moments is not None:
         raise ValueError(
-            "apply_site_mixture does not support cells carrying magnetic moments."
+            "build_mixture_cell does not support cells carrying magnetic moments."
         )
     if len(weights) != len(cell):
         raise ValueError(
@@ -918,7 +919,48 @@ def apply_site_mixture(
 
     weights_arr = np.asarray(weights, dtype="double")
     scaled = cell.scaled_positions
-    symbols = cell.symbols
+
+    groups = _group_overlapping_atoms(cell, symprec)
+    mixtures = build_mixtures_from_groups(cell.symbols, groups, weights_arr)
+    new_scaled = [scaled[group[0]] for group in groups]
+
+    species_table, species_ids = build_species_table_from_mixtures(
+        mixtures, sort_constituents=sort_constituents
+    )
+
+    return PhonopyAtoms(
+        cell=cell.cell,
+        scaled_positions=np.array(new_scaled, dtype="double"),
+        species_table=species_table,
+        species_ids=species_ids,
+    )
+
+
+def _group_overlapping_atoms(
+    cell: PhonopyAtoms, symprec: float = 1e-5
+) -> list[list[int]]:
+    """Group atom indices whose fractional positions coincide modulo lattice.
+
+    Two atoms belong to the same group when their fractional coordinates
+    agree within ``symprec`` after removing integer lattice translations.
+    Every atom appears in exactly one group; non-overlapping atoms form
+    singleton groups. Groups and their members are returned in ascending
+    index order.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Cell whose atoms are grouped by positional overlap.
+    symprec : float
+        Tolerance for treating two fractional positions as overlapping.
+
+    Returns
+    -------
+    list[list[int]]
+        Groups of coinciding atom indices.
+
+    """
+    scaled = cell.scaled_positions
     natom = len(cell)
 
     visited = [False] * natom
@@ -937,35 +979,7 @@ def apply_site_mixture(
                 group.append(j)
                 visited[j] = True
         groups.append(group)
-
-    mixtures: list[list[tuple[str, float]]] = []
-    new_scaled: list[NDArray[np.double]] = []
-    for group in groups:
-        wsum = float(weights_arr[group].sum())
-        if len(group) == 1:
-            if not np.isclose(weights_arr[group[0]], 1.0):
-                raise ValueError(
-                    f"Weight of non-overlapping atom at index {group[0]} "
-                    f"must be 1.0, got {weights_arr[group[0]]}."
-                )
-        elif not np.isclose(wsum, 1.0):
-            raise ValueError(
-                f"Weights of overlapping atoms at indices {group} must "
-                f"sum to 1.0, got {wsum}."
-            )
-        mixtures.append([(symbols[i], float(weights_arr[i])) for i in group])
-        new_scaled.append(scaled[group[0]])
-
-    species_table, species_ids = build_species_table_from_mixtures(
-        mixtures, sort_constituents=sort_constituents
-    )
-
-    return PhonopyAtoms(
-        cell=cell.cell,
-        scaled_positions=np.array(new_scaled, dtype="double"),
-        species_table=species_table,
-        species_ids=species_ids,
-    )
+    return groups
 
 
 def print_cell(
