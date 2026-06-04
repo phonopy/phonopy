@@ -44,6 +44,8 @@ jobs:
           conda activate test
           pip install -e . -v
       - name: Test with pytest
+        env:
+          MPLBACKEND: Agg
         run: |
           pip install pytest
           pytest -v test
