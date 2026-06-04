@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import apply_site_mixture
+from phonopy.structure.cells import build_mixture_cell
 from phonopy.structure.mixture import get_mixture_expansion, reduce_mixture_forces
 
 
@@ -21,7 +21,7 @@ def test_get_mixture_expansion_GeSn_unitcell():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
     site_indices, weights = get_mixture_expansion(mixed_cell)
 
     np.testing.assert_array_equal(site_indices, [0, 1, 0, 1])
@@ -54,7 +54,7 @@ def test_get_mixture_expansion_mixed_with_pure_site():
         ],
         symbols=["Ge", "Sn", "Si"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 1.0])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 1.0])
     # mixed_cell has 2 sites: site 0 = GeSn (mixture), site 1 = Si.
     site_indices, weights = get_mixture_expansion(mixed_cell)
 
@@ -81,7 +81,7 @@ def test_reduce_mixture_forces_GeSn_weighted_sum():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
 
     # Expanded forces: rows [Ge@s0, Ge@s1, Sn@s0, Sn@s1].
     expanded = np.array(
@@ -121,7 +121,7 @@ def test_reduce_mixture_forces_sum_mode():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
 
     expanded = np.array(
         [
@@ -154,7 +154,7 @@ def test_reduce_mixture_forces_invalid_mode_raises():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
     forces = np.zeros((4, 3), dtype="double")
     with pytest.raises(ValueError, match='mode must be "weighted_sum" or "sum"'):
         reduce_mixture_forces(forces, mixed_cell, mode="weird")
@@ -173,7 +173,7 @@ def test_reduce_mixture_forces_passes_through_already_reduced():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
 
     site_forces = np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]], dtype="double")
     reduced = reduce_mixture_forces(site_forces, mixed_cell)
@@ -193,7 +193,7 @@ def test_reduce_mixture_forces_batched():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
 
     expanded = np.zeros((3, 4, 3), dtype="double")
     expanded[0] = [[1, 0, 0], [0, 2, 0], [3, 0, 0], [0, 4, 0]]
@@ -221,7 +221,7 @@ def test_reduce_mixture_forces_shape_mismatch_raises():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
 
     bad = np.zeros((5, 3), dtype="double")
     with pytest.raises(ValueError, match="must equal"):
