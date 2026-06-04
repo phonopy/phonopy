@@ -10,6 +10,9 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
+    strategy:
+      matrix:
+        python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v5
