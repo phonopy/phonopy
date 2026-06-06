@@ -87,13 +87,20 @@ from phonopy.phonon.dos import (
     ProjectedDosDict,
     TotalDos,
     TotalDosDict,
-    get_dos_frequency_range,
 )
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.mesh import IterMesh, IterMeshDict, Mesh, MeshDict
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.moment import PhononMoment
+from phonopy.phonon.plot import (
+    plot_band_structure,
+    plot_band_structure_and_dos,
+    plot_projected_dos,
+    plot_thermal_displacements,
+    plot_thermal_properties,
+    plot_total_dos,
+)
 from phonopy.phonon.qpoints import QpointsDict, QpointsPhonon
 from phonopy.phonon.random_displacements import RandomDisplacements
 from phonopy.phonon.thermal_displacement import (
@@ -1513,27 +1520,10 @@ class Phonopy:
             display the figure.
 
         """
-        import matplotlib.pyplot as plt
-
         if self._band_structure is None:
             raise RuntimeError("run_band_structure has to be done.")
 
-        if self._band_structure.is_legacy_plot:
-            fig, axs = plt.subplots(1, 1)
-        else:
-            from mpl_toolkits.axes_grid1 import ImageGrid
-
-            n = len([x for x in self._band_structure.path_connections if not x])
-            fig = plt.figure()
-            axs = ImageGrid(
-                fig,
-                111,  # similar to subplot(111)
-                nrows_ncols=(1, n),
-                axes_pad=0.11,
-                label_mode="L",
-            )
-        self._band_structure.plot(axs)
-        return plt
+        return plot_band_structure(self._band_structure)
 
     def write_hdf5_band_structure(
         self,
@@ -1784,9 +1774,6 @@ class Phonopy:
         self, pdos_indices: Sequence[Sequence[int]] | None = None
     ) -> Any:
         """Plot band structure and DOS."""
-        import matplotlib.pyplot as plt
-        from matplotlib.axes import Axes
-
         if self._total_dos is None and pdos_indices is None:
             msg = "run_total_dos has to be done."
             raise RuntimeError(msg)
@@ -1797,66 +1784,12 @@ class Phonopy:
             msg = "run_band_structure has to be done."
             raise RuntimeError(msg)
 
-        if self._band_structure.is_legacy_plot:
-            import matplotlib.gridspec as gridspec
-
-            # plt.figure(figsize=(10, 6))
-            gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
-            ax2 = plt.subplot(gs[0, 1])
-            if pdos_indices is None:
-                assert self._total_dos is not None
-                self._total_dos.plot(ax2, ylabel="", draw_grid=False, flip_xy=True)
-            else:
-                assert self._pdos is not None
-                self._pdos.plot(
-                    ax2, indices=pdos_indices, ylabel="", draw_grid=False, flip_xy=True
-                )
-            ax2.set_xlim(left=0, right=None)
-            plt.setp(ax2.get_yticklabels(), visible=False)
-
-            ax1 = plt.subplot(gs[0, 0], sharey=ax2)
-            self._band_structure.plot(ax1)
-
-            plt.subplots_adjust(wspace=0.03)
-            plt.tight_layout()
-        else:
-            from mpl_toolkits.axes_grid1 import ImageGrid
-
-            n = len([x for x in self._band_structure.path_connections if not x]) + 1
-            fig = plt.figure()
-            axs = ImageGrid(
-                fig,
-                111,  # similar to subplot(111)
-                nrows_ncols=(1, n),
-                axes_pad=0.11,
-                label_mode="L",
-            )
-            self._band_structure.plot(axs[:-1])
-
-            if pdos_indices is None:
-                assert self._total_dos is not None
-                self._total_dos.plot(
-                    axs[-1], xlabel="", ylabel="", draw_grid=False, flip_xy=True
-                )
-            else:
-                assert self._pdos is not None
-                self._pdos.plot(
-                    axs[-1],
-                    indices=pdos_indices,
-                    xlabel="",
-                    ylabel="",
-                    draw_grid=False,
-                    flip_xy=True,
-                )
-            last_axs = cast(Axes, axs[-1])
-            xlim = last_axs.get_xlim()
-            ylim = last_axs.get_ylim()
-            aspect = (xlim[1] - xlim[0]) / (ylim[1] - ylim[0]) * 3
-            last_axs.set_aspect(aspect)
-            last_axs.axhline(y=0, linestyle=":", linewidth=0.5, color="b")
-            last_axs.set_xlim(left=0, right=None)
-
-        return plt
+        return plot_band_structure_and_dos(
+            self._band_structure,
+            total_dos=self._total_dos,
+            projected_dos=self._pdos,
+            pdos_indices=pdos_indices,
+        )
 
     # Sampling at q-points
     def run_qpoints(
@@ -2101,19 +2034,12 @@ class Phonopy:
             msg = "run_total_dos has to be done before plotting total DOS."
             raise RuntimeError(msg)
 
-        import matplotlib.pyplot as plt
-
-        fig, ax = plt.subplots()
-        self._total_dos.plot(ax, xlabel=xlabel, ylabel=ylabel, draw_grid=False)
-        if with_tight_frequency_range:
-            assert self._total_dos.dos is not None
-            fmin, fmax = get_dos_frequency_range(
-                self._total_dos.frequency_points, self._total_dos.dos
-            )
-            ax.set_xlim(left=fmin, right=fmax)
-        ax.set_ylim(bottom=0, top=None)
-
-        return plt
+        return plot_total_dos(
+            self._total_dos,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            with_tight_frequency_range=with_tight_frequency_range,
+        )
 
     def write_total_dos(self, filename: str | os.PathLike = "total_dos.dat") -> None:
         """Write total DOS to text file."""
@@ -2309,38 +2235,20 @@ class Phonopy:
             Plot with tight frequency range. Default is False.
 
         """
-        import matplotlib.pyplot as plt
-
         if self._pdos is None:
             msg = "run_projected_dos has to be done before plotting projected DOS."
             raise RuntimeError(msg)
 
-        fig, ax = plt.subplots()
-        ax.xaxis.set_ticks_position("both")
-        ax.yaxis.set_ticks_position("both")
-        ax.xaxis.set_tick_params(which="both", direction="in")
-        ax.yaxis.set_tick_params(which="both", direction="in")
-
-        self._pdos.plot(
-            ax,
-            indices=pdos_indices,
+        return plot_projected_dos(
+            self._pdos,
+            pdos_indices=pdos_indices,
             legend=legend,
             legend_prop=legend_prop,
             legend_frameon=legend_frameon,
             xlabel=xlabel,
             ylabel=ylabel,
-            draw_grid=False,
+            with_tight_frequency_range=with_tight_frequency_range,
         )
-
-        if with_tight_frequency_range:
-            assert self._pdos.projected_dos is not None
-            fmin, fmax = get_dos_frequency_range(
-                self._pdos.frequency_points, self._pdos.projected_dos.sum(axis=0)
-            )
-            ax.set_xlim(left=fmin, right=fmax)
-        ax.set_ylim(bottom=0, top=None)
-
-        return plt
 
     def write_projected_dos(
         self, filename: str | os.PathLike = "projected_dos.dat"
@@ -2485,8 +2393,6 @@ class Phonopy:
             "normal", "compact", None. None will not show legend.
 
         """
-        import matplotlib.pyplot as plt
-
         if (
             self._thermal_properties is None
             or self._thermal_properties.temperatures is None
@@ -2494,28 +2400,14 @@ class Phonopy:
             msg = "run_thermal_properties has to be done."
             raise RuntimeError(msg)
 
-        plt.rcParams["pdf.fonttype"] = 42
-        plt.rcParams["font.family"] = "serif"
-
-        fig, ax = plt.subplots()
-        ax.xaxis.set_ticks_position("both")
-        ax.yaxis.set_ticks_position("both")
-        ax.xaxis.set_tick_params(which="both", direction="in")
-        ax.yaxis.set_tick_params(which="both", direction="in")
-
-        self._thermal_properties.plot(
-            ax,
+        return plot_thermal_properties(
+            self._thermal_properties,
             xlabel=xlabel,
             ylabel=ylabel,
             with_grid=with_grid,
             divide_by_Z=divide_by_Z,
             legend_style=legend_style,
         )
-
-        temps = self._thermal_properties.temperatures
-        ax.set_xlim(left=0, right=temps[-1])
-
-        return plt
 
     def write_yaml_thermal_properties(
         self, filename: str | os.PathLike = "thermal_properties.yaml"
@@ -2604,25 +2496,13 @@ class Phonopy:
 
     def plot_thermal_displacements(self, is_legend: bool = False) -> Any:
         """Plot thermal displacements."""
-        import matplotlib.pyplot as plt
-
         if self._thermal_displacements is None:
             msg = "run_thermal_displacements has to be done."
             raise RuntimeError(msg)
 
-        fig, ax = plt.subplots()
-        ax.xaxis.set_ticks_position("both")
-        ax.yaxis.set_ticks_position("both")
-        ax.xaxis.set_tick_params(which="both", direction="in")
-        ax.yaxis.set_tick_params(which="both", direction="in")
-
-        self._thermal_displacements.plot(plt, is_legend=is_legend)
-
-        assert self._thermal_displacements.temperatures is not None
-        temps = self._thermal_displacements.temperatures
-        ax.set_xlim(left=0, right=temps[-1])
-
-        return plt
+        return plot_thermal_displacements(
+            self._thermal_displacements, is_legend=is_legend
+        )
 
     def write_yaml_thermal_displacements(self) -> None:
         """Write thermal displacements in yaml format."""
