@@ -877,7 +877,7 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
     # Use an independent instance: generate_displacements replaces the
     # dataset, which also invalidates force constants, so the
     # session-scoped fixture must not be mutated.
-    ph = ph_tio2.copy()
+    ph = ph_tio2.replicate()
     ph.nac_params = ph_tio2.nac_params
     ph.force_constants = ph_tio2.force_constants
     ph.generate_displacements(
