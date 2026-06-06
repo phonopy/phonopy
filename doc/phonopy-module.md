@@ -1,6 +1,21 @@
 (phonopy_module)=
 # Phonopy API for Python
 
+```{note}
+The Python API is being restructured toward phonopy v5 and v6; see
+{ref}`development` for the architecture principles, migration plan,
+and deprecation policy. Two points are directly relevant to API
+users:
+
+- Mutating a calculation input (`force_constants`, `nac_params`,
+  `masses`, the displacement dataset, `forces`, ...) invalidates all
+  results derived from it. Run the corresponding `run_*` method
+  again before accessing the result; accessing a cleared result
+  raises `RuntimeError`.
+- APIs planned for removal emit `DeprecationWarning`. New code
+  should not rely on them.
+```
+
 ## Three unit cells
 
 In the `Phonopy` class, mainly three different unit cells are used, `unitcell`,

@@ -25,6 +25,8 @@ repository.
 
 - Github issues is the place to discuss about phonopy issues.
 - Github pull request is the place to request merging source code.
+- Architecture principles and the migration plan toward v5/v6 are
+  documented at https://phonopy.github.io/phonopy/development.html.
 
 ### Formatting
 
