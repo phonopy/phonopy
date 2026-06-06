@@ -3272,13 +3272,13 @@ class Phonopy:
             raise RuntimeError("Force constants are not prepared.")
 
         fc_shape = self._force_constants.shape
-        ph_copy = self._copy()
+        ph_copy = self._replicate()
         ph_copy.force_constants = self._force_constants
 
         if with_nac and self._nac_params is not None:
             ph_copy.nac_params = self._nac_params
 
-        ph = self._copy(supercell_matrix)
+        ph = self._replicate(supercell_matrix)
         assert isclose(ph.primitive, ph_copy.primitive)
         d2f = DynmatToForceConstants(
             ph.primitive,
@@ -3296,14 +3296,15 @@ class Phonopy:
 
         return ph
 
-    def copy(self, log_level: int | None = None) -> Phonopy:
-        """Copy this Phonopy instance carrying only the init parameters.
+    def replicate(self, log_level: int | None = None) -> Phonopy:
+        """Return a new instance constructed with the same init parameters.
 
         Notes
         -----
         The returned instance is constructed with the same init
         parameters as this one, but internal state such as force
-        constants, NAC parameters, MLP, etc. is **not** copied.
+        constants, NAC parameters, MLP, etc. is **not** carried over.
+        Supercell, primitive cell, and symmetry are recomputed.
 
         Returns
         -------
@@ -3311,7 +3312,24 @@ class Phonopy:
             New Phonopy instance.
 
         """
-        return self._copy(log_level=log_level)
+        return self._replicate(log_level=log_level)
+
+    def copy(self, log_level: int | None = None) -> Phonopy:
+        """Return a new instance constructed with the same init parameters.
+
+        Deprecated. Use :meth:`replicate` instead. Despite its name,
+        this method does not copy internal state such as force
+        constants and NAC parameters.
+
+        """
+        warnings.warn(
+            "Phonopy.copy is deprecated. Use Phonopy.replicate instead. "
+            "Note that neither method carries over internal state such "
+            "as force constants and NAC parameters.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.replicate(log_level=log_level)
 
     def to_phonopy_yaml(
         self, configuration: dict | None = None, settings: dict | None = None
@@ -3330,12 +3348,12 @@ class Phonopy:
     ###################
     # private methods #
     ###################
-    def _copy(
+    def _replicate(
         self,
         supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
         log_level: int | None = None,
     ) -> Phonopy:
-        """Copy this Phonopy class instance with init parameters.
+        """Construct a new instance with the same init parameters.
 
         Parameters
         ----------
@@ -3346,7 +3364,7 @@ class Phonopy:
         Returns
         -------
         ph : Phonopy
-            Copied phonopy class instance.
+            New Phonopy class instance.
 
         """
         if supercell_matrix is None:

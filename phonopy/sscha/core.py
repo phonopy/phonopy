@@ -112,7 +112,7 @@ class MLPSSCHA:
         self._random_seed = random_seed
         self._log_level = log_level
 
-        self._ph = ph.copy()
+        self._ph = ph.replicate()
         self._ph.mlp = PhonopyMLP(mlp=mlp.mlp)
         self._ph.nac_params = copy.deepcopy(ph.nac_params)
 

@@ -43,6 +43,29 @@ def test_displacements_masses_setter_NaCl(ph_nacl: Phonopy):
     np.testing.assert_allclose(ph.supercell.masses, ph_in.supercell.masses * 2)
 
 
+def test_replicate_NaCl(ph_nacl: Phonopy):
+    """Test Phonopy.replicate carrying only the init parameters."""
+    ph = ph_nacl.replicate()
+    assert ph is not ph_nacl
+    assert isclose(ph.unitcell, ph_nacl.unitcell)
+    assert isclose(ph.supercell, ph_nacl.supercell)
+    assert isclose(ph.primitive, ph_nacl.primitive)
+    np.testing.assert_array_equal(ph.supercell_matrix, ph_nacl.supercell_matrix)
+    # Internal state is not carried over.
+    assert ph.force_constants is None
+    assert ph.nac_params is None
+    assert ph.dataset is None
+
+
+def test_copy_deprecated_NaCl(ph_nacl: Phonopy):
+    """Test that Phonopy.copy warns and delegates to replicate."""
+    with pytest.warns(DeprecationWarning):
+        ph = ph_nacl.copy()
+    assert isclose(ph.unitcell, ph_nacl.unitcell)
+    assert ph.force_constants is None
+    assert ph.nac_params is None
+
+
 def test_forces_setter_NaCl_type1(ph_nacl: Phonopy):
     """Test Phonopy.forces setter and getter (type1 dataset)."""
     ph_in = ph_nacl
