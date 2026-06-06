@@ -376,6 +376,7 @@ class Phonopy:
     def unit_conversion_factor(self, unit_conversion_factor: float):
         self._unit_conversion_factor = unit_conversion_factor
         self._unit_conversion_factor_overridden = True
+        self._invalidate_derived("factor")
 
     @property
     def calculator(self) -> str | None:
@@ -448,6 +449,7 @@ class Phonopy:
             raise RuntimeError("Data format of dataset is wrong.")
 
         self._supercells_with_displacements = None
+        self._invalidate_derived("dataset_inputs")
 
     @property
     def mlp_dataset(self) -> Type2DisplacementDataset | None:
@@ -544,6 +546,7 @@ class Phonopy:
             )
         self._dataset = {"displacements": disp}
         self._supercells_with_displacements = None
+        self._invalidate_derived("dataset_inputs")
 
     @property
     def force_constants(self) -> NDArray[np.double] | None:
@@ -572,6 +575,7 @@ class Phonopy:
     def force_constants(self, force_constants: NDArray[np.double] | None) -> None:
         if force_constants is None:
             self._force_constants = None
+            self._invalidate_derived("dm_inputs")
             return
 
         self._force_constants = np.array(force_constants, dtype="double", order="C")
@@ -585,6 +589,7 @@ class Phonopy:
                 )
                 raise RuntimeError(msg)
 
+        self._invalidate_derived("dm_inputs")
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
@@ -600,6 +605,7 @@ class Phonopy:
             cutoff_radius,
             symprec=self._symprec,
         )
+        self._invalidate_derived("dm_inputs")
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
@@ -620,6 +626,7 @@ class Phonopy:
         self, set_of_energies: Sequence[float] | NDArray[np.double]
     ) -> None:
         self._set_forces_energies(set_of_energies, target="supercell_energies")
+        self._invalidate_derived("dataset_inputs")
 
     @property
     def forces(self) -> NDArray[np.double]:
@@ -652,6 +659,7 @@ class Phonopy:
         | Sequence[Sequence[Sequence[float]]],
     ) -> None:
         self._set_forces_energies(sets_of_forces, target="forces")
+        self._invalidate_derived("dataset_inputs")
 
     @property
     def dynamical_matrix(self) -> DynamicalMatrix | None:
@@ -688,6 +696,7 @@ class Phonopy:
     @nac_params.setter
     def nac_params(self, nac_params: dict | None) -> None:
         self._nac_params = nac_params
+        self._invalidate_derived("dm_inputs")
         if self._force_constants is not None:
             self._set_dynamical_matrix()
 
@@ -802,6 +811,7 @@ class Phonopy:
         u2s_map = self._supercell.u2s_map
         u_masses = s_masses[u2s_map]
         self._unitcell.masses = u_masses
+        self._invalidate_derived("dm_inputs")
         if self._force_constants is not None:
             self._set_dynamical_matrix()
 
@@ -1045,6 +1055,7 @@ class Phonopy:
                 self._force_constants, primitive=self._primitive, lang=self._lang
             )
 
+        self._invalidate_derived("dm_inputs")
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
@@ -1113,6 +1124,7 @@ class Phonopy:
                 lang=self._lang,
             )
 
+        self._invalidate_derived("dm_inputs")
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
@@ -1149,6 +1161,7 @@ class Phonopy:
                 lang=self._lang,
             )
 
+        self._invalidate_derived("dm_inputs")
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
@@ -3440,8 +3453,40 @@ class Phonopy:
         # type of numpy array.
         self._force_constants = self._dynamical_matrix.force_constants
 
-        if self._group_velocity is not None:
-            self._set_group_velocity()
+    def _invalidate_derived(
+        self, level: Literal["dataset_inputs", "dm_inputs", "factor"]
+    ) -> None:
+        """Clear derived state after an input mutation.
+
+        Levels cascade:
+
+        - "dataset_inputs" clears force constants, then behaves as
+          "dm_inputs".
+        - "dm_inputs" clears the dynamical matrix and everything
+          derived from it.
+        - "factor" preserves the dynamical matrix (it does not depend
+          on the unit conversion factor) but clears group velocity and
+          all analyses.
+
+        """
+        if level == "dataset_inputs":
+            self._force_constants = None
+        if level in ("dataset_inputs", "dm_inputs"):
+            self._dynamical_matrix = None
+        self._group_velocity = None
+        self._band_structure = None
+        self._mesh = None
+        self._total_dos = None
+        self._pdos = None
+        self._thermal_properties = None
+        self._thermal_displacements = None
+        self._thermal_displacement_matrices = None
+        self._moment = None
+        self._dynamic_structure_factor = None
+        self._qpoints = None
+        self._modulation = None
+        self._irreps = None
+        self._random_displacements = None
 
     def _set_group_velocity(self) -> None:
         if self._dynamical_matrix is None:
