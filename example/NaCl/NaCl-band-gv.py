@@ -29,9 +29,10 @@ _append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
 _append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
 _append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 phonon.run_band_structure(bands, with_group_velocities=True)
-band_dict = phonon.get_band_structure_dict()
-frequencies = band_dict["frequencies"]
-group_velocities = band_dict["group_velocities"]
+bs = phonon.band_structure
+assert bs is not None
+frequencies = bs.frequencies
+group_velocities = bs.group_velocities
 print(len(frequencies))
 print(frequencies[0].shape)
 print(len(group_velocities))

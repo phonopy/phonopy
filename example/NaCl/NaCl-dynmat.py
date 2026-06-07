@@ -17,7 +17,8 @@ q = [0.1, 0.1, 0.1]
 dynmat = phonon.get_dynamical_matrix_at_q(q)
 print(dynmat)
 phonon.run_qpoints(q, with_dynamical_matrices=True)
-print(phonon.get_qpoints_dict()["frequencies"][0])
+assert phonon.qpoints is not None
+print(phonon.qpoints.frequencies[0])
 phonon.write_yaml_qpoints_phonon()
 
 data = yaml.load(open("qpoints.yaml"), Loader=yaml.FullLoader)

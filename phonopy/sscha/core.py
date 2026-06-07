@@ -166,8 +166,7 @@ class MLPSSCHA:
         self._ph.run_mesh(mesh=mesh)
         self._ph.run_thermal_properties(temperatures=[self._temperature])
         hfe = (
-            self._ph.get_thermal_properties_dict()["free_energy"][0]
-            / get_physical_units().EvTokJmol
+            self._ph.thermal_properties.free_energy[0] / get_physical_units().EvTokJmol
         )
         n_cell = len(self._ph.supercell) / len(self._ph.primitive)
         pe = self.potential_energy / n_cell

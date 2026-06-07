@@ -42,12 +42,14 @@ def test_Qpoints_with_NAC_qdirection(ph_nacl: Phonopy):
     phonon = ph_nacl
     qpoints = [[0, 0, 0]]
     phonon.run_qpoints(qpoints)
-    freqs = phonon.get_qpoints_dict()["frequencies"]
+    assert phonon.qpoints is not None
+    freqs = phonon.qpoints.frequencies
     np.testing.assert_allclose(
         freqs, [[0, 0, 0, 4.61643516, 4.61643516, 4.61643516]], atol=1e-5
     )
     phonon.run_qpoints(qpoints, nac_q_direction=[1, 0, 0])
-    freqs = phonon.get_qpoints_dict()["frequencies"]
+    assert phonon.qpoints is not None
+    freqs = phonon.qpoints.frequencies
     np.testing.assert_allclose(
         freqs, [[0, 0, 0, 4.61643516, 4.61643516, 7.39632718]], atol=1e-5
     )

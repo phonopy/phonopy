@@ -67,6 +67,9 @@ class QpointsPhonon:
 
     Attributes
     ----------
+    qpoints : ndarray
+        q-points in reduced coordinates of reciprocal lattice.
+        shape=(qpoints, 3), dtype='double'
     frequencies : ndarray
         Phonon frequencies. Imaginary frequencies are represented by
         negative real numbers. Unit conversion factor is multiplied.
@@ -161,6 +164,11 @@ class QpointsPhonon:
         self._dynamical_matrices: NDArray[np.cdouble] | None = None
 
         self._run()
+
+    @property
+    def qpoints(self) -> NDArray[np.double]:
+        """Return q-points in reduced coordinates of reciprocal lattice."""
+        return self._qpoints
 
     @property
     def frequencies(self) -> NDArray[np.double]:

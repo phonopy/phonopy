@@ -271,17 +271,14 @@ phonon.save(settings={'force_constants': True})
 
 ### Band structure
 
-Set band paths (`run_band_structure()`) and get the results
-(`get_band_structure_dict()`).
-
-A dictionary with `qpoints`, `distances`, `frequencies`, `eigenvectors`,
-and `group_velocities` is returned by `get_band_structure_dict()`.
-Eigenvectors are included when `with_eigenvectors=True` is passed to
-`run_band_structure()`. See the docstring of
-`Phonopy.get_band_structure_dict` for details. Frequencies are returned
-in the unit set by `Phonopy.unit_conversion_factor` (THz by default for
-the VASP calculator with displacements in Angstrom and forces in
-eV/Angstrom). Imaginary frequencies are encoded as negative real numbers.
+Set band paths with `run_band_structure()`. The result is accessible via
+the `band_structure` property, which returns a `BandStructure` object with
+attributes `qpoints`, `distances`, `frequencies`, `eigenvectors`, and
+`group_velocities`. Eigenvectors are included when `with_eigenvectors=True`
+is passed to `run_band_structure()`. Frequencies are returned in the unit
+set by `Phonopy.unit_conversion_factor` (THz by default for the VASP
+calculator with displacements in Angstrom and forces in eV/Angstrom).
+Imaginary frequencies are encoded as negative real numbers.
 
 In `example/NaCl`, the phonopy is executed from python script, e.g.,
 
@@ -340,21 +337,21 @@ To use this method, `seekpath` python module is needed.
 ### Mesh sampling
 
 Run the sampling-mesh phonon calculation with `run_mesh()` in
-reciprocal space. The irreducible _q_-points and corresponding
-_q_-point weights, eigenvalues, and eigenvectors are obtained by
-`get_mesh_dict()`. `mesh` gives the sampling mesh in the Monkhorst-Pack
-scheme. The keyword `shift` gives the fractional mesh shift with
-respect to the neighboring grid points.
+reciprocal space. The `mesh` property returns a `Mesh` object with
+attributes `qpoints`, `weights`, `frequencies`, `eigenvectors`, and
+`group_velocities` for the irreducible _q_-points. `mesh` gives the
+sampling mesh in the Monkhorst-Pack scheme. The keyword `shift` gives
+the fractional mesh shift with respect to the neighboring grid points.
 
 ```python
 mesh = [20, 20, 20]
 phonon.run_mesh(mesh)
-mesh_dict = phonon.get_mesh_dict()
-qpoints = mesh_dict['qpoints']
-weights = mesh_dict['weights']
-frequencies = mesh_dict['frequencies']
-eigenvectors = mesh_dict['eigenvectors']
-group_velocities = mesh_dict['group_velocities']
+m = phonon.mesh
+qpoints = m.qpoints
+weights = m.weights
+frequencies = m.frequencies
+eigenvectors = m.eigenvectors
+group_velocities = m.group_velocities
 ```
 
 To obtain eigenvectors, the corresponding keyword argument must be set:
@@ -381,8 +378,8 @@ phonon.run_mesh(100.0)
 Before starting mesh sampling has to be finished. Then set parameters
 (`run_total_dos()` or `run_projected_dos()`) and write the results into files
 (`write_total_dos()` and `write_projected_dos()`). In the case of PDOS, the
-eigenvectors have to be calculated in the mesh sampling. To get the results
-`get_total_dos_dict()` and `get_projected_dos_dict()` can be used.
+eigenvectors have to be calculated in the mesh sampling. The results are
+accessible via the `total_dos` and `projected_dos` properties.
 
 To plot total DOS,
 
@@ -419,21 +416,20 @@ has to be done in the **THz unit**. The unit conversion factor for phonon
 frequency is set in the pre-process of Phonopy with the `factor` keyword.
 Calculation range of temperature is set by the parameters
 `run_thermal_properties`. Helmholtz free energy, entropy, heat capacity at
-constant volume at temperatures are obtained by `get_thermal_properties_dict`,
-where the results are given as a dictionary of temperatures, Helmholtz free
-energy, entropy, and heat capacity with keys `temperatures`, `free_energy`,
-`entropy`, and `heat_capacity`, respectively.
+constant volume at temperatures are obtained via the `thermal_properties`
+property, which returns a `ThermalProperties` object with attributes
+`temperatures`, `free_energy`, `entropy`, and `heat_capacity`.
 
 ```python
 phonon.run_mesh([20, 20, 20])
 phonon.run_thermal_properties(t_step=10,
                               t_max=1000,
                               t_min=0)
-tp_dict = phonon.get_thermal_properties_dict()
-temperatures = tp_dict['temperatures']
-free_energy = tp_dict['free_energy']
-entropy = tp_dict['entropy']
-heat_capacity = tp_dict['heat_capacity']
+tp = phonon.thermal_properties
+temperatures = tp.temperatures
+free_energy = tp.free_energy
+entropy = tp.entropy
+heat_capacity = tp.heat_capacity
 
 for t, F, S, cv in zip(temperatures, free_energy, entropy, heat_capacity):
     print(("%12.3f " + "%15.7f" * 3) % ( t, F, S, cv ))
@@ -466,8 +462,10 @@ phonon.nac_params = {'born': born,
 ### Phonon at arbitrary q-points
 
 To evaluate phonons at an explicit list of q-points (without imposing
-a band path or a mesh), use `run_qpoints()`. The result is retrieved
-through `get_qpoints_dict()`.
+a band path or a mesh), use `run_qpoints()`. The result is accessible
+via the `qpoints` property, which returns a `QpointsPhonon` object with
+attributes `frequencies`, `eigenvectors`, `group_velocities`, and
+`dynamical_matrices`.
 
 ```python
 phonon.run_qpoints(
@@ -477,10 +475,10 @@ phonon.run_qpoints(
     with_eigenvectors=True,
     with_group_velocities=True,
 )
-qpts_dict = phonon.get_qpoints_dict()
-frequencies = qpts_dict['frequencies']
-eigenvectors = qpts_dict['eigenvectors']
-group_velocities = qpts_dict['group_velocities']
+qpts = phonon.qpoints
+frequencies = qpts.frequencies
+eigenvectors = qpts.eigenvectors
+group_velocities = qpts.group_velocities
 ```
 
 For one-off evaluations at a single q-point, the lightweight helpers
@@ -497,14 +495,15 @@ Mean-square atomic displacements and the corresponding 3x3 matrices
 ```python
 phonon.run_mesh([20, 20, 20], with_eigenvectors=True, is_mesh_symmetry=False)
 phonon.run_thermal_displacements(t_min=0, t_max=1000, t_step=10)
-td_dict = phonon.get_thermal_displacements_dict()
-temperatures = td_dict['temperatures']
-u2 = td_dict['thermal_displacements']  # shape=(temperatures, atoms*3)
+td = phonon.thermal_displacements
+temperatures = td.temperatures
+u2 = td.thermal_displacements  # shape=(temperatures, atoms*3)
 ```
 
 ```python
 phonon.run_thermal_displacement_matrices(t_min=0, t_max=1000, t_step=10)
-tdm_dict = phonon.get_thermal_displacement_matrices_dict()
+tdm = phonon.thermal_displacement_matrices
+temperatures = tdm.temperatures
 phonon.write_thermal_displacement_matrix_to_cif(temperature_index=10)
 ```
 

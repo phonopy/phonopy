@@ -71,6 +71,17 @@ def test_thermal_properties_at_temperatues(ph_nacl):
     _test_thermal_properties(ph_nacl)
 
 
+def test_thermal_properties_individual_properties(ph_nacl):
+    """Test free_energy, entropy, and heat_capacity properties."""
+    ph_nacl.run_mesh([5, 5, 5])
+    ph_nacl.run_thermal_properties(t_step=100, t_max=900, cutoff_frequency=1e-5)
+    tp = ph_nacl.thermal_properties
+    np.testing.assert_allclose(tp.temperatures, temps, atol=1e-5)
+    np.testing.assert_allclose(tp.free_energy, fes, atol=1e-5)
+    np.testing.assert_allclose(tp.entropy, entropies, atol=1e-5)
+    np.testing.assert_allclose(tp.heat_capacity, cvs, atol=1e-5)
+
+
 def _test_thermal_properties(ph: Phonopy):
     tp = ph.thermal_properties
 

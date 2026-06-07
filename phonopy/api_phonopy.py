@@ -40,7 +40,6 @@ import copy
 import lzma
 import os
 import sys
-import textwrap
 import warnings
 from collections.abc import Callable, Sequence
 from typing import Any, Literal, cast
@@ -178,7 +177,6 @@ class Phonopy:
         | Sequence[Sequence[float]]
         | NDArray
         | None = "auto",
-        factor: float | None = None,
         group_velocity_delta_q: float | None = None,
         symprec: float = 1e-5,
         is_symmetry: bool = True,
@@ -204,10 +202,6 @@ class Phonopy:
             symmetry. To use the unit cell as the primitive cell
             (identity transformation), pass ``"P"``. ``None`` is treated
             the same as ``"auto"``.
-        factor : float, optional
-            Deprecated. Passing a non-``None`` value raises
-            ``RuntimeError``. Use the
-            :attr:`unit_conversion_factor` setter instead.
         group_velocity_delta_q : float, optional
             Delta-q distance to calculate group velocity.
         symprec : float, optional
@@ -242,13 +236,6 @@ class Phonopy:
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
         self._lang: Literal["C", "Rust"] = lang
-
-        if factor is not None:
-            msg = (
-                "Phonopy class instantiation with factor was removed. "
-                "Use unit_conversion_factor attribute instead."
-            )
-            raise RuntimeError(textwrap.fill(msg, width=70))
 
         self._unit_conversion_factor = get_calculator_physical_units(
             interface_mode=self._calculator
@@ -783,6 +770,11 @@ class Phonopy:
     def irreps(self) -> IrReps | None:
         """Return IrReps instance."""
         return self._irreps
+
+    @property
+    def modulation(self) -> Modulation | None:
+        """Return Modulation instance."""
+        return self._modulation
 
     @property
     def moment(self) -> PhononMoment | None:
@@ -1447,7 +1439,18 @@ class Phonopy:
                 are not calculated.
                 ``shape=(q-points, bands, 3)``, ``dtype='double'``.
 
+        .. deprecated::
+            Use the ``band_structure`` property instead.
+
         """
+        warnings.warn(
+            "get_band_structure_dict() is deprecated. Use the band_structure "
+            "property to access the BandStructure result object; its "
+            "qpoints, distances, frequencies, eigenvectors, and "
+            "group_velocities attributes replace the dict keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._band_structure is None:
             msg = "Phonopy.run_band_structure() has to be done."
             raise RuntimeError(msg)
@@ -1734,7 +1737,18 @@ class Phonopy:
                 Phonon group velocities at ir-grid points.
                 ``shape=(ir-grid points, bands, 3)``, ``dtype='double'``.
 
+        .. deprecated::
+            Use the ``mesh`` property instead.
+
         """
+        warnings.warn(
+            "get_mesh_dict() is deprecated. Use the mesh property to access "
+            "the Mesh result object; its qpoints, weights, frequencies, "
+            "eigenvectors, and group_velocities attributes replace the dict "
+            "keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if isinstance(self._mesh, Mesh):
             return MeshDict(
                 qpoints=self._mesh.qpoints,
@@ -1870,7 +1884,18 @@ class Phonopy:
                 Dynamical matrices at q-points.
                 ``shape=(qpoints, bands, bands)``, ``dtype='double'``.
 
+        .. deprecated::
+            Use the ``qpoints`` property instead.
+
         """
+        warnings.warn(
+            "get_qpoints_dict() is deprecated. Use the qpoints property to "
+            "access the Qpoints result object; its frequencies, eigenvectors, "
+            "group_velocities, and dynamical_matrices attributes replace the "
+            "dict keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._qpoints is None:
             msg = "Phonopy.run_qpoints() has to be done."
             raise RuntimeError(msg)
@@ -1984,7 +2009,17 @@ class Phonopy:
         total_dos:
             shape=(frequency_sampling_points, ), dtype='double'
 
+        .. deprecated::
+            Use the ``total_dos`` property instead.
+
         """
+        warnings.warn(
+            "get_total_dos_dict() is deprecated. Use the total_dos property "
+            "to access the TotalDos result object; its frequency_points and "
+            "dos attributes replace the dict keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._total_dos is None:
             msg = "run_total_dos has to be done before getting total DOS."
             raise RuntimeError(msg)
@@ -2191,7 +2226,18 @@ class Phonopy:
         projected_dos:
             shape=(projections, frequency_sampling_points), dtype='double'
 
+        .. deprecated::
+            Use the ``projected_dos`` property instead.
+
         """
+        warnings.warn(
+            "get_projected_dos_dict() is deprecated. Use the projected_dos "
+            "property to access the ProjectedDos result object; its "
+            "frequency_points and projected_dos attributes replace the dict "
+            "keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._pdos is None:
             msg = "run_projected_dos has to be done before getting projected DOS."
             raise RuntimeError(msg)
@@ -2350,7 +2396,18 @@ class Phonopy:
         heat_capacity : ndarray
             shape=(temperatures, ), dtype='double'
 
+        .. deprecated::
+            Use the ``thermal_properties`` property instead.
+
         """
+        warnings.warn(
+            "get_thermal_properties_dict() is deprecated. Use the "
+            "thermal_properties property to access the ThermalProperties "
+            "result object; its temperatures, free_energy, entropy, and "
+            "heat_capacity attributes replace the dict keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._thermal_properties is None:
             msg = (
                 "run_thermal_properties has to be done before "
@@ -2483,7 +2540,20 @@ class Phonopy:
         self._thermal_displacements = td
 
     def get_thermal_displacements_dict(self) -> dict:
-        """Return thermal displacements."""
+        """Return thermal displacements.
+
+        .. deprecated::
+            Use the ``thermal_displacements`` property instead.
+
+        """
+        warnings.warn(
+            "get_thermal_displacements_dict() is deprecated. Use the "
+            "thermal_displacements property to access the ThermalDisplacements"
+            " result object; its temperatures and thermal_displacements "
+            "attributes replace the dict keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._thermal_displacements is None:
             msg = "run_thermal_displacements has to be done."
             raise RuntimeError(msg)
@@ -2568,7 +2638,22 @@ class Phonopy:
         self._thermal_displacement_matrices = tdm
 
     def get_thermal_displacement_matrices_dict(self) -> ThermalDisplacementMatricesDict:
-        """Return thermal displacement matrices."""
+        """Return thermal displacement matrices.
+
+        .. deprecated::
+            Use the ``thermal_displacement_matrices`` property instead.
+
+        """
+        warnings.warn(
+            "get_thermal_displacement_matrices_dict() is deprecated. Use the "
+            "thermal_displacement_matrices property to access the "
+            "ThermalDisplacementMatrices result object; its temperatures, "
+            "thermal_displacement_matrices, and "
+            "thermal_displacement_matrices_cif attributes replace the dict "
+            "keys.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._thermal_displacement_matrices is None:
             msg = "run_thermal_displacement_matrices has to be done."
             raise RuntimeError(msg)
@@ -3168,9 +3253,9 @@ class Phonopy:
             lang=self._lang,
         )
         ph_copy.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
-        dynmat = ph_copy.get_qpoints_dict()["dynamical_matrices"]
-        assert dynmat is not None
-        d2f.dynamical_matrices = dynmat
+        assert ph_copy.qpoints is not None
+        assert ph_copy.qpoints.dynamical_matrices is not None
+        d2f.dynamical_matrices = ph_copy.qpoints.dynamical_matrices
         d2f.run()
         ph.force_constants = d2f.force_constants
 

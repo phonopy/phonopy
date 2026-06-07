@@ -151,9 +151,11 @@ def test_rearrange_force_constants_array(
     )
     re_fc, indices = rearrange_force_constants_array(fc, ph1.supercell, ph2.supercell)
     ph1.run_qpoints([[0.5, 0.5, 0.5]])
-    freq1 = ph1.get_qpoints_dict()["frequencies"]
+    assert ph1.qpoints is not None
+    freq1 = ph1.qpoints.frequencies
     ph2.force_constants = re_fc
     ph2.run_qpoints([[0.5, 0.5, 0.5]])
-    freq2 = ph2.get_qpoints_dict()["frequencies"]
+    assert ph2.qpoints is not None
+    freq2 = ph2.qpoints.frequencies
     np.testing.assert_allclose(fc[indices[3], indices[3]], re_fc[3, 3])
     np.testing.assert_allclose(freq1, freq2)
