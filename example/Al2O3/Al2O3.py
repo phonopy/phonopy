@@ -30,12 +30,12 @@ for i in range(51):
 bands.append(band)
 
 print("\nPhonon dispersion:")
-phonon.run_band_structure(bands, with_eigenvectors=True, labels=["X", r"$\Gamma$", "L"])
+bs = phonon.run_band_structure(
+    bands, with_eigenvectors=True, labels=["X", r"$\Gamma$", "L"]
+)
 band_plot = phonon.plot_band_structure()
 band_plot.show()
 
-bs = phonon.band_structure
-assert bs is not None
 distances = bs.distances
 frequencies = bs.frequencies
 qpoints = bs.qpoints

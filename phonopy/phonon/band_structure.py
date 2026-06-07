@@ -387,28 +387,38 @@ class BandStructure:
         self._set_band()
 
     @property
-    def distances(self) -> list:
+    def distances(self) -> list[NDArray[np.double]]:
         """Return distances of band segments."""
         return self._distances
 
     @property
-    def qpoints(self) -> list:
+    def qpoints(self) -> list[NDArray[np.double]]:
         """Return qpoints of band segments."""
         return self._paths
 
     @property
-    def eigenvectors(self) -> list | None:
-        """Return phonon eigenvectors of band segments."""
+    def eigenvectors(self) -> list[NDArray[np.cdouble]] | None:
+        """Return phonon eigenvectors of band segments.
+
+        None when the band structure was computed without
+        eigenvectors.
+
+        """
         return self._eigenvectors
 
     @property
-    def frequencies(self) -> list | None:
+    def frequencies(self) -> list[NDArray[np.double]]:
         """Return phonon frequencies of band segments."""
         return self._frequencies
 
     @property
-    def group_velocities(self) -> list | None:
-        """Return phonon group velocities of band segments."""
+    def group_velocities(self) -> list[NDArray[np.double]] | None:
+        """Return phonon group velocities of band segments.
+
+        None when the band structure was computed without group
+        velocities.
+
+        """
         return self._group_velocities
 
     @property
