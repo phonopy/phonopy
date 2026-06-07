@@ -197,7 +197,9 @@ def _test_IXS_G_to_L(
         func_AFF=_get_func_AFF(f_params),
         n_points=n_points,
     )
-    Q, S = phonon.get_dynamic_structure_factor()
+    assert phonon.dynamic_structure_factor is not None
+    Q = phonon.dynamic_structure_factor.qpoints
+    S = phonon.dynamic_structure_factor.dynamic_structure_factors
     data_cmp = np.reshape([float(x) for x in data_AFF.split()], (-1, 6))
     if verbose:
         for S_at_Q in S:
@@ -220,7 +222,9 @@ def _test_IXS_G_to_L(
         scattering_lengths=scattering_lengths,
         n_points=n_points,
     )
-    Q, S = phonon.get_dynamic_structure_factor()
+    assert phonon.dynamic_structure_factor is not None
+    Q = phonon.dynamic_structure_factor.qpoints
+    S = phonon.dynamic_structure_factor.dynamic_structure_factors
     data_cmp = np.reshape([float(x) for x in data_b.split()], (-1, 6))
     if verbose:
         for S_at_Q in S:

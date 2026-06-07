@@ -1345,15 +1345,13 @@ def _run_moment(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> N
     else:
         orders = list(range(3))
     for i in orders:
-        phonon.run_moment(
+        total_moment = phonon.run_moment(
             order=i, freq_min=freq_min, freq_max=freq_max, is_projection=False
-        )
-        total_moment = phonon.get_moment()
-        phonon.run_moment(
-            order=i, freq_min=freq_min, freq_max=freq_max, is_projection=True
-        )
+        ).moment
         text = " %3d |%10.5f | " % (i, total_moment)
-        moments = phonon.get_moment()
+        moments = phonon.run_moment(
+            order=i, freq_min=freq_min, freq_max=freq_max, is_projection=True
+        ).moment
         assert isinstance(moments, np.ndarray)
         for m in moments:
             text += "%10.5f " % m
@@ -1494,7 +1492,7 @@ def _run_irreps(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> N
     """Run irreducible representations calculation."""
     irreps_q_point = settings.irreps_q_point
     assert irreps_q_point is not None
-    phonon.set_irreps(
+    phonon.run_irreps(
         irreps_q_point,
         is_little_cogroup=settings.is_little_cogroup,
         nac_q_direction=settings.nac_q_direction,

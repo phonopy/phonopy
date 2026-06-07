@@ -162,9 +162,11 @@ def test_dynmat_at_q_rust_matches_c(
     """End-to-end Gonze NAC dynamical matrix at q must agree."""
     ph_c, _ = gl_c
     ph_r, _ = gl_rust
-    dm_c = ph_c.get_dynamical_matrix_at_q(q_red)
-    dm_r = ph_r.get_dynamical_matrix_at_q(q_red)
-    np.testing.assert_allclose(dm_c, dm_r, atol=1e-13)
+    dm_c = ph_c.run_qpoints([q_red], with_dynamical_matrices=True).dynamical_matrices
+    dm_r = ph_r.run_qpoints([q_red], with_dynamical_matrices=True).dynamical_matrices
+    assert dm_c is not None
+    assert dm_r is not None
+    np.testing.assert_allclose(dm_c[0], dm_r[0], atol=1e-13)
 
 
 def test_dynmat_gamma_with_q_direction_rust_matches_c(
@@ -241,9 +243,11 @@ def test_wang_dynmat_at_q_rust_matches_c(
     """End-to-end Wang NAC dynamical matrix at q must agree."""
     ph_c, _ = wang_c
     ph_r, _ = wang_rust
-    dm_c = ph_c.get_dynamical_matrix_at_q(q_red)
-    dm_r = ph_r.get_dynamical_matrix_at_q(q_red)
-    np.testing.assert_allclose(dm_c, dm_r, atol=1e-13)
+    dm_c = ph_c.run_qpoints([q_red], with_dynamical_matrices=True).dynamical_matrices
+    dm_r = ph_r.run_qpoints([q_red], with_dynamical_matrices=True).dynamical_matrices
+    assert dm_c is not None
+    assert dm_r is not None
+    np.testing.assert_allclose(dm_c[0], dm_r[0], atol=1e-13)
 
 
 @pytest.mark.parametrize(

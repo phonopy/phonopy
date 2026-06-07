@@ -756,7 +756,7 @@ def test_pt03_P2():
     """Test of pt03_P2."""
     data = _load_data(chars_P2)
     phonon = _get_phonon("P2", [3, 2, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -769,7 +769,7 @@ def test_pt04_Pc():
     """Test of pt04_Pc."""
     data = _load_data(chars_Pc)
     phonon = _get_phonon("Pc", [2, 2, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -782,7 +782,7 @@ def test_pt06_P222_1():
     """Test of pt06_P222_1."""
     data = _load_data(chars_P222_1)
     phonon = _get_phonon("P222_1", [2, 2, 1], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -803,7 +803,7 @@ def test_pt07_Amm2():
     """Test of pt07_Amm2."""
     data = _load_data(chars_Amm2)
     phonon = _get_phonon("Amm2", [3, 2, 2], [[1, 0, 0], [0, 0.5, -0.5], [0, 0.5, 0.5]])
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -822,7 +822,7 @@ def test_pt09_P4_1():
     """Test of pt09_P4_1."""
     data = _load_data(chars_P4_1)
     phonon = _get_phonon("P4_1", [2, 2, 1], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -835,7 +835,7 @@ def test_pt10_Pbar4():
     """Test of pt10_Pbar4."""
     data = _load_data(chars_Pbar4)
     phonon = _get_phonon("P-4", [1, 1, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -854,7 +854,7 @@ def test_pt11_I4_1a():
     phonon = _get_phonon(
         "I4_1a", [2, 2, 1], np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]]) * 0.5
     )
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -874,7 +874,7 @@ def test_pt13_P4mm():
     """Test of pt13_P4mm."""
     data = _load_data(chars_P4mm)
     phonon = _get_phonon("P4mm", [3, 3, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -893,7 +893,7 @@ def test_pt14_Pbar42_1m():
     """Test of pt14_Pbar42_1m."""
     data = _load_data(chars_Pbar42_1m)
     phonon = _get_phonon("P-42_1m", [2, 2, 3], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -914,7 +914,7 @@ def test_pt19_P3m1():
     """Test of pt19_P3m1."""
     data = _load_data(chars_P3m1)
     phonon = _get_phonon("P3m1", [4, 4, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -932,7 +932,7 @@ def test_pt19_P31m():
     """Test of pt19_P31m."""
     data = _load_data(chars_P31m)
     phonon = _get_phonon("P31m", [1, 1, 3], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     # _show_chars(chars)
@@ -951,7 +951,7 @@ def test_pt20_Pbar3m1():
     """Test of pt20_Pbar3m1."""
     data = _load_data(chars_Pbar3m1)
     phonon = _get_phonon("P-3m1", [3, 3, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -972,7 +972,7 @@ def test_pt21_P6():
     """Test of pt21_P6."""
     data = _load_data(chars_P6)
     phonon = _get_phonon("P6", [2, 2, 1], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -990,7 +990,7 @@ def test_pt22_Pbar6():
     """Test of pt22_Pbar6."""
     data = _load_data(chars_Pbar6)
     phonon = _get_phonon("P-6", [1, 1, 3], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1011,7 +1011,7 @@ def test_pt24_P6_222():
     """Test of pt24_P6_222."""
     data = _load_data(chars_P6_222)
     phonon = _get_phonon("P6_222", [2, 2, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1032,7 +1032,7 @@ def test_pt26_Pbar6m2():
     """Test of pt26_Pbar6m2."""
     data = _load_data(chars_Pbar6m2)
     phonon = _get_phonon("P-6m2", [2, 2, 3], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1051,7 +1051,7 @@ def test_pt26_Pbar62m():
     """Test of pt26_Pbar62m."""
     data = _load_data(chars_Pbar62m)
     phonon = _get_phonon("P-62m", [1, 1, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0], degeneracy_tolerance=1e-4)
+    phonon.run_irreps([0, 0, 0], degeneracy_tolerance=1e-4)
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1070,7 +1070,7 @@ def test_pt28_P2_13():
     """Test of pt28_P2_13."""
     data = _load_data(chars_P2_13)
     phonon = _get_phonon("P2_13", [2, 2, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1089,7 +1089,7 @@ def test_pt29_Pabar3():
     """Test of pt29_Pabar3."""
     data = _load_data(chars_Pabar3)
     phonon = _get_phonon("Pa-3", [2, 2, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1133,7 +1133,7 @@ def test_pt30_P4_332():
     """Test of pt30_P4_332."""
     data = _load_data(chars_P4_332)
     phonon = _get_phonon("P4_332", [1, 1, 1], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1177,7 +1177,7 @@ def test_pt31_Pbar43m():
     """Test of pt31_Pbar43m."""
     data = _load_data(chars_Pbar43m)
     phonon = _get_phonon("P-43m", [2, 2, 2], np.eye(3))
-    phonon.set_irreps([0, 0, 0])
+    phonon.run_irreps([0, 0, 0])
     assert phonon.irreps is not None
     chars = phonon.irreps.characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
@@ -1266,7 +1266,7 @@ def _check_char_sum(phonon: Phonopy, qpoints: list, show_info: bool = False):
 
     found_physically_irreps = False
     for q in qpoints:
-        phonon.set_irreps(q)
+        phonon.run_irreps(q)
         assert phonon.irreps is not None
         # print(phonon.irreps.qpoint)
         order = len(phonon.irreps.conventional_rotations)

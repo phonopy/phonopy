@@ -36,7 +36,7 @@ def get_frequency(poscar_filename, force_sets):
         ],
     }
     phonon.produce_force_constants()
-    return phonon.get_frequencies([0.5, 0.5, 0]), volume
+    return phonon.run_qpoints([[0.5, 0.5, 0]]).frequencies[0], volume
 
 
 def main():

@@ -1254,7 +1254,19 @@ class Phonopy:
             (``"c%d" % (np.dtype('double').itemsize * 2)``),
             ``order='C'``.
 
+        .. deprecated::
+            Use ``run_qpoints([q], with_dynamical_matrices=True)`` and
+            the ``dynamical_matrices`` attribute of the returned
+            ``QpointsPhonon`` object instead.
+
         """
+        warnings.warn(
+            "get_dynamical_matrix_at_q() is deprecated. Use "
+            "run_qpoints([q], with_dynamical_matrices=True); the returned "
+            "QpointsPhonon object provides dynamical_matrices[0].",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
             msg = "Dynamical matrix has not yet built."
@@ -1280,7 +1292,17 @@ class Phonopy:
             Phonon frequencies. Imaginary frequencies are represented by
             negative real numbers. ``shape=(bands,)``, ``dtype='double'``.
 
+        .. deprecated::
+            Use ``run_qpoints([q])`` and the ``frequencies`` attribute
+            of the returned ``QpointsPhonon`` object instead.
+
         """
+        warnings.warn(
+            "get_frequencies() is deprecated. Use run_qpoints([q]); the "
+            "returned QpointsPhonon object provides frequencies[0].",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
             msg = "Dynamical matrix has not yet built."
@@ -1321,7 +1343,20 @@ class Phonopy:
             dtype (``"c%d" % (np.dtype('double').itemsize * 2)``),
             ``order='C'``.
 
+        .. deprecated::
+            Use ``run_qpoints([q], with_eigenvectors=True)`` and the
+            ``frequencies`` / ``eigenvectors`` attributes of the
+            returned ``QpointsPhonon`` object instead.
+
         """
+        warnings.warn(
+            "get_frequencies_with_eigenvectors() is deprecated. Use "
+            "run_qpoints([q], with_eigenvectors=True); the returned "
+            "QpointsPhonon object provides frequencies[0] and "
+            "eigenvectors[0].",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
             msg = "Dynamical matrix has not yet built."
@@ -1695,10 +1730,16 @@ class Phonopy:
         with_eigenvectors: bool = False,
         with_group_velocities: bool = False,
         is_gamma_center: bool = False,
-    ) -> None:
+    ) -> Mesh:
         """Run mesh sampling phonon calculation.
 
         See the parameter details in Phonopy.init_mesh.
+
+        Returns
+        -------
+        Mesh
+            The calculated mesh sampling result. The same object is
+            also accessible through the ``mesh`` property.
 
         """
         self.init_mesh(
@@ -1712,6 +1753,7 @@ class Phonopy:
         )
         assert isinstance(self._mesh, Mesh)
         self._mesh.run()
+        return self._mesh
 
     def get_mesh_dict(self) -> MeshDict | IterMeshDict:
         """Return phonon properties calculated by mesh sampling.
@@ -1820,7 +1862,7 @@ class Phonopy:
         with_group_velocities: bool = False,
         with_dynamical_matrices: bool = False,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
-    ) -> None:
+    ) -> QpointsPhonon:
         """Run phonon calculation at specified q-points.
 
         Parameters
@@ -1841,6 +1883,12 @@ class Phonopy:
             ``q_direction / norm(q_direction)`` is computed and used. This
             parameter is activated only at q=(0, 0, 0).
             ``shape=(3,)``, ``dtype='double'``.
+
+        Returns
+        -------
+        QpointsPhonon
+            The calculated phonons at the q-points. The same object is
+            also accessible through the ``qpoints`` property.
 
         """
         if self._dynamical_matrix is None:
@@ -1864,6 +1912,7 @@ class Phonopy:
             factor=self._unit_conversion_factor,
             lang=self._lang,
         )
+        return self._qpoints
 
     def get_qpoints_dict(self) -> QpointsDict:
         """Return calculated phonon properties at q-points.
@@ -1939,7 +1988,7 @@ class Phonopy:
         freq_max: float | None = None,
         freq_pitch: float | None = None,
         use_tetrahedron_method: bool = True,
-    ) -> None:
+    ) -> TotalDos:
         """Run total DOS calculation.
 
         Parameters
@@ -1954,6 +2003,12 @@ class Phonopy:
         use_tetrahedron_method : bool, optional
             Use the tetrahedron method when True. When ``sigma`` is
             set, the smearing method is used instead. Default is True.
+
+        Returns
+        -------
+        TotalDos
+            The calculated total DOS. The same object is also
+            accessible through the ``total_dos`` property.
 
         """
         if self._mesh is None:
@@ -1972,6 +2027,7 @@ class Phonopy:
         total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
         total_dos.run()
         self._total_dos = total_dos
+        return self._total_dos
 
     def auto_total_dos(
         self,
@@ -2100,7 +2156,7 @@ class Phonopy:
         use_tetrahedron_method: bool = True,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
-    ) -> None:
+    ) -> ProjectedDos:
         """Run projected DOS calculation.
 
         Parameters
@@ -2122,6 +2178,12 @@ class Phonopy:
         xyz_projection : bool, optional
             Whether to project along Cartesian directions. Default is
             False.
+
+        Returns
+        -------
+        ProjectedDos
+            The calculated projected DOS. The same object is also
+            accessible through the ``projected_dos`` property.
 
         """
         self._pdos = None
@@ -2156,6 +2218,7 @@ class Phonopy:
         )
         self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
         self._pdos.run()
+        return self._pdos
 
     def auto_projected_dos(
         self,
@@ -2324,7 +2387,7 @@ class Phonopy:
         band_indices: Sequence[Sequence[int]] | None = None,
         is_projection: bool = False,
         classical: bool = False,
-    ) -> None:
+    ) -> ThermalProperties:
         """Run calculation of thermal properties at constant volume.
 
         In phonopy, imaginary frequencies are represented as negative real
@@ -2360,6 +2423,12 @@ class Phonopy:
             If True, use classical statistics; if False, use quantum
             statistics. Default is False.
 
+        Returns
+        -------
+        ThermalProperties
+            The calculated thermal properties. The same object is also
+            accessible through the ``thermal_properties`` property.
+
         """
         if self._mesh is None:
             msg = "run_mesh has to be done before run_thermal_properties."
@@ -2384,6 +2453,7 @@ class Phonopy:
             tp.temperatures = temperatures
         tp.run()
         self._thermal_properties = tp
+        return self._thermal_properties
 
     def get_thermal_properties_dict(self) -> ThermalPropertiesDict:
         """Return thermal properties.
@@ -2492,7 +2562,7 @@ class Phonopy:
         direction: Sequence[float] | NDArray[np.double] | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
-    ) -> None:
+    ) -> ThermalDisplacements:
         """Run thermal displacements calculation.
 
         Parameters
@@ -2510,6 +2580,13 @@ class Phonopy:
         freq_min, freq_max : float, optional
             Only phonon frequencies between ``freq_min`` and
             ``freq_max`` are included. Default is None (all phonons).
+
+        Returns
+        -------
+        ThermalDisplacements
+            The calculated thermal displacements. The same object is
+            also accessible through the ``thermal_displacements``
+            property.
 
         """
         if self._dynamical_matrix is None:
@@ -2545,6 +2622,7 @@ class Phonopy:
         td.run()
 
         self._thermal_displacements = td
+        return self._thermal_displacements
 
     def get_thermal_displacements_dict(self) -> dict:
         """Return thermal displacements.
@@ -2597,7 +2675,7 @@ class Phonopy:
         temperatures: Sequence[float] | NDArray[np.double] | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
-    ) -> None:
+    ) -> ThermalDisplacementMatrices:
         """Run thermal displacement matrices calculation.
 
         Parameters
@@ -2612,6 +2690,13 @@ class Phonopy:
             Temperature points where thermal properties are calculated.
             When this is set, t_min, t_max, and t_step are ignored.
             Default is None.
+
+        Returns
+        -------
+        ThermalDisplacementMatrices
+            The calculated thermal displacement matrices. The same
+            object is also accessible through the
+            ``thermal_displacement_matrices`` property.
 
         """
         if self._dynamical_matrix is None:
@@ -2643,6 +2728,7 @@ class Phonopy:
         tdm.run()
 
         self._thermal_displacement_matrices = tdm
+        return self._thermal_displacement_matrices
 
     def get_thermal_displacement_matrices_dict(self) -> ThermalDisplacementMatricesDict:
         """Return thermal displacement matrices.
@@ -2734,7 +2820,7 @@ class Phonopy:
         delta_q: Sequence[float] | NDArray[np.double] | None = None,
         derivative_order: int | None = None,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
-    ) -> None:
+    ) -> Modulation:
         """Generate atomic displacements of phonon modes.
 
         The design of this feature, and thus its API, is not very
@@ -2762,6 +2848,12 @@ class Phonopy:
             parameter is activated only at q=(0, 0, 0).
             ``shape=(3,)``, ``dtype='double'``.
 
+        Returns
+        -------
+        Modulation
+            The calculated modulations. The same object is also
+            accessible through the ``modulation`` property.
+
         """
         if self._dynamical_matrix is None:
             msg = "Dynamical matrix has not yet built."
@@ -2777,13 +2869,28 @@ class Phonopy:
             factor=self._unit_conversion_factor,
         )
         self._modulation.run()
+        return self._modulation
 
     def get_modulated_supercells(self) -> list[PhonopyAtoms]:
-        """Return modulated structures as a list of ``PhonopyAtoms``."""
+        """Return modulated structures as a list of ``PhonopyAtoms``.
+
+        .. deprecated::
+            Use the ``modulated_supercells`` attribute of the
+            ``Modulation`` object returned by ``run_modulations()`` (or
+            of the ``modulation`` property) instead.
+
+        """
+        warnings.warn(
+            "get_modulated_supercells() is deprecated. Use the "
+            "modulated_supercells attribute of the Modulation object "
+            "returned by run_modulations() or of the modulation property.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._modulation is None:
             msg = "run_modulations has to be done before getting modulated supercells."
             raise RuntimeError(msg)
-        return self._modulation.get_modulated_supercells()
+        return self._modulation.modulated_supercells
 
     def get_modulations_and_supercell(self) -> tuple[NDArray[np.cdouble], PhonopyAtoms]:
         """Return atomic modulations and the perfect supercell.
@@ -2796,11 +2903,23 @@ class Phonopy:
         supercell : PhonopyAtoms
             The (unmodulated) supercell.
 
+        .. deprecated::
+            Use the ``modulations`` and ``supercell`` attributes of the
+            ``Modulation`` object returned by ``run_modulations()`` (or
+            of the ``modulation`` property) instead.
+
         """
+        warnings.warn(
+            "get_modulations_and_supercell() is deprecated. Use the "
+            "modulations and supercell attributes of the Modulation object "
+            "returned by run_modulations() or of the modulation property.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._modulation is None:
             msg = "run_modulations has to be done before getting modulations."
             raise RuntimeError(msg)
-        return self._modulation.get_modulations_and_supercell()
+        return self._modulation.modulations, self._modulation.supercell
 
     def write_modulations(
         self,
@@ -2824,13 +2943,13 @@ class Phonopy:
         self._modulation.write_yaml()
 
     # Irreducible representation
-    def set_irreps(
+    def run_irreps(
         self,
         q: Sequence[float] | NDArray[np.double],
         is_little_cogroup: bool = False,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
         degeneracy_tolerance: float | None = None,
-    ) -> None:
+    ) -> IrReps:
         """Identify ir-reps of phonon modes.
 
         The design of this API is not very satisfactory and is expected
@@ -2845,6 +2964,12 @@ class Phonopy:
             ``q_direction / norm(q_direction)`` is computed and used. This
             parameter is activated only at q=(0, 0, 0).
             ``shape=(3,)``, ``dtype='double'``.
+
+        Returns
+        -------
+        IrReps
+            The identified ir-reps. The same object is also accessible
+            through the ``irreps`` property.
 
         """
         if self._dynamical_matrix is None:
@@ -2861,25 +2986,65 @@ class Phonopy:
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level,
         )
+        return self._irreps
+
+    def set_irreps(
+        self,
+        q: Sequence[float] | NDArray[np.double],
+        is_little_cogroup: bool = False,
+        nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
+        degeneracy_tolerance: float | None = None,
+    ) -> IrReps:
+        """Identify ir-reps of phonon modes.
+
+        .. deprecated::
+            Use :meth:`run_irreps` instead.
+
+        """
+        warnings.warn(
+            "set_irreps() is deprecated. Use run_irreps() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.run_irreps(
+            q,
+            is_little_cogroup=is_little_cogroup,
+            nac_q_direction=nac_q_direction,
+            degeneracy_tolerance=degeneracy_tolerance,
+        )
 
     def show_irreps(self, show_irreps: bool = False) -> None:
         """Show Ir-reps."""
         if self._irreps is None:
-            msg = "set_irreps has to be done before showing Ir-reps."
+            msg = "run_irreps has to be done before showing Ir-reps."
             raise RuntimeError(msg)
         self._irreps.show(show_irreps=show_irreps)
 
     def write_yaml_irreps(self, show_irreps: bool = False) -> None:
         """Write Ir-reps in yaml format."""
         if self._irreps is None:
-            msg = "set_irreps has to be done before writing Ir-reps."
+            msg = "run_irreps has to be done before writing Ir-reps."
             raise RuntimeError(msg)
         self._irreps.write_yaml(show_irreps=show_irreps)
 
     def get_group_velocity_at_q(
         self, q_point: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Return group velocity at a q-point."""
+        """Return group velocity at a q-point.
+
+        .. deprecated::
+            Use ``run_qpoints([q], with_group_velocities=True)`` and
+            the ``group_velocities`` attribute of the returned
+            ``QpointsPhonon`` object instead.
+
+        """
+        warnings.warn(
+            "get_group_velocity_at_q() is deprecated. Use "
+            "run_qpoints([q], with_group_velocities=True); the returned "
+            "QpointsPhonon object provides group_velocities[0].",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._group_velocity is None:
             self._set_group_velocity()
         assert self._group_velocity is not None
@@ -2894,8 +3059,16 @@ class Phonopy:
         is_projection: bool = False,
         freq_min: float | None = None,
         freq_max: float | None = None,
-    ) -> None:
-        """Run moment calculation."""
+    ) -> PhononMoment:
+        """Run moment calculation.
+
+        Returns
+        -------
+        PhononMoment
+            The calculated moment. The same object is also accessible
+            through the ``moment`` property.
+
+        """
         if self._mesh is None:
             msg = "run_mesh has to be done before run_moment."
             raise RuntimeError(msg)
@@ -2921,9 +3094,24 @@ class Phonopy:
         if freq_min is not None or freq_max is not None:
             self._moment.set_frequency_range(freq_min=freq_min, freq_max=freq_max)
         self._moment.run(order=order)
+        return self._moment
 
     def get_moment(self) -> float | NDArray[np.double] | None:
-        """Return moment."""
+        """Return moment.
+
+        .. deprecated::
+            Use the ``moment`` attribute of the ``PhononMoment`` object
+            returned by ``run_moment()`` (or of the ``moment``
+            property) instead.
+
+        """
+        warnings.warn(
+            "get_moment() is deprecated. Use the moment attribute of the "
+            "PhononMoment object returned by run_moment() or of the moment "
+            "property.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._moment is None:
             msg = "run_moment has to be done before getting moment."
             raise RuntimeError(msg)
@@ -2938,10 +3126,12 @@ class Phonopy:
         scattering_lengths: dict | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
-    ) -> None:
+    ) -> DynamicStructureFactor:
         """Initialize dynamic structure factor calculation.
 
-        Call ``DynamicStructureFactor.run()`` to start the calculation.
+        Call ``DynamicStructureFactor.run()`` to start the calculation,
+        or iterate over the returned object to compute the structure
+        factor q-point by q-point (e.g. for progress reporting).
 
         Parameters
         ----------
@@ -2974,6 +3164,13 @@ class Phonopy:
             Minimum and maximum phonon frequencies to determine whether
             phonons are included in the calculation.
 
+        Returns
+        -------
+        DynamicStructureFactor
+            The initialized (not yet run) calculation. The same object
+            is also accessible through the ``dynamic_structure_factor``
+            property.
+
         """
         if self._mesh is None:
             msg = (
@@ -2998,6 +3195,7 @@ class Phonopy:
             freq_min=freq_min,
             freq_max=freq_max,
         )
+        return self._dynamic_structure_factor
 
     def run_dynamic_structure_factor(
         self,
@@ -3007,11 +3205,18 @@ class Phonopy:
         scattering_lengths: dict | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
-    ) -> None:
+    ) -> DynamicStructureFactor:
         """Run dynamic structure factor calculation.
 
         See the detail of parameters at
         Phonopy.init_dynamic_structure_factor().
+
+        Returns
+        -------
+        DynamicStructureFactor
+            The calculated dynamic structure factors. The same object
+            is also accessible through the
+            ``dynamic_structure_factor`` property.
 
         """
         self.init_dynamic_structure_factor(
@@ -3024,11 +3229,29 @@ class Phonopy:
         )
         assert self._dynamic_structure_factor is not None
         self._dynamic_structure_factor.run()
+        return self._dynamic_structure_factor
 
     def get_dynamic_structure_factor(
         self,
     ) -> tuple[NDArray[np.double], NDArray[np.double]]:
-        """Return dynamic structure factors."""
+        """Return dynamic structure factors.
+
+        .. deprecated::
+            Use the ``qpoints`` and ``dynamic_structure_factors``
+            attributes of the ``DynamicStructureFactor`` object
+            returned by ``run_dynamic_structure_factor()`` (or of the
+            ``dynamic_structure_factor`` property) instead.
+
+        """
+        warnings.warn(
+            "get_dynamic_structure_factor() is deprecated. Use the qpoints "
+            "and dynamic_structure_factors attributes of the "
+            "DynamicStructureFactor object returned by "
+            "run_dynamic_structure_factor() or of the "
+            "dynamic_structure_factor property.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._dynamic_structure_factor is None:
             msg = (
                 "run_dynamic_structure_factor has to be done before "
