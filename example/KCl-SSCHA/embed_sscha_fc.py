@@ -16,7 +16,7 @@ ipfc_ha_444 = ph_ha.ph2ph(dim).force_constants
 delta_ipfc_444 = ipfc_iter_444 - ipfc_ha_444
 ph_ha_444_force_constants = ph_ha_444.force_constants + delta_ipfc_444
 
-ph_ipfc_444 = ph_ha_444.copy()
+ph_ipfc_444 = ph_ha_444.replicate()
 ph_ipfc_444.force_constants = ph_ha_444_force_constants
 ph_ipfc_444.nac_params = ph_iter.nac_params
 

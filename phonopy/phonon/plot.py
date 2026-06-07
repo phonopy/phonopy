@@ -240,7 +240,6 @@ def plot_projected_dos(
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots()
-    _set_ax_ticks_both(ax)
 
     projected_dos.plot(
         ax,
@@ -299,9 +298,6 @@ def plot_thermal_properties(
     """
     import matplotlib.pyplot as plt
 
-    plt.rcParams["pdf.fonttype"] = 42
-    plt.rcParams["font.family"] = "serif"
-
     fig, ax = plt.subplots()
     _set_ax_ticks_both(ax)
 
@@ -346,7 +342,7 @@ def plot_thermal_displacements(
     fig, ax = plt.subplots()
     _set_ax_ticks_both(ax)
 
-    thermal_displacements.plot(plt, is_legend=is_legend)
+    thermal_displacements.plot(ax, is_legend=is_legend)
 
     assert thermal_displacements.temperatures is not None
     temps = thermal_displacements.temperatures
