@@ -40,7 +40,7 @@ import dataclasses
 import itertools
 import warnings
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -50,6 +50,47 @@ from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.brillouin_zone import BrillouinZone
 from phonopy.structure.cells import Primitive, sparse_to_dense_svecs
+
+
+class _NacParamsBase(TypedDict):
+    """Required keys of NacParams."""
+
+    born: NDArray[np.double]
+    dielectric: NDArray[np.double]
+
+
+class NacParams(_NacParamsBase, total=False):
+    """Parameters of non-analytical term correction.
+
+    Keys
+    ----
+    born : ndarray
+        Born effective charge tensors in Cartesian coordinates, in the
+        order of atoms of the primitive cell.
+        shape=(primitive cell atoms, 3, 3), dtype='double'
+    dielectric : ndarray
+        High-frequency dielectric constant tensor in Cartesian
+        coordinates. shape=(3, 3), dtype='double'
+    factor : float, optional
+        Unit conversion factor of the non-analytical term. When
+        omitted, the value for the calculator interface is used.
+    method : str, optional
+        NAC method, either 'gonze' (Gonze-Lee, default) or 'wang'.
+    G_cutoff : float, optional
+        Cutoff distance of reciprocal-space sampling used by the
+        Gonze-Lee method. When omitted, determined from the number of
+        G-points and the primitive cell volume.
+    Lambda : float, optional
+        Smearing parameter of the Ewald-like sum of the Gonze-Lee
+        method. When omitted, determined from G_cutoff and the
+        dielectric constant.
+
+    """
+
+    factor: float
+    method: Literal["gonze", "wang"]
+    G_cutoff: float
+    Lambda: float
 
 
 class DynamicalMatrix:
@@ -388,7 +429,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         return self._method
 
     @property
-    def nac_params(self) -> dict:
+    def nac_params(self) -> NacParams:
         """Return NAC basic parameters."""
         return {
             "born": self.born,
@@ -397,7 +438,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         }
 
     @nac_params.setter
-    def nac_params(self, nac_params: dict) -> None:
+    def nac_params(self, nac_params: NacParams) -> None:
         """Set NAC parameters."""
         self._set_nac_params(nac_params)
 
@@ -414,10 +455,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         """
         raise NotImplementedError()
 
-    def _set_nac_params(self, nac_params: dict) -> None:
+    def _set_nac_params(self, nac_params: NacParams) -> None:
         raise NotImplementedError()
 
-    def _set_basic_nac_params(self, nac_params: dict) -> None:
+    def _set_basic_nac_params(self, nac_params: NacParams) -> None:
         """Set basic NAC parameters."""
         self._born = np.array(nac_params["born"], dtype="double", order="C")
         self._unit_conversion = nac_params["factor"]
@@ -441,7 +482,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         supercell: PhonopyAtoms,
         primitive: Primitive,
         force_constants: NDArray[np.double],
-        nac_params: dict | None = None,
+        nac_params: NacParams | None = None,
         num_G_points: int | None = None,  # For Gonze NAC
         with_full_terms: bool = False,
         decimals: int | None = None,
@@ -605,7 +646,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             "Lambda: %4.2f" % (self._G_cutoff, len(self._G_list), self._Lambda)
         )
 
-    def _set_nac_params(self, nac_params: dict) -> None:
+    def _set_nac_params(self, nac_params: NacParams) -> None:
         """Set and prepare NAC parameters.
 
         This is called via DynamicalMatrixNAC.nac_params.
@@ -935,7 +976,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         supercell: PhonopyAtoms,
         primitive: Primitive,
         force_constants: NDArray[np.double],
-        nac_params: dict | None = None,
+        nac_params: NacParams | None = None,
         decimals: int | None = None,
         hermitianize: bool = True,
         log_level: int = 0,
@@ -985,7 +1026,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         if self._log_level:
             print("NAC by Wang et al., J. Phys. Condens. Matter 22, 202201 (2010)")
 
-    def _set_nac_params(self, nac_params: dict) -> None:
+    def _set_nac_params(self, nac_params: NacParams) -> None:
         """Set NAC parameters.
 
         This is called via DynamicalMatrixNAC.nac_params.
@@ -1088,7 +1129,7 @@ def get_dynamical_matrix(
     fc2: NDArray[np.double],
     supercell: PhonopyAtoms,
     primitive: Primitive,
-    nac_params: dict | None = None,
+    nac_params: NacParams | None = None,
     frequency_scale_factor: float | None = None,
     decimals: int | None = None,
     hermitianize: bool = True,

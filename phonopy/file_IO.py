@@ -66,6 +66,9 @@ from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
 from phonopy.utils import similarity_transformation
 
+if typing.TYPE_CHECKING:
+    from phonopy.harmonic.dynamical_matrix import NacParams
+
 
 #
 # FORCE_SETS
@@ -775,7 +778,7 @@ def parse_BORN(
     is_symmetry: bool = True,
     filename: str | os.PathLike = "BORN",
     lang: Literal["C", "Rust"] = "Rust",
-) -> dict:
+) -> NacParams:
     """Parse BORN file.
 
     Parameters
@@ -805,7 +808,7 @@ def parse_BORN_from_strings(
     symprec: float = 1e-5,
     is_symmetry: bool = True,
     lang: Literal["C", "Rust"] = "Rust",
-) -> dict:
+) -> NacParams:
     """Parse BORN file text.
 
     See `parse_BORN` for parameters.
@@ -821,14 +824,14 @@ def _parse_BORN_from_file_object(
     symprec: float,
     is_symmetry: bool,
     lang: Literal["C", "Rust"] = "Rust",
-) -> dict:
+) -> NacParams:
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry, lang=lang)
     return get_born_parameters(f, primitive, symmetry)
 
 
 def get_born_parameters(
     f: typing.TextIO, primitive: PhonopyAtoms, prim_symmetry: Symmetry
-) -> dict[str, NDArray[np.double] | float]:
+) -> NacParams:
     """Parse BORN file text.
 
     Parameters
@@ -898,7 +901,7 @@ def get_born_parameters(
         raise BORNFileParseError(msg)
 
     _expand_borns(borns, primitive, prim_symmetry)
-    non_anal: dict[str, NDArray[np.double] | float] = {
+    non_anal: NacParams = {
         "born": borns,
         "dielectric": dielectric,
     }

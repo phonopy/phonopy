@@ -60,6 +60,7 @@ from phonopy.file_IO import (
     read_force_constants_hdf5,
 )
 from phonopy.harmonic.displacement import DisplacementDataset
+from phonopy.harmonic.dynamical_matrix import NacParams
 from phonopy.harmonic.force_constants import (
     compact_fc_to_full_fc,
     full_fc_to_compact_fc,
@@ -146,21 +147,21 @@ def get_cell_settings(
 
 def get_nac_params(
     primitive: PhonopyAtoms | None = None,
-    nac_params: dict | None = None,
+    nac_params: NacParams | None = None,
     born_filename: str | os.PathLike | None = None,
     is_nac: bool = True,
     nac_factor: float | None = None,
     log_level: int = 0,
     lang: Literal["C", "Rust"] = "Rust",
-) -> dict | None:
+) -> NacParams | None:
     """Look for and return NAC parameters.
 
     Parameters
     ----------
     primitive : PhonopyAtoms
         Primitive cell.
-    nac_params : dict
-        NAC parameters.
+    nac_params : NacParams
+        NAC parameters. See :class:`NacParams` for the entries.
     born_filename : str
         Filename of BORN file.
     is_nac : bool
@@ -173,7 +174,7 @@ def get_nac_params(
 
     Returns
     -------
-    dict
+    NacParams
         Parameters used for non-analytical term correction 'born': ndarray
             Born effective charges. shape=(primitive cell atoms, 3, 3),
             dtype='double', order='C'
@@ -344,7 +345,7 @@ def produce_force_constants(
 
 
 def check_nac_params(
-    nac_params: dict, unitcell: PhonopyAtoms, pmat: NDArray[np.double]
+    nac_params: NacParams, unitcell: PhonopyAtoms, pmat: NDArray[np.double]
 ) -> None:
     """Check number of Born effective charges."""
     borns = nac_params["born"]
