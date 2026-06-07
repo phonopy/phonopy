@@ -1352,7 +1352,7 @@ class Phonopy:
         path_connections: Sequence[bool] | None = None,
         labels: Sequence[str] | None = None,
         is_legacy_plot: bool = False,
-    ) -> None:
+    ) -> BandStructure:
         """Run phonon band structure calculation.
 
         Parameters
@@ -1381,6 +1381,12 @@ class Phonopy:
         is_legacy_plot : bool, optional
             Use the old-style band-structure plot. Default is False.
 
+        Returns
+        -------
+        BandStructure
+            The calculated band structure. The same object is also
+            accessible through the ``band_structure`` property.
+
         """
         if self._dynamical_matrix is None:
             msg = "Dynamical matrix has not yet built."
@@ -1404,6 +1410,7 @@ class Phonopy:
             is_legacy_plot=is_legacy_plot,
             factor=self._unit_conversion_factor,
         )
+        return self._band_structure
 
     def get_band_structure_dict(self) -> BandStructureDict:
         """Return calculated band structures.

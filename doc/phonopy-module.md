@@ -271,14 +271,20 @@ phonon.save(settings={'force_constants': True})
 
 ### Band structure
 
-Set band paths with `run_band_structure()`. The result is accessible via
-the `band_structure` property, which returns a `BandStructure` object with
-attributes `qpoints`, `distances`, `frequencies`, `eigenvectors`, and
-`group_velocities`. Eigenvectors are included when `with_eigenvectors=True`
-is passed to `run_band_structure()`. Frequencies are returned in the unit
-set by `Phonopy.unit_conversion_factor` (THz by default for the VASP
+Set band paths with `run_band_structure()`, which returns a
+`BandStructure` result object with attributes `qpoints`, `distances`,
+`frequencies`, `eigenvectors`, and `group_velocities` (the same object
+is also accessible via the `band_structure` property). Eigenvectors are
+included when `with_eigenvectors=True` is passed to
+`run_band_structure()`. Frequencies are returned in the unit set by
+`Phonopy.unit_conversion_factor` (THz by default for the VASP
 calculator with displacements in Angstrom and forces in eV/Angstrom).
 Imaginary frequencies are encoded as negative real numbers.
+
+```python
+bs = phonon.run_band_structure(qpoints, path_connections=connections)
+frequencies = bs.frequencies
+```
 
 In `example/NaCl`, the phonopy is executed from python script, e.g.,
 
