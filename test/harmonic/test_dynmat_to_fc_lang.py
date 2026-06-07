@@ -30,7 +30,8 @@ def _run_d2f(ph: Phonopy, lang: str, *, full_fc: bool) -> np.ndarray:
         ph.primitive, ph.supercell, is_full_fc=full_fc, lang=lang
     )
     ph.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
-    d2f.dynamical_matrices = ph.get_qpoints_dict()["dynamical_matrices"]
+    assert ph.qpoints is not None
+    d2f.dynamical_matrices = ph.qpoints.dynamical_matrices
     d2f.run()
     assert d2f.force_constants is not None
     return d2f.force_constants

@@ -363,9 +363,10 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
                 unitcell_filename=unitcell_filename,
                 born_filename=born_filename,
                 force_constants_filename=fc_filename,
-                factor=factor,
                 symprec=args.symprec,
             )
+            if factor is not None:
+                phonon.unit_conversion_factor = factor
             phonons.append(phonon)
         else:
             force_filename = "%s/FORCE_SETS" % directory
@@ -377,9 +378,10 @@ def main(**argparse_control: PhonopyGruneisenMockArgs):
                 unitcell_filename=unitcell_filename,
                 born_filename=born_filename,
                 force_sets_filename=force_filename,
-                factor=factor,
                 symprec=args.symprec,
             )
+            if factor is not None:
+                phonon.unit_conversion_factor = factor
             phonons.append(phonon)
 
         print("")

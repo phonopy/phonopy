@@ -31,7 +31,8 @@ def test_band_structure(ph_nacl: Phonopy):
     ph_nacl.run_band_structure(
         _get_band_qpoints(), with_group_velocities=False, is_band_connection=False
     )
-    freqs = ph_nacl.get_band_structure_dict()["frequencies"]
+    assert ph_nacl.band_structure is not None
+    freqs = ph_nacl.band_structure.frequencies
     assert len(freqs) == 3
     assert freqs[0].shape == (11, 6)
     np.testing.assert_allclose(
@@ -44,7 +45,8 @@ def test_band_structure_gv(ph_nacl: Phonopy):
     ph_nacl.run_band_structure(
         _get_band_qpoints(), with_group_velocities=True, is_band_connection=False
     )
-    assert "group_velocities" in ph_nacl.get_band_structure_dict()
+    assert ph_nacl.band_structure is not None
+    assert ph_nacl.band_structure.group_velocities is not None
 
 
 def test_band_structure_bc(ph_nacl: Phonopy):
@@ -52,11 +54,13 @@ def test_band_structure_bc(ph_nacl: Phonopy):
     ph_nacl.run_band_structure(
         _get_band_qpoints(), with_group_velocities=False, is_band_connection=False
     )
-    freqs = ph_nacl.get_band_structure_dict()["frequencies"]
+    assert ph_nacl.band_structure is not None
+    freqs = ph_nacl.band_structure.frequencies
     ph_nacl.run_band_structure(
         _get_band_qpoints(), with_group_velocities=False, is_band_connection=True
     )
-    freqs_bc = ph_nacl.get_band_structure_dict()["frequencies"]
+    assert ph_nacl.band_structure is not None
+    freqs_bc = ph_nacl.band_structure.frequencies
 
     # Order of bands is changed by is_band_connection=True.
     np.testing.assert_allclose(

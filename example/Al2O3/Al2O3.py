@@ -34,10 +34,11 @@ phonon.run_band_structure(bands, with_eigenvectors=True, labels=["X", r"$\Gamma$
 band_plot = phonon.plot_band_structure()
 band_plot.show()
 
-bs = phonon.get_band_structure_dict()
-distances = bs["distances"]
-frequencies = bs["frequencies"]
-qpoints = bs["qpoints"]
+bs = phonon.band_structure
+assert bs is not None
+distances = bs.distances
+frequencies = bs.frequencies
+qpoints = bs.qpoints
 
 for qs_at_segments, dists_at_segments, freqs_at_segments in zip(
     qpoints, distances, frequencies, strict=True

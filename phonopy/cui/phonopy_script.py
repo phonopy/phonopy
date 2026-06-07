@@ -1180,11 +1180,12 @@ def _run_thermal_properties(
             "#%11s %15s%15s%15s%15s"
             % ("T [K]", "F [kJ/mol]", "S [J/K/mol]", "C_v [J/K/mol]", "E [kJ/mol]")
         )
-        tp = phonon.get_thermal_properties_dict()
-        temps = tp["temperatures"]
-        fe = tp["free_energy"]
-        entropy = tp["entropy"]
-        heat_capacity = tp["heat_capacity"]
+        tp = phonon.thermal_properties
+        assert tp is not None
+        temps = tp.temperatures
+        fe = tp.free_energy
+        entropy = tp.entropy
+        heat_capacity = tp.heat_capacity
         for T, F, S, CV in zip(temps, fe, entropy, heat_capacity, strict=True):
             print(("%12.3f " + "%15.7f" * 4) % (T, F, S, CV, F + T * S / 1000))
     if plot_conf["plot_graph"]:

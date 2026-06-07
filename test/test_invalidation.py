@@ -196,14 +196,11 @@ def test_group_velocity_not_auto_rebuilt(ph: Phonopy) -> None:
     assert ph.group_velocity is not None
 
 
-def test_get_dict_raises_on_cleared_state(ph: Phonopy) -> None:
-    """Accessing a cleared result raises instead of silently rerunning (Q4)."""
+def test_derived_state_cleared_on_fc_change(ph: Phonopy) -> None:
+    """Derived results are set to None after a force_constants change (Q4)."""
     _run_analyses(ph)
     assert ph.force_constants is not None
     ph.force_constants = ph.force_constants.copy()
-    with pytest.raises(RuntimeError):
-        ph.get_band_structure_dict()
-    with pytest.raises(RuntimeError):
-        ph.get_mesh_dict()
-    with pytest.raises(RuntimeError):
-        ph.get_thermal_properties_dict()
+    assert ph.band_structure is None
+    assert ph.mesh is None
+    assert ph.thermal_properties is None

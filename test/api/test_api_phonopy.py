@@ -296,7 +296,8 @@ def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
     ph.evaluate_mlp()
     ph.produce_force_constants(fc_calculator="symfc")
     ph.run_mesh([2, 2, 2])
-    freqs = ph.get_mesh_dict()["frequencies"]
+    assert ph.mesh is not None
+    freqs = ph.mesh.frequencies
     print(freqs.ravel().tolist())
 
     # Mesh [2,2,2] + default shift breaks point-group symmetry, so BZGrid
