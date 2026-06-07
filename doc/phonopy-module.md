@@ -343,16 +343,15 @@ To use this method, `seekpath` python module is needed.
 ### Mesh sampling
 
 Run the sampling-mesh phonon calculation with `run_mesh()` in
-reciprocal space. The `mesh` property returns a `Mesh` object with
-attributes `qpoints`, `weights`, `frequencies`, `eigenvectors`, and
-`group_velocities` for the irreducible _q_-points. `mesh` gives the
-sampling mesh in the Monkhorst-Pack scheme. The keyword `shift` gives
-the fractional mesh shift with respect to the neighboring grid points.
+reciprocal space. It returns a `Mesh` result object with attributes
+`qpoints`, `weights`, `frequencies`, `eigenvectors`, and
+`group_velocities` for the irreducible _q_-points (the same object is
+also accessible via the `mesh` property). `mesh` gives the sampling
+mesh in the Monkhorst-Pack scheme. The keyword `shift` gives the
+fractional mesh shift with respect to the neighboring grid points.
 
 ```python
-mesh = [20, 20, 20]
-phonon.run_mesh(mesh)
-m = phonon.mesh
+m = phonon.run_mesh([20, 20, 20])
 qpoints = m.qpoints
 weights = m.weights
 frequencies = m.frequencies
@@ -422,16 +421,16 @@ has to be done in the **THz unit**. The unit conversion factor for phonon
 frequency is set in the pre-process of Phonopy with the `factor` keyword.
 Calculation range of temperature is set by the parameters
 `run_thermal_properties`. Helmholtz free energy, entropy, heat capacity at
-constant volume at temperatures are obtained via the `thermal_properties`
-property, which returns a `ThermalProperties` object with attributes
-`temperatures`, `free_energy`, `entropy`, and `heat_capacity`.
+constant volume at temperatures are obtained from the returned
+`ThermalProperties` object with attributes `temperatures`,
+`free_energy`, `entropy`, and `heat_capacity` (the same object is also
+accessible via the `thermal_properties` property).
 
 ```python
 phonon.run_mesh([20, 20, 20])
-phonon.run_thermal_properties(t_step=10,
-                              t_max=1000,
-                              t_min=0)
-tp = phonon.thermal_properties
+tp = phonon.run_thermal_properties(t_step=10,
+                                   t_max=1000,
+                                   t_min=0)
 temperatures = tp.temperatures
 free_energy = tp.free_energy
 entropy = tp.entropy
@@ -468,30 +467,29 @@ phonon.nac_params = {'born': born,
 ### Phonon at arbitrary q-points
 
 To evaluate phonons at an explicit list of q-points (without imposing
-a band path or a mesh), use `run_qpoints()`. The result is accessible
-via the `qpoints` property, which returns a `QpointsPhonon` object with
-attributes `frequencies`, `eigenvectors`, `group_velocities`, and
-`dynamical_matrices`.
+a band path or a mesh), use `run_qpoints()`. It returns a
+`QpointsPhonon` result object with attributes `qpoints`,
+`frequencies`, `eigenvectors`, `group_velocities`, and
+`dynamical_matrices` (the same object is also accessible via the
+`qpoints` property).
 
 ```python
-phonon.run_qpoints(
+qpts = phonon.run_qpoints(
     [[0.0, 0.0, 0.0],
      [0.5, 0.0, 0.0],
      [0.5, 0.5, 0.5]],
     with_eigenvectors=True,
     with_group_velocities=True,
 )
-qpts = phonon.qpoints
 frequencies = qpts.frequencies
 eigenvectors = qpts.eigenvectors
 group_velocities = qpts.group_velocities
 ```
 
-For one-off evaluations at a single q-point, the lightweight helpers
-`get_frequencies(q)` and `get_frequencies_with_eigenvectors(q)` return
-arrays directly, while `get_group_velocity_at_q(q)` returns group
-velocities. `get_dynamical_matrix_at_q(q)` returns the (non-mass-weighted)
-dynamical matrix itself.
+`run_qpoints()` also covers one-off evaluations at a single q-point,
+e.g. `phonon.run_qpoints([q]).frequencies[0]`. The legacy single-point
+helpers (`get_frequencies`, `get_frequencies_with_eigenvectors`,
+`get_group_velocity_at_q`, `get_dynamical_matrix_at_q`) are deprecated.
 
 ### Thermal displacements
 
@@ -500,15 +498,13 @@ Mean-square atomic displacements and the corresponding 3x3 matrices
 
 ```python
 phonon.run_mesh([20, 20, 20], with_eigenvectors=True, is_mesh_symmetry=False)
-phonon.run_thermal_displacements(t_min=0, t_max=1000, t_step=10)
-td = phonon.thermal_displacements
+td = phonon.run_thermal_displacements(t_min=0, t_max=1000, t_step=10)
 temperatures = td.temperatures
 u2 = td.thermal_displacements  # shape=(temperatures, atoms*3)
 ```
 
 ```python
-phonon.run_thermal_displacement_matrices(t_min=0, t_max=1000, t_step=10)
-tdm = phonon.thermal_displacement_matrices
+tdm = phonon.run_thermal_displacement_matrices(t_min=0, t_max=1000, t_step=10)
 temperatures = tdm.temperatures
 phonon.write_thermal_displacement_matrix_to_cif(temperature_index=10)
 ```
@@ -517,17 +513,21 @@ phonon.write_thermal_displacement_matrix_to_cif(temperature_index=10)
 
 `run_modulations()` builds atomic-displacement patterns of selected
 phonon modes on a chosen supercell. Each requested mode is a list
-`[q-point, band_index, amplitude, phase]`.
+`[q-point, band_index, amplitude, phase]`. The returned `Modulation`
+object gives the per-mode modulated cells (`modulated_supercells`),
+the cell modulated by all modes summed (`modulated_supercell`), the
+complex displacement fields (`modulations`), and the perfect
+supercell (`supercell`).
 
 ```python
-phonon.run_modulations(
+mod = phonon.run_modulations(
     dimension=[2, 2, 2],
     phonon_modes=[
         [[0.0, 0.0, 0.0], 0, 1.0, 0.0],
         [[0.5, 0.5, 0.5], 3, 0.5, 0.0],
     ],
 )
-modulated_cells = phonon.get_modulated_supercells()
+modulated_cells = mod.modulated_supercells
 phonon.write_modulations()  # MPOSCAR-001, MPOSCAR-002, ...
 ```
 
@@ -537,7 +537,7 @@ For mode analysis at a chosen q-point, irreducible representations of
 the little co-group can be computed.
 
 ```python
-phonon.set_irreps(q=[0.0, 0.0, 0.0])
+phonon.run_irreps(q=[0.0, 0.0, 0.0])
 phonon.show_irreps(show_irreps=True)
 phonon.write_yaml_irreps()
 ```

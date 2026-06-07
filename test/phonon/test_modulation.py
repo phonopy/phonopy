@@ -37,8 +37,8 @@ cell_NaCl222 = PhonopyAtoms(
 def test_modulation(ph_nacl: Phonopy, helper_methods):
     """Test to calculate modulation by NaCl."""
     ph = ph_nacl
-    ph.run_modulations([2, 2, 2], [[[0, 0.5, 0.5], 2, 2, 0]])
-    cells = ph.get_modulated_supercells()
+    mod = ph.run_modulations([2, 2, 2], [[[0, 0.5, 0.5], 2, 2, 0]])
+    cells = mod.modulated_supercells
     # _show(cells)
     helper_methods.compare_cells_with_order(cells[0], cell_NaCl222)
 

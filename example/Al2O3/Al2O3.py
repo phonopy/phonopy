@@ -10,7 +10,9 @@ phonon = phonopy.load(
 print("Space group: %s" % phonon.symmetry.get_international_table())
 
 # Example to obtain dynamical matrix
-dmat = phonon.get_dynamical_matrix_at_q([0, 0, 0])
+qpts = phonon.run_qpoints([[0, 0, 0]], with_dynamical_matrices=True)
+assert qpts.dynamical_matrices is not None
+dmat = qpts.dynamical_matrices[0]
 print(dmat)
 
 # Example of band structure calculation
