@@ -59,6 +59,7 @@ from phonopy.harmonic.displacement import (
 )
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
+    NacParams,
     get_dynamical_matrix,
 )
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
@@ -275,7 +276,7 @@ class Phonopy:
         self._dynamical_matrix = None
 
         # NAC parameters
-        self._nac_params: dict | None = None
+        self._nac_params: NacParams | None = None
 
         # MLP
         self._mlp = None
@@ -667,10 +668,11 @@ class Phonopy:
         return self._dynamical_matrix
 
     @property
-    def nac_params(self) -> dict | None:
+    def nac_params(self) -> NacParams | None:
         """Getter and setter of parameters for non-analytical term correction.
 
-        A ``dict`` with the following entries:
+        A ``dict`` (typed as :class:`NacParams`) with the following
+        entries:
 
         ``'born'`` : ndarray
             Born effective charges.
@@ -680,15 +682,17 @@ class Phonopy:
             Dielectric constant tensor.
             ``shape=(3, 3)``, ``dtype='double'``, ``order='C'``.
         ``'factor'`` : float, optional
-            Unit conversion factor.
+            Unit conversion factor. When omitted, the value for the
+            calculator interface is used.
         ``'method'`` : str, optional
-            Method to calculate NAC.
+            Method to calculate NAC, either ``'gonze'`` (default) or
+            ``'wang'``.
 
         """
         return self._nac_params
 
     @nac_params.setter
-    def nac_params(self, nac_params: dict | None) -> None:
+    def nac_params(self, nac_params: NacParams | None) -> None:
         self._nac_params = nac_params
         self._invalidate_derived("dm_inputs")
         if self._force_constants is not None:
@@ -3628,6 +3632,7 @@ class Phonopy:
     def _set_dynamical_matrix(self) -> None:
         self._dynamical_matrix = None
 
+        nac_params: NacParams | None
         if self._is_symmetry and self._nac_params is not None:
             if len(self._nac_params["born"]) != len(self._primitive):
                 raise ValueError(

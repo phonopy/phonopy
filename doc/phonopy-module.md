@@ -16,6 +16,7 @@ users:
   should not rely on them.
 ```
 
+(phonopy_three_unit_cells)=
 ## Three unit cells
 
 In the `Phonopy` class, mainly three different unit cells are used, `unitcell`,
@@ -246,6 +247,64 @@ details at {ref}`file_force_constants`.
 
 ## Phonon calculation
 
+(phonopy_result_objects)=
+### Result objects
+
+The `Phonopy` class holds the definition of the physical model: the
+three unit cells ({ref}`phonopy_three_unit_cells`), symmetry, force
+constants, and parameters of non-analytical term correction
+({ref}`phonopy_nac_params`). Each
+phonon analysis is started by a `run_*` method, which computes the
+analysis and returns a self-contained **result object**. The same
+object is also accessible through the property of the same name
+(e.g. `phonon.band_structure`), which returns None before the
+corresponding `run_*` call. Mutating a calculation input (force
+constants, NAC parameters, masses, ...) invalidates the stored
+results; run the analysis again.
+
+```{note}
+This part of the API is being restructured toward phonopy v5 / v6
+(see {ref}`development`). The `run_*` return value is the
+recommended access path for new code; the same-named properties on
+`Phonopy` are transitional and are planned for deprecation in a
+future major version. The data attributes of the result objects
+listed below are the stable surface.
+```
+
+```python
+bs = phonon.run_band_structure(paths)  # compute and return
+bs.frequencies                          # read data attributes
+bs.write_yaml()                         # file output
+bs.plot(ax)                             # draw into a matplotlib Axes
+```
+
+Internal machinery such as `DynamicalMatrix` and `GroupVelocity` is
+not a result object; those are stateful calculators wrapped by the
+`run_*` methods and are not part of the supported data-access API.
+
+The result objects and their main data attributes:
+
+| `run_*` method | Result class | Main data attributes |
+|---|---|---|
+| `run_band_structure()` | `BandStructure` | `qpoints`, `distances`, `frequencies`, `eigenvectors`, `group_velocities`, `labels`, `path_connections` |
+| `run_mesh()` | `Mesh` | `qpoints`, `weights`, `frequencies`, `eigenvectors`, `group_velocities`, `mesh_numbers` |
+| `run_qpoints()` | `QpointsPhonon` | `qpoints`, `frequencies`, `eigenvectors`, `group_velocities`, `dynamical_matrices` |
+| `run_total_dos()` | `TotalDos` | `frequency_points`, `dos` |
+| `run_projected_dos()` | `ProjectedDos` | `frequency_points`, `projected_dos` |
+| `run_thermal_properties()` | `ThermalProperties` | `temperatures`, `free_energy`, `entropy`, `heat_capacity`, `zero_point_energy` |
+| `run_thermal_displacements()` | `ThermalDisplacements` | `temperatures`, `thermal_displacements` |
+| `run_thermal_displacement_matrices()` | `ThermalDisplacementMatrices` | `temperatures`, `thermal_displacement_matrices`, `thermal_displacement_matrices_cif` |
+| `run_moment()` | `PhononMoment` | `moment` |
+| `run_modulations()` | `Modulation` | `modulations`, `supercell`, `modulated_supercells`, `modulated_supercell`, `frequencies`, `eigenvectors` |
+| `run_irreps()` | `IrReps` | `band_indices`, `characters`, `frequencies`, `eigenvectors`, `qpoint` |
+| `run_dynamic_structure_factor()` | `DynamicStructureFactor` | `qpoints`, `frequencies`, `dynamic_structure_factors` |
+
+File output lives on the result objects (`write_yaml`, `write_hdf5`,
+`write`, `write_cif`, depending on the class), and ax-level plotting
+on those that have a graphical representation (`plot(ax)`).
+Figure-level convenience plot functions are provided in
+`phonopy.phonon.plot` and as `Phonopy.plot_*` methods.
+
 (phonopy_save_parameters)=
 ### Save parameters (`phonopy.save`)
 
@@ -442,11 +501,25 @@ for t, F, S, cv in zip(temperatures, free_energy, entropy, heat_capacity):
 phonon.plot_thermal_properties().show()
 ```
 
+(phonopy_nac_params)=
 ### Non-analytical term correction
 
 To apply non-analytical term correction, Born effective charge tensors for all
 atoms in **primitive** cell, dielectric constant tensor, and the unit conversion
 factor have to be correctly set. The tensors are given in Cartesian coordinates.
+
+The parameters are set to the `nac_params` attribute as a dictionary
+(typed as `NacParams` in `phonopy.harmonic.dynamical_matrix`) with the
+following keys:
+
+| Key | Type | Description |
+|---|---|---|
+| `'born'` | array_like, shape=(primitive cell atoms, 3, 3) | Born effective charge tensors in Cartesian coordinates, in the order of atoms of the primitive cell. |
+| `'dielectric'` | array_like, shape=(3, 3) | High-frequency dielectric constant tensor in Cartesian coordinates. |
+| `'factor'` | float, optional | Unit conversion factor of the non-analytical term. When omitted, the value for the calculator interface is used (see {ref}`nac_default_value_interfaces`). |
+| `'method'` | str, optional | NAC method, either `'gonze'` (Gonze-Lee, default) or `'wang'`. |
+| `'G_cutoff'` | float, optional | Cutoff distance of reciprocal-space sampling of the Gonze-Lee method. When omitted, determined automatically. |
+| `'Lambda'` | float, optional | Smearing parameter of the Ewald-like sum of the Gonze-Lee method. When omitted, determined automatically. |
 
 ```python
 born = [[[1.08878299, 0, 0],

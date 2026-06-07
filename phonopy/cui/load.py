@@ -47,6 +47,7 @@ from numpy.typing import NDArray
 import phonopy.cui.load_helper as load_helper
 from phonopy._lang import resolve_lang
 from phonopy.api_phonopy import Phonopy
+from phonopy.harmonic.dynamical_matrix import NacParams
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.physical_units import get_calculator_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
@@ -69,7 +70,7 @@ def load(
     calculator: str | None = None,
     unitcell: PhonopyAtoms | None = None,
     supercell: PhonopyAtoms | None = None,
-    nac_params: dict | None = None,
+    nac_params: NacParams | None = None,
     unitcell_filename: os.PathLike | str | None = None,
     supercell_filename: os.PathLike | str | None = None,
     born_filename: os.PathLike | str | None = None,
@@ -173,7 +174,7 @@ def load(
         Input supercell. When given, the default value of
         ``primitive_matrix`` is set to ``'auto'`` (can be overwritten),
         and ``supercell_matrix`` is ignored. Default is None.
-    nac_params : dict, optional
+    nac_params : NacParams, optional
         Parameters required for non-analytical term correction. Default
         is None. Expected structure::
 
@@ -182,7 +183,8 @@ def load(
                       dtype=float),
              'dielectric': Dielectric constant matrix
                            (array_like, shape=(3, 3), dtype=float),
-             'factor': unit conversion factor (float)}
+             'factor': unit conversion factor (float, optional),
+             'method': 'gonze' (default) or 'wang' (str, optional)}
 
     unitcell_filename : str, optional
         Input unit cell filename. Default is None.
