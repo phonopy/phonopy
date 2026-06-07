@@ -269,18 +269,25 @@ class ThermalDisplacements(ThermalMotion):
         with open(filename, "w") as w:
             w.write("\n".join(lines))
 
-    def plot(self, pyplot: Any, is_legend: bool = False) -> None:
-        """Return pyplot of thermal displacements calculation result."""
+    def plot(self, ax: Any, is_legend: bool = False) -> None:
+        """Plot thermal displacements into matplotlib axes.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Single Matplotlib Axes object.
+        is_legend : bool, optional
+            Show legend when True. Default is False.
+
+        """
         assert self._displacements is not None
         assert self._temperatures is not None
         xyz = ["x", "y", "z"]
         for i, u in enumerate(self._displacements.transpose()):
-            pyplot.plot(
-                self._temperatures, u, label=("%d-%s" % (i // 3 + 1, xyz[i % 3]))
-            )
+            ax.plot(self._temperatures, u, label=("%d-%s" % (i // 3 + 1, xyz[i % 3])))
 
         if is_legend:
-            pyplot.legend(loc="upper left")
+            ax.legend(loc="upper left")
 
     def _project_eigenvectors(self) -> None:
         """Project eigenvectors to specific direction.

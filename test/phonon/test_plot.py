@@ -98,9 +98,31 @@ def test_plot_thermal_properties(ph_nacl: Phonopy):
     plt.close("all")
 
 
+def test_plot_thermal_properties_leaves_rcparams_untouched(ph_nacl: Phonopy):
+    """plot_thermal_properties must not mutate global matplotlib rcParams."""
+    ph_nacl.run_mesh([5, 5, 5])
+    ph_nacl.run_thermal_properties(t_min=0, t_max=100, t_step=50)
+    pdf_fonttype = plt.rcParams["pdf.fonttype"]
+    font_family = list(plt.rcParams["font.family"])
+    ph_nacl.plot_thermal_properties()
+    assert plt.rcParams["pdf.fonttype"] == pdf_fonttype
+    assert list(plt.rcParams["font.family"]) == font_family
+    plt.close("all")
+
+
 def test_plot_thermal_displacements(ph_nacl: Phonopy):
     """Test Phonopy.plot_thermal_displacements."""
     ph_nacl.run_mesh([5, 5, 5], with_eigenvectors=True, is_mesh_symmetry=False)
     ph_nacl.run_thermal_displacements(t_min=0, t_max=100, t_step=50)
     assert ph_nacl.plot_thermal_displacements(is_legend=True) is plt
+    plt.close("all")
+
+
+def test_thermal_displacements_plot_takes_ax(ph_nacl: Phonopy):
+    """ThermalDisplacements.plot takes a matplotlib Axes like other results."""
+    ph_nacl.run_mesh([5, 5, 5], with_eigenvectors=True, is_mesh_symmetry=False)
+    td = ph_nacl.run_thermal_displacements(t_min=0, t_max=100, t_step=50)
+    _, ax = plt.subplots()
+    td.plot(ax, is_legend=True)
+    assert len(ax.lines) > 0
     plt.close("all")

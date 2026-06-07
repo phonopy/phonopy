@@ -109,7 +109,8 @@ class Dos:
             Mesh object. IterMesh object cannot be used currently since
             pre-computed frequencies and weights are used.
         sigma : float, optional
-            Sigma for smearing method. If None, tetrahedron method is used.
+            Sigma for smearing method. When set, the smearing method is
+            used regardless of ``use_tetrahedron_method``.
         lang : {"C", "Rust"}, optional
             Backend selector for the tetrahedron-method kernels.  Default
             is "C".
@@ -118,12 +119,14 @@ class Dos:
         self._mesh_object = mesh_object
         self._frequencies = mesh_object.frequencies
         self._weights = mesh_object.weights
-        self._use_tetrahedron_method = use_tetrahedron_method
+        # A given sigma selects the smearing method; the tetrahedron
+        # method applies only without sigma.
+        self._use_tetrahedron_method = use_tetrahedron_method and sigma is None
         self._frequency_points: NDArray[np.double]
         self._sigma = sigma
         self._lang: Literal["C", "Rust"] = lang
 
-        if use_tetrahedron_method:
+        if self._use_tetrahedron_method:
             self.set_draw_area()
         else:
             self._sigma = self.set_draw_area()
@@ -244,12 +247,12 @@ class TotalDos(Dos):
 
     def run(self) -> None:
         """Calculate total DOS."""
-        if self._sigma is not None:
+        if self._use_tetrahedron_method:
+            self._run_tetrahedron_method_dos()
+        else:
             self._dos = np.array(
                 [self._get_density_of_states_at_freq(f) for f in self._frequency_points]
             )
-        else:
-            self._run_tetrahedron_method_dos()
 
     @property
     def dos(self) -> NDArray[np.double] | None:
