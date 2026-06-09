@@ -88,7 +88,7 @@ def get_eos(eos: str) -> EosFunc:
         p[3] = V_0
 
         """
-        x = (v / p[3]) ** (1.0 / 3)
+        x = np.cbrt(v / p[3])
         xi = 3.0 / 2 * (p[2] - 1)
         return p[0] + (
             9 * p[1] * p[3] / (xi**2) * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x)))
