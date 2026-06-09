@@ -283,9 +283,9 @@ class Unfolding:
         assert self._frequencies is not None
         q_count = self._q_count
         self._phonon.run_qpoints(self._qpoints_s[q_count], with_eigenvectors=True)
-        qpt = self._phonon.get_qpoints_dict()
-        self._frequencies[q_count] = qpt["frequencies"][0]
-        eigvecs: NDArray[np.cdouble] = qpt["eigenvectors"][0]
+        assert self._phonon.qpoints is not None
+        self._frequencies[q_count] = self._phonon.qpoints.frequencies[0]
+        eigvecs: NDArray[np.cdouble] = self._phonon.qpoints.eigenvectors[0]
 
         if -1 in self._atom_mapping:
             shape = list(eigvecs.shape)

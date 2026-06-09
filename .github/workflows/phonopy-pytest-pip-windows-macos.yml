@@ -10,6 +10,9 @@ jobs:
     defaults:
       run:
         shell: bash -l {0}
+    strategy:
+      matrix:
+        python-version: ["3.13"]
 
     steps:
       - uses: actions/checkout@v5
@@ -44,6 +47,8 @@ jobs:
           conda activate test
           pip install -e . -v
       - name: Test with pytest
+        env:
+          MPLBACKEND: Agg
         run: |
           pip install pytest
           pytest -v test

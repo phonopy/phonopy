@@ -20,7 +20,7 @@ from phonopy.interface.symfc import (
     update_symfc_cutoff_by_memsize,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import apply_site_mixture
+from phonopy.structure.cells import build_mixture_cell
 from phonopy.structure.mixture import get_mixture_expansion
 
 
@@ -307,7 +307,7 @@ def test_symfc_force_constants_GeSn_mixture():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    mixed = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
     ph = Phonopy(mixed, supercell_matrix=np.diag([2, 2, 2]))
     ph.generate_displacements(distance=0.01)
 

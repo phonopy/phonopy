@@ -15,9 +15,6 @@ installed using conda by
 % conda install -c conda-forge phonopy
 ```
 
-This phonopy's conda package is prepared and maintained by Paweł T. Jochym at
-conda-forge channel (please be aware that this is not a trivial job).
-
 ### Minimum steps to install and use phonopy via conda
 
 In the following procedure, conda's environment (see
@@ -47,22 +44,21 @@ To use this phonopy, entering this environment is necessary like below.
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                      2.12.0
+                                       4.1.0
 
-Python version 3.9.6
-Spglib version 1.16.2
+Rust backend (phonors) using rayon (10 threads).
+Running in phonopy.load mode.
+Python version 3.13.3
+Spglib version 2.7.0
 
 
-Supercell matrix (DIM or --dim) was not explicitly specified.
-By this reason, phonopy_yaml mode was invoked.
-But "phonopy_params.yaml", "phonopy_disp.yaml" and "phonopy.yaml" could not be found.
+Switched on phonopy-yaml mode.
+"phonopy_disp.yaml" or "phonopy.yaml" could not be found.
   ___ _ __ _ __ ___  _ __
  / _ \ '__| '__/ _ \| '__|
 |  __/ |  | | | (_) | |
  \___|_|  |_|  \___/|_|
 ```
-
-(install_from_source)=
 
 ## Using HDF5 on NFS mounted file system
 
@@ -73,13 +69,15 @@ In this case, setting the following environment variable may solve the problem:
 export HDF5_USE_FILE_LOCKING=FALSE
 ```
 
+(install_from_source)=
+
 ## Installation from source code
 
 ### System requirement
 
 The procedure to setup phonopy is explained in this section. It is supposed that
 phonopy is installed on the recent linux distribution like Ubuntu or Fedora with
-Python version 3.8 or later. Mac OS X users may use conda (conda-forge channel)
+Python version 3.10 or later. Mac OS X users may use conda (conda-forge channel)
 packages. Windows users should use conda (conda-forge channel) packages as well.
 
 Prepare the following Python libraries:
@@ -146,7 +144,6 @@ removed.
    ```bash
    % git clone https://github.com/phonopy/phonopy.git
    % cd phonopy
-   % git checkout master
    ```
 
 2. Run `pip install`

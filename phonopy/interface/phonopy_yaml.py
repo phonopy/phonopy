@@ -43,7 +43,7 @@ import typing
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import numpy as np
 import yaml
@@ -72,6 +72,9 @@ from phonopy.physical_units import (
 from phonopy.structure.atoms import CellDict, PhonopyAtoms, parse_cell_dict
 from phonopy.structure.dataset import forces_in_dataset
 
+if TYPE_CHECKING:
+    from phonopy.harmonic.dynamical_matrix import NacParams
+
 
 @dataclasses.dataclass
 class PhonopyYamlData:
@@ -86,7 +89,7 @@ class PhonopyYamlData:
     dataset: DisplacementDataset | None = None
     supercell_matrix: NDArray[np.int64] | None = None
     primitive_matrix: NDArray[np.double] | None = None
-    nac_params: dict | None = None
+    nac_params: NacParams | None = None
     force_constants: NDArray[np.double] | None = None
     symmetry: Symmetry | None = None  # symmetry of supercell
     frequency_unit_conversion_factor: float | None = None
@@ -369,7 +372,7 @@ class PhonopyYamlLoaderBase(ABC):
         if "nac" in self._yaml:
             nac_params = self._parse_nac_params(self._yaml["nac"])
         if "born" in nac_params and "dielectric" in nac_params:
-            self._data.nac_params = nac_params
+            self._data.nac_params = cast("NacParams", nac_params)
 
     def _parse_nac_params(self, nac_yaml: dict) -> dict:
         nac_params = {}
@@ -440,7 +443,7 @@ class PhonopyYamlDumperBase(ABC):
         lines = []
         lines.append("%s:" % self._data.command_name)
         if self._data.version is None:
-            from phonopy.version import __version__
+            from phonopy import __version__
 
             version = __version__
         else:
@@ -943,15 +946,15 @@ class PhonopyYaml:
             self._data.primitive_matrix = None
 
     @property
-    def nac_params(self) -> dict | None:
+    def nac_params(self) -> NacParams | None:
         """Return non-analytical term correction parameters."""
         return self._data.nac_params
 
     @nac_params.setter
-    def nac_params(self, value: dict | None) -> None:
+    def nac_params(self, value: NacParams | None) -> None:
         """Set non-analytical term correction parameters."""
         if value is not None:
-            _value = {}
+            _value: dict = {}
             if "born" in value:
                 _value["born"] = np.array(value["born"], dtype="double", order="C")
             if "dielectric" in value:
@@ -962,7 +965,7 @@ class PhonopyYaml:
                 _value["factor"] = value["factor"]
             if "method" in value:
                 _value["method"] = value["method"]
-            self._data.nac_params = _value
+            self._data.nac_params = cast("NacParams", _value)
         else:
             self._data.nac_params = value
 

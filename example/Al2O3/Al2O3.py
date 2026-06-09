@@ -10,7 +10,9 @@ phonon = phonopy.load(
 print("Space group: %s" % phonon.symmetry.get_international_table())
 
 # Example to obtain dynamical matrix
-dmat = phonon.get_dynamical_matrix_at_q([0, 0, 0])
+qpts = phonon.run_qpoints([[0, 0, 0]], with_dynamical_matrices=True)
+assert qpts.dynamical_matrices is not None
+dmat = qpts.dynamical_matrices[0]
 print(dmat)
 
 # Example of band structure calculation
@@ -30,14 +32,15 @@ for i in range(51):
 bands.append(band)
 
 print("\nPhonon dispersion:")
-phonon.run_band_structure(bands, with_eigenvectors=True, labels=["X", r"$\Gamma$", "L"])
+bs = phonon.run_band_structure(
+    bands, with_eigenvectors=True, labels=["X", r"$\Gamma$", "L"]
+)
 band_plot = phonon.plot_band_structure()
 band_plot.show()
 
-bs = phonon.get_band_structure_dict()
-distances = bs["distances"]
-frequencies = bs["frequencies"]
-qpoints = bs["qpoints"]
+distances = bs.distances
+frequencies = bs.frequencies
+qpoints = bs.qpoints
 
 for qs_at_segments, dists_at_segments, freqs_at_segments in zip(
     qpoints, distances, frequencies, strict=True

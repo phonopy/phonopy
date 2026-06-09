@@ -1,11 +1,12 @@
 [![Version Badge](https://anaconda.org/conda-forge/phonopy/badges/version.svg)](https://anaconda.org/conda-forge/phonopy)
 [![Downloads Badge](https://anaconda.org/conda-forge/phonopy/badges/downloads.svg)](https://anaconda.org/conda-forge/phonopy)
 [![PyPI](https://img.shields.io/pypi/dm/phonopy.svg?maxAge=2592000)](https://pypi.python.org/pypi/phonopy)
-[![codecov](https://codecov.io/gh/phonopy/phonopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/phonopy/phonopy)
+[![codecov](https://codecov.io/gh/phonopy/phonopy/branch/main/graph/badge.svg)](https://codecov.io/gh/phonopy/phonopy)
 
 # Phonopy
 
-Phonon code mainly written in python. Phonopy user documentation is found at
+Phonon code mainly written in Python, with the compute-intensive parts handled
+by the Rust backend (phonors). Phonopy user documentation is found at
 http://phonopy.github.io/phonopy/
 
 ## Installation
@@ -19,11 +20,13 @@ Usual phonopy questions should be sent to phonopy mailing list
 
 ## Development
 
-The development of phonopy is managed on the `develop` branch of github phonopy
+The development of phonopy is managed on the `main` branch of the github phonopy
 repository.
 
 - Github issues is the place to discuss about phonopy issues.
 - Github pull request is the place to request merging source code.
+- Architecture principles and the migration plan toward v5/v6 are
+  documented at https://phonopy.github.io/phonopy/development.html.
 
 ### Formatting
 
@@ -35,7 +38,7 @@ Pre-commit (https://pre-commit.com/) is mainly used for applying the formatting
 rules automatically. Therefore, it is strongly encouraged to use it at or before
 git-commit. Pre-commit is set-up and used in the following way:
 
-- Installed by `pip install pre-commit`, `conda install pre_commit` or see
+- Installed by `pip install pre-commit`, `conda install pre-commit` or see
   https://pre-commit.com/#install.
 - pre-commit hook is installed by `pre-commit install`.
 - pre-commit hook is run by `pre-commit run --all-files`.

@@ -43,6 +43,29 @@ def test_displacements_masses_setter_NaCl(ph_nacl: Phonopy):
     np.testing.assert_allclose(ph.supercell.masses, ph_in.supercell.masses * 2)
 
 
+def test_replicate_NaCl(ph_nacl: Phonopy):
+    """Test Phonopy.replicate carrying only the init parameters."""
+    ph = ph_nacl.replicate()
+    assert ph is not ph_nacl
+    assert isclose(ph.unitcell, ph_nacl.unitcell)
+    assert isclose(ph.supercell, ph_nacl.supercell)
+    assert isclose(ph.primitive, ph_nacl.primitive)
+    np.testing.assert_array_equal(ph.supercell_matrix, ph_nacl.supercell_matrix)
+    # Internal state is not carried over.
+    assert ph.force_constants is None
+    assert ph.nac_params is None
+    assert ph.dataset is None
+
+
+def test_copy_deprecated_NaCl(ph_nacl: Phonopy):
+    """Test that Phonopy.copy warns and delegates to replicate."""
+    with pytest.warns(DeprecationWarning):
+        ph = ph_nacl.copy()
+    assert isclose(ph.unitcell, ph_nacl.unitcell)
+    assert ph.force_constants is None
+    assert ph.nac_params is None
+
+
 def test_forces_setter_NaCl_type1(ph_nacl: Phonopy):
     """Test Phonopy.forces setter and getter (type1 dataset)."""
     ph_in = ph_nacl
@@ -273,7 +296,8 @@ def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
     ph.evaluate_mlp()
     ph.produce_force_constants(fc_calculator="symfc")
     ph.run_mesh([2, 2, 2])
-    freqs = ph.get_mesh_dict()["frequencies"]
+    assert ph.mesh is not None
+    freqs = ph.mesh.frequencies
     print(freqs.ravel().tolist())
 
     # Mesh [2,2,2] + default shift breaks point-group symmetry, so BZGrid
@@ -313,6 +337,26 @@ def test_load_mlp_pypolymlp(ph_kcl: Phonopy):
     pytest.importorskip("pypolymlp", minversion="0.9.2")
     ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml")
     ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml.xz")
+
+
+def test_run_methods_return_result_objects(ph_nacl: Phonopy):
+    """Each run_* method returns the result object it stores."""
+    ph = ph_nacl
+    mesh = ph.run_mesh([5, 5, 5], with_eigenvectors=True, is_mesh_symmetry=False)
+    assert mesh is ph.mesh
+    assert ph.run_qpoints([[0.5, 0.5, 0.5]]) is ph.qpoints
+    assert ph.run_total_dos() is ph.total_dos
+    assert ph.run_projected_dos() is ph.projected_dos
+    assert ph.run_thermal_properties() is ph.thermal_properties
+    assert ph.run_thermal_displacements() is ph.thermal_displacements
+    assert ph.run_thermal_displacement_matrices() is ph.thermal_displacement_matrices
+    assert ph.run_moment() is ph.moment
+    assert ph.run_modulations([2, 2, 2], [[[0.5, 0.5, 0.5], 3, 1, 0]]) is ph.modulation
+    assert ph.run_irreps([0, 0, 0]) is ph.irreps
+    dsf = ph.run_dynamic_structure_factor(
+        [[0.5, 0.5, 0.5]], 300, scattering_lengths={"Na": 3.63, "Cl": 9.5770}
+    )
+    assert dsf is ph.dynamic_structure_factor
 
 
 def test_Phonopy_calculator():

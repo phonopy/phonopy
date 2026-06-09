@@ -1,6 +1,6 @@
 # How to write phonopy documentation
 
-This directory contains python-sphinx documentation source.
+This directory contains the python-sphinx documentation source.
 
 ## How to compile
 
@@ -8,28 +8,25 @@ This directory contains python-sphinx documentation source.
 make html
 ```
 
+This is equivalent to what the CI runs:
+
+```
+sphinx-build doc docs_build
+```
+
 ## Source files
 
-* `conf.py` contains the sphinx setting confiuration.
-* `*.rst` are the usual sphinx documentation source and the filenames without `.rst` are the keys to link from toctree mainly in `index.rst`.
-* `*.inc` are the files included in the other `*.rst` files.
+* `conf.py` contains the sphinx configuration.
+* `*.md` are the documentation source written in MyST Markdown (the main
+  format). The filenames without `.md` are the keys used to link from the
+  toctree, mainly in `index.md`.
+* `*.rst` are reStructuredText source files, still used for some pages such
+  as the calculator interfaces.
+* `*.inc` are files included from other source files.
 
 ## How to publish
 
-Web page files are copied to `gh-pages` branch. At the phonopy github top directory,
-```
-git checkout gh-pages
-rm -r .buildinfo .doctrees *
-```
-
-From the directory the sphinx doc is complied,
-```
-rsync -avh _build/ <phonopy-repository-directory>/
-```
-
-Again, at the phonopy github top directory,
-```
-git add .
-git commit -a -m "Update documentation ..."
-git push
-```
+Publishing is automated. Pushing to the `publish-gh-pages` branch triggers the
+`publish-gh-pages.yml` GitHub Actions workflow, which builds the documentation
+with `sphinx-build` and deploys it to the `gh-pages` branch. No manual copying
+is needed.

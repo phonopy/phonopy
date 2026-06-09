@@ -390,7 +390,7 @@ def write_crystal_structure(
 
 def _write_supercells_vasp(
     config: SupercellWriterConfig,
-    structure_info: StructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for VASP interface."""
     import phonopy.interface.vasp as vasp
@@ -412,16 +412,20 @@ def _write_supercells_vasp(
 
 def _write_supercells_qe(
     config: SupercellWriterConfig,
-    structure_info: QeStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for Quantum Espresso interface."""
     import phonopy.interface.qe as qe
 
+    if isinstance(structure_info, QeStructureInfo):
+        pp_filenames = structure_info.pp_filenames
+    else:
+        pp_filenames = None
     qe.write_supercells_with_displacements(
         config.supercell,
         config.cells_with_disps,
         config.displacement_ids,
-        structure_info.pp_filenames,
+        pp_filenames,
         **_get_filename_writer_kwargs(config),
     )
     write_magnetic_moments(config.supercell, sort_by_elements=False)
@@ -429,11 +433,16 @@ def _write_supercells_qe(
 
 def _write_supercells_wien2k(
     config: SupercellWriterConfig,
-    structure_info: Wien2kStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for Wien2k interface."""
     import phonopy.interface.wien2k as wien2k
 
+    if not isinstance(structure_info, Wien2kStructureInfo):
+        raise ValueError(
+            "wien2k requires structure information (npts, r0s, rmts). Pass "
+            "the optional_structure_info returned by read_crystal_structure."
+        )
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for wien2k.")
 
@@ -452,27 +461,37 @@ def _write_supercells_wien2k(
 
 def _write_supercells_elk(
     config: SupercellWriterConfig,
-    structure_info: ElkStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for Elk interface."""
     import phonopy.interface.elk as elk
 
+    if isinstance(structure_info, ElkStructureInfo):
+        sp_filenames = structure_info.sp_filenames
+    else:
+        sp_filenames = None
     elk.write_supercells_with_displacements(
         config.supercell,
         config.cells_with_disps,
         config.displacement_ids,
-        structure_info.sp_filenames,
+        sp_filenames,
         **_get_filename_writer_kwargs(config),
     )
 
 
 def _write_supercells_cp2k(
     config: SupercellWriterConfig,
-    structure_info: Cp2kStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for CP2K interface."""
     import phonopy.interface.cp2k as cp2k
 
+    if not isinstance(structure_info, Cp2kStructureInfo):
+        raise ValueError(
+            "cp2k requires structure information (input file configuration). "
+            "Pass the optional_structure_info returned by "
+            "read_crystal_structure."
+        )
     cp2k.write_supercells_with_displacements(
         config.supercell,
         config.cells_with_disps,
@@ -484,11 +503,17 @@ def _write_supercells_cp2k(
 
 def _write_supercells_crystal(
     config: SupercellWriterConfig,
-    structure_info: CrystalStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for CRYSTAL interface."""
     import phonopy.interface.crystal as crystal
 
+    if not isinstance(structure_info, CrystalStructureInfo):
+        raise ValueError(
+            "crystal requires structure information (conventional cell atom "
+            "numbers). Pass the optional_structure_info returned by "
+            "read_crystal_structure."
+        )
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for crystal.")
 
@@ -507,11 +532,17 @@ def _write_supercells_crystal(
 
 def _write_supercells_fleur(
     config: SupercellWriterConfig,
-    structure_info: FleurStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for Fleur interface."""
     import phonopy.interface.fleur as fleur
 
+    if not isinstance(structure_info, FleurStructureInfo):
+        raise ValueError(
+            "fleur requires structure information (species and input file "
+            "lines). Pass the optional_structure_info returned by "
+            "read_crystal_structure."
+        )
     if config.additional_info is None:
         raise ValueError("additional_info should not be None for fleur.")
 
@@ -529,29 +560,42 @@ def _write_supercells_fleur(
 
 def _write_supercells_abacus(
     config: SupercellWriterConfig,
-    structure_info: AbacusStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for ABACUS interface."""
     import phonopy.interface.abacus as abacus
 
+    if isinstance(structure_info, AbacusStructureInfo):
+        pps = structure_info.pps
+        orbitals = structure_info.orbitals
+        abfs = structure_info.abfs
+    else:
+        pps = None
+        orbitals = None
+        abfs = None
     abacus.write_supercells_with_displacements(
         config.supercell,
         config.cells_with_disps,
         config.displacement_ids,
-        structure_info.pps,
-        structure_info.orbitals,
-        structure_info.abfs,
+        pps,
+        orbitals,
+        abfs,
         **_get_filename_writer_kwargs(config),
     )
 
 
 def _write_supercells_qlm(
     config: SupercellWriterConfig,
-    structure_info: QlmStructureInfo,
+    structure_info: StructureInfo | None,
 ) -> None:
     """Write supercells for QLM interface."""
     import phonopy.interface.qlm as qlm
 
+    if not isinstance(structure_info, QlmStructureInfo):
+        raise ValueError(
+            "qlm requires structure information (qlm context). Pass the "
+            "optional_structure_info returned by read_crystal_structure."
+        )
     qlm.write_supercells_with_displacements(
         config.supercell,
         config.cells_with_disps,
@@ -562,7 +606,9 @@ def _write_supercells_qlm(
 
 
 def _write_supercells_generic(
-    config: SupercellWriterConfig, structure_info: StructureInfo, interface_mode: str
+    config: SupercellWriterConfig,
+    structure_info: StructureInfo | None,
+    interface_mode: str,
 ) -> None:
     """Write supercells for generic interfaces (no special handling)."""
     writer = None
@@ -619,7 +665,7 @@ def _get_filename_writer_kwargs(config: SupercellWriterConfig) -> dict[str, Any]
 
 def _get_writer_handler(
     interface_mode: str | None,
-) -> Callable[[SupercellWriterConfig, StructureInfo], None]:
+) -> Callable[[SupercellWriterConfig, StructureInfo | None], None]:
     """Get the appropriate handler function for the given interface mode.
 
     This function implements the Strategy pattern to dispatch handler functions
@@ -675,7 +721,7 @@ def _get_writer_handler(
 
     # Return generic handler for remaining interfaces
     def generic_handler(
-        config: SupercellWriterConfig, structure_info: StructureInfo
+        config: SupercellWriterConfig, structure_info: StructureInfo | None
     ) -> None:
         _write_supercells_generic(config, structure_info, interface_mode)
 
@@ -686,7 +732,7 @@ def write_supercells_with_displacements(
     interface_mode: str | None,
     supercell: PhonopyAtoms,
     cells_with_disps: Sequence[PhonopyAtoms],
-    optional_structure_info: StructureInfo,
+    optional_structure_info: StructureInfo | None = None,
     displacement_ids: Sequence | NDArray | None = None,
     zfill_width: int = 3,
     additional_info: dict | None = None,
@@ -706,9 +752,12 @@ def write_supercells_with_displacements(
         Supercell to write.
     cells_with_disps : Sequence[PhonopyAtoms]
         Supercells with displacements to write.
-    optional_structure_info : StructureInfo
+    optional_structure_info : StructureInfo, optional
         Interface-specific structure information returned by
-        ``read_crystal_structure``.
+        ``read_crystal_structure``. Default is None. Some interfaces
+        (wien2k, cp2k, crystal, fleur, qlm) cannot write supercells
+        without it and raise ``ValueError``; the others fall back to
+        defaults.
     displacement_ids : Sequence | NDArray | None, optional
         Integer 1d array with the length of cells_with_disps, containing
         numbers to be assigned to the supercells with displacements.
@@ -724,10 +773,10 @@ def write_supercells_with_displacements(
     Raises
     ------
     RuntimeError
-        If the calculator interface is not recognized or if required
-        structure information is missing.
+        If the calculator interface is not recognized.
     ValueError
-        If required additional information is missing for certain interfaces.
+        If required structure or additional information is missing for
+        certain interfaces.
 
     """
     # Prepare displacement IDs

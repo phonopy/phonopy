@@ -47,6 +47,7 @@ from numpy.typing import NDArray
 import phonopy.cui.load_helper as load_helper
 from phonopy._lang import resolve_lang
 from phonopy.api_phonopy import Phonopy
+from phonopy.harmonic.dynamical_matrix import NacParams
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.physical_units import get_calculator_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
@@ -69,7 +70,7 @@ def load(
     calculator: str | None = None,
     unitcell: PhonopyAtoms | None = None,
     supercell: PhonopyAtoms | None = None,
-    nac_params: dict | None = None,
+    nac_params: NacParams | None = None,
     unitcell_filename: os.PathLike | str | None = None,
     supercell_filename: os.PathLike | str | None = None,
     born_filename: os.PathLike | str | None = None,
@@ -77,7 +78,6 @@ def load(
     force_constants_filename: os.PathLike | str | None = None,
     fc_calculator: Literal["traditional", "symfc", "alm"] | None = None,
     fc_calculator_options: str | None = None,
-    factor: float | None = None,
     produce_fc: bool = True,
     is_symmetry: bool = True,
     symmetrize_fc: bool = True,
@@ -174,7 +174,7 @@ def load(
         Input supercell. When given, the default value of
         ``primitive_matrix`` is set to ``'auto'`` (can be overwritten),
         and ``supercell_matrix`` is ignored. Default is None.
-    nac_params : dict, optional
+    nac_params : NacParams, optional
         Parameters required for non-analytical term correction. Default
         is None. Expected structure::
 
@@ -183,7 +183,8 @@ def load(
                       dtype=float),
              'dielectric': Dielectric constant matrix
                            (array_like, shape=(3, 3), dtype=float),
-             'factor': unit conversion factor (float)}
+             'factor': unit conversion factor (float, optional),
+             'method': 'gonze' (default) or 'wang' (str, optional)}
 
     unitcell_filename : str, optional
         Input unit cell filename. Default is None.
@@ -207,9 +208,6 @@ def load(
         single text string. Parsing rules depend on the calculator.
         For ``alm``, each parameter is split by ``','`` and each
         key-value pair is written as ``'key = value'``.
-    factor : float, optional
-        Deprecated. The conversion factor is selected based on
-        ``calculator``.
     produce_fc : bool, optional
         When False, force constants are not calculated from the dataset
         of displacements and forces even if the dataset exists. Default
@@ -308,7 +306,6 @@ def load(
         cell,
         smat,
         primitive_matrix=pmat,
-        factor=factor,
         symprec=symprec,
         is_symmetry=is_symmetry,
         use_SNF_supercell=use_SNF_supercell,
@@ -353,8 +350,7 @@ def load(
         phonon.force_constants = fc
 
     if use_pypolymlp and dataset is not None:
-        phonon.mlp_dataset = dataset
-        phonon.dataset = None
+        load_helper.move_force_dataset_to_mlp_dataset(phonon)
         load_helper.develop_or_load_pypolymlp(
             phonon, mlp_params=mlp_params, log_level=log_level
         )

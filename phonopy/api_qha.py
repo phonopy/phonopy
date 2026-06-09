@@ -88,8 +88,6 @@ class PhonopyQHA:
             Temperatures ascending order (T) in K.
             dtype='double'
             shape=(temperatures,)
-        pressure: float,
-            Pressure in GPa that is added to energy as PV term.
         free_energy: array_like
             Phonon Helmholtz free energy (F_ph) in kJ/mol.
             dtype='double'

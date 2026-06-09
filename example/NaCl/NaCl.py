@@ -68,12 +68,11 @@ _append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
 _append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
 _append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
 _append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
-phonon.run_band_structure(bands)
-band_dict = phonon.get_band_structure_dict()
-q_points = band_dict["qpoints"]
-distances = band_dict["distances"]
-frequencies = band_dict["frequencies"]
-eigvecs = band_dict["eigenvectors"]
+bs = phonon.run_band_structure(bands)
+q_points = bs.qpoints
+distances = bs.distances
+frequencies = bs.frequencies
+eigvecs = bs.eigenvectors
 for q_path, d_path, freq_path in zip(q_points, distances, frequencies, strict=True):
     for q, d, freq in zip(q_path, d_path, freq_path, strict=True):
         print(
@@ -89,19 +88,21 @@ phonon.run_thermal_properties(t_step=10, t_max=1000, t_min=0)
 
 # DOS
 phonon.run_total_dos(sigma=0.1)
-dos_dict = phonon.get_total_dos_dict()
-for omega, dos in zip(dos_dict["frequency_points"], dos_dict["total_dos"], strict=True):
+total_dos = phonon.total_dos
+assert total_dos is not None
+for omega, dos in zip(total_dos.frequency_points, total_dos.dos, strict=True):
     print("%15.7f%15.7f" % (omega, dos))
 phonon.plot_total_dos().show()
 
 # Thermal properties
-tprop_dict = phonon.get_thermal_properties_dict()
+tp = phonon.thermal_properties
+assert tp is not None
 
 for t, free_energy, entropy, cv in zip(
-    tprop_dict["temperatures"],
-    tprop_dict["free_energy"],
-    tprop_dict["entropy"],
-    tprop_dict["heat_capacity"],
+    tp.temperatures,
+    tp.free_energy,
+    tp.entropy,
+    tp.heat_capacity,
     strict=True,
 ):
     print(("%12.3f " + "%15.7f" * 3) % (t, free_energy, entropy, cv))
@@ -110,8 +111,9 @@ phonon.plot_thermal_properties().show()
 # PDOS
 phonon.run_mesh(mesh=[10, 10, 10], is_mesh_symmetry=False, with_eigenvectors=True)
 phonon.run_projected_dos(use_tetrahedron_method=True)
-pdos_dict = phonon.get_projected_dos_dict()
-omegas = pdos_dict["frequency_points"]
-pdos = pdos_dict["projected_dos"]
+pdos = phonon.projected_dos
+assert pdos is not None
+omegas = pdos.frequency_points
+pdos_array = pdos.projected_dos
 pdos_indices = [[0], [1]]
 phonon.plot_projected_dos(pdos_indices=pdos_indices, legend=pdos_indices).show()

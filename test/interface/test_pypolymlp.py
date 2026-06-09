@@ -401,7 +401,8 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     # ph_nacl_rd.run_mesh([2, 2, 2])
     # ph_nacl_rd.get_mesh_dict()["frequencies"]
     ph.run_mesh([2, 2, 2])
-    freqs = ph.get_mesh_dict()["frequencies"]
+    assert ph.mesh is not None
+    freqs = ph.mesh.frequencies
     print(freqs.ravel().tolist())
     # Mesh [2,2,2] + default shift breaks point-group symmetry, so BZGrid
     # falls back to TR-only ir-grid (4 ir-pairs of weight 2 = 24 floats);

@@ -1,6 +1,22 @@
 (phonopy_module)=
 # Phonopy API for Python
 
+```{note}
+The Python API is being restructured toward phonopy v5 and v6; see
+{ref}`development` for the architecture principles, migration plan,
+and deprecation policy. Two points are directly relevant to API
+users:
+
+- Mutating a calculation input (`force_constants`, `nac_params`,
+  `masses`, the displacement dataset, `forces`, ...) invalidates all
+  results derived from it. Run the corresponding `run_*` method
+  again before accessing the result; accessing a cleared result
+  raises `RuntimeError`.
+- APIs planned for removal emit `DeprecationWarning`. New code
+  should not rely on them.
+```
+
+(phonopy_three_unit_cells)=
 ## Three unit cells
 
 In the `Phonopy` class, mainly three different unit cells are used, `unitcell`,
@@ -231,6 +247,64 @@ details at {ref}`file_force_constants`.
 
 ## Phonon calculation
 
+(phonopy_result_objects)=
+### Result objects
+
+The `Phonopy` class holds the definition of the physical model: the
+three unit cells ({ref}`phonopy_three_unit_cells`), symmetry, force
+constants, and parameters of non-analytical term correction
+({ref}`phonopy_nac_params`). Each
+phonon analysis is started by a `run_*` method, which computes the
+analysis and returns a self-contained **result object**. The same
+object is also accessible through the property of the same name
+(e.g. `phonon.band_structure`), which returns None before the
+corresponding `run_*` call. Mutating a calculation input (force
+constants, NAC parameters, masses, ...) invalidates the stored
+results; run the analysis again.
+
+```{note}
+This part of the API is being restructured toward phonopy v5 / v6
+(see {ref}`development`). The `run_*` return value is the
+recommended access path for new code; the same-named properties on
+`Phonopy` are transitional and are planned for deprecation in a
+future major version. The data attributes of the result objects
+listed below are the stable surface.
+```
+
+```python
+bs = phonon.run_band_structure(paths)  # compute and return
+bs.frequencies                          # read data attributes
+bs.write_yaml()                         # file output
+bs.plot(ax)                             # draw into a matplotlib Axes
+```
+
+Internal machinery such as `DynamicalMatrix` and `GroupVelocity` is
+not a result object; those are stateful calculators wrapped by the
+`run_*` methods and are not part of the supported data-access API.
+
+The result objects and their main data attributes:
+
+| `run_*` method | Result class | Main data attributes |
+|---|---|---|
+| `run_band_structure()` | `BandStructure` | `qpoints`, `distances`, `frequencies`, `eigenvectors`, `group_velocities`, `labels`, `path_connections` |
+| `run_mesh()` | `Mesh` | `qpoints`, `weights`, `frequencies`, `eigenvectors`, `group_velocities`, `mesh_numbers` |
+| `run_qpoints()` | `QpointsPhonon` | `qpoints`, `frequencies`, `eigenvectors`, `group_velocities`, `dynamical_matrices` |
+| `run_total_dos()` | `TotalDos` | `frequency_points`, `dos` |
+| `run_projected_dos()` | `ProjectedDos` | `frequency_points`, `projected_dos` |
+| `run_thermal_properties()` | `ThermalProperties` | `temperatures`, `free_energy`, `entropy`, `heat_capacity`, `zero_point_energy` |
+| `run_thermal_displacements()` | `ThermalDisplacements` | `temperatures`, `thermal_displacements` |
+| `run_thermal_displacement_matrices()` | `ThermalDisplacementMatrices` | `temperatures`, `thermal_displacement_matrices`, `thermal_displacement_matrices_cif` |
+| `run_moment()` | `PhononMoment` | `moment` |
+| `run_modulations()` | `Modulation` | `modulations`, `supercell`, `modulated_supercells`, `modulated_supercell`, `frequencies`, `eigenvectors` |
+| `run_irreps()` | `IrReps` | `band_indices`, `characters`, `frequencies`, `eigenvectors`, `qpoint` |
+| `run_dynamic_structure_factor()` | `DynamicStructureFactor` | `qpoints`, `frequencies`, `dynamic_structure_factors` |
+
+File output lives on the result objects (`write_yaml`, `write_hdf5`,
+`write`, `write_cif`, depending on the class), and ax-level plotting
+on those that have a graphical representation (`plot(ax)`).
+Figure-level convenience plot functions are provided in
+`phonopy.phonon.plot` and as `Phonopy.plot_*` methods.
+
 (phonopy_save_parameters)=
 ### Save parameters (`phonopy.save`)
 
@@ -256,17 +330,20 @@ phonon.save(settings={'force_constants': True})
 
 ### Band structure
 
-Set band paths (`run_band_structure()`) and get the results
-(`get_band_structure_dict()`).
+Set band paths with `run_band_structure()`, which returns a
+`BandStructure` result object with attributes `qpoints`, `distances`,
+`frequencies`, `eigenvectors`, and `group_velocities` (the same object
+is also accessible via the `band_structure` property). Eigenvectors are
+included when `with_eigenvectors=True` is passed to
+`run_band_structure()`. Frequencies are returned in the unit set by
+`Phonopy.unit_conversion_factor` (THz by default for the VASP
+calculator with displacements in Angstrom and forces in eV/Angstrom).
+Imaginary frequencies are encoded as negative real numbers.
 
-A dictionary with `qpoints`, `distances`, `frequencies`, `eigenvectors`,
-and `group_velocities` is returned by `get_band_structure_dict()`.
-Eigenvectors are included when `with_eigenvectors=True` is passed to
-`run_band_structure()`. See the docstring of
-`Phonopy.get_band_structure_dict` for details. Frequencies are returned
-in the unit set by `Phonopy.unit_conversion_factor` (THz by default for
-the VASP calculator with displacements in Angstrom and forces in
-eV/Angstrom). Imaginary frequencies are encoded as negative real numbers.
+```python
+bs = phonon.run_band_structure(qpoints, path_connections=connections)
+frequencies = bs.frequencies
+```
 
 In `example/NaCl`, the phonopy is executed from python script, e.g.,
 
@@ -325,21 +402,20 @@ To use this method, `seekpath` python module is needed.
 ### Mesh sampling
 
 Run the sampling-mesh phonon calculation with `run_mesh()` in
-reciprocal space. The irreducible _q_-points and corresponding
-_q_-point weights, eigenvalues, and eigenvectors are obtained by
-`get_mesh_dict()`. `mesh` gives the sampling mesh in the Monkhorst-Pack
-scheme. The keyword `shift` gives the fractional mesh shift with
-respect to the neighboring grid points.
+reciprocal space. It returns a `Mesh` result object with attributes
+`qpoints`, `weights`, `frequencies`, `eigenvectors`, and
+`group_velocities` for the irreducible _q_-points (the same object is
+also accessible via the `mesh` property). `mesh` gives the sampling
+mesh in the Monkhorst-Pack scheme. The keyword `shift` gives the
+fractional mesh shift with respect to the neighboring grid points.
 
 ```python
-mesh = [20, 20, 20]
-phonon.run_mesh(mesh)
-mesh_dict = phonon.get_mesh_dict()
-qpoints = mesh_dict['qpoints']
-weights = mesh_dict['weights']
-frequencies = mesh_dict['frequencies']
-eigenvectors = mesh_dict['eigenvectors']
-group_velocities = mesh_dict['group_velocities']
+m = phonon.run_mesh([20, 20, 20])
+qpoints = m.qpoints
+weights = m.weights
+frequencies = m.frequencies
+eigenvectors = m.eigenvectors
+group_velocities = m.group_velocities
 ```
 
 To obtain eigenvectors, the corresponding keyword argument must be set:
@@ -366,8 +442,8 @@ phonon.run_mesh(100.0)
 Before starting mesh sampling has to be finished. Then set parameters
 (`run_total_dos()` or `run_projected_dos()`) and write the results into files
 (`write_total_dos()` and `write_projected_dos()`). In the case of PDOS, the
-eigenvectors have to be calculated in the mesh sampling. To get the results
-`get_total_dos_dict()` and `get_projected_dos_dict()` can be used.
+eigenvectors have to be calculated in the mesh sampling. The results are
+accessible via the `total_dos` and `projected_dos` properties.
 
 To plot total DOS,
 
@@ -404,21 +480,20 @@ has to be done in the **THz unit**. The unit conversion factor for phonon
 frequency is set in the pre-process of Phonopy with the `factor` keyword.
 Calculation range of temperature is set by the parameters
 `run_thermal_properties`. Helmholtz free energy, entropy, heat capacity at
-constant volume at temperatures are obtained by `get_thermal_properties_dict`,
-where the results are given as a dictionary of temperatures, Helmholtz free
-energy, entropy, and heat capacity with keys `temperatures`, `free_energy`,
-`entropy`, and `heat_capacity`, respectively.
+constant volume at temperatures are obtained from the returned
+`ThermalProperties` object with attributes `temperatures`,
+`free_energy`, `entropy`, and `heat_capacity` (the same object is also
+accessible via the `thermal_properties` property).
 
 ```python
 phonon.run_mesh([20, 20, 20])
-phonon.run_thermal_properties(t_step=10,
-                              t_max=1000,
-                              t_min=0)
-tp_dict = phonon.get_thermal_properties_dict()
-temperatures = tp_dict['temperatures']
-free_energy = tp_dict['free_energy']
-entropy = tp_dict['entropy']
-heat_capacity = tp_dict['heat_capacity']
+tp = phonon.run_thermal_properties(t_step=10,
+                                   t_max=1000,
+                                   t_min=0)
+temperatures = tp.temperatures
+free_energy = tp.free_energy
+entropy = tp.entropy
+heat_capacity = tp.heat_capacity
 
 for t, F, S, cv in zip(temperatures, free_energy, entropy, heat_capacity):
     print(("%12.3f " + "%15.7f" * 3) % ( t, F, S, cv ))
@@ -426,11 +501,25 @@ for t, F, S, cv in zip(temperatures, free_energy, entropy, heat_capacity):
 phonon.plot_thermal_properties().show()
 ```
 
+(phonopy_nac_params)=
 ### Non-analytical term correction
 
 To apply non-analytical term correction, Born effective charge tensors for all
 atoms in **primitive** cell, dielectric constant tensor, and the unit conversion
 factor have to be correctly set. The tensors are given in Cartesian coordinates.
+
+The parameters are set to the `nac_params` attribute as a dictionary
+(typed as `NacParams` in `phonopy.harmonic.dynamical_matrix`) with the
+following keys:
+
+| Key | Type | Description |
+|---|---|---|
+| `'born'` | array_like, shape=(primitive cell atoms, 3, 3) | Born effective charge tensors in Cartesian coordinates, in the order of atoms of the primitive cell. |
+| `'dielectric'` | array_like, shape=(3, 3) | High-frequency dielectric constant tensor in Cartesian coordinates. |
+| `'factor'` | float, optional | Unit conversion factor of the non-analytical term. When omitted, the value for the calculator interface is used (see {ref}`nac_default_value_interfaces`). |
+| `'method'` | str, optional | NAC method, either `'gonze'` (Gonze-Lee, default) or `'wang'`. |
+| `'G_cutoff'` | float, optional | Cutoff distance of reciprocal-space sampling of the Gonze-Lee method. When omitted, determined automatically. |
+| `'Lambda'` | float, optional | Smearing parameter of the Ewald-like sum of the Gonze-Lee method. When omitted, determined automatically. |
 
 ```python
 born = [[[1.08878299, 0, 0],
@@ -451,28 +540,29 @@ phonon.nac_params = {'born': born,
 ### Phonon at arbitrary q-points
 
 To evaluate phonons at an explicit list of q-points (without imposing
-a band path or a mesh), use `run_qpoints()`. The result is retrieved
-through `get_qpoints_dict()`.
+a band path or a mesh), use `run_qpoints()`. It returns a
+`QpointsPhonon` result object with attributes `qpoints`,
+`frequencies`, `eigenvectors`, `group_velocities`, and
+`dynamical_matrices` (the same object is also accessible via the
+`qpoints` property).
 
 ```python
-phonon.run_qpoints(
+qpts = phonon.run_qpoints(
     [[0.0, 0.0, 0.0],
      [0.5, 0.0, 0.0],
      [0.5, 0.5, 0.5]],
     with_eigenvectors=True,
     with_group_velocities=True,
 )
-qpts_dict = phonon.get_qpoints_dict()
-frequencies = qpts_dict['frequencies']
-eigenvectors = qpts_dict['eigenvectors']
-group_velocities = qpts_dict['group_velocities']
+frequencies = qpts.frequencies
+eigenvectors = qpts.eigenvectors
+group_velocities = qpts.group_velocities
 ```
 
-For one-off evaluations at a single q-point, the lightweight helpers
-`get_frequencies(q)` and `get_frequencies_with_eigenvectors(q)` return
-arrays directly, while `get_group_velocity_at_q(q)` returns group
-velocities. `get_dynamical_matrix_at_q(q)` returns the (non-mass-weighted)
-dynamical matrix itself.
+`run_qpoints()` also covers one-off evaluations at a single q-point,
+e.g. `phonon.run_qpoints([q]).frequencies[0]`. The legacy single-point
+helpers (`get_frequencies`, `get_frequencies_with_eigenvectors`,
+`get_group_velocity_at_q`, `get_dynamical_matrix_at_q`) are deprecated.
 
 ### Thermal displacements
 
@@ -481,15 +571,14 @@ Mean-square atomic displacements and the corresponding 3x3 matrices
 
 ```python
 phonon.run_mesh([20, 20, 20], with_eigenvectors=True, is_mesh_symmetry=False)
-phonon.run_thermal_displacements(t_min=0, t_max=1000, t_step=10)
-td_dict = phonon.get_thermal_displacements_dict()
-temperatures = td_dict['temperatures']
-u2 = td_dict['thermal_displacements']  # shape=(temperatures, atoms*3)
+td = phonon.run_thermal_displacements(t_min=0, t_max=1000, t_step=10)
+temperatures = td.temperatures
+u2 = td.thermal_displacements  # shape=(temperatures, atoms*3)
 ```
 
 ```python
-phonon.run_thermal_displacement_matrices(t_min=0, t_max=1000, t_step=10)
-tdm_dict = phonon.get_thermal_displacement_matrices_dict()
+tdm = phonon.run_thermal_displacement_matrices(t_min=0, t_max=1000, t_step=10)
+temperatures = tdm.temperatures
 phonon.write_thermal_displacement_matrix_to_cif(temperature_index=10)
 ```
 
@@ -497,17 +586,21 @@ phonon.write_thermal_displacement_matrix_to_cif(temperature_index=10)
 
 `run_modulations()` builds atomic-displacement patterns of selected
 phonon modes on a chosen supercell. Each requested mode is a list
-`[q-point, band_index, amplitude, phase]`.
+`[q-point, band_index, amplitude, phase]`. The returned `Modulation`
+object gives the per-mode modulated cells (`modulated_supercells`),
+the cell modulated by all modes summed (`modulated_supercell`), the
+complex displacement fields (`modulations`), and the perfect
+supercell (`supercell`).
 
 ```python
-phonon.run_modulations(
+mod = phonon.run_modulations(
     dimension=[2, 2, 2],
     phonon_modes=[
         [[0.0, 0.0, 0.0], 0, 1.0, 0.0],
         [[0.5, 0.5, 0.5], 3, 0.5, 0.0],
     ],
 )
-modulated_cells = phonon.get_modulated_supercells()
+modulated_cells = mod.modulated_supercells
 phonon.write_modulations()  # MPOSCAR-001, MPOSCAR-002, ...
 ```
 
@@ -517,7 +610,7 @@ For mode analysis at a chosen q-point, irreducible representations of
 the little co-group can be computed.
 
 ```python
-phonon.set_irreps(q=[0.0, 0.0, 0.0])
+phonon.run_irreps(q=[0.0, 0.0, 0.0])
 phonon.show_irreps(show_irreps=True)
 phonon.write_yaml_irreps()
 ```
@@ -752,7 +845,7 @@ spglib crystal structure
 ```{warning}
 **Experimental.** The mixed-species / Virtual Crystal Approximation
 (VCA) support — including `species_table` / `species_ids` /
-`has_mixtures` on `PhonopyAtoms`, `apply_site_mixture`,
+`has_mixtures` on `PhonopyAtoms`, `build_mixture_cell`,
 `build_species_table_from_mixtures`, the `--site-mixture` CLI option,
 the FC-time mixture-force reduction, and the VASP `expand_mixtures`
 writer — is experimental. APIs, file layouts (including the expanded
@@ -801,16 +894,16 @@ in input order ("GeSn"); two distinct mixtures that would share the same
 composite label still get distinct ids because the underlying
 `(symbol, weight)` tuples differ.
 
-#### `apply_site_mixture` utility
+#### `build_mixture_cell` utility
 
-`phonopy.structure.cells.apply_site_mixture` collapses overlapping atoms in
+`phonopy.structure.cells.build_mixture_cell` collapses overlapping atoms in
 an ordinary cell into mixed-species sites. The Virtual Crystal
 Approximation (VCA) is the typical use case.
 
 ```python
-from phonopy.structure.cells import apply_site_mixture
+from phonopy.structure.cells import build_mixture_cell
 
-mixed_cell = apply_site_mixture(cell, weights=[0.5, 0.5, 0.5, 0.5])
+mixed_cell = build_mixture_cell(cell, weights=[0.5, 0.5, 0.5, 0.5])
 ```
 
 `weights` must have one entry per atom in the input order. Atoms whose
@@ -834,7 +927,7 @@ phonopy --dim "2 2 2" --site-mixture "0.5 0.5 0.5 0.5" -d
 ```
 
 `--site-mixture` takes a space-separated list of per-atom weights in the
-input order, with the same validation rules as `apply_site_mixture`. The
+input order, with the same validation rules as `build_mixture_cell`. The
 merge is applied immediately after the unit cell is read, so the rest of
 the workflow (displacement generation, supercell construction,
 force-constant building) sees only the merged cell.

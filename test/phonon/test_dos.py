@@ -81,6 +81,42 @@ def testTotalDOSTetrahedron(ph_nacl_nofcsym: Phonopy):
     #     print("%f %f" % (f, d))
 
 
+def test_total_dos_sigma_overrides_tetrahedron(ph_nacl_nofcsym: Phonopy):
+    """Sigma selects the smearing method even with use_tetrahedron_method=True.
+
+    The default use_tetrahedron_method=True with sigma used to crash
+    (TotalDos) because __init__ dispatched on the flag while run()
+    dispatched on sigma.
+
+    """
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5])
+    dos_default = phonon.run_total_dos(sigma=0.5, freq_pitch=1).dos
+    dos_smearing = phonon.run_total_dos(
+        sigma=0.5, freq_pitch=1, use_tetrahedron_method=False
+    ).dos
+    assert dos_default is not None
+    np.testing.assert_allclose(dos_default, dos_smearing, atol=1e-12)
+
+
+def test_projected_dos_sigma_overrides_tetrahedron(ph_nacl_nofcsym: Phonopy):
+    """Sigma selects the smearing method even with use_tetrahedron_method=True.
+
+    The default use_tetrahedron_method=True with sigma used to silently
+    ignore sigma (ProjectedDos) because run() dispatched on the flag
+    while sigma promised the smearing method.
+
+    """
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
+    pdos_default = phonon.run_projected_dos(sigma=0.5, freq_pitch=1).projected_dos
+    pdos_smearing = phonon.run_projected_dos(
+        sigma=0.5, freq_pitch=1, use_tetrahedron_method=False
+    ).projected_dos
+    assert pdos_default is not None
+    np.testing.assert_allclose(pdos_default, pdos_smearing, atol=1e-12)
+
+
 def testProjectedlDOS(ph_nacl_nofcsym: Phonopy):
     """Test projected DOS with smearing method."""
     phonon = ph_nacl_nofcsym

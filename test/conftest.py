@@ -5,6 +5,7 @@ from __future__ import annotations
 import pathlib
 from collections.abc import Callable
 
+import matplotlib
 import numpy as np
 import pytest
 
@@ -12,6 +13,10 @@ import phonopy
 from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.structure.atoms import PhonopyAtoms
+
+# Use the non-interactive Agg backend for the whole test session,
+# consistent with MPLBACKEND=Agg on CI.
+matplotlib.use("Agg")
 
 cwd = pathlib.Path(__file__).parent
 

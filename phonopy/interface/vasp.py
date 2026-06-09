@@ -548,7 +548,7 @@ def _expand_mixtures_for_vasp(
     for sid, sp in enumerate(species_table):
         atom_idx = np.where(species_ids == sid)[0]
         # Every species in the table is referenced by at least one atom in
-        # the standard construction paths (apply_site_mixture, Supercell,
+        # the standard construction paths (build_mixture_cell, Supercell,
         # Primitive, displacement). A hand-crafted PhonopyAtoms with an
         # orphan species would land here.
         assert atom_idx.size > 0, f"species_table[{sid}]={sp.symbol!r} has no atoms"

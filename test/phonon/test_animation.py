@@ -10,9 +10,9 @@ from phonopy.phonon.animation import write_animation
 
 def _get_dynamical_matrix(ph: Phonopy):
     """Return DynamicalMatrix after building it (pre-run at a non-Gamma q-point)."""
-    ph.get_dynamical_matrix_at_q([0.5, 0.5, 0.5])
     dm = ph.dynamical_matrix
     assert dm is not None
+    dm.run([0.5, 0.5, 0.5])
     return dm
 
 
@@ -261,7 +261,8 @@ def test_write_animation_via_phonopy_api(
 ):
     """Test Phonopy.write_animation() API produces same output as write_animation."""
     ph = ph_nacl_nonac
-    ph.get_dynamical_matrix_at_q([0.5, 0.5, 0.5])
+    assert ph.dynamical_matrix is not None
+    ph.dynamical_matrix.run([0.5, 0.5, 0.5])
     fname_api = str(tmp_path / "api_anime.ascii")
     fname_direct = str(tmp_path / "direct_anime.ascii")
     q = [0, 0, 0]

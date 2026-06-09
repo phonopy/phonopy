@@ -59,6 +59,7 @@ from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
     develop_or_load_pypolymlp,
     get_nac_params,
+    move_force_dataset_to_mlp_dataset,
     prepare_dataset_by_pypolymlp,
     produce_force_constants,
     select_and_extract_force_constants,
@@ -82,6 +83,7 @@ from phonopy.exception import (
     PypolymlpDevelopmentError,
     PypolymlpFileNotFoundError,
     PypolymlpRelaxationError,
+    PypolymlpTrainingDatasetNotFoundError,
 )
 from phonopy.file_IO import (
     get_supported_file_extensions_for_compression,
@@ -142,20 +144,10 @@ def _print_phonopy_end():
 
 def print_version(version: str, package_name: str = "phonopy", rjust_length: int = 44):
     """Show phonopy version number."""
-    try:
-        version_text = version.rjust(rjust_length)
-        import importlib.metadata
-
-        if importlib.metadata.version(package_name):
-            ver = importlib.metadata.version(package_name).split(".")
-            if len(ver) > 3:
-                rev = ver[3]
-                version_text = ("%s-%s" % (version, rev)).rjust(44)
-    except (ImportError, importlib.metadata.PackageNotFoundError):
-        pass
-    finally:
-        print(version_text)
-        print("")
+    # Show only the public version, dropping any local segment that
+    # setuptools_scm appends to dev builds (e.g. "+g1234abcd.d20260525").
+    print(version.split("+")[0].rjust(rjust_length))
+    print("")
 
 
 def print_end():
@@ -1188,11 +1180,12 @@ def _run_thermal_properties(
             "#%11s %15s%15s%15s%15s"
             % ("T [K]", "F [kJ/mol]", "S [J/K/mol]", "C_v [J/K/mol]", "E [kJ/mol]")
         )
-        tp = phonon.get_thermal_properties_dict()
-        temps = tp["temperatures"]
-        fe = tp["free_energy"]
-        entropy = tp["entropy"]
-        heat_capacity = tp["heat_capacity"]
+        tp = phonon.thermal_properties
+        assert tp is not None
+        temps = tp.temperatures
+        fe = tp.free_energy
+        entropy = tp.entropy
+        heat_capacity = tp.heat_capacity
         for T, F, S, CV in zip(temps, fe, entropy, heat_capacity, strict=True):
             print(("%12.3f " + "%15.7f" * 4) % (T, F, S, CV, F + T * S / 1000))
     if plot_conf["plot_graph"]:
@@ -1352,15 +1345,13 @@ def _run_moment(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> N
     else:
         orders = list(range(3))
     for i in orders:
-        phonon.run_moment(
+        total_moment = phonon.run_moment(
             order=i, freq_min=freq_min, freq_max=freq_max, is_projection=False
-        )
-        total_moment = phonon.get_moment()
-        phonon.run_moment(
-            order=i, freq_min=freq_min, freq_max=freq_max, is_projection=True
-        )
+        ).moment
         text = " %3d |%10.5f | " % (i, total_moment)
-        moments = phonon.get_moment()
+        moments = phonon.run_moment(
+            order=i, freq_min=freq_min, freq_max=freq_max, is_projection=True
+        ).moment
         assert isinstance(moments, np.ndarray)
         for m in moments:
             text += "%10.5f " % m
@@ -1501,7 +1492,7 @@ def _run_irreps(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> N
     """Run irreducible representations calculation."""
     irreps_q_point = settings.irreps_q_point
     assert irreps_q_point is not None
-    phonon.set_irreps(
+    phonon.run_irreps(
         irreps_q_point,
         is_little_cogroup=settings.is_little_cogroup,
         nac_q_direction=settings.nac_q_direction,
@@ -2179,16 +2170,17 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         # Prepare polynomial MLPs #
         ###########################
         if settings.use_pypolymlp:
-            if phonon.dataset is not None:
-                assert "forces" in phonon.dataset
-                phonon.mlp_dataset = phonon.dataset
-                phonon.dataset = None
+            move_force_dataset_to_mlp_dataset(phonon)
 
             try:
                 develop_or_load_pypolymlp(
                     phonon, mlp_params=settings.mlp_params, log_level=log_level
                 )
-            except (PypolymlpDevelopmentError, PypolymlpFileNotFoundError) as e:
+            except (
+                PypolymlpDevelopmentError,
+                PypolymlpFileNotFoundError,
+                PypolymlpTrainingDatasetNotFoundError,
+            ) as e:
                 print_error_message(str(e))
                 if log_level:
                     print_error()

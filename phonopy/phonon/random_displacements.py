@@ -351,11 +351,13 @@ class RandomDisplacements:
     @frequencies.setter
     def frequencies(self, freqs: NDArray[np.double]) -> None:
         eigvals = (freqs / self._factor) ** 2 * np.sign(freqs)
-        if len(eigvals) != len(self._eigvals_ii) + len(self._eigvals_ij):
+        n_ii = len(self._eigvals_ii)
+        n_ij = len(self._eigvals_ij) if self._ij else 0
+        if len(eigvals) != n_ii + n_ij:
             raise RuntimeError("Dimension of frequencies is wrong.")
-
-        self._eigvals_ii = eigvals[: len(self._eigvals_ii)]
-        self._eigvals_ij = eigvals[len(self._eigvals_ii) :]
+        self._eigvals_ii = eigvals[:n_ii]
+        if self._ij:
+            self._eigvals_ij = eigvals[n_ii:]
 
     @property
     def qpoints(self) -> NDArray[np.double]:

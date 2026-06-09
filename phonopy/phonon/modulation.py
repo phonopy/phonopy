@@ -84,12 +84,50 @@ class Modulation:
             self._eigvecs[i] = eigvecs[:, band_index]
             self._eigvals[i] = eigvals[band_index]
 
+    @property
+    def supercell(self) -> PhonopyAtoms:
+        """Return the perfect (unmodulated) supercell."""
+        return self._supercell
+
+    @property
+    def modulations(self) -> NDArray[np.cdouble]:
+        """Return complex atomic displacement fields.
+
+        Displacements in Cartesian coordinates, one field per phonon
+        mode. ``shape=(modes, supercell atoms, 3)``,
+        ``dtype=np.cdouble``. Zeros before ``run()`` is called.
+
+        """
+        return self._u
+
+    @property
+    def modulated_supercells(self) -> list[PhonopyAtoms]:
+        """Return supercells modulated by respective phonon modes."""
+        return [self._get_cell_with_modulation(u) for u in self._u]
+
+    @property
+    def modulated_supercell(self) -> PhonopyAtoms:
+        """Return the supercell modulated by the sum of all phonon modes."""
+        return self._get_cell_with_modulation(np.sum(self._u, axis=0))
+
+    @property
+    def frequencies(self) -> NDArray[np.double]:
+        """Return phonon frequencies of the selected phonon modes."""
+        return self._eigvals_to_frequencies(self._eigvals)
+
+    @property
+    def eigenvectors(self) -> NDArray[np.cdouble]:
+        """Return eigenvectors of the selected phonon modes.
+
+        ``shape=(modes, primitive cell atoms * 3)``,
+        ``dtype=np.cdouble``.
+
+        """
+        return self._eigvecs
+
     def get_modulated_supercells(self) -> list[PhonopyAtoms]:
         """Return modulations."""
-        modulations = []
-        for u in self._u:
-            modulations.append(self._get_cell_with_modulation(u))
-        return modulations
+        return self.modulated_supercells
 
     def get_modulations_and_supercell(
         self,
@@ -105,26 +143,21 @@ class Modulation:
         """Write supercells with modulations."""
         base_fname = get_default_cell_filename(interface_mode)
 
-        deltas = []
-        for i, u in enumerate(self._u):
-            cell = self._get_cell_with_modulation(u)
+        for i, cell in enumerate(self.modulated_supercells):
             write_crystal_structure(
                 f"M{base_fname}-{(i + 1):03d}",
                 cell,
                 interface_mode=interface_mode,
                 optional_structure_info=optional_structure_info,
             )
-            deltas.append(u)
 
-        sum_of_deltas = np.sum(deltas, axis=0)
-        cell = self._get_cell_with_modulation(sum_of_deltas)
         write_crystal_structure(
             f"M{base_fname}",
-            cell,
+            self.modulated_supercell,
             interface_mode=interface_mode,
             optional_structure_info=optional_structure_info,
         )
-        no_modulations = np.zeros(sum_of_deltas.shape, dtype=complex)
+        no_modulations = np.zeros(self._u.shape[1:], dtype=np.cdouble)
         cell = self._get_cell_with_modulation(no_modulations)
         write_crystal_structure(
             f"M{base_fname}-orig",

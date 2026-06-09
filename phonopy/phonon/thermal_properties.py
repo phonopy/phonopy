@@ -448,6 +448,39 @@ class ThermalProperties(ThermalPropertiesBase):
         return self._thermal_properties  # type: ignore[return-value]
 
     @property
+    def free_energy(self) -> NDArray[np.double] | None:
+        """Return Helmholtz free energies in kJ/mol.
+
+        None is returned before running the calculation.
+
+        """
+        if self._thermal_properties is None:
+            return None
+        return self._thermal_properties[1]
+
+    @property
+    def entropy(self) -> NDArray[np.double] | None:
+        """Return entropies in J/K/mol.
+
+        None is returned before running the calculation.
+
+        """
+        if self._thermal_properties is None:
+            return None
+        return self._thermal_properties[2]
+
+    @property
+    def heat_capacity(self) -> NDArray[np.double] | None:
+        """Return heat capacities in J/K/mol.
+
+        None is returned before running the calculation.
+
+        """
+        if self._thermal_properties is None:
+            return None
+        return self._thermal_properties[3]
+
+    @property
     def zero_point_energy(self) -> float | None:
         """Return zero point energy in kJ/mol."""
         return self._zero_point_energy  # type: ignore[return-value]

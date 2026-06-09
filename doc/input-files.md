@@ -213,7 +213,7 @@ calculators the support is not yet wired.
 ```
 
 Cells built with {ref}`mixed-species sites <mixed_species_sites>` (e.g. via
-`--site-mixture` or `apply_site_mixture`) keep one phonopy site per
+`--site-mixture` or `build_mixture_cell`) keep one phonopy site per
 crystallographic position, but the calculator (e.g. VASP) sees one row per
 constituent at the same fractional coordinate. Forces returned by the
 calculator therefore have one entry per constituent row, not per phonopy
