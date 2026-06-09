@@ -2,6 +2,20 @@
 
 # Change Log
 
+## Jun-09-2026: Version 4.2.0
+
+- `run_*` methods now return result objects (e.g. `run_band_structure`
+  returns a `BandStructure`). The corresponding `get_*_dict` accessors
+  are deprecated, and the legacy `factor` argument has been removed.
+- Result objects share a unified `plot(ax)` signature. Figure-level
+  plotting helpers moved to `phonopy.phonon.plot`, and the global
+  side effects of the old plot functions were removed.
+- Added `NacParams` TypedDict; documented result objects and NAC
+  parameters.
+- Added `Phonopy.replicate`; `Phonopy.copy` is deprecated.
+- Added a development documentation page describing the architecture
+  principles.
+
 ## May-25-2026: Version 4.1.0
 
 - Analytical derivative of the dynamical matrix is now available for
