@@ -621,6 +621,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../../citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
 </ul>
 
@@ -771,6 +772,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.cui.load_helper</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">load_helper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy._lang</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_lang</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.api_phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.dynamical_matrix</span><span class="w"> </span><span class="kn">import</span> <span class="n">NacParams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.phonopy_yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyYaml</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.physical_units</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_calculator_physical_units</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
@@ -795,7 +797,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">calculator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">unitcell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">nac_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">nac_params</span><span class="p">:</span> <span class="n">NacParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">unitcell_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">supercell_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">born_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -803,7 +805,6 @@ window.runMermaid = runMermaid;</script>
     <span class="n">force_constants_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fc_calculator</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;traditional&quot;</span><span class="p">,</span> <span class="s2">&quot;symfc&quot;</span><span class="p">,</span> <span class="s2">&quot;alm&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fc_calculator_options</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">produce_fc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">is_symmetry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">symmetrize_fc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -900,7 +901,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Input supercell. When given, the default value of</span>
 <span class="sd">        ``primitive_matrix`` is set to ``&#39;auto&#39;`` (can be overwritten),</span>
 <span class="sd">        and ``supercell_matrix`` is ignored. Default is None.</span>
-<span class="sd">    nac_params : dict, optional</span>
+<span class="sd">    nac_params : NacParams, optional</span>
 <span class="sd">        Parameters required for non-analytical term correction. Default</span>
 <span class="sd">        is None. Expected structure::</span>
 
@@ -909,7 +910,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">                      dtype=float),</span>
 <span class="sd">             &#39;dielectric&#39;: Dielectric constant matrix</span>
 <span class="sd">                           (array_like, shape=(3, 3), dtype=float),</span>
-<span class="sd">             &#39;factor&#39;: unit conversion factor (float)}</span>
+<span class="sd">             &#39;factor&#39;: unit conversion factor (float, optional),</span>
+<span class="sd">             &#39;method&#39;: &#39;gonze&#39; (default) or &#39;wang&#39; (str, optional)}</span>
 
 <span class="sd">    unitcell_filename : str, optional</span>
 <span class="sd">        Input unit cell filename. Default is None.</span>
@@ -933,9 +935,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        single text string. Parsing rules depend on the calculator.</span>
 <span class="sd">        For ``alm``, each parameter is split by ``&#39;,&#39;`` and each</span>
 <span class="sd">        key-value pair is written as ``&#39;key = value&#39;``.</span>
-<span class="sd">    factor : float, optional</span>
-<span class="sd">        Deprecated. The conversion factor is selected based on</span>
-<span class="sd">        ``calculator``.</span>
 <span class="sd">    produce_fc : bool, optional</span>
 <span class="sd">        When False, force constants are not calculated from the dataset</span>
 <span class="sd">        of displacements and forces even if the dataset exists. Default</span>
@@ -1034,7 +1033,6 @@ window.runMermaid = runMermaid;</script>
         <span class="n">cell</span><span class="p">,</span>
         <span class="n">smat</span><span class="p">,</span>
         <span class="n">primitive_matrix</span><span class="o">=</span><span class="n">pmat</span><span class="p">,</span>
-        <span class="n">factor</span><span class="o">=</span><span class="n">factor</span><span class="p">,</span>
         <span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">,</span>
         <span class="n">is_symmetry</span><span class="o">=</span><span class="n">is_symmetry</span><span class="p">,</span>
         <span class="n">use_SNF_supercell</span><span class="o">=</span><span class="n">use_SNF_supercell</span><span class="p">,</span>
@@ -1079,8 +1077,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">phonon</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="n">fc</span>
 
     <span class="k">if</span> <span class="n">use_pypolymlp</span> <span class="ow">and</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">phonon</span><span class="o">.</span><span class="n">mlp_dataset</span> <span class="o">=</span> <span class="n">dataset</span>
-        <span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">load_helper</span><span class="o">.</span><span class="n">move_force_dataset_to_mlp_dataset</span><span class="p">(</span><span class="n">phonon</span><span class="p">)</span>
         <span class="n">load_helper</span><span class="o">.</span><span class="n">develop_or_load_pypolymlp</span><span class="p">(</span>
             <span class="n">phonon</span><span class="p">,</span> <span class="n">mlp_params</span><span class="o">=</span><span class="n">mlp_params</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span>
         <span class="p">)</span>

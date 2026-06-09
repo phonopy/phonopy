@@ -186,6 +186,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -348,38 +349,35 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="how-to-write-phonopy-documentation">
 <h1>How to write phonopy documentation<a class="headerlink" href="#how-to-write-phonopy-documentation" title="Link to this heading">#</a></h1>
-<p>This directory contains python-sphinx documentation source.</p>
+<p>This directory contains the python-sphinx documentation source.</p>
 <section id="how-to-compile">
 <h2>How to compile<a class="headerlink" href="#how-to-compile" title="Link to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">html</span>
+</pre></div>
+</div>
+<p>This is equivalent to what the CI runs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sphinx</span><span class="o">-</span><span class="n">build</span> <span class="n">doc</span> <span class="n">docs_build</span>
 </pre></div>
 </div>
 </section>
 <section id="source-files">
 <h2>Source files<a class="headerlink" href="#source-files" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">conf.py</span></code> contains the sphinx setting confiuration.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">*.rst</span></code> are the usual sphinx documentation source and the filenames without <code class="docutils literal notranslate"><span class="pre">.rst</span></code> are the keys to link from toctree mainly in <code class="docutils literal notranslate"><span class="pre">index.rst</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">*.inc</span></code> are the files included in the other <code class="docutils literal notranslate"><span class="pre">*.rst</span></code> files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conf.py</span></code> contains the sphinx configuration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*.md</span></code> are the documentation source written in MyST Markdown (the main
+format). The filenames without <code class="docutils literal notranslate"><span class="pre">.md</span></code> are the keys used to link from the
+toctree, mainly in <code class="docutils literal notranslate"><span class="pre">index.md</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*.rst</span></code> are reStructuredText source files, still used for some pages such
+as the calculator interfaces.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*.inc</span></code> are files included from other source files.</p></li>
 </ul>
 </section>
 <section id="how-to-publish">
 <h2>How to publish<a class="headerlink" href="#how-to-publish" title="Link to this heading">#</a></h2>
-<p>Web page files are copied to <code class="docutils literal notranslate"><span class="pre">gh-pages</span></code> branch. At the phonopy github top directory,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">gh</span><span class="o">-</span><span class="n">pages</span>
-<span class="n">rm</span> <span class="o">-</span><span class="n">r</span> <span class="o">.</span><span class="n">buildinfo</span> <span class="o">.</span><span class="n">doctrees</span> <span class="o">*</span>
-</pre></div>
-</div>
-<p>From the directory the sphinx doc is complied,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rsync</span> <span class="o">-</span><span class="n">avh</span> <span class="n">_build</span><span class="o">/</span> <span class="o">&lt;</span><span class="n">phonopy</span><span class="o">-</span><span class="n">repository</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;/</span>
-</pre></div>
-</div>
-<p>Again, at the phonopy github top directory,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">add</span> <span class="o">.</span>
-<span class="n">git</span> <span class="n">commit</span> <span class="o">-</span><span class="n">a</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;Update documentation ...&quot;</span>
-<span class="n">git</span> <span class="n">push</span>
-</pre></div>
-</div>
+<p>Publishing is automated. Pushing to the <code class="docutils literal notranslate"><span class="pre">publish-gh-pages</span></code> branch triggers the
+<code class="docutils literal notranslate"><span class="pre">publish-gh-pages.yml</span></code> GitHub Actions workflow, which builds the documentation
+with <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> and deploys it to the <code class="docutils literal notranslate"><span class="pre">gh-pages</span></code> branch. No manual copying
+is needed.</p>
 </section>
 </section>
 

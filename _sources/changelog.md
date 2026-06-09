@@ -2,6 +2,20 @@
 
 # Change Log
 
+## Jun-09-2026: Version 4.2.0
+
+- `run_*` methods now return result objects (e.g. `run_band_structure`
+  returns a `BandStructure`). The corresponding `get_*_dict` accessors
+  are deprecated, and the legacy `factor` argument has been removed.
+- Result objects share a unified `plot(ax)` signature. Figure-level
+  plotting helpers moved to `phonopy.phonon.plot`, and the global
+  side effects of the old plot functions were removed.
+- Added `NacParams` TypedDict; documented result objects and NAC
+  parameters.
+- Added `Phonopy.replicate`; `Phonopy.copy` is deprecated.
+- Added a development documentation page describing the architecture
+  principles.
+
 ## May-25-2026: Version 4.1.0
 
 - Analytical derivative of the dynamical matrix is now available for
@@ -56,10 +70,6 @@ Major breaking changes. See {ref}`migration_v4` for the upgrade guide.
   input), the grid is now rebuilt as a generalized regular grid that keeps
   full point-group symmetry; the resulting `mesh_numbers` may differ from
   the regular-grid value.
-- Mixed-species site support (initial): `PhonopyAtoms` gains a species
-  table, the `apply_site_mixture()` helper, and a `--site-mixture` CLI
-  flag. VASP POSCAR writes expand mixed sites. The force-I/O and
-  FC-build pipeline for site-mixture cells is still under development.
 - Bug fix: copy-by-reference issue in `qpoints.py`.
 
 ## Apr-23-2026: Version 3.5.1

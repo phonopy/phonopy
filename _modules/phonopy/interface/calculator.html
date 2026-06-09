@@ -621,6 +621,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../../citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
 </ul>
 
@@ -1117,7 +1118,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_vasp</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for VASP interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">vasp</span>
@@ -1139,16 +1140,20 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_qe</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">QeStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Quantum Espresso interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qe</span>
 
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">QeStructureInfo</span><span class="p">):</span>
+        <span class="n">pp_filenames</span> <span class="o">=</span> <span class="n">structure_info</span><span class="o">.</span><span class="n">pp_filenames</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pp_filenames</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">qe</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
-        <span class="n">structure_info</span><span class="o">.</span><span class="n">pp_filenames</span><span class="p">,</span>
+        <span class="n">pp_filenames</span><span class="p">,</span>
         <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">write_magnetic_moments</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">sort_by_elements</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1156,11 +1161,16 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_wien2k</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">Wien2kStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Wien2k interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">wien2k</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">Wien2kStructureInfo</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;wien2k requires structure information (npts, r0s, rmts). Pass &quot;</span>
+            <span class="s2">&quot;the optional_structure_info returned by read_crystal_structure.&quot;</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for wien2k.&quot;</span><span class="p">)</span>
 
@@ -1179,27 +1189,37 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_elk</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">ElkStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Elk interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">elk</span>
 
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">ElkStructureInfo</span><span class="p">):</span>
+        <span class="n">sp_filenames</span> <span class="o">=</span> <span class="n">structure_info</span><span class="o">.</span><span class="n">sp_filenames</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sp_filenames</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">elk</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
-        <span class="n">structure_info</span><span class="o">.</span><span class="n">sp_filenames</span><span class="p">,</span>
+        <span class="n">sp_filenames</span><span class="p">,</span>
         <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_cp2k</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">Cp2kStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for CP2K interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp2k</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">Cp2kStructureInfo</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;cp2k requires structure information (input file configuration). &quot;</span>
+            <span class="s2">&quot;Pass the optional_structure_info returned by &quot;</span>
+            <span class="s2">&quot;read_crystal_structure.&quot;</span>
+        <span class="p">)</span>
     <span class="n">cp2k</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
@@ -1211,11 +1231,17 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_crystal</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">CrystalStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for CRYSTAL interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crystal</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">CrystalStructureInfo</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;crystal requires structure information (conventional cell atom &quot;</span>
+            <span class="s2">&quot;numbers). Pass the optional_structure_info returned by &quot;</span>
+            <span class="s2">&quot;read_crystal_structure.&quot;</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for crystal.&quot;</span><span class="p">)</span>
 
@@ -1234,11 +1260,17 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_fleur</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">FleurStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Fleur interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fleur</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">FleurStructureInfo</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;fleur requires structure information (species and input file &quot;</span>
+            <span class="s2">&quot;lines). Pass the optional_structure_info returned by &quot;</span>
+            <span class="s2">&quot;read_crystal_structure.&quot;</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for fleur.&quot;</span><span class="p">)</span>
 
@@ -1256,29 +1288,42 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_abacus</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">AbacusStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for ABACUS interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abacus</span>
 
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">AbacusStructureInfo</span><span class="p">):</span>
+        <span class="n">pps</span> <span class="o">=</span> <span class="n">structure_info</span><span class="o">.</span><span class="n">pps</span>
+        <span class="n">orbitals</span> <span class="o">=</span> <span class="n">structure_info</span><span class="o">.</span><span class="n">orbitals</span>
+        <span class="n">abfs</span> <span class="o">=</span> <span class="n">structure_info</span><span class="o">.</span><span class="n">abfs</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">orbitals</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">abfs</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">abacus</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
-        <span class="n">structure_info</span><span class="o">.</span><span class="n">pps</span><span class="p">,</span>
-        <span class="n">structure_info</span><span class="o">.</span><span class="n">orbitals</span><span class="p">,</span>
-        <span class="n">structure_info</span><span class="o">.</span><span class="n">abfs</span><span class="p">,</span>
+        <span class="n">pps</span><span class="p">,</span>
+        <span class="n">orbitals</span><span class="p">,</span>
+        <span class="n">abfs</span><span class="p">,</span>
         <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_qlm</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
-    <span class="n">structure_info</span><span class="p">:</span> <span class="n">QlmStructureInfo</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for QLM interface.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qlm</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">QlmStructureInfo</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;qlm requires structure information (qlm context). Pass the &quot;</span>
+            <span class="s2">&quot;optional_structure_info returned by read_crystal_structure.&quot;</span>
+        <span class="p">)</span>
     <span class="n">qlm</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
@@ -1289,7 +1334,9 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_supercells_generic</span><span class="p">(</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span><span class="p">,</span> <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
+    <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for generic interfaces (no special handling).&quot;&quot;&quot;</span>
     <span class="n">writer</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1346,7 +1393,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_writer_handler</span><span class="p">(</span>
     <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the appropriate handler function for the given interface mode.</span>
 
 <span class="sd">    This function implements the Strategy pattern to dispatch handler functions</span>
@@ -1402,7 +1449,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="c1"># Return generic handler for remaining interfaces</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">generic_handler</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_write_supercells_generic</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">structure_info</span><span class="p">,</span> <span class="n">interface_mode</span><span class="p">)</span>
 
@@ -1413,7 +1460,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span>
     <span class="n">cells_with_disps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">PhonopyAtoms</span><span class="p">],</span>
-    <span class="n">optional_structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span><span class="p">,</span>
+    <span class="n">optional_structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">displacement_ids</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">zfill_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
     <span class="n">additional_info</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1433,9 +1480,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Supercell to write.</span>
 <span class="sd">    cells_with_disps : Sequence[PhonopyAtoms]</span>
 <span class="sd">        Supercells with displacements to write.</span>
-<span class="sd">    optional_structure_info : StructureInfo</span>
+<span class="sd">    optional_structure_info : StructureInfo, optional</span>
 <span class="sd">        Interface-specific structure information returned by</span>
-<span class="sd">        ``read_crystal_structure``.</span>
+<span class="sd">        ``read_crystal_structure``. Default is None. Some interfaces</span>
+<span class="sd">        (wien2k, cp2k, crystal, fleur, qlm) cannot write supercells</span>
+<span class="sd">        without it and raise ``ValueError``; the others fall back to</span>
+<span class="sd">        defaults.</span>
 <span class="sd">    displacement_ids : Sequence | NDArray | None, optional</span>
 <span class="sd">        Integer 1d array with the length of cells_with_disps, containing</span>
 <span class="sd">        numbers to be assigned to the supercells with displacements.</span>
@@ -1451,10 +1501,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    RuntimeError</span>
-<span class="sd">        If the calculator interface is not recognized or if required</span>
-<span class="sd">        structure information is missing.</span>
+<span class="sd">        If the calculator interface is not recognized.</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If required additional information is missing for certain interfaces.</span>
+<span class="sd">        If required structure or additional information is missing for</span>
+<span class="sd">        certain interfaces.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Prepare displacement IDs</span>

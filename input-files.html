@@ -188,6 +188,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -572,7 +573,7 @@ calculators the support is not yet wired.
 ```
 
 Cells built with {ref}`mixed-species sites <mixed_species_sites>` (e.g. via
-`--site-mixture` or `apply_site_mixture`) keep one phonopy site per
+`--site-mixture` or `build_mixture_cell`) keep one phonopy site per
 crystallographic position, but the calculator (e.g. VASP) sees one row per
 constituent at the same fractional coordinate. Forces returned by the
 calculator therefore have one entry per constituent row, not per phonopy

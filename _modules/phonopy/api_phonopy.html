@@ -621,6 +621,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Change Log</a></li>
 </ul>
 
@@ -764,7 +765,6 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">lzma</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">cast</span>
@@ -784,6 +784,7 @@ window.runMermaid = runMermaid;</script>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.dynamical_matrix</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DynamicalMatrix</span><span class="p">,</span>
+    <span class="n">NacParams</span><span class="p">,</span>
     <span class="n">get_dynamical_matrix</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.dynmat_to_fc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DynmatToForceConstants</span>
@@ -811,13 +812,20 @@ window.runMermaid = runMermaid;</script>
     <span class="n">ProjectedDosDict</span><span class="p">,</span>
     <span class="n">TotalDos</span><span class="p">,</span>
     <span class="n">TotalDosDict</span><span class="p">,</span>
-    <span class="n">get_dos_frequency_range</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.group_velocity</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroupVelocity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.irreps</span><span class="w"> </span><span class="kn">import</span> <span class="n">IrReps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">IterMesh</span><span class="p">,</span> <span class="n">IterMeshDict</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">,</span> <span class="n">MeshDict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.modulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Modulation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.moment</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhononMoment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.plot</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">plot_band_structure</span><span class="p">,</span>
+    <span class="n">plot_band_structure_and_dos</span><span class="p">,</span>
+    <span class="n">plot_projected_dos</span><span class="p">,</span>
+    <span class="n">plot_thermal_displacements</span><span class="p">,</span>
+    <span class="n">plot_thermal_properties</span><span class="p">,</span>
+    <span class="n">plot_total_dos</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.qpoints</span><span class="w"> </span><span class="kn">import</span> <span class="n">QpointsDict</span><span class="p">,</span> <span class="n">QpointsPhonon</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.random_displacements</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomDisplacements</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.thermal_displacement</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -842,7 +850,6 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">forces_in_dataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.mixture</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce_mixture_forces</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.symmetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Symmetry</span><span class="p">,</span> <span class="n">symmetrize_borns_and_epsilon</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
 
 
 <div class="viewcode-block" id="Phonopy">
@@ -898,7 +905,6 @@ window.runMermaid = runMermaid;</script>
         <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
         <span class="o">|</span> <span class="n">NDArray</span>
         <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
-        <span class="n">factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">group_velocity_delta_q</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">symprec</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
         <span class="n">is_symmetry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -924,10 +930,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            symmetry. To use the unit cell as the primitive cell</span>
 <span class="sd">            (identity transformation), pass ``&quot;P&quot;``. ``None`` is treated</span>
 <span class="sd">            the same as ``&quot;auto&quot;``.</span>
-<span class="sd">        factor : float, optional</span>
-<span class="sd">            Deprecated. Passing a non-``None`` value raises</span>
-<span class="sd">            ``RuntimeError``. Use the</span>
-<span class="sd">            :attr:`unit_conversion_factor` setter instead.</span>
 <span class="sd">        group_velocity_delta_q : float, optional</span>
 <span class="sd">            Delta-q distance to calculate group velocity.</span>
 <span class="sd">        symprec : float, optional</span>
@@ -962,13 +964,6 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hermitianize_dynamical_matrix</span> <span class="o">=</span> <span class="n">hermitianize_dynamical_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_calculator</span> <span class="o">=</span> <span class="n">calculator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;Rust&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lang</span>
-
-        <span class="k">if</span> <span class="n">factor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Phonopy class instantiation with factor was removed. &quot;</span>
-                <span class="s2">&quot;Use unit_conversion_factor attribute instead.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">70</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span>
             <span class="n">interface_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculator</span>
@@ -1008,7 +1003,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># NAC parameters</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span><span class="p">:</span> <span class="n">NacParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># MLP</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mlp</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1034,6 +1029,8 @@ window.runMermaid = runMermaid;</script>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return phonopy release version number.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+
         <span class="k">return</span> <span class="n">__version__</span>
 
     <span class="nd">@property</span>
@@ -1101,6 +1098,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">unit_conversion_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit_conversion_factor</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span> <span class="o">=</span> <span class="n">unit_conversion_factor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor_overridden</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;factor&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">calculator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1173,6 +1171,7 @@ window.runMermaid = runMermaid;</script>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Data format of dataset is wrong.&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_supercells_with_displacements</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dataset_inputs&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mlp_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type2DisplacementDataset</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1269,6 +1268,7 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;displacements&quot;</span><span class="p">:</span> <span class="n">disp</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_supercells_with_displacements</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dataset_inputs&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1297,6 +1297,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">force_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_constants</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">force_constants</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">force_constants</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
@@ -1310,6 +1311,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="o">.</span><span class="n">masses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span>
 
@@ -1327,6 +1329,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">cutoff_radius</span><span class="p">,</span>
             <span class="n">symprec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="o">.</span><span class="n">masses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span></div>
 
@@ -1348,6 +1351,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="p">,</span> <span class="n">set_of_energies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_forces_energies</span><span class="p">(</span><span class="n">set_of_energies</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;supercell_energies&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dataset_inputs&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
@@ -1380,6 +1384,7 @@ window.runMermaid = runMermaid;</script>
         <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_forces_energies</span><span class="p">(</span><span class="n">sets_of_forces</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;forces&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dataset_inputs&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dynamical_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DynamicalMatrix</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1393,10 +1398,11 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">nac_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nac_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NacParams</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Getter and setter of parameters for non-analytical term correction.</span>
 
-<span class="sd">        A ``dict`` with the following entries:</span>
+<span class="sd">        A ``dict`` (typed as :class:`NacParams`) with the following</span>
+<span class="sd">        entries:</span>
 
 <span class="sd">        ``&#39;born&#39;`` : ndarray</span>
 <span class="sd">            Born effective charges.</span>
@@ -1406,16 +1412,19 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Dielectric constant tensor.</span>
 <span class="sd">            ``shape=(3, 3)``, ``dtype=&#39;double&#39;``, ``order=&#39;C&#39;``.</span>
 <span class="sd">        ``&#39;factor&#39;`` : float, optional</span>
-<span class="sd">            Unit conversion factor.</span>
+<span class="sd">            Unit conversion factor. When omitted, the value for the</span>
+<span class="sd">            calculator interface is used.</span>
 <span class="sd">        ``&#39;method&#39;`` : str, optional</span>
-<span class="sd">            Method to calculate NAC.</span>
+<span class="sd">            Method to calculate NAC, either ``&#39;gonze&#39;`` (default) or</span>
+<span class="sd">            ``&#39;wang&#39;``.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span>
 
     <span class="nd">@nac_params</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">nac_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nac_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nac_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nac_params</span><span class="p">:</span> <span class="n">NacParams</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span> <span class="o">=</span> <span class="n">nac_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span>
 
@@ -1497,6 +1506,11 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modulation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Modulation</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return Modulation instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">moment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhononMoment</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return PhononMoment instance.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span>
@@ -1530,6 +1544,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">u2s_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">u2s_map</span>
         <span class="n">u_masses</span> <span class="o">=</span> <span class="n">s_masses</span><span class="p">[</span><span class="n">u2s_map</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="o">.</span><span class="n">masses</span> <span class="o">=</span> <span class="n">u_masses</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span>
 
@@ -1778,6 +1793,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span>
             <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="o">.</span><span class="n">masses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span></div>
 
@@ -1849,6 +1865,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="o">.</span><span class="n">masses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span></div>
 
@@ -1888,6 +1905,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_invalidate_derived</span><span class="p">(</span><span class="s2">&quot;dm_inputs&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="o">.</span><span class="n">masses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span></div>
 
@@ -1996,7 +2014,19 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            (``&quot;c%d&quot; % (np.dtype(&#39;double&#39;).itemsize * 2)``),</span>
 <span class="sd">            ``order=&#39;C&#39;``.</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use ``run_qpoints([q], with_dynamical_matrices=True)`` and</span>
+<span class="sd">            the ``dynamical_matrices`` attribute of the returned</span>
+<span class="sd">            ``QpointsPhonon`` object instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_dynamical_matrix_at_q() is deprecated. Use &quot;</span>
+            <span class="s2">&quot;run_qpoints([q], with_dynamical_matrices=True); the returned &quot;</span>
+            <span class="s2">&quot;QpointsPhonon object provides dynamical_matrices[0].&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dynamical matrix has not yet built.&quot;</span>
@@ -2025,7 +2055,17 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Phonon frequencies. Imaginary frequencies are represented by</span>
 <span class="sd">            negative real numbers. ``shape=(bands,)``, ``dtype=&#39;double&#39;``.</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use ``run_qpoints([q])`` and the ``frequencies`` attribute</span>
+<span class="sd">            of the returned ``QpointsPhonon`` object instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_frequencies() is deprecated. Use run_qpoints([q]); the &quot;</span>
+            <span class="s2">&quot;returned QpointsPhonon object provides frequencies[0].&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dynamical matrix has not yet built.&quot;</span>
@@ -2069,7 +2109,20 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            dtype (``&quot;c%d&quot; % (np.dtype(&#39;double&#39;).itemsize * 2)``),</span>
 <span class="sd">            ``order=&#39;C&#39;``.</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use ``run_qpoints([q], with_eigenvectors=True)`` and the</span>
+<span class="sd">            ``frequencies`` / ``eigenvectors`` attributes of the</span>
+<span class="sd">            returned ``QpointsPhonon`` object instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_frequencies_with_eigenvectors() is deprecated. Use &quot;</span>
+            <span class="s2">&quot;run_qpoints([q], with_eigenvectors=True); the returned &quot;</span>
+            <span class="s2">&quot;QpointsPhonon object provides frequencies[0] and &quot;</span>
+            <span class="s2">&quot;eigenvectors[0].&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_dynamical_matrix</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dynamical matrix has not yet built.&quot;</span>
@@ -2103,7 +2156,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">path_connections</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">labels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">is_legacy_plot</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BandStructure</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run phonon band structure calculation.</span>
 
 <span class="sd">        Parameters</span>
@@ -2132,6 +2185,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        is_legacy_plot : bool, optional</span>
 <span class="sd">            Use the old-style band-structure plot. Default is False.</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        BandStructure</span>
+<span class="sd">            The calculated band structure. The same object is also</span>
+<span class="sd">            accessible through the ``band_structure`` property.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dynamical matrix has not yet built.&quot;</span>
@@ -2154,7 +2213,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
             <span class="n">is_legacy_plot</span><span class="o">=</span><span class="n">is_legacy_plot</span><span class="p">,</span>
             <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_band_structure_dict">
@@ -2193,7 +2253,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">                are not calculated.</span>
 <span class="sd">                ``shape=(q-points, bands, 3)``, ``dtype=&#39;double&#39;``.</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``band_structure`` property instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_band_structure_dict() is deprecated. Use the band_structure &quot;</span>
+            <span class="s2">&quot;property to access the BandStructure result object; its &quot;</span>
+            <span class="s2">&quot;qpoints, distances, frequencies, eigenvectors, and &quot;</span>
+            <span class="s2">&quot;group_velocities attributes replace the dict keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Phonopy.run_band_structure() has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -2272,27 +2343,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            display the figure.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;run_band_structure has to be done.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="o">.</span><span class="n">is_legacy_plot</span><span class="p">:</span>
-            <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.axes_grid1</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageGrid</span>
-
-            <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="o">.</span><span class="n">path_connections</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="p">])</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">axs</span> <span class="o">=</span> <span class="n">ImageGrid</span><span class="p">(</span>
-                <span class="n">fig</span><span class="p">,</span>
-                <span class="mi">111</span><span class="p">,</span>  <span class="c1"># similar to subplot(111)</span>
-                <span class="n">nrows_ncols</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span>
-                <span class="n">axes_pad</span><span class="o">=</span><span class="mf">0.11</span><span class="p">,</span>
-                <span class="n">label_mode</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">plt</span></div>
+        <span class="k">return</span> <span class="n">plot_band_structure</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.write_hdf5_band_structure">
@@ -2466,10 +2520,16 @@ window.runMermaid = runMermaid;</script>
         <span class="n">with_eigenvectors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">with_group_velocities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">is_gamma_center</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mesh</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run mesh sampling phonon calculation.</span>
 
 <span class="sd">        See the parameter details in Phonopy.init_mesh.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Mesh</span>
+<span class="sd">            The calculated mesh sampling result. The same object is</span>
+<span class="sd">            also accessible through the ``mesh`` property.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init_mesh</span><span class="p">(</span>
@@ -2482,7 +2542,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">is_gamma_center</span><span class="o">=</span><span class="n">is_gamma_center</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_mesh_dict">
@@ -2518,7 +2579,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">                Phonon group velocities at ir-grid points.</span>
 <span class="sd">                ``shape=(ir-grid points, bands, 3)``, ``dtype=&#39;double&#39;``.</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``mesh`` property instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_mesh_dict() is deprecated. Use the mesh property to access &quot;</span>
+            <span class="s2">&quot;the Mesh result object; its qpoints, weights, frequencies, &quot;</span>
+            <span class="s2">&quot;eigenvectors, and group_velocities attributes replace the dict &quot;</span>
+            <span class="s2">&quot;keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">MeshDict</span><span class="p">(</span>
                 <span class="n">qpoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="o">.</span><span class="n">qpoints</span><span class="p">,</span>
@@ -2567,9 +2639,6 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="p">,</span> <span class="n">pdos_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot band structure and DOS.&quot;&quot;&quot;</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.axes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Axes</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pdos_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_total_dos has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -2580,66 +2649,12 @@ window.runMermaid = runMermaid;</script>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_band_structure has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="o">.</span><span class="n">is_legacy_plot</span><span class="p">:</span>
-            <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.gridspec</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gridspec</span>
-
-            <span class="c1"># plt.figure(figsize=(10, 6))</span>
-            <span class="n">gs</span> <span class="o">=</span> <span class="n">gridspec</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">width_ratios</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-            <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-            <span class="k">if</span> <span class="n">pdos_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">draw_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flip_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-                    <span class="n">ax2</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">pdos_indices</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">draw_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flip_xy</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
-            <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax2</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span> <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-            <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax2</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax1</span><span class="p">)</span>
-
-            <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.axes_grid1</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageGrid</span>
-
-            <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="o">.</span><span class="n">path_connections</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
-            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-            <span class="n">axs</span> <span class="o">=</span> <span class="n">ImageGrid</span><span class="p">(</span>
-                <span class="n">fig</span><span class="p">,</span>
-                <span class="mi">111</span><span class="p">,</span>  <span class="c1"># similar to subplot(111)</span>
-                <span class="n">nrows_ncols</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span>
-                <span class="n">axes_pad</span><span class="o">=</span><span class="mf">0.11</span><span class="p">,</span>
-                <span class="n">label_mode</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">axs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-            <span class="k">if</span> <span class="n">pdos_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-                    <span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">draw_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flip_xy</span><span class="o">=</span><span class="kc">True</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-                    <span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="n">indices</span><span class="o">=</span><span class="n">pdos_indices</span><span class="p">,</span>
-                    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-                    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-                    <span class="n">draw_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">flip_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">last_axs</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Axes</span><span class="p">,</span> <span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">xlim</span> <span class="o">=</span> <span class="n">last_axs</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
-            <span class="n">ylim</span> <span class="o">=</span> <span class="n">last_axs</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
-            <span class="n">aspect</span> <span class="o">=</span> <span class="p">(</span><span class="n">xlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xlim</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">ylim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ylim</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="mi">3</span>
-            <span class="n">last_axs</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="n">aspect</span><span class="p">)</span>
-            <span class="n">last_axs</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
-            <span class="n">last_axs</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">plt</span></div>
+        <span class="k">return</span> <span class="n">plot_band_structure_and_dos</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span><span class="p">,</span>
+            <span class="n">total_dos</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="p">,</span>
+            <span class="n">projected_dos</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="p">,</span>
+            <span class="n">pdos_indices</span><span class="o">=</span><span class="n">pdos_indices</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
     <span class="c1"># Sampling at q-points</span>
@@ -2652,7 +2667,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">with_group_velocities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">with_dynamical_matrices</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">nac_q_direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QpointsPhonon</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run phonon calculation at specified q-points.</span>
 
 <span class="sd">        Parameters</span>
@@ -2673,6 +2688,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            ``q_direction / norm(q_direction)`` is computed and used. This</span>
 <span class="sd">            parameter is activated only at q=(0, 0, 0).</span>
 <span class="sd">            ``shape=(3,)``, ``dtype=&#39;double&#39;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        QpointsPhonon</span>
+<span class="sd">            The calculated phonons at the q-points. The same object is</span>
+<span class="sd">            also accessible through the ``qpoints`` property.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2695,7 +2716,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">with_dynamical_matrices</span><span class="o">=</span><span class="n">with_dynamical_matrices</span><span class="p">,</span>
             <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span><span class="p">,</span>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qpoints</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_qpoints_dict">
@@ -2726,7 +2748,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">                Dynamical matrices at q-points.</span>
 <span class="sd">                ``shape=(qpoints, bands, bands)``, ``dtype=&#39;double&#39;``.</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``qpoints`` property instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_qpoints_dict() is deprecated. Use the qpoints property to &quot;</span>
+            <span class="s2">&quot;access the Qpoints result object; its frequencies, eigenvectors, &quot;</span>
+            <span class="s2">&quot;group_velocities, and dynamical_matrices attributes replace the &quot;</span>
+            <span class="s2">&quot;dict keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qpoints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Phonopy.run_qpoints() has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -2772,7 +2805,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_pitch</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">use_tetrahedron_method</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TotalDos</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run total DOS calculation.</span>
 
 <span class="sd">        Parameters</span>
@@ -2787,6 +2820,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        use_tetrahedron_method : bool, optional</span>
 <span class="sd">            Use the tetrahedron method when True. When ``sigma`` is</span>
 <span class="sd">            set, the smearing method is used instead. Default is True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TotalDos</span>
+<span class="sd">            The calculated total DOS. The same object is also</span>
+<span class="sd">            accessible through the ``total_dos`` property.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2804,7 +2843,8 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="n">total_dos</span><span class="o">.</span><span class="n">set_draw_area</span><span class="p">(</span><span class="n">freq_min</span><span class="p">,</span> <span class="n">freq_max</span><span class="p">,</span> <span class="n">freq_pitch</span><span class="p">)</span>
         <span class="n">total_dos</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="o">=</span> <span class="n">total_dos</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="o">=</span> <span class="n">total_dos</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.auto_total_dos">
@@ -2855,7 +2895,17 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        total_dos:</span>
 <span class="sd">            shape=(frequency_sampling_points, ), dtype=&#39;double&#39;</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``total_dos`` property instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_total_dos_dict() is deprecated. Use the total_dos property &quot;</span>
+            <span class="s2">&quot;to access the TotalDos result object; its frequency_points and &quot;</span>
+            <span class="s2">&quot;dos attributes replace the dict keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_total_dos has to be done before getting total DOS.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -2914,19 +2964,12 @@ window.runMermaid = runMermaid;</script>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_total_dos has to be done before plotting total DOS.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="n">xlabel</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="n">ylabel</span><span class="p">,</span> <span class="n">draw_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">with_tight_frequency_range</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">dos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="n">fmin</span><span class="p">,</span> <span class="n">fmax</span> <span class="o">=</span> <span class="n">get_dos_frequency_range</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">frequency_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">dos</span>
-            <span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">fmin</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">plt</span></div>
+        <span class="k">return</span> <span class="n">plot_total_dos</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="p">,</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="n">xlabel</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="n">ylabel</span><span class="p">,</span>
+            <span class="n">with_tight_frequency_range</span><span class="o">=</span><span class="n">with_tight_frequency_range</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.write_total_dos">
@@ -2951,7 +2994,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">use_tetrahedron_method</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">xyz_projection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProjectedDos</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run projected DOS calculation.</span>
 
 <span class="sd">        Parameters</span>
@@ -2973,6 +3016,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        xyz_projection : bool, optional</span>
 <span class="sd">            Whether to project along Cartesian directions. Default is</span>
 <span class="sd">            False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ProjectedDos</span>
+<span class="sd">            The calculated projected DOS. The same object is also</span>
+<span class="sd">            accessible through the ``projected_dos`` property.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span> <span class="o">=</span> <span class="kc">None</span>
@@ -3006,7 +3055,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">set_draw_area</span><span class="p">(</span><span class="n">freq_min</span><span class="p">,</span> <span class="n">freq_max</span><span class="p">,</span> <span class="n">freq_pitch</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.auto_projected_dos">
@@ -3090,7 +3140,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        projected_dos:</span>
 <span class="sd">            shape=(projections, frequency_sampling_points), dtype=&#39;double&#39;</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``projected_dos`` property instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_projected_dos_dict() is deprecated. Use the projected_dos &quot;</span>
+            <span class="s2">&quot;property to access the ProjectedDos result object; its &quot;</span>
+            <span class="s2">&quot;frequency_points and projected_dos attributes replace the dict &quot;</span>
+            <span class="s2">&quot;keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_projected_dos has to be done before getting projected DOS.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -3137,38 +3198,20 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Plot with tight frequency range. Default is False.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_projected_dos has to be done before plotting projected DOS.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-            <span class="n">ax</span><span class="p">,</span>
-            <span class="n">indices</span><span class="o">=</span><span class="n">pdos_indices</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">plot_projected_dos</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="p">,</span>
+            <span class="n">pdos_indices</span><span class="o">=</span><span class="n">pdos_indices</span><span class="p">,</span>
             <span class="n">legend</span><span class="o">=</span><span class="n">legend</span><span class="p">,</span>
             <span class="n">legend_prop</span><span class="o">=</span><span class="n">legend_prop</span><span class="p">,</span>
             <span class="n">legend_frameon</span><span class="o">=</span><span class="n">legend_frameon</span><span class="p">,</span>
             <span class="n">xlabel</span><span class="o">=</span><span class="n">xlabel</span><span class="p">,</span>
             <span class="n">ylabel</span><span class="o">=</span><span class="n">ylabel</span><span class="p">,</span>
-            <span class="n">draw_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">with_tight_frequency_range</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">projected_dos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="n">fmin</span><span class="p">,</span> <span class="n">fmax</span> <span class="o">=</span> <span class="n">get_dos_frequency_range</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">frequency_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">projected_dos</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">fmin</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">fmax</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">plt</span></div>
+            <span class="n">with_tight_frequency_range</span><span class="o">=</span><span class="n">with_tight_frequency_range</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.write_projected_dos">
@@ -3197,7 +3240,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">band_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">is_projection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">classical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalProperties</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run calculation of thermal properties at constant volume.</span>
 
 <span class="sd">        In phonopy, imaginary frequencies are represented as negative real</span>
@@ -3233,6 +3276,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            If True, use classical statistics; if False, use quantum</span>
 <span class="sd">            statistics. Default is False.</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ThermalProperties</span>
+<span class="sd">            The calculated thermal properties. The same object is also</span>
+<span class="sd">            accessible through the ``thermal_properties`` property.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_mesh has to be done before run_thermal_properties.&quot;</span>
@@ -3256,7 +3305,8 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">tp</span><span class="o">.</span><span class="n">temperatures</span> <span class="o">=</span> <span class="n">temperatures</span>
         <span class="n">tp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span> <span class="o">=</span> <span class="n">tp</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span> <span class="o">=</span> <span class="n">tp</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_thermal_properties_dict">
@@ -3279,7 +3329,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        heat_capacity : ndarray</span>
 <span class="sd">            shape=(temperatures, ), dtype=&#39;double&#39;</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``thermal_properties`` property instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_thermal_properties_dict() is deprecated. Use the &quot;</span>
+            <span class="s2">&quot;thermal_properties property to access the ThermalProperties &quot;</span>
+            <span class="s2">&quot;result object; its temperatures, free_energy, entropy, and &quot;</span>
+            <span class="s2">&quot;heat_capacity attributes replace the dict keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s2">&quot;run_thermal_properties has to be done before &quot;</span>
@@ -3325,8 +3386,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            &quot;normal&quot;, &quot;compact&quot;, None. None will not show legend.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-
         <span class="k">if</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span> <span class="ow">is</span> <span class="kc">None</span>
             <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span><span class="o">.</span><span class="n">temperatures</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -3334,28 +3393,14 @@ window.runMermaid = runMermaid;</script>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_thermal_properties has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;pdf.fonttype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;font.family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;serif&quot;</span>
-
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-            <span class="n">ax</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">plot_thermal_properties</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span><span class="p">,</span>
             <span class="n">xlabel</span><span class="o">=</span><span class="n">xlabel</span><span class="p">,</span>
             <span class="n">ylabel</span><span class="o">=</span><span class="n">ylabel</span><span class="p">,</span>
             <span class="n">with_grid</span><span class="o">=</span><span class="n">with_grid</span><span class="p">,</span>
             <span class="n">divide_by_Z</span><span class="o">=</span><span class="n">divide_by_Z</span><span class="p">,</span>
             <span class="n">legend_style</span><span class="o">=</span><span class="n">legend_style</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span><span class="o">.</span><span class="n">temperatures</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">temps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-        <span class="k">return</span> <span class="n">plt</span></div>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.write_yaml_thermal_properties">
@@ -3382,7 +3427,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalDisplacements</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run thermal displacements calculation.</span>
 
 <span class="sd">        Parameters</span>
@@ -3400,6 +3445,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        freq_min, freq_max : float, optional</span>
 <span class="sd">            Only phonon frequencies between ``freq_min`` and</span>
 <span class="sd">            ``freq_max`` are included. Default is None (all phonons).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ThermalDisplacements</span>
+<span class="sd">            The calculated thermal displacements. The same object is</span>
+<span class="sd">            also accessible through the ``thermal_displacements``</span>
+<span class="sd">            property.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -3434,13 +3486,27 @@ window.runMermaid = runMermaid;</script>
             <span class="n">td</span><span class="o">.</span><span class="n">temperatures</span> <span class="o">=</span> <span class="n">temperatures</span>
         <span class="n">td</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span> <span class="o">=</span> <span class="n">td</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span> <span class="o">=</span> <span class="n">td</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_thermal_displacements_dict">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.get_thermal_displacements_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_thermal_displacements_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return thermal displacements.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return thermal displacements.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``thermal_displacements`` property instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_thermal_displacements_dict() is deprecated. Use the &quot;</span>
+            <span class="s2">&quot;thermal_displacements property to access the ThermalDisplacements&quot;</span>
+            <span class="s2">&quot; result object; its temperatures and thermal_displacements &quot;</span>
+            <span class="s2">&quot;attributes replace the dict keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_thermal_displacements has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -3456,25 +3522,13 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.plot_thermal_displacements">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_thermal_displacements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_legend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot thermal displacements.&quot;&quot;&quot;</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_thermal_displacements has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">plt</span><span class="p">,</span> <span class="n">is_legend</span><span class="o">=</span><span class="n">is_legend</span><span class="p">)</span>
-
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span><span class="o">.</span><span class="n">temperatures</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="n">temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span><span class="o">.</span><span class="n">temperatures</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">temps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-        <span class="k">return</span> <span class="n">plt</span></div>
+        <span class="k">return</span> <span class="n">plot_thermal_displacements</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span><span class="p">,</span> <span class="n">is_legend</span><span class="o">=</span><span class="n">is_legend</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.write_yaml_thermal_displacements">
@@ -3498,7 +3552,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">temperatures</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalDisplacementMatrices</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run thermal displacement matrices calculation.</span>
 
 <span class="sd">        Parameters</span>
@@ -3513,6 +3567,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Temperature points where thermal properties are calculated.</span>
 <span class="sd">            When this is set, t_min, t_max, and t_step are ignored.</span>
 <span class="sd">            Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ThermalDisplacementMatrices</span>
+<span class="sd">            The calculated thermal displacement matrices. The same</span>
+<span class="sd">            object is also accessible through the</span>
+<span class="sd">            ``thermal_displacement_matrices`` property.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -3543,13 +3604,29 @@ window.runMermaid = runMermaid;</script>
             <span class="n">tdm</span><span class="o">.</span><span class="n">temperatures</span> <span class="o">=</span> <span class="n">temperatures</span>
         <span class="n">tdm</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacement_matrices</span> <span class="o">=</span> <span class="n">tdm</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacement_matrices</span> <span class="o">=</span> <span class="n">tdm</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacement_matrices</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_thermal_displacement_matrices_dict">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.get_thermal_displacement_matrices_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_thermal_displacement_matrices_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalDisplacementMatricesDict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return thermal displacement matrices.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return thermal displacement matrices.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``thermal_displacement_matrices`` property instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_thermal_displacement_matrices_dict() is deprecated. Use the &quot;</span>
+            <span class="s2">&quot;thermal_displacement_matrices property to access the &quot;</span>
+            <span class="s2">&quot;ThermalDisplacementMatrices result object; its temperatures, &quot;</span>
+            <span class="s2">&quot;thermal_displacement_matrices, and &quot;</span>
+            <span class="s2">&quot;thermal_displacement_matrices_cif attributes replace the dict &quot;</span>
+            <span class="s2">&quot;keys.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacement_matrices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_thermal_displacement_matrices has to be done.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -3635,7 +3712,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">delta_q</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">derivative_order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">nac_q_direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Modulation</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate atomic displacements of phonon modes.</span>
 
 <span class="sd">        The design of this feature, and thus its API, is not very</span>
@@ -3663,6 +3740,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            parameter is activated only at q=(0, 0, 0).</span>
 <span class="sd">            ``shape=(3,)``, ``dtype=&#39;double&#39;``.</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Modulation</span>
+<span class="sd">            The calculated modulations. The same object is also</span>
+<span class="sd">            accessible through the ``modulation`` property.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dynamical matrix has not yet built.&quot;</span>
@@ -3677,17 +3760,32 @@ window.runMermaid = runMermaid;</script>
             <span class="n">nac_q_direction</span><span class="o">=</span><span class="n">nac_q_direction</span><span class="p">,</span>
             <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_modulated_supercells">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.get_modulated_supercells">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_modulated_supercells</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PhonopyAtoms</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return modulated structures as a list of ``PhonopyAtoms``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return modulated structures as a list of ``PhonopyAtoms``.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``modulated_supercells`` attribute of the</span>
+<span class="sd">            ``Modulation`` object returned by ``run_modulations()`` (or</span>
+<span class="sd">            of the ``modulation`` property) instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_modulated_supercells() is deprecated. Use the &quot;</span>
+            <span class="s2">&quot;modulated_supercells attribute of the Modulation object &quot;</span>
+            <span class="s2">&quot;returned by run_modulations() or of the modulation property.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_modulations has to be done before getting modulated supercells.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span><span class="o">.</span><span class="n">get_modulated_supercells</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span><span class="o">.</span><span class="n">modulated_supercells</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_modulations_and_supercell">
@@ -3703,11 +3801,23 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        supercell : PhonopyAtoms</span>
 <span class="sd">            The (unmodulated) supercell.</span>
 
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``modulations`` and ``supercell`` attributes of the</span>
+<span class="sd">            ``Modulation`` object returned by ``run_modulations()`` (or</span>
+<span class="sd">            of the ``modulation`` property) instead.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_modulations_and_supercell() is deprecated. Use the &quot;</span>
+            <span class="s2">&quot;modulations and supercell attributes of the Modulation object &quot;</span>
+            <span class="s2">&quot;returned by run_modulations() or of the modulation property.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_modulations has to be done before getting modulations.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span><span class="o">.</span><span class="n">get_modulations_and_supercell</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span><span class="o">.</span><span class="n">modulations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span><span class="o">.</span><span class="n">supercell</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.write_modulations">
@@ -3738,15 +3848,15 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="c1"># Irreducible representation</span>
-<div class="viewcode-block" id="Phonopy.set_irreps">
-<a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.set_irreps">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_irreps</span><span class="p">(</span>
+<div class="viewcode-block" id="Phonopy.run_irreps">
+<a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.run_irreps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_irreps</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">q</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">],</span>
         <span class="n">is_little_cogroup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">nac_q_direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">degeneracy_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IrReps</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify ir-reps of phonon modes.</span>
 
 <span class="sd">        The design of this API is not very satisfactory and is expected</span>
@@ -3762,6 +3872,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            parameter is activated only at q=(0, 0, 0).</span>
 <span class="sd">            ``shape=(3,)``, ``dtype=&#39;double&#39;``.</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        IrReps</span>
+<span class="sd">            The identified ir-reps. The same object is also accessible</span>
+<span class="sd">            through the ``irreps`` property.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dynamical matrix has not yet built.&quot;</span>
@@ -3776,6 +3892,35 @@ window.runMermaid = runMermaid;</script>
             <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span><span class="p">,</span>
             <span class="n">degeneracy_tolerance</span><span class="o">=</span><span class="n">degeneracy_tolerance</span><span class="p">,</span>
             <span class="n">log_level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_level</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span></div>
+
+
+<div class="viewcode-block" id="Phonopy.set_irreps">
+<a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.set_irreps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_irreps</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">q</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">],</span>
+        <span class="n">is_little_cogroup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">nac_q_direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">degeneracy_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IrReps</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify ir-reps of phonon modes.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use :meth:`run_irreps` instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;set_irreps() is deprecated. Use run_irreps() instead.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_irreps</span><span class="p">(</span>
+            <span class="n">q</span><span class="p">,</span>
+            <span class="n">is_little_cogroup</span><span class="o">=</span><span class="n">is_little_cogroup</span><span class="p">,</span>
+            <span class="n">nac_q_direction</span><span class="o">=</span><span class="n">nac_q_direction</span><span class="p">,</span>
+            <span class="n">degeneracy_tolerance</span><span class="o">=</span><span class="n">degeneracy_tolerance</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -3784,7 +3929,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">show_irreps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_irreps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Show Ir-reps.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;set_irreps has to be done before showing Ir-reps.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_irreps has to be done before showing Ir-reps.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">show_irreps</span><span class="o">=</span><span class="n">show_irreps</span><span class="p">)</span></div>
 
@@ -3794,7 +3939,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_yaml_irreps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_irreps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write Ir-reps in yaml format.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;set_irreps has to be done before writing Ir-reps.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_irreps has to be done before writing Ir-reps.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span><span class="o">.</span><span class="n">write_yaml</span><span class="p">(</span><span class="n">show_irreps</span><span class="o">=</span><span class="n">show_irreps</span><span class="p">)</span></div>
 
@@ -3804,7 +3949,21 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_group_velocity_at_q</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">q_point</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return group velocity at a q-point.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return group velocity at a q-point.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use ``run_qpoints([q], with_group_velocities=True)`` and</span>
+<span class="sd">            the ``group_velocities`` attribute of the returned</span>
+<span class="sd">            ``QpointsPhonon`` object instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_group_velocity_at_q() is deprecated. Use &quot;</span>
+            <span class="s2">&quot;run_qpoints([q], with_group_velocities=True); the returned &quot;</span>
+            <span class="s2">&quot;QpointsPhonon object provides group_velocities[0].&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_velocity</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_group_velocity</span><span class="p">()</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_velocity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -3822,8 +3981,16 @@ window.runMermaid = runMermaid;</script>
         <span class="n">is_projection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">freq_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run moment calculation.&quot;&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhononMoment</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run moment calculation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        PhononMoment</span>
+<span class="sd">            The calculated moment. The same object is also accessible</span>
+<span class="sd">            through the ``moment`` property.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_mesh has to be done before run_moment.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -3848,13 +4015,28 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">freq_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">freq_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span><span class="o">.</span><span class="n">set_frequency_range</span><span class="p">(</span><span class="n">freq_min</span><span class="o">=</span><span class="n">freq_min</span><span class="p">,</span> <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_moment">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.get_moment">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_moment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return moment.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return moment.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``moment`` attribute of the ``PhononMoment`` object</span>
+<span class="sd">            returned by ``run_moment()`` (or of the ``moment``</span>
+<span class="sd">            property) instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_moment() is deprecated. Use the moment attribute of the &quot;</span>
+            <span class="s2">&quot;PhononMoment object returned by run_moment() or of the moment &quot;</span>
+            <span class="s2">&quot;property.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_moment has to be done before getting moment.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -3872,10 +4054,12 @@ window.runMermaid = runMermaid;</script>
         <span class="n">scattering_lengths</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DynamicStructureFactor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize dynamic structure factor calculation.</span>
 
-<span class="sd">        Call ``DynamicStructureFactor.run()`` to start the calculation.</span>
+<span class="sd">        Call ``DynamicStructureFactor.run()`` to start the calculation,</span>
+<span class="sd">        or iterate over the returned object to compute the structure</span>
+<span class="sd">        factor q-point by q-point (e.g. for progress reporting).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -3908,6 +4092,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Minimum and maximum phonon frequencies to determine whether</span>
 <span class="sd">            phonons are included in the calculation.</span>
 
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DynamicStructureFactor</span>
+<span class="sd">            The initialized (not yet run) calculation. The same object</span>
+<span class="sd">            is also accessible through the ``dynamic_structure_factor``</span>
+<span class="sd">            property.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -3931,7 +4122,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">scattering_lengths</span><span class="o">=</span><span class="n">scattering_lengths</span><span class="p">,</span>
             <span class="n">freq_min</span><span class="o">=</span><span class="n">freq_min</span><span class="p">,</span>
             <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.run_dynamic_structure_factor">
@@ -3944,11 +4136,18 @@ window.runMermaid = runMermaid;</script>
         <span class="n">scattering_lengths</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DynamicStructureFactor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run dynamic structure factor calculation.</span>
 
 <span class="sd">        See the detail of parameters at</span>
 <span class="sd">        Phonopy.init_dynamic_structure_factor().</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DynamicStructureFactor</span>
+<span class="sd">            The calculated dynamic structure factors. The same object</span>
+<span class="sd">            is also accessible through the</span>
+<span class="sd">            ``dynamic_structure_factor`` property.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init_dynamic_structure_factor</span><span class="p">(</span>
@@ -3960,7 +4159,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_dynamic_structure_factor">
@@ -3968,7 +4168,24 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_dynamic_structure_factor</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dynamic structure factors.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dynamic structure factors.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use the ``qpoints`` and ``dynamic_structure_factors``</span>
+<span class="sd">            attributes of the ``DynamicStructureFactor`` object</span>
+<span class="sd">            returned by ``run_dynamic_structure_factor()`` (or of the</span>
+<span class="sd">            ``dynamic_structure_factor`` property) instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_dynamic_structure_factor() is deprecated. Use the qpoints &quot;</span>
+            <span class="s2">&quot;and dynamic_structure_factors attributes of the &quot;</span>
+            <span class="s2">&quot;DynamicStructureFactor object returned by &quot;</span>
+            <span class="s2">&quot;run_dynamic_structure_factor() or of the &quot;</span>
+            <span class="s2">&quot;dynamic_structure_factor property.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s2">&quot;run_dynamic_structure_factor has to be done before &quot;</span>
@@ -4196,13 +4413,13 @@ window.runMermaid = runMermaid;</script>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Force constants are not prepared.&quot;</span><span class="p">)</span>
 
         <span class="n">fc_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">ph_copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy</span><span class="p">()</span>
+        <span class="n">ph_copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate</span><span class="p">()</span>
         <span class="n">ph_copy</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span>
 
         <span class="k">if</span> <span class="n">with_nac</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ph_copy</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span>
 
-        <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="p">)</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span> <span class="n">ph_copy</span><span class="o">.</span><span class="n">primitive</span><span class="p">)</span>
         <span class="n">d2f</span> <span class="o">=</span> <span class="n">DynmatToForceConstants</span><span class="p">(</span>
             <span class="n">ph</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span>
@@ -4212,25 +4429,26 @@ window.runMermaid = runMermaid;</script>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">ph_copy</span><span class="o">.</span><span class="n">run_qpoints</span><span class="p">(</span><span class="n">d2f</span><span class="o">.</span><span class="n">commensurate_points</span><span class="p">,</span> <span class="n">with_dynamical_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">dynmat</span> <span class="o">=</span> <span class="n">ph_copy</span><span class="o">.</span><span class="n">get_qpoints_dict</span><span class="p">()[</span><span class="s2">&quot;dynamical_matrices&quot;</span><span class="p">]</span>
-        <span class="k">assert</span> <span class="n">dynmat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="n">d2f</span><span class="o">.</span><span class="n">dynamical_matrices</span> <span class="o">=</span> <span class="n">dynmat</span>
+        <span class="k">assert</span> <span class="n">ph_copy</span><span class="o">.</span><span class="n">qpoints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">ph_copy</span><span class="o">.</span><span class="n">qpoints</span><span class="o">.</span><span class="n">dynamical_matrices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">d2f</span><span class="o">.</span><span class="n">dynamical_matrices</span> <span class="o">=</span> <span class="n">ph_copy</span><span class="o">.</span><span class="n">qpoints</span><span class="o">.</span><span class="n">dynamical_matrices</span>
         <span class="n">d2f</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
         <span class="n">ph</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="n">d2f</span><span class="o">.</span><span class="n">force_constants</span>
 
         <span class="k">return</span> <span class="n">ph</span></div>
 
 
-<div class="viewcode-block" id="Phonopy.copy">
-<a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.copy">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Phonopy</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy this Phonopy instance carrying only the init parameters.</span>
+<div class="viewcode-block" id="Phonopy.replicate">
+<a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.replicate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">replicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Phonopy</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new instance constructed with the same init parameters.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        The returned instance is constructed with the same init</span>
 <span class="sd">        parameters as this one, but internal state such as force</span>
-<span class="sd">        constants, NAC parameters, MLP, etc. is **not** copied.</span>
+<span class="sd">        constants, NAC parameters, MLP, etc. is **not** carried over.</span>
+<span class="sd">        Supercell, primitive cell, and symmetry are recomputed.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -4238,7 +4456,27 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            New Phonopy instance.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicate</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Phonopy.copy">
+<a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Phonopy</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new instance constructed with the same init parameters.</span>
+
+<span class="sd">        Deprecated. Use :meth:`replicate` instead. Despite its name,</span>
+<span class="sd">        this method does not copy internal state such as force</span>
+<span class="sd">        constants and NAC parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;Phonopy.copy is deprecated. Use Phonopy.replicate instead. &quot;</span>
+            <span class="s2">&quot;Note that neither method carries over internal state such &quot;</span>
+            <span class="s2">&quot;as force constants and NAC parameters.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.to_phonopy_yaml">
@@ -4261,12 +4499,12 @@ window.runMermaid = runMermaid;</script>
     <span class="c1">###################</span>
     <span class="c1"># private methods #</span>
     <span class="c1">###################</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_copy</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_replicate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">supercell_matrix</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Phonopy</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy this Phonopy class instance with init parameters.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a new instance with the same init parameters.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -4277,7 +4515,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        ph : Phonopy</span>
-<span class="sd">            Copied phonopy class instance.</span>
+<span class="sd">            New Phonopy class instance.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">supercell_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -4346,6 +4584,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_dynamical_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="n">nac_params</span><span class="p">:</span> <span class="n">NacParams</span> <span class="o">|</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_symmetry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nac_params</span><span class="p">[</span><span class="s2">&quot;born&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -4384,8 +4623,40 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># type of numpy array.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span><span class="o">.</span><span class="n">force_constants</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_velocity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_set_group_velocity</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_invalidate_derived</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;dataset_inputs&quot;</span><span class="p">,</span> <span class="s2">&quot;dm_inputs&quot;</span><span class="p">,</span> <span class="s2">&quot;factor&quot;</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear derived state after an input mutation.</span>
+
+<span class="sd">        Levels cascade:</span>
+
+<span class="sd">        - &quot;dataset_inputs&quot; clears force constants, then behaves as</span>
+<span class="sd">          &quot;dm_inputs&quot;.</span>
+<span class="sd">        - &quot;dm_inputs&quot; clears the dynamical matrix and everything</span>
+<span class="sd">          derived from it.</span>
+<span class="sd">        - &quot;factor&quot; preserves the dynamical matrix (it does not depend</span>
+<span class="sd">          on the unit conversion factor) but clears group velocity and</span>
+<span class="sd">          all analyses.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;dataset_inputs&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;dataset_inputs&quot;</span><span class="p">,</span> <span class="s2">&quot;dm_inputs&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_group_velocity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_band_structure</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_properties</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacements</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thermal_displacement_matrices</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qpoints</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_random_displacements</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_group_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamical_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

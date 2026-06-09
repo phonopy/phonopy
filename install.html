@@ -186,6 +186,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -372,8 +373,6 @@ installed using conda by</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>phonopy
 </pre></div>
 </div>
-<p>This phonopy’s conda package is prepared and maintained by Paweł T. Jochym at
-conda-forge channel (please be aware that this is not a trivial job).</p>
 <section id="minimum-steps-to-install-and-use-phonopy-via-conda">
 <h3>Minimum steps to install and use phonopy via conda<a class="headerlink" href="#minimum-steps-to-install-and-use-phonopy-via-conda" title="Link to this heading">#</a></h3>
 <p>In the following procedure, conda’s environment (see
@@ -397,15 +396,16 @@ existing environment (mainly python environment).</p>
  <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
  <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
-                                      <span class="mf">2.12.0</span>
+                                       <span class="mf">4.1.0</span>
 
-<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.9.6</span>
-<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">1.16.2</span>
+<span class="n">Rust</span> <span class="n">backend</span> <span class="p">(</span><span class="n">phonors</span><span class="p">)</span> <span class="n">using</span> <span class="n">rayon</span> <span class="p">(</span><span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
+<span class="n">Running</span> <span class="ow">in</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span> <span class="n">mode</span><span class="o">.</span>
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.13.3</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.7.0</span>
 
 
-<span class="n">Supercell</span> <span class="n">matrix</span> <span class="p">(</span><span class="n">DIM</span> <span class="ow">or</span> <span class="o">--</span><span class="n">dim</span><span class="p">)</span> <span class="n">was</span> <span class="ow">not</span> <span class="n">explicitly</span> <span class="n">specified</span><span class="o">.</span>
-<span class="n">By</span> <span class="n">this</span> <span class="n">reason</span><span class="p">,</span> <span class="n">phonopy_yaml</span> <span class="n">mode</span> <span class="n">was</span> <span class="n">invoked</span><span class="o">.</span>
-<span class="n">But</span> <span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span> <span class="ow">and</span> <span class="s2">&quot;phonopy.yaml&quot;</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">found</span><span class="o">.</span>
+<span class="n">Switched</span> <span class="n">on</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">yaml</span> <span class="n">mode</span><span class="o">.</span>
+<span class="s2">&quot;phonopy_disp.yaml&quot;</span> <span class="ow">or</span> <span class="s2">&quot;phonopy.yaml&quot;</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">found</span><span class="o">.</span>
   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span> <span class="n">_</span> <span class="n">__</span> <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>
  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;__| &#39;</span><span class="n">__</span><span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;__|</span>
 <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span>
@@ -415,7 +415,7 @@ existing environment (mainly python environment).</p>
 </section>
 </section>
 <section id="using-hdf5-on-nfs-mounted-file-system">
-<span id="install-from-source"></span><h2>Using HDF5 on NFS mounted file system<a class="headerlink" href="#using-hdf5-on-nfs-mounted-file-system" title="Link to this heading">#</a></h2>
+<h2>Using HDF5 on NFS mounted file system<a class="headerlink" href="#using-hdf5-on-nfs-mounted-file-system" title="Link to this heading">#</a></h2>
 <p>Recent hdf5 versions just as installed may not work on NFS mounted file systems.
 In this case, setting the following environment variable may solve the problem:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">HDF5_USE_FILE_LOCKING</span><span class="o">=</span>FALSE
@@ -423,12 +423,12 @@ In this case, setting the following environment variable may solve the problem:<
 </div>
 </section>
 <section id="installation-from-source-code">
-<h2>Installation from source code<a class="headerlink" href="#installation-from-source-code" title="Link to this heading">#</a></h2>
+<span id="install-from-source"></span><h2>Installation from source code<a class="headerlink" href="#installation-from-source-code" title="Link to this heading">#</a></h2>
 <section id="system-requirement">
 <h3>System requirement<a class="headerlink" href="#system-requirement" title="Link to this heading">#</a></h3>
 <p>The procedure to setup phonopy is explained in this section. It is supposed that
 phonopy is installed on the recent linux distribution like Ubuntu or Fedora with
-Python version 3.8 or later. Mac OS X users may use conda (conda-forge channel)
+Python version 3.10 or later. Mac OS X users may use conda (conda-forge channel)
 packages. Windows users should use conda (conda-forge channel) packages as well.</p>
 <p>Prepare the following Python libraries:</p>
 <ul class="simple">
@@ -485,7 +485,6 @@ removed.</p>
 <li><p>Get the source code from github</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/phonopy/phonopy.git
 %<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>phonopy
-%<span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>master
 </pre></div>
 </div>
 </li>

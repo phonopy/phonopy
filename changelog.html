@@ -46,7 +46,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'changelog';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Migrating from phonopy v3 to v4" href="migration-v4.html" />
+    <link rel="prev" title="Development" href="development.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="4.1" />
@@ -185,6 +185,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Change Log</a></li>
 </ul>
 
@@ -331,6 +332,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-09-2026-version-4-2-0">Jun-09-2026: Version 4.2.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-25-2026-version-4-1-0">May-25-2026: Version 4.1.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-18-2026-version-4-0-1">May-18-2026: Version 4.0.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-16-2026-version-4-0-0">May-16-2026: Version 4.0.0</a></li>
@@ -554,6 +556,22 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="jun-09-2026-version-4-2-0">
+<h2>Jun-09-2026: Version 4.2.0<a class="headerlink" href="#jun-09-2026-version-4-2-0" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">run_*</span></code> methods now return result objects (e.g. <code class="docutils literal notranslate"><span class="pre">run_band_structure</span></code>
+returns a <code class="docutils literal notranslate"><span class="pre">BandStructure</span></code>). The corresponding <code class="docutils literal notranslate"><span class="pre">get_*_dict</span></code> accessors
+are deprecated, and the legacy <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument has been removed.</p></li>
+<li><p>Result objects share a unified <code class="docutils literal notranslate"><span class="pre">plot(ax)</span></code> signature. Figure-level
+plotting helpers moved to <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.plot</span></code>, and the global
+side effects of the old plot functions were removed.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">NacParams</span></code> TypedDict; documented result objects and NAC
+parameters.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Phonopy.replicate</span></code>; <code class="docutils literal notranslate"><span class="pre">Phonopy.copy</span></code> is deprecated.</p></li>
+<li><p>Added a development documentation page describing the architecture
+principles.</p></li>
+</ul>
+</section>
 <section id="may-25-2026-version-4-1-0">
 <h2>May-25-2026: Version 4.1.0<a class="headerlink" href="#may-25-2026-version-4-1-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -612,10 +630,6 @@ from previous versions. When the mesh was specified by a length (float
 input), the grid is now rebuilt as a generalized regular grid that keeps
 full point-group symmetry; the resulting <code class="docutils literal notranslate"><span class="pre">mesh_numbers</span></code> may differ from
 the regular-grid value.</p></li>
-<li><p>Mixed-species site support (initial): <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> gains a species
-table, the <code class="docutils literal notranslate"><span class="pre">apply_site_mixture()</span></code> helper, and a <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code> CLI
-flag. VASP POSCAR writes expand mixed sites. The force-I/O and
-FC-build pipeline for site-mixture cells is still under development.</p></li>
 <li><p>Bug fix: copy-by-reference issue in <code class="docutils literal notranslate"><span class="pre">qpoints.py</span></code>.</p></li>
 </ul>
 </section>
@@ -2461,12 +2475,12 @@ structure with atomic displacements.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="migration-v4.html"
+       href="development.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Migrating from phonopy v3 to v4</p>
+        <p class="prev-next-title">Development</p>
       </div>
     </a>
 </div>
@@ -2487,6 +2501,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-09-2026-version-4-2-0">Jun-09-2026: Version 4.2.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-25-2026-version-4-1-0">May-25-2026: Version 4.1.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-18-2026-version-4-0-1">May-18-2026: Version 4.0.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-16-2026-version-4-0-0">May-16-2026: Version 4.0.0</a></li>

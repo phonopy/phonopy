@@ -186,6 +186,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
@@ -371,6 +372,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.thermal_displacements"><code class="docutils literal notranslate"><span class="pre">Phonopy.thermal_displacements</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.thermal_displacement_matrices"><code class="docutils literal notranslate"><span class="pre">Phonopy.thermal_displacement_matrices</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.irreps</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.modulation"><code class="docutils literal notranslate"><span class="pre">Phonopy.modulation</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.moment"><code class="docutils literal notranslate"><span class="pre">Phonopy.moment</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.total_dos"><code class="docutils literal notranslate"><span class="pre">Phonopy.total_dos</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.projected_dos"><code class="docutils literal notranslate"><span class="pre">Phonopy.projected_dos</span></code></a></li>
@@ -432,6 +434,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.get_modulations_and_supercell"><code class="docutils literal notranslate"><span class="pre">Phonopy.get_modulations_and_supercell()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.write_modulations"><code class="docutils literal notranslate"><span class="pre">Phonopy.write_modulations()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.write_yaml_modulations"><code class="docutils literal notranslate"><span class="pre">Phonopy.write_yaml_modulations()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.run_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.run_irreps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.set_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.set_irreps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.show_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.show_irreps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.write_yaml_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.write_yaml_irreps()</span></code></a></li>
@@ -445,6 +448,7 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.get_random_displacements_at_temperature"><code class="docutils literal notranslate"><span class="pre">Phonopy.get_random_displacements_at_temperature()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.save"><code class="docutils literal notranslate"><span class="pre">Phonopy.save()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.ph2ph"><code class="docutils literal notranslate"><span class="pre">Phonopy.ph2ph()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.replicate"><code class="docutils literal notranslate"><span class="pre">Phonopy.replicate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.copy"><code class="docutils literal notranslate"><span class="pre">Phonopy.copy()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.to_phonopy_yaml"><code class="docutils literal notranslate"><span class="pre">Phonopy.to_phonopy_yaml()</span></code></a></li>
 </ul>
@@ -507,7 +511,7 @@ API. For a tutorial-style guide, see <a class="reference internal" href="phonopy
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="phonopy.load">
-<span class="sig-prename descclassname"><span class="pre">phonopy.</span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phonopy_yaml</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primitive_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_nac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unitcell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nac_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unitcell_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">born_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_sets_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_constants_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fc_calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fc_calculator_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">produce_fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetrize_fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_compact_fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pypolymlp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlp_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_SNF_supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symprec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Rust'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/cui/load.html#load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.load" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phonopy.</span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phonopy_yaml</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primitive_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_nac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unitcell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nac_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unitcell_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">born_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_sets_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_constants_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fc_calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fc_calculator_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">produce_fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetrize_fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_compact_fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pypolymlp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlp_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_SNF_supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symprec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Rust'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/cui/load.html#load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.load" title="Link to this definition">#</a></dt>
 <dd><p>Create a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance from parameters and/or input files.</p>
 <p>A “phonopy_yaml”-like file is parsed unless crystal structure
 information is given through <code class="docutils literal notranslate"><span class="pre">unitcell_filename</span></code>,
@@ -580,14 +584,15 @@ to <code class="docutils literal notranslate"><span class="pre">&quot;vasp&quot;
 <li><p><strong>supercell</strong> (<a class="reference internal" href="#phonopy.structure.atoms.PhonopyAtoms" title="phonopy.structure.atoms.PhonopyAtoms"><em>PhonopyAtoms</em></a><em>, </em><em>optional</em>) – Input supercell. When given, the default value of
 <code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> is set to <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> (can be overwritten),
 and <code class="docutils literal notranslate"><span class="pre">supercell_matrix</span></code> is ignored. Default is None.</p></li>
-<li><p><strong>nac_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em>) – <p>Parameters required for non-analytical term correction. Default
+<li><p><strong>nac_params</strong> (<em>NacParams</em><em>, </em><em>optional</em>) – <p>Parameters required for non-analytical term correction. Default
 is None. Expected structure:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">Born</span> <span class="n">effective</span> <span class="n">charges</span>
          <span class="p">(</span><span class="n">array_like</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">primitive</span> <span class="n">cell</span> <span class="n">atoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
           <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
  <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">Dielectric</span> <span class="n">constant</span> <span class="n">matrix</span>
                <span class="p">(</span><span class="n">array_like</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
- <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">unit</span> <span class="n">conversion</span> <span class="n">factor</span> <span class="p">(</span><span class="nb">float</span><span class="p">)}</span>
+ <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">unit</span> <span class="n">conversion</span> <span class="n">factor</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">optional</span><span class="p">),</span>
+ <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;gonze&#39;</span> <span class="p">(</span><span class="n">default</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;wang&#39;</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">optional</span><span class="p">)}</span>
 </pre></div>
 </div>
 </p></li>
@@ -606,8 +611,6 @@ Default is None.</p></li>
 single text string. Parsing rules depend on the calculator.
 For <code class="docutils literal notranslate"><span class="pre">alm</span></code>, each parameter is split by <code class="docutils literal notranslate"><span class="pre">','</span></code> and each
 key-value pair is written as <code class="docutils literal notranslate"><span class="pre">'key</span> <span class="pre">=</span> <span class="pre">value'</span></code>.</p></li>
-<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>optional</em>) – Deprecated. The conversion factor is selected based on
-<code class="docutils literal notranslate"><span class="pre">calculator</span></code>.</p></li>
 <li><p><strong>produce_fc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – When False, force constants are not calculated from the dataset
 of displacements and forces even if the dataset exists. Default
 is True.</p></li>
@@ -645,7 +648,7 @@ phonors backend. Default is <code class="docutils literal notranslate"><span cla
 <h2><code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class<a class="headerlink" href="#phonopy-class" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="phonopy.Phonopy">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">phonopy.</span></span><span class="sig-name descname"><span class="pre">Phonopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unitcell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primitive_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_velocity_delta_q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symprec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_SNF_supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hermitianize_dynamical_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Rust'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">phonopy.</span></span><span class="sig-name descname"><span class="pre">Phonopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unitcell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primitive_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_velocity_delta_q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symprec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_SNF_supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hermitianize_dynamical_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Rust'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Phonopy main API.</p>
 <p>A <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance is created from a unit cell and a supercell
@@ -687,7 +690,6 @@ overview of the typical workflow.</p>
 <li><p><strong>unitcell</strong> (<a class="reference internal" href="#phonopy.structure.atoms.PhonopyAtoms" title="phonopy.structure.atoms.PhonopyAtoms"><em>PhonopyAtoms</em></a>)</p></li>
 <li><p><strong>supercell_matrix</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em><em>] </em><em>| </em><em>NDArray</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>primitive_matrix</strong> (<em>Literal</em><em>[</em><em>'P'</em><em>, </em><em>'F'</em><em>, </em><em>'I'</em><em>, </em><em>'A'</em><em>, </em><em>'C'</em><em>, </em><em>'R'</em><em>, </em><em>'auto'</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><em>float</em><em>]</em><em>] </em><em>| </em><em>NDArray</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>group_velocity_delta_q</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>symprec</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
 <li><p><strong>is_symmetry</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
@@ -934,9 +936,10 @@ to obtain the matrix at a given q-point.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="phonopy.Phonopy.nac_params">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nac_params</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#phonopy.Phonopy.nac_params" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nac_params</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NacParams</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#phonopy.Phonopy.nac_params" title="Link to this definition">#</a></dt>
 <dd><p>Getter and setter of parameters for non-analytical term correction.</p>
-<p>A <code class="docutils literal notranslate"><span class="pre">dict</span></code> with the following entries:</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">dict</span></code> (typed as <code class="xref py py-class docutils literal notranslate"><span class="pre">NacParams</span></code>) with the following
+entries:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">'born'</span></code><span class="classifier">ndarray</span></dt><dd><p>Born effective charges.
 <code class="docutils literal notranslate"><span class="pre">shape=(primitive</span> <span class="pre">cell</span> <span class="pre">atoms,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>,
@@ -945,9 +948,11 @@ to obtain the matrix at a given q-point.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">'dielectric'</span></code><span class="classifier">ndarray</span></dt><dd><p>Dielectric constant tensor.
 <code class="docutils literal notranslate"><span class="pre">shape=(3,</span> <span class="pre">3)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>, <code class="docutils literal notranslate"><span class="pre">order='C'</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">'factor'</span></code><span class="classifier">float, optional</span></dt><dd><p>Unit conversion factor.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">'factor'</span></code><span class="classifier">float, optional</span></dt><dd><p>Unit conversion factor. When omitted, the value for the
+calculator interface is used.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">'method'</span></code><span class="classifier">str, optional</span></dt><dd><p>Method to calculate NAC.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">'method'</span></code><span class="classifier">str, optional</span></dt><dd><p>Method to calculate NAC, either <code class="docutils literal notranslate"><span class="pre">'gonze'</span></code> (default) or
+<code class="docutils literal notranslate"><span class="pre">'wang'</span></code>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1025,6 +1030,12 @@ to obtain the matrix at a given q-point.</p>
 <dt class="sig sig-object py" id="phonopy.Phonopy.irreps">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">irreps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">IrReps</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#phonopy.Phonopy.irreps" title="Link to this definition">#</a></dt>
 <dd><p>Return IrReps instance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phonopy.Phonopy.modulation">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">modulation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Modulation</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#phonopy.Phonopy.modulation" title="Link to this definition">#</a></dt>
+<dd><p>Return Modulation instance.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1276,12 +1287,18 @@ constants.</p>
 <dd class="field-odd"><p><strong>q</strong> (<em>array_like</em>) – A q-vector. <code class="docutils literal notranslate"><span class="pre">shape=(3,)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dynamical matrix. <code class="docutils literal notranslate"><span class="pre">shape=(bands,</span> <span class="pre">bands)</span></code>, complex dtype
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>ndarray</em> – Dynamical matrix. <code class="docutils literal notranslate"><span class="pre">shape=(bands,</span> <span class="pre">bands)</span></code>, complex dtype
 (<code class="docutils literal notranslate"><span class="pre">&quot;c%d&quot;</span> <span class="pre">%</span> <span class="pre">(np.dtype('double').itemsize</span> <span class="pre">*</span> <span class="pre">2)</span></code>),
-<code class="docutils literal notranslate"><span class="pre">order='C'</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">order='C'</span></code>.</p></li>
+<li><p><em>.. deprecated::</em> – Use <code class="docutils literal notranslate"><span class="pre">run_qpoints([q],</span> <span class="pre">with_dynamical_matrices=True)</span></code> and
+the <code class="docutils literal notranslate"><span class="pre">dynamical_matrices</span></code> attribute of the returned
+<code class="docutils literal notranslate"><span class="pre">QpointsPhonon</span></code> object instead.</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ndarray</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>complex128</em>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1295,11 +1312,16 @@ constants.</p>
 <dd class="field-odd"><p><strong>q</strong> (<em>array_like</em>) – A q-vector. <code class="docutils literal notranslate"><span class="pre">shape=(3,)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Phonon frequencies. Imaginary frequencies are represented by
-negative real numbers. <code class="docutils literal notranslate"><span class="pre">shape=(bands,)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>ndarray</em> – Phonon frequencies. Imaginary frequencies are represented by
+negative real numbers. <code class="docutils literal notranslate"><span class="pre">shape=(bands,)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p></li>
+<li><p><em>.. deprecated::</em> – Use <code class="docutils literal notranslate"><span class="pre">run_qpoints([q])</span></code> and the <code class="docutils literal notranslate"><span class="pre">frequencies</span></code> attribute
+of the returned <code class="docutils literal notranslate"><span class="pre">QpointsPhonon</span></code> object instead.</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ndarray</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>float64</em>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1320,6 +1342,9 @@ negative real numbers. <code class="docutils literal notranslate"><span class="p
 <li><p><strong>eigenvectors</strong> (<em>ndarray</em>) – Phonon eigenvectors. <code class="docutils literal notranslate"><span class="pre">shape=(bands,</span> <span class="pre">bands)</span></code>, complex
 dtype (<code class="docutils literal notranslate"><span class="pre">&quot;c%d&quot;</span> <span class="pre">%</span> <span class="pre">(np.dtype('double').itemsize</span> <span class="pre">*</span> <span class="pre">2)</span></code>),
 <code class="docutils literal notranslate"><span class="pre">order='C'</span></code>.</p></li>
+<li><p><em>.. deprecated::</em> – Use <code class="docutils literal notranslate"><span class="pre">run_qpoints([q],</span> <span class="pre">with_eigenvectors=True)</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">frequencies</span></code> / <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code> attributes of the
+returned <code class="docutils literal notranslate"><span class="pre">QpointsPhonon</span></code> object instead.</p></li>
 </ul>
 </p>
 </dd>
@@ -1354,8 +1379,12 @@ path. The number of labels equals
 <li><p><strong>is_legacy_plot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – Use the old-style band-structure plot. Default is False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated band structure. The same object is also
+accessible through the <code class="docutils literal notranslate"><span class="pre">band_structure</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>BandStructure</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1366,7 +1395,8 @@ path. The number of labels equals
 <dd><p>Return calculated band structures.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><p>Keys are <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">distances</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>,
+<dd class="field-odd"><p><ul>
+<li><p><em>dict</em> – Keys are <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">distances</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>,
 <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>, and <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code>. Each value is a
 list containing the property along one band path. The number
 of q-points along one path can be different from that of
@@ -1394,10 +1424,13 @@ are not calculated.
 <code class="docutils literal notranslate"><span class="pre">shape=(q-points,</span> <span class="pre">bands,</span> <span class="pre">3)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p>
 </dd>
 </dl>
+</li>
+<li><p><em>.. deprecated::</em> – Use the <code class="docutils literal notranslate"><span class="pre">band_structure</span></code> property instead.</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-even"><p><em>BandStructureDict</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1541,6 +1574,13 @@ Used with <code class="docutils literal notranslate"><span class="pre">ThermalDi
 <dd><p>Run mesh sampling phonon calculation.</p>
 <p>See the parameter details in Phonopy.init_mesh.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The calculated mesh sampling result. The same object is
+also accessible through the <code class="docutils literal notranslate"><span class="pre">mesh</span></code> property.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mesh</p>
+</dd>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mesh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>int64</em><em>]</em><em>]</em>)</p></li>
@@ -1552,9 +1592,6 @@ Used with <code class="docutils literal notranslate"><span class="pre">ThermalDi
 <li><p><strong>is_gamma_center</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1564,7 +1601,8 @@ Used with <code class="docutils literal notranslate"><span class="pre">ThermalDi
 <dd><p>Return phonon properties calculated by mesh sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><p>Keys are <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>,
+<dd class="field-odd"><p><ul>
+<li><p><em>dict</em> – Keys are <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>,
 <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>, and <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code>.</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">qpoints</span></code><span class="classifier">ndarray</span></dt><dd><p>q-points in reduced coordinates of the reciprocal
@@ -1589,10 +1627,13 @@ structure of <code class="docutils literal notranslate"><span class="pre">np.lin
 <code class="docutils literal notranslate"><span class="pre">shape=(ir-grid</span> <span class="pre">points,</span> <span class="pre">bands,</span> <span class="pre">3)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p>
 </dd>
 </dl>
+</li>
+<li><p><em>.. deprecated::</em> – Use the <code class="docutils literal notranslate"><span class="pre">mesh</span></code> property instead.</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-even"><p><em>MeshDict</em> | <em>IterMeshDict</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1656,8 +1697,12 @@ parameter is activated only at q=(0, 0, 0).
 <code class="docutils literal notranslate"><span class="pre">shape=(3,)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated phonons at the q-points. The same object is
+also accessible through the <code class="docutils literal notranslate"><span class="pre">qpoints</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QpointsPhonon</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1668,7 +1713,8 @@ parameter is activated only at q=(0, 0, 0).
 <dd><p>Return calculated phonon properties at q-points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><p>Keys are <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>,
+<dd class="field-odd"><p><ul>
+<li><p><em>dict</em> – Keys are <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>,
 <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code>, and <code class="docutils literal notranslate"><span class="pre">dynamical_matrices</span></code>.</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">frequencies</span></code><span class="classifier">ndarray</span></dt><dd><p>Phonon frequencies. Imaginary frequencies are represented
@@ -1688,10 +1734,13 @@ are not calculated.
 <code class="docutils literal notranslate"><span class="pre">shape=(qpoints,</span> <span class="pre">bands,</span> <span class="pre">bands)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>.</p>
 </dd>
 </dl>
+</li>
+<li><p><em>.. deprecated::</em> – Use the <code class="docutils literal notranslate"><span class="pre">qpoints</span></code> property instead.</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-even"><p><em>QpointsDict</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1745,8 +1794,12 @@ automatically determined.</p></li>
 set, the smearing method is used instead. Default is True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated total DOS. The same object is also
+accessible through the <code class="docutils literal notranslate"><span class="pre">total_dos</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>TotalDos</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1773,6 +1826,7 @@ set, the smearing method is used instead. Default is True.</p></li>
 <li><p><em>Each value of corresponding key is as follows</em></p></li>
 <li><p><strong>frequency_points</strong> (<em>ndarray</em>) – shape=(frequency_sampling_points, ), dtype=’double’</p></li>
 <li><p><em>total_dos</em> – shape=(frequency_sampling_points, ), dtype=’double’</p></li>
+<li><p><em>.. deprecated::</em> – Use the <code class="docutils literal notranslate"><span class="pre">total_dos</span></code> property instead.</p></li>
 </ul>
 </p>
 </dd>
@@ -1870,8 +1924,12 @@ projection).</p></li>
 False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated projected DOS. The same object is also
+accessible through the <code class="docutils literal notranslate"><span class="pre">projected_dos</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ProjectedDos</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1927,6 +1985,7 @@ depending on the parameters at run_projected_dos.</p>
 <li><p><em>Each value of corresponding key is as follows</em></p></li>
 <li><p><strong>frequency_points</strong> (<em>ndarray</em>) – shape=(frequency_sampling_points, ), dtype=’double’</p></li>
 <li><p><em>projected_dos</em> – shape=(projections, frequency_sampling_points), dtype=’double’</p></li>
+<li><p><em>.. deprecated::</em> – Use the <code class="docutils literal notranslate"><span class="pre">projected_dos</span></code> property instead.</p></li>
 </ul>
 </p>
 </dd>
@@ -2012,8 +2071,12 @@ Default is False.</p></li>
 statistics. Default is False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated thermal properties. The same object is also
+accessible through the <code class="docutils literal notranslate"><span class="pre">thermal_properties</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ThermalProperties</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2032,6 +2095,7 @@ statistics. Default is False.</p></li>
 <li><p><strong>free_energy</strong> (<em>ndarray</em>) – shape=(temperatures, ), dtype=’double’</p></li>
 <li><p><strong>entropy</strong> (<em>ndarray</em>) – shape=(temperatures, ), dtype=’double’</p></li>
 <li><p><strong>heat_capacity</strong> (<em>ndarray</em>) – shape=(temperatures, ), dtype=’double’</p></li>
+<li><p><em>.. deprecated::</em> – Use the <code class="docutils literal notranslate"><span class="pre">thermal_properties</span></code> property instead.</p></li>
 </ul>
 </p>
 </dd>
@@ -2100,8 +2164,13 @@ When this is set, t_min, t_max, and t_step are ignored.</p></li>
 <code class="docutils literal notranslate"><span class="pre">freq_max</span></code> are included. Default is None (all phonons).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated thermal displacements. The same object is
+also accessible through the <code class="docutils literal notranslate"><span class="pre">thermal_displacements</span></code>
+property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ThermalDisplacements</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2110,6 +2179,9 @@ When this is set, t_min, t_max, and t_step are ignored.</p></li>
 <dt class="sig sig-object py" id="phonopy.Phonopy.get_thermal_displacements_dict">
 <span class="sig-name descname"><span class="pre">get_thermal_displacements_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_thermal_displacements_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_thermal_displacements_dict" title="Link to this definition">#</a></dt>
 <dd><p>Return thermal displacements.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span>the <code class="docutils literal notranslate"><span class="pre">thermal_displacements</span></code> property instead.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
@@ -2164,8 +2236,13 @@ When this is set, t_min, t_max, and t_step are ignored.
 Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated thermal displacement matrices. The same
+object is also accessible through the
+<code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ThermalDisplacementMatrices</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2174,6 +2251,9 @@ Default is None.</p></li>
 <dt class="sig sig-object py" id="phonopy.Phonopy.get_thermal_displacement_matrices_dict">
 <span class="sig-name descname"><span class="pre">get_thermal_displacement_matrices_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_thermal_displacement_matrices_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_thermal_displacement_matrices_dict" title="Link to this definition">#</a></dt>
 <dd><p>Return thermal displacement matrices.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span>the <code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices</span></code> property instead.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>ThermalDisplacementMatricesDict</em></p>
@@ -2261,8 +2341,12 @@ parameter is activated only at q=(0, 0, 0).
 <li><p><strong>derivative_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated modulations. The same object is also
+accessible through the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modulation</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2271,6 +2355,11 @@ parameter is activated only at q=(0, 0, 0).
 <dt class="sig sig-object py" id="phonopy.Phonopy.get_modulated_supercells">
 <span class="sig-name descname"><span class="pre">get_modulated_supercells</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_modulated_supercells"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_modulated_supercells" title="Link to this definition">#</a></dt>
 <dd><p>Return modulated structures as a list of <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code>.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span>the <code class="docutils literal notranslate"><span class="pre">modulated_supercells</span></code> attribute of the
+<code class="docutils literal notranslate"><span class="pre">Modulation</span></code> object returned by <code class="docutils literal notranslate"><span class="pre">run_modulations()</span></code> (or
+of the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> property) instead.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a>[<a class="reference internal" href="#phonopy.structure.atoms.PhonopyAtoms" title="phonopy.structure.atoms.PhonopyAtoms"><em>PhonopyAtoms</em></a>]</p>
@@ -2288,6 +2377,9 @@ parameter is activated only at q=(0, 0, 0).
 <li><p><strong>modulations</strong> (<em>ndarray</em>) – Atomic modulations of the supercell in Cartesian
 coordinates.</p></li>
 <li><p><strong>supercell</strong> (<em>PhonopyAtoms</em>) – The (unmodulated) supercell.</p></li>
+<li><p><em>.. deprecated::</em> – Use the <code class="docutils literal notranslate"><span class="pre">modulations</span></code> and <code class="docutils literal notranslate"><span class="pre">supercell</span></code> attributes of the
+<code class="docutils literal notranslate"><span class="pre">Modulation</span></code> object returned by <code class="docutils literal notranslate"><span class="pre">run_modulations()</span></code> (or
+of the <code class="docutils literal notranslate"><span class="pre">modulation</span></code> property) instead.</p></li>
 </ul>
 </p>
 </dd>
@@ -2326,8 +2418,8 @@ coordinates.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="phonopy.Phonopy.set_irreps">
-<span class="sig-name descname"><span class="pre">set_irreps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_little_cogroup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nac_q_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degeneracy_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.set_irreps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.set_irreps" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="phonopy.Phonopy.run_irreps">
+<span class="sig-name descname"><span class="pre">run_irreps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_little_cogroup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nac_q_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degeneracy_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.run_irreps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.run_irreps" title="Link to this definition">#</a></dt>
 <dd><p>Identify ir-reps of phonon modes.</p>
 <p>The design of this API is not very satisfactory and is expected
 to be redesigned in the next major versions once the use case
@@ -2345,8 +2437,34 @@ parameter is activated only at q=(0, 0, 0).
 <li><p><strong>degeneracy_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The identified ir-reps. The same object is also accessible
+through the <code class="docutils literal notranslate"><span class="pre">irreps</span></code> property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>IrReps</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phonopy.Phonopy.set_irreps">
+<span class="sig-name descname"><span class="pre">set_irreps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_little_cogroup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nac_q_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degeneracy_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.set_irreps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.set_irreps" title="Link to this definition">#</a></dt>
+<dd><p>Identify ir-reps of phonon modes.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span><a class="reference internal" href="#phonopy.Phonopy.run_irreps" title="phonopy.Phonopy.run_irreps"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_irreps()</span></code></a> instead.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>q</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>float64</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>is_little_cogroup</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>nac_q_direction</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>float64</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>degeneracy_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p><em>IrReps</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2383,6 +2501,11 @@ parameter is activated only at q=(0, 0, 0).
 <dt class="sig sig-object py" id="phonopy.Phonopy.get_group_velocity_at_q">
 <span class="sig-name descname"><span class="pre">get_group_velocity_at_q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_group_velocity_at_q"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_group_velocity_at_q" title="Link to this definition">#</a></dt>
 <dd><p>Return group velocity at a q-point.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span><code class="docutils literal notranslate"><span class="pre">run_qpoints([q],</span> <span class="pre">with_group_velocities=True)</span></code> and
+the <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code> attribute of the returned
+<code class="docutils literal notranslate"><span class="pre">QpointsPhonon</span></code> object instead.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>q_point</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>float64</em><em>]</em><em>]</em>)</p>
@@ -2398,6 +2521,13 @@ parameter is activated only at q=(0, 0, 0).
 <span class="sig-name descname"><span class="pre">run_moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.run_moment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.run_moment" title="Link to this definition">#</a></dt>
 <dd><p>Run moment calculation.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The calculated moment. The same object is also accessible
+through the <code class="docutils literal notranslate"><span class="pre">moment</span></code> property.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>PhononMoment</p>
+</dd>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
@@ -2406,9 +2536,6 @@ parameter is activated only at q=(0, 0, 0).
 <li><p><strong>freq_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2416,6 +2543,11 @@ parameter is activated only at q=(0, 0, 0).
 <dt class="sig sig-object py" id="phonopy.Phonopy.get_moment">
 <span class="sig-name descname"><span class="pre">get_moment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_moment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_moment" title="Link to this definition">#</a></dt>
 <dd><p>Return moment.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span>the <code class="docutils literal notranslate"><span class="pre">moment</span></code> attribute of the <code class="docutils literal notranslate"><span class="pre">PhononMoment</span></code> object
+returned by <code class="docutils literal notranslate"><span class="pre">run_moment()</span></code> (or of the <code class="docutils literal notranslate"><span class="pre">moment</span></code>
+property) instead.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a> | <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>float64</em>]] | None</p>
@@ -2427,7 +2559,9 @@ parameter is activated only at q=(0, 0, 0).
 <dt class="sig sig-object py" id="phonopy.Phonopy.init_dynamic_structure_factor">
 <span class="sig-name descname"><span class="pre">init_dynamic_structure_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Qpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_form_factor_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scattering_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.init_dynamic_structure_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.init_dynamic_structure_factor" title="Link to this definition">#</a></dt>
 <dd><p>Initialize dynamic structure factor calculation.</p>
-<p>Call <code class="docutils literal notranslate"><span class="pre">DynamicStructureFactor.run()</span></code> to start the calculation.</p>
+<p>Call <code class="docutils literal notranslate"><span class="pre">DynamicStructureFactor.run()</span></code> to start the calculation,
+or iterate over the returned object to compute the structure
+factor q-point by q-point (e.g. for progress reporting).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2459,8 +2593,13 @@ phonons are included in the calculation.</p></li>
 phonons are included in the calculation.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The initialized (not yet run) calculation. The same object
+is also accessible through the <code class="docutils literal notranslate"><span class="pre">dynamic_structure_factor</span></code>
+property.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DynamicStructureFactor</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2472,6 +2611,14 @@ phonons are included in the calculation.</p></li>
 <p>See the detail of parameters at
 Phonopy.init_dynamic_structure_factor().</p>
 <dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The calculated dynamic structure factors. The same object
+is also accessible through the
+<code class="docutils literal notranslate"><span class="pre">dynamic_structure_factor</span></code> property.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>DynamicStructureFactor</p>
+</dd>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>Qpoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.14)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em><em>] </em><em>| </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>, </em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a><em>[</em><em>float64</em><em>]</em><em>]</em>)</p></li>
@@ -2482,9 +2629,6 @@ Phonopy.init_dynamic_structure_factor().</p>
 <li><p><strong>freq_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -2492,6 +2636,12 @@ Phonopy.init_dynamic_structure_factor().</p>
 <dt class="sig sig-object py" id="phonopy.Phonopy.get_dynamic_structure_factor">
 <span class="sig-name descname"><span class="pre">get_dynamic_structure_factor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_dynamic_structure_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_dynamic_structure_factor" title="Link to this definition">#</a></dt>
 <dd><p>Return dynamic structure factors.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version Use: </span>the <code class="docutils literal notranslate"><span class="pre">qpoints</span></code> and <code class="docutils literal notranslate"><span class="pre">dynamic_structure_factors</span></code>
+attributes of the <code class="docutils literal notranslate"><span class="pre">DynamicStructureFactor</span></code> object
+returned by <code class="docutils literal notranslate"><span class="pre">run_dynamic_structure_factor()</span></code> (or of the
+<code class="docutils literal notranslate"><span class="pre">dynamic_structure_factor</span></code> property) instead.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>float64</em>]], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>, …], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a>[<em>float64</em>]]]</p>
@@ -2628,13 +2778,14 @@ instance and the transformed force constants for the given
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="phonopy.Phonopy.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.copy" title="Link to this definition">#</a></dt>
-<dd><p>Copy this Phonopy instance carrying only the init parameters.</p>
+<dt class="sig sig-object py" id="phonopy.Phonopy.replicate">
+<span class="sig-name descname"><span class="pre">replicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.replicate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.replicate" title="Link to this definition">#</a></dt>
+<dd><p>Return a new instance constructed with the same init parameters.</p>
 <p class="rubric">Notes</p>
 <p>The returned instance is constructed with the same init
 parameters as this one, but internal state such as force
-constants, NAC parameters, MLP, etc. is <strong>not</strong> copied.</p>
+constants, NAC parameters, MLP, etc. is <strong>not</strong> carried over.
+Supercell, primitive cell, and symmetry are recomputed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>New Phonopy instance.</p>
@@ -2644,6 +2795,23 @@ constants, NAC parameters, MLP, etc. is <strong>not</strong> copied.</p>
 </dd>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>log_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phonopy.Phonopy.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.copy" title="Link to this definition">#</a></dt>
+<dd><p>Return a new instance constructed with the same init parameters.</p>
+<p>Deprecated. Use <a class="reference internal" href="#phonopy.Phonopy.replicate" title="phonopy.Phonopy.replicate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">replicate()</span></code></a> instead. Despite its name,
+this method does not copy internal state such as force
+constants and NAC parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>log_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#phonopy.Phonopy" title="phonopy.api_phonopy.Phonopy"><em>Phonopy</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3063,6 +3231,7 @@ See the docstring. Default is None.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.thermal_displacements"><code class="docutils literal notranslate"><span class="pre">Phonopy.thermal_displacements</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.thermal_displacement_matrices"><code class="docutils literal notranslate"><span class="pre">Phonopy.thermal_displacement_matrices</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.irreps</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.modulation"><code class="docutils literal notranslate"><span class="pre">Phonopy.modulation</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.moment"><code class="docutils literal notranslate"><span class="pre">Phonopy.moment</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.total_dos"><code class="docutils literal notranslate"><span class="pre">Phonopy.total_dos</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.projected_dos"><code class="docutils literal notranslate"><span class="pre">Phonopy.projected_dos</span></code></a></li>
@@ -3124,6 +3293,7 @@ See the docstring. Default is None.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.get_modulations_and_supercell"><code class="docutils literal notranslate"><span class="pre">Phonopy.get_modulations_and_supercell()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.write_modulations"><code class="docutils literal notranslate"><span class="pre">Phonopy.write_modulations()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.write_yaml_modulations"><code class="docutils literal notranslate"><span class="pre">Phonopy.write_yaml_modulations()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.run_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.run_irreps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.set_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.set_irreps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.show_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.show_irreps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.write_yaml_irreps"><code class="docutils literal notranslate"><span class="pre">Phonopy.write_yaml_irreps()</span></code></a></li>
@@ -3137,6 +3307,7 @@ See the docstring. Default is None.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.get_random_displacements_at_temperature"><code class="docutils literal notranslate"><span class="pre">Phonopy.get_random_displacements_at_temperature()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.save"><code class="docutils literal notranslate"><span class="pre">Phonopy.save()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.ph2ph"><code class="docutils literal notranslate"><span class="pre">Phonopy.ph2ph()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.replicate"><code class="docutils literal notranslate"><span class="pre">Phonopy.replicate()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.copy"><code class="docutils literal notranslate"><span class="pre">Phonopy.copy()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.Phonopy.to_phonopy_yaml"><code class="docutils literal notranslate"><span class="pre">Phonopy.to_phonopy_yaml()</span></code></a></li>
 </ul>
