@@ -461,18 +461,19 @@ dynmat_ref_555 = [
 
 
 @pytest.mark.parametrize(
-    "is_compact_fc,lang", [(True, "C"), (False, "C"), (True, "Py"), (False, "Py")]
+    "is_compact_fc,use_python",
+    [(True, False), (False, False), (True, True), (False, True)],
 )
 def test_dynmat(
     ph_nacl_nonac: Phonopy,
     ph_nacl_nonac_compact_fc: Phonopy,
     is_compact_fc: bool,
-    lang: str,
+    use_python: bool,
 ):
-    """Test dynamical matrix of NaCl in C and python implementations.
+    """Test dynamical matrix of NaCl in compiled and Python implementations.
 
     1. Without NAC.
-    2. Without NAC with comapact fc2.
+    2. Without NAC with compact fc2.
 
     """
     if is_compact_fc:
@@ -480,8 +481,8 @@ def test_dynmat(
     else:
         ph = ph_nacl_nonac
     dynmat = ph.dynamical_matrix
-    _test_dynmat(dynmat, lang=lang)
-    _test_dynmat_252525(dynmat, dynmat_ref_252525, lang=lang)
+    _test_dynmat(dynmat, use_python=use_python)
+    _test_dynmat_252525(dynmat, dynmat_ref_252525, use_python=use_python)
 
 
 def test_dynmat_without_hermitianize(ph_tipn3: Phonopy):
@@ -961,13 +962,13 @@ def test_dynmat_without_hermitianize(ph_tipn3: Phonopy):
     np.testing.assert_allclose(np.vstack((dynmat, dynmat_nac)).T, dynmat_ref, atol=1e-5)
 
 
-@pytest.mark.parametrize("lang", ["C", "Py"])
-def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs: Phonopy, lang: str):
+@pytest.mark.parametrize("use_python", [False, True])
+def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs: Phonopy, use_python: bool):
     """Test with dense svecs."""
     ph = ph_nacl_nonac_dense_svecs
     dynmat = ph.dynamical_matrix
-    _test_dynmat(dynmat, lang=lang)
-    _test_dynmat_252525(dynmat, dynmat_ref_252525, lang=lang)
+    _test_dynmat(dynmat, use_python=use_python)
+    _test_dynmat_252525(dynmat, dynmat_ref_252525, use_python=use_python)
 
 
 def test_dynmat_gonze_lee(ph_nacl: Phonopy):
@@ -1066,33 +1067,35 @@ def test_dynmat_wang(ph_nacl_wang: Phonopy):
     _test_dynmat_252525(dynmat, dynmat_wang_ref_252525)
 
 
-def _test_dynmat(dynmat: DynamicalMatrix, lang=None):
-    dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
-    if lang:
-        dynmat.run([0, 0, 0], lang=lang)
+def _run_dynmat(dynmat: DynamicalMatrix, q: list, use_python: bool) -> None:
+    if use_python:
+        dynmat._dynamical_matrix = dynmat._run_py_dynamical_matrix(
+            np.array(q, dtype="double")
+        )
     else:
-        dynmat.run([0, 0, 0])
+        dynmat.run(q)
+
+
+def _test_dynmat(dynmat: DynamicalMatrix, use_python: bool = False):
+    dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
+    _run_dynmat(dynmat, [0, 0, 0], use_python)
     dynmat_ref = (
         np.array(dynmat_ref_000, dtype="double").view(dtype=dtype_complex).reshape(6, 6)
     )
     np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
 
-    if lang:
-        dynmat.run([0.5, 0.5, 0.5], lang=lang)
-    else:
-        dynmat.run([0.5, 0.5, 0.5])
+    _run_dynmat(dynmat, [0.5, 0.5, 0.5], use_python)
     dynmat_ref = (
         np.array(dynmat_ref_555, dtype="double").view(dtype=dtype_complex).reshape(6, 6)
     )
     np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
 
 
-def _test_dynmat_252525(dynmat: DynamicalMatrix, dynmat_ref: list, lang=None):
+def _test_dynmat_252525(
+    dynmat: DynamicalMatrix, dynmat_ref: list, use_python: bool = False
+):
     dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
-    if lang:
-        dynmat.run([0.25, 0.25, 0.25], lang=lang)
-    else:
-        dynmat.run([0.25, 0.25, 0.25])
+    _run_dynmat(dynmat, [0.25, 0.25, 0.25], use_python)
     # for row in dynmat.dynamical_matrix:
     #     print("".join(["%f, %f, " % (c.real, c.imag) for c in row]))
 

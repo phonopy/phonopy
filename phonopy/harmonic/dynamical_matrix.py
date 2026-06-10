@@ -250,7 +250,6 @@ class DynamicalMatrix:
     def run(
         self,
         q: Sequence[float] | NDArray[np.double],
-        lang: Literal["C", "Python"] = "C",
     ) -> None:
         """Run dynamical matrix calculation at a q-point.
 
@@ -259,22 +258,17 @@ class DynamicalMatrix:
             shape=(3,), dtype='double'
 
         """
-        self._run_without_NAC(np.array(q, dtype="double"), lang=lang)
+        self._run_without_NAC(np.array(q, dtype="double"))
 
-    def _run_without_NAC(
-        self, q: NDArray[np.double], lang: Literal["C", "Python"] = "C"
-    ) -> None:
+    def _run_without_NAC(self, q: NDArray[np.double]) -> None:
         """Run dynamical matrix calculation at a q-point without NAC."""
-        if lang == "C":
-            self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
-                self,
-                q,
-                is_nac=False,
-                hermitianize=self._hermitianize,
-                lang=self._lang,
-            )
-        else:
-            self._dynamical_matrix = self._run_py_dynamical_matrix(q)
+        self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
+            self,
+            q,
+            is_nac=False,
+            hermitianize=self._hermitianize,
+            lang=self._lang,
+        )
 
     def _run_py_dynamical_matrix(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
         """Python implementation of building dynamical matrix.
