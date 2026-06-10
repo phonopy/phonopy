@@ -342,10 +342,10 @@ class DynmatToForceConstants:
         elif dynamical_matrices is not None:
             self.dynamical_matrices = dynamical_matrices
 
-    def run(self, lang: Literal["C", "Python"] = "C") -> None:
+    def run(self) -> None:
         """Run."""
         self._fc = np.zeros(self._fc_shape, dtype="double", order="C")
-        self._inverse_transformation(lang=lang)
+        self._inverse_transformation()
 
     @property
     def force_constants(self) -> NDArray[np.double] | None:
@@ -451,11 +451,8 @@ class DynmatToForceConstants:
             dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
         self.dynamical_matrices = np.array(dm, dtype="cdouble", order="C")
 
-    def _inverse_transformation(self, lang: Literal["C", "Python"] = "C") -> None:
-        if lang == "C":
-            self._inverse_transformation_compiled()
-        else:
-            self._inverse_transformation_py()
+    def _inverse_transformation(self) -> None:
+        self._inverse_transformation_compiled()
 
         assert self._fc is not None
         if self._fc.shape[0] == self._fc.shape[1]:
