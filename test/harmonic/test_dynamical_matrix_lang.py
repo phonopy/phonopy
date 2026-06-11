@@ -129,8 +129,8 @@ def test_recip_dipole_dipole_rust_matches_c(
     q_dir_cart: NDArray[np.double] | None = (
         np.array([1.0, 0.0, 0.0]) if with_q_dir else None
     )
-    dd_c = dm_c._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
-    dd_r = dm_r._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
+    dd_c = dm_c._get_recip_dipole_dipole(q_cart, q_dir_cart)
+    dd_r = dm_r._get_recip_dipole_dipole(q_cart, q_dir_cart)
     np.testing.assert_allclose(dd_c, dd_r, atol=1e-13)
 
 

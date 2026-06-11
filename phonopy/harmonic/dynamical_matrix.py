@@ -250,7 +250,6 @@ class DynamicalMatrix:
     def run(
         self,
         q: Sequence[float] | NDArray[np.double],
-        lang: Literal["C", "Python"] = "C",
     ) -> None:
         """Run dynamical matrix calculation at a q-point.
 
@@ -259,22 +258,17 @@ class DynamicalMatrix:
             shape=(3,), dtype='double'
 
         """
-        self._run_without_NAC(np.array(q, dtype="double"), lang=lang)
+        self._run_without_NAC(np.array(q, dtype="double"))
 
-    def _run_without_NAC(
-        self, q: NDArray[np.double], lang: Literal["C", "Python"] = "C"
-    ) -> None:
+    def _run_without_NAC(self, q: NDArray[np.double]) -> None:
         """Run dynamical matrix calculation at a q-point without NAC."""
-        if lang == "C":
-            self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
-                self,
-                q,
-                is_nac=False,
-                hermitianize=self._hermitianize,
-                lang=self._lang,
-            )
-        else:
-            self._dynamical_matrix = self._run_py_dynamical_matrix(q)
+        self._dynamical_matrix = get_dynamical_matrices_at_qpoints(
+            self,
+            q,
+            is_nac=False,
+            hermitianize=self._hermitianize,
+            lang=self._lang,
+        )
 
     def _run_py_dynamical_matrix(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
         """Python implementation of building dynamical matrix.
@@ -596,7 +590,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         supercell force constants.
 
         """
-        self._run_c_recip_dipole_dipole_q0()
+        self._run_recip_dipole_dipole_q0()
 
         if self._with_full_terms:
             self._dd_limiting = self._run_limiting_dipole_dipole()
@@ -702,13 +696,12 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         q_direction: NDArray[np.double] | None,
     ) -> NDArray[np.cdouble]:
         num_atom = len(self._pcell)
-        q_cart = np.array(np.dot(q_red, self._rec_lat.T), dtype="double")
         if q_direction is None:
             q_dir_cart = None
         else:
             q_dir_cart = np.array(np.dot(q_direction, self._rec_lat.T), dtype="double")
 
-        C_recip = self._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
+        C_recip = self._get_recip_dipole_dipole(q_red, q_dir_cart)
 
         if self._with_full_terms:
             for i in range(num_atom):
@@ -728,9 +721,9 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         return C_dd
 
-    def _get_c_recip_dipole_dipole(
+    def _get_recip_dipole_dipole(
         self,
-        q_cart: NDArray[np.double],
+        q_red: NDArray[np.double],
         q_dir_cart: NDArray[np.double] | None,
     ) -> NDArray[np.cdouble]:
         """Reciprocal part of Eq.(71) on the right hand side.
@@ -746,6 +739,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         shape=(num_atom, 3, num_atom, 3), dtype="cdouble"
 
         """
+        q_cart = np.array(np.dot(q_red, self._rec_lat.T), dtype="double")
         pos = self._pcell.positions
         num_atom = len(pos)
         volume = self._pcell.volume
@@ -759,7 +753,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         factor = self._unit_conversion * 4.0 * np.pi / volume
 
         if self._lang == "Rust":
-            log_dispatch("Rust", "DynamicalMatrixGL._get_c_recip_dipole_dipole")
+            log_dispatch("Rust", "DynamicalMatrixGL._get_recip_dipole_dipole")
             import phonors  # type: ignore[import-untyped]
 
             phonors.recip_dipole_dipole(
@@ -775,7 +769,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 q_dir_cart,
             )
         else:
-            log_dispatch("C", "DynamicalMatrixGL._get_c_recip_dipole_dipole")
+            log_dispatch("C", "DynamicalMatrixGL._get_recip_dipole_dipole")
             import phonopy._phonopy as phonoc  # type: ignore
 
             if q_dir_cart is None:
@@ -802,7 +796,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             )
         return dd
 
-    def _run_c_recip_dipole_dipole_q0(self) -> None:
+    def _run_recip_dipole_dipole_q0(self) -> None:
         """Reciprocal part of Eq.(71) second term on the right hand side.
 
         Computed only once.
@@ -812,7 +806,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._dd_q0 = np.zeros((len(pos), 3, 3), dtype="cdouble", order="C")
 
         if self._lang == "Rust":
-            log_dispatch("Rust", "DynamicalMatrixGL._run_c_recip_dipole_dipole_q0")
+            log_dispatch("Rust", "DynamicalMatrixGL._run_recip_dipole_dipole_q0")
             import phonors  # type: ignore[import-untyped]
 
             phonors.recip_dipole_dipole_q0(
@@ -824,7 +818,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 self._Lambda,
             )
         else:
-            log_dispatch("C", "DynamicalMatrixGL._run_c_recip_dipole_dipole_q0")
+            log_dispatch("C", "DynamicalMatrixGL._run_recip_dipole_dipole_q0")
             import phonopy._phonopy as phonoc  # type: ignore
 
             phonoc.recip_dipole_dipole_q0(

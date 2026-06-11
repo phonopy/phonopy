@@ -13,6 +13,7 @@ from phonopy.harmonic.dynmat_to_fc import (
     get_commensurate_points_in_integers,
     ph2ph,
 )
+from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.physical_units import get_physical_units
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -156,9 +157,9 @@ def test_with_eigenvalues(ph_nacl, ph_nacl_nonac):
 
 
 @pytest.mark.parametrize(
-    "is_nac,lang", [(False, "C"), (True, "C"), (False, "Py"), (True, "Py")]
+    "is_nac,use_python", [(False, False), (True, False), (False, True), (True, True)]
 )
-def test_with_dynamical_matrices(ph_nacl, ph_nacl_nonac, is_nac, lang):
+def test_with_dynamical_matrices(ph_nacl, ph_nacl_nonac, is_nac, use_python):
     """Test transformation from dynamical matrix to force constants."""
     if is_nac:
         ph = ph_nacl
@@ -169,5 +170,11 @@ def test_with_dynamical_matrices(ph_nacl, ph_nacl_nonac, is_nac, lang):
     ph.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
     assert ph.qpoints is not None
     d2f.dynamical_matrices = ph.qpoints.dynamical_matrices
-    d2f.run(lang=lang)
+    if use_python:
+        d2f._fc = np.zeros(d2f._fc_shape, dtype="double", order="C")
+        d2f._inverse_transformation_py()
+        if d2f._fc.shape[0] == d2f._fc.shape[1]:
+            distribute_force_constants_by_translations(d2f._fc, d2f._pcell)
+    else:
+        d2f.run()
     np.testing.assert_allclose(ph.force_constants, d2f.force_constants, atol=1e-5)
