@@ -39,7 +39,7 @@ from __future__ import annotations
 import dataclasses
 import re
 import warnings
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from math import gcd
 from typing import TypedDict
 
@@ -131,25 +131,77 @@ class _Species:
 
     Two atoms share a species iff all fields are equal.
 
-    For a normal (single-element) species, ``atomic_number`` is set and
-    ``mixture`` is None. ``symbol`` carries the suffix ("Cl1") so that
-    "Cl" and "Cl1" are distinct species that share the same atomic number.
+    Three forms exist:
 
-    For a mixed-species site (e.g. a VCA virtual crystal site, an alloy
-    site, a solid-solution site), ``atomic_number`` is None and ``mixture``
-    holds the constituent (symbol, weight) pairs with weights summing to
-    1.0. ``symbol`` is the composite label (e.g. "GeSn", or "GeSn1"/"GeSn2"
-    if the cell has multiple distinct GeSn mixtures).
+    1. Normal (single-element) species: ``atomic_number`` is set, ``mixture``
+       and ``weight`` are None. ``symbol`` carries the suffix ("Cl1") so that
+       "Cl" and "Cl1" are distinct species that share the same atomic number.
+
+    2. Merged mixed-species site (merge-style VCA): ``atomic_number`` is None
+       and ``mixture`` holds the constituent (symbol, weight) pairs with weights
+       summing to 1.0. ``symbol`` is the composite label (e.g. "GeSn", or
+       "GeSn1"/"GeSn2" if the cell has multiple distinct GeSn mixtures).
+       Overlapping atoms are collapsed into one site per group (see
+       ``build_mixture_cell``).
+
+    3. Weighted real species (non-merge VCA): ``atomic_number`` is set and
+       ``weight`` carries the concentration ``x_{tau nu}`` in ``(0, 1)``. An
+       atom of a co-located VCA group always has a fractional concentration;
+       atoms without a concentration use ``weight=None`` (form 1), never
+       ``weight=1.0``. The atom keeps its real element symbol, atomic number,
+       and mass; co-located constituent atoms are kept as separate atoms (see
+       ``apply_vca``). Species-resolved force constants are computed in this
+       representation.
+
+    Forms 2 and 3 model the same physics in different layouts and must not
+    coexist within one cell (checked by ``PhonopyAtoms._check``).
 
     """
 
     symbol: str
     atomic_number: int | None
     mixture: tuple[tuple[str, float], ...] | None = None
+    weight: float | None = None
 
     def __post_init__(self) -> None:
         if (self.atomic_number is None) == (self.mixture is None):
             raise ValueError("Exactly one of atomic_number or mixture must be set.")
+        if self.weight is not None:
+            if not 0 < self.weight < 1:
+                raise ValueError(
+                    f"weight must be in (0, 1), got {self.weight}: weight 0 "
+                    "would cause division by zero when recovering "
+                    "species-resolved forces, and an atom without a "
+                    "fractional concentration must use weight=None."
+                )
+            if self.mixture is not None:
+                raise ValueError(
+                    "weight is the per-species concentration of the non-merge "
+                    "VCA scheme and cannot be combined with a merged mixture "
+                    "species."
+                )
+
+
+def _dedup_species(
+    per_atom_species: Iterable[_Species],
+) -> tuple[list[_Species], NDArray[np.int64]]:
+    """Deduplicate per-atom species into a (species_table, species_ids) pair.
+
+    The table keeps the first-appearance order of distinct species; each
+    atom's id points at its species entry.
+
+    """
+    seen: dict[_Species, int] = {}
+    table: list[_Species] = []
+    ids: list[int] = []
+    for sp in per_atom_species:
+        sid = seen.get(sp)
+        if sid is None:
+            sid = len(table)
+            table.append(sp)
+            seen[sp] = sid
+        ids.append(sid)
+    return table, np.array(ids, dtype="int64")
 
 
 def build_species_table_from_mixtures(
@@ -187,9 +239,7 @@ def build_species_table_from_mixtures(
 
     """
     symbol_map = get_atomic_data().symbol_map
-    seen: dict[_Species, int] = {}
-    species_list: list[_Species] = []
-    ids: list[int] = []
+    per_atom_species: list[_Species] = []
     for atom_mixture in mixtures:
         mix = tuple((str(s), float(w)) for s, w in atom_mixture)
         if not mix:
@@ -212,14 +262,10 @@ def build_species_table_from_mixtures(
         else:
             composite = "".join(s for s, _ in mix)
             sp = _Species(symbol=composite, atomic_number=None, mixture=mix)
-        sid = seen.get(sp)
-        if sid is None:
-            sid = len(species_list)
-            species_list.append(sp)
-            seen[sp] = sid
-        ids.append(sid)
+        per_atom_species.append(sp)
+    species_list, ids = _dedup_species(per_atom_species)
     species_list = _disambiguate_composite_labels(species_list)
-    return species_list, np.array(ids, dtype="int64")
+    return species_list, ids
 
 
 def _disambiguate_composite_labels(
@@ -507,6 +553,32 @@ class PhonopyAtoms:
         return any(sp.mixture is not None for sp in self._species)
 
     @property
+    def has_weighted_species(self) -> bool:
+        """Return True if the cell contains any weighted real species.
+
+        ``True`` when any species carries a non-merge VCA concentration
+        weight (see ``apply_vca``).
+
+        """
+        return any(sp.weight is not None for sp in self._species)
+
+    @property
+    def mixture_weights(self) -> NDArray[np.double] | None:
+        """Per-atom concentration weights for the non-merge VCA scheme.
+
+        Derived from the species table: ``species.weight`` per atom, with
+        1.0 for atoms whose species carries no weight. ``None`` when no
+        species carries a weight (ordinary cells and merge-style VCA
+        cells). Otherwise ``shape=(natom,)``, ``dtype='double'``, all
+        values in ``(0, 1]``. Set via :func:`apply_vca`.
+
+        """
+        if not self.has_weighted_species:
+            return None
+        weights = [self._species[sid].weight for sid in self._species_ids]
+        return np.array([1.0 if w is None else w for w in weights], dtype="double")
+
+    @property
     def masses(self) -> NDArray[np.double]:
         """Setter and getter of atomic masses.
 
@@ -642,41 +714,25 @@ class PhonopyAtoms:
     def _build_species_from_symbols(self, symbols: list[str]) -> None:
         """Parse symbol strings and populate _species and _species_ids."""
         symbol_map = get_atomic_data().symbol_map
-        species_table: dict[_Species, int] = {}
-        species_list: list[_Species] = []
-        ids: list[int] = []
+        per_atom_species: list[_Species] = []
         for symnum in symbols:
             base, _ = split_symbol_and_index(symnum)
             if base not in symbol_map:
                 raise RuntimeError(f"Invalid symbol: {symnum}.")
-            sp = _Species(symbol=symnum, atomic_number=symbol_map[base])
-            sid = species_table.get(sp)
-            if sid is None:
-                sid = len(species_list)
-                species_list.append(sp)
-                species_table[sp] = sid
-            ids.append(sid)
-        self._species = species_list
-        self._species_ids = np.array(ids, dtype="int64")
+            per_atom_species.append(
+                _Species(symbol=symnum, atomic_number=symbol_map[base])
+            )
+        self._species, self._species_ids = _dedup_species(per_atom_species)
 
     def _build_species_from_numbers(self, numbers: NDArray[np.int64]) -> None:
         """Populate _species and _species_ids from atomic numbers (1..118)."""
         if numbers.size and ((numbers > 118).any() or (numbers < 1).any()):
             raise ValueError("Atomic numbers must be in 1..118.")
         atom_data = get_atomic_data().atom_data
-        species_table: dict[_Species, int] = {}
-        species_list: list[_Species] = []
-        ids: list[int] = []
-        for n in numbers:
-            sp = _Species(symbol=atom_data[n][1], atomic_number=int(n))
-            sid = species_table.get(sp)
-            if sid is None:
-                sid = len(species_list)
-                species_list.append(sp)
-                species_table[sp] = sid
-            ids.append(sid)
-        self._species = species_list
-        self._species_ids = np.array(ids, dtype="int64")
+        per_atom_species = [
+            _Species(symbol=atom_data[n][1], atomic_number=int(n)) for n in numbers
+        ]
+        self._species, self._species_ids = _dedup_species(per_atom_species)
 
     def _set_default_masses(self) -> None:
         """Set _masses from the periodic table using each atom's species.
@@ -744,6 +800,11 @@ class PhonopyAtoms:
                 raise RuntimeError(
                     "_magnetic_moments has to have shape=(natom,) or (natom*3)."
                 )
+        if self.has_mixtures and self.has_weighted_species:
+            raise RuntimeError(
+                "Merged mixed-species sites (merge-style VCA) and weighted "
+                "real species (non-merge VCA) cannot coexist in one cell."
+            )
 
     def copy(self) -> PhonopyAtoms:
         """Return an independent copy of this cell.
@@ -789,8 +850,10 @@ class PhonopyAtoms:
             suitable as the ``types`` argument for spglib when
             symbol-suffix groupings must be preserved. If False
             (default), the per-atom integer is the atomic number. VCA
-            cells always use ``species_ids`` regardless, since a VCA
-            mixture has no single atomic number.
+            cells (both merge-style mixtures and non-merge weighted
+            species) always use ``species_ids`` regardless, since a VCA
+            mixture has no single atomic number and weighted species at
+            the same position must be distinguished by concentration.
 
         Returns
         -------
@@ -799,7 +862,7 @@ class PhonopyAtoms:
             ``(cell, scaled_positions, numbers, magnetic_moments)``.
 
         """
-        if distinguish_symbol_index or self.has_mixtures:
+        if distinguish_symbol_index or self.has_mixtures or self.has_weighted_species:
             numbers = self.species_ids
         else:
             numbers = self.numbers

@@ -12,6 +12,7 @@ import yaml
 from phonopy import Phonopy
 from phonopy.structure.atoms import (
     PhonopyAtoms,
+    _Species,
     build_species_table_from_mixtures,
     parse_cell_dict,
 )
@@ -459,6 +460,107 @@ def test_PhonopyAtoms_input_mutual_exclusion():
             cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
             scaled_positions=[[0, 0, 0]],
             species_table=species,
+        )
+
+
+def test_Species_weight_validation():
+    """Weighted species accept (0, 1) and reject everything else."""
+    sp = _Species(symbol="Ge", atomic_number=32, weight=0.5)
+    assert sp.weight == 0.5
+    for bad in (0.0, 1.0, 1.5, -0.5):
+        with pytest.raises(ValueError):
+            _Species(symbol="Ge", atomic_number=32, weight=bad)
+    # A merged mixture species cannot carry a concentration weight.
+    with pytest.raises(ValueError):
+        _Species(
+            symbol="GeSn",
+            atomic_number=None,
+            mixture=(("Ge", 0.5), ("Sn", 0.5)),
+            weight=0.5,
+        )
+
+
+def _make_weighted_GeSn_cell() -> PhonopyAtoms:
+    """Return a non-merge VCA cell: Ge/Sn co-located on both zincblende sites."""
+    species = [
+        _Species(symbol="Ge", atomic_number=32, weight=0.5),
+        _Species(symbol="Sn", atomic_number=50, weight=0.5),
+    ]
+    a = 5.789
+    return PhonopyAtoms(
+        cell=[[0, a / 2, a / 2], [a / 2, 0, a / 2], [a / 2, a / 2, 0]],
+        scaled_positions=[[0, 0, 0], [0, 0, 0], [0.25, 0.25, 0.25], [0.25, 0.25, 0.25]],
+        species_table=species,
+        species_ids=[0, 1, 0, 1],
+    )
+
+
+def test_PhonopyAtoms_weighted_species_properties():
+    """Weighted real species keep real elements and expose mixture_weights."""
+    cell = _make_weighted_GeSn_cell()
+    assert cell.has_weighted_species
+    assert not cell.has_mixtures
+    assert cell.symbols == ["Ge", "Sn", "Ge", "Sn"]
+    # Real atomic numbers and masses, unlike merged mixture sites.
+    np.testing.assert_array_equal(cell.numbers, [32, 50, 32, 50])
+    np.testing.assert_allclose(cell.masses, [72.64, 118.71, 72.64, 118.71])
+    np.testing.assert_allclose(cell.mixture_weights, [0.5, 0.5, 0.5, 0.5])
+    # spglib types discriminate species (and thereby weights).
+    np.testing.assert_array_equal(cell.totuple()[2], [0, 1, 0, 1])
+
+
+def test_PhonopyAtoms_weighted_species_copy():
+    """copy() preserves weighted species through the species table."""
+    cell = _make_weighted_GeSn_cell()
+    cell2 = cell.copy()
+    assert cell2.has_weighted_species
+    np.testing.assert_allclose(cell2.mixture_weights, cell.mixture_weights)
+    assert cell2.species_table == cell.species_table
+
+
+def test_PhonopyAtoms_mixture_weights_none_without_weights():
+    """mixture_weights is None for ordinary and merge-style VCA cells."""
+    assert cell_SiO2.mixture_weights is None
+    assert not cell_SiO2.has_weighted_species
+    species, ids = build_species_table_from_mixtures(
+        [[("Si", 1.0)], [("Ge", 0.5), ("Sn", 0.5)]]
+    )
+    merge_cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        species_table=species,
+        species_ids=ids,
+    )
+    assert merge_cell.mixture_weights is None
+    assert not merge_cell.has_weighted_species
+
+
+def test_PhonopyAtoms_mixture_weights_unity_for_unweighted_atom():
+    """Atoms without a species weight contribute 1.0 to mixture_weights."""
+    species = [
+        _Species(symbol="Ge", atomic_number=32, weight=0.5),
+        _Species(symbol="Sn", atomic_number=50, weight=0.5),
+        _Species(symbol="Si", atomic_number=14),
+    ]
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0, 0, 0], [0.5, 0.5, 0.5]],
+        species_table=species,
+        species_ids=[0, 1, 2],
+    )
+    np.testing.assert_allclose(cell.mixture_weights, [0.5, 0.5, 1.0])
+
+
+def test_PhonopyAtoms_merge_and_weighted_cannot_coexist():
+    """Merged mixture sites and weighted species are mutually exclusive."""
+    merged, _ = build_species_table_from_mixtures([[("Ge", 0.5), ("Sn", 0.5)]])
+    species = [merged[0], _Species(symbol="Si", atomic_number=14, weight=0.5)]
+    with pytest.raises(RuntimeError):
+        PhonopyAtoms(
+            cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+            species_table=species,
+            species_ids=[0, 1],
         )
 
 

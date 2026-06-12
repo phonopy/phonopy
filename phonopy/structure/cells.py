@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import warnings
 from collections.abc import Sequence
 from typing import Literal
@@ -52,7 +53,12 @@ from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy._lang import log_dispatch, resolve_lang
-from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
+from phonopy.structure.atoms import (
+    PhonopyAtoms,
+    _dedup_species,
+    _Species,
+    build_species_table_from_mixtures,
+)
 from phonopy.structure.mixture import build_mixtures_from_groups
 from phonopy.structure.snf import SNF3x3
 
@@ -933,6 +939,118 @@ def build_mixture_cell(
         scaled_positions=np.array(new_scaled, dtype="double"),
         species_table=species_table,
         species_ids=species_ids,
+    )
+
+
+def apply_vca(
+    cell: PhonopyAtoms,
+    weights: Sequence[float] | NDArray[np.double],
+    symprec: float = 1e-5,
+) -> PhonopyAtoms:
+    """Attach per-atom concentration weights for the non-merge VCA scheme.
+
+    Returns a new cell whose species table carries the concentration of each
+    atom as a weighted real species (``_Species.weight``). Unlike
+    :func:`build_mixture_cell`, atoms are **not** merged: every input atom is
+    preserved (``len(result) == len(cell)``) and keeps its real element symbol,
+    atomic number, and mass. The weights are validated against the positional
+    overlap structure of the cell: atoms at the same fractional position form a
+    group whose weights must sum to 1.0, and isolated atoms must carry weight
+    1.0.
+
+    Use this function to prepare a cell for the species-resolved force constants
+    workflow. The ``weights`` list corresponds one-to-one with the atom order in
+    the input cell, matching the VASP ``INCAR`` ``VCA`` tag order when the
+    POSCAR lists all atoms of each element consecutively.
+
+    Note: when writing displaced supercells with :func:`write_vasp`, phonopy may
+    reorder atoms by symbol (``sort_positions_by_symbols``). Ensure that forces
+    read from VASP are reordered to match the supercell atom order before
+    setting ``phonon.forces``.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Input unit cell. Must not already contain mixed-species sites
+        (``has_mixtures`` must be False), magnetic moments, or weighted species.
+    weights : sequence of float or ndarray
+        Per-atom concentration weights in the input cell order. ``len(weights)``
+        must equal ``len(cell)``. Values must lie in ``(0, 1]``. Isolated atoms
+        must have weight 1.0; atoms sharing a fractional position must have
+        weights summing to 1.0.
+    symprec : float
+        Tolerance for treating two fractional positions as overlapping.
+
+    Returns
+    -------
+    PhonopyAtoms
+        Copy of ``cell`` with ``mixture_weights`` attached. ``natom``, symbols,
+        positions, and masses are unchanged.
+
+    """
+    if cell.has_mixtures:
+        raise ValueError(
+            "apply_vca cannot be applied to a cell that already contains "
+            "mixed-species sites."
+        )
+    if cell.magnetic_moments is not None:
+        raise ValueError("apply_vca does not support cells carrying magnetic moments.")
+    if cell.has_weighted_species:
+        raise ValueError(
+            "apply_vca cannot be applied to a cell that already has weighted species."
+        )
+    if len(weights) != len(cell):
+        raise ValueError(
+            f"Length of weights ({len(weights)}) must match number of atoms "
+            f"({len(cell)})."
+        )
+
+    weights_arr = np.asarray(weights, dtype="double")
+    groups = _group_overlapping_atoms(cell, symprec)
+
+    for group in groups:
+        wsum = float(weights_arr[list(group)].sum())
+        if len(group) == 1:
+            if not np.isclose(weights_arr[group[0]], 1.0):
+                raise ValueError(
+                    f"Weight of non-overlapping atom at index {group[0]} "
+                    f"must be 1.0, got {weights_arr[group[0]]}."
+                )
+        elif not np.isclose(wsum, 1.0):
+            raise ValueError(
+                f"Weights of overlapping atoms at indices {list(group)} must "
+                f"sum to 1.0, got {wsum}."
+            )
+
+    # Rebuild the species table with weighted real species. Atoms of
+    # co-located groups receive their concentration as a species weight;
+    # isolated atoms keep their original species entry (weight=None).
+    # Note that the float weight enters _Species equality; weights are
+    # stored once here and only copied afterwards, so bitwise comparison
+    # is reliable.
+    in_overlap_group = np.zeros(len(cell), dtype=bool)
+    for group in groups:
+        if len(group) > 1:
+            in_overlap_group[list(group)] = True
+
+    old_table = cell.species_table
+    per_atom_species: list[_Species] = []
+    for sid, w, is_overlapping in zip(
+        cell.species_ids, weights_arr, in_overlap_group, strict=True
+    ):
+        base = old_table[sid]
+        if is_overlapping:
+            per_atom_species.append(dataclasses.replace(base, weight=float(w)))
+        else:
+            per_atom_species.append(base)
+    new_table, new_ids = _dedup_species(per_atom_species)
+
+    return PhonopyAtoms(
+        cell=cell.cell,
+        scaled_positions=cell.scaled_positions,
+        species_table=new_table,
+        species_ids=new_ids,
+        masses=cell.masses,
     )
 
 
