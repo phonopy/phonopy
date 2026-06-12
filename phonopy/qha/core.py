@@ -712,7 +712,7 @@ class QHA:
     def plot_gibbs_temperature(
         self,
         xlabel: str = "Temperature (K)",
-        ylabel: str = "Gibbs free energy",
+        ylabel: str = "Gibbs free energy (eV)",
     ) -> Any:
         """Return pyplot Gibbs free energy vs temperature."""
         import matplotlib.pyplot as plt
