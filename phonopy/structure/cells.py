@@ -557,9 +557,9 @@ class Primitive(PhonopyAtoms):
             cart_diffs = np.dot(frac_diffs, self.cell)
             distances = np.sqrt((cart_diffs**2).sum(axis=1))
             # Match the same species, so co-located atoms of different
-            # species map to their own representative (e.g. Ge and Sn in a
-            # VCA cell). Ordinary cells have one species per site, so this
-            # is unchanged.
+            # species map to their own representative (e.g. Ge and Sn at
+            # the same site). Ordinary cells have one species per site, so
+            # this is unchanged.
             indices = np.where(
                 (distances < self._symprec) & (p2s_species == s_species)
             )[0]
@@ -583,7 +583,7 @@ class Primitive(PhonopyAtoms):
             [np.eye(3, dtype="int64")] * len(trans), dtype="int64", order="C"
         )
         # Match within each species so pure translations do not pair
-        # co-located atoms of different species (e.g. Ge and Sn in a VCA
+        # co-located atoms of different species (e.g. Ge and Sn at the same
         # cell). Ordinary cells have one species per site, so passing the
         # species ids does not change the result.
         atomic_permutations = compute_all_sg_permutations(
@@ -730,7 +730,7 @@ class TrimmedCell(PhonopyAtoms):
             cell.magnetic_moments,
             check_overlap,
             symprec,
-            # Disambiguate co-located atoms by species only for VCA cells.
+            # Disambiguate co-located atoms by species only for species-resolved cells.
             # Other cells keep position-only trimming so a mismatched
             # primitive matrix still raises the detailed symbol-mapping
             # diagnostic in ``_create_primitive_cell``.
@@ -799,7 +799,7 @@ class TrimmedCell(PhonopyAtoms):
                 close = distances < symprec
                 if species_ids is not None:
                     # Require the same species id, so co-located atoms of
-                    # different species (e.g. Ge and Sn in a VCA cell) are
+                    # different species (Ge and Sn at the same site) are
                     # kept as separate atoms rather than merged.
                     close = close & (species_ids[extracted_atoms] == species_ids[i])
                 overlap_indices = np.where(close)[0]
@@ -902,9 +902,8 @@ def build_mixture_cell(
 
     Atoms whose fractional positions agree (modulo lattice translations)
     within ``symprec`` are collapsed into a single site whose species is the
-    weighted mixture of the constituents. The Virtual Crystal Approximation
-    (VCA) is the typical use case. Each non-overlapping atom is preserved
-    verbatim and its weight must equal 1.0.
+    weighted mixture of the constituents. Each non-overlapping atom is
+    preserved verbatim and its weight must equal 1.0.
 
     Parameters
     ----------
@@ -968,12 +967,12 @@ def build_mixture_cell(
     )
 
 
-def apply_vca(
+def apply_site_mixture(
     cell: PhonopyAtoms,
     weights: Sequence[float] | NDArray[np.double],
     symprec: float = 1e-5,
 ) -> PhonopyAtoms:
-    """Attach per-atom concentration weights for the non-merge VCA scheme.
+    """Attach per-atom concentration weights keeping atoms species-resolved.
 
     Returns a new cell whose species table carries the concentration of each
     atom as a weighted real species (``_Species.weight``). Unlike
@@ -1016,14 +1015,17 @@ def apply_vca(
     """
     if cell.has_mixtures:
         raise ValueError(
-            "apply_vca cannot be applied to a cell that already contains "
+            "apply_site_mixture cannot be applied to a cell that already contains "
             "mixed-species sites."
         )
     if cell.magnetic_moments is not None:
-        raise ValueError("apply_vca does not support cells carrying magnetic moments.")
+        raise ValueError(
+            "apply_site_mixture does not support cells carrying magnetic moments."
+        )
     if cell.has_weighted_species:
         raise ValueError(
-            "apply_vca cannot be applied to a cell that already has weighted species."
+            "apply_site_mixture cannot be applied to a cell that already has "
+            "weighted species."
         )
     if len(weights) != len(cell):
         raise ValueError(
@@ -1753,7 +1755,7 @@ def compute_all_sg_permutations(
     types : array_like or None
         Per-atom integer types. When given, atoms are matched only within
         the same type, which disambiguates co-located atoms of different
-        species (e.g. a Virtual Crystal Approximation cell). When None
+        species (e.g. a species-resolved cell). When None
         (default), matching is by position alone. See
         ``compute_permutation_for_rotation``.
 
@@ -1811,7 +1813,7 @@ def compute_permutation_for_rotation(
         Per-atom integer types. When given, atoms are matched only within
         the same type. This disambiguates co-located atoms of different
         species, which position-only matching cannot resolve (e.g. Ge and
-        Sn at the same site in a Virtual Crystal Approximation cell). The
+        Sn at the same site in a species-resolved cell). The
         space group operations must map each type onto itself, which holds
         when the operations were found from the same types. When None
         (default), matching is by position alone (unchanged behavior).

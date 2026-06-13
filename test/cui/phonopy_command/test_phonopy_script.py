@@ -177,7 +177,7 @@ def test_create_force_sets_GeSn_vca():
 
 
 def test_phonopy_load_GeSn_vca():
-    """Phonopy-load on a GeSn 99/1 VCA bundle writes valid force constants.
+    """Phonopy-load on a GeSn 99/1 site-mixture bundle writes valid force constants.
 
     Drops phonopy_disp.yaml and FORCE_SETS into the cwd (mirroring how a
     user would have them after running ``phonopy -f``) and invokes the

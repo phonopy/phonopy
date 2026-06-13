@@ -481,7 +481,7 @@ def test_Species_weight_validation():
 
 
 def _make_weighted_GeSn_cell() -> PhonopyAtoms:
-    """Return a non-merge VCA cell: Ge/Sn co-located on both zincblende sites."""
+    """Return a non-merge species-resolved cell: Ge/Sn co-located on both sites."""
     species = [
         _Species(symbol="Ge", atomic_number=32, weight=0.5),
         _Species(symbol="Sn", atomic_number=50, weight=0.5),
@@ -519,7 +519,7 @@ def test_PhonopyAtoms_weighted_species_copy():
 
 
 def test_PhonopyAtoms_mixture_weights_none_without_weights():
-    """mixture_weights is None for ordinary and merge-style VCA cells."""
+    """mixture_weights is None for ordinary and merge-style mixture cells."""
     assert cell_SiO2.mixture_weights is None
     assert not cell_SiO2.has_weighted_species
     species, ids = build_species_table_from_mixtures(

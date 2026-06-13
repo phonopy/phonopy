@@ -55,7 +55,11 @@ from phonopy.interface.calculator import (
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import build_mixture_cell, get_primitive_matrix_with_auto
+from phonopy.structure.cells import (
+    apply_site_mixture,
+    build_mixture_cell,
+    get_primitive_matrix_with_auto,
+)
 
 _FallbackReason = Literal[
     "load_phonopy_yaml mode",
@@ -143,9 +147,14 @@ def get_cell_info(
             print("")
 
     if settings.site_mixture is not None:
-        cell_info.unitcell = build_mixture_cell(
-            cell_info.unitcell, settings.site_mixture
-        )
+        if settings.merge_site_mixture:
+            cell_info.unitcell = build_mixture_cell(
+                cell_info.unitcell, settings.site_mixture
+            )
+        else:
+            cell_info.unitcell = apply_site_mixture(
+                cell_info.unitcell, settings.site_mixture
+            )
 
     set_magnetic_moments(cell_info.unitcell, settings.magnetic_moments, log_level)
 

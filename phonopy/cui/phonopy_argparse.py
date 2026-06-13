@@ -116,12 +116,24 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help=(
             "Per-atom mixture weights in the order atoms appear in the "
-            "input cell. Overlapping atoms are merged into mixed-species "
-            "sites; weights within each overlapping group must sum to "
-            "1.0. The typical use case is the Virtual Crystal "
-            "Approximation. Note that this is per-atom and distinct from "
-            "the VASP INCAR VCA tag, which lists one weight per element "
-            "row in POSCAR."
+            "input cell. Weights within each overlapping group of atoms "
+            "must sum to 1.0. By default the overlapping atoms are kept "
+            "as separate species-resolved atoms (non-merge Virtual "
+            "Crystal Approximation); pass --merge-site-mixture to instead "
+            "merge them into mixed-species sites. Note that this is "
+            "per-atom and distinct from the VASP INCAR VCA tag, which "
+            "lists one weight per element row in POSCAR."
+        ),
+    )
+    parser.add_argument(
+        "--merge-site-mixture",
+        dest="merge_site_mixture",
+        action="store_true",
+        default=None,
+        help=(
+            "With --site-mixture, merge overlapping atoms into "
+            "mixed-species sites instead of keeping them as separate "
+            "species-resolved atoms."
         ),
     )
     parser.add_argument(

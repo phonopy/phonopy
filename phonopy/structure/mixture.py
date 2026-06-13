@@ -1,7 +1,7 @@
 """Utilities for mixed-species (site-mixture) cells.
 
 This module hosts helpers that operate on PhonopyAtoms whose species
-table contains weighted mixtures (e.g. Virtual Crystal Approximation
+table contains merged weighted mixtures (e.g. alloy or solid-solution
 sites): the mapping between phonopy sites and the constituent-expanded
 row layout assumed by VASP-style outputs, and reductions of expanded
 calculator data back to per-site quantities.
@@ -37,8 +37,8 @@ def build_mixtures_from_groups(
     group's index order. The result is the input layout expected by
     :func:`phonopy.structure.atoms.build_species_table_from_mixtures`.
 
-    Weights are validated up front so that misconfigured Virtual Crystal
-    Approximation inputs are reported with the offending atom indices: an
+    Weights are validated up front so that misconfigured site-mixture
+    inputs are reported with the offending atom indices: an
     isolated atom (singleton group) must carry weight 1.0, and the weights of
     an overlapping group must sum to 1.0. This entry-level check complements,
     and does not replace, the constituent-sum check performed later by

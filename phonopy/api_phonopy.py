@@ -3618,7 +3618,7 @@ class Phonopy:
         # calculator path remains unchanged. The raw forces in
         # ``self._dataset`` are kept intact. Reduction convention is
         # picked from the calculator: VASP uses a plain sum because its
-        # vasprun.xml forces already carry the VCA weight factor.
+        # vasprun.xml forces already carry the mixture weight factor.
         dataset_for_fc = self._dataset
         if self._supercell.has_mixtures:
             dataset_for_fc = _reduce_mixture_dataset_forces(
@@ -3917,11 +3917,11 @@ def _mixture_reduce_mode_for_calculator(
 ) -> Literal["weighted_sum", "sum"]:
     """Return the mixture-reduce convention appropriate for ``calculator``.
 
-    VASP applies the VCA weights inside the SCF, so the per-row forces in
+    VASP folds the mixture weights into the SCF, so the per-row forces in
     vasprun.xml already carry the weight factor: a plain sum across
     constituents is correct. Other calculators have not yet been wired
     for site-mixture; for them we default to the explicit weighted sum
-    so the per-site force matches the standard VCA expression.
+    so the per-site force matches the standard weighted-mixture expression.
 
     """
     if calculator is None or calculator == "vasp":

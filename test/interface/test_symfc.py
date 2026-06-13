@@ -291,7 +291,7 @@ def test_symfc_force_constants_GeSn_mixture():
     back to ``species_ids`` (which already encodes the same "same species
     -> same opaque integer" contract that symfc / spglib expect from the
     ``numbers`` argument) so that the default fc_calculator path works
-    end-to-end on VCA cells.
+    end-to-end on site-mixture cells.
 
     """
     pytest.importorskip("symfc")
