@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
 from phonopy.structure.cells import apply_vca
 from phonopy.structure.symmetry import Symmetry
@@ -192,3 +193,35 @@ def test_symmetry_distinct_concentrations_lower_symmetry():
     symmetry = Symmetry(vca)
     assert symmetry.dataset.number == 216  # F-43m, no A<->B swap
     assert len(vca.species_table) == 4
+
+
+def test_phonopy_construction_and_displacements_co_located():
+    """Phonopy builds a co-located VCA cell and displaces species separately.
+
+    The supercell keeps every constituent atom (no merging), weights
+    propagate through the species table, and the symmetry-reduced
+    displacements move one Ge and one Sn independently (Eq 97 scheme).
+
+    """
+    vca = apply_vca(_make_GeSn_co_located_cell(), weights=[0.5, 0.5, 0.5, 0.5])
+    phonon = Phonopy(vca, supercell_matrix=np.diag([2, 2, 2]), primitive_matrix="auto")
+    supercell = phonon.supercell
+    assert len(supercell) == 32  # 4 atoms x 8, nothing merged away
+    assert len(phonon.primitive) == 4
+    np.testing.assert_allclose(supercell.mixture_weights, 0.5)
+
+    # Permutations (supercell symmetry and primitive translations) never
+    # map an atom onto a different species.
+    species = np.array(supercell.species_ids)
+    for perm in phonon.symmetry.atomic_permutations:
+        np.testing.assert_array_equal(species[perm], species)
+    for perm in phonon.primitive.atomic_permutations:
+        np.testing.assert_array_equal(species[perm], species)
+
+    phonon.generate_displacements(distance=0.01)
+    first_atoms = phonon.dataset["first_atoms"]
+    displaced_species = sorted(
+        int(supercell.species_ids[d["number"]]) for d in first_atoms
+    )
+    # One independent Ge (species 0) and one independent Sn (species 1).
+    assert displaced_species == [0, 1]

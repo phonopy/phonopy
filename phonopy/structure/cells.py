@@ -498,7 +498,7 @@ class Primitive(PhonopyAtoms):
             supercell, positions_to_reorder=positions_to_reorder
         )
         self._s2p_map, self._p2p_map = self._map_atomic_indices(
-            supercell.scaled_positions
+            supercell.scaled_positions, supercell.species_ids
         )
         (self._smallest_vectors, self._multiplicity) = self._get_smallest_vectors(
             supercell
@@ -543,19 +543,26 @@ class Primitive(PhonopyAtoms):
         return p2s_map
 
     def _map_atomic_indices(
-        self, s_pos_orig: NDArray[np.double]
+        self, s_pos_orig: NDArray[np.double], species_ids: NDArray[np.int64]
     ) -> tuple[NDArray[np.int64], dict[int, int]]:
         frac_pos = np.dot(s_pos_orig, np.linalg.inv(self._primitive_matrix).T)
 
         p2s_positions = frac_pos[self._p2s_map]
+        p2s_species = species_ids[self._p2s_map]
         s2p_map = []
-        for s_pos in frac_pos:
+        for s_pos, s_species in zip(frac_pos, species_ids, strict=True):
             # Compute distances from s_pos to all positions in _p2s_map.
             frac_diffs = p2s_positions - s_pos
             frac_diffs -= np.rint(frac_diffs)
             cart_diffs = np.dot(frac_diffs, self.cell)
             distances = np.sqrt((cart_diffs**2).sum(axis=1))
-            indices = np.where(distances < self._symprec)[0]
+            # Match the same species, so co-located atoms of different
+            # species map to their own representative (e.g. Ge and Sn in a
+            # VCA cell). Ordinary cells have one species per site, so this
+            # is unchanged.
+            indices = np.where(
+                (distances < self._symprec) & (p2s_species == s_species)
+            )[0]
             assert len(indices) == 1
             s2p_map.append(self._p2s_map[indices[0]])
 
@@ -575,6 +582,10 @@ class Primitive(PhonopyAtoms):
         rotations = np.array(
             [np.eye(3, dtype="int64")] * len(trans), dtype="int64", order="C"
         )
+        # Match within each species so pure translations do not pair
+        # co-located atoms of different species (e.g. Ge and Sn in a VCA
+        # cell). Ordinary cells have one species per site, so passing the
+        # species ids does not change the result.
         atomic_permutations = compute_all_sg_permutations(
             positions,
             rotations,
@@ -582,6 +593,7 @@ class Primitive(PhonopyAtoms):
             np.array(supercell.cell.T, dtype="double", order="C"),
             self._symprec,
             lang=self._lang,
+            types=supercell.species_ids,
         )
 
         return atomic_permutations
@@ -718,6 +730,13 @@ class TrimmedCell(PhonopyAtoms):
             cell.magnetic_moments,
             check_overlap,
             symprec,
+            # Disambiguate co-located atoms by species only for VCA cells.
+            # Other cells keep position-only trimming so a mismatched
+            # primitive matrix still raises the detailed symbol-mapping
+            # diagnostic in ``_create_primitive_cell``.
+            cell.species_ids
+            if (cell.has_weighted_species or cell.has_mixtures)
+            else None,
         )
 
         if positions_to_reorder is not None:
@@ -755,6 +774,7 @@ class TrimmedCell(PhonopyAtoms):
         magmoms: NDArray[np.double] | None,
         check_overlap: bool,
         symprec: float,
+        species_ids: NDArray[np.int64] | None,
     ) -> tuple[
         NDArray[np.double],
         NDArray[np.double] | None,
@@ -776,7 +796,13 @@ class TrimmedCell(PhonopyAtoms):
                 diff -= np.rint(diff)
                 # Older numpy doesn't support axis argument.
                 distances = np.sqrt(np.sum(np.dot(diff, trimmed_lattice) ** 2, axis=1))
-                overlap_indices = np.where(distances < symprec)[0]
+                close = distances < symprec
+                if species_ids is not None:
+                    # Require the same species id, so co-located atoms of
+                    # different species (e.g. Ge and Sn in a VCA cell) are
+                    # kept as separate atoms rather than merged.
+                    close = close & (species_ids[extracted_atoms] == species_ids[i])
+                overlap_indices = np.where(close)[0]
                 if len(overlap_indices) > 0:
                     assert len(overlap_indices) == 1
                     found_overlap = True
