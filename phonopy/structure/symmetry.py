@@ -337,6 +337,21 @@ class Symmetry:
         lattice = np.array(self._cell.cell.T, dtype="double", order="C")
         rotations = self._symmetry_operations["rotations"]
         translations = self._symmetry_operations["translations"]
+        # When atoms can be co-located (VCA mixtures/weighted species, or
+        # suffix-distinguished species), match permutations within each
+        # type class so position degeneracy does not mix species. The
+        # types are the same per-atom labels spglib used to find the
+        # operations. Ordinary cells pass None for unchanged behavior.
+        if (
+            self._cell.has_mixtures
+            or self._cell.has_weighted_species
+            or self._distinguish_symbol_index
+        ):
+            types = self._cell.totuple(
+                distinguish_symbol_index=self._distinguish_symbol_index
+            )[2]
+        else:
+            types = None
         self._atomic_permutations = compute_all_sg_permutations(
             positions,  # scaled positions
             rotations,  # scaled
@@ -344,6 +359,7 @@ class Symmetry:
             lattice,  # column vectors
             self._symprec,
             lang=self._lang,
+            types=types,
         )
 
     def _get_site_symmetry(

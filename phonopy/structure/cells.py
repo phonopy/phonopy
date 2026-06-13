@@ -1701,6 +1701,7 @@ def compute_all_sg_permutations(
     lattice: NDArray[np.double],  # column vectors
     symprec: float,
     lang: Literal["C", "Rust"] = "Rust",
+    types: NDArray[np.int64] | Sequence[int] | None = None,
 ) -> NDArray[np.int64]:
     """Compute permutations for space group operations.
 
@@ -1723,6 +1724,12 @@ def compute_all_sg_permutations(
         Symmetry tolerance of the distance unit
     lang : {"C", "Rust"}
         Backend for the inner permutation matcher. Default is "C".
+    types : array_like or None
+        Per-atom integer types. When given, atoms are matched only within
+        the same type, which disambiguates co-located atoms of different
+        species (e.g. a Virtual Crystal Approximation cell). When None
+        (default), matching is by position alone. See
+        ``compute_permutation_for_rotation``.
 
     Returns
     -------
@@ -1735,7 +1742,7 @@ def compute_all_sg_permutations(
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
-                positions, rotated_positions, lattice, symprec, lang=lang
+                positions, rotated_positions, lattice, symprec, lang=lang, types=types
             )
         )
     return np.array(out, dtype="int64", order="C")
@@ -1747,6 +1754,7 @@ def compute_permutation_for_rotation(
     lattice: NDArray[np.double],
     symprec: float,
     lang: Literal["C", "Rust"] = "Rust",
+    types: NDArray[np.int64] | Sequence[int] | None = None,
 ) -> NDArray[np.int64]:
     """Get the overall permutation such that.
 
@@ -1773,6 +1781,14 @@ def compute_permutation_for_rotation(
         Symmetry tolerance of the distance unit
     lang : {"C", "Rust"}
         Backend for the inner permutation matcher. Default is "C".
+    types : array_like or None
+        Per-atom integer types. When given, atoms are matched only within
+        the same type. This disambiguates co-located atoms of different
+        species, which position-only matching cannot resolve (e.g. Ge and
+        Sn at the same site in a Virtual Crystal Approximation cell). The
+        space group operations must map each type onto itself, which holds
+        when the operations were found from the same types. When None
+        (default), matching is by position alone (unchanged behavior).
 
     Returns
     -------
@@ -1782,6 +1798,23 @@ def compute_permutation_for_rotation(
         shape=(len(positions), ), dtype=int
 
     """
+    if types is not None:
+        # Match within each type class. positions_b[i] is the rotated
+        # position of atom i and shares its type, so the same index set
+        # selects a type class on both sides. perm[idx] = idx[sub_perm]
+        # composes the per-class result into the full permutation.
+        types_arr = np.asarray(types)
+        perm = np.empty(len(positions_a), dtype="int64")
+        for t in np.unique(types_arr):
+            idx = np.where(types_arr == t)[0]
+            sub_perm = compute_permutation_for_rotation(
+                positions_a[idx], positions_b[idx], lattice, symprec, lang=lang
+            )
+            perm[idx] = idx[sub_perm]
+        # Each type fills a disjoint slice of perm; together they must form
+        # a bijection of all atoms.
+        assert np.array_equal(np.sort(perm), np.arange(len(perm)))
+        return perm
 
     def sort_by_lattice_distance(
         fracs: NDArray[np.double],

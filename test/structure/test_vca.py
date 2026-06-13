@@ -170,6 +170,22 @@ def test_symmetry_GeSn_50_50_co_located():
     np.testing.assert_array_equal(symmetry.get_independent_atoms(), [0, 1])
 
 
+def test_symmetry_permutations_do_not_mix_species():
+    """Atomic permutations keep co-located Ge and Sn within their species.
+
+    Position-only matching is ambiguous when Ge and Sn share a site, so
+    the type-aware matcher is required. Every operation must map each
+    atom onto an atom of the same species (Ge ids 0/2, Sn ids 1/3).
+
+    """
+    vca = apply_vca(_make_GeSn_co_located_cell(), weights=[0.5, 0.5, 0.5, 0.5])
+    symmetry = Symmetry(vca)
+    perms = symmetry.atomic_permutations
+    species = np.array(vca.species_ids)
+    for perm in perms:
+        np.testing.assert_array_equal(species[perm], species)
+
+
 def test_symmetry_distinct_concentrations_lower_symmetry():
     """Sites with different concentrations are not symmetry-equivalent."""
     vca = apply_vca(_make_GeSn_co_located_cell(), weights=[0.9, 0.1, 0.5, 0.5])
