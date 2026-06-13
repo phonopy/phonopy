@@ -347,6 +347,40 @@ def test_reciprocal_operations(ph_zr3n4: Phonopy):
     assert found_inv
 
 
+def _get_cu1_cu2_fcc_cell() -> PhonopyAtoms:
+    """Return fcc Cu with the two sublattice blocks labeled Cu1 / Cu2.
+
+    The labels order the atoms as in the CuAu-I (L1_0) arrangement, so
+    distinguishing them lowers the symmetry from Fm-3m to P4/mmm.
+
+    """
+    a = 3.6
+    return PhonopyAtoms(
+        symbols=["Cu1", "Cu1", "Cu2", "Cu2"],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.0],
+            [0.5, 0.0, 0.5],
+            [0.0, 0.5, 0.5],
+        ],
+        cell=np.eye(3) * a,
+    )
+
+
+def test_symbol_suffix_does_not_affect_symmetry_by_default():
+    """Suffixed symbols are calculator labels; symmetry sees atomic numbers."""
+    symmetry = Symmetry(_get_cu1_cu2_fcc_cell())
+    assert symmetry.dataset.number == 225  # Fm-3m, all Cu equivalent
+    np.testing.assert_array_equal(symmetry.get_map_atoms(), [0, 0, 0, 0])
+
+
+def test_distinguish_symbol_index_lowers_symmetry():
+    """With distinguish_symbol_index=True, Cu1/Cu2 are distinct species."""
+    symmetry = Symmetry(_get_cu1_cu2_fcc_cell(), distinguish_symbol_index=True)
+    assert symmetry.dataset.number == 123  # P4/mmm (CuAu-I like ordering)
+    np.testing.assert_array_equal(symmetry.get_map_atoms(), [0, 0, 2, 2])
+
+
 def _get_nac_params_in_unitcell(ph: Phonopy):
     nac_params = ph.nac_params
     assert nac_params is not None

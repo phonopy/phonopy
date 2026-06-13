@@ -2085,20 +2085,26 @@ def get_primitive_matrix_with_auto(
     | NDArray[np.double]
     | None,
     symprec: float = 1e-5,
+    distinguish_symbol_index: bool = False,
 ) -> NDArray[np.double]:
     """Return primitive matrix that supports 'auto' option.
 
     ``None`` is treated as ``"auto"`` so that an unspecified primitive
     matrix is resolved from crystal symmetry.
+    ``distinguish_symbol_index`` is forwarded to
+    ``guess_primitive_matrix``.
 
     """
-    if primitive_matrix is None:
-        return guess_primitive_matrix(unitcell, symprec=symprec)
+    if primitive_matrix is None or (
+        isinstance(primitive_matrix, str) and primitive_matrix == "auto"
+    ):
+        return guess_primitive_matrix(
+            unitcell,
+            symprec=symprec,
+            distinguish_symbol_index=distinguish_symbol_index,
+        )
     elif isinstance(primitive_matrix, str):
-        if primitive_matrix == "auto":
-            return guess_primitive_matrix(unitcell, symprec=symprec)
-        else:
-            return get_primitive_matrix(primitive_matrix, symprec=symprec)
+        return get_primitive_matrix(primitive_matrix, symprec=symprec)
     else:
         return np.array(primitive_matrix, dtype="double", order="C")
 
@@ -2197,7 +2203,9 @@ def get_primitive_matrix_by_centring(centring: str) -> NDArray[np.double]:
 
 
 def guess_primitive_matrix(
-    unitcell: PhonopyAtoms, symprec: float = 1e-5
+    unitcell: PhonopyAtoms,
+    symprec: float = 1e-5,
+    distinguish_symbol_index: bool = False,
 ) -> NDArray[np.double]:
     """Guess primitive matrix from crystal symmetry.
 
@@ -2216,13 +2224,21 @@ def guess_primitive_matrix(
         Unit cell.
     symprec : float
         Tolerance to find symmetry operations.
+    distinguish_symbol_index : bool, optional
+        When True, atoms whose symbols differ only in the numeric
+        suffix ("Cl" vs "Cl1") are treated as distinct species, so the
+        guessed primitive cell never merges them. Must be consistent
+        with the ``Symmetry`` flag of the same name. Default is False.
 
     """
     if unitcell.magnetic_moments is None:
-        dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)  # type: ignore
+        dataset = spglib.get_symmetry_dataset(
+            unitcell.totuple(distinguish_symbol_index=distinguish_symbol_index),  # type: ignore
+            symprec=symprec,
+        )
     else:
         dataset = spglib.get_magnetic_symmetry_dataset(
-            unitcell.totuple(),  # type: ignore
+            unitcell.totuple(distinguish_symbol_index=distinguish_symbol_index),  # type: ignore
             symprec=symprec,
         )
         if isinstance(dataset, SpglibMagneticDataset) and dataset.msg_type == 4:

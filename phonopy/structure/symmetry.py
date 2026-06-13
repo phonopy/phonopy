@@ -103,6 +103,7 @@ class Symmetry:
         is_symmetry: bool = True,
         s2p_map: NDArray[np.int64] | None = None,
         lang: Literal["C", "Rust"] = "Rust",
+        distinguish_symbol_index: bool = False,
     ):
         """Init method.
 
@@ -122,10 +123,19 @@ class Symmetry:
         lang : {"C", "Rust"}, optional
             Backend used by helpers that have a Rust port (currently
             the atomic-permutation matcher). Default is ``"Rust"``.
+        distinguish_symbol_index : bool, optional
+            When True, atoms whose symbols differ only in the numeric
+            suffix ("Cl" vs "Cl1") are treated as distinct species in
+            the symmetry search. By default (False) the suffix is a
+            calculator-facing label and such atoms are symmetry
+            equivalent. Must be consistent with the primitive matrix:
+            ``guess_primitive_matrix`` takes the same flag. Default is
+            False.
 
         """
         self._cell = cell
         self._symprec = symprec
+        self._distinguish_symbol_index = distinguish_symbol_index
         self._lang: Literal["C", "Rust"] = resolve_lang(lang)
 
         self._symmetry_operations: _SymmetryOperations
@@ -359,7 +369,10 @@ class Symmetry:
         return np.array(site_symmetries, dtype="int64")
 
     def _set_symmetry_dataset(self) -> None:
-        _dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)  # type: ignore[arg-type]
+        _dataset = spglib.get_symmetry_dataset(
+            self._cell.totuple(distinguish_symbol_index=self._distinguish_symbol_index),  # type: ignore[arg-type]
+            self._symprec,
+        )
         assert _dataset is not None
         self._dataset = _dataset
 
@@ -379,7 +392,7 @@ class Symmetry:
 
     def _set_symmetry_operations_with_magmoms(self) -> None:
         _dataset = spglib.get_magnetic_symmetry_dataset(
-            self._cell.totuple(),  # type: ignore
+            self._cell.totuple(distinguish_symbol_index=self._distinguish_symbol_index),  # type: ignore
             symprec=self._symprec,
         )
         assert _dataset is not None

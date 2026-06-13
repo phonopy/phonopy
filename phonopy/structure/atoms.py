@@ -136,6 +136,10 @@ class _Species:
     1. Normal (single-element) species: ``atomic_number`` is set, ``mixture``
        and ``weight`` are None. ``symbol`` carries the suffix ("Cl1") so that
        "Cl" and "Cl1" are distinct species that share the same atomic number.
+       The suffix is a calculator-facing label (e.g. QE ATOMIC_SPECIES names
+       for isotopes or distinct pseudopotentials) carried through cell I/O
+       and per-atom masses; it deliberately does not affect symmetry search,
+       which sees atomic numbers (see ``PhonopyAtoms.totuple``).
 
     2. Merged mixed-species site (merge-style VCA): ``atomic_number`` is None
        and ``mixture`` holds the constituent (symbol, weight) pairs with weights
@@ -849,11 +853,16 @@ class PhonopyAtoms:
             the same symbol but different suffix get different ids);
             suitable as the ``types`` argument for spglib when
             symbol-suffix groupings must be preserved. If False
-            (default), the per-atom integer is the atomic number. VCA
-            cells (both merge-style mixtures and non-merge weighted
-            species) always use ``species_ids`` regardless, since a VCA
-            mixture has no single atomic number and weighted species at
-            the same position must be distinguished by concentration.
+            (default), the per-atom integer is the atomic number, so
+            suffixed symbols ("Cl1") are deliberately NOT distinguished:
+            a suffix is a calculator-facing label (e.g. QE
+            ATOMIC_SPECIES for isotopes) and force constants do not
+            depend on it, so symmetry search treats such atoms as
+            equivalent. VCA cells (both merge-style mixtures and
+            non-merge weighted species) always use ``species_ids``
+            regardless, since a VCA mixture has no single atomic number
+            and weighted species at the same position must be
+            distinguished by concentration.
 
         Returns
         -------

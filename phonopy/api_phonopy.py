@@ -181,6 +181,7 @@ class Phonopy:
         group_velocity_delta_q: float | None = None,
         symprec: float = 1e-5,
         is_symmetry: bool = True,
+        distinguish_symbol_index: bool = False,
         use_SNF_supercell: bool = False,
         hermitianize_dynamical_matrix: bool = True,
         calculator: str | None = None,
@@ -210,6 +211,13 @@ class Phonopy:
         is_symmetry : bool, optional
             Whether to search symmetry of the supercell. Default is
             True.
+        distinguish_symbol_index : bool, optional
+            When True, atoms whose symbols differ only in the numeric
+            suffix ("Cl" vs "Cl1") are treated as distinct species in
+            the symmetry search and in the automatic primitive matrix
+            determination. By default (False) the suffix is a
+            calculator-facing label that does not affect symmetry.
+            Default is False.
         use_SNF_supercell : bool, optional
             Build the supercell with the SNF algorithm when True.
             Default is False. The SNF algorithm is faster than the
@@ -234,6 +242,7 @@ class Phonopy:
         log_dispatch(lang, "Phonopy.__init__")
         self._symprec = symprec
         self._is_symmetry = is_symmetry
+        self._distinguish_symbol_index = distinguish_symbol_index
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
         self._lang: Literal["C", "Rust"] = lang
@@ -249,7 +258,10 @@ class Phonopy:
         self._unitcell = unitcell.copy()
         self._supercell_matrix = shape_supercell_matrix(supercell_matrix)
         self._primitive_matrix = get_primitive_matrix_with_auto(
-            self._unitcell, primitive_matrix, symprec=self._symprec
+            self._unitcell,
+            primitive_matrix,
+            symprec=self._symprec,
+            distinguish_symbol_index=self._distinguish_symbol_index,
         )
         warn_if_primitive_matrix_auto_changed_cell(
             primitive_matrix, self._primitive_matrix
@@ -3724,11 +3736,16 @@ class Phonopy:
             self._is_symmetry,
             s2p_map=self._primitive.s2p_map,
             lang=self._lang,
+            distinguish_symbol_index=self._distinguish_symbol_index,
         )
 
     def _search_primitive_symmetry(self) -> None:
         self._primitive_symmetry = Symmetry(
-            self._primitive, self._symprec, self._is_symmetry, lang=self._lang
+            self._primitive,
+            self._symprec,
+            self._is_symmetry,
+            lang=self._lang,
+            distinguish_symbol_index=self._distinguish_symbol_index,
         )
 
         if len(self._symmetry.pointgroup_operations) != len(
