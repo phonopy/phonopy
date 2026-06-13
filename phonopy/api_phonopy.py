@@ -3626,6 +3626,12 @@ class Phonopy:
                 self._supercell,
                 mode=_mixture_reduce_mode_for_calculator(self._calculator),
             )
+        elif self._supercell.has_weighted_species:
+            # Non-merge site-mixture: recover species-resolved forces
+            # F = f / x from the weighted forces the calculator reports.
+            weights = self._supercell.mixture_weights
+            assert weights is not None
+            dataset_for_fc = _divide_dataset_forces_by_weights(self._dataset, weights)
 
         self._force_constants = get_fc2(
             self._supercell,
@@ -3876,6 +3882,39 @@ class Phonopy:
             self._dataset[target] = _values
         else:
             raise RuntimeError("Set of displacements is not available.")
+
+
+def _divide_dataset_forces_by_weights(
+    dataset: DisplacementDataset,
+    weights: NDArray[np.double],
+) -> DisplacementDataset:
+    """Return a shallow-copied dataset with forces divided by per-atom weights.
+
+    For the non-merge site-mixture scheme, the calculator reports weighted
+    forces ``f = x * F`` (VASP folds the concentration ``x`` into the SCF).
+    Dividing by the per-atom weight recovers the species-resolved force
+    ``F`` that the finite-difference solver expects. The raw forces in the
+    user-visible dataset are left intact. Non-mixture atoms have weight 1.0,
+    so the division is a no-op for them.
+
+    """
+    inv = (1.0 / weights)[:, None]
+    if "first_atoms" in dataset:
+        d1 = cast(Type1DisplacementDataset, dataset)
+        new_first_atoms = []
+        for entry in d1["first_atoms"]:
+            new_entry = dict(entry)
+            if "forces" in entry:
+                new_entry["forces"] = np.asarray(entry["forces"], dtype="double") * inv
+            new_first_atoms.append(new_entry)
+        new_dataset: dict = {"first_atoms": new_first_atoms, "natom": d1["natom"]}
+        return cast(DisplacementDataset, new_dataset)
+
+    d2 = cast(Type2DisplacementDataset, dataset)
+    new_dataset = dict(d2)
+    if "forces" in d2:
+        new_dataset["forces"] = np.asarray(d2["forces"], dtype="double") * inv
+    return cast(DisplacementDataset, new_dataset)
 
 
 def _reduce_mixture_dataset_forces(
