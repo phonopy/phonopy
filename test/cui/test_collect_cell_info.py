@@ -96,6 +96,7 @@ def _settings(
     primitive_matrix: str | list[list[float]] | None = None,
     magnetic_moments: list[float] | None = None,
     site_mixture: list[float] | None = None,
+    merge_site_mixture: bool = True,
 ) -> Settings:
     settings = Settings()
     settings.supercell_matrix = (
@@ -108,10 +109,11 @@ def _settings(
     settings.chemical_symbols = None
     settings.magnetic_moments = magnetic_moments
     settings.site_mixture = site_mixture
+    settings.merge_site_mixture = merge_site_mixture
     return settings
 
 
-_POSCAR_GeSn_VCA = """\
+_POSCAR_GeSn_mixture = """\
 Ge0.5Sn0.5
 1.00000000000000
 0.00000    2.82173    2.82173
@@ -175,11 +177,13 @@ def test_get_cell_info_enforce_primitive_matrix_auto(monkeypatch, tmp_path):
     assert result.primitive_matrix == "auto"
 
 
-def test_get_cell_info_site_mixture_merges_overlapping_atoms(monkeypatch, tmp_path):
-    """--site-mixture merges overlapping atoms into mixed-species sites."""
+def test_get_cell_info_site_mixture_merges_overlapping_atoms_by_default(
+    monkeypatch, tmp_path
+):
+    """--site-mixture merges overlapping atoms into mixed-species sites by default."""
     monkeypatch.chdir(tmp_path)
     poscar = tmp_path / "POSCAR_GeSn"
-    poscar.write_text(_POSCAR_GeSn_VCA)
+    poscar.write_text(_POSCAR_GeSn_mixture)
     settings = _settings(
         supercell_matrix=_supercell_matrix,
         site_mixture=[0.5, 0.5, 0.5, 0.5],
@@ -191,6 +195,27 @@ def test_get_cell_info_site_mixture_merges_overlapping_atoms(monkeypatch, tmp_pa
     assert len(result.unitcell) == 2
     assert result.unitcell.has_mixtures
     assert result.unitcell.symbols == ["GeSn", "GeSn"]
+
+
+def test_get_cell_info_split_site_mixture_keeps_atoms_separate(monkeypatch, tmp_path):
+    """--split-site-mixture keeps overlapping atoms as weighted species."""
+    monkeypatch.chdir(tmp_path)
+    poscar = tmp_path / "POSCAR_GeSn"
+    poscar.write_text(_POSCAR_GeSn_mixture)
+    settings = _settings(
+        supercell_matrix=_supercell_matrix,
+        site_mixture=[0.5, 0.5, 0.5, 0.5],
+        merge_site_mixture=False,
+    )
+
+    result = get_cell_info(settings=settings, cell_filename=poscar)
+
+    assert result.unitcell is not None
+    assert len(result.unitcell) == 4
+    assert result.unitcell.has_weighted_species
+    assert not result.unitcell.has_mixtures
+    assert result.unitcell.symbols == ["Ge", "Ge", "Sn", "Sn"]
+    np.testing.assert_allclose(result.unitcell.mixture_weights, 0.5)
 
 
 def test_get_cell_info_invalid_magnetic_moments_raises(monkeypatch, tmp_path):

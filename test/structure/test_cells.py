@@ -559,6 +559,48 @@ def test_get_primitive_with_Xn_symbol(ph_nacl: Phonopy):
     assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
 
 
+def test_guess_primitive_matrix_distinguish_symbol_index():
+    """Auto primitive matrix can respect suffixed-symbol species on demand.
+
+    By default the suffix is a calculator label: spglib sees plain Cu,
+    the guessed matrix reduces to one atom, and the species-aware
+    primitive construction refuses it. With
+    distinguish_symbol_index=True the guessed matrix preserves the
+    Cu1/Cu2 grouping (CuAu-I like ordering: 2-atom primitive cell).
+
+    """
+    a = 3.6
+    cell = PhonopyAtoms(
+        symbols=["Cu1", "Cu1", "Cu2", "Cu2"],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.0],
+            [0.5, 0.0, 0.5],
+            [0.0, 0.5, 0.5],
+        ],
+        cell=np.eye(3) * a,
+    )
+
+    pmat_default = guess_primitive_matrix(cell)
+    with pytest.raises(RuntimeError) as e:
+        get_primitive(cell, pmat_default)
+    assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
+
+    pmat = guess_primitive_matrix(cell, distinguish_symbol_index=True)
+    primitive = get_primitive(cell, pmat)
+    assert len(primitive) == 2
+    assert primitive.symbols == ["Cu1", "Cu2"]
+
+    ph = Phonopy(
+        cell,
+        supercell_matrix=np.eye(3, dtype=int),
+        primitive_matrix="auto",
+        distinguish_symbol_index=True,
+    )
+    assert len(ph.primitive) == 2
+    assert ph.symmetry.dataset.number == 123  # P4/mmm
+
+
 def test_build_mixture_cell_GeSn():
     """Two overlapping Ge/Sn pairs collapse into two GeSn mixture sites."""
     a = 2.82173

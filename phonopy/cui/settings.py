@@ -98,6 +98,7 @@ class Settings:
         self.magnetic_moments: list[float] | None = None
         self.masses: list[float] | None = None
         self.site_mixture: list[float] | None = None
+        self.merge_site_mixture: bool = True
         self.mesh_numbers: float | list[int] | list[list[int]] | None = None
         self.mlp_params: str | None = None
         self.nac_method: str | None = None
@@ -346,6 +347,13 @@ class ConfParser(Generic[TSettings]):
                     self._confs["site_mixture"] = " ".join(args.site_mixture)
                 else:
                     self._confs["site_mixture"] = args.site_mixture
+
+        # The CLI flag --split-site-mixture opts into the non-merge scheme;
+        # internally this is the merge_site_mixture switch (default merge),
+        # so the flag sets it to false.
+        if "split_site_mixture" in arg_list:
+            if args.split_site_mixture:
+                self._confs["merge_site_mixture"] = ".false."
 
         if "mesh_numbers" in arg_list:
             mesh = args.mesh_numbers
@@ -673,6 +681,12 @@ class ConfParser(Generic[TSettings]):
                     self._set_parameter("site_mixture", [float(x) for x in tokens])
                 except ValueError:
                     self.setting_error("SITE_MIXTURE tag is incorrectly set.")
+
+            if conf_key == "merge_site_mixture":
+                if confs["merge_site_mixture"].lower() == ".true.":
+                    self._set_parameter("merge_site_mixture", True)
+                elif confs["merge_site_mixture"].lower() == ".false.":
+                    self._set_parameter("merge_site_mixture", False)
 
             if conf_key == "mass":
                 self._set_parameter("mass", [float(x) for x in confs["mass"].split()])
@@ -1003,6 +1017,9 @@ class ConfParser(Generic[TSettings]):
         # Site mixture weights
         if "site_mixture" in params:
             settings.site_mixture = params["site_mixture"]
+
+        if "merge_site_mixture" in params:
+            settings.merge_site_mixture = params["merge_site_mixture"]
 
         # Atomic mass
         if "mass" in params:

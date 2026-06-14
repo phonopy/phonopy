@@ -181,6 +181,7 @@ class Phonopy:
         group_velocity_delta_q: float | None = None,
         symprec: float = 1e-5,
         is_symmetry: bool = True,
+        distinguish_symbol_index: bool = False,
         use_SNF_supercell: bool = False,
         hermitianize_dynamical_matrix: bool = True,
         calculator: str | None = None,
@@ -210,6 +211,13 @@ class Phonopy:
         is_symmetry : bool, optional
             Whether to search symmetry of the supercell. Default is
             True.
+        distinguish_symbol_index : bool, optional
+            When True, atoms whose symbols differ only in the numeric
+            suffix ("Cl" vs "Cl1") are treated as distinct species in
+            the symmetry search and in the automatic primitive matrix
+            determination. By default (False) the suffix is a
+            calculator-facing label that does not affect symmetry.
+            Default is False.
         use_SNF_supercell : bool, optional
             Build the supercell with the SNF algorithm when True.
             Default is False. The SNF algorithm is faster than the
@@ -234,6 +242,7 @@ class Phonopy:
         log_dispatch(lang, "Phonopy.__init__")
         self._symprec = symprec
         self._is_symmetry = is_symmetry
+        self._distinguish_symbol_index = distinguish_symbol_index
         self._hermitianize_dynamical_matrix = hermitianize_dynamical_matrix
         self._calculator = calculator
         self._lang: Literal["C", "Rust"] = lang
@@ -249,7 +258,10 @@ class Phonopy:
         self._unitcell = unitcell.copy()
         self._supercell_matrix = shape_supercell_matrix(supercell_matrix)
         self._primitive_matrix = get_primitive_matrix_with_auto(
-            self._unitcell, primitive_matrix, symprec=self._symprec
+            self._unitcell,
+            primitive_matrix,
+            symprec=self._symprec,
+            distinguish_symbol_index=self._distinguish_symbol_index,
         )
         warn_if_primitive_matrix_auto_changed_cell(
             primitive_matrix, self._primitive_matrix
@@ -3606,7 +3618,7 @@ class Phonopy:
         # calculator path remains unchanged. The raw forces in
         # ``self._dataset`` are kept intact. Reduction convention is
         # picked from the calculator: VASP uses a plain sum because its
-        # vasprun.xml forces already carry the VCA weight factor.
+        # vasprun.xml forces already carry the mixture weight factor.
         dataset_for_fc = self._dataset
         if self._supercell.has_mixtures:
             dataset_for_fc = _reduce_mixture_dataset_forces(
@@ -3614,6 +3626,11 @@ class Phonopy:
                 self._supercell,
                 mode=_mixture_reduce_mode_for_calculator(self._calculator),
             )
+        # Non-merge site-mixture (weighted real species) cells use the
+        # ordinary finite-difference path: the raw VASP forces and real
+        # displacements give the symmetric force constants G that satisfy
+        # the ordinary sum rule, so the standard symmetrizer applies. The
+        # concentration weights x do not enter the force constants.
 
         self._force_constants = get_fc2(
             self._supercell,
@@ -3724,11 +3741,16 @@ class Phonopy:
             self._is_symmetry,
             s2p_map=self._primitive.s2p_map,
             lang=self._lang,
+            distinguish_symbol_index=self._distinguish_symbol_index,
         )
 
     def _search_primitive_symmetry(self) -> None:
         self._primitive_symmetry = Symmetry(
-            self._primitive, self._symprec, self._is_symmetry, lang=self._lang
+            self._primitive,
+            self._symprec,
+            self._is_symmetry,
+            lang=self._lang,
+            distinguish_symbol_index=self._distinguish_symbol_index,
         )
 
         if len(self._symmetry.pointgroup_operations) != len(
@@ -3900,11 +3922,11 @@ def _mixture_reduce_mode_for_calculator(
 ) -> Literal["weighted_sum", "sum"]:
     """Return the mixture-reduce convention appropriate for ``calculator``.
 
-    VASP applies the VCA weights inside the SCF, so the per-row forces in
+    VASP folds the mixture weights into the SCF, so the per-row forces in
     vasprun.xml already carry the weight factor: a plain sum across
     constituents is correct. Other calculators have not yet been wired
     for site-mixture; for them we default to the explicit weighted sum
-    so the per-site force matches the standard VCA expression.
+    so the per-site force matches the standard weighted-mixture expression.
 
     """
     if calculator is None or calculator == "vasp":

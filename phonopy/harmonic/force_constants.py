@@ -543,6 +543,7 @@ def get_positions_sent_by_rot_inv(
     site_symmetry: NDArray[np.int64],
     symprec: float,
     lang: Literal["C", "Rust"] = "Rust",
+    types: NDArray[np.int64] | Sequence[int] | None = None,
 ) -> NDArray[np.int64]:
     """Return atom indices of positions sent by inverse site symmetries.
 
@@ -558,6 +559,11 @@ def get_positions_sent_by_rot_inv(
         Site symmetry operations of the displaced atom.
     symprec : float
         Tolerance of symmetry.
+    types : array_like or None
+        Per-atom integer types. When given, atoms are matched only within
+        the same type so co-located atoms of different species (e.g. in a
+        site-mixture cell) are not paired. When None (default), matching
+        is by position alone. See ``compute_permutation_for_rotation``.
 
     Note
     ----
@@ -567,7 +573,12 @@ def get_positions_sent_by_rot_inv(
     rot_map_syms = []
     for sym in site_symmetry:
         rot_map = compute_permutation_for_rotation(
-            np.dot(positions, sym.T), positions, lattice, symprec, lang=lang
+            np.dot(positions, sym.T),
+            positions,
+            lattice,
+            symprec,
+            lang=lang,
+            types=types,
         )
         rot_map_syms.append(rot_map)
 
@@ -906,8 +917,15 @@ def _solve_force_constants_svd(
     positions = supercell.scaled_positions
     pos_center = positions[disp_atom_number]
     positions -= pos_center
+    # For cells with co-located atoms (site-mixture / weighted species),
+    # match the site-symmetry permutations within each species so that
+    # degenerate positions do not pair atoms of different species.
+    if supercell.has_weighted_species or supercell.has_mixtures:
+        types: NDArray[np.int64] | None = supercell.species_ids
+    else:
+        types = None
     rot_map_syms = get_positions_sent_by_rot_inv(
-        lattice, positions, site_symmetry, symprec, lang=lang
+        lattice, positions, site_symmetry, symprec, lang=lang, types=types
     )
     site_sym_cart = [similarity_transformation(lattice, sym) for sym in site_symmetry]
     rot_disps = get_rotated_displacement(displacements, site_sym_cart)
