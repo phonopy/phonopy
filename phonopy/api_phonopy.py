@@ -3626,19 +3626,11 @@ class Phonopy:
                 self._supercell,
                 mode=_mixture_reduce_mode_for_calculator(self._calculator),
             )
-        elif self._supercell.has_weighted_species:
-            # Non-merge site-mixture: feed raw weighted forces f = x F and
-            # displacements scaled by 1 / x of the displaced atom. The
-            # finite-difference fit then yields the weight-folded force
-            # constants phibar_ij = x_i Phi_ij x_j directly. phibar is
-            # symmetric and obeys the ordinary acoustic sum rule, so the
-            # standard symmetrizer and dynamical matrix (with effective
-            # mass x M) apply unchanged. The raw dataset is left intact.
-            weights = self._supercell.mixture_weights
-            assert weights is not None
-            dataset_for_fc = _scale_dataset_displacements_by_inv_weights(
-                self._dataset, weights
-            )
+        # Non-merge site-mixture (weighted real species) cells use the
+        # ordinary finite-difference path: the raw VASP forces and real
+        # displacements give the symmetric force constants G that satisfy
+        # the ordinary sum rule, so the standard symmetrizer applies. The
+        # concentration weights x do not enter the force constants.
 
         self._force_constants = get_fc2(
             self._supercell,
@@ -3889,49 +3881,6 @@ class Phonopy:
             self._dataset[target] = _values
         else:
             raise RuntimeError("Set of displacements is not available.")
-
-
-def _scale_dataset_displacements_by_inv_weights(
-    dataset: DisplacementDataset,
-    weights: NDArray[np.double],
-) -> DisplacementDataset:
-    """Return a shallow-copied dataset with displacements scaled by 1 / weight.
-
-    For the non-merge site-mixture scheme the calculator reports weighted
-    forces ``f_i = x_i F_i``. Feeding these raw forces together with the
-    displacement of the displaced atom ``j`` scaled by ``1 / x_j`` makes
-    the finite-difference fit return the weight-folded force constants
-    ``phibar_ij = x_i Phi_ij x_j`` directly (Phi is the species-resolved
-    force constant). ``phibar`` is symmetric and satisfies the ordinary
-    acoustic sum rule, so the standard symmetrizer applies unchanged; the
-    dynamical matrix uses the effective mass ``x M``.
-
-    The raw forces and the user-visible displacements are left intact;
-    only the copy fed to the FC calculator is rescaled. Non-mixture atoms
-    have weight 1.0, so the scaling is a no-op for them.
-
-    """
-    if "first_atoms" in dataset:
-        d1 = cast(Type1DisplacementDataset, dataset)
-        new_first_atoms = []
-        for entry in d1["first_atoms"]:
-            new_entry = dict(entry)
-            inv = 1.0 / weights[entry["number"]]
-            new_entry["displacement"] = (
-                np.asarray(entry["displacement"], dtype="double") * inv
-            )
-            new_first_atoms.append(new_entry)
-        new_dataset: dict = {"first_atoms": new_first_atoms, "natom": d1["natom"]}
-        return cast(DisplacementDataset, new_dataset)
-
-    d2 = cast(Type2DisplacementDataset, dataset)
-    new_dataset = dict(d2)
-    if "displacements" in d2:
-        inv = (1.0 / weights)[None, :, None]
-        new_dataset["displacements"] = (
-            np.asarray(d2["displacements"], dtype="double") * inv
-        )
-    return cast(DisplacementDataset, new_dataset)
 
 
 def _reduce_mixture_dataset_forces(

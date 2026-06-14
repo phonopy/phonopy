@@ -147,7 +147,17 @@ def get_cell_info(
             print("")
 
     if settings.site_mixture is not None:
-        if settings.merge_site_mixture:
+        # A cell loaded from phonopy(_disp).yaml already carries its
+        # site-mixture (merged mixtures or weighted species), so re-applying
+        # the --site-mixture weights would fail. Skip in that case; the
+        # persisted cell already has the information.
+        if cell_info.unitcell.has_mixtures or cell_info.unitcell.has_weighted_species:
+            if log_level:
+                print(
+                    "Site mixture is already defined in the input cell; "
+                    "--site-mixture is ignored."
+                )
+        elif settings.merge_site_mixture:
             cell_info.unitcell = build_mixture_cell(
                 cell_info.unitcell, settings.site_mixture
             )

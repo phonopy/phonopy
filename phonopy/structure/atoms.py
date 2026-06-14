@@ -149,14 +149,15 @@ class _Species:
        Overlapping atoms are collapsed into one site per group (see
        ``build_mixture_cell``).
 
-    3. Weighted real species (non-merge, species-resolved): ``atomic_number`` is set and
-       ``weight`` carries the concentration ``x_{tau nu}`` in ``(0, 1)``. An
-       atom of a co-located group always has a fractional concentration;
+    3. Weighted real species (non-merge site mixture): ``atomic_number`` is
+       set and ``weight`` carries the per-atom concentration in ``(0, 1)``.
+       An atom of a co-located group always has a fractional concentration;
        atoms without a concentration use ``weight=None`` (form 1), never
-       ``weight=1.0``. The atom keeps its real element symbol, atomic number,
-       and mass; co-located constituent atoms are kept as separate atoms (see
-       ``apply_site_mixture``). Species-resolved force constants are computed in this
-       representation.
+       ``weight=1.0``. The atom keeps its real element symbol, atomic
+       number, and mass; co-located constituent atoms are kept as separate
+       atoms (see ``apply_site_mixture``). The weight distinguishes
+       co-located atoms of different concentration during symmetry
+       analysis.
 
     Forms 2 and 3 model the same physics in different layouts and must not
     coexist within one cell (checked by ``PhonopyAtoms._check``).

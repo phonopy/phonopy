@@ -176,15 +176,6 @@ class DynamicalMatrix:
         self._dynamical_matrix: NDArray[np.cdouble] | None = None
         self._force_constants = np.asarray(force_constants, dtype="double", order="C")
 
-        # Effective masses for the dynamical matrix. For a non-merge
-        # site-mixture cell the stored force constants are the weight-folded
-        # phibar = x_i Phi_ij x_j, and the dynamical matrix uses the
-        # effective mass x M (Eq 64). Ordinary cells use the plain masses.
-        self._masses = np.array(self._pcell.masses, dtype="double")
-        weights = self._pcell.mixture_weights
-        if weights is not None:
-            self._masses = self._masses * weights
-
         self._p2s_map = np.array(self._pcell.p2s_map, dtype="int64")
         self._s2p_map = np.array(self._pcell.s2p_map, dtype="int64")
         p2p_map = self._pcell.p2p_map
@@ -222,17 +213,6 @@ class DynamicalMatrix:
     def primitive(self) -> Primitive:
         """Return primitive cell."""
         return self._pcell
-
-    @property
-    def masses(self) -> NDArray[np.double]:
-        """Return effective masses used to build the dynamical matrix.
-
-        Equal to the primitive-cell masses for ordinary cells, and to the
-        concentration-weighted masses ``x M`` for a non-merge site-mixture
-        cell (Eq 64). For getter, a copy is returned.
-
-        """
-        return self._masses.copy()
 
     @property
     def force_constants(self) -> NDArray[np.double]:
@@ -302,7 +282,7 @@ class DynamicalMatrix:
         multi = self._multi
         num_atom = len(self._pcell)
         dm = np.zeros((3 * num_atom, 3 * num_atom), dtype="cdouble", order="C")
-        mass = self.masses
+        mass = self._pcell.masses
         if fc.shape[0] == fc.shape[1]:
             is_compact_fc = False
         else:
@@ -732,7 +712,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 C_recip[i, :, i, :] -= drift[i]
 
         # Mass weighted
-        mass = self.masses
+        mass = self._pcell.masses
         for i in range(num_atom):
             for j in range(num_atom):
                 C_recip[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
@@ -1511,7 +1491,7 @@ def _extract_params(
     else:
         _svecs, _multi = sparse_to_dense_svecs(svecs, multi)
 
-    masses = dm.masses
+    masses = dm.primitive.masses
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
     positions = dm.primitive.positions
     if isinstance(dm, DynamicalMatrixNAC):

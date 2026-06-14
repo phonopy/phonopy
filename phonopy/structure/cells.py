@@ -983,10 +983,11 @@ def apply_site_mixture(
     group whose weights must sum to 1.0, and isolated atoms must carry weight
     1.0.
 
-    Use this function to prepare a cell for the species-resolved force constants
-    workflow. The ``weights`` list corresponds one-to-one with the atom order in
-    the input cell, matching the VASP ``INCAR`` ``VCA`` tag order when the
-    POSCAR lists all atoms of each element consecutively.
+    Use this function to prepare a cell with co-located atoms of different
+    species (a site mixture / virtual-crystal cell). The ``weights`` list
+    corresponds one-to-one with the atom order in the input cell, matching
+    the VASP ``INCAR`` ``VCA`` tag order when the POSCAR lists all atoms of
+    each element consecutively.
 
     Note: when writing displaced supercells with :func:`write_vasp`, phonopy may
     reorder atoms by symbol (``sort_positions_by_symbols``). Ensure that forces
