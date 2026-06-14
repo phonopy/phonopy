@@ -96,7 +96,7 @@ def _settings(
     primitive_matrix: str | list[list[float]] | None = None,
     magnetic_moments: list[float] | None = None,
     site_mixture: list[float] | None = None,
-    merge_site_mixture: bool = False,
+    merge_site_mixture: bool = True,
 ) -> Settings:
     settings = Settings()
     settings.supercell_matrix = (
@@ -177,16 +177,35 @@ def test_get_cell_info_enforce_primitive_matrix_auto(monkeypatch, tmp_path):
     assert result.primitive_matrix == "auto"
 
 
-def test_get_cell_info_site_mixture_keeps_atoms_separate_by_default(
+def test_get_cell_info_site_mixture_merges_overlapping_atoms_by_default(
     monkeypatch, tmp_path
 ):
-    """--site-mixture keeps overlapping atoms as weighted species by default."""
+    """--site-mixture merges overlapping atoms into mixed-species sites by default."""
     monkeypatch.chdir(tmp_path)
     poscar = tmp_path / "POSCAR_GeSn"
     poscar.write_text(_POSCAR_GeSn_mixture)
     settings = _settings(
         supercell_matrix=_supercell_matrix,
         site_mixture=[0.5, 0.5, 0.5, 0.5],
+    )
+
+    result = get_cell_info(settings=settings, cell_filename=poscar)
+
+    assert result.unitcell is not None
+    assert len(result.unitcell) == 2
+    assert result.unitcell.has_mixtures
+    assert result.unitcell.symbols == ["GeSn", "GeSn"]
+
+
+def test_get_cell_info_split_site_mixture_keeps_atoms_separate(monkeypatch, tmp_path):
+    """--split-site-mixture keeps overlapping atoms as weighted species."""
+    monkeypatch.chdir(tmp_path)
+    poscar = tmp_path / "POSCAR_GeSn"
+    poscar.write_text(_POSCAR_GeSn_mixture)
+    settings = _settings(
+        supercell_matrix=_supercell_matrix,
+        site_mixture=[0.5, 0.5, 0.5, 0.5],
+        merge_site_mixture=False,
     )
 
     result = get_cell_info(settings=settings, cell_filename=poscar)
@@ -197,27 +216,6 @@ def test_get_cell_info_site_mixture_keeps_atoms_separate_by_default(
     assert not result.unitcell.has_mixtures
     assert result.unitcell.symbols == ["Ge", "Ge", "Sn", "Sn"]
     np.testing.assert_allclose(result.unitcell.mixture_weights, 0.5)
-
-
-def test_get_cell_info_merge_site_mixture_merges_overlapping_atoms(
-    monkeypatch, tmp_path
-):
-    """--merge-site-mixture merges overlapping atoms into mixed-species sites."""
-    monkeypatch.chdir(tmp_path)
-    poscar = tmp_path / "POSCAR_GeSn"
-    poscar.write_text(_POSCAR_GeSn_mixture)
-    settings = _settings(
-        supercell_matrix=_supercell_matrix,
-        site_mixture=[0.5, 0.5, 0.5, 0.5],
-        merge_site_mixture=True,
-    )
-
-    result = get_cell_info(settings=settings, cell_filename=poscar)
-
-    assert result.unitcell is not None
-    assert len(result.unitcell) == 2
-    assert result.unitcell.has_mixtures
-    assert result.unitcell.symbols == ["GeSn", "GeSn"]
 
 
 def test_get_cell_info_invalid_magnetic_moments_raises(monkeypatch, tmp_path):

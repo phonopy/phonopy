@@ -98,7 +98,7 @@ class Settings:
         self.magnetic_moments: list[float] | None = None
         self.masses: list[float] | None = None
         self.site_mixture: list[float] | None = None
-        self.merge_site_mixture: bool = False
+        self.merge_site_mixture: bool = True
         self.mesh_numbers: float | list[int] | list[list[int]] | None = None
         self.mlp_params: str | None = None
         self.nac_method: str | None = None
@@ -348,9 +348,12 @@ class ConfParser(Generic[TSettings]):
                 else:
                     self._confs["site_mixture"] = args.site_mixture
 
-        if "merge_site_mixture" in arg_list:
-            if args.merge_site_mixture:
-                self._confs["merge_site_mixture"] = ".true."
+        # The CLI flag --split-site-mixture opts into the non-merge scheme;
+        # internally this is the merge_site_mixture switch (default merge),
+        # so the flag sets it to false.
+        if "split_site_mixture" in arg_list:
+            if args.split_site_mixture:
+                self._confs["merge_site_mixture"] = ".false."
 
         if "mesh_numbers" in arg_list:
             mesh = args.mesh_numbers

@@ -47,6 +47,32 @@ from phonopy.interface.calculator import (
     calculator_info,
 )
 
+_CALCULATOR_DESTS = frozenset(f"{name}_mode" for name in calculator_info)
+
+
+class _SortedHelpFormatter(argparse.HelpFormatter):
+    """Help formatter that orders options independently of definition order.
+
+    The options are split across shared / init / run helper functions, so
+    their definition order does not give a tidy ``--help`` listing. This
+    formatter sorts the display instead: ``-h`` first, then the calculator
+    interface flags (alphabetically), then the remaining options
+    alphabetically.
+
+    """
+
+    def add_arguments(self, actions):
+        """Sort actions before the base formatter lays them out."""
+
+        def sort_key(action):
+            is_help = action.dest == "help"
+            is_calculator = action.dest in _CALCULATOR_DESTS
+            opt = (action.option_strings or [""])[0].lstrip("-").lower()
+            # (help first, calculators next, then the rest), each then by name.
+            return (not is_help, not is_calculator, opt)
+
+        super().add_arguments(sorted(actions, key=sort_key))
+
 
 def fix_deprecated_option_names(argv: list[str]) -> list[str]:
     """Replace underscore in command option name by hyphen."""
@@ -115,25 +141,25 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         dest="site_mixture",
         default=None,
         help=(
-            "Per-atom mixture weights in the order atoms appear in the "
-            "input cell. Weights within each overlapping group of atoms "
-            "must sum to 1.0. By default the overlapping atoms are kept "
-            "as separate species-resolved atoms (non-merge Virtual "
-            "Crystal Approximation); pass --merge-site-mixture to instead "
-            "merge them into mixed-species sites. Note that this is "
-            "per-atom and distinct from the VASP INCAR VCA tag, which "
-            "lists one weight per element row in POSCAR."
+            "[Experimental] Per-atom mixture weights in the order atoms "
+            "appear in the input cell. Weights within each overlapping "
+            "group of atoms must sum to 1.0. By default the overlapping "
+            "atoms are merged into mixed-species sites (Virtual Crystal "
+            "Approximation); pass --split-site-mixture to instead keep them "
+            "as separate species-resolved atoms. Note that this is per-atom "
+            "and distinct from the VASP INCAR VCA tag, which lists one "
+            "weight per element row in POSCAR."
         ),
     )
     parser.add_argument(
-        "--merge-site-mixture",
-        dest="merge_site_mixture",
+        "--split-site-mixture",
+        dest="split_site_mixture",
         action="store_true",
         default=None,
         help=(
-            "With --site-mixture, merge overlapping atoms into "
-            "mixed-species sites instead of keeping them as separate "
-            "species-resolved atoms."
+            "[Experimental] With --site-mixture, keep overlapping atoms as "
+            "separate species-resolved atoms instead of merging them into "
+            "mixed-species sites."
         ),
     )
     parser.add_argument(
@@ -1035,6 +1061,7 @@ def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
             "FORCE_CONSTANTS files, and inspect crystal symmetry."
         ),
         allow_abbrev=False,
+        formatter_class=_SortedHelpFormatter,
     )
     _add_shared_options(parser)
     _add_init_options(parser)
@@ -1056,6 +1083,7 @@ def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
     parser = argparse.ArgumentParser(
         description="phonopy: phonon calculation from a phonopy.yaml-like file.",
         allow_abbrev=False,
+        formatter_class=_SortedHelpFormatter,
     )
     _add_shared_options(parser)
     _add_run_options(parser)
