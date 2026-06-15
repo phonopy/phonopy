@@ -202,7 +202,7 @@ def test_phonopy_yaml_extended_symbol(nacl_unitcell_order1: PhonopyAtoms):
 def test_phonopy_yaml_mixture_roundtrip():
     """Test of PhonopyYaml round-trip for a cell with mixed-species sites.
 
-    Build a Phonopy on a GeSn 50/50 zincblende (the canonical VCA use case),
+    Build a Phonopy on a GeSn 50/50 zincblende (the canonical site-mixture use case),
     dump to phonopy.yaml, read back via phonopy.load, and verify cells
     round-trip with masses preserved. Also checks the supercell carries the
     mixture spec through.

@@ -55,7 +55,11 @@ from phonopy.interface.calculator import (
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import build_mixture_cell, get_primitive_matrix_with_auto
+from phonopy.structure.cells import (
+    apply_site_mixture,
+    build_mixture_cell,
+    get_primitive_matrix_with_auto,
+)
 
 _FallbackReason = Literal[
     "load_phonopy_yaml mode",
@@ -143,9 +147,24 @@ def get_cell_info(
             print("")
 
     if settings.site_mixture is not None:
-        cell_info.unitcell = build_mixture_cell(
-            cell_info.unitcell, settings.site_mixture
-        )
+        # A cell loaded from phonopy(_disp).yaml already carries its
+        # site-mixture (merged mixtures or weighted species), so re-applying
+        # the --site-mixture weights would fail. Skip in that case; the
+        # persisted cell already has the information.
+        if cell_info.unitcell.has_mixtures or cell_info.unitcell.has_weighted_species:
+            if log_level:
+                print(
+                    "Site mixture is already defined in the input cell; "
+                    "--site-mixture is ignored."
+                )
+        elif settings.merge_site_mixture:
+            cell_info.unitcell = build_mixture_cell(
+                cell_info.unitcell, settings.site_mixture
+            )
+        else:
+            cell_info.unitcell = apply_site_mixture(
+                cell_info.unitcell, settings.site_mixture
+            )
 
     set_magnetic_moments(cell_info.unitcell, settings.magnetic_moments, log_level)
 

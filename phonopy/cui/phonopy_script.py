@@ -1770,9 +1770,9 @@ def _init_phonopy(
     if settings.masses is not None:
         phonon.masses = settings.masses
 
-    # Atomic species without mass case. VCA / mixed-species sites carry derived
-    # masses already, so the per-symbol lookup (which would fail on composite
-    # labels like "GeSn") is skipped for those cells.
+    # Atomic species without mass case. Mixture and weighted-species sites
+    # carry derived masses already, so the per-symbol lookup (which would
+    # fail on composite labels like "GeSn") is skipped for those cells.
     atom_data = get_atomic_data().atom_data
     symbol_map = get_atomic_data().symbol_map
     symbols_with_no_mass = []

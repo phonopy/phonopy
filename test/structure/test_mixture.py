@@ -106,7 +106,7 @@ def test_reduce_mixture_forces_sum_mode():
     """``mode="sum"`` adds constituent forces without reapplying weights.
 
     This is the VASP convention: vasprun.xml forces already incorporate
-    the per-row VCA weight factor, so a plain sum across constituents at
+    the per-row mixture weight factor, so a plain sum across constituents at
     each site is the correct reduction.
 
     """

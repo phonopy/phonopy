@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import warnings
 from collections.abc import Sequence
 from typing import Literal
@@ -52,7 +53,12 @@ from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy._lang import log_dispatch, resolve_lang
-from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
+from phonopy.structure.atoms import (
+    PhonopyAtoms,
+    _dedup_species,
+    _Species,
+    build_species_table_from_mixtures,
+)
 from phonopy.structure.mixture import build_mixtures_from_groups
 from phonopy.structure.snf import SNF3x3
 
@@ -492,7 +498,7 @@ class Primitive(PhonopyAtoms):
             supercell, positions_to_reorder=positions_to_reorder
         )
         self._s2p_map, self._p2p_map = self._map_atomic_indices(
-            supercell.scaled_positions
+            supercell.scaled_positions, supercell.species_ids
         )
         (self._smallest_vectors, self._multiplicity) = self._get_smallest_vectors(
             supercell
@@ -537,19 +543,26 @@ class Primitive(PhonopyAtoms):
         return p2s_map
 
     def _map_atomic_indices(
-        self, s_pos_orig: NDArray[np.double]
+        self, s_pos_orig: NDArray[np.double], species_ids: NDArray[np.int64]
     ) -> tuple[NDArray[np.int64], dict[int, int]]:
         frac_pos = np.dot(s_pos_orig, np.linalg.inv(self._primitive_matrix).T)
 
         p2s_positions = frac_pos[self._p2s_map]
+        p2s_species = species_ids[self._p2s_map]
         s2p_map = []
-        for s_pos in frac_pos:
+        for s_pos, s_species in zip(frac_pos, species_ids, strict=True):
             # Compute distances from s_pos to all positions in _p2s_map.
             frac_diffs = p2s_positions - s_pos
             frac_diffs -= np.rint(frac_diffs)
             cart_diffs = np.dot(frac_diffs, self.cell)
             distances = np.sqrt((cart_diffs**2).sum(axis=1))
-            indices = np.where(distances < self._symprec)[0]
+            # Match the same species, so co-located atoms of different
+            # species map to their own representative (e.g. Ge and Sn at
+            # the same site). Ordinary cells have one species per site, so
+            # this is unchanged.
+            indices = np.where(
+                (distances < self._symprec) & (p2s_species == s_species)
+            )[0]
             assert len(indices) == 1
             s2p_map.append(self._p2s_map[indices[0]])
 
@@ -569,6 +582,10 @@ class Primitive(PhonopyAtoms):
         rotations = np.array(
             [np.eye(3, dtype="int64")] * len(trans), dtype="int64", order="C"
         )
+        # Match within each species so pure translations do not pair
+        # co-located atoms of different species (e.g. Ge and Sn at the same
+        # cell). Ordinary cells have one species per site, so passing the
+        # species ids does not change the result.
         atomic_permutations = compute_all_sg_permutations(
             positions,
             rotations,
@@ -576,6 +593,7 @@ class Primitive(PhonopyAtoms):
             np.array(supercell.cell.T, dtype="double", order="C"),
             self._symprec,
             lang=self._lang,
+            types=supercell.species_ids,
         )
 
         return atomic_permutations
@@ -712,6 +730,13 @@ class TrimmedCell(PhonopyAtoms):
             cell.magnetic_moments,
             check_overlap,
             symprec,
+            # Disambiguate co-located atoms by species only for species-resolved cells.
+            # Other cells keep position-only trimming so a mismatched
+            # primitive matrix still raises the detailed symbol-mapping
+            # diagnostic in ``_create_primitive_cell``.
+            cell.species_ids
+            if (cell.has_weighted_species or cell.has_mixtures)
+            else None,
         )
 
         if positions_to_reorder is not None:
@@ -749,6 +774,7 @@ class TrimmedCell(PhonopyAtoms):
         magmoms: NDArray[np.double] | None,
         check_overlap: bool,
         symprec: float,
+        species_ids: NDArray[np.int64] | None,
     ) -> tuple[
         NDArray[np.double],
         NDArray[np.double] | None,
@@ -770,7 +796,13 @@ class TrimmedCell(PhonopyAtoms):
                 diff -= np.rint(diff)
                 # Older numpy doesn't support axis argument.
                 distances = np.sqrt(np.sum(np.dot(diff, trimmed_lattice) ** 2, axis=1))
-                overlap_indices = np.where(distances < symprec)[0]
+                close = distances < symprec
+                if species_ids is not None:
+                    # Require the same species id, so co-located atoms of
+                    # different species (Ge and Sn at the same site) are
+                    # kept as separate atoms rather than merged.
+                    close = close & (species_ids[extracted_atoms] == species_ids[i])
+                overlap_indices = np.where(close)[0]
                 if len(overlap_indices) > 0:
                     assert len(overlap_indices) == 1
                     found_overlap = True
@@ -870,9 +902,8 @@ def build_mixture_cell(
 
     Atoms whose fractional positions agree (modulo lattice translations)
     within ``symprec`` are collapsed into a single site whose species is the
-    weighted mixture of the constituents. The Virtual Crystal Approximation
-    (VCA) is the typical use case. Each non-overlapping atom is preserved
-    verbatim and its weight must equal 1.0.
+    weighted mixture of the constituents. Each non-overlapping atom is
+    preserved verbatim and its weight must equal 1.0.
 
     Parameters
     ----------
@@ -933,6 +964,122 @@ def build_mixture_cell(
         scaled_positions=np.array(new_scaled, dtype="double"),
         species_table=species_table,
         species_ids=species_ids,
+    )
+
+
+def apply_site_mixture(
+    cell: PhonopyAtoms,
+    weights: Sequence[float] | NDArray[np.double],
+    symprec: float = 1e-5,
+) -> PhonopyAtoms:
+    """Attach per-atom concentration weights keeping atoms species-resolved.
+
+    Returns a new cell whose species table carries the concentration of each
+    atom as a weighted real species (``_Species.weight``). Unlike
+    :func:`build_mixture_cell`, atoms are **not** merged: every input atom is
+    preserved (``len(result) == len(cell)``) and keeps its real element symbol,
+    atomic number, and mass. The weights are validated against the positional
+    overlap structure of the cell: atoms at the same fractional position form a
+    group whose weights must sum to 1.0, and isolated atoms must carry weight
+    1.0.
+
+    Use this function to prepare a cell with co-located atoms of different
+    species (a site mixture / virtual-crystal cell). The ``weights`` list
+    corresponds one-to-one with the atom order in the input cell, matching
+    the VASP ``INCAR`` ``VCA`` tag order when the POSCAR lists all atoms of
+    each element consecutively.
+
+    Note: when writing displaced supercells with :func:`write_vasp`, phonopy may
+    reorder atoms by symbol (``sort_positions_by_symbols``). Ensure that forces
+    read from VASP are reordered to match the supercell atom order before
+    setting ``phonon.forces``.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Input unit cell. Must not already contain mixed-species sites
+        (``has_mixtures`` must be False), magnetic moments, or weighted species.
+    weights : sequence of float or ndarray
+        Per-atom concentration weights in the input cell order. ``len(weights)``
+        must equal ``len(cell)``. Values must lie in ``(0, 1]``. Isolated atoms
+        must have weight 1.0; atoms sharing a fractional position must have
+        weights summing to 1.0.
+    symprec : float
+        Tolerance for treating two fractional positions as overlapping.
+
+    Returns
+    -------
+    PhonopyAtoms
+        Copy of ``cell`` with ``mixture_weights`` attached. ``natom``, symbols,
+        positions, and masses are unchanged.
+
+    """
+    if cell.has_mixtures:
+        raise ValueError(
+            "apply_site_mixture cannot be applied to a cell that already contains "
+            "mixed-species sites."
+        )
+    if cell.magnetic_moments is not None:
+        raise ValueError(
+            "apply_site_mixture does not support cells carrying magnetic moments."
+        )
+    if cell.has_weighted_species:
+        raise ValueError(
+            "apply_site_mixture cannot be applied to a cell that already has "
+            "weighted species."
+        )
+    if len(weights) != len(cell):
+        raise ValueError(
+            f"Length of weights ({len(weights)}) must match number of atoms "
+            f"({len(cell)})."
+        )
+
+    weights_arr = np.asarray(weights, dtype="double")
+    groups = _group_overlapping_atoms(cell, symprec)
+
+    for group in groups:
+        wsum = float(weights_arr[list(group)].sum())
+        if len(group) == 1:
+            if not np.isclose(weights_arr[group[0]], 1.0):
+                raise ValueError(
+                    f"Weight of non-overlapping atom at index {group[0]} "
+                    f"must be 1.0, got {weights_arr[group[0]]}."
+                )
+        elif not np.isclose(wsum, 1.0):
+            raise ValueError(
+                f"Weights of overlapping atoms at indices {list(group)} must "
+                f"sum to 1.0, got {wsum}."
+            )
+
+    # Rebuild the species table with weighted real species. Atoms of
+    # co-located groups receive their concentration as a species weight;
+    # isolated atoms keep their original species entry (weight=None).
+    # Note that the float weight enters _Species equality; weights are
+    # stored once here and only copied afterwards, so bitwise comparison
+    # is reliable.
+    in_overlap_group = np.zeros(len(cell), dtype=bool)
+    for group in groups:
+        if len(group) > 1:
+            in_overlap_group[list(group)] = True
+
+    old_table = cell.species_table
+    per_atom_species: list[_Species] = []
+    for sid, w, is_overlapping in zip(
+        cell.species_ids, weights_arr, in_overlap_group, strict=True
+    ):
+        base = old_table[sid]
+        if is_overlapping:
+            per_atom_species.append(dataclasses.replace(base, weight=float(w)))
+        else:
+            per_atom_species.append(base)
+    new_table, new_ids = _dedup_species(per_atom_species)
+
+    return PhonopyAtoms(
+        cell=cell.cell,
+        scaled_positions=cell.scaled_positions,
+        species_table=new_table,
+        species_ids=new_ids,
+        masses=cell.masses,
     )
 
 
@@ -1583,6 +1730,7 @@ def compute_all_sg_permutations(
     lattice: NDArray[np.double],  # column vectors
     symprec: float,
     lang: Literal["C", "Rust"] = "Rust",
+    types: NDArray[np.int64] | Sequence[int] | None = None,
 ) -> NDArray[np.int64]:
     """Compute permutations for space group operations.
 
@@ -1605,6 +1753,12 @@ def compute_all_sg_permutations(
         Symmetry tolerance of the distance unit
     lang : {"C", "Rust"}
         Backend for the inner permutation matcher. Default is "C".
+    types : array_like or None
+        Per-atom integer types. When given, atoms are matched only within
+        the same type, which disambiguates co-located atoms of different
+        species (e.g. a species-resolved cell). When None
+        (default), matching is by position alone. See
+        ``compute_permutation_for_rotation``.
 
     Returns
     -------
@@ -1617,7 +1771,7 @@ def compute_all_sg_permutations(
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
-                positions, rotated_positions, lattice, symprec, lang=lang
+                positions, rotated_positions, lattice, symprec, lang=lang, types=types
             )
         )
     return np.array(out, dtype="int64", order="C")
@@ -1629,6 +1783,7 @@ def compute_permutation_for_rotation(
     lattice: NDArray[np.double],
     symprec: float,
     lang: Literal["C", "Rust"] = "Rust",
+    types: NDArray[np.int64] | Sequence[int] | None = None,
 ) -> NDArray[np.int64]:
     """Get the overall permutation such that.
 
@@ -1655,6 +1810,14 @@ def compute_permutation_for_rotation(
         Symmetry tolerance of the distance unit
     lang : {"C", "Rust"}
         Backend for the inner permutation matcher. Default is "C".
+    types : array_like or None
+        Per-atom integer types. When given, atoms are matched only within
+        the same type. This disambiguates co-located atoms of different
+        species, which position-only matching cannot resolve (e.g. Ge and
+        Sn at the same site in a species-resolved cell). The
+        space group operations must map each type onto itself, which holds
+        when the operations were found from the same types. When None
+        (default), matching is by position alone (unchanged behavior).
 
     Returns
     -------
@@ -1664,6 +1827,23 @@ def compute_permutation_for_rotation(
         shape=(len(positions), ), dtype=int
 
     """
+    if types is not None:
+        # Match within each type class. positions_b[i] is the rotated
+        # position of atom i and shares its type, so the same index set
+        # selects a type class on both sides. perm[idx] = idx[sub_perm]
+        # composes the per-class result into the full permutation.
+        types_arr = np.asarray(types)
+        perm = np.empty(len(positions_a), dtype="int64")
+        for t in np.unique(types_arr):
+            idx = np.where(types_arr == t)[0]
+            sub_perm = compute_permutation_for_rotation(
+                positions_a[idx], positions_b[idx], lattice, symprec, lang=lang
+            )
+            perm[idx] = idx[sub_perm]
+        # Each type fills a disjoint slice of perm; together they must form
+        # a bijection of all atoms.
+        assert np.array_equal(np.sort(perm), np.arange(len(perm)))
+        return perm
 
     def sort_by_lattice_distance(
         fracs: NDArray[np.double],
@@ -1967,20 +2147,26 @@ def get_primitive_matrix_with_auto(
     | NDArray[np.double]
     | None,
     symprec: float = 1e-5,
+    distinguish_symbol_index: bool = False,
 ) -> NDArray[np.double]:
     """Return primitive matrix that supports 'auto' option.
 
     ``None`` is treated as ``"auto"`` so that an unspecified primitive
     matrix is resolved from crystal symmetry.
+    ``distinguish_symbol_index`` is forwarded to
+    ``guess_primitive_matrix``.
 
     """
-    if primitive_matrix is None:
-        return guess_primitive_matrix(unitcell, symprec=symprec)
+    if primitive_matrix is None or (
+        isinstance(primitive_matrix, str) and primitive_matrix == "auto"
+    ):
+        return guess_primitive_matrix(
+            unitcell,
+            symprec=symprec,
+            distinguish_symbol_index=distinguish_symbol_index,
+        )
     elif isinstance(primitive_matrix, str):
-        if primitive_matrix == "auto":
-            return guess_primitive_matrix(unitcell, symprec=symprec)
-        else:
-            return get_primitive_matrix(primitive_matrix, symprec=symprec)
+        return get_primitive_matrix(primitive_matrix, symprec=symprec)
     else:
         return np.array(primitive_matrix, dtype="double", order="C")
 
@@ -2079,7 +2265,9 @@ def get_primitive_matrix_by_centring(centring: str) -> NDArray[np.double]:
 
 
 def guess_primitive_matrix(
-    unitcell: PhonopyAtoms, symprec: float = 1e-5
+    unitcell: PhonopyAtoms,
+    symprec: float = 1e-5,
+    distinguish_symbol_index: bool = False,
 ) -> NDArray[np.double]:
     """Guess primitive matrix from crystal symmetry.
 
@@ -2098,13 +2286,21 @@ def guess_primitive_matrix(
         Unit cell.
     symprec : float
         Tolerance to find symmetry operations.
+    distinguish_symbol_index : bool, optional
+        When True, atoms whose symbols differ only in the numeric
+        suffix ("Cl" vs "Cl1") are treated as distinct species, so the
+        guessed primitive cell never merges them. Must be consistent
+        with the ``Symmetry`` flag of the same name. Default is False.
 
     """
     if unitcell.magnetic_moments is None:
-        dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)  # type: ignore
+        dataset = spglib.get_symmetry_dataset(
+            unitcell.totuple(distinguish_symbol_index=distinguish_symbol_index),  # type: ignore
+            symprec=symprec,
+        )
     else:
         dataset = spglib.get_magnetic_symmetry_dataset(
-            unitcell.totuple(),  # type: ignore
+            unitcell.totuple(distinguish_symbol_index=distinguish_symbol_index),  # type: ignore
             symprec=symprec,
         )
         if isinstance(dataset, SpglibMagneticDataset) and dataset.msg_type == 4:
