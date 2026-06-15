@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>phonopy.api_phonopy &#8212; Phonopy v.4.2.0</title>
+    <title>phonopy.api_phonopy &#8212; Phonopy v.4.2.1</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=830d3dd9"></script>
+    <script src="../../_static/documentation_options.js?v=38f1bfc4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -560,7 +560,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.2.0</p>
+    <p class="title logo__title">Phonopy v.4.2.1</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -908,6 +908,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">group_velocity_delta_q</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">symprec</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
         <span class="n">is_symmetry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">distinguish_symbol_index</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">use_SNF_supercell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">hermitianize_dynamical_matrix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">calculator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -937,6 +938,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        is_symmetry : bool, optional</span>
 <span class="sd">            Whether to search symmetry of the supercell. Default is</span>
 <span class="sd">            True.</span>
+<span class="sd">        distinguish_symbol_index : bool, optional</span>
+<span class="sd">            When True, atoms whose symbols differ only in the numeric</span>
+<span class="sd">            suffix (&quot;Cl&quot; vs &quot;Cl1&quot;) are treated as distinct species in</span>
+<span class="sd">            the symmetry search and in the automatic primitive matrix</span>
+<span class="sd">            determination. By default (False) the suffix is a</span>
+<span class="sd">            calculator-facing label that does not affect symmetry.</span>
+<span class="sd">            Default is False.</span>
 <span class="sd">        use_SNF_supercell : bool, optional</span>
 <span class="sd">            Build the supercell with the SNF algorithm when True.</span>
 <span class="sd">            Default is False. The SNF algorithm is faster than the</span>
@@ -961,6 +969,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">log_dispatch</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="s2">&quot;Phonopy.__init__&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span> <span class="o">=</span> <span class="n">symprec</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_symmetry</span> <span class="o">=</span> <span class="n">is_symmetry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_distinguish_symbol_index</span> <span class="o">=</span> <span class="n">distinguish_symbol_index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hermitianize_dynamical_matrix</span> <span class="o">=</span> <span class="n">hermitianize_dynamical_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_calculator</span> <span class="o">=</span> <span class="n">calculator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;Rust&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lang</span>
@@ -976,7 +985,10 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span> <span class="o">=</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_supercell_matrix</span> <span class="o">=</span> <span class="n">shape_supercell_matrix</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_primitive_matrix</span> <span class="o">=</span> <span class="n">get_primitive_matrix_with_auto</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">,</span>
+            <span class="n">primitive_matrix</span><span class="p">,</span>
+            <span class="n">symprec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span>
+            <span class="n">distinguish_symbol_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_distinguish_symbol_index</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">warn_if_primitive_matrix_auto_changed_cell</span><span class="p">(</span>
             <span class="n">primitive_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primitive_matrix</span>
@@ -4558,7 +4570,7 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># calculator path remains unchanged. The raw forces in</span>
         <span class="c1"># ``self._dataset`` are kept intact. Reduction convention is</span>
         <span class="c1"># picked from the calculator: VASP uses a plain sum because its</span>
-        <span class="c1"># vasprun.xml forces already carry the VCA weight factor.</span>
+        <span class="c1"># vasprun.xml forces already carry the mixture weight factor.</span>
         <span class="n">dataset_for_fc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">has_mixtures</span><span class="p">:</span>
             <span class="n">dataset_for_fc</span> <span class="o">=</span> <span class="n">_reduce_mixture_dataset_forces</span><span class="p">(</span>
@@ -4566,6 +4578,11 @@ window.runMermaid = runMermaid;</script>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">,</span>
                 <span class="n">mode</span><span class="o">=</span><span class="n">_mixture_reduce_mode_for_calculator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculator</span><span class="p">),</span>
             <span class="p">)</span>
+        <span class="c1"># Non-merge site-mixture (weighted real species) cells use the</span>
+        <span class="c1"># ordinary finite-difference path: the raw VASP forces and real</span>
+        <span class="c1"># displacements give the symmetric force constants G that satisfy</span>
+        <span class="c1"># the ordinary sum rule, so the standard symmetrizer applies. The</span>
+        <span class="c1"># concentration weights x do not enter the force constants.</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="o">=</span> <span class="n">get_fc2</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">,</span>
@@ -4676,11 +4693,16 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_symmetry</span><span class="p">,</span>
             <span class="n">s2p_map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="o">.</span><span class="n">s2p_map</span><span class="p">,</span>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
+            <span class="n">distinguish_symbol_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_distinguish_symbol_index</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_search_primitive_symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_primitive_symmetry</span> <span class="o">=</span> <span class="n">Symmetry</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_symmetry</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_symmetry</span><span class="p">,</span>
+            <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
+            <span class="n">distinguish_symbol_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_distinguish_symbol_index</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_symmetry</span><span class="o">.</span><span class="n">pointgroup_operations</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span>
@@ -4853,11 +4875,11 @@ window.runMermaid = runMermaid;</script>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;weighted_sum&quot;</span><span class="p">,</span> <span class="s2">&quot;sum&quot;</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the mixture-reduce convention appropriate for ``calculator``.</span>
 
-<span class="sd">    VASP applies the VCA weights inside the SCF, so the per-row forces in</span>
+<span class="sd">    VASP folds the mixture weights into the SCF, so the per-row forces in</span>
 <span class="sd">    vasprun.xml already carry the weight factor: a plain sum across</span>
 <span class="sd">    constituents is correct. Other calculators have not yet been wired</span>
 <span class="sd">    for site-mixture; for them we default to the explicit weighted sum</span>
-<span class="sd">    so the per-site force matches the standard VCA expression.</span>
+<span class="sd">    so the per-site force matches the standard weighted-mixture expression.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">calculator</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">calculator</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>

@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jun-15-2026: Version 4.2.1
+
+- Fix a NumPy error in the equation-of-state (EOS) fit used by QHA.
+
 ## Jun-09-2026: Version 4.2.0
 
 - `run_*` methods now return result objects (e.g. `run_band_structure`

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>phonopy.structure.atoms &#8212; Phonopy v.4.2.0</title>
+    <title>phonopy.structure.atoms &#8212; Phonopy v.4.2.1</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=830d3dd9"></script>
+    <script src="../../../_static/documentation_options.js?v=38f1bfc4"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -560,7 +560,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.2.0</p>
+    <p class="title logo__title">Phonopy v.4.2.1</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -764,7 +764,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">gcd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypedDict</span>
 
@@ -781,6 +781,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">mass</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">magnetic_moment</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
     <span class="n">mixture</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span>  <span class="c1"># [[symbol_str, weight_float], ...] for a mixed-species site</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># non-merge concentration for a weighted real species</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_CellDictBase</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
@@ -856,25 +857,82 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    Two atoms share a species iff all fields are equal.</span>
 
-<span class="sd">    For a normal (single-element) species, ``atomic_number`` is set and</span>
-<span class="sd">    ``mixture`` is None. ``symbol`` carries the suffix (&quot;Cl1&quot;) so that</span>
-<span class="sd">    &quot;Cl&quot; and &quot;Cl1&quot; are distinct species that share the same atomic number.</span>
+<span class="sd">    Three forms exist:</span>
 
-<span class="sd">    For a mixed-species site (e.g. a VCA virtual crystal site, an alloy</span>
-<span class="sd">    site, a solid-solution site), ``atomic_number`` is None and ``mixture``</span>
-<span class="sd">    holds the constituent (symbol, weight) pairs with weights summing to</span>
-<span class="sd">    1.0. ``symbol`` is the composite label (e.g. &quot;GeSn&quot;, or &quot;GeSn1&quot;/&quot;GeSn2&quot;</span>
-<span class="sd">    if the cell has multiple distinct GeSn mixtures).</span>
+<span class="sd">    1. Normal (single-element) species: ``atomic_number`` is set, ``mixture``</span>
+<span class="sd">       and ``weight`` are None. ``symbol`` carries the suffix (&quot;Cl1&quot;) so that</span>
+<span class="sd">       &quot;Cl&quot; and &quot;Cl1&quot; are distinct species that share the same atomic number.</span>
+<span class="sd">       The suffix is a calculator-facing label (e.g. QE ATOMIC_SPECIES names</span>
+<span class="sd">       for isotopes or distinct pseudopotentials) carried through cell I/O</span>
+<span class="sd">       and per-atom masses; it deliberately does not affect symmetry search,</span>
+<span class="sd">       which sees atomic numbers (see ``PhonopyAtoms.totuple``).</span>
+
+<span class="sd">    2. Merged mixed-species site (merge-style mixture): ``atomic_number`` is None</span>
+<span class="sd">       and ``mixture`` holds the constituent (symbol, weight) pairs with weights</span>
+<span class="sd">       summing to 1.0. ``symbol`` is the composite label (e.g. &quot;GeSn&quot;, or</span>
+<span class="sd">       &quot;GeSn1&quot;/&quot;GeSn2&quot; if the cell has multiple distinct GeSn mixtures).</span>
+<span class="sd">       Overlapping atoms are collapsed into one site per group (see</span>
+<span class="sd">       ``build_mixture_cell``).</span>
+
+<span class="sd">    3. Weighted real species (non-merge site mixture): ``atomic_number`` is</span>
+<span class="sd">       set and ``weight`` carries the per-atom concentration in ``(0, 1)``.</span>
+<span class="sd">       An atom of a co-located group always has a fractional concentration;</span>
+<span class="sd">       atoms without a concentration use ``weight=None`` (form 1), never</span>
+<span class="sd">       ``weight=1.0``. The atom keeps its real element symbol, atomic</span>
+<span class="sd">       number, and mass; co-located constituent atoms are kept as separate</span>
+<span class="sd">       atoms (see ``apply_site_mixture``). The weight distinguishes</span>
+<span class="sd">       co-located atoms of different concentration during symmetry</span>
+<span class="sd">       analysis.</span>
+
+<span class="sd">    Forms 2 and 3 model the same physics in different layouts and must not</span>
+<span class="sd">    coexist within one cell (checked by ``PhonopyAtoms._check``).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">atomic_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="n">mixture</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Exactly one of atomic_number or mixture must be set.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;weight must be in (0, 1), got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="si">}</span><span class="s2">: weight 0 &quot;</span>
+                    <span class="s2">&quot;would cause division by zero when recovering &quot;</span>
+                    <span class="s2">&quot;species-resolved forces, and an atom without a &quot;</span>
+                    <span class="s2">&quot;fractional concentration must use weight=None.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;weight is the per-species concentration of the non-merge &quot;</span>
+                    <span class="s2">&quot;non-merge scheme and cannot be combined with a merged mixture &quot;</span>
+                    <span class="s2">&quot;species.&quot;</span>
+                <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dedup_species</span><span class="p">(</span>
+    <span class="n">per_atom_species</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deduplicate per-atom species into a (species_table, species_ids) pair.</span>
+
+<span class="sd">    The table keeps the first-appearance order of distinct species; each</span>
+<span class="sd">    atom&#39;s id points at its species entry.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">table</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">per_atom_species</span><span class="p">:</span>
+        <span class="n">sid</span> <span class="o">=</span> <span class="n">seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+            <span class="n">seen</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
+        <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">build_species_table_from_mixtures</span><span class="p">(</span>
@@ -906,15 +964,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        to preserve the caller&#39;s order verbatim.</span>
 
 <span class="sd">    The returned pair can be passed to ``PhonopyAtoms(species_table=...,</span>
-<span class="sd">    species_ids=...)``. Use cases include the Virtual Crystal Approximation</span>
+<span class="sd">    species_ids=...)``. Use cases include site mixtures</span>
 <span class="sd">    (see ``build_mixture_cell``) and any other site-disorder model</span>
 <span class="sd">    expressible as weighted constituent symbols.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
-    <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">species_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">per_atom_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">atom_mixture</span> <span class="ow">in</span> <span class="n">mixtures</span><span class="p">:</span>
         <span class="n">mix</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">atom_mixture</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">mix</span><span class="p">:</span>
@@ -937,14 +993,10 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">composite</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">)</span>
             <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">composite</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mixture</span><span class="o">=</span><span class="n">mix</span><span class="p">)</span>
-        <span class="n">sid</span> <span class="o">=</span> <span class="n">seen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
-            <span class="n">species_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
-            <span class="n">seen</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
-        <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="n">per_atom_species</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+    <span class="n">species_list</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
     <span class="n">species_list</span> <span class="o">=</span> <span class="n">_disambiguate_composite_labels</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">species_list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">species_list</span><span class="p">,</span> <span class="n">ids</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_disambiguate_composite_labels</span><span class="p">(</span>
@@ -994,7 +1046,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    symbols (``symbols``) / atomic numbers (``numbers``) for ordinary</span>
 <span class="sd">    cells, or as a deduplicated table plus per-atom indices</span>
 <span class="sd">    (``species_table`` / ``species_ids``) which additionally supports</span>
-<span class="sd">    mixed-species sites for the Virtual Crystal Approximation. See</span>
+<span class="sd">    mixed-species sites for site mixtures. See</span>
 <span class="sd">    :ref:`phonopy_Atoms` for the tutorial-style overview and per-attribute</span>
 <span class="sd">    documentation below for details.</span>
 
@@ -1026,7 +1078,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        ----------</span>
 <span class="sd">        symbols : sequence of str, optional</span>
 <span class="sd">            Per-atom chemical symbols (``&quot;Si&quot;``, ``&quot;Cl1&quot;``, ...).</span>
-<span class="sd">            Shorthand for non-VCA cells. Atomic numbers and default</span>
+<span class="sd">            Shorthand for ordinary cells. Atomic numbers and default</span>
 <span class="sd">            masses are derived from these.</span>
 <span class="sd">        numbers : sequence of int, optional</span>
 <span class="sd">            Per-atom atomic numbers in 1..118. Shorthand alternative to</span>
@@ -1228,10 +1280,36 @@ window.runMermaid = runMermaid;</script>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the cell contains any mixed-species site.</span>
 
 <span class="sd">        ``True`` when any species in the cell is a weighted mixture of</span>
-<span class="sd">        constituents (e.g., a Virtual Crystal Approximation site).</span>
+<span class="sd">        constituents (a merged site mixture).</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_weighted_species</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the cell contains any weighted real species.</span>
+
+<span class="sd">        ``True`` when any species carries a non-merge concentration</span>
+<span class="sd">        weight (see ``apply_site_mixture``).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mixture_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Per-atom concentration weights for the non-merge scheme.</span>
+
+<span class="sd">        Derived from the species table: ``species.weight`` per atom, with</span>
+<span class="sd">        1.0 for atoms whose species carries no weight. ``None`` when no</span>
+<span class="sd">        species carries a weight (ordinary cells and merge-style mixture</span>
+<span class="sd">        cells). Otherwise ``shape=(natom,)``, ``dtype=&#39;double&#39;``, all</span>
+<span class="sd">        values in ``(0, 1]``. Set via :func:`apply_site_mixture`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span><span class="o">.</span><span class="n">weight</span> <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">masses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
@@ -1369,41 +1447,25 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse symbol strings and populate _species and _species_ids.&quot;&quot;&quot;</span>
         <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
-        <span class="n">species_table</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">species_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">per_atom_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">symnum</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
             <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">symnum</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-            <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symnum</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">])</span>
-            <span class="n">sid</span> <span class="o">=</span> <span class="n">species_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">sid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
-                <span class="n">species_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
-                <span class="n">species_table</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
-            <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span> <span class="o">=</span> <span class="n">species_list</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+            <span class="n">per_atom_species</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symnum</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">])</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numbers</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate _species and _species_ids from atomic numbers (1..118).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">numbers</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="p">((</span><span class="n">numbers</span> <span class="o">&gt;</span> <span class="mi">118</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">numbers</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Atomic numbers must be in 1..118.&quot;</span><span class="p">)</span>
         <span class="n">atom_data</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
-        <span class="n">species_table</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">species_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">:</span>
-            <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">atom_data</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">atomic_number</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-            <span class="n">sid</span> <span class="o">=</span> <span class="n">species_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">sid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">species_list</span><span class="p">)</span>
-                <span class="n">species_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
-                <span class="n">species_table</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
-            <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span> <span class="o">=</span> <span class="n">species_list</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+        <span class="n">per_atom_species</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">atom_data</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">atomic_number</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_default_masses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set _masses from the periodic table using each atom&#39;s species.</span>
@@ -1471,6 +1533,11 @@ window.runMermaid = runMermaid;</script>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                     <span class="s2">&quot;_magnetic_moments has to have shape=(natom,) or (natom*3).&quot;</span>
                 <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_mixtures</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Merged mixed-species sites (merge-style mixture) and weighted &quot;</span>
+                <span class="s2">&quot;real species (non-merge, species-resolved) cannot coexist in one cell.&quot;</span>
+            <span class="p">)</span>
 
 <div class="viewcode-block" id="PhonopyAtoms.copy">
 <a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms.copy">[docs]</a>
@@ -1520,9 +1587,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            the same symbol but different suffix get different ids);</span>
 <span class="sd">            suitable as the ``types`` argument for spglib when</span>
 <span class="sd">            symbol-suffix groupings must be preserved. If False</span>
-<span class="sd">            (default), the per-atom integer is the atomic number. VCA</span>
-<span class="sd">            cells always use ``species_ids`` regardless, since a VCA</span>
-<span class="sd">            mixture has no single atomic number.</span>
+<span class="sd">            (default), the per-atom integer is the atomic number, so</span>
+<span class="sd">            suffixed symbols (&quot;Cl1&quot;) are deliberately NOT distinguished:</span>
+<span class="sd">            a suffix is a calculator-facing label (e.g. QE</span>
+<span class="sd">            ATOMIC_SPECIES for isotopes) and force constants do not</span>
+<span class="sd">            depend on it, so symmetry search treats such atoms as</span>
+<span class="sd">            equivalent. Mixture cells (both merge-style mixtures and</span>
+<span class="sd">            non-merge weighted species) always use ``species_ids``</span>
+<span class="sd">            regardless, since a merged mixture has no single atomic number</span>
+<span class="sd">            and weighted species at the same position must be</span>
+<span class="sd">            distinguished by concentration.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1531,7 +1605,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            ``(cell, scaled_positions, numbers, magnetic_moments)``.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">distinguish_symbol_index</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_mixtures</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">distinguish_symbol_index</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_mixtures</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
             <span class="n">numbers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_ids</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">numbers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numbers</span>
@@ -1587,6 +1661,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  coordinates: [ </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2"> ]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  mass: </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mass</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  weight: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">weight</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">mag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">mag</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">mag_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mag</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -1707,7 +1783,9 @@ window.runMermaid = runMermaid;</script>
     <span class="n">masses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">magnetic_moments</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">mixture_per_atom</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">weight_per_atom</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">has_any_mixture</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">has_any_weight</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="s2">&quot;points&quot;</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="s2">&quot;coordinates&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
@@ -1722,6 +1800,11 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">has_any_mixture</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">mixture_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;weight&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">weight_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]))</span>
+                <span class="n">has_any_weight</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">weight_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="s2">&quot;mass&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
                 <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;mass&quot;</span><span class="p">])</span>
             <span class="k">if</span> <span class="s2">&quot;magnetic_moment&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
@@ -1732,6 +1815,27 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">points</span> <span class="ow">and</span> <span class="n">symbols</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">has_any_weight</span><span class="p">:</span>
+        <span class="c1"># Non-merge cell: each atom keeps its real element and carries</span>
+        <span class="c1"># a concentration weight. Build the species table directly so the</span>
+        <span class="c1"># (symbol, weight) pairs become weighted real species.</span>
+        <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
+        <span class="n">per_atom_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">weight_per_atom</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">per_atom_species</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">species_table</span><span class="p">,</span> <span class="n">species_ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
+            <span class="n">cell</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+            <span class="n">scaled_positions</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+            <span class="n">masses</span><span class="o">=</span><span class="n">masses_arg</span><span class="p">,</span>
+            <span class="n">magnetic_moments</span><span class="o">=</span><span class="n">magmoms_arg</span><span class="p">,</span>
+            <span class="n">species_table</span><span class="o">=</span><span class="n">species_table</span><span class="p">,</span>
+            <span class="n">species_ids</span><span class="o">=</span><span class="n">species_ids</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">has_any_mixture</span><span class="p">:</span>
         <span class="c1"># Cells with any mixed-species site route through</span>

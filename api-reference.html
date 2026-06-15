@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API reference &#8212; Phonopy v.4.2.0</title>
+    <title>API reference &#8212; Phonopy v.4.2.1</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=830d3dd9"></script>
+    <script src="_static/documentation_options.js?v=38f1bfc4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.2.0</p>
+    <p class="title logo__title">Phonopy v.4.2.1</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -465,6 +465,8 @@
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.species_table"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.species_table</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.numbers"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.numbers</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.has_mixtures"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.has_mixtures</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.has_weighted_species"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.has_weighted_species</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.mixture_weights"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.mixture_weights</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.masses"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.masses</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.magnetic_moments"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.magnetic_moments</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.volume"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.volume</span></code></a></li>
@@ -648,7 +650,7 @@ phonors backend. Default is <code class="docutils literal notranslate"><span cla
 <h2><code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class<a class="headerlink" href="#phonopy-class" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="phonopy.Phonopy">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">phonopy.</span></span><span class="sig-name descname"><span class="pre">Phonopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unitcell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primitive_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_velocity_delta_q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symprec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_SNF_supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hermitianize_dynamical_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Rust'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">phonopy.</span></span><span class="sig-name descname"><span class="pre">Phonopy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unitcell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supercell_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primitive_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_velocity_delta_q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symprec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distinguish_symbol_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_SNF_supercell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hermitianize_dynamical_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Rust'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Phonopy main API.</p>
 <p>A <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance is created from a unit cell and a supercell
@@ -693,6 +695,7 @@ overview of the typical workflow.</p>
 <li><p><strong>group_velocity_delta_q</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>symprec</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
 <li><p><strong>is_symmetry</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>distinguish_symbol_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
 <li><p><strong>use_SNF_supercell</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
 <li><p><strong>hermitianize_dynamical_matrix</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
 <li><p><strong>calculator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
@@ -2851,7 +2854,7 @@ information. Species can be expressed either as plain chemical
 symbols (<code class="docutils literal notranslate"><span class="pre">symbols</span></code>) / atomic numbers (<code class="docutils literal notranslate"><span class="pre">numbers</span></code>) for ordinary
 cells, or as a deduplicated table plus per-atom indices
 (<code class="docutils literal notranslate"><span class="pre">species_table</span></code> / <code class="docutils literal notranslate"><span class="pre">species_ids</span></code>) which additionally supports
-mixed-species sites for the Virtual Crystal Approximation. See
+mixed-species sites for site mixtures. See
 <a class="reference internal" href="phonopy-module.html#phonopy-atoms"><span class="std std-ref">PhonopyAtoms class</span></a> for the tutorial-style overview and per-attribute
 documentation below for details.</p>
 <dl class="field-list simple">
@@ -2947,7 +2950,26 @@ discriminator is needed.</p>
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_mixtures</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#phonopy.structure.atoms.PhonopyAtoms.has_mixtures" title="Link to this definition">#</a></dt>
 <dd><p>Return True if the cell contains any mixed-species site.</p>
 <p><code class="docutils literal notranslate"><span class="pre">True</span></code> when any species in the cell is a weighted mixture of
-constituents (e.g., a Virtual Crystal Approximation site).</p>
+constituents (a merged site mixture).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phonopy.structure.atoms.PhonopyAtoms.has_weighted_species">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_weighted_species</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#phonopy.structure.atoms.PhonopyAtoms.has_weighted_species" title="Link to this definition">#</a></dt>
+<dd><p>Return True if the cell contains any weighted real species.</p>
+<p><code class="docutils literal notranslate"><span class="pre">True</span></code> when any species carries a non-merge concentration
+weight (see <code class="docutils literal notranslate"><span class="pre">apply_site_mixture</span></code>).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phonopy.structure.atoms.PhonopyAtoms.mixture_weights">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mixture_weights</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><span class="pre">dtype</span></a><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#phonopy.structure.atoms.PhonopyAtoms.mixture_weights" title="Link to this definition">#</a></dt>
+<dd><p>Per-atom concentration weights for the non-merge scheme.</p>
+<p>Derived from the species table: <code class="docutils literal notranslate"><span class="pre">species.weight</span></code> per atom, with
+1.0 for atoms whose species carries no weight. <code class="docutils literal notranslate"><span class="pre">None</span></code> when no
+species carries a weight (ordinary cells and merge-style mixture
+cells). Otherwise <code class="docutils literal notranslate"><span class="pre">shape=(natom,)</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype='double'</span></code>, all
+values in <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1]</span></code>. Set via <code class="xref py py-func docutils literal notranslate"><span class="pre">apply_site_mixture()</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -3018,9 +3040,16 @@ returned instead.</p>
 the same symbol but different suffix get different ids);
 suitable as the <code class="docutils literal notranslate"><span class="pre">types</span></code> argument for spglib when
 symbol-suffix groupings must be preserved. If False
-(default), the per-atom integer is the atomic number. VCA
-cells always use <code class="docutils literal notranslate"><span class="pre">species_ids</span></code> regardless, since a VCA
-mixture has no single atomic number.</p>
+(default), the per-atom integer is the atomic number, so
+suffixed symbols (“Cl1”) are deliberately NOT distinguished:
+a suffix is a calculator-facing label (e.g. QE
+ATOMIC_SPECIES for isotopes) and force constants do not
+depend on it, so symmetry search treats such atoms as
+equivalent. Mixture cells (both merge-style mixtures and
+non-merge weighted species) always use <code class="docutils literal notranslate"><span class="pre">species_ids</span></code>
+regardless, since a merged mixture has no single atomic number
+and weighted species at the same position must be
+distinguished by concentration.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(cell,</span> <span class="pre">scaled_positions,</span> <span class="pre">numbers)</span></code> or
@@ -3324,6 +3353,8 @@ See the docstring. Default is None.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.species_table"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.species_table</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.numbers"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.numbers</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.has_mixtures"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.has_mixtures</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.has_weighted_species"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.has_weighted_species</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.mixture_weights"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.mixture_weights</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.masses"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.masses</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.magnetic_moments"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.magnetic_moments</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy.structure.atoms.PhonopyAtoms.volume"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms.volume</span></code></a></li>
