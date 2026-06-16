@@ -215,6 +215,25 @@ class DynamicalMatrix:
         return self._pcell
 
     @property
+    def scaled_masses(self) -> NDArray[np.double]:
+        """Atomic masses used to mass-normalize the dynamical matrix.
+
+        For ordinary and merge-style mixture cells this equals
+        ``primitive.masses``. For non-merge site-mixture cells (built by
+        ``apply_site_mixture``) each mass is scaled by its per-atom
+        concentration weight x_i in (0, 1], giving the VCA effective mass
+        x_i * M_i in the 1/sqrt(M_i M_j) normalization. The reported masses
+        (``primitive.masses``) and the force constants stay unchanged; only
+        the dynamical matrix and its derivative see the scaled mass.
+        shape=(natom,), dtype='double'.
+
+        """
+        weights = self._pcell.mixture_weights
+        if weights is None:
+            return self._pcell.masses
+        return self._pcell.masses * weights
+
+    @property
     def force_constants(self) -> NDArray[np.double]:
         """Return supercell force constants."""
         return self._force_constants
@@ -282,7 +301,7 @@ class DynamicalMatrix:
         multi = self._multi
         num_atom = len(self._pcell)
         dm = np.zeros((3 * num_atom, 3 * num_atom), dtype="cdouble", order="C")
-        mass = self._pcell.masses
+        mass = self.scaled_masses
         if fc.shape[0] == fc.shape[1]:
             is_compact_fc = False
         else:
@@ -712,7 +731,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 C_recip[i, :, i, :] -= drift[i]
 
         # Mass weighted
-        mass = self._pcell.masses
+        mass = self.scaled_masses
         for i in range(num_atom):
             for j in range(num_atom):
                 C_recip[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
@@ -1491,7 +1510,7 @@ def _extract_params(
     else:
         _svecs, _multi = sparse_to_dense_svecs(svecs, multi)
 
-    masses = dm.primitive.masses
+    masses = dm.scaled_masses
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
     positions = dm.primitive.positions
     if isinstance(dm, DynamicalMatrixNAC):
