@@ -191,6 +191,35 @@ def test_projected_dos_direction(ph_nacl_nofcsym: Phonopy):
     np.testing.assert_allclose(pdos_dir_x, pdos_xyz[0::3], atol=1e-10)
 
 
+def test_projected_dos_non_merge_site_weights(ph_nacl_nofcsym: Phonopy, monkeypatch):
+    """Per-atom site-mixture weights scale each atom's PDOS by x_a.
+
+    Regression guard for the mixture_weights handling in ``ProjectedDos.__init__``.
+
+    """
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
+    mesh = phonon.mesh
+    natom = len(mesh.primitive)
+
+    pdos_ref = _run_projected_dos(mesh)
+    pdos_xyz_ref = _run_projected_dos(mesh, xyz_projection=True)
+    assert pdos_ref is not None
+    assert pdos_xyz_ref is not None
+
+    weights = np.linspace(0.4, 1.0, natom)  # non-uniform: distinguishes per atom
+    monkeypatch.setattr(
+        type(mesh.primitive), "mixture_weights", property(lambda self: weights)
+    )
+    pdos_w = _run_projected_dos(mesh)
+    pdos_xyz_w = _run_projected_dos(mesh, xyz_projection=True)
+
+    np.testing.assert_allclose(pdos_w, pdos_ref * weights[:, None], atol=1e-12)
+    np.testing.assert_allclose(
+        pdos_xyz_w, pdos_xyz_ref * np.repeat(weights, 3)[:, None], atol=1e-12
+    )
+
+
 def testProjectedlDOS(ph_nacl_nofcsym: Phonopy):
     """Test projected DOS with smearing method."""
     phonon = ph_nacl_nofcsym
