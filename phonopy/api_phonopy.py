@@ -2004,6 +2004,7 @@ class Phonopy:
         freq_max: float | None = None,
         freq_pitch: float | None = None,
         use_tetrahedron_method: bool = True,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
     ) -> TotalDos:
         """Run total DOS calculation.
 
@@ -2019,6 +2020,10 @@ class Phonopy:
         use_tetrahedron_method : bool, optional
             Use the tetrahedron method when True. When ``sigma`` is
             set, the smearing method is used instead. Default is True.
+        smearing_function : {"Normal", "Cauchy"}, optional
+            Distribution used by the smearing method. "Normal" is a normal
+            distribution and "Cauchy" is a Cauchy (Lorentzian) distribution.
+            Default is "Normal".
 
         Returns
         -------
@@ -2038,6 +2043,7 @@ class Phonopy:
             self._mesh,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            smearing_function=smearing_function,
             lang=self._lang,
         )
         total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
@@ -2194,6 +2200,7 @@ class Phonopy:
         use_tetrahedron_method: bool = True,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
     ) -> ProjectedDos:
         """Run projected DOS calculation.
 
@@ -2216,6 +2223,10 @@ class Phonopy:
         xyz_projection : bool, optional
             Whether to project along Cartesian directions. Default is
             False.
+        smearing_function : {"Normal", "Cauchy"}, optional
+            Distribution used by the smearing method. "Normal" is a normal
+            distribution and "Cauchy" is a Cauchy (Lorentzian) distribution.
+            Default is "Normal".
 
         Returns
         -------
@@ -2252,6 +2263,7 @@ class Phonopy:
             use_tetrahedron_method=use_tetrahedron_method,
             direction=direction_cart,
             xyz_projection=xyz_projection,
+            smearing_function=smearing_function,
             lang=self._lang,
         )
         self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
