@@ -409,6 +409,14 @@ class ProjectedDos(Dos):
                 proj = np.einsum("iajm,j->iam", ev, d)
                 self._eigvecs2 = np.abs(proj) ** 2
 
+        weights = self._mesh_object.primitive.mixture_weights
+        if weights is not None:
+            # Per-atom non-merge site-mixture concentration weight x_a scales
+            # each atom's PDOS linearly: |sqrt(x_a) e|^2 = x_a |e|^2. The xyz
+            # projection has 3 rows per atom.
+            row_weights = np.repeat(weights, 3) if xyz_projection else weights
+            self._eigvecs2 = self._eigvecs2 * row_weights[None, :, None]
+
     @property
     def projected_dos(self) -> NDArray[np.double] | None:
         """Return projected DOS."""

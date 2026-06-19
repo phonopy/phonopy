@@ -1271,6 +1271,8 @@ def _run_projected_dos(
         print(
             "                      [%6.3f %6.3f %6.3f] (Cartesian)" % tuple(c_direction)
         )
+    if log_level and phonon.primitive.mixture_weights is not None:
+        print("Projected DOS is scaled by per-atom site-mixture concentration weights.")
     if log_level:
         print("Calculating projected DOS...")
     phonon.run_projected_dos(
@@ -1299,6 +1301,8 @@ def _run_total_dos(
 ) -> None:
     """Run total DOS calculation."""
     run_mode = settings.run_mode
+    if log_level and phonon.primitive.mixture_weights is not None:
+        print("Total DOS is NOT scaled by site-mixture concentration weights.")
     phonon.run_total_dos(
         sigma=settings.sigma,
         freq_min=settings.min_frequency,
