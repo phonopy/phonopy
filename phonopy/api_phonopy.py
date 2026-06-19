@@ -2109,20 +2109,42 @@ class Phonopy:
         )
 
     def set_Debye_frequency(self, freq_max_fit: float | None = None) -> None:
-        """Calculate Debye frequency on top of total DOS."""
+        """Calculate Debye frequency on top of total DOS.
+
+        .. deprecated::
+            After ``run_total_dos()``, call
+            ``total_dos.run_debye_frequency(num_atoms)`` instead.
+
+        """
+        warnings.warn(
+            "set_Debye_frequency() is deprecated. After run_total_dos(), call "
+            "total_dos.run_debye_frequency(num_atoms) and read "
+            "total_dos.debye_frequency.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._total_dos is None:
             msg = "run_total_dos has to be done before getting total DOS."
             raise RuntimeError(msg)
-        self._total_dos.set_Debye_frequency(
-            len(self._primitive), freq_max_fit=freq_max_fit
-        )
+        self._total_dos.run_debye_frequency(freq_max_fit=freq_max_fit)
 
     def get_Debye_frequency(self) -> float | None:
-        """Return Debye frequency."""
+        """Return Debye frequency.
+
+        .. deprecated::
+            Use ``total_dos.debye_frequency`` instead.
+
+        """
+        warnings.warn(
+            "get_Debye_frequency() is deprecated. Use the total_dos property "
+            "and read its debye_frequency attribute instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._total_dos is None:
             msg = "run_total_dos has to be done before getting total DOS."
             raise RuntimeError(msg)
-        return self._total_dos.get_Debye_frequency()
+        return self._total_dos.debye_frequency
 
     def plot_total_dos(
         self,

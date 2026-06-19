@@ -1,6 +1,7 @@
 """Tests for DOS."""
 
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
 from phonopy.cui.phonopy_script import _get_pdos_indices
@@ -203,6 +204,34 @@ def testPartialDOSTetrahedronEvenMesh(ph_nacl_nofcsym: Phonopy):
     freqs = phonon.projected_dos.frequency_points
     data_ref = np.reshape([float(x) for x in pdos_thm_even_str.split()], (-1, 3)).T
     np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
+
+
+def test_debye_frequency(ph_nacl_nofcsym: Phonopy):
+    """Test Debye frequency via run_debye_frequency and the debye_frequency attr."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5])
+    phonon.run_total_dos(freq_pitch=1)
+    assert phonon.total_dos.debye_frequency is None
+    phonon.total_dos.run_debye_frequency()
+    freq_debye = phonon.total_dos.debye_frequency
+    assert isinstance(freq_debye, float)
+    assert freq_debye > 0
+
+
+def test_debye_frequency_deprecated_api(ph_nacl_nofcsym: Phonopy):
+    """Deprecated set_/get_Debye_frequency keep working but warn."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5])
+    phonon.run_total_dos(freq_pitch=1)
+
+    with pytest.warns(DeprecationWarning):
+        phonon.set_Debye_frequency()
+    with pytest.warns(DeprecationWarning):
+        freq_debye_deprecated = phonon.get_Debye_frequency()
+
+    np.testing.assert_allclose(
+        freq_debye_deprecated, phonon.total_dos.debye_frequency, atol=1e-12
+    )
 
 
 def test_get_pdos_indices(ph_tio2: Phonopy):
