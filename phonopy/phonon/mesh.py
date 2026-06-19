@@ -52,6 +52,7 @@ from phonopy.harmonic.dynamical_matrix import (
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points, length2mesh
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
+from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
 
 
@@ -469,6 +470,11 @@ class MeshBase:
     def is_shift(self) -> list[int] | None:
         """Return half-grid shift flags per axis (0 or 1)."""
         return self._gp.is_shift
+
+    @property
+    def primitive(self) -> Primitive:
+        """Return the primitive cell."""
+        return self._cell
 
     @property
     def primitive_symmetry(self) -> Symmetry | None:

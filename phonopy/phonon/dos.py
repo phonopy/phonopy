@@ -259,13 +259,12 @@ class TotalDos(Dos):
         """Return total DOS."""
         return self._dos
 
-    def get_Debye_frequency(self) -> float | None:
+    @property
+    def debye_frequency(self) -> float | None:
         """Return a kind of Debye frequency."""
         return self._freq_Debye
 
-    def set_Debye_frequency(
-        self, num_atoms: int, freq_max_fit: float | None = None
-    ) -> None:
+    def run_debye_frequency(self, freq_max_fit: float | None = None) -> None:
         """Calculate a kind of Debye frequency."""
         try:
             from scipy.optimize import curve_fit
@@ -274,6 +273,8 @@ class TotalDos(Dos):
 
         if self._dos is None:
             raise RuntimeError("Run total DOS calculation first.")
+
+        num_atoms = len(self._mesh_object.primitive)
 
         def Debye_dos(freq, a):
             return a * freq**2

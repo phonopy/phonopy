@@ -1309,9 +1309,9 @@ def _run_total_dos(
     if log_level:
         print("Calculating DOS...")
     if settings.fits_Debye_model:
-        phonon.set_Debye_frequency()
+        phonon.total_dos.run_debye_frequency()
         if log_level:
-            print("Debye frequency: %10.5f" % phonon.get_Debye_frequency())
+            print("Debye frequency: %10.5f" % phonon.total_dos.debye_frequency)
     phonon.write_total_dos()
     if plot_conf["plot_graph"] and run_mode != "band_mesh":
         plot = phonon.plot_total_dos()
