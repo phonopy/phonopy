@@ -5,6 +5,7 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy.cui.phonopy_script import _get_pdos_indices
+from phonopy.phonon.dos import ProjectedDos
 
 tp_str = """0.000000 100.000000 200.000000 300.000000 400.000000
 500.000000 600.000000 700.000000 800.000000 900.000000
@@ -147,6 +148,47 @@ def test_projected_dos_cauchy_smearing(ph_nacl_nofcsym: Phonopy):
     assert pdos_normal is not None
     assert pdos_cauchy is not None
     assert not np.allclose(pdos_normal, pdos_cauchy)
+
+
+def _run_projected_dos(mesh, **kwargs):
+    """Build a smearing ProjectedDos directly and return its projected DOS."""
+    pdos = ProjectedDos(mesh, sigma=0.5, **kwargs)
+    pdos.set_draw_area(freq_pitch=1)
+    pdos.run()
+    return pdos.projected_dos
+
+
+def test_projected_dos_xyz_projection(ph_nacl_nofcsym: Phonopy):
+    """Summing the xyz projection over x, y, z per atom recovers the per-atom PDOS.
+
+    Regression guard for the eigenvector handling in ``ProjectedDos.__init__``.
+
+    """
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
+    pdos_atom = _run_projected_dos(phonon.mesh)
+    pdos_xyz = _run_projected_dos(phonon.mesh, xyz_projection=True)
+    assert pdos_atom is not None
+    assert pdos_xyz is not None
+    natom, nfreq = pdos_atom.shape
+    summed = pdos_xyz.reshape(natom, 3, nfreq).sum(axis=1)
+    np.testing.assert_allclose(summed, pdos_atom, atol=1e-10)
+
+
+def test_projected_dos_direction(ph_nacl_nofcsym: Phonopy):
+    """Projection onto Cartesian x equals the x rows of the xyz projection.
+
+    Regression guard for the direction-projection path in
+    ``ProjectedDos.__init__``.
+
+    """
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
+    pdos_xyz = _run_projected_dos(phonon.mesh, xyz_projection=True)
+    pdos_dir_x = _run_projected_dos(phonon.mesh, direction=[1, 0, 0])
+    assert pdos_xyz is not None
+    assert pdos_dir_x is not None
+    np.testing.assert_allclose(pdos_dir_x, pdos_xyz[0::3], atol=1e-10)
 
 
 def testProjectedlDOS(ph_nacl_nofcsym: Phonopy):

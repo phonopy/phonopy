@@ -388,29 +388,26 @@ class ProjectedDos(Dos):
             smearing_function=smearing_function,
             lang=lang,
         )
-        if self._mesh_object.eigenvectors is None:
+        eigvecs = self._mesh_object.eigenvectors
+        if eigvecs is None:
             raise ValueError("Mesh object does not have eigenvectors.")
-        self._eigenvectors = self._mesh_object.eigenvectors
         self._projected_dos = None
 
         if xyz_projection:
-            self._eigvecs2 = np.abs(self._eigenvectors) ** 2
+            self._eigvecs2 = np.abs(eigvecs) ** 2
         else:
-            num_atom = self._frequencies.shape[1] // 3
-            i_x = np.arange(num_atom, dtype="int") * 3
-            i_y = np.arange(num_atom, dtype="int") * 3 + 1
-            i_z = np.arange(num_atom, dtype="int") * 3 + 2
+            n_ir, n_comp, n_mode = eigvecs.shape
+            # Split the component axis [x1,y1,z1,x2,y2,z2,...] into (atom, xyz).
+            ev = eigvecs.reshape(n_ir, n_comp // 3, 3, n_mode)
             if direction is None:
-                self._eigvecs2 = np.abs(self._eigenvectors[:, i_x, :]) ** 2
-                self._eigvecs2 += np.abs(self._eigenvectors[:, i_y, :]) ** 2
-                self._eigvecs2 += np.abs(self._eigenvectors[:, i_z, :]) ** 2
+                self._eigvecs2 = (np.abs(ev) ** 2).sum(axis=2)
             else:
-                d = np.array(direction, dtype="double")
-                d /= np.linalg.norm(direction)
-                proj_eigvecs = self._eigenvectors[:, i_x, :] * d[0]
-                proj_eigvecs += self._eigenvectors[:, i_y, :] * d[1]
-                proj_eigvecs += self._eigenvectors[:, i_z, :] * d[2]
-                self._eigvecs2 = np.abs(proj_eigvecs) ** 2
+                d = np.asarray(direction, dtype="double")
+                d = d / np.linalg.norm(d)
+                # Project each atom's xyz amplitude onto the direction (sum over
+                # the xyz axis j), then square.
+                proj = np.einsum("iajm,j->iam", ev, d)
+                self._eigvecs2 = np.abs(proj) ** 2
 
     @property
     def projected_dos(self) -> NDArray[np.double] | None:
