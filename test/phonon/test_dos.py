@@ -118,6 +118,37 @@ def test_projected_dos_sigma_overrides_tetrahedron(ph_nacl_nofcsym: Phonopy):
     np.testing.assert_allclose(pdos_default, pdos_smearing, atol=1e-12)
 
 
+def test_total_dos_cauchy_smearing(ph_nacl_nofcsym: Phonopy):
+    """Cauchy smearing is selectable through run_total_dos."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5])
+    dos_normal = phonon.run_total_dos(
+        sigma=0.5, freq_pitch=1, smearing_function="Normal"
+    ).dos
+    dos_cauchy = phonon.run_total_dos(
+        sigma=0.5, freq_pitch=1, smearing_function="Cauchy"
+    ).dos
+    assert dos_normal is not None
+    assert dos_cauchy is not None
+    # Different distributions give different DOS.
+    assert not np.allclose(dos_normal, dos_cauchy)
+
+
+def test_projected_dos_cauchy_smearing(ph_nacl_nofcsym: Phonopy):
+    """Cauchy smearing is selectable through run_projected_dos."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
+    pdos_normal = phonon.run_projected_dos(
+        sigma=0.5, freq_pitch=1, smearing_function="Normal"
+    ).projected_dos
+    pdos_cauchy = phonon.run_projected_dos(
+        sigma=0.5, freq_pitch=1, smearing_function="Cauchy"
+    ).projected_dos
+    assert pdos_normal is not None
+    assert pdos_cauchy is not None
+    assert not np.allclose(pdos_normal, pdos_cauchy)
+
+
 def testProjectedlDOS(ph_nacl_nofcsym: Phonopy):
     """Test projected DOS with smearing method."""
     phonon = ph_nacl_nofcsym

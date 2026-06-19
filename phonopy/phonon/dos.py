@@ -99,6 +99,7 @@ class Dos:
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
@@ -111,6 +112,10 @@ class Dos:
         sigma : float, optional
             Sigma for smearing method. When set, the smearing method is
             used regardless of ``use_tetrahedron_method``.
+        smearing_function : {"Normal", "Cauchy"}, optional
+            Distribution used by the smearing method.  "Normal" is a normal
+            distribution and "Cauchy" is a Cauchy (Lorentzian) distribution.
+            Default is "Normal".
         lang : {"C", "Rust"}, optional
             Backend selector for the tetrahedron-method kernels.  Default
             is "C".
@@ -123,39 +128,24 @@ class Dos:
         # method applies only without sigma.
         self._use_tetrahedron_method = use_tetrahedron_method and sigma is None
         self._frequency_points: NDArray[np.double]
+        self._smearing_function: NormalDistribution | CauchyDistribution
         self._sigma = sigma
         self._lang: Literal["C", "Rust"] = lang
 
         if self._use_tetrahedron_method:
             self.set_draw_area()
         else:
-            self._sigma = self.set_draw_area()
-            self.set_smearing_function("Normal")
+            sigma_value = self.set_draw_area()
+            self._sigma = sigma_value
+            if smearing_function == "Cauchy":
+                self._smearing_function = CauchyDistribution(sigma_value)
+            else:
+                self._smearing_function = NormalDistribution(sigma_value)
 
     @property
     def frequency_points(self) -> NDArray[np.double]:
         """Return frequency points."""
         return self._frequency_points
-
-    def set_smearing_function(self, function_name: Literal["Normal", "Cauchy"]) -> None:
-        """Set function form for smearing method.
-
-        Parameters
-        ----------
-        function_name : str
-            'Normal': smearing is done by normal distribution.
-            'Cauchy': smearing is done by Cauchy distribution.
-
-        """
-        assert self._sigma is not None
-        if function_name == "Cauchy":
-            self._smearing_function = CauchyDistribution(self._sigma)
-        else:
-            self._smearing_function = NormalDistribution(self._sigma)
-
-    def set_sigma(self, sigma: float) -> None:
-        """Set sigma."""
-        self._sigma = sigma
 
     def set_draw_area(
         self,
@@ -232,6 +222,7 @@ class TotalDos(Dos):
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
@@ -239,6 +230,7 @@ class TotalDos(Dos):
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            smearing_function=smearing_function,
             lang=lang,
         )
         self._dos: NDArray[np.double] | None = None
@@ -385,6 +377,7 @@ class ProjectedDos(Dos):
         use_tetrahedron_method: bool = False,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
@@ -392,6 +385,7 @@ class ProjectedDos(Dos):
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            smearing_function=smearing_function,
             lang=lang,
         )
         if self._mesh_object.eigenvectors is None:
