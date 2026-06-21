@@ -24,7 +24,7 @@ cwd = pathlib.Path(__file__).parent
 
 def test_read_exciting() -> None:
     """Test of read_exciting."""
-    cell = read_abinit(cwd / "exciting/input.xml")
+    cell = read_exciting(cwd / "exciting/input.xml")
     filename = cwd / "exciting/PbTiO3.yaml"
     cell_ref = read_cell_yaml(filename)
     assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
