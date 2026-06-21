@@ -181,6 +181,7 @@ def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
                     f"Species file not found: {species_file_path}. "
                     f"Using fallback symbol: {chemical_symbol}",
                     UserWarning,
+                    stacklevel=2,
                 )
         except (ValueError, FileNotFoundError) as e:
             # Fallback: extract from filename.
@@ -193,6 +194,7 @@ def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
                 f"Could not read species file {species_file_path}: {e}. "
                 f"Using fallback symbol: {chemical_symbol}",
                 UserWarning,
+                stacklevel=2,
             )
 
         if not chemical_symbol:
@@ -248,7 +250,6 @@ def get_exciting_structure(cell: PhonopyAtoms) -> str:
     structure = ET.SubElement(root, "structure", attrib=structure_attrib)
 
     # Create crystal element
-    crystal_attrib = {}
     crystal = ET.SubElement(structure, "crystal")
 
     for i in range(3):
@@ -283,6 +284,7 @@ def get_exciting_structure(cell: PhonopyAtoms) -> str:
 
 
 def write_exciting(filename: str | os.PathLike, cell: PhonopyAtoms) -> None:
+    """Write exciting structure to file."""
     tree = get_exciting_structure(cell)
     ET.indent(tree, space="  ", level=0)
     tree.write(filename, encoding="utf-8", xml_declaration=True)
