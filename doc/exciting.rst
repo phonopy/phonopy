@@ -14,12 +14,12 @@ when generating input files:
 
     autormt, autormtscaling, cartesian, epslat, primcell, tshift, stretch, fixrmt, rmt, LDAplusU, dfthalfparam, shell
 
-If any of these are required for your calculations, 
+If any of these are required for your calculations,
 they must be manually re-added by the user after processing.
-Note that although it is possible to process files where atomic 
-positions are given in Cartesian coordinates, the generated files 
-will always use reduced (fractional) coordinates. In addition, 
-``tshift`` will be set to ``false`` for consistency with the input file. 
+Note that although it is possible to process files where atomic
+positions are given in Cartesian coordinates, the generated files
+will always use reduced (fractional) coordinates. In addition,
+``tshift`` will be set to ``false`` for consistency with the input file.
 For more information, see: https://exciting-code.org/.
 
 How to run
@@ -39,11 +39,11 @@ A procedure of exciting-phonopy calculation is as follows:
    generated. ``phonopy_disp.yaml`` is also created. This file contains
    information on displacements. Put those files in folders ``001 002 ...``
    and create a symbolic link called ``input.xml`` to those. Morever,
-   if needed copy the species files, 
+   if needed copy the species files,
 
 2) Calculate forces on atoms in the supercells with
    displacements. Calculation block ``groundstate`` have to be added to
-   each ``supercell.xml`` file. 
+   each ``supercell.xml`` file.
 
 3) Create ``FORCE_SETS`` by
 

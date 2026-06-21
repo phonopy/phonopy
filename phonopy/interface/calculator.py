@@ -644,7 +644,8 @@ def _get_writer_handler(
 
     2. Generic handlers (unified implementation):
        - Use a standard call pattern without special processing
-       - Examples: ABINIT, SIESTA, DFTB+, TURBOMOLE, FHI-aims, CASTEP, LAMMPS, PWmat, exciting
+       - Examples: ABINIT, SIESTA, DFTB+, TURBOMOLE, FHI-aims, CASTEP, LAMMPS, PWmat,
+         exciting
        - Share a single generic handler via _write_supercells_generic()
 
     Parameters

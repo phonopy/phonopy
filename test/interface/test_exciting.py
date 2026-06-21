@@ -2,21 +2,15 @@
 
 import io
 import pathlib
-import tempfile
+import xml.etree.ElementTree as ET
 
 import numpy as np
-import pytest
-
-import xml.etree.ElementTree as ET
 
 from phonopy.interface.exciting import (
     get_exciting_structure,
     read_exciting,
-    write_exciting,
-    write_supercells_with_displacements,
 )
 from phonopy.interface.phonopy_yaml import read_cell_yaml
-from phonopy.physical_units import get_physical_units
 from phonopy.structure.cells import isclose
 
 cwd = pathlib.Path(__file__).parent
