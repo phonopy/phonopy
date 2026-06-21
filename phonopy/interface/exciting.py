@@ -48,161 +48,163 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy import Phonopy
-
-from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import (
     check_forces,
     get_drift_forces,
-    get_scaled_positions_lines,
 )
-from phonopy.physical_units import get_physical_units
-from phonopy.structure.atomic_data import get_atomic_data
-from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index
-from phonopy.structure.cells import Primitive, get_primitive, get_supercell
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def read_species_symbol(speciesfile: str | os.PathLike | typing.IO) -> str:
     """Extract chemical symbol from exciting species XML file.
-    
+
     Args:
         speciesfile: Path to species XML file (e.g., "Li.xml") or file-like object
-        
-    Returns:
+
+    Returns
+    -------
         Chemical symbol (e.g., "Li")
     """
     if isinstance(speciesfile, io.IOBase):
         xml_content = speciesfile.read()
         if isinstance(xml_content, bytes):
-            xml_content = xml_content.decode('utf-8')
+            xml_content = xml_content.decode("utf-8")
     else:
-        with open(speciesfile, 'r') as f:
+        with open(speciesfile, "r") as f:
             xml_content = f.read()
-    
+
     root = ET.fromstring(xml_content)
-    sp_elem = root.find('.//sp')
+    sp_elem = root.find(".//sp")
     if sp_elem is None:
         raise ValueError(f"No 'sp' element found in species file: {speciesfile}")
-    
-    chemical_symbol = sp_elem.get('chemicalSymbol')
+
+    chemical_symbol = sp_elem.get("chemicalSymbol")
     if chemical_symbol is None:
-        raise ValueError(f"No 'chemicalSymbol' attribute in species file: {speciesfile}")
-    
+        raise ValueError(
+            f"No 'chemicalSymbol' attribute in species file: {speciesfile}"
+        )
+
     return chemical_symbol
 
 
 def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
     """Read exciting structure.
-    
+
     Parses exciting XML format to extract lattice vectors and atomic positions.
     Reads chemical symbols from species files located in the speciespath directory.
-    
+
     Args:
         filename: Path to exciting XML file or file-like object
-        
-    Returns:
+
+    Returns
+    -------
         PhonopyAtoms object with parsed structure
     """
-
     # Read XML content
     if isinstance(filename, io.IOBase):
         xml_content = filename.read()
         if isinstance(xml_content, bytes):
-            xml_content = xml_content.decode('utf-8')
+            xml_content = xml_content.decode("utf-8")
         input_dir = "."
     else:
         input_dir = os.path.dirname(os.path.abspath(filename))
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             xml_content = f.read()
-    
+
     # Parse XML
     root = ET.fromstring(xml_content)
-    
+
     # Extract lattice vectors from crystal/basevect
-    crystal = root.find('.//crystal')
+    crystal = root.find(".//crystal")
     if crystal is None:
         raise ValueError("No 'crystal' element found in XML")
-    
+
     # Get scale factor if present (default: 1.0)
-    scale = float(crystal.get('scale', 1.0))
-    
+    scale = float(crystal.get("scale", 1.0))
+
     basevects = []
-    for basevect_elem in crystal.findall('basevect'):
+    for basevect_elem in crystal.findall("basevect"):
         coords = [float(x) for x in basevect_elem.text.split()]
         basevects.append(coords)
-    
+
     if len(basevects) != 3:
         raise ValueError(f"Expected 3 basis vectors, got {len(basevects)}")
-    
-    lattice         = np.array(basevects) * scale  # Apply scale factor
+
+    lattice = np.array(basevects) * scale  # Apply scale factor
     inverse_lattice = np.linalg.inv(lattice)
-    
+
     # Get speciespath from structure element
-    structure = root.find('.//structure')
+    structure = root.find(".//structure")
     if structure is not None:
-        structure_speciespath = structure.get('speciespath', '.')
+        structure_speciespath = structure.get("speciespath", ".")
         # Resolve path relative to input file directory
         if os.path.isabs(structure_speciespath):
             speciespath = structure_speciespath
         else:
-            speciespath = os.path.normpath(os.path.join(input_dir, structure_speciespath))
+            speciespath = os.path.normpath(
+                os.path.join(input_dir, structure_speciespath)
+            )
     else:
         speciespath = input_dir
-    
+
     # Check if coordinates are in Cartesian format (default: False)
-    cartesian = structure.get('cartesian', 'false').lower() == 'true' if structure is not None else False
-    
+    cartesian = (
+        structure.get("cartesian", "false").lower() == "true"
+        if structure is not None
+        else False
+    )
+
     # Extract atomic positions and species symbols
     symbols = []
     positions = []
-    
-    for species_elem in root.findall('.//species'):
+
+    for species_elem in root.findall(".//species"):
         # Get species file path
-        speciesfile = species_elem.get('speciesfile', '')
+        speciesfile = species_elem.get("speciesfile", "")
         if not speciesfile:
             raise ValueError("Species element missing 'speciesfile' attribute")
-        
+
         # Try to read chemical symbol from species file
         try:
             species_file_path = os.path.join(speciespath, speciesfile)
             if os.path.exists(species_file_path):
                 chemical_symbol = read_species_symbol(species_file_path)
             else:
-                # Fallback: extract from filename. 
+                # Fallback: extract from filename.
                 # This is not safe, as in exciting the user can
                 # rename its species file as it desires. But
-                # I found it worth to allow Phonopy usage without 
+                # I found it worth to allow Phonopy usage without
                 # species selection.
-                chemical_symbol = speciesfile.replace('.xml', '').replace('.XML', '')
+                chemical_symbol = speciesfile.replace(".xml", "").replace(".XML", "")
                 warnings.warn(
                     f"Species file not found: {species_file_path}. "
                     f"Using fallback symbol: {chemical_symbol}",
-                    UserWarning
+                    UserWarning,
                 )
         except (ValueError, FileNotFoundError) as e:
             # Fallback: extract from filename.
             # This is not safe, as in exciting the user can
             # rename its species file as it desires.
-            # I found it worth to allow Phonopy usage without 
+            # I found it worth to allow Phonopy usage without
             # species selection.
-            chemical_symbol = speciesfile.replace('.xml', '').replace('.XML', '')
+            chemical_symbol = speciesfile.replace(".xml", "").replace(".XML", "")
             warnings.warn(
                 f"Could not read species file {species_file_path}: {e}. "
                 f"Using fallback symbol: {chemical_symbol}",
-                UserWarning
+                UserWarning,
             )
-        
+
         if not chemical_symbol:
             raise ValueError(f"Could not extract species symbol from {speciesfile}")
-        
+
         # Extract all atoms for this species
-        for atom_elem in species_elem.findall('atom'):
-            coord_str = atom_elem.get('coord', '')
+        for atom_elem in species_elem.findall("atom"):
+            coord_str = atom_elem.get("coord", "")
             if coord_str:
                 # Parse coordinates
                 coords = [float(x) for x in coord_str.split()]
-                
+
                 # Convert from Cartesian to fractional if needed
                 if cartesian:
                     # coords are in Cartesian, convert to fractional
@@ -211,96 +213,80 @@ def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
                 else:
                     # coords are already fractional
                     frac_coords = coords
-                
+
                 symbols.append(chemical_symbol)
                 positions.append(frac_coords)
-    
+
     if not symbols:
         raise ValueError("No atoms found in structure")
-    
+
     scaled_positions = np.array(positions)
-    
+
     # Return PhonopyAtoms object
     return PhonopyAtoms(
-        symbols=symbols,
-        cell=lattice,
-        scaled_positions=scaled_positions
+        symbols=symbols, cell=lattice, scaled_positions=scaled_positions
     )
+
 
 def get_exciting_structure(cell: PhonopyAtoms) -> str:
     """Return exciting structure in xml tree."""
-    
     # Extract data from PhonopyAtoms object
     lattice = cell.cell
     scaled_positions = cell.scaled_positions
     chemical_symbols = cell.symbols
-    
+
     # Create root element
-    root = ET.Element('input')
-    
+    root = ET.Element("input")
+
     # Add title
-    title_elem = ET.SubElement(root, 'title')
+    title_elem = ET.SubElement(root, "title")
     title_elem.text = "Phonopy generated structure"
-    
+
     # Create structure element with all attributes
-    structure_attrib = {
-        'speciespath': '.',
-        'cartesian': 'false',
-        'tshift': 'false'
-    }
-    
-    structure = ET.SubElement(root, 'structure', attrib=structure_attrib)
-    
+    structure_attrib = {"speciespath": ".", "cartesian": "false", "tshift": "false"}
+
+    structure = ET.SubElement(root, "structure", attrib=structure_attrib)
+
     # Create crystal element
     crystal_attrib = {}
-    crystal = ET.SubElement(structure, 'crystal')
-    
+    crystal = ET.SubElement(structure, "crystal")
+
     for i in range(3):
-        basevect = ET.SubElement(crystal, 'basevect')
-        basevect.text = '   {:16.10f}   {:16.10f}   {:16.10f}'.format(
-            lattice[i, 0],
-            lattice[i, 1],
-            lattice[i, 2]
+        basevect = ET.SubElement(crystal, "basevect")
+        basevect.text = "   {:16.10f}   {:16.10f}   {:16.10f}".format(
+            lattice[i, 0], lattice[i, 1], lattice[i, 2]
         )
-    
+
     # Group atoms by species
     species_dict = OrderedDict()
     for i, symbol in enumerate(chemical_symbols):
         if symbol not in species_dict:
             species_dict[symbol] = []
-        species_dict[symbol].append(scaled_positions[i,:])
-    
+        species_dict[symbol].append(scaled_positions[i, :])
+
     # Create species elements
     for symbol, atom_positions in species_dict.items():
         species = ET.SubElement(
-            structure,
-            'species',
-            attrib={
-                'speciesfile': f'{symbol}.xml'
-            }
+            structure, "species", attrib={"speciesfile": f"{symbol}.xml"}
         )
-        
+
         for atom_pos in atom_positions:
-            atom = ET.SubElement(species, 'atom')
+            atom = ET.SubElement(species, "atom")
             atom.set(
-                'coord',
-                '   {:16.10f}   {:16.10f}   {:16.10f}'.format(
-                    atom_pos[0],
-                    atom_pos[1],
-                    atom_pos[2]
-                )
+                "coord",
+                "   {:16.10f}   {:16.10f}   {:16.10f}".format(
+                    atom_pos[0], atom_pos[1], atom_pos[2]
+                ),
             )
 
     return ET.ElementTree(root)
 
-def write_exciting(
-    filename: str | os.PathLike,
-    cell: PhonopyAtoms
-) -> None:
+
+def write_exciting(filename: str | os.PathLike, cell: PhonopyAtoms) -> None:
     tree = get_exciting_structure(cell)
     ET.indent(tree, space="  ", level=0)
     tree.write(filename, encoding="utf-8", xml_declaration=True)
-    
+
 
 def write_supercells_with_displacements(
     supercell: PhonopyAtoms,
@@ -316,6 +302,7 @@ def write_supercells_with_displacements(
             i, pre_filename=pre_filename, width=width
         )
         write_exciting(filename, cell)
+
 
 def parse_set_of_forces(
     num_atoms: int,
@@ -344,5 +331,3 @@ def parse_set_of_forces(
         return force_sets
     else:
         return []
-
-

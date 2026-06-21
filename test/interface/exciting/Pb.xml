@@ -57,7 +57,7 @@
         <wf matchingOrder="0" trialEnergy="-4.5" searchE="false"/>
         <wf matchingOrder="1" trialEnergy="-4.5" searchE="false"/>
       </lo>
- 
+
     </basis>
   </sp>
 </spdb>
