@@ -926,8 +926,12 @@ class PhonopyAtoms:
             lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(pos))
             if mass is not None:
                 lines.append("  mass: %f" % mass)
-            if sp.weight is not None:
-                lines.append(f"  weight: {sp.weight}")
+            if self.has_weighted_species:
+                # In a non-merge site-mixture cell every atom carries an
+                # explicit weight so the yaml is self-describing; a pure
+                # site (weight=None in the model) is shown as 1.0.
+                w = sp.weight if sp.weight is not None else 1.0
+                lines.append(f"  weight: {w}")
             if mag is not None:
                 if mag.ndim == 0:
                     mag_str = f"{mag:.8f}"
@@ -1064,8 +1068,13 @@ def parse_cell_dict(cell_dict: CellDict) -> PhonopyAtoms | None:
             else:
                 mixture_per_atom.append(None)
             if "weight" in x:
-                weight_per_atom.append(float(x["weight"]))
+                # A pure site in a non-merge mixture cell is written as
+                # weight 1.0 for a self-describing yaml; normalize it back
+                # to None (the model form 1). The presence of the key marks
+                # a weighted-species cell, matching the writer's condition.
                 has_any_weight = True
+                w = float(x["weight"])
+                weight_per_atom.append(None if w == 1.0 else w)
             else:
                 weight_per_atom.append(None)
             if "mass" in x:
