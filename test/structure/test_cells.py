@@ -6,23 +6,28 @@ from collections.abc import Callable
 
 import numpy as np
 import pytest
+import spglib
+import yaml
 
 from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import read_cell_yaml
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
 from phonopy.structure.cells import (
     Primitive,
     ShortestPairs,
     TrimmedCell,
+    apply_site_mixture,
     build_mixture_cell,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
     dense_to_sparse_svecs,
+    generate_standardized_cells,
     get_angles,
     get_cell_matrix_from_lattice,
     get_cell_parameters,
     get_primitive,
     get_primitive_matrix,
+    get_standardized_cell,
     get_supercell,
     guess_primitive_matrix,
     isclose,
@@ -777,3 +782,111 @@ def test_GeSn_mixture_force_constants_e2e():
     assert fc is not None
     assert fc.shape == (n_sites, n_sites, 3, 3)
     assert ph.dataset["first_atoms"][0]["forces"].shape == (n_expanded, 3)
+
+
+def _weighted_rocksalt_cell() -> PhonopyAtoms:
+    """Return an FCC cell: mixed Ge/Sn cation at origin, Te anion at body-center."""
+    a = 3.0
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+        symbols=["Ge", "Sn", "Te"],
+    )
+    return apply_site_mixture(cell, weights=[0.5, 0.5, 1.0])
+
+
+def test_get_standardized_cell_weighted_preserves_symbols_and_weights():
+    """Standardizing a weighted cell keeps real symbols and concentration weights."""
+    vca = _weighted_rocksalt_cell()
+    assert vca.has_weighted_species
+
+    dataset = spglib.get_symmetry_dataset(vca.totuple(), symprec=1e-5)
+    std = get_standardized_cell(vca, dataset)
+
+    # Symbols are the real species (Ge/Sn/Te), not dummy/H/He from a
+    # species-id-as-atomic-number misread.
+    assert set(std.symbols) == {"Ge", "Sn", "Te"}
+    # Weights survive the standardization multiplicity.
+    weight_by_symbol = dict(zip(std.symbols, std.mixture_weights, strict=True))
+    assert weight_by_symbol["Ge"] == 0.5
+    assert weight_by_symbol["Sn"] == 0.5
+    assert weight_by_symbol["Te"] == 1.0
+
+
+def test_generate_standardized_cells_weighted_primitive_preserves_weights():
+    """The derived primitive cell also keeps the concentration weights."""
+    vca = _weighted_rocksalt_cell()
+    dataset = spglib.get_symmetry_dataset(vca.totuple(), symprec=1e-5)
+
+    conventional, primitive, _ = generate_standardized_cells(vca, dataset)
+
+    assert set(conventional.symbols) == {"Ge", "Sn", "Te"}
+    assert primitive.symbols == ["Ge", "Sn", "Te"]
+    np.testing.assert_allclose(primitive.mixture_weights, [0.5, 0.5, 1.0])
+
+
+def test_get_standardized_cell_merge_mixture_pairs_survive():
+    """Merge-style mixture pairs survive standardization."""
+    a = 3.0
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+        symbols=["Ge", "Sn", "Te"],
+    )
+    mixed = build_mixture_cell(cell, [0.5, 0.5, 1.0])
+    assert mixed.has_mixtures
+
+    dataset = spglib.get_symmetry_dataset(mixed.totuple(), symprec=1e-5)
+    std = get_standardized_cell(mixed, dataset)
+
+    assert std.has_mixtures
+    assert set(std.symbols) == {"GeSn", "Te"}
+    gesn_site = std.species_table[int(std.species_ids[0])]
+    assert gesn_site.mixture == (("Ge", 0.5), ("Sn", 0.5))
+
+
+def test_get_standardized_cell_ordinary_regression():
+    """A non-mixture cell reconstructs from atomic numbers (unchanged path)."""
+    a = 3.0
+    nacl = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+        symbols=["Na", "Cl"],
+    )
+    dataset = spglib.get_symmetry_dataset(nacl.totuple(), symprec=1e-5)
+    std = get_standardized_cell(nacl, dataset)
+
+    assert not std.has_mixtures
+    assert not std.has_weighted_species
+    # Conventional Fm-3m NaCl: 4 Na + 4 Cl.
+    assert sorted(std.symbols) == ["Cl"] * 4 + ["Na"] * 4
+    np.testing.assert_allclose(std.cell, dataset.std_lattice)
+
+
+def test_get_standardized_cell_magnetic_moments_preserved():
+    """The magnetic-moment path is unchanged for magnetic datasets."""
+    fe = PhonopyAtoms(
+        cell=np.eye(3) * 2.8,
+        scaled_positions=[[0.0, 0.0, 0.0]],
+        symbols=["Fe"],
+        magnetic_moments=[1.0],
+    )
+    dataset = spglib.get_magnetic_symmetry_dataset(fe.totuple(), symprec=1e-5)
+    std = get_standardized_cell(fe, dataset)
+
+    assert std.symbols == ["Fe"]
+    assert std.magnetic_moments is not None
+    np.testing.assert_allclose(std.magnetic_moments, dataset.std_tensors)
+
+
+def test_get_standardized_cell_weighted_yaml_roundtrip():
+    """Standardized weighted cell round-trips weights through a yaml dict."""
+    vca = _weighted_rocksalt_cell()
+    dataset = spglib.get_symmetry_dataset(vca.totuple(), symprec=1e-5)
+    std = get_standardized_cell(vca, dataset)
+
+    restored = parse_cell_dict(yaml.safe_load(str(std)))
+    assert restored is not None
+    assert restored.has_weighted_species
+    assert restored.symbols == std.symbols
+    np.testing.assert_allclose(restored.mixture_weights, std.mixture_weights)

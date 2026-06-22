@@ -49,10 +49,10 @@ from phonopy.interface.vasp import (
     check_forces,
     get_drift_forces,
     get_scaled_positions_lines,
-    sort_positions_by_symbols,
 )
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import sort_positions_by_symbols
 
 
 def parse_set_of_forces(

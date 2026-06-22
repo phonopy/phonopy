@@ -45,7 +45,6 @@ import warnings
 import xml.etree.cElementTree as etree
 import xml.etree.ElementTree
 import xml.parsers.expat
-from collections import Counter
 from collections.abc import Sequence
 from typing import Iterator, Literal, cast
 
@@ -60,6 +59,7 @@ from phonopy.file_IO import (
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import sort_positions_by_symbols
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
@@ -111,63 +111,6 @@ def get_drift_forces(
 def get_scaled_positions_lines(scaled_positions: NDArray[np.double]) -> str:
     """Return text lines of scaled positions."""
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
-
-
-def sort_positions_by_symbols(
-    symbols: Sequence[str | int] | NDArray[np.int64],
-    positions: NDArray[np.double] | None = None,
-) -> tuple[list[int], list[str | int], NDArray[np.double] | None, list[int]]:
-    """Sort atomic positions by symbols.
-
-    Sort positions by symbols (using the order defined by reduced_symbols)
-    using a stable sort algorithm. Written by @ExpHP, refactored by @atztogo.
-
-    symbols = ["A", "B", "A", "B"]
-    reduced_symbols = ["A", "B"]
-    sort_keys = [0, 1, 0, 1]
-    perm = [0, 2, 1, 3]
-    counts_dict = {'A': 2, 'B': 2}
-    counts_list = [2, 2]
-
-    Parameters
-    ----------
-    symbols : list[str] or list[int] or NDArray[np.int64]
-        Sequence of hashable objects. This may be a list of chemical symbols
-        or numbers.
-    positions : NDArray[np.double] or None, optional
-        Atomic positions. When None, sorted_positions is also None.
-
-    Returns
-    -------
-    sorted_positions = positions[perm]
-    For the others, see the example above.
-
-    Functions
-    ---------
-    _argsort_stable :
-        Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
-        so that indices tied for the same value are listed in increasing order.
-
-    """
-
-    def _argsort_stable(keys):
-        # Python's built-in sort algorithm is a stable sort
-        return sorted(range(len(keys)), key=keys.__getitem__)
-
-    # dict in Python 3.7 or later is ordered dict.
-    reduced_symbols = list(dict.fromkeys(symbols))
-    counts_dict = Counter(symbols)
-    # list(counts_dict.values()) may be used...
-    counts_list = [counts_dict[s] for s in reduced_symbols]
-    sort_keys = [reduced_symbols.index(i) for i in symbols]
-    perm = _argsort_stable(sort_keys)
-
-    if positions is None:
-        sorted_positions = None
-    else:
-        sorted_positions = positions[perm]
-
-    return counts_list, reduced_symbols, sorted_positions, perm
 
 
 def _get_forces_points_and_energy(

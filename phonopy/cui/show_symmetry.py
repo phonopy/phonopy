@@ -49,9 +49,12 @@ from phonopy.interface.calculator import (
     write_crystal_structure,
 )
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.vasp import sort_positions_by_symbols
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import determinant, guess_primitive_matrix
+from phonopy.structure.cells import (
+    determinant,
+    guess_primitive_matrix,
+    sort_positions_by_symbols,
+)
 from phonopy.structure.symmetry import Symmetry
 
 

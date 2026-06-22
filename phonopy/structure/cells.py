@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import dataclasses
 import warnings
+from collections import Counter
 from collections.abc import Sequence
 from typing import Literal
 
@@ -53,6 +54,7 @@ from numpy.typing import NDArray
 from spglib import SpglibDataset, SpglibMagneticDataset
 
 from phonopy._lang import log_dispatch, resolve_lang
+from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import (
     PhonopyAtoms,
     _dedup_species,
@@ -869,6 +871,63 @@ def get_supercell(
     )
 
 
+def sort_positions_by_symbols(
+    symbols: Sequence[str | int] | NDArray[np.int64],
+    positions: NDArray[np.double] | None = None,
+) -> tuple[list[int], list[str | int], NDArray[np.double] | None, list[int]]:
+    """Sort atomic positions by symbols.
+
+    Sort positions by symbols (using the order defined by reduced_symbols)
+    using a stable sort algorithm. Written by @ExpHP, refactored by @atztogo.
+
+    symbols = ["A", "B", "A", "B"]
+    reduced_symbols = ["A", "B"]
+    sort_keys = [0, 1, 0, 1]
+    perm = [0, 2, 1, 3]
+    counts_dict = {'A': 2, 'B': 2}
+    counts_list = [2, 2]
+
+    Parameters
+    ----------
+    symbols : list[str] or list[int] or NDArray[np.int64]
+        Sequence of hashable objects. This may be a list of chemical symbols
+        or numbers.
+    positions : NDArray[np.double] or None, optional
+        Atomic positions. When None, sorted_positions is also None.
+
+    Returns
+    -------
+    sorted_positions = positions[perm]
+    For the others, see the example above.
+
+    Functions
+    ---------
+    _argsort_stable :
+        Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
+        so that indices tied for the same value are listed in increasing order.
+
+    """
+
+    def _argsort_stable(keys):
+        # Python's built-in sort algorithm is a stable sort
+        return sorted(range(len(keys)), key=keys.__getitem__)
+
+    # dict in Python 3.7 or later is ordered dict.
+    reduced_symbols = list(dict.fromkeys(symbols))
+    counts_dict = Counter(symbols)
+    # list(counts_dict.values()) may be used...
+    counts_list = [counts_dict[s] for s in reduced_symbols]
+    sort_keys = [reduced_symbols.index(i) for i in symbols]
+    perm = _argsort_stable(sort_keys)
+
+    if positions is None:
+        sorted_positions = None
+    else:
+        sorted_positions = positions[perm]
+
+    return counts_list, reduced_symbols, sorted_positions, perm
+
+
 def get_primitive(
     supercell: PhonopyAtoms,
     primitive_matrix: Literal["P", "F", "I", "A", "C", "R"]
@@ -890,6 +949,127 @@ def get_primitive(
         positions_to_reorder=positions_to_reorder,
         lang=lang,
     )
+
+
+def get_standardized_cell(
+    cell: PhonopyAtoms,
+    dataset: SpglibDataset | SpglibMagneticDataset,
+) -> PhonopyAtoms:
+    """Build the standardized conventional cell from a spglib dataset.
+
+    This is the inverse of PhonopyAtoms.totuple: it turns the spglib
+    standardization result back into a PhonopyAtoms, preserving the
+    species table (site-mixture weights / mixed species) and, for
+    magnetic datasets, the standardized magnetic moments. The
+    standardized cell may include a rigid rotation with respect to the
+    input cell for which symmetry was analyzed.
+
+    The dataset must have been produced from cell.totuple() (i.e. with
+    distinguish_symbol_index=False, the default). Under that contract,
+    dataset.std_types are species ids into cell.species_table exactly
+    when cell.has_mixtures or cell.has_weighted_species, and atomic
+    numbers otherwise.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Input cell from which the symmetry dataset was computed. Its
+        species table is reused to restore mixture weights / mixed
+        species.
+    dataset : SpglibDataset or SpglibMagneticDataset
+        Symmetry dataset of spglib computed from cell.totuple().
+
+    Returns
+    -------
+    PhonopyAtoms
+        Standardized conventional unit cell.
+
+    """
+    std_positions = dataset.std_positions
+    std_types = dataset.std_types
+    _, _, _, perm = sort_positions_by_symbols(std_types, std_positions)
+
+    if cell.has_mixtures or cell.has_weighted_species:
+        # std_types are species ids into cell.species_table (totuple
+        # hands species ids to spglib for such cells). Rebuilding with
+        # the species table restores symbol, atomic number, mass, and
+        # weight / mixture in one step.
+        return PhonopyAtoms(
+            cell=dataset.std_lattice,
+            scaled_positions=std_positions[perm],
+            species_table=cell.species_table,
+            species_ids=std_types[perm],
+        )
+
+    # std_types are atomic numbers.
+    atom_data = get_atomic_data().atom_data
+    if isinstance(dataset, SpglibDataset):
+        return PhonopyAtoms(
+            cell=dataset.std_lattice,
+            scaled_positions=std_positions[perm],
+            symbols=[atom_data[n][1] for n in std_types[perm]],
+        )
+    return PhonopyAtoms(
+        cell=dataset.std_lattice,
+        scaled_positions=std_positions[perm],
+        symbols=[atom_data[n][1] for n in std_types[perm]],
+        magnetic_moments=dataset.std_tensors[perm],
+    )
+
+
+def generate_standardized_cells(
+    cell: PhonopyAtoms,
+    dataset: SpglibDataset | SpglibMagneticDataset,
+    symprec: float = 1e-5,
+) -> tuple[PhonopyAtoms, PhonopyAtoms, NDArray[np.double]]:
+    """Return the standardized conventional and primitive cells.
+
+    Companion of get_standardized_cell that also derives the primitive
+    cell. The primitive cell is obtained via get_primitive, which carries
+    the species table, so mixture weights / mixed species propagate to
+    the primitive cell as well.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Input cell from which the symmetry dataset was computed.
+    dataset : SpglibDataset or SpglibMagneticDataset
+        Symmetry dataset of spglib computed from cell.totuple().
+    symprec : float, optional
+        Symmetry search tolerance forwarded to get_primitive. Default is
+        1e-5.
+
+    Returns
+    -------
+    tuple[PhonopyAtoms, PhonopyAtoms, NDArray[np.double]]
+        (conventional, primitive, primitive_matrix). When the primitive
+        matrix is the identity, primitive is the conventional cell.
+
+    """
+    conventional = get_standardized_cell(cell, dataset)
+    pmat = _get_primitive_matrix_from_dataset(dataset)
+    if (np.abs(pmat - np.eye(3)) < 1e-8).all():
+        primitive = conventional
+    else:
+        primitive = get_primitive(conventional, primitive_matrix=pmat, symprec=symprec)
+    return conventional, primitive, pmat
+
+
+def _get_primitive_matrix_from_dataset(
+    dataset: SpglibDataset | SpglibMagneticDataset,
+) -> NDArray[np.double]:
+    """Return the centring primitive matrix implied by a spglib dataset.
+
+    The returned matrix maps the standardized conventional cell to its
+    primitive cell. To obtain a primitive matrix relative to the input
+    cell, compose it with the inverse transformation matrix (see
+    guess_primitive_matrix).
+
+    """
+    spg_type = spglib.get_spacegroup_type(dataset.hall_number)
+    assert spg_type is not None
+    centring = spg_type.international[0]
+    return get_primitive_matrix_by_centring(centring)
 
 
 def build_mixture_cell(
@@ -2318,10 +2498,7 @@ def guess_primitive_matrix(
 
     if isinstance(dataset, (SpglibDataset, SpglibMagneticDataset)):
         tmat = dataset.transformation_matrix
-        spg_type = spglib.get_spacegroup_type(dataset.hall_number)
-        assert spg_type is not None
-        centring = spg_type.international[0]
-        pmat = get_primitive_matrix_by_centring(centring)
+        pmat = _get_primitive_matrix_from_dataset(dataset)
         return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
     else:
         return np.eye(3, dtype="double", order="C")
