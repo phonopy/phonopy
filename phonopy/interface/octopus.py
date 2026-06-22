@@ -128,7 +128,7 @@ def parse_set_of_forces(
                     conversion = units.Hartree / units.EV * units.Bohr / units.Angstrom
 
             f.seek(0)
-            octopus_forces = collect_forces(f, num_atoms, hook, [2, 3, 4])
+            octopus_forces = collect_forces(f, num_atoms, "Forces on the ions", [2, 3, 4], word="Ion")
 
         for force in octopus_forces:
             force[0] *= conversion

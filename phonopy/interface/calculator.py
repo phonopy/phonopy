@@ -165,11 +165,8 @@ calculator_info = {
     "vasp": {"option": {"name": "--vasp", "help": "Invoke Vasp mode"}},
     "wien2k": {"option": {"name": "--wien2k", "help": "Invoke Wien2k mode"}},
     "pwmat": {"option": {"name": "--pwmat", "help": "Invoke PWmat mode"}},
-<<<<<<< HEAD
     "exciting": {"option": {"name": "--exciting", "help": "Invoke exciting mode"}},
-=======
     "octopus": {"option": {"name": "--octopus", "help": "Invoke Octopus mode"}},
->>>>>>> 9c7ca731 (Add Octopus interface on top of current develop)
 }
 
 
