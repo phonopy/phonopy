@@ -43,11 +43,9 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.interface.vasp import (
-    get_drift_forces,
-    sort_positions_by_symbols,
-)
+from phonopy.interface.vasp import get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import sort_positions_by_symbols
 
 
 def parse_set_of_forces(

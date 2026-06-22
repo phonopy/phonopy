@@ -26,13 +26,16 @@ from phonopy.interface.vasp import (
     read_vasp,
     read_vasp_from_strings,
     read_XDATCAR,
-    sort_positions_by_symbols,
     write_supercells_with_displacements,
     write_vasp,
     write_XDATCAR,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import build_mixture_cell, isclose
+from phonopy.structure.cells import (
+    build_mixture_cell,
+    isclose,
+    sort_positions_by_symbols,
+)
 
 cwd = Path(__file__).parent
 

@@ -50,14 +50,13 @@ from numpy.typing import NDArray
 from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.harmonic.displacement import DisplacementDataset
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.vasp import sort_positions_by_symbols
 from phonopy.physical_units import (
     CalculatorPhysicalUnits,
     get_calculator_physical_units,
     get_physical_units,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import determinant
+from phonopy.structure.cells import determinant, sort_positions_by_symbols
 from phonopy.structure.dataset import get_displacements_and_forces
 
 
