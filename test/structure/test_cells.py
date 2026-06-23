@@ -561,7 +561,7 @@ def test_get_primitive_with_Xn_symbol(ph_nacl: Phonopy):
     )
     with pytest.raises(RuntimeError) as e:
         get_primitive(cell, primitive_matrix="F")
-    assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
+    assert str(e.value).split("\n")[0] == "Cell trimming failed."
 
 
 def test_guess_primitive_matrix_distinguish_symbol_index():
@@ -589,7 +589,7 @@ def test_guess_primitive_matrix_distinguish_symbol_index():
     pmat_default = guess_primitive_matrix(cell)
     with pytest.raises(RuntimeError) as e:
         get_primitive(cell, pmat_default)
-    assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
+    assert str(e.value).split("\n")[0] == "Cell trimming failed."
 
     pmat = guess_primitive_matrix(cell, distinguish_symbol_index=True)
     primitive = get_primitive(cell, pmat)
