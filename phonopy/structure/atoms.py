@@ -801,6 +801,19 @@ class PhonopyAtoms:
             self._species_ids.max() >= len(self._species) or self._species_ids.min() < 0
         ):
             raise RuntimeError("species_ids out of range of species table.")
+        if len(set(self._species)) != len(self._species):
+            raise ValueError(
+                "species_table contains duplicate species; entries must be "
+                "unique so that species_ids identify a species unambiguously. "
+                "Build it via _dedup_species or "
+                "build_species_table_from_mixtures."
+            )
+        if len(np.unique(self._species_ids)) != len(self._species):
+            raise ValueError(
+                "species_table contains unused entries; every entry must be "
+                "referenced by some atom. Build it via _dedup_species or "
+                "prune unused entries before construction."
+            )
         if self._magnetic_moments is not None:
             if len(self._magnetic_moments) not in (len(self), len(self) * 3):
                 raise RuntimeError(

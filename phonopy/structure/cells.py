@@ -512,28 +512,12 @@ class Primitive(PhonopyAtoms):
         supercell: PhonopyAtoms,
         positions_to_reorder: NDArray[np.double] | None = None,
     ) -> NDArray[np.int64]:
-        trimmed_cell, p2s_map, mapping_table = _trim_cell(
+        trimmed_cell, p2s_map, _ = _trim_cell(
             self._primitive_matrix,
             supercell,
             symprec=self._symprec,
             positions_to_reorder=positions_to_reorder,
         )
-
-        mapped_symbols = [supercell.symbols[i] for i in mapping_table]
-        if supercell.symbols != mapped_symbols:
-            msg = [
-                "Atom symbol mapping failure.",
-                "Primitive cell could not be created.",
-            ]
-            msg.append("Primitive cell:")
-            for i, s in enumerate(trimmed_cell.symbols):
-                msg.append(f"  {i + 1}: {s}")
-            msg.append("Original cell:")
-            for i, (s1, s2) in enumerate(
-                zip(supercell.symbols, mapped_symbols, strict=True)
-            ):
-                msg.append(f"  {i + 1}: {s1} -> {s2}")
-            raise RuntimeError("\n".join(msg))
         super().__init__(
             species_table=trimmed_cell.species_table,
             species_ids=trimmed_cell.species_ids,
@@ -584,10 +568,6 @@ class Primitive(PhonopyAtoms):
         rotations = np.array(
             [np.eye(3, dtype="int64")] * len(trans), dtype="int64", order="C"
         )
-        # Match within each species so pure translations do not pair
-        # co-located atoms of different species (e.g. Ge and Sn at the same
-        # cell). Ordinary cells have one species per site, so passing the
-        # species ids does not change the result.
         atomic_permutations = compute_all_sg_permutations(
             positions,
             rotations,
@@ -635,14 +615,27 @@ class Primitive(PhonopyAtoms):
 
 
 class TrimmedCell(PhonopyAtoms):
-    """Trim cell.
+    """Cell obtained by trimming overlapping atoms in a smaller lattice.
 
-    Trimmed cell is self.
+    The lattice of ``cell`` is transformed into a smaller one by
+    ``relative_axes`` (``trimmed_lattice = relative_axes.T @ cell.cell``), and
+    atoms that coincide on the same site under that smaller lattice are merged
+    into a single representative. The trimmed cell is ``self``.
+
+    Merging is species-aware: atoms of distinct species on the same site (e.g.
+    "Cl" and "Cl1", or distinct concentrations) are kept separate, so the
+    trimmed cell is always well-formed. The surviving atom count must equal the
+    lattice volume ratio ``det(relative_axes)`` times the input count; a
+    mismatch (distinct species folded onto one site, or overlapping atoms) is
+    an error and raises ``RuntimeError``.
 
     Attributes
     ----------
     extracted_atoms : ndarray
+        Indices into the input cell of the atoms kept in the trimmed cell.
     mapping_table : ndarray
+        For each atom of the input cell, the input-cell index of the
+        representative atom it is merged into.
 
     """
 
@@ -732,13 +725,7 @@ class TrimmedCell(PhonopyAtoms):
             cell.magnetic_moments,
             check_overlap,
             symprec,
-            # Disambiguate co-located atoms by species only for species-resolved cells.
-            # Other cells keep position-only trimming so a mismatched
-            # primitive matrix still raises the detailed symbol-mapping
-            # diagnostic in ``_create_primitive_cell``.
-            cell.species_ids
-            if (cell.has_weighted_species or cell.has_mixtures)
-            else None,
+            cell.species_ids,
         )
 
         if positions_to_reorder is not None:
@@ -752,21 +739,35 @@ class TrimmedCell(PhonopyAtoms):
                 trimmed_magmoms = trimmed_magmoms[ids]
             extracted_atoms = extracted_atoms[ids]
 
-        # scale is not always to become integer.
-        scale = 1.0 / np.linalg.det(relative_axes)
-        if len(cell) == int(np.rint(scale * len(extracted_atoms))):
-            super().__init__(
-                species_table=cell.species_table,
-                species_ids=cell.species_ids[extracted_atoms],
-                masses=trimmed_masses,
-                magnetic_moments=trimmed_magmoms,
-                scaled_positions=trimmed_positions,
-                cell=trimmed_lattice,
-            )
-            self._extracted_atoms = np.array(extracted_atoms, dtype="int64")
-            self._mapping_table = mapping_table
-        else:
-            raise RuntimeError("Remapping of atoms by TrimmedCell failed.")
+        # A correct trim reduces the cell by the lattice volume ratio
+        # det(relative_axes). A different surviving count means atoms that
+        # should have coincided did not: distinct species folded onto one site
+        # (e.g. an incompatible primitive matrix) or overlapping atoms in a bad
+        # supercell matrix. Either way it is an error.
+        expected_natom = int(np.rint(len(cell) * np.linalg.det(relative_axes)))
+        if len(extracted_atoms) != expected_natom:
+            symbols = [cell.symbols[i] for i in extracted_atoms]
+            msg = [
+                "Cell trimming failed.",
+                f"The input cell ({len(cell)} atoms) does not reduce to "
+                f"{expected_natom} atoms by the lattice volume ratio; trimming "
+                f"left {len(extracted_atoms)}.",
+                "Atoms of distinct species were folded onto the same site, or "
+                "atoms overlap. Trimmed cell:",
+            ]
+            for i, s in enumerate(symbols):
+                msg.append(f"  {i + 1}: {s}")
+            raise RuntimeError("\n".join(msg))
+        super().__init__(
+            species_table=cell.species_table,
+            species_ids=cell.species_ids[extracted_atoms],
+            masses=trimmed_masses,
+            magnetic_moments=trimmed_magmoms,
+            scaled_positions=trimmed_positions,
+            cell=trimmed_lattice,
+        )
+        self._extracted_atoms = np.array(extracted_atoms, dtype="int64")
+        self._mapping_table = mapping_table
 
     def _extract(
         self,
@@ -776,7 +777,7 @@ class TrimmedCell(PhonopyAtoms):
         magmoms: NDArray[np.double] | None,
         check_overlap: bool,
         symprec: float,
-        species_ids: NDArray[np.int64] | None,
+        species_ids: NDArray[np.int64],
     ) -> tuple[
         NDArray[np.double],
         NDArray[np.double] | None,
@@ -799,11 +800,9 @@ class TrimmedCell(PhonopyAtoms):
                 # Older numpy doesn't support axis argument.
                 distances = np.sqrt(np.sum(np.dot(diff, trimmed_lattice) ** 2, axis=1))
                 close = distances < symprec
-                if species_ids is not None:
-                    # Require the same species id, so co-located atoms of
-                    # different species (Ge and Sn at the same site) are
-                    # kept as separate atoms rather than merged.
-                    close = close & (species_ids[extracted_atoms] == species_ids[i])
+                # Require the same species id so co-located atoms of different
+                # species (e.g. Ge and Sn at one site) are kept separate.
+                close = close & (species_ids[extracted_atoms] == species_ids[i])
                 overlap_indices = np.where(close)[0]
                 if len(overlap_indices) > 0:
                     assert len(overlap_indices) == 1
