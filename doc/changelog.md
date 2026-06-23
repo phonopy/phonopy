@@ -2,6 +2,13 @@
 
 # Change Log
 
+## Jun-23-2026: Version 4.2.2
+
+- `debye_frequency` is now an attribute of `TotalDos`; the corresponding
+  `Phonopy` getter is deprecated. The DOS smearing distribution is
+  selected through the constructor instead of setter methods.
+- Refactoring of `PhonopyAtoms` and related cell generation functions.
+
 ## Jun-15-2026: Version 4.2.1
 
 - Fix a NumPy error in the equation-of-state (EOS) fit used by QHA.
