@@ -48,8 +48,8 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     Primitive,
     compute_permutation_for_rotation,
+    get_atom_order,
     get_smallest_vectors,
-    isclose,
 )
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -236,8 +236,8 @@ def rearrange_force_constants_array(
 
     """
     assert full_fc.shape[0] == full_fc.shape[1]
-    indices = isclose(a, b, with_arbitrary_order=True, return_order=True)
-    assert not isinstance(indices, bool)
+    indices = get_atom_order(a, b)
+    assert indices is not None
     re_fc = np.zeros_like(full_fc)
     for i, j in enumerate(indices):
         re_fc[i] = full_fc[j][indices]

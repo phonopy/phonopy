@@ -1355,14 +1355,121 @@ def get_cell_lines(
     return lines
 
 
+def _species_isclose(
+    sp_a: _Species, sp_b: _Species, rtol: float = 1e-5, atol: float = 1e-8
+) -> bool:
+    """Compare two ``_Species`` with concentration weights matched by tolerance.
+
+    Symbol, atomic number, and mixture constituent symbols must agree exactly.
+    Concentration weights (the per-atom ``weight`` and the per-constituent
+    weights of a mixture) are floats that may originate from different
+    construction paths, so they are compared with ``numpy.isclose`` rather
+    than exact equality.
+
+    """
+    if sp_a.symbol != sp_b.symbol or sp_a.atomic_number != sp_b.atomic_number:
+        return False
+    if (sp_a.weight is None) != (sp_b.weight is None):
+        return False
+    if (
+        sp_a.weight is not None
+        and sp_b.weight is not None
+        and not np.isclose(sp_a.weight, sp_b.weight, rtol=rtol, atol=atol)
+    ):
+        return False
+    if (sp_a.mixture is None) != (sp_b.mixture is None):
+        return False
+    if sp_a.mixture is not None and sp_b.mixture is not None:
+        if len(sp_a.mixture) != len(sp_b.mixture):
+            return False
+        for (s_a, w_a), (s_b, w_b) in zip(sp_a.mixture, sp_b.mixture, strict=True):
+            if s_a != s_b or not np.isclose(w_a, w_b, rtol=rtol, atol=atol):
+                return False
+    return True
+
+
+def get_atom_order(
+    a: PhonopyAtoms,
+    b: PhonopyAtoms,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+) -> list[int] | None:
+    """Return the atom order aligning cell-b onto cell-a, or None.
+
+    For each atom of cell-b, the returned list gives the index of the
+    matching atom of cell-a, so that ``a`` reordered by the result equals
+    ``b`` (positions modulo lattice translation, species within tolerance,
+    and magnetic moments). ``a.numbers[order] == b.numbers``.
+
+    Returns None when the cells are not equivalent: different atom count or
+    lattice, an atom of ``b`` with no or more than one match in ``a``, or a
+    match that is not one-to-one. Matching is by position and species, so
+    co-located atoms of a site mixture (e.g. Ge and Sn sharing a site) are
+    resolved, which position-only matching cannot do.
+
+    Parameters
+    ----------
+    a : PhonopyAtoms
+        Reference cell.
+    b : PhonopyAtoms
+        Cell to be compared.
+    rtol : float, optional
+        Relative tolerance for species weights. Default is 1e-5.
+    atol : float, optional
+        Tolerance in Cartesian distance and for species weights.
+        Default is 1e-8.
+
+    Returns
+    -------
+    list[int] or None
+        Atom indices of cell-a in the order of cell-b, or None when the
+        cells are not equivalent.
+
+    """
+    if len(a) != len(b):
+        return None
+    if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
+        return None
+
+    a_table = a.species_table
+    b_table = b.species_table
+    a_species = [a_table[i] for i in a.species_ids]
+    b_species = [b_table[i] for i in b.species_ids]
+    indices = []
+    for pos, sp in zip(b.scaled_positions, b_species, strict=True):
+        diff = a.scaled_positions - pos
+        diff -= np.rint(diff)
+        dist = np.linalg.norm(np.dot(diff, a.cell), axis=1)
+        matches = np.where(dist < atol)[0]
+        if len(matches) > 1:
+            matches = np.array(
+                [i for i in matches if _species_isclose(a_species[i], sp, rtol, atol)],
+                dtype=int,
+            )
+        if len(matches) != 1:
+            return None
+        indices.append(int(matches[0]))
+    if not (np.sort(indices) == np.arange(len(indices))).all():
+        return None
+    if not all(
+        _species_isclose(a_species[i], sp_b, rtol, atol)
+        for i, sp_b in zip(indices, b_species, strict=True)
+    ):
+        return None
+    if not _magnetic_moments_all_close(
+        a.magnetic_moments, b.magnetic_moments, indices=indices, rtol=rtol, atol=atol
+    ):
+        return None
+    return indices
+
+
 def isclose(
     a: PhonopyAtoms,
     b: PhonopyAtoms,
     rtol: float = 1e-5,
     atol: float = 1e-8,
     with_arbitrary_order: bool = False,
-    return_order: bool = False,
-) -> bool | list:
+) -> bool:
     """Check equivalence of two cells.
 
     Cell-b is compared with respect to cell-a.
@@ -1378,67 +1485,46 @@ def isclose(
     atol : float, optional
         Tolerance in Cartesian distance. Default is 1e-8.
     with_arbitrary_order : bool, optional
-        PosDefault is False.
-    return_order : bool, optional
-        See ``Returns`` below. Default is False. This can be only usable with
-        ``with_arbitrary_order=True``.
+        If True, atoms may appear in a different order in the two cells and
+        are matched up to permutation. If False (default), atoms are
+        compared index by index. Deprecated: use
+        ``get_atom_order(a, b) is not None`` instead.
 
     Returns
     -------
-    bool (``return_order=False``)
+    bool
         Whether two cells agree upto lattice translation of each atom.
 
-    or
-
-    list (``return_order=True``).
-        A list of atom indices of cell-b in the index of cell-a.
-        This means ``a.numbers[indices] == b.numbers``.
-
     """
+    if with_arbitrary_order:
+        warnings.warn(
+            "isclose(..., with_arbitrary_order=True) is deprecated. Use "
+            "get_atom_order(a, b) is not None instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return get_atom_order(a, b, rtol=rtol, atol=atol) is not None
+
     if len(a) != len(b):
         return False
-
     if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
         return False
-
-    if with_arbitrary_order:
-        indices = []
-        for pos in b.scaled_positions:
-            diff = a.scaled_positions - pos
-            diff -= np.rint(diff)
-            dist = (np.dot(diff, a.cell) ** 2).sum(axis=1)
-            matches = np.where(dist < atol)[0]
-            if len(matches) != 1:
-                return False
-            indices.append(matches[0])
-        if (np.sort(indices) != np.arange(len(indices))).all():
-            return False
-        a_symbols = a.symbols
-        if [a_symbols[i] for i in indices] != b.symbols:
-            return False
-        if not _magnetic_moments_all_close(
-            a.magnetic_moments,
-            b.magnetic_moments,
-            indices=indices,
-            rtol=rtol,
-            atol=atol,
-        ):
-            return False
-        if return_order:
-            return indices
-        return True
-    else:
-        if a.symbols != b.symbols:
-            return False
-        if not _magnetic_moments_all_close(
-            a.magnetic_moments, b.magnetic_moments, rtol=rtol, atol=atol
-        ):
-            return False
-        diff = a.scaled_positions - b.scaled_positions
-        diff -= np.rint(diff)
-        dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
-        if (dist > atol).any():
-            return False
+    a_species = [a.species_table[i] for i in a.species_ids]
+    b_species = [b.species_table[i] for i in b.species_ids]
+    if not all(
+        _species_isclose(sp_a, sp_b, rtol, atol)
+        for sp_a, sp_b in zip(a_species, b_species, strict=True)
+    ):
+        return False
+    if not _magnetic_moments_all_close(
+        a.magnetic_moments, b.magnetic_moments, rtol=rtol, atol=atol
+    ):
+        return False
+    diff = a.scaled_positions - b.scaled_positions
+    diff -= np.rint(diff)
+    dist = np.linalg.norm(np.dot(diff, a.cell), axis=1)
+    if (dist > atol).any():
+        return False
     return True
 
 
