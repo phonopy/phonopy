@@ -69,10 +69,10 @@ def test_compute_permutation_for_rotation_matches(ph_nacl: Phonopy):
     t = translations[1]
     rotated = positions @ sym.T + t
     perm_c = compute_permutation_for_rotation(
-        positions, rotated, lattice, 1e-5, lang="C"
+        positions, rotated, lattice, 1e-5, None, lang="C"
     )
     perm_rust = compute_permutation_for_rotation(
-        positions, rotated, lattice, 1e-5, lang="Rust"
+        positions, rotated, lattice, 1e-5, None, lang="Rust"
     )
     np.testing.assert_array_equal(perm_c, perm_rust)
 
@@ -83,10 +83,10 @@ def test_compute_all_sg_permutations_matches(ph_nacl: Phonopy):
     rotations = ph_nacl.symmetry.symmetry_operations["rotations"]
     translations = ph_nacl.symmetry.symmetry_operations["translations"]
     perms_c = compute_all_sg_permutations(
-        positions, rotations, translations, lattice, 1e-5, lang="C"
+        positions, rotations, translations, lattice, 1e-5, None, lang="C"
     )
     perms_rust = compute_all_sg_permutations(
-        positions, rotations, translations, lattice, 1e-5, lang="Rust"
+        positions, rotations, translations, lattice, 1e-5, None, lang="Rust"
     )
     np.testing.assert_array_equal(perms_c, perms_rust)
 

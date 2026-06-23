@@ -574,8 +574,8 @@ class Primitive(PhonopyAtoms):
             trans,
             np.array(supercell.cell.T, dtype="double", order="C"),
             self._symprec,
+            supercell.permutation_types,
             lang=self._lang,
-            types=supercell.species_ids,
         )
 
         return atomic_permutations
@@ -1994,8 +1994,8 @@ def compute_all_sg_permutations(
     translations: NDArray[np.double],  # scaled
     lattice: NDArray[np.double],  # column vectors
     symprec: float,
+    types: NDArray[np.int64] | Sequence[int] | None,
     lang: Literal["C", "Rust"] = "Rust",
-    types: NDArray[np.int64] | Sequence[int] | None = None,
 ) -> NDArray[np.int64]:
     """Compute permutations for space group operations.
 
@@ -2016,14 +2016,14 @@ def compute_all_sg_permutations(
         Basis vectors in column vectors (like PhonopyAtoms.cell.T)
     symprec : float
         Symmetry tolerance of the distance unit
-    lang : {"C", "Rust"}
-        Backend for the inner permutation matcher. Default is "C".
     types : array_like or None
-        Per-atom integer types. When given, atoms are matched only within
-        the same type, which disambiguates co-located atoms of different
-        species (e.g. a species-resolved cell). When None
-        (default), matching is by position alone. See
-        ``compute_permutation_for_rotation``.
+        Per-atom integer types (required). When given, atoms are matched
+        only within the same type, which disambiguates co-located atoms of
+        different species (e.g. a species-resolved cell). The types must
+        match the partition the operations were found from. Pass None to
+        match by position alone. See ``compute_permutation_for_rotation``.
+    lang : {"C", "Rust"}
+        Backend for the inner permutation matcher. Default is "Rust".
 
     Returns
     -------
@@ -2036,7 +2036,7 @@ def compute_all_sg_permutations(
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
-                positions, rotated_positions, lattice, symprec, lang=lang, types=types
+                positions, rotated_positions, lattice, symprec, types, lang=lang
             )
         )
     return np.array(out, dtype="int64", order="C")
@@ -2047,8 +2047,8 @@ def compute_permutation_for_rotation(
     positions_b: NDArray[np.double],
     lattice: NDArray[np.double],
     symprec: float,
+    types: NDArray[np.int64] | Sequence[int] | None,
     lang: Literal["C", "Rust"] = "Rust",
-    types: NDArray[np.int64] | Sequence[int] | None = None,
 ) -> NDArray[np.int64]:
     """Get the overall permutation such that.
 
@@ -2073,16 +2073,16 @@ def compute_permutation_for_rotation(
         Basis vectors in column vectors (like PhonopyAtoms.cell.T)
     symprec : float
         Symmetry tolerance of the distance unit
-    lang : {"C", "Rust"}
-        Backend for the inner permutation matcher. Default is "C".
     types : array_like or None
-        Per-atom integer types. When given, atoms are matched only within
-        the same type. This disambiguates co-located atoms of different
-        species, which position-only matching cannot resolve (e.g. Ge and
-        Sn at the same site in a species-resolved cell). The
+        Per-atom integer types (required). When given, atoms are matched
+        only within the same type. This disambiguates co-located atoms of
+        different species, which position-only matching cannot resolve
+        (e.g. Ge and Sn at the same site in a species-resolved cell). The
         space group operations must map each type onto itself, which holds
-        when the operations were found from the same types. When None
-        (default), matching is by position alone (unchanged behavior).
+        when the operations were found from the same types. Pass None to
+        match by position alone.
+    lang : {"C", "Rust"}
+        Backend for the inner permutation matcher. Default is "Rust".
 
     Returns
     -------
@@ -2092,23 +2092,44 @@ def compute_permutation_for_rotation(
         shape=(len(positions), ), dtype=int
 
     """
-    if types is not None:
-        # Match within each type class. positions_b[i] is the rotated
-        # position of atom i and shares its type, so the same index set
-        # selects a type class on both sides. perm[idx] = idx[sub_perm]
-        # composes the per-class result into the full permutation.
-        types_arr = np.asarray(types)
-        perm = np.empty(len(positions_a), dtype="int64")
-        for t in np.unique(types_arr):
-            idx = np.where(types_arr == t)[0]
-            sub_perm = compute_permutation_for_rotation(
-                positions_a[idx], positions_b[idx], lattice, symprec, lang=lang
-            )
-            perm[idx] = idx[sub_perm]
-        # Each type fills a disjoint slice of perm; together they must form
-        # a bijection of all atoms.
-        assert np.array_equal(np.sort(perm), np.arange(len(perm)))
-        return perm
+    if types is None:
+        return _match_positions_for_rotation(
+            positions_a, positions_b, lattice, symprec, lang=lang
+        )
+
+    # Match within each type class. positions_b[i] is the rotated position
+    # of atom i and shares its type, so the same index set selects a type
+    # class on both sides. perm[idx] = idx[sub_perm] composes the per-class
+    # result into the full permutation.
+    types_arr = np.asarray(types)
+    perm = np.empty(len(positions_a), dtype="int64")
+    for t in np.unique(types_arr):
+        idx = np.where(types_arr == t)[0]
+        sub_perm = _match_positions_for_rotation(
+            positions_a[idx], positions_b[idx], lattice, symprec, lang=lang
+        )
+        perm[idx] = idx[sub_perm]
+    # Each type fills a disjoint slice of perm; together they must form a
+    # bijection of all atoms.
+    assert np.array_equal(np.sort(perm), np.arange(len(perm)))
+    return perm
+
+
+def _match_positions_for_rotation(
+    positions_a: NDArray[np.double],
+    positions_b: NDArray[np.double],
+    lattice: NDArray[np.double],
+    symprec: float,
+    lang: Literal["C", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return the by-position permutation for two rotation-related cells.
+
+    perm satisfies ``positions_a[perm] == positions_b`` (modulo the
+    lattice), matching atoms by position alone. This is the leaf matcher
+    used by :func:`compute_permutation_for_rotation` within a single type
+    class (or when no types are given).
+
+    """
 
     def sort_by_lattice_distance(
         fracs: NDArray[np.double],

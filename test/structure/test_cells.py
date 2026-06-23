@@ -200,10 +200,10 @@ def _test_compute_permutation(ph: Phonopy):
     symprec = symmetry.tolerance
     rots = symmetry.symmetry_operations["rotations"]
     trans = symmetry.symmetry_operations["translations"]
-    perms = compute_all_sg_permutations(ppos, rots, trans, plat, symprec)
+    perms = compute_all_sg_permutations(ppos, rots, trans, plat, symprec, None)
     for i, (r, t) in enumerate(zip(rots, trans, strict=True)):
         ppos_rot = np.dot(ppos, r.T) + t
-        perm = compute_permutation_for_rotation(ppos, ppos_rot, plat, symprec)
+        perm = compute_permutation_for_rotation(ppos, ppos_rot, plat, symprec, None)
         np.testing.assert_array_equal(perms[i], perm)
         diff = ppos[perm] - ppos_rot
         diff -= np.rint(diff)
