@@ -220,12 +220,23 @@ class DynamicalMatrix:
 
         For ordinary and merge-style mixture cells this equals
         ``primitive.masses``. For non-merge site-mixture cells (built by
-        ``apply_site_mixture``) each mass is scaled by its per-atom
-        concentration weight x_i in (0, 1], giving the VCA effective mass
-        x_i * M_i in the 1/sqrt(M_i M_j) normalization. The reported masses
-        (``primitive.masses``) and the force constants stay unchanged; only
-        the dynamical matrix and its derivative see the scaled mass.
+        ``apply_site_mixture``) each mass M_i is scaled by its per-atom
+        concentration weight x_i in (0, 1], giving the effective mass
+        x_i * M_i. The dynamical matrix block between atoms i and j is then
+        normalized by 1 / sqrt(x_i M_i * x_j M_j) instead of
+        1 / sqrt(M_i M_j). The reported masses (``primitive.masses``) and
+        the force constants stay unchanged; only the dynamical matrix and
+        its derivative see the scaled mass.
         shape=(natom,), dtype='double'.
+
+        Note that this concentration-weighted mass scaling is only one
+        possible modeling choice for site mixtures; other conventions
+        (e.g. unscaled masses, or a different effective-mass definition)
+        are equally defensible. Because the scaling changes the
+        eigenvectors, it couples to every eigenvector-derived quantity,
+        e.g. the projected (atom-projected) DOS and group velocities, not
+        just the eigenfrequencies. Changing the convention here therefore
+        changes those downstream results as well.
 
         """
         weights = self._pcell.mixture_weights
@@ -289,11 +300,14 @@ class DynamicalMatrix:
             lang=self._lang,
         )
 
-    def _run_py_dynamical_matrix(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
-        """Python implementation of building dynamical matrix.
+    def _run_py_dynamical_matrix(
+        self, q: NDArray[np.double], hermitianize: bool = True
+    ) -> NDArray[np.cdouble]:
+        """Python implementation of building dynamical matrix at one q-point.
 
-        This is not used in production.
-        This works only with full-fc.
+        This works with both full and compact force constants, but only
+        for the non-NAC case. It is the per-q reference kernel reused by
+        the batched ``get_dynamical_matrices_at_qpoints_py`` backend.
 
         """
         fc = self._force_constants
@@ -329,8 +343,10 @@ class DynamicalMatrix:
 
                 dm[(i * 3) : (i * 3 + 3), (j * 3) : (j * 3 + 3)] += dm_local
 
-        # Impose Hermisian condition
-        return (dm + dm.conj().transpose()) / 2  # type: ignore
+        if hermitianize:
+            # Impose Hermitian condition
+            return (dm + dm.conj().transpose()) / 2  # type: ignore
+        return dm
 
 
 class DynamicalMatrixNAC(DynamicalMatrix):
@@ -1202,7 +1218,7 @@ def get_dynamical_matrices_at_qpoints(
     nac_q_direction: NDArray[np.double] | None = None,
     is_nac: bool | None = None,
     hermitianize: bool = True,
-    lang: Literal["C", "Rust"] | None = None,
+    lang: Literal["C", "Rust", "Python"] | None = None,
 ) -> NDArray[np.cdouble]:
     """Build dynamical matrices at the given q-points.
 
@@ -1210,6 +1226,11 @@ def get_dynamical_matrices_at_qpoints(
     explicit ``lang`` override).  When many q-points need to be
     processed, prefer this batched entry over one-q-at-a-time builds
     so the preparation steps are amortized.
+
+    A pure-Python backend is available via ``lang="Python"`` for the
+    non-NAC case only.  It is a NumPy reference path that needs neither
+    the C extension nor ``phonors``; it is not selected by ``dm.lang``
+    and must be requested explicitly.
 
     Parameters
     ----------
@@ -1231,9 +1252,10 @@ def get_dynamical_matrices_at_qpoints(
     hermitianize : bool, optional
         Apply Hermitian symmetrization to each q-point block. Default
         is True.
-    lang : {"C", "Rust"}, optional
+    lang : {"C", "Rust", "Python"}, optional
         Backend override.  When None (default), the value is inherited
-        from ``dm.lang``.
+        from ``dm.lang``.  ``"Python"`` selects the pure-NumPy reference
+        backend (non-NAC only) and is never produced by ``dm.lang``.
 
     Returns
     -------
@@ -1244,6 +1266,14 @@ def get_dynamical_matrices_at_qpoints(
 
     """
     _lang = lang if lang is not None else dm.lang
+    if _lang == "Python":
+        return get_dynamical_matrices_at_qpoints_py(
+            dm,
+            qpoints,
+            nac_q_direction=nac_q_direction,
+            is_nac=is_nac,
+            hermitianize=hermitianize,
+        )
     if _lang == "Rust":
         return get_dynamical_matrices_at_qpoints_rust(
             dm,
@@ -1364,6 +1394,41 @@ def get_dynamical_matrices_at_qpoints_rust(
             hermitianize,
         )
     return dynmat[0] if args.qpoints_ndim == 1 else dynmat
+
+
+def get_dynamical_matrices_at_qpoints_py(
+    dm: DynamicalMatrix | DynamicalMatrixWang | DynamicalMatrixGL,
+    qpoints: NDArray[np.double],
+    nac_q_direction: NDArray[np.double] | None = None,
+    is_nac: bool | None = None,
+    hermitianize: bool = True,
+) -> NDArray[np.cdouble]:
+    """Pure-Python (NumPy) backend for ``get_dynamical_matrices_at_qpoints``.
+
+    This reference path needs neither the C extension nor ``phonors``.
+    It supports the non-NAC case only; a NAC input raises
+    ``NotImplementedError``.  Each q-point is delegated to the per-q
+    kernel ``DynamicalMatrix._run_py_dynamical_matrix``, which handles
+    both full and compact force constants.
+
+    """
+    log_dispatch("Python", "get_dynamical_matrices_at_qpoints_py")
+
+    _is_nac = isinstance(dm, DynamicalMatrixNAC) if is_nac is None else is_nac
+    if _is_nac:
+        raise NotImplementedError(
+            "The Python backend of get_dynamical_matrices_at_qpoints supports "
+            "the non-NAC case only."
+        )
+
+    _qpoints = np.array(qpoints, dtype="double", order="C")
+    qpoints_ndim = _qpoints.ndim
+    _qpoints = _qpoints.reshape(-1, 3)
+
+    dynmat = np.array(
+        [dm._run_py_dynamical_matrix(q, hermitianize=hermitianize) for q in _qpoints]
+    )
+    return dynmat[0] if qpoints_ndim == 1 else dynmat
 
 
 @dataclasses.dataclass

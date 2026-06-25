@@ -59,6 +59,7 @@ from phonopy.qha.electron import get_free_energy_at_T
 class PhonopyVaspEfeMockArgs:
     """Mock args of ArgumentParser."""
 
+    scale_factor: float = 1.0
     tmax: float = 1000.0
     tmin: float = 0.0
     tstep: float = 10.0
@@ -69,6 +70,13 @@ def get_options() -> argparse.Namespace:
     """Parse command-line options."""
     parser = argparse.ArgumentParser(description="Phonopy vasp-efe command-line-tool")
     default_vals = PhonopyVaspEfeMockArgs()
+    parser.add_argument(
+        "--scale-factor",
+        dest="scale_factor",
+        type=float,
+        default=default_vals.scale_factor,
+        help="Scaling factor for volume, energy, and free energy (default: 1.0)",
+    )
     parser.add_argument(
         "--tmax",
         dest="tmax",
@@ -136,10 +144,15 @@ def get_fe_ev_lines(
             assert (np.abs(temperatures - temps) < 1e-5).all()
     assert temperatures is not None
 
+    scale_factor = args.scale_factor
+    volumes = np.array(volumes) * scale_factor
+    energy_sigma0 = np.array(energy_sigma0) * scale_factor
+    free_energies = np.array(free_energies) * scale_factor
+
     lines_fe = []
     lines_fe.append(("# volume:  " + " %15.8f" * len(volumes)) % tuple(volumes))
     lines_fe.append("#    T(K)     Free energies")
-    lines_fe += get_free_energy_lines(temperatures, np.transpose(free_energies))
+    lines_fe += get_free_energy_lines(temperatures, free_energies.T)
 
     lines_ev = ["#   cell volume        energy of cell other than phonon"]
     lines_ev += [
