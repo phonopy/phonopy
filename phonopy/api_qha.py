@@ -154,7 +154,7 @@ class PhonopyQHA:
         Returns
         -------
         list
-            Thermal expansion coefficients at temperatues.
+            Thermal expansion coefficients at temperatues in K^-1.
             shape=(temperatures, )
 
         """
@@ -167,7 +167,7 @@ class PhonopyQHA:
         Returns
         -------
         ndarray
-            Helmholtz free energies calculated at temperatures and volumes.
+            Helmholtz free energies calculated at temperatures and volumes in eV.
             shape=(temperatures, volumes)
 
         """
@@ -180,7 +180,7 @@ class PhonopyQHA:
         Returns
         -------
         ndarray
-            Equilibrium volumes at temperatures
+            Equilibrium volumes at temperatures in Angstrom^3.
             shape=(temperatures,), dtype=float
 
         """
@@ -193,7 +193,7 @@ class PhonopyQHA:
         Returns
         -------
         ndarray
-            Gibbs free energies at temperatures.
+            Gibbs free energies at temperatures in eV.
             shape=(temperatures, ), dtype=float
 
         """
@@ -206,7 +206,7 @@ class PhonopyQHA:
         Returns
         -------
         ndarray
-            Bulk modulus at constant pressure and temperatures
+            Bulk modulus at constant pressure and temperatures in GPa.
             shape=(temperatures, ), dtype=float
 
         """
@@ -378,7 +378,7 @@ class PhonopyQHA:
     def plot_gibbs_temperature(
         self,
         xlabel: str = "Temperature (K)",
-        ylabel: str = "Gibbs free energy",
+        ylabel: str = "Gibbs free energy (eV)",
     ) -> Any:
         """Return pyplot of Gibbs free energy vs temperature."""
         return self._qha.plot_gibbs_temperature(xlabel=xlabel, ylabel=ylabel)
@@ -392,7 +392,7 @@ class PhonopyQHA:
     def plot_bulk_modulus_temperature(
         self,
         xlabel: str = "Temperature (K)",
-        ylabel: str = "Bulk modulus",
+        ylabel: str = "Bulk modulus (GPa)",
     ) -> Any:
         """Return pyplot of bulk modulus vs temperature."""
         return self._qha.plot_bulk_modulus_temperature(xlabel=xlabel, ylabel=ylabel)
