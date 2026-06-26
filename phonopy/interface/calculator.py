@@ -56,7 +56,7 @@ from phonopy.physical_units import (
     get_physical_units,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import determinant, sort_positions_by_symbols
+from phonopy.structure.cells import argsort_by_key, determinant
 from phonopy.structure.dataset import get_displacements_and_forces
 
 
@@ -813,9 +813,7 @@ def write_magnetic_moments(cell: PhonopyAtoms, sort_by_elements: bool = False) -
     if magmoms is not None:
         sort_list: list[int]
         if sort_by_elements:
-            _, _, _, sort_list = sort_positions_by_symbols(
-                cell.symbols, cell.scaled_positions
-            )
+            sort_list = argsort_by_key(cell.symbols)
         else:
             sort_list = list(range(len(cell)))
 

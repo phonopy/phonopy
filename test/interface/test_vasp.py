@@ -32,9 +32,10 @@ from phonopy.interface.vasp import (
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    argsort_by_key,
     build_mixture_cell,
+    group_by_key,
     isclose,
-    sort_positions_by_symbols,
 )
 
 cwd = Path(__file__).parent
@@ -235,46 +236,56 @@ def test_get_scaled_positions_lines_near_zero_negative():
 
 
 # ---------------------------------------------------------------------------
-# sort_positions_by_symbols
+# group_by_key
 # ---------------------------------------------------------------------------
 
 
-def test_sort_positions_by_symbols_already_sorted():
-    """Symbols already grouped are returned in the same order."""
-    symbols = ["Na", "Na", "Cl", "Cl"]
-    counts, reduced, _, perm = sort_positions_by_symbols(symbols)
-    assert reduced == ["Na", "Cl"]
-    assert counts == [2, 2]
-    assert perm == [0, 1, 2, 3]
+def test_argsort_by_key_already_sorted():
+    """Symbols already grouped keep their order (identity permutation)."""
+    assert argsort_by_key(["Na", "Na", "Cl", "Cl"]) == [0, 1, 2, 3]
 
 
-def test_sort_positions_by_symbols_interleaved():
+def test_argsort_by_key_interleaved():
     """Interleaved symbols are stably grouped."""
-    symbols = ["Na", "Cl", "Na", "Cl"]
-    counts, reduced, sorted_pos, perm = sort_positions_by_symbols(symbols)
+    assert argsort_by_key(["Na", "Cl", "Na", "Cl"]) == [0, 2, 1, 3]
+
+
+def test_argsort_by_key_first_occurrence_order():
+    """Groups follow first-occurrence symbol order, stable within a group."""
+    assert argsort_by_key(["Na", "Cl", "Na"]) == [0, 2, 1]
+
+
+def test_group_by_key_already_sorted():
+    """Symbols already grouped are returned in the same order."""
+    counts, reduced, _ = group_by_key(["Na", "Na", "Cl", "Cl"])
     assert reduced == ["Na", "Cl"]
     assert counts == [2, 2]
-    assert perm == [0, 2, 1, 3]
 
 
-def test_sort_positions_by_symbols_sorts_positions():
+def test_group_by_key_interleaved():
+    """Interleaved symbols are stably grouped."""
+    counts, reduced, _ = group_by_key(["Na", "Cl", "Na", "Cl"])
+    assert reduced == ["Na", "Cl"]
+    assert counts == [2, 2]
+
+
+def test_group_by_key_sorts_positions():
     """Positions are permuted in first-occurrence symbol order."""
     # ["Na", "Cl", "Na"] → reduced = ["Na", "Cl"], perm = [0, 2, 1]
     symbols = ["Na", "Cl", "Na"]
     positions = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.1, 0.1, 0.1]])
-    counts, reduced, sorted_pos, perm = sort_positions_by_symbols(symbols, positions)
+    counts, reduced, sorted_pos = group_by_key(symbols, positions)
     assert reduced == ["Na", "Cl"]
     assert counts == [2, 1]
-    assert perm == [0, 2, 1]
     assert sorted_pos is not None
     np.testing.assert_allclose(sorted_pos[0], [0.0, 0.0, 0.0], atol=1e-10)
     np.testing.assert_allclose(sorted_pos[1], [0.1, 0.1, 0.1], atol=1e-10)
     np.testing.assert_allclose(sorted_pos[2], [0.5, 0.5, 0.5], atol=1e-10)
 
 
-def test_sort_positions_by_symbols_none_positions():
+def test_group_by_key_none_positions():
     """When positions=None, sorted_positions is also None."""
-    _, _, sorted_pos, _ = sort_positions_by_symbols(["Na", "Cl"])
+    _, _, sorted_pos = group_by_key(["Na", "Cl"])
     assert sorted_pos is None
 
 
