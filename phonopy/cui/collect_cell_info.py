@@ -151,7 +151,7 @@ def get_cell_info(
         # site-mixture (merged mixtures or weighted species), so re-applying
         # the --site-mixture weights would fail. Skip in that case; the
         # persisted cell already has the information.
-        if cell_info.unitcell.has_mixtures or cell_info.unitcell.has_weighted_species:
+        if cell_info.unitcell.is_site_mixture:
             if log_level:
                 print(
                     "Site mixture is already defined in the input cell; "

@@ -580,6 +580,21 @@ class PhonopyAtoms:
         return any(sp.weight is not None for sp in self._species)
 
     @property
+    def is_site_mixture(self) -> bool:
+        """Return True if the cell carries any site-mixture information.
+
+        True when the cell has merged mixed-species sites
+        (``has_mixtures``) or weighted real species
+        (``has_weighted_species``), i.e. whenever co-located atoms or
+        fractional concentrations are present. These are exactly the
+        cells for which ``totuple`` hands species ids (rather than atomic
+        numbers) to spglib, so the species table must be used to rebuild
+        a cell from a spglib result.
+
+        """
+        return self.has_mixtures or self.has_weighted_species
+
+    @property
     def mixture_weights(self) -> NDArray[np.double] | None:
         """Per-atom concentration weights for the non-merge scheme.
 
@@ -609,7 +624,7 @@ class PhonopyAtoms:
         :func:`phonopy.structure.cells.compute_permutation_for_rotation`.
 
         """
-        if self.has_mixtures or self.has_weighted_species:
+        if self.is_site_mixture:
             return self.species_ids
         return None
 
@@ -915,7 +930,7 @@ class PhonopyAtoms:
             ``(cell, scaled_positions, numbers, magnetic_moments)``.
 
         """
-        if distinguish_symbol_index or self.has_mixtures or self.has_weighted_species:
+        if distinguish_symbol_index or self.is_site_mixture:
             numbers = self.species_ids
         else:
             numbers = self.numbers

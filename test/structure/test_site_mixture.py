@@ -284,8 +284,8 @@ def _phonon_from_cell(cell: PhonopyAtoms, lang: str = "C") -> Phonopy:
     )
 
 
-def test_scaled_masses_property_non_merge():
-    """scaled_masses scales each mass by its concentration weight."""
+def test_normalization_masses_property_non_merge():
+    """normalization_masses scales each mass by its concentration weight."""
     vca = apply_site_mixture(_make_GeSn_co_located_cell(), weights=[0.9, 0.1, 0.9, 0.1])
     phonon = _phonon_from_cell(vca)
     phonon.force_constants = np.zeros(
@@ -294,14 +294,14 @@ def test_scaled_masses_property_non_merge():
     dm = phonon.dynamical_matrix
     primitive = dm.primitive
     np.testing.assert_allclose(
-        dm.scaled_masses, primitive.masses * primitive.mixture_weights
+        dm.normalization_masses, primitive.masses * primitive.mixture_weights
     )
     # The reported masses are left untouched.
     np.testing.assert_allclose(primitive.masses, vca.masses[:2].tolist() * 2)
 
 
-def test_scaled_masses_property_normal_cell():
-    """For an ordinary cell scaled_masses equals the reported masses."""
+def test_normalization_masses_property_normal_cell():
+    """For an ordinary cell normalization_masses equals the reported masses."""
     cell = PhonopyAtoms(
         symbols=["Ge", "Sn"],
         scaled_positions=[[0, 0, 0], [0.25, 0.25, 0.25]],
@@ -313,11 +313,11 @@ def test_scaled_masses_property_normal_cell():
     )
     dm = phonon.dynamical_matrix
     assert dm.primitive.mixture_weights is None
-    np.testing.assert_allclose(dm.scaled_masses, dm.primitive.masses)
+    np.testing.assert_allclose(dm.normalization_masses, dm.primitive.masses)
 
 
-def test_scaled_masses_property_merge_cell():
-    """For a merge-style mixture cell scaled_masses equals the averaged masses."""
+def test_normalization_masses_property_merge_cell():
+    """For a merge-style mixture cell normalization_masses equals averaged masses."""
     species, ids = build_species_table_from_mixtures([[("Ge", 0.5), ("Sn", 0.5)]])
     merge = PhonopyAtoms(
         cell=_zincblende_lattice,
@@ -332,7 +332,7 @@ def test_scaled_masses_property_merge_cell():
     )
     dm = phonon.dynamical_matrix
     assert dm.primitive.mixture_weights is None
-    np.testing.assert_allclose(dm.scaled_masses, dm.primitive.masses)
+    np.testing.assert_allclose(dm.normalization_masses, dm.primitive.masses)
 
 
 @pytest.mark.parametrize("lang", ["C", "Rust"])
@@ -357,12 +357,12 @@ def test_eq64_frequencies_depend_only_on_scaled_mass(lang):
     )
     phonon_b.force_constants = fc
     # Pick masses so that mass * weight equals phonon_a's scaled masses.
-    scaled_a = phonon_a.dynamical_matrix.scaled_masses
+    scaled_a = phonon_a.dynamical_matrix.normalization_masses
     phonon_b.masses = scaled_a / phonon_b.primitive.mixture_weights
 
     # The engineered effective masses coincide while the weights differ.
     np.testing.assert_allclose(
-        phonon_b.dynamical_matrix.scaled_masses, scaled_a, atol=1e-12
+        phonon_b.dynamical_matrix.normalization_masses, scaled_a, atol=1e-12
     )
 
     qpoints = [[0.0, 0.0, 0.0], [0.1, 0.2, 0.3], [0.5, 0.0, 0.0]]
