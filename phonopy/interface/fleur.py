@@ -45,7 +45,7 @@ from numpy.typing import NDArray
 
 from phonopy.interface.vasp import get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import sort_positions_by_symbols
+from phonopy.structure.cells import group_by_key
 
 
 def parse_set_of_forces(
@@ -179,7 +179,7 @@ def get_fleur_structure(
     """
     lattice = cell.cell
 
-    num_atoms, reduced_speci, scaled_positions, sort_list = sort_positions_by_symbols(
+    num_atoms, reduced_speci, scaled_positions = group_by_key(
         speci, cell.scaled_positions
     )
     assert scaled_positions is not None

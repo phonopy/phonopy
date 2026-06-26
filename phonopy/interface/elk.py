@@ -52,7 +52,7 @@ from phonopy.interface.vasp import (
 )
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import sort_positions_by_symbols
+from phonopy.structure.cells import group_by_key
 
 
 def parse_set_of_forces(
@@ -146,7 +146,7 @@ def get_elk_structure(
 ) -> str:
     """Return Elk structure in text."""
     lattice = cell.cell
-    (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
+    (num_atoms, symbols, scaled_positions) = group_by_key(
         cell.symbols, cell.scaled_positions
     )
 

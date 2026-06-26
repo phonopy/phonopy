@@ -39,7 +39,7 @@ from __future__ import annotations
 import dataclasses
 import warnings
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Hashable, Sequence
 from typing import Literal
 
 import numpy as np
@@ -870,61 +870,69 @@ def get_supercell(
     )
 
 
-def sort_positions_by_symbols(
-    symbols: Sequence[str | int] | NDArray[np.int64],
-    positions: NDArray[np.double] | None = None,
-) -> tuple[list[int], list[str | int], NDArray[np.double] | None, list[int]]:
-    """Sort atomic positions by symbols.
+def argsort_by_key(
+    keys: Sequence[Hashable] | NDArray[np.integer],
+) -> list[int]:
+    """Return a stable permutation that groups items by key.
 
-    Sort positions by symbols (using the order defined by reduced_symbols)
-    using a stable sort algorithm. Written by @ExpHP, refactored by @atztogo.
+    Items are reordered so that items sharing a key become contiguous, the key
+    groups appearing in first-appearance order and the original order preserved
+    within each group (stable). ``perm[k]`` is the index in ``keys`` of the
+    item placed at position ``k``. Keys may be any hashable values (chemical
+    symbols, atomic numbers, species ids, ...).
 
-    symbols = ["A", "B", "A", "B"]
-    reduced_symbols = ["A", "B"]
-    sort_keys = [0, 1, 0, 1]
-    perm = [0, 2, 1, 3]
-    counts_dict = {'A': 2, 'B': 2}
-    counts_list = [2, 2]
+    For ``keys = ["A", "B", "A", "B"]`` the result is ``[0, 2, 1, 3]``.
 
     Parameters
     ----------
-    symbols : list[str] or list[int] or NDArray[np.int64]
-        Sequence of hashable objects. This may be a list of chemical symbols
-        or numbers.
-    positions : NDArray[np.double] or None, optional
-        Atomic positions. When None, sorted_positions is also None.
+    keys : sequence of hashable or NDArray[np.integer]
+        Per-item grouping keys.
 
     Returns
     -------
-    sorted_positions = positions[perm]
-    For the others, see the example above.
-
-    Functions
-    ---------
-    _argsort_stable :
-        Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
-        so that indices tied for the same value are listed in increasing order.
+    list[int]
+        Stable permutation grouping items by key.
 
     """
+    rank = {key: i for i, key in enumerate(dict.fromkeys(keys))}
+    # Python's built-in sort is stable, so ties keep their original order.
+    return sorted(range(len(keys)), key=lambda k: rank[keys[k]])
 
-    def _argsort_stable(keys):
-        # Python's built-in sort algorithm is a stable sort
-        return sorted(range(len(keys)), key=keys.__getitem__)
 
-    # dict in Python 3.7 or later is ordered dict.
-    reduced_symbols = list(dict.fromkeys(symbols))
-    counts_dict = Counter(symbols)
-    # list(counts_dict.values()) may be used...
-    counts_list = [counts_dict[s] for s in reduced_symbols]
-    sort_keys = [reduced_symbols.index(i) for i in symbols]
-    perm = _argsort_stable(sort_keys)
+def group_by_key(
+    keys: Sequence[Hashable] | NDArray[np.integer],
+    values: NDArray[np.double] | None = None,
+) -> tuple[list[int], list[Hashable], NDArray[np.double] | None]:
+    """Group items by key and report the per-group layout.
 
-    if positions is None:
-        sorted_positions = None
-    else:
-        sorted_positions = positions[perm]
+    Items are reordered so items sharing a key are contiguous (the grouping
+    permutation is :func:`argsort_by_key`). Keys may be any hashable values.
+    For ``keys = ["A", "B", "A", "B"]`` the unique keys are ``["A", "B"]`` and
+    the counts ``[2, 2]``.
 
-    return counts_list, reduced_symbols, sorted_positions, perm
+    Parameters
+    ----------
+    keys : sequence of hashable or NDArray[np.integer]
+        Per-item grouping keys.
+    values : NDArray[np.double] or None, optional
+        Per-item array reordered alongside the keys. When None, the reordered
+        array is also None.
+
+    Returns
+    -------
+    counts : list[int]
+        Number of items per group, aligned with unique_keys.
+    unique_keys : list[Hashable]
+        Unique keys in first-appearance order.
+    grouped_values : NDArray[np.double] or None
+        ``values`` reordered by the grouping permutation, or None.
+
+    """
+    unique_keys = list(dict.fromkeys(keys))
+    counts = list(Counter(keys).values())
+    perm = argsort_by_key(keys)
+    grouped_values = None if values is None else values[perm]
+    return counts, unique_keys, grouped_values
 
 
 def get_primitive(
@@ -1023,7 +1031,7 @@ def get_standardized_cell(
     """
     std_positions = dataset.std_positions
     std_types = dataset.std_types
-    _, _, _, perm = sort_positions_by_symbols(std_types, std_positions)
+    perm = argsort_by_key(std_types)
 
     if cell.is_site_mixture:
         # std_types are species ids into cell.species_table (totuple
@@ -1207,7 +1215,7 @@ def apply_site_mixture(
     each element consecutively.
 
     Note: when writing displaced supercells with :func:`write_vasp`, phonopy may
-    reorder atoms by symbol (``sort_positions_by_symbols``). Ensure that forces
+    reorder atoms by symbol (``group_by_key``). Ensure that forces
     read from VASP are reordered to match the supercell atom order before
     setting ``phonon.forces``.
 

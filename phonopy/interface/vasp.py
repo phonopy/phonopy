@@ -59,7 +59,8 @@ from phonopy.file_IO import (
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import sort_positions_by_symbols
+from phonopy.structure.cells import group_by_key
+from phonopy.structure.mixture import iter_mixture_expansion_blocks
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
@@ -479,8 +480,6 @@ def _expand_mixtures_for_vasp(
     ``(row_symbols, row_counts, expanded_scaled_positions, row_weights)``.
 
     """
-    species_table = cell.species_table
-    species_ids = cell.species_ids
     scaled = cell.scaled_positions
 
     row_symbols: list[str] = []
@@ -488,25 +487,16 @@ def _expand_mixtures_for_vasp(
     row_weights: list[float] = []
     blocks: list[NDArray[np.double]] = []
 
-    for sid, sp in enumerate(species_table):
-        atom_idx = np.where(species_ids == sid)[0]
+    for symbol, weight, atom_idx in iter_mixture_expansion_blocks(cell):
         # Every species in the table is referenced by at least one atom in
         # the standard construction paths (build_mixture_cell, Supercell,
         # Primitive, displacement). A hand-crafted PhonopyAtoms with an
         # orphan species would land here.
-        assert atom_idx.size > 0, f"species_table[{sid}]={sp.symbol!r} has no atoms"
-        positions = scaled[atom_idx]
-        if sp.mixture is None:
-            row_symbols.append(sp.symbol)
-            row_counts.append(int(atom_idx.size))
-            row_weights.append(1.0)
-            blocks.append(positions)
-        else:
-            for sym, weight in sp.mixture:
-                row_symbols.append(sym)
-                row_counts.append(int(atom_idx.size))
-                row_weights.append(float(weight))
-                blocks.append(positions)
+        assert atom_idx.size > 0, f"species {symbol!r} has no atoms"
+        row_symbols.append(symbol)
+        row_counts.append(int(atom_idx.size))
+        row_weights.append(weight)
+        blocks.append(scaled[atom_idx])
 
     expanded = np.concatenate(blocks, axis=0)
     return row_symbols, row_counts, expanded, row_weights
@@ -521,7 +511,7 @@ def _get_vasp_structure_header_lines(
     if expand_mixtures and cell.has_mixtures:
         symbols, num_atoms, scaled_positions, _ = _expand_mixtures_for_vasp(cell)
     else:
-        num_atoms, symbols, scaled_positions, _ = sort_positions_by_symbols(
+        num_atoms, symbols, scaled_positions = group_by_key(
             cell.symbols, cell.scaled_positions
         )
     assert scaled_positions is not None

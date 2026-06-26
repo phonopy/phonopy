@@ -52,10 +52,10 @@ from phonopy.interface.calculator import (
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    argsort_by_key,
     determinant,
     guess_primitive_matrix,
     raise_if_suffixed_symbols,
-    sort_positions_by_symbols,
 )
 from phonopy.structure.symmetry import Symmetry
 
@@ -135,7 +135,7 @@ def _rebuild_bravais_cell(
     cells map the returned atomic numbers directly.
 
     """
-    _, _, _, perm = sort_positions_by_symbols(bravais_numbers)
+    perm = argsort_by_key(bravais_numbers)
     if cell.is_site_mixture:
         return PhonopyAtoms(
             species_table=cell.species_table,

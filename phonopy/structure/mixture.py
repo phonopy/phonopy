@@ -15,7 +15,7 @@ mixture structure.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import Literal
 
 import numpy as np
@@ -77,6 +77,46 @@ def build_mixtures_from_groups(
     return mixtures
 
 
+def iter_mixture_expansion_blocks(
+    cell: PhonopyAtoms,
+) -> Iterator[tuple[str, float, NDArray[np.int64]]]:
+    """Yield ``(symbol, weight, atom_indices)`` blocks in expansion order.
+
+    This is the single source of truth for the order in which a (possibly
+    mixed) cell is expanded into per-constituent rows. The canonical order is:
+    for each ``cell.species_table`` entry, one block per constituent -- a
+    single ``(symbol, 1.0)`` for a non-mixture species, or each
+    ``(symbol, weight)`` pair (in mixture order) for a mixed species -- paired
+    with the indices of the atoms that reference the species. Both
+    :func:`get_mixture_expansion` (per-row site/weight arrays) and the VASP
+    POSCAR row layout build on this ordering, so they cannot drift apart.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Cell whose expansion order is to be reported. May or may not contain
+        mixed-species sites.
+
+    Yields
+    ------
+    symbol : str
+        Constituent element symbol of the block.
+    weight : float
+        Constituent weight (1.0 for a non-mixture species).
+    atom_indices : NDArray[np.int64]
+        Ascending indices of the atoms in ``cell`` referencing the species.
+
+    """
+    species_ids = cell.species_ids
+    for sid, sp in enumerate(cell.species_table):
+        atom_idx = np.where(species_ids == sid)[0]
+        if sp.mixture is None:
+            yield sp.symbol, 1.0, atom_idx
+        else:
+            for sym, weight in sp.mixture:
+                yield sym, float(weight), atom_idx
+
+
 def get_mixture_expansion(
     cell: PhonopyAtoms,
 ) -> tuple[NDArray[np.int64], NDArray[np.double]]:
@@ -106,22 +146,12 @@ def get_mixture_expansion(
         Constituent weight (1.0 for non-mixture sites).
 
     """
-    species_table = cell.species_table
-    species_ids = cell.species_ids
-
     site_indices: list[int] = []
     weights: list[float] = []
-    for sid, sp in enumerate(species_table):
-        atom_idx = np.where(species_ids == sid)[0]
-        if sp.mixture is None:
-            for j in atom_idx:
-                site_indices.append(int(j))
-                weights.append(1.0)
-        else:
-            for _sym, weight in sp.mixture:
-                for j in atom_idx:
-                    site_indices.append(int(j))
-                    weights.append(float(weight))
+    for _symbol, weight, atom_idx in iter_mixture_expansion_blocks(cell):
+        for j in atom_idx:
+            site_indices.append(int(j))
+            weights.append(weight)
 
     return (
         np.array(site_indices, dtype="int64"),
