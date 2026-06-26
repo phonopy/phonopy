@@ -109,6 +109,38 @@ def test_phonopy_vasp_efe_temperature_range():
     np.testing.assert_allclose(row2[1], -17.27926217, rtol=1e-6)
 
 
+def test_phonopy_vasp_efe_uses_kpoints_opt():
+    """Free energy must be evaluated on the kpoints_opt mesh when present.
+
+    The fixture's SCF mesh (14 k-points) and kpoints_opt mesh (24 k-points)
+    have different sizes, so the output must match an explicit computation on
+    the kpoints_opt mesh.
+
+    """
+    from phonopy.interface.vasp import parse_vasprunxml
+    from phonopy.qha.electron import get_free_energy_at_T
+
+    filename = cwd.parents[1] / "interface" / "vasprun_kpoints_opt.xml.xz"
+    args = PhonopyVaspEfeMockArgs(filenames=[filename], tmax=100.0, tstep=50.0)
+    lines_fe, _ = get_fe_ev_lines(args)
+    rows = _data_rows(lines_fe)
+    assert len(rows) == 3  # T = 0, 50, 100
+
+    vxml = parse_vasprunxml(filename)
+    assert vxml.has_kpoints_opt
+    _, fe = get_free_energy_at_T(
+        0.0,
+        100.0,
+        50.0,
+        vxml.eigenvalues_kpoints_opt[:, :, :, 0],
+        vxml.k_weights_kpoints_opt,
+        vxml.NELECT,
+    )
+    ref = vxml.energies[-1, 1] - fe[0] + fe
+    for row, r in zip(rows, ref, strict=True):
+        np.testing.assert_allclose(row[1], r, rtol=1e-8)
+
+
 def test_get_free_energy_lines():
     """Test get_free_energy_lines formatting."""
     temperatures = np.array([0.0, 100.0, 200.0])

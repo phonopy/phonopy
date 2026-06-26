@@ -127,8 +127,14 @@ def get_fe_ev_lines(
     assert args.filenames is not None
     for filename in args.filenames:
         vxml = parse_vasprunxml(filename)
-        weights = vxml.k_weights
-        eigenvalues = vxml.eigenvalues[:, :, :, 0]
+        # With KPOINTS_OPT the electronic DOS (hence the free energy) is
+        # evaluated on the denser kpoints_opt mesh, so prefer it when present.
+        if vxml.has_kpoints_opt:
+            weights = vxml.k_weights_kpoints_opt
+            eigenvalues = vxml.eigenvalues_kpoints_opt[:, :, :, 0]
+        else:
+            weights = vxml.k_weights
+            eigenvalues = vxml.eigenvalues[:, :, :, 0]
         n_electrons = vxml.NELECT
         assert n_electrons is not None
         energy = vxml.energies[-1, 1]

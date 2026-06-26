@@ -4,7 +4,7 @@ import lzma
 import shutil
 import tarfile
 import tempfile
-from io import StringIO
+from io import BytesIO, StringIO
 from pathlib import Path
 
 import numpy as np
@@ -23,6 +23,7 @@ from phonopy.interface.vasp import (
     get_vasp_vca_hint_lines,
     parse_force_constants,
     parse_set_of_forces,
+    parse_vasprunxml,
     read_vasp,
     read_vasp_from_strings,
     read_XDATCAR,
@@ -497,6 +498,180 @@ def test_VasprunxmlExpat():
         np.testing.assert_almost_equal(vasprun.NELECT, 448)
         np.testing.assert_almost_equal(vasprun.volume, 1473.99433936)
         break
+
+
+def test_VasprunxmlExpat_characterization():
+    """Lock current parser output as a regression baseline.
+
+    These golden values guard against behavior changes while the
+    VasprunxmlExpat internals are refactored. The fixture is a
+    Gamma-point NaCl supercell calculation (no kpoints_opt).
+
+    """
+    filename_vasprun = cwd / "vasprun.xml.tar.bz2"
+    _tar = tarfile.open(filename_vasprun)
+    members = _tar.getmembers()
+    assert [m.name for m in members] == ["vasprun.xml-001", "vasprun.xml-002"]
+
+    vasprun = VasprunxmlExpat(_tar.extractfile(members[0]))
+    vasprun.parse()
+
+    # Scalars and grids.
+    assert vasprun.NELECT == pytest.approx(448.0)
+    assert vasprun.efermi is None
+    np.testing.assert_equal(vasprun.fft_grid, [64, 64, 64])
+    np.testing.assert_equal(vasprun.fft_fine_grid, [128, 128, 128])
+    assert vasprun.symbols == ["Na"] * 32 + ["Cl"] * 32
+
+    # Structure quantities.
+    np.testing.assert_almost_equal(vasprun.volume, [1473.99433936])
+    assert vasprun.forces.shape == (1, 64, 3)
+    np.testing.assert_allclose(vasprun.forces[0, 0], [-0.01806194, 0.0, 0.0], atol=1e-8)
+    np.testing.assert_allclose(
+        vasprun.energies, [[-216.82820693, -216.82820693, 0.0]], atol=1e-8
+    )
+
+    # k-points and eigenvalues.
+    np.testing.assert_equal(vasprun.k_mesh, [2, 2, 2])
+    assert vasprun.kpointlist.shape == (1, 3)
+    assert vasprun.k_weights.shape == (1,)
+    np.testing.assert_allclose(np.sum(vasprun.k_weights), 1.0, atol=1e-10)
+    assert vasprun.eigenvalues.shape == (1, 1, 268, 2)
+    np.testing.assert_allclose(vasprun.eigenvalues[0, 0, 0], [-21.6488, 1.0], atol=1e-4)
+    np.testing.assert_allclose(vasprun.eigenvalues[0, 0, 1, 0], -21.6487, atol=1e-4)
+
+    # Absent in this fixture.
+    assert vasprun.born.shape == (0,)
+    assert vasprun.epsilon.shape == ()
+    assert vasprun.pseudopotentials == []
+
+
+def test_VasprunxmlExpat_kpoints_opt():
+    """Test parsing of a KPOINTS_OPT calculation.
+
+    The fixture is a TiSe2 calculation with a coarse SCF mesh (14
+    irreducible k-points) and a denser kpoints_opt mesh (24
+    irreducible k-points). The plain ``eigenvalues`` / ``k_weights``
+    / ``efermi`` must return the SCF-mesh quantities, while the
+    ``*_kpoints_opt`` properties return the dense-mesh quantities.
+
+    The kpoints_opt eigenvalues carry occupations sourced from
+    ``<projected_kpoints_opt>`` so the shape matches the SCF
+    eigenvalues (..., 2).
+
+    """
+    filename = cwd / "vasprun_kpoints_opt.xml.xz"
+    vxml = parse_vasprunxml(filename)
+
+    # Stable structure quantities.
+    assert vxml.NELECT == pytest.approx(24.0)
+    np.testing.assert_almost_equal(vxml.volume, [33.23606544])
+    assert vxml.symbols == ["Ti", "Ti"]
+
+    # SCF mesh (plain properties).
+    assert vxml.eigenvalues.shape == (1, 14, 18, 2)
+    np.testing.assert_allclose(vxml.eigenvalues[0, 0, 0], [-47.8415, 1.0], atol=1e-4)
+    np.testing.assert_allclose(vxml.eigenvalues[0, -1, -1], [12.0109, 0.0], atol=1e-4)
+    assert vxml.k_weights.shape == (14,)
+    np.testing.assert_allclose(np.sum(vxml.k_weights), 1.0, atol=1e-6)
+    np.testing.assert_allclose(vxml.k_weights[0], 0.00925926, atol=1e-7)
+    assert vxml.kpointlist.shape == (14, 3)
+    np.testing.assert_equal(vxml.k_mesh, [6, 6, 3])
+    assert vxml.efermi == pytest.approx(8.73771591)
+
+    # kpoints_opt mesh (dedicated properties).
+    assert vxml.has_kpoints_opt
+    assert vxml.eigenvalues_kpoints_opt.shape == (1, 24, 18, 2)
+    np.testing.assert_allclose(
+        vxml.eigenvalues_kpoints_opt[0, 0, 0], [-47.8416, 1.0], atol=1e-4
+    )
+    np.testing.assert_allclose(
+        vxml.eigenvalues_kpoints_opt[0, -1, -1], [12.13, 0.0], atol=1e-4
+    )
+    assert vxml.k_weights_kpoints_opt.shape == (24,)
+    np.testing.assert_allclose(np.sum(vxml.k_weights_kpoints_opt), 1.0, atol=1e-6)
+    np.testing.assert_allclose(vxml.k_weights_kpoints_opt[0], 0.00510204, atol=1e-7)
+    assert vxml.kpointlist_kpoints_opt.shape == (24, 3)
+    np.testing.assert_equal(vxml.k_mesh_kpoints_opt, [7, 7, 4])
+    assert vxml.efermi_kpoints_opt == pytest.approx(8.73880881)
+
+
+def test_VasprunxmlExpat_kpoints_opt_spin():
+    """Test KPOINTS_OPT parsing for a spin-polarized (ISPIN=2) run.
+
+    This exercises the spin dimension of the eigenvalue sets, both
+    for the SCF mesh and for the kpoints_opt mesh whose occupations
+    are merged per spin from <projected_kpoints_opt>.
+
+    """
+    filename = cwd / "vasprun_kpoints_opt_spin.xml.xz"
+    vxml = parse_vasprunxml(filename)
+
+    assert vxml.NELECT == pytest.approx(24.0)
+    np.testing.assert_almost_equal(vxml.volume, [33.23606544])
+
+    # SCF mesh has two spin channels.
+    assert vxml.eigenvalues.shape == (2, 14, 18, 2)
+    assert vxml.efermi == pytest.approx(8.73771247)
+
+    # kpoints_opt mesh, both spins, occupations merged in.
+    assert vxml.eigenvalues_kpoints_opt.shape == (2, 24, 18, 2)
+    np.testing.assert_allclose(
+        vxml.eigenvalues_kpoints_opt[0, 21, 17, 0], 12.4904, atol=1e-4
+    )
+    np.testing.assert_allclose(
+        vxml.eigenvalues_kpoints_opt[1, 21, 17, 0], 12.2976, atol=1e-4
+    )
+    assert vxml.k_weights_kpoints_opt.shape == (24,)
+    assert vxml.efermi_kpoints_opt == pytest.approx(8.73881616)
+
+
+def test_VasprunxmlExpat_kpoints_opt_requires_projected():
+    """kpoints_opt occupations must come from <projected_kpoints_opt>.
+
+    When a kpoints_opt block is present but the projected block
+    (carrying occupations) is absent, accessing the kpoints_opt
+    eigenvalues must raise rather than silently fall back.
+
+    """
+    xml_str = b"""<modeling>
+ <calculation>
+  <eigenvalues_kpoints_opt comment="kpoints_opt">
+   <kpoints>
+    <varray name="weights">
+     <v> 0.5 </v>
+     <v> 0.5 </v>
+    </varray>
+   </kpoints>
+   <eigenvalues>
+    <array>
+     <field>eigene</field>
+     <set>
+      <set comment="spin 1">
+       <set comment="kpoint 1"><r> -1.0 </r></set>
+       <set comment="kpoint 2"><r> -2.0 </r></set>
+      </set>
+     </set>
+    </array>
+   </eigenvalues>
+  </eigenvalues_kpoints_opt>
+  <eigenvalues>
+   <array>
+    <field>eigene</field><field>occ</field>
+    <set>
+     <set comment="spin 1">
+      <set comment="kpoint 1"><r> -1.0 1.0 </r></set>
+     </set>
+    </set>
+   </array>
+  </eigenvalues>
+ </calculation>
+</modeling>
+"""
+    vxml = VasprunxmlExpat(BytesIO(xml_str))
+    vxml.parse()
+    with pytest.raises(RuntimeError):
+        _ = vxml.eigenvalues_kpoints_opt
 
 
 def test_parse_set_of_forces():
