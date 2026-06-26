@@ -2514,13 +2514,17 @@ class Phonopy:
         'free_energy', 'entropy', and 'heat_capacity'.
         Each value of corresponding key is as follows:
 
-        temperatures: ndarray
+        temperatures : ndarray
+            Temperatures in K.
             shape=(temperatures, ), dtype='double'
         free_energy : ndarray
+            Helmholtz free energies in kJ/mol.
             shape=(temperatures, ), dtype='double'
         entropy : ndarray
+            Entropies in J/K/mol.
             shape=(temperatures, ), dtype='double'
         heat_capacity : ndarray
+            Heat capacities in J/K/mol.
             shape=(temperatures, ), dtype='double'
 
         .. deprecated::
