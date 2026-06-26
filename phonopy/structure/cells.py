@@ -950,6 +950,43 @@ def get_primitive(
     )
 
 
+def raise_if_suffixed_symbols(cell: PhonopyAtoms) -> None:
+    """Raise if the cell carries suffixed symbols sharing an atomic number.
+
+    Symmetry standardization rebuilds a cell from atomic numbers using spglib,
+    so two species that share an atomic number but differ only by a symbol
+    suffix (e.g. ``"Cl"`` and ``"Cl1"``) cannot be distinguished in the result.
+    This guard refuses such cells rather than silently dropping the suffix
+    labels. Site-mixture cells are rebuilt from the species table and keep
+    their symbols, so they are exempt; this guard is meant only for the
+    atomic-number reconstruction path.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Cell about to be reconstructed from atomic numbers.
+
+    Raises
+    ------
+    ValueError
+        If two species share an atomic number but carry different symbols.
+
+    """
+    symbol_of: dict[int, str] = {}
+    for sp in cell.species_table:
+        if sp.atomic_number is None:
+            continue
+        previous = symbol_of.get(sp.atomic_number)
+        if previous is not None and previous != sp.symbol:
+            raise ValueError(
+                "Symmetry standardization cannot preserve suffixed symbols that "
+                f"share an atomic number (e.g. '{previous}' and '{sp.symbol}'); "
+                "the standardized cell is built from atomic numbers, which would "
+                "drop the suffix labels."
+            )
+        symbol_of[sp.atomic_number] = sp.symbol
+
+
 def get_standardized_cell(
     cell: PhonopyAtoms,
     dataset: SpglibDataset | SpglibMagneticDataset,
@@ -988,7 +1025,7 @@ def get_standardized_cell(
     std_types = dataset.std_types
     _, _, _, perm = sort_positions_by_symbols(std_types, std_positions)
 
-    if cell.has_mixtures or cell.has_weighted_species:
+    if cell.is_site_mixture:
         # std_types are species ids into cell.species_table (totuple
         # hands species ids to spglib for such cells). Rebuilding with
         # the species table restores symbol, atomic number, mass, and
@@ -1001,6 +1038,7 @@ def get_standardized_cell(
         )
 
     # std_types are atomic numbers.
+    raise_if_suffixed_symbols(cell)
     atom_data = get_atomic_data().atom_data
     if isinstance(dataset, SpglibDataset):
         return PhonopyAtoms(

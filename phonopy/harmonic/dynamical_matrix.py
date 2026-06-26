@@ -215,7 +215,7 @@ class DynamicalMatrix:
         return self._pcell
 
     @property
-    def scaled_masses(self) -> NDArray[np.double]:
+    def normalization_masses(self) -> NDArray[np.double]:
         """Atomic masses used to mass-normalize the dynamical matrix.
 
         For ordinary and merge-style mixture cells this equals
@@ -315,7 +315,7 @@ class DynamicalMatrix:
         multi = self._multi
         num_atom = len(self._pcell)
         dm = np.zeros((3 * num_atom, 3 * num_atom), dtype="cdouble", order="C")
-        mass = self.scaled_masses
+        mass = self.normalization_masses
         if fc.shape[0] == fc.shape[1]:
             is_compact_fc = False
         else:
@@ -747,7 +747,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 C_recip[i, :, i, :] -= drift[i]
 
         # Mass weighted
-        mass = self.scaled_masses
+        mass = self.normalization_masses
         for i in range(num_atom):
             for j in range(num_atom):
                 C_recip[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
@@ -1575,7 +1575,7 @@ def _extract_params(
     else:
         _svecs, _multi = sparse_to_dense_svecs(svecs, multi)
 
-    masses = dm.scaled_masses
+    masses = dm.normalization_masses
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
     positions = dm.primitive.positions
     if isinstance(dm, DynamicalMatrixNAC):

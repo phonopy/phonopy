@@ -865,6 +865,21 @@ def test_get_standardized_cell_ordinary_regression():
     np.testing.assert_allclose(std.cell, dataset.std_lattice)
 
 
+def test_get_standardized_cell_suffixed_symbols_raise():
+    """Suffixed symbols sharing an atomic number are refused, not silently lost."""
+    a = 3.0
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+        symbols=["Cl", "Cl1"],
+    )
+    assert not cell.is_site_mixture
+    dataset = spglib.get_symmetry_dataset(cell.totuple(), symprec=1e-5)
+
+    with pytest.raises(ValueError, match="suffixed symbols"):
+        get_standardized_cell(cell, dataset)
+
+
 def test_get_standardized_cell_magnetic_moments_preserved():
     """The magnetic-moment path is unchanged for magnetic datasets."""
     fe = PhonopyAtoms(

@@ -36,6 +36,7 @@
 
 import numpy as np
 import spglib
+from numpy.typing import NDArray
 
 try:
     spglib.error.OLD_ERROR_HANDLING = False
@@ -53,6 +54,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     determinant,
     guess_primitive_matrix,
+    raise_if_suffixed_symbols,
     sort_positions_by_symbols,
 )
 from phonopy.structure.symmetry import Symmetry
@@ -74,22 +76,12 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
     spglib_cell = spglib.refine_cell(phonon.primitive.totuple(), symprec)
     assert spglib_cell is not None
     bravais_lattice, bravais_pos, bravais_numbers = spglib_cell
-    _, _, _, perm = sort_positions_by_symbols(bravais_numbers)
-    if phonon.primitive.has_mixtures:
-        # spglib returns species_ids verbatim when the input has mixtures, so
-        # rebuild PhonopyAtoms via the species table instead of atomic numbers.
-        bravais = PhonopyAtoms(
-            species_table=phonon.primitive.species_table,
-            species_ids=bravais_numbers[perm],
-            scaled_positions=bravais_pos[perm],
-            cell=bravais_lattice,
-        )
-    else:
-        bravais = PhonopyAtoms(
-            numbers=bravais_numbers[perm],
-            scaled_positions=bravais_pos[perm],
-            cell=bravais_lattice,
-        )
+    bravais = _rebuild_bravais_cell(
+        phonon.primitive,
+        np.array(bravais_lattice, dtype="double"),
+        np.array(bravais_pos, dtype="double"),
+        np.array(bravais_numbers, dtype="int64"),
+    )
     trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
     ph = Phonopy(
         bravais,
@@ -126,6 +118,37 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
         )
     else:
         _show_symmetry_yaml(phonon, cell_info, base_fname, ph)
+
+
+def _rebuild_bravais_cell(
+    cell: PhonopyAtoms,
+    bravais_lattice: NDArray[np.double],
+    bravais_pos: NDArray[np.double],
+    bravais_numbers: NDArray[np.int64],
+) -> PhonopyAtoms:
+    """Rebuild the refined Bravais cell from a spglib ``refine_cell`` result.
+
+    For site-mixture cells ``totuple`` hands species ids (not atomic
+    numbers) to spglib, so ``bravais_numbers`` are species ids and the
+    species table of ``cell`` must be used to restore symbols, masses, and
+    mixture weights (both merged mixtures and weighted species). Ordinary
+    cells map the returned atomic numbers directly.
+
+    """
+    _, _, _, perm = sort_positions_by_symbols(bravais_numbers)
+    if cell.is_site_mixture:
+        return PhonopyAtoms(
+            species_table=cell.species_table,
+            species_ids=bravais_numbers[perm],
+            scaled_positions=bravais_pos[perm],
+            cell=bravais_lattice,
+        )
+    raise_if_suffixed_symbols(cell)
+    return PhonopyAtoms(
+        numbers=bravais_numbers[perm],
+        scaled_positions=bravais_pos[perm],
+        cell=bravais_lattice,
+    )
 
 
 def _show_symmetry_yaml(
