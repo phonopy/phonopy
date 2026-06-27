@@ -141,6 +141,31 @@ def test_phonopy_vasp_efe_uses_kpoints_opt():
         np.testing.assert_allclose(row[1], r, rtol=1e-8)
 
 
+def test_phonopy_vasp_efe_kpoints_opt_values():
+    """Golden-value regression test for the KPOINTS_OPT path.
+
+    Unlike test_phonopy_vasp_efe_uses_kpoints_opt (which recomputes the
+    reference with the same library functions), this pins absolute output
+    numbers so a future change of the underlying free-energy computation on
+    the kpoints_opt mesh is caught.
+
+    """
+    filename = cwd.parents[1] / "interface" / "vasprun_kpoints_opt.xml.xz"
+    args = PhonopyVaspEfeMockArgs(filenames=[filename], tmax=100.0, tstep=50.0)
+    lines_fe, lines_ev = get_fe_ev_lines(args)
+
+    ev_rows = _data_rows(lines_ev)
+    assert len(ev_rows) == 1
+    np.testing.assert_allclose(ev_rows[0][0], 33.23606544, rtol=1e-6)  # volume
+    np.testing.assert_allclose(ev_rows[0][1], -21.10777233, rtol=1e-6)  # energy
+
+    fe_rows = _data_rows(lines_fe)
+    assert len(fe_rows) == 3  # T = 0, 50, 100
+    np.testing.assert_allclose(fe_rows[0], [0.0, -21.10777233], rtol=1e-6, atol=1e-5)
+    np.testing.assert_allclose(fe_rows[1], [50.0, -21.10779563], rtol=1e-6, atol=1e-5)
+    np.testing.assert_allclose(fe_rows[2], [100.0, -21.10797222], rtol=1e-6, atol=1e-5)
+
+
 def test_get_free_energy_lines():
     """Test get_free_energy_lines formatting."""
     temperatures = np.array([0.0, 100.0, 200.0])

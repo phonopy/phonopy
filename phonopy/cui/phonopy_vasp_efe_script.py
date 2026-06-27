@@ -63,6 +63,7 @@ class PhonopyVaspEfeMockArgs:
     tmax: float = 1000.0
     tmin: float = 0.0
     tstep: float = 10.0
+    quiet: bool = False
     filenames: Sequence[os.PathLike | str] | None = None
 
 
@@ -99,6 +100,13 @@ def get_options() -> argparse.Namespace:
         help="Calculated temperature step",
     )
     parser.add_argument(
+        "--quiet",
+        dest="quiet",
+        action="store_true",
+        default=default_vals.quiet,
+        help="Suppress progress messages printed while reading vasprun.xml files",
+    )
+    parser.add_argument(
         "filenames",
         nargs="*",
         help="Filenames: vasprun.xml's of all volumes in correct order",
@@ -118,26 +126,55 @@ def get_free_energy_lines(temperatures: NDArray, free_energies: NDArray) -> list
 
 def get_fe_ev_lines(
     args: argparse.Namespace | PhonopyVaspEfeMockArgs,
+    verbose: bool = False,
 ) -> tuple[list[str], list[str]]:
-    """Return Free energy vs volume lines."""
+    """Return Free energy vs volume lines.
+
+    When ``verbose`` is True, progress is printed to stdout: which file is
+    being read and what is found in it (volume, NELECT, the k-point mesh
+    used for the electronic free energy).
+
+    """
     volumes = []
     energy_sigma0 = []
     free_energies = []
     temperatures = None
     assert args.filenames is not None
-    for filename in args.filenames:
+    filenames = list(args.filenames)
+    if verbose:
+        print(
+            "Reading %d vasprun.xml file(s), T = %g..%g K step %g K"
+            % (len(filenames), args.tmin, args.tmax, args.tstep)
+        )
+        sys.stdout.flush()
+    for i, filename in enumerate(filenames):
+        if verbose:
+            print("  [%d/%d] reading %s" % (i + 1, len(filenames), filename))
+            sys.stdout.flush()
         vxml = parse_vasprunxml(filename)
         # With KPOINTS_OPT the electronic DOS (hence the free energy) is
         # evaluated on the denser kpoints_opt mesh, so prefer it when present.
         if vxml.has_kpoints_opt:
             weights = vxml.k_weights_kpoints_opt
             eigenvalues = vxml.eigenvalues_kpoints_opt[:, :, :, 0]
+            k_mesh = vxml.k_mesh_kpoints_opt
+            kpoints_label = "KPOINTS_OPT mesh"
         else:
             weights = vxml.k_weights
             eigenvalues = vxml.eigenvalues[:, :, :, 0]
+            k_mesh = vxml.k_mesh
+            kpoints_label = "SCF mesh"
         n_electrons = vxml.NELECT
         assert n_electrons is not None
         energy = vxml.energies[-1, 1]
+        if verbose:
+            k_mesh_str = "x".join("%d" % m for m in k_mesh)
+            print(
+                "        volume = %.4f A^3, NELECT = %g, "
+                "free energy on %s (%s)"
+                % (vxml.volume[-1], n_electrons, kpoints_label, k_mesh_str)
+            )
+            sys.stdout.flush()
         temps, fe = get_free_energy_at_T(
             args.tmin, args.tmax, args.tstep, eigenvalues, weights, n_electrons
         )
@@ -149,6 +186,9 @@ def get_fe_ev_lines(
         else:
             assert (np.abs(temperatures - temps) < 1e-5).all()
     assert temperatures is not None
+    if verbose:
+        print("Done. %d volume(s) processed." % len(filenames))
+        sys.stdout.flush()
 
     scale_factor = args.scale_factor
     volumes = np.array(volumes) * scale_factor
@@ -176,7 +216,8 @@ def main(**argparse_control: PhonopyVaspEfeMockArgs) -> None:
     else:
         args = get_options()
 
-    lines_fe, lines_ev = get_fe_ev_lines(args)
+    verbose = not getattr(args, "quiet", False)
+    lines_fe, lines_ev = get_fe_ev_lines(args, verbose=verbose)
 
     with open("fe-v.dat", "w") as w:
         w.write("\n".join(lines_fe))
