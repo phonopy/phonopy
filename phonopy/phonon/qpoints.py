@@ -46,6 +46,7 @@ from numpy.typing import NDArray
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     DynamicalMatrixNAC,
+    diagonalize_dynamical_matrices,
     get_dynamical_matrices_at_qpoints,
 )
 from phonopy.phonon.group_velocity import GroupVelocity
@@ -283,41 +284,25 @@ class QpointsPhonon:
             self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._gv_obj.group_velocities
 
-        if self._with_dynamical_matrices:
-            dynamical_matrices = []
-
-        num_band = self._natom * 3
-        num_qpoints = len(self._qpoints)
-        self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
-        self._eigenvalues = np.zeros((num_qpoints, num_band), dtype="double")
         dynmat = get_dynamical_matrices_at_qpoints(
             self._dynamical_matrix,
             self._qpoints,
             self._nac_q_direction,
             lang=self._lang,
         )
-        if self._with_eigenvectors:
-            eigenvectors = np.zeros_like(dynmat)
-
-        for i, _q in enumerate(self._qpoints):
-            dm = dynmat[i]
-            if self._with_dynamical_matrices:
-                dynamical_matrices.append(dm)
-            if self._with_eigenvectors:
-                eigvals, eigvecs = np.linalg.eigh(dm)  # type: ignore
-                eigenvectors[i] = eigvecs
-            else:
-                eigvals = np.linalg.eigvalsh(dm)  # type: ignore
-            eigvals = eigvals.real  # type: ignore
-            self._eigenvalues[i] = eigvals
-            self._frequencies[i] = (
-                np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
-            )
+        eigenvalues, eigenvectors = diagonalize_dynamical_matrices(
+            dynmat,
+            with_eigenvectors=self._with_eigenvectors,
+            lang=self._lang,
+        )
+        self._eigenvalues = eigenvalues
+        self._frequencies = np.ascontiguousarray(
+            np.sqrt(np.abs(eigenvalues)) * np.sign(eigenvalues) * self._factor,
+            dtype="double",
+        )
 
         if self._with_eigenvectors:
             self._eigenvectors = eigenvectors
 
         if self._with_dynamical_matrices:
-            self._dynamical_matrices = np.array(
-                dynamical_matrices, dtype="cdouble", order="C"
-            )
+            self._dynamical_matrices = np.ascontiguousarray(dynmat, dtype="cdouble")

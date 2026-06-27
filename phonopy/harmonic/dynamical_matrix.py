@@ -45,7 +45,7 @@ from typing import Literal, TypedDict
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy._lang import log_dispatch, resolve_lang
+from phonopy._lang import have_phonors, log_dispatch, resolve_lang
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.brillouin_zone import BrillouinZone
@@ -1429,6 +1429,90 @@ def get_dynamical_matrices_at_qpoints_py(
         [dm._run_py_dynamical_matrix(q, hermitianize=hermitianize) for q in _qpoints]
     )
     return dynmat[0] if qpoints_ndim == 1 else dynmat
+
+
+def diagonalize_dynamical_matrices(
+    dynmat: NDArray[np.cdouble],
+    with_eigenvectors: bool = True,
+    lang: Literal["C", "Rust"] | None = None,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
+    """Diagonalize a batch of Hermitian dynamical matrices.
+
+    Numerically a drop-in for ``numpy.linalg.eigh`` / ``numpy.linalg.eigvalsh``
+    over a stack of Hermitian matrices.  Returns raw eigenvalues (ascending
+    per q-point) and, when requested, eigenvectors stored as columns
+    (``eigenvectors[q, component, band]``), matching ``numpy.linalg.eigh``.
+    The ``sqrt`` / sign / unit conversion to phonon frequencies is left to
+    the caller.
+
+    When ``phonors`` is available the batched Rust kernel
+    ``phonors.eigvalsh_batch`` is used (single-threaded per matrix, parallel
+    over q-points); otherwise NumPy is used.
+
+    Parameters
+    ----------
+    dynmat : ndarray
+        Stacked Hermitian dynamical matrices.
+        shape=(n_qpoints, num_band, num_band), dtype='cdouble', order='C'
+    with_eigenvectors : bool, optional
+        Return eigenvectors in addition to eigenvalues. Default is True.
+    lang : {"C", "Rust"}, optional
+        Backend override.  ``"Rust"`` selects ``phonors.eigvalsh_batch``
+        (falling back to NumPy when ``phonors`` is absent); ``"C"`` forces
+        the NumPy path.  When None (default), the Rust kernel is used if
+        ``phonors`` is importable.
+
+    Returns
+    -------
+    eigenvalues : ndarray
+        shape=(n_qpoints, num_band), dtype='double'.  Ascending per q-point.
+    eigenvectors : ndarray or None
+        shape=(n_qpoints, num_band, num_band), dtype='cdouble', order='C'
+        when ``with_eigenvectors`` is True; otherwise None.
+
+    """
+    use_rust = have_phonors() if lang != "C" else False
+    if use_rust:
+        return _diagonalize_dynamical_matrices_rust(dynmat, with_eigenvectors)
+    return _diagonalize_dynamical_matrices_np(dynmat, with_eigenvectors)
+
+
+def _diagonalize_dynamical_matrices_rust(
+    dynmat: NDArray[np.cdouble],
+    with_eigenvectors: bool,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
+    """Rust backend for ``diagonalize_dynamical_matrices``."""
+    import phonors  # type: ignore[import-untyped]
+
+    log_dispatch("Rust", "diagonalize_dynamical_matrices_rust")
+
+    dynmat = np.ascontiguousarray(dynmat, dtype="cdouble")
+    n_qpoints, num_band = dynmat.shape[0], dynmat.shape[1]
+    eigenvalues = np.zeros((n_qpoints, num_band), dtype="double", order="C")
+    if not with_eigenvectors:
+        # Values-only kernel skips the eigenvector computation and buffer.
+        phonors.eigvalsh_values_batch(dynmat, eigenvalues)
+        return eigenvalues, None
+    eigenvectors = np.zeros((n_qpoints, num_band, num_band), dtype="cdouble", order="C")
+    phonors.eigvalsh_batch(dynmat, eigenvalues, eigenvectors)
+    return eigenvalues, eigenvectors
+
+
+def _diagonalize_dynamical_matrices_np(
+    dynmat: NDArray[np.cdouble],
+    with_eigenvectors: bool,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
+    """NumPy backend for ``diagonalize_dynamical_matrices``."""
+    log_dispatch("Python", "diagonalize_dynamical_matrices_np")
+
+    if with_eigenvectors:
+        eigenvalues, eigenvectors = np.linalg.eigh(dynmat)
+        return (
+            np.ascontiguousarray(eigenvalues.real, dtype="double"),
+            np.ascontiguousarray(eigenvectors, dtype="cdouble"),
+        )
+    eigenvalues = np.linalg.eigvalsh(dynmat)
+    return np.ascontiguousarray(eigenvalues.real, dtype="double"), None
 
 
 @dataclasses.dataclass
