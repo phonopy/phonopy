@@ -2,6 +2,16 @@
 
 # Change Log
 
+## Jun-28-2026: Version 4.3.0
+
+- Batched diagonalization of dynamical matrices for mesh and q-points phonon
+  calculations using the Rust backend (`phonors`-backed). This raises the
+  minimum `phonors` requirement to 0.3.0.
+- `vasprun.xml` parser and `phonopy-vasp-efe` now support mesh sampling of
+  `KPOINTS_OPT`.
+- Added `--scale-factor` option to `phonopy-vasp-efe`, and progress output that
+  can be suppressed with `--quiet`.
+
 ## Jun-23-2026: Version 4.2.2
 
 - `debye_frequency` is now an attribute of `TotalDos`; the corresponding
