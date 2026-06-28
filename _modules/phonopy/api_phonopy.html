@@ -621,6 +621,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../migration-v5.html">Migrating toward phonopy v5</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Change Log</a></li>
 </ul>
@@ -2817,6 +2818,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_pitch</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">use_tetrahedron_method</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">smearing_function</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cauchy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TotalDos</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run total DOS calculation.</span>
 
@@ -2832,6 +2834,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        use_tetrahedron_method : bool, optional</span>
 <span class="sd">            Use the tetrahedron method when True. When ``sigma`` is</span>
 <span class="sd">            set, the smearing method is used instead. Default is True.</span>
+<span class="sd">        smearing_function : {&quot;Normal&quot;, &quot;Cauchy&quot;}, optional</span>
+<span class="sd">            Distribution used by the smearing method. &quot;Normal&quot; is a normal</span>
+<span class="sd">            distribution and &quot;Cauchy&quot; is a Cauchy (Lorentzian) distribution.</span>
+<span class="sd">            Default is &quot;Normal&quot;.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -2851,6 +2857,7 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="p">,</span>
             <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span>
             <span class="n">use_tetrahedron_method</span><span class="o">=</span><span class="n">use_tetrahedron_method</span><span class="p">,</span>
+            <span class="n">smearing_function</span><span class="o">=</span><span class="n">smearing_function</span><span class="p">,</span>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">total_dos</span><span class="o">.</span><span class="n">set_draw_area</span><span class="p">(</span><span class="n">freq_min</span><span class="p">,</span> <span class="n">freq_max</span><span class="p">,</span> <span class="n">freq_pitch</span><span class="p">)</span>
@@ -2931,23 +2938,45 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="Phonopy.set_Debye_frequency">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.set_Debye_frequency">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_Debye_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq_max_fit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate Debye frequency on top of total DOS.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate Debye frequency on top of total DOS.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            After ``run_total_dos()``, call</span>
+<span class="sd">            ``total_dos.run_debye_frequency(num_atoms)`` instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;set_Debye_frequency() is deprecated. After run_total_dos(), call &quot;</span>
+            <span class="s2">&quot;total_dos.run_debye_frequency(num_atoms) and read &quot;</span>
+            <span class="s2">&quot;total_dos.debye_frequency.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_total_dos has to be done before getting total DOS.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">set_Debye_frequency</span><span class="p">(</span>
-            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="p">),</span> <span class="n">freq_max_fit</span><span class="o">=</span><span class="n">freq_max_fit</span>
-        <span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">run_debye_frequency</span><span class="p">(</span><span class="n">freq_max_fit</span><span class="o">=</span><span class="n">freq_max_fit</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.get_Debye_frequency">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.get_Debye_frequency">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_Debye_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return Debye frequency.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return Debye frequency.</span>
+
+<span class="sd">        .. deprecated::</span>
+<span class="sd">            Use ``total_dos.debye_frequency`` instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;get_Debye_frequency() is deprecated. Use the total_dos property &quot;</span>
+            <span class="s2">&quot;and read its debye_frequency attribute instead.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;run_total_dos has to be done before getting total DOS.&quot;</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">get_Debye_frequency</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span><span class="o">.</span><span class="n">debye_frequency</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.plot_total_dos">
@@ -3006,6 +3035,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">use_tetrahedron_method</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">xyz_projection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">smearing_function</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cauchy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Normal&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProjectedDos</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run projected DOS calculation.</span>
 
@@ -3028,6 +3058,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        xyz_projection : bool, optional</span>
 <span class="sd">            Whether to project along Cartesian directions. Default is</span>
 <span class="sd">            False.</span>
+<span class="sd">        smearing_function : {&quot;Normal&quot;, &quot;Cauchy&quot;}, optional</span>
+<span class="sd">            Distribution used by the smearing method. &quot;Normal&quot; is a normal</span>
+<span class="sd">            distribution and &quot;Cauchy&quot; is a Cauchy (Lorentzian) distribution.</span>
+<span class="sd">            Default is &quot;Normal&quot;.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3064,6 +3098,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">use_tetrahedron_method</span><span class="o">=</span><span class="n">use_tetrahedron_method</span><span class="p">,</span>
             <span class="n">direction</span><span class="o">=</span><span class="n">direction_cart</span><span class="p">,</span>
             <span class="n">xyz_projection</span><span class="o">=</span><span class="n">xyz_projection</span><span class="p">,</span>
+            <span class="n">smearing_function</span><span class="o">=</span><span class="n">smearing_function</span><span class="p">,</span>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pdos</span><span class="o">.</span><span class="n">set_draw_area</span><span class="p">(</span><span class="n">freq_min</span><span class="p">,</span> <span class="n">freq_max</span><span class="p">,</span> <span class="n">freq_pitch</span><span class="p">)</span>
@@ -3332,13 +3367,17 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        &#39;free_energy&#39;, &#39;entropy&#39;, and &#39;heat_capacity&#39;.</span>
 <span class="sd">        Each value of corresponding key is as follows:</span>
 
-<span class="sd">        temperatures: ndarray</span>
+<span class="sd">        temperatures : ndarray</span>
+<span class="sd">            Temperatures in K.</span>
 <span class="sd">            shape=(temperatures, ), dtype=&#39;double&#39;</span>
 <span class="sd">        free_energy : ndarray</span>
+<span class="sd">            Helmholtz free energies in kJ/mol.</span>
 <span class="sd">            shape=(temperatures, ), dtype=&#39;double&#39;</span>
 <span class="sd">        entropy : ndarray</span>
+<span class="sd">            Entropies in J/K/mol.</span>
 <span class="sd">            shape=(temperatures, ), dtype=&#39;double&#39;</span>
 <span class="sd">        heat_capacity : ndarray</span>
+<span class="sd">            Heat capacities in J/K/mol.</span>
 <span class="sd">            shape=(temperatures, ), dtype=&#39;double&#39;</span>
 
 <span class="sd">        .. deprecated::</span>

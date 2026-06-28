@@ -1,0 +1,707 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Migrating toward phonopy v5 &#8212; Phonopy v.4.2.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=38f1bfc4"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'migration-v5';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Development" href="development.html" />
+    <link rel="prev" title="Migrating from phonopy v3 to v4" href="migration-v4.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.2.1</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Migrating toward phonopy v5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/migration-v5.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Migrating toward phonopy v5</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#result-accessors-get-dict-to-result-object-properties">Result accessors: <code class="docutils literal notranslate"><span class="pre">get_*_dict()</span></code> to result-object properties</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-band-structure">Example: band structure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-thermal-properties">Example: thermal properties</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-q-one-off-evaluators-use-run-qpoints">Single-q one-off evaluators: use <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-deprecated-analysis-methods">Other deprecated analysis methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecated-utility-method">Deprecated utility method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#removed-the-factor-argument">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#surfacing-the-warnings-in-existing-code">Surfacing the warnings in existing code</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="migrating-toward-phonopy-v5">
+<span id="migration-v5"></span><h1>Migrating toward phonopy v5<a class="headerlink" href="#migrating-toward-phonopy-v5" title="Link to this heading">#</a></h1>
+<p>Phonopy is moving to a model where each analysis returns a
+self-contained <em>result object</em> and the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance holds only
+the calculation inputs (cells, symmetry, force constants, NAC
+parameters). See <a class="reference internal" href="development.html#development"><span class="std std-ref">Development</span></a> for the architectural background
+and the deprecation policy.</p>
+<p>As part of this migration, a group of legacy <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> methods has
+been deprecated. They still work in the v4.x series but emit
+<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> and are scheduled for removal in v5.0. This page
+lists each deprecated method and its replacement so that existing
+scripts can be updated ahead of v5.0.</p>
+<p>The replacements are available now: every <code class="docutils literal notranslate"><span class="pre">run_*</span></code> method returns its
+result object, and the corresponding property on <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> exposes the
+same object. You can migrate today on v4.x without waiting for v5.0.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>v5.0 has not been released yet. This page is provisional: the set of
+deprecated methods, their recommended replacements, and the removal
+timing may still change before v5.0. The replacement APIs are already
+available in v4.x and are intended to be stable, but some of their
+method and attribute names may still be adjusted before v5.0. Treat
+the v5.0 removal schedule as a plan rather than a guarantee, and always
+check the <a class="reference internal" href="changelog.html#changelog"><span class="std std-ref">Change Log</span></a> of the version you upgrade to for the final
+names and list.</p>
+</div>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#result-accessors-get-dict-to-result-object-properties" id="id1">Result accessors: <code class="docutils literal notranslate"><span class="pre">get_*_dict()</span></code> to result-object properties</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-band-structure" id="id2">Example: band structure</a></p></li>
+<li><p><a class="reference internal" href="#example-thermal-properties" id="id3">Example: thermal properties</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#single-q-one-off-evaluators-use-run-qpoints" id="id4">Single-q one-off evaluators: use <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code></a></p></li>
+<li><p><a class="reference internal" href="#other-deprecated-analysis-methods" id="id5">Other deprecated analysis methods</a></p></li>
+<li><p><a class="reference internal" href="#deprecated-utility-method" id="id6">Deprecated utility method</a></p></li>
+<li><p><a class="reference internal" href="#removed-the-factor-argument" id="id7">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a></p></li>
+<li><p><a class="reference internal" href="#surfacing-the-warnings-in-existing-code" id="id8">Surfacing the warnings in existing code</a></p></li>
+</ul>
+</nav>
+<section id="result-accessors-get-dict-to-result-object-properties">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Result accessors: <code class="docutils literal notranslate"><span class="pre">get_*_dict()</span></code> to result-object properties</a><a class="headerlink" href="#result-accessors-get-dict-to-result-object-properties" title="Link to this heading">#</a></h2>
+<p>Each <code class="docutils literal notranslate"><span class="pre">get_*_dict()</span></code> method returned a plain dictionary. The
+replacement is the result object returned by the matching <code class="docutils literal notranslate"><span class="pre">run_*</span></code>
+method (also reachable through the property of the same name); its
+attributes replace the former dict keys.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Deprecated method</p></th>
+<th class="head"><p>Replacement (result object): attributes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_band_structure_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">band_structure</span></code> (<code class="docutils literal notranslate"><span class="pre">BandStructure</span></code>): <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">distances</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>, <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_mesh_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mesh</span></code> (<code class="docutils literal notranslate"><span class="pre">Mesh</span></code>): <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>, <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_qpoints_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">qpoints</span></code> (<code class="docutils literal notranslate"><span class="pre">QpointsPhonon</span></code>): <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>, <code class="docutils literal notranslate"><span class="pre">group_velocities</span></code>, <code class="docutils literal notranslate"><span class="pre">dynamical_matrices</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_total_dos_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">total_dos</span></code> (<code class="docutils literal notranslate"><span class="pre">TotalDos</span></code>): <code class="docutils literal notranslate"><span class="pre">frequency_points</span></code>, <code class="docutils literal notranslate"><span class="pre">dos</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_projected_dos_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">projected_dos</span></code> (<code class="docutils literal notranslate"><span class="pre">ProjectedDos</span></code>): <code class="docutils literal notranslate"><span class="pre">frequency_points</span></code>, <code class="docutils literal notranslate"><span class="pre">projected_dos</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_thermal_properties_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">thermal_properties</span></code> (<code class="docutils literal notranslate"><span class="pre">ThermalProperties</span></code>): <code class="docutils literal notranslate"><span class="pre">temperatures</span></code>, <code class="docutils literal notranslate"><span class="pre">free_energy</span></code>, <code class="docutils literal notranslate"><span class="pre">entropy</span></code>, <code class="docutils literal notranslate"><span class="pre">heat_capacity</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_thermal_displacements_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">thermal_displacements</span></code> (<code class="docutils literal notranslate"><span class="pre">ThermalDisplacements</span></code>): <code class="docutils literal notranslate"><span class="pre">temperatures</span></code>, <code class="docutils literal notranslate"><span class="pre">thermal_displacements</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_thermal_displacement_matrices_dict()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices</span></code> (<code class="docutils literal notranslate"><span class="pre">ThermalDisplacementMatrices</span></code>): <code class="docutils literal notranslate"><span class="pre">temperatures</span></code>, <code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices</span></code>, <code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices_cif</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="example-band-structure">
+<h3><a class="toc-backref" href="#id2" role="doc-backlink">Example: band structure</a><a class="headerlink" href="#example-band-structure" title="Link to this heading">#</a></h3>
+<p><strong>Deprecated:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span><span class="o">.</span><span class="n">run_band_structure</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">get_band_structure_dict</span><span class="p">()</span>
+<span class="n">frequencies</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;frequencies&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Replacement:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bs</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">run_band_structure</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>   <span class="c1"># returns a BandStructure</span>
+<span class="n">frequencies</span> <span class="o">=</span> <span class="n">bs</span><span class="o">.</span><span class="n">frequencies</span>
+<span class="c1"># or, equivalently, through the property:</span>
+<span class="n">frequencies</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">band_structure</span><span class="o">.</span><span class="n">frequencies</span>
+</pre></div>
+</div>
+</section>
+<section id="example-thermal-properties">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Example: thermal properties</a><a class="headerlink" href="#example-thermal-properties" title="Link to this heading">#</a></h3>
+<p><strong>Deprecated:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span><span class="o">.</span><span class="n">run_thermal_properties</span><span class="p">()</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">get_thermal_properties_dict</span><span class="p">()</span>
+<span class="n">free_energy</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;free_energy&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Replacement:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tp</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">run_thermal_properties</span><span class="p">()</span>    <span class="c1"># returns a ThermalProperties</span>
+<span class="n">free_energy</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">free_energy</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="single-q-one-off-evaluators-use-run-qpoints">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Single-q one-off evaluators: use <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code></a><a class="headerlink" href="#single-q-one-off-evaluators-use-run-qpoints" title="Link to this heading">#</a></h2>
+<p>The single-q convenience methods are replaced by <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code>, which
+returns a <code class="docutils literal notranslate"><span class="pre">QpointsPhonon</span></code> result object indexed by q-point.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Deprecated method</p></th>
+<th class="head"><p>Replacement</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_frequencies(q)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_qpoints([q]).frequencies[0]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_frequencies_with_eigenvectors(q)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_qpoints([q],</span> <span class="pre">with_eigenvectors=True)</span></code>: <code class="docutils literal notranslate"><span class="pre">frequencies[0]</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors[0]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_dynamical_matrix_at_q(q)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_qpoints([q],</span> <span class="pre">with_dynamical_matrices=True).dynamical_matrices[0]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_group_velocity_at_q(q)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_qpoints([q],</span> <span class="pre">with_group_velocities=True).group_velocities[0]</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Deprecated:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">frequencies</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">get_frequencies</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Replacement:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">frequencies</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">run_qpoints</span><span class="p">([</span><span class="n">q</span><span class="p">])</span><span class="o">.</span><span class="n">frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="other-deprecated-analysis-methods">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Other deprecated analysis methods</a><a class="headerlink" href="#other-deprecated-analysis-methods" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Deprecated method</p></th>
+<th class="head"><p>Replacement</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_modulated_supercells()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_modulations()</span></code>, then <code class="docutils literal notranslate"><span class="pre">modulation.modulated_supercells</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_modulations_and_supercell()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modulation.modulations</span></code>, <code class="docutils literal notranslate"><span class="pre">modulation.supercell</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">set_irreps(...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_irreps(...)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_moment()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_moment().moment</span></code> (or the <code class="docutils literal notranslate"><span class="pre">moment</span></code> property)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_dynamic_structure_factor()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_dynamic_structure_factor()</span></code>: <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">dynamic_structure_factors</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_Debye_frequency()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">total_dos.debye_frequency</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">set_Debye_frequency()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_total_dos()</span></code>, then <code class="docutils literal notranslate"><span class="pre">total_dos.run_debye_frequency(num_atoms)</span></code> and read <code class="docutils literal notranslate"><span class="pre">total_dos.debye_frequency</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">produce_force_constants(forces=...)</span></code></p></td>
+<td><p>set the <code class="docutils literal notranslate"><span class="pre">forces</span></code> setter, then call <code class="docutils literal notranslate"><span class="pre">produce_force_constants()</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="deprecated-utility-method">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Deprecated utility method</a><a class="headerlink" href="#deprecated-utility-method" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Deprecated method</p></th>
+<th class="head"><p>Replacement</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Phonopy.copy()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Phonopy.replicate()</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">copy()</span></code> and <code class="docutils literal notranslate"><span class="pre">replicate()</span></code> both build a new instance from the same
+init parameters; neither carries over internal state such as force
+constants or NAC parameters. <code class="docutils literal notranslate"><span class="pre">copy()</span></code> is deprecated already in v4.x to
+extend the notice period.</p>
+</section>
+<section id="removed-the-factor-argument">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a><a class="headerlink" href="#removed-the-factor-argument" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument of <code class="docutils literal notranslate"><span class="pre">Phonopy(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy.load(...)</span></code> has
+already been removed (it raised an error in recent v4.x). Set the
+frequency unit conversion factor through the <code class="docutils literal notranslate"><span class="pre">unit_conversion_factor</span></code>
+setter instead.</p>
+<p><strong>Removed:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">521.471</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Replacement:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">)</span>
+<span class="n">ph</span><span class="o">.</span><span class="n">unit_conversion_factor</span> <span class="o">=</span> <span class="mf">521.471</span>
+</pre></div>
+</div>
+</section>
+<section id="surfacing-the-warnings-in-existing-code">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Surfacing the warnings in existing code</a><a class="headerlink" href="#surfacing-the-warnings-in-existing-code" title="Link to this heading">#</a></h2>
+<p>Python hides <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> by default in many contexts. To see
+which deprecated calls a script makes before v5.0 removes them, run it
+with warnings made visible:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-W<span class="w"> </span>default::DeprecationWarning<span class="w"> </span>your_script.py
+</pre></div>
+</div>
+<p>In a test suite, configure pytest to error on the phonopy
+deprecations, for example:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[pytest]</span>
+<span class="na">filterwarnings</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="na">error</span><span class="o">:</span><span class="s">:DeprecationWarning:phonopy</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="migration-v4.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Migrating from phonopy v3 to v4</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="development.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Development</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#result-accessors-get-dict-to-result-object-properties">Result accessors: <code class="docutils literal notranslate"><span class="pre">get_*_dict()</span></code> to result-object properties</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-band-structure">Example: band structure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-thermal-properties">Example: thermal properties</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-q-one-off-evaluators-use-run-qpoints">Single-q one-off evaluators: use <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-deprecated-analysis-methods">Other deprecated analysis methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecated-utility-method">Deprecated utility method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#removed-the-factor-argument">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#surfacing-the-warnings-in-existing-code">Surfacing the warnings in existing code</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

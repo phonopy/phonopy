@@ -185,6 +185,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v5.html">Migrating toward phonopy v5</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Change Log</a></li>
 </ul>
@@ -332,6 +333,8 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-28-2026-version-4-3-0">Jun-28-2026: Version 4.3.0</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-23-2026-version-4-2-2">Jun-23-2026: Version 4.2.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-15-2026-version-4-2-1">Jun-15-2026: Version 4.2.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-09-2026-version-4-2-0">Jun-09-2026: Version 4.2.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-25-2026-version-4-1-0">May-25-2026: Version 4.1.0</a></li>
@@ -557,6 +560,27 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="jun-28-2026-version-4-3-0">
+<h2>Jun-28-2026: Version 4.3.0<a class="headerlink" href="#jun-28-2026-version-4-3-0" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Batched diagonalization of dynamical matrices for mesh and q-points phonon
+calculations using the Rust backend (<code class="docutils literal notranslate"><span class="pre">phonors</span></code>-backed). This raises the
+minimum <code class="docutils literal notranslate"><span class="pre">phonors</span></code> requirement to 0.3.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> parser and <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> now support mesh sampling of
+<code class="docutils literal notranslate"><span class="pre">KPOINTS_OPT</span></code>.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">--scale-factor</span></code> option to <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code>, and progress output that
+can be suppressed with <code class="docutils literal notranslate"><span class="pre">--quiet</span></code>.</p></li>
+</ul>
+</section>
+<section id="jun-23-2026-version-4-2-2">
+<h2>Jun-23-2026: Version 4.2.2<a class="headerlink" href="#jun-23-2026-version-4-2-2" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">debye_frequency</span></code> is now an attribute of <code class="docutils literal notranslate"><span class="pre">TotalDos</span></code>; the corresponding
+<code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> getter is deprecated. The DOS smearing distribution is
+selected through the constructor instead of setter methods.</p></li>
+<li><p>Refactoring of <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> and related cell generation functions.</p></li>
+</ul>
+</section>
 <section id="jun-15-2026-version-4-2-1">
 <h2>Jun-15-2026: Version 4.2.1<a class="headerlink" href="#jun-15-2026-version-4-2-1" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2508,6 +2532,8 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-28-2026-version-4-3-0">Jun-28-2026: Version 4.3.0</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-23-2026-version-4-2-2">Jun-23-2026: Version 4.2.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-15-2026-version-4-2-1">Jun-15-2026: Version 4.2.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-09-2026-version-4-2-0">Jun-09-2026: Version 4.2.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#may-25-2026-version-4-1-0">May-25-2026: Version 4.1.0</a></li>

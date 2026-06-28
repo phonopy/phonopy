@@ -621,6 +621,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../../citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../migration-v5.html">Migrating toward phonopy v5</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Change Log</a></li>
 </ul>
@@ -775,14 +776,13 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.file_IO</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_supported_file_extensions_for_compression</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.displacement</span><span class="w"> </span><span class="kn">import</span> <span class="n">DisplacementDataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.phonopy_yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyYaml</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">sort_positions_by_symbols</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.physical_units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CalculatorPhysicalUnits</span><span class="p">,</span>
     <span class="n">get_calculator_physical_units</span><span class="p">,</span>
     <span class="n">get_physical_units</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.cells</span><span class="w"> </span><span class="kn">import</span> <span class="n">determinant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.cells</span><span class="w"> </span><span class="kn">import</span> <span class="n">argsort_by_key</span><span class="p">,</span> <span class="n">determinant</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_displacements_and_forces</span>
 
 
@@ -1542,9 +1542,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">if</span> <span class="n">magmoms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sort_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">sort_by_elements</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sort_list</span> <span class="o">=</span> <span class="n">sort_positions_by_symbols</span><span class="p">(</span>
-                <span class="n">cell</span><span class="o">.</span><span class="n">symbols</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">scaled_positions</span>
-            <span class="p">)</span>
+            <span class="n">sort_list</span> <span class="o">=</span> <span class="n">argsort_by_key</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sort_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">)))</span>
 
