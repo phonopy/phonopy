@@ -443,6 +443,24 @@ def test_write_gruneisen_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None
     np.testing.assert_allclose(data[:, 1], qha_si.gruneisen_temperature, atol=1e-10)
 
 
+def test_qha_plot_units(qha_si: PhonopyQHA) -> None:
+    """y-axis labels of QHA plots carry units, and unit-annotated docstrings."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+    plt = qha_si.plot_gibbs_temperature()
+    assert "(eV)" in plt.gca().get_ylabel()
+    plt.close("all")
+
+    plt = qha_si.plot_bulk_modulus_temperature()
+    assert "(GPa)" in plt.gca().get_ylabel()
+    plt.close("all")
+
+    assert "eV" in PhonopyQHA.gibbs_temperature.__doc__
+    assert "GPa" in PhonopyQHA.bulk_modulus_temperature.__doc__
+
+
 def _print_values(values: NDArray[np.double]) -> None:
     print("%.7f," % values[0])
     for line in np.reshape(values[1:], (-1, 5)):

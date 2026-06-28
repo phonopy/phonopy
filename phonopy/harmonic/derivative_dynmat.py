@@ -242,7 +242,7 @@ class DerivativeOfDynamicalMatrix:
                 reclat,
                 self._svecs,
                 self._multi,
-                self._pcell.masses,
+                self._dynmat.normalization_masses,
                 self._s2p_map,
                 self._p2s_map,
                 nac_factor,
@@ -262,7 +262,7 @@ class DerivativeOfDynamicalMatrix:
                 np.array(np.linalg.inv(self._pcell.cell), dtype="double", order="C"),
                 self._svecs,
                 self._multi,
-                self._pcell.masses,
+                self._dynmat.normalization_masses,
                 self._s2pp_map,
                 np.arange(len(self._p2s_map), dtype="int64"),
                 nac_factor,
@@ -354,7 +354,7 @@ class DerivativeOfDynamicalMatrix:
             reclat,
             self._svecs,
             self._multi,
-            self._pcell.masses,
+            self._dynmat.normalization_masses,
             s2_for_inner,
             fc_row,
             born=born if kernel_is_nac else None,
@@ -411,7 +411,7 @@ class DerivativeOfDynamicalMatrix:
 
         # Mass weighting: the kernel returns without 1/sqrt(m_k m_k'),
         # matching the value-side `get_recip_dipole_dipole` convention.
-        inv_sqrt_m = 1.0 / np.sqrt(self._pcell.masses)
+        inv_sqrt_m = 1.0 / np.sqrt(self._dynmat.normalization_masses)
         mass_pair = np.outer(inv_sqrt_m, inv_sqrt_m)
         dd *= mass_pair[None, :, None, :, None]
 
@@ -446,7 +446,10 @@ class DerivativeOfDynamicalMatrix:
             s_i = self._p2s_map[i]
             s_j = self._p2s_map[j]
             fc_row = s_i if is_full_fc else i
-            mass = np.sqrt(self._pcell.masses[i] * self._pcell.masses[j])
+            mass = np.sqrt(
+                self._dynmat.normalization_masses[i]
+                * self._dynmat.normalization_masses[j]
+            )
             ddm_local = np.zeros((num_elem, 3, 3), dtype=np.cdouble)
 
             for k in range(num_satom):
@@ -654,7 +657,7 @@ class DerivativeOfDynamicalMatrix:
             d_dd += ZTZ * C * phase_pair[None, :, None, :, None]
 
         # Mass weighting 1 / sqrt(m_k m_kp)
-        inv_sqrt_m = 1.0 / np.sqrt(self._pcell.masses)
+        inv_sqrt_m = 1.0 / np.sqrt(self._dynmat.normalization_masses)
         mass_pair = np.outer(inv_sqrt_m, inv_sqrt_m)
         d_dd *= mass_pair[None, :, None, :, None]
         d_dd *= factor

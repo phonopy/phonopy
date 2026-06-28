@@ -2004,6 +2004,7 @@ class Phonopy:
         freq_max: float | None = None,
         freq_pitch: float | None = None,
         use_tetrahedron_method: bool = True,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
     ) -> TotalDos:
         """Run total DOS calculation.
 
@@ -2019,6 +2020,10 @@ class Phonopy:
         use_tetrahedron_method : bool, optional
             Use the tetrahedron method when True. When ``sigma`` is
             set, the smearing method is used instead. Default is True.
+        smearing_function : {"Normal", "Cauchy"}, optional
+            Distribution used by the smearing method. "Normal" is a normal
+            distribution and "Cauchy" is a Cauchy (Lorentzian) distribution.
+            Default is "Normal".
 
         Returns
         -------
@@ -2038,6 +2043,7 @@ class Phonopy:
             self._mesh,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            smearing_function=smearing_function,
             lang=self._lang,
         )
         total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
@@ -2109,20 +2115,42 @@ class Phonopy:
         )
 
     def set_Debye_frequency(self, freq_max_fit: float | None = None) -> None:
-        """Calculate Debye frequency on top of total DOS."""
+        """Calculate Debye frequency on top of total DOS.
+
+        .. deprecated::
+            After ``run_total_dos()``, call
+            ``total_dos.run_debye_frequency(num_atoms)`` instead.
+
+        """
+        warnings.warn(
+            "set_Debye_frequency() is deprecated. After run_total_dos(), call "
+            "total_dos.run_debye_frequency(num_atoms) and read "
+            "total_dos.debye_frequency.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._total_dos is None:
             msg = "run_total_dos has to be done before getting total DOS."
             raise RuntimeError(msg)
-        self._total_dos.set_Debye_frequency(
-            len(self._primitive), freq_max_fit=freq_max_fit
-        )
+        self._total_dos.run_debye_frequency(freq_max_fit=freq_max_fit)
 
     def get_Debye_frequency(self) -> float | None:
-        """Return Debye frequency."""
+        """Return Debye frequency.
+
+        .. deprecated::
+            Use ``total_dos.debye_frequency`` instead.
+
+        """
+        warnings.warn(
+            "get_Debye_frequency() is deprecated. Use the total_dos property "
+            "and read its debye_frequency attribute instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._total_dos is None:
             msg = "run_total_dos has to be done before getting total DOS."
             raise RuntimeError(msg)
-        return self._total_dos.get_Debye_frequency()
+        return self._total_dos.debye_frequency
 
     def plot_total_dos(
         self,
@@ -2172,6 +2200,7 @@ class Phonopy:
         use_tetrahedron_method: bool = True,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
     ) -> ProjectedDos:
         """Run projected DOS calculation.
 
@@ -2194,6 +2223,10 @@ class Phonopy:
         xyz_projection : bool, optional
             Whether to project along Cartesian directions. Default is
             False.
+        smearing_function : {"Normal", "Cauchy"}, optional
+            Distribution used by the smearing method. "Normal" is a normal
+            distribution and "Cauchy" is a Cauchy (Lorentzian) distribution.
+            Default is "Normal".
 
         Returns
         -------
@@ -2230,6 +2263,7 @@ class Phonopy:
             use_tetrahedron_method=use_tetrahedron_method,
             direction=direction_cart,
             xyz_projection=xyz_projection,
+            smearing_function=smearing_function,
             lang=self._lang,
         )
         self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
@@ -2480,13 +2514,17 @@ class Phonopy:
         'free_energy', 'entropy', and 'heat_capacity'.
         Each value of corresponding key is as follows:
 
-        temperatures: ndarray
+        temperatures : ndarray
+            Temperatures in K.
             shape=(temperatures, ), dtype='double'
         free_energy : ndarray
+            Helmholtz free energies in kJ/mol.
             shape=(temperatures, ), dtype='double'
         entropy : ndarray
+            Entropies in J/K/mol.
             shape=(temperatures, ), dtype='double'
         heat_capacity : ndarray
+            Heat capacities in J/K/mol.
             shape=(temperatures, ), dtype='double'
 
         .. deprecated::

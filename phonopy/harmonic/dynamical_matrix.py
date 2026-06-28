@@ -45,7 +45,7 @@ from typing import Literal, TypedDict
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy._lang import log_dispatch, resolve_lang
+from phonopy._lang import have_phonors, log_dispatch, resolve_lang
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.brillouin_zone import BrillouinZone
@@ -215,6 +215,36 @@ class DynamicalMatrix:
         return self._pcell
 
     @property
+    def normalization_masses(self) -> NDArray[np.double]:
+        """Atomic masses used to mass-normalize the dynamical matrix.
+
+        For ordinary and merge-style mixture cells this equals
+        ``primitive.masses``. For non-merge site-mixture cells (built by
+        ``apply_site_mixture``) each mass M_i is scaled by its per-atom
+        concentration weight x_i in (0, 1], giving the effective mass
+        x_i * M_i. The dynamical matrix block between atoms i and j is then
+        normalized by 1 / sqrt(x_i M_i * x_j M_j) instead of
+        1 / sqrt(M_i M_j). The reported masses (``primitive.masses``) and
+        the force constants stay unchanged; only the dynamical matrix and
+        its derivative see the scaled mass.
+        shape=(natom,), dtype='double'.
+
+        Note that this concentration-weighted mass scaling is only one
+        possible modeling choice for site mixtures; other conventions
+        (e.g. unscaled masses, or a different effective-mass definition)
+        are equally defensible. Because the scaling changes the
+        eigenvectors, it couples to every eigenvector-derived quantity,
+        e.g. the projected (atom-projected) DOS and group velocities, not
+        just the eigenfrequencies. Changing the convention here therefore
+        changes those downstream results as well.
+
+        """
+        weights = self._pcell.mixture_weights
+        if weights is None:
+            return self._pcell.masses
+        return self._pcell.masses * weights
+
+    @property
     def force_constants(self) -> NDArray[np.double]:
         """Return supercell force constants."""
         return self._force_constants
@@ -270,11 +300,14 @@ class DynamicalMatrix:
             lang=self._lang,
         )
 
-    def _run_py_dynamical_matrix(self, q: NDArray[np.double]) -> NDArray[np.cdouble]:
-        """Python implementation of building dynamical matrix.
+    def _run_py_dynamical_matrix(
+        self, q: NDArray[np.double], hermitianize: bool = True
+    ) -> NDArray[np.cdouble]:
+        """Python implementation of building dynamical matrix at one q-point.
 
-        This is not used in production.
-        This works only with full-fc.
+        This works with both full and compact force constants, but only
+        for the non-NAC case. It is the per-q reference kernel reused by
+        the batched ``get_dynamical_matrices_at_qpoints_py`` backend.
 
         """
         fc = self._force_constants
@@ -282,7 +315,7 @@ class DynamicalMatrix:
         multi = self._multi
         num_atom = len(self._pcell)
         dm = np.zeros((3 * num_atom, 3 * num_atom), dtype="cdouble", order="C")
-        mass = self._pcell.masses
+        mass = self.normalization_masses
         if fc.shape[0] == fc.shape[1]:
             is_compact_fc = False
         else:
@@ -310,8 +343,10 @@ class DynamicalMatrix:
 
                 dm[(i * 3) : (i * 3 + 3), (j * 3) : (j * 3 + 3)] += dm_local
 
-        # Impose Hermisian condition
-        return (dm + dm.conj().transpose()) / 2  # type: ignore
+        if hermitianize:
+            # Impose Hermitian condition
+            return (dm + dm.conj().transpose()) / 2  # type: ignore
+        return dm
 
 
 class DynamicalMatrixNAC(DynamicalMatrix):
@@ -712,7 +747,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 C_recip[i, :, i, :] -= drift[i]
 
         # Mass weighted
-        mass = self._pcell.masses
+        mass = self.normalization_masses
         for i in range(num_atom):
             for j in range(num_atom):
                 C_recip[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
@@ -1183,7 +1218,7 @@ def get_dynamical_matrices_at_qpoints(
     nac_q_direction: NDArray[np.double] | None = None,
     is_nac: bool | None = None,
     hermitianize: bool = True,
-    lang: Literal["C", "Rust"] | None = None,
+    lang: Literal["C", "Rust", "Python"] | None = None,
 ) -> NDArray[np.cdouble]:
     """Build dynamical matrices at the given q-points.
 
@@ -1191,6 +1226,11 @@ def get_dynamical_matrices_at_qpoints(
     explicit ``lang`` override).  When many q-points need to be
     processed, prefer this batched entry over one-q-at-a-time builds
     so the preparation steps are amortized.
+
+    A pure-Python backend is available via ``lang="Python"`` for the
+    non-NAC case only.  It is a NumPy reference path that needs neither
+    the C extension nor ``phonors``; it is not selected by ``dm.lang``
+    and must be requested explicitly.
 
     Parameters
     ----------
@@ -1212,9 +1252,10 @@ def get_dynamical_matrices_at_qpoints(
     hermitianize : bool, optional
         Apply Hermitian symmetrization to each q-point block. Default
         is True.
-    lang : {"C", "Rust"}, optional
+    lang : {"C", "Rust", "Python"}, optional
         Backend override.  When None (default), the value is inherited
-        from ``dm.lang``.
+        from ``dm.lang``.  ``"Python"`` selects the pure-NumPy reference
+        backend (non-NAC only) and is never produced by ``dm.lang``.
 
     Returns
     -------
@@ -1225,6 +1266,14 @@ def get_dynamical_matrices_at_qpoints(
 
     """
     _lang = lang if lang is not None else dm.lang
+    if _lang == "Python":
+        return get_dynamical_matrices_at_qpoints_py(
+            dm,
+            qpoints,
+            nac_q_direction=nac_q_direction,
+            is_nac=is_nac,
+            hermitianize=hermitianize,
+        )
     if _lang == "Rust":
         return get_dynamical_matrices_at_qpoints_rust(
             dm,
@@ -1345,6 +1394,125 @@ def get_dynamical_matrices_at_qpoints_rust(
             hermitianize,
         )
     return dynmat[0] if args.qpoints_ndim == 1 else dynmat
+
+
+def get_dynamical_matrices_at_qpoints_py(
+    dm: DynamicalMatrix | DynamicalMatrixWang | DynamicalMatrixGL,
+    qpoints: NDArray[np.double],
+    nac_q_direction: NDArray[np.double] | None = None,
+    is_nac: bool | None = None,
+    hermitianize: bool = True,
+) -> NDArray[np.cdouble]:
+    """Pure-Python (NumPy) backend for ``get_dynamical_matrices_at_qpoints``.
+
+    This reference path needs neither the C extension nor ``phonors``.
+    It supports the non-NAC case only; a NAC input raises
+    ``NotImplementedError``.  Each q-point is delegated to the per-q
+    kernel ``DynamicalMatrix._run_py_dynamical_matrix``, which handles
+    both full and compact force constants.
+
+    """
+    log_dispatch("Python", "get_dynamical_matrices_at_qpoints_py")
+
+    _is_nac = isinstance(dm, DynamicalMatrixNAC) if is_nac is None else is_nac
+    if _is_nac:
+        raise NotImplementedError(
+            "The Python backend of get_dynamical_matrices_at_qpoints supports "
+            "the non-NAC case only."
+        )
+
+    _qpoints = np.array(qpoints, dtype="double", order="C")
+    qpoints_ndim = _qpoints.ndim
+    _qpoints = _qpoints.reshape(-1, 3)
+
+    dynmat = np.array(
+        [dm._run_py_dynamical_matrix(q, hermitianize=hermitianize) for q in _qpoints]
+    )
+    return dynmat[0] if qpoints_ndim == 1 else dynmat
+
+
+def diagonalize_dynamical_matrices(
+    dynmat: NDArray[np.cdouble],
+    with_eigenvectors: bool = True,
+    lang: Literal["C", "Rust"] | None = None,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
+    """Diagonalize a batch of Hermitian dynamical matrices.
+
+    Numerically a drop-in for ``numpy.linalg.eigh`` / ``numpy.linalg.eigvalsh``
+    over a stack of Hermitian matrices.  Returns raw eigenvalues (ascending
+    per q-point) and, when requested, eigenvectors stored as columns
+    (``eigenvectors[q, component, band]``), matching ``numpy.linalg.eigh``.
+    The ``sqrt`` / sign / unit conversion to phonon frequencies is left to
+    the caller.
+
+    When ``phonors`` is available the batched Rust kernel
+    ``phonors.eigvalsh_batch`` is used (single-threaded per matrix, parallel
+    over q-points); otherwise NumPy is used.
+
+    Parameters
+    ----------
+    dynmat : ndarray
+        Stacked Hermitian dynamical matrices.
+        shape=(n_qpoints, num_band, num_band), dtype='cdouble', order='C'
+    with_eigenvectors : bool, optional
+        Return eigenvectors in addition to eigenvalues. Default is True.
+    lang : {"C", "Rust"}, optional
+        Backend override.  ``"Rust"`` selects ``phonors.eigvalsh_batch``
+        (falling back to NumPy when ``phonors`` is absent); ``"C"`` forces
+        the NumPy path.  When None (default), the Rust kernel is used if
+        ``phonors`` is importable.
+
+    Returns
+    -------
+    eigenvalues : ndarray
+        shape=(n_qpoints, num_band), dtype='double'.  Ascending per q-point.
+    eigenvectors : ndarray or None
+        shape=(n_qpoints, num_band, num_band), dtype='cdouble', order='C'
+        when ``with_eigenvectors`` is True; otherwise None.
+
+    """
+    use_rust = have_phonors() if lang != "C" else False
+    if use_rust:
+        return _diagonalize_dynamical_matrices_rust(dynmat, with_eigenvectors)
+    return _diagonalize_dynamical_matrices_np(dynmat, with_eigenvectors)
+
+
+def _diagonalize_dynamical_matrices_rust(
+    dynmat: NDArray[np.cdouble],
+    with_eigenvectors: bool,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
+    """Rust backend for ``diagonalize_dynamical_matrices``."""
+    import phonors  # type: ignore[import-untyped]
+
+    log_dispatch("Rust", "diagonalize_dynamical_matrices_rust")
+
+    dynmat = np.ascontiguousarray(dynmat, dtype="cdouble")
+    n_qpoints, num_band = dynmat.shape[0], dynmat.shape[1]
+    eigenvalues = np.zeros((n_qpoints, num_band), dtype="double", order="C")
+    if not with_eigenvectors:
+        # Values-only kernel skips the eigenvector computation and buffer.
+        phonors.eigvalsh_values_batch(dynmat, eigenvalues)
+        return eigenvalues, None
+    eigenvectors = np.zeros((n_qpoints, num_band, num_band), dtype="cdouble", order="C")
+    phonors.eigvalsh_batch(dynmat, eigenvalues, eigenvectors)
+    return eigenvalues, eigenvectors
+
+
+def _diagonalize_dynamical_matrices_np(
+    dynmat: NDArray[np.cdouble],
+    with_eigenvectors: bool,
+) -> tuple[NDArray[np.double], NDArray[np.cdouble] | None]:
+    """NumPy backend for ``diagonalize_dynamical_matrices``."""
+    log_dispatch("Python", "diagonalize_dynamical_matrices_np")
+
+    if with_eigenvectors:
+        eigenvalues, eigenvectors = np.linalg.eigh(dynmat)
+        return (
+            np.ascontiguousarray(eigenvalues.real, dtype="double"),
+            np.ascontiguousarray(eigenvectors, dtype="cdouble"),
+        )
+    eigenvalues = np.linalg.eigvalsh(dynmat)
+    return np.ascontiguousarray(eigenvalues.real, dtype="double"), None
 
 
 @dataclasses.dataclass
@@ -1491,7 +1659,7 @@ def _extract_params(
     else:
         _svecs, _multi = sparse_to_dense_svecs(svecs, multi)
 
-    masses = dm.primitive.masses
+    masses = dm.normalization_masses
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
     positions = dm.primitive.positions
     if isinstance(dm, DynamicalMatrixNAC):

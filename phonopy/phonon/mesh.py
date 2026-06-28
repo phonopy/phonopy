@@ -47,11 +47,13 @@ from numpy.typing import NDArray
 from phonopy._lang import c_use_openmp
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
+    diagonalize_dynamical_matrices,
     get_dynamical_matrices_at_qpoints,
 )
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points, length2mesh
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.physical_units import get_physical_units
+from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
 
 
@@ -471,6 +473,11 @@ class MeshBase:
         return self._gp.is_shift
 
     @property
+    def primitive(self) -> Primitive:
+        """Return the primitive cell."""
+        return self._cell
+
+    @property
     def primitive_symmetry(self) -> Symmetry | None:
         """Return the primitive-cell Symmetry passed at construction, if any."""
         return self._primitive_symmetry
@@ -700,15 +707,27 @@ class Mesh(MeshBase):
         # Rust path is rayon-parallel without an extra runtime check.
         use_batched_build = self._lang == "Rust" or c_use_openmp()
 
-        self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
         if use_batched_build:
             dynmat = get_dynamical_matrices_at_qpoints(
                 self._dynamical_matrix,
                 self._qpoints,
                 lang=self._lang,
             )
-            eigenvectors = dynmat
-        elif self._with_eigenvectors:
+            eigenvalues, eigenvectors = diagonalize_dynamical_matrices(
+                dynmat,
+                with_eigenvectors=self._with_eigenvectors,
+                lang=self._lang,
+            )
+            self._frequencies = np.ascontiguousarray(
+                np.sqrt(np.abs(eigenvalues)) * np.sign(eigenvalues) * self._factor,
+                dtype="double",
+            )
+            if self._with_eigenvectors:
+                self._eigenvectors = eigenvectors
+            return
+
+        self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
+        if self._with_eigenvectors:
             dtype = "c%d" % (np.dtype("double").itemsize * 2)
             eigenvectors = np.zeros(
                 (
@@ -721,11 +740,8 @@ class Mesh(MeshBase):
             )
 
         for i, q in enumerate(self._qpoints):
-            if use_batched_build:
-                dm = dynmat[i]
-            else:
-                self._dynamical_matrix.run(q)
-                dm = self._dynamical_matrix.dynamical_matrix
+            self._dynamical_matrix.run(q)
+            dm = self._dynamical_matrix.dynamical_matrix
             if self._with_eigenvectors:
                 eigvals, eigenvectors[i] = np.linalg.eigh(dm)  # type: ignore
                 eigenvalues = eigvals.real

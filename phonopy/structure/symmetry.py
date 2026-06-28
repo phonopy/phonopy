@@ -57,6 +57,7 @@ from phonopy.structure.cells import (
     Primitive,
     Supercell,
     compute_all_sg_permutations,
+    get_atom_order,
     get_primitive,
     get_supercell,
 )
@@ -337,29 +338,22 @@ class Symmetry:
         lattice = np.array(self._cell.cell.T, dtype="double", order="C")
         rotations = self._symmetry_operations["rotations"]
         translations = self._symmetry_operations["translations"]
-        # When atoms can be co-located (mixtures or weighted species, or
-        # suffix-distinguished species), match permutations within each
-        # type class so position degeneracy does not mix species. The
-        # types are the same per-atom labels spglib used to find the
-        # operations. Ordinary cells pass None for unchanged behavior.
-        if (
-            self._cell.has_mixtures
-            or self._cell.has_weighted_species
-            or self._distinguish_symbol_index
-        ):
-            types = self._cell.totuple(
-                distinguish_symbol_index=self._distinguish_symbol_index
-            )[2]
-        else:
-            types = None
+        # Match permutations within each type class so that position
+        # degeneracy (co-located mixture / weighted species) does not mix
+        # species. The types are the same per-atom labels spglib used to
+        # find the operations: species ids for mixture / weighted /
+        # suffix-distinguished cells, atomic numbers otherwise.
+        types = self._cell.totuple(
+            distinguish_symbol_index=self._distinguish_symbol_index
+        )[2]
         self._atomic_permutations = compute_all_sg_permutations(
             positions,  # scaled positions
             rotations,  # scaled
             translations,  # scaled
             lattice,  # column vectors
             self._symprec,
+            types,
             lang=self._lang,
-            types=types,
         )
 
     def _get_site_symmetry(
@@ -792,13 +786,19 @@ def _take_average_of_borns(
 ) -> NDArray[np.double]:
     lattice = cell.cell
     positions = cell.scaled_positions
+    # Per-atom species id, used to disambiguate co-located atoms of a site
+    # mixture (e.g. Ge and Sn sharing a site): the symmetry-operation
+    # pre-image of atom i must be the same species, which a position-only
+    # match cannot guarantee. Within one cell the species id is exact.
+    species_ids = cell.species_ids
     borns_ = np.zeros_like(borns)
     for i in range(len(borns)):
         for r, t in zip(rotations, translations, strict=True):
             diff = np.dot(positions, r.T) + t - positions[i]
             diff -= np.rint(diff)
-            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
-            j = np.nonzero(dist < symprec)[0][0]
+            dist = np.linalg.norm(np.dot(diff, lattice), axis=1)
+            matches = np.nonzero((dist < symprec) & (species_ids == species_ids[i]))[0]
+            j = matches[0]
             r_cart = similarity_transformation(lattice.T, r)
             borns_[i] += similarity_transformation(r_cart, borns[j])
         borns_[i] /= len(rotations)
@@ -812,20 +812,12 @@ def _take_average_of_borns(
 def _get_mapping_between_cells(
     cell_from: PhonopyAtoms, cell_to: PhonopyAtoms, symprec: float = 1e-5
 ) -> list[int]:
-    indices = []
-    lattice = cell_from.cell
-    pos_from = cell_from.scaled_positions
-    for p_to in cell_to.scaled_positions:
-        diff = pos_from - p_to
-        diff -= np.rint(diff)
-        dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
-        ids = np.nonzero(dist < symprec)[0]
-        if len(ids) == 1:
-            indices.append(ids[0])
-        else:
-            msg = "Index matching didn't go well."
-            raise RuntimeError(msg)
-    return indices
+    # See get_atom_order for the definition of the returned order.
+    order = get_atom_order(cell_from, cell_to, atol=symprec)
+    if order is None:
+        msg = "Index matching didn't go well."
+        raise RuntimeError(msg)
+    return order
 
 
 def _symmetrize_2nd_rank_tensor(

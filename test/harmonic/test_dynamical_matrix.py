@@ -4,9 +4,16 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from phonopy import Phonopy
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixGL
+from phonopy._lang import have_phonors
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    DynamicalMatrixGL,
+    diagonalize_dynamical_matrices,
+    get_dynamical_matrices_at_qpoints,
+)
 
 dynmat_ref_000 = [
     0.052897,
@@ -1104,3 +1111,92 @@ def _test_dynmat_252525(
         np.array(dynmat_ref, dtype="double").view(dtype=dtype_complex).reshape(6, 6),
         atol=1e-5,
     )
+
+
+def _max_subspace_projection_error(
+    w_ref: NDArray, v_ref: NDArray, v_new: NDArray, tol_deg: float = 1e-6
+) -> float:
+    """Compare eigenvectors allowing phase and degenerate-subspace gauge.
+
+    Bands are grouped by (near-)equal eigenvalue; for each group the
+    projectors P = V V^H built from the reference and new bases are
+    compared.  This is invariant to a per-band phase and to the choice of
+    basis within a degenerate subspace, both of which are solver-dependent.
+
+    """
+    n = len(w_ref)
+    max_err = 0.0
+    i = 0
+    while i < n:
+        j = i + 1
+        while j < n and abs(w_ref[j] - w_ref[i]) < tol_deg:
+            j += 1
+        Vr = v_ref[:, i:j]
+        Vn = v_new[:, i:j]
+        Pr = Vr @ Vr.conj().T
+        Pn = Vn @ Vn.conj().T
+        max_err = max(max_err, float(np.max(np.abs(Pr - Pn))))
+        i = j
+    return max_err
+
+
+_PARITY_QPOINTS = np.array(
+    [
+        [0.0, 0.0, 0.0],
+        [0.5, 0.0, 0.0],
+        [0.5, 0.5, 0.0],
+        [0.5, 0.5, 0.5],
+        [0.1, 0.2, 0.3],
+        [0.25, 0.25, 0.0],
+    ],
+    dtype="double",
+)
+
+
+@pytest.mark.skipif(not have_phonors(), reason="phonors is not installed")
+@pytest.mark.parametrize("ph_fixture", ["ph_nacl", "ph_si"])
+def test_diagonalize_dynamical_matrices_phonors_vs_numpy(
+    ph_fixture: str, request: pytest.FixtureRequest
+):
+    """Check that the phonors and NumPy diagonalization paths agree.
+
+    Eigenvalues match to numerical precision; eigenvectors match up to a
+    per-band phase and degenerate-subspace basis (subspace projection).
+
+    """
+    ph: Phonopy = request.getfixturevalue(ph_fixture)
+    dynmat = get_dynamical_matrices_at_qpoints(ph.dynamical_matrix, _PARITY_QPOINTS)
+
+    w_np, v_np = diagonalize_dynamical_matrices(
+        dynmat, with_eigenvectors=True, lang="C"
+    )
+    w_rs, v_rs = diagonalize_dynamical_matrices(
+        dynmat, with_eigenvectors=True, lang="Rust"
+    )
+    assert v_np is not None and v_rs is not None
+
+    np.testing.assert_allclose(w_np, w_rs, atol=1e-8)
+    for q in range(len(_PARITY_QPOINTS)):
+        err = _max_subspace_projection_error(w_np[q], v_np[q], v_rs[q])
+        assert err < 1e-7, f"q-index {q}: subspace projection error {err:.3e}"
+
+    # Values-only path must return the same eigenvalues and no eigenvectors.
+    w_rs_vals, v_none = diagonalize_dynamical_matrices(
+        dynmat, with_eigenvectors=False, lang="Rust"
+    )
+    assert v_none is None
+    np.testing.assert_allclose(w_np, w_rs_vals, atol=1e-8)
+
+
+@pytest.mark.skipif(not have_phonors(), reason="phonors is not installed")
+def test_diagonalize_dynamical_matrices_non_destructive(ph_nacl: Phonopy):
+    """The phonors path must not modify its input dynamical matrices."""
+    dynmat = get_dynamical_matrices_at_qpoints(
+        ph_nacl.dynamical_matrix, _PARITY_QPOINTS
+    )
+    dynmat_ref = dynmat.copy()
+    diagonalize_dynamical_matrices(dynmat, with_eigenvectors=True, lang="Rust")
+    np.testing.assert_array_equal(dynmat, dynmat_ref)
+    # The values-only kernel must also leave the input untouched.
+    diagonalize_dynamical_matrices(dynmat, with_eigenvectors=False, lang="Rust")
+    np.testing.assert_array_equal(dynmat, dynmat_ref)

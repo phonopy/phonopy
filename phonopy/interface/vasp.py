@@ -45,7 +45,6 @@ import warnings
 import xml.etree.cElementTree as etree
 import xml.etree.ElementTree
 import xml.parsers.expat
-from collections import Counter
 from collections.abc import Sequence
 from typing import Iterator, Literal, cast
 
@@ -60,6 +59,8 @@ from phonopy.file_IO import (
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import group_by_key
+from phonopy.structure.mixture import iter_mixture_expansion_blocks
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
@@ -111,63 +112,6 @@ def get_drift_forces(
 def get_scaled_positions_lines(scaled_positions: NDArray[np.double]) -> str:
     """Return text lines of scaled positions."""
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
-
-
-def sort_positions_by_symbols(
-    symbols: Sequence[str | int] | NDArray[np.int64],
-    positions: NDArray[np.double] | None = None,
-) -> tuple[list[int], list[str | int], NDArray[np.double] | None, list[int]]:
-    """Sort atomic positions by symbols.
-
-    Sort positions by symbols (using the order defined by reduced_symbols)
-    using a stable sort algorithm. Written by @ExpHP, refactored by @atztogo.
-
-    symbols = ["A", "B", "A", "B"]
-    reduced_symbols = ["A", "B"]
-    sort_keys = [0, 1, 0, 1]
-    perm = [0, 2, 1, 3]
-    counts_dict = {'A': 2, 'B': 2}
-    counts_list = [2, 2]
-
-    Parameters
-    ----------
-    symbols : list[str] or list[int] or NDArray[np.int64]
-        Sequence of hashable objects. This may be a list of chemical symbols
-        or numbers.
-    positions : NDArray[np.double] or None, optional
-        Atomic positions. When None, sorted_positions is also None.
-
-    Returns
-    -------
-    sorted_positions = positions[perm]
-    For the others, see the example above.
-
-    Functions
-    ---------
-    _argsort_stable :
-        Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
-        so that indices tied for the same value are listed in increasing order.
-
-    """
-
-    def _argsort_stable(keys):
-        # Python's built-in sort algorithm is a stable sort
-        return sorted(range(len(keys)), key=keys.__getitem__)
-
-    # dict in Python 3.7 or later is ordered dict.
-    reduced_symbols = list(dict.fromkeys(symbols))
-    counts_dict = Counter(symbols)
-    # list(counts_dict.values()) may be used...
-    counts_list = [counts_dict[s] for s in reduced_symbols]
-    sort_keys = [reduced_symbols.index(i) for i in symbols]
-    perm = _argsort_stable(sort_keys)
-
-    if positions is None:
-        sorted_positions = None
-    else:
-        sorted_positions = positions[perm]
-
-    return counts_list, reduced_symbols, sorted_positions, perm
 
 
 def _get_forces_points_and_energy(
@@ -536,8 +480,6 @@ def _expand_mixtures_for_vasp(
     ``(row_symbols, row_counts, expanded_scaled_positions, row_weights)``.
 
     """
-    species_table = cell.species_table
-    species_ids = cell.species_ids
     scaled = cell.scaled_positions
 
     row_symbols: list[str] = []
@@ -545,25 +487,16 @@ def _expand_mixtures_for_vasp(
     row_weights: list[float] = []
     blocks: list[NDArray[np.double]] = []
 
-    for sid, sp in enumerate(species_table):
-        atom_idx = np.where(species_ids == sid)[0]
+    for symbol, weight, atom_idx in iter_mixture_expansion_blocks(cell):
         # Every species in the table is referenced by at least one atom in
         # the standard construction paths (build_mixture_cell, Supercell,
         # Primitive, displacement). A hand-crafted PhonopyAtoms with an
         # orphan species would land here.
-        assert atom_idx.size > 0, f"species_table[{sid}]={sp.symbol!r} has no atoms"
-        positions = scaled[atom_idx]
-        if sp.mixture is None:
-            row_symbols.append(sp.symbol)
-            row_counts.append(int(atom_idx.size))
-            row_weights.append(1.0)
-            blocks.append(positions)
-        else:
-            for sym, weight in sp.mixture:
-                row_symbols.append(sym)
-                row_counts.append(int(atom_idx.size))
-                row_weights.append(float(weight))
-                blocks.append(positions)
+        assert atom_idx.size > 0, f"species {symbol!r} has no atoms"
+        row_symbols.append(symbol)
+        row_counts.append(int(atom_idx.size))
+        row_weights.append(weight)
+        blocks.append(scaled[atom_idx])
 
     expanded = np.concatenate(blocks, axis=0)
     return row_symbols, row_counts, expanded, row_weights
@@ -578,7 +511,7 @@ def _get_vasp_structure_header_lines(
     if expand_mixtures and cell.has_mixtures:
         symbols, num_atoms, scaled_positions, _ = _expand_mixtures_for_vasp(cell)
     else:
-        num_atoms, symbols, scaled_positions, _ = sort_positions_by_symbols(
+        num_atoms, symbols, scaled_positions = group_by_key(
             cell.symbols, cell.scaled_positions
         )
     assert scaled_positions is not None
@@ -1012,13 +945,10 @@ class VasprunxmlExpat:
         self._is_volume = False
         self._is_energy = False
         self._is_k_weights = False
-        self._is_kpoints = False
         self._is_kpointlist = False
-        self._is_eigenvalues = False
         self._is_epsilon = False
         self._is_born = False
         self._is_efermi = False
-        self._is_generation = False
         self._is_divisions = False
         self._is_NELECT = False
         self._is_NGXYZ = [False, False, False]
@@ -1031,15 +961,15 @@ class VasprunxmlExpat:
         self._is_set = False
         self._is_r = False
         self._is_field = False
-        self._is_separator = False
         self._is_grids = False
 
-        self._is_scstep = False
         self._is_structure = False
-        self._is_projected = False
-        self._is_proj_eig = False
         self._is_field_string = False
-        self._is_pseudopotential = False
+
+        # Stack of element names from the document root to the element
+        # currently being processed. Used to resolve the parsing context
+        # from the ancestor path instead of ad-hoc boolean flags.
+        self._stack: list[tuple[str, dict]] = []
 
         self._all_forces: list[list[list[float]]] = []
         self._all_stress: list[list[list[float]]] = []
@@ -1055,11 +985,29 @@ class VasprunxmlExpat:
         self._energies: list[float] | None = None
         self._epsilon: list[list[float]] | None = None
         self._born_atom: list[list[float]] | None = None
-        self._k_weights: list[float] | None = None
-        self._kpointlist: list[list[float]] | None = None
-        self._k_mesh: list[int] | None = None
+
+        # k-point quantities are kept per provenance so that the SCF mesh
+        # (top-level <kpoints>, or the per-step <kpoints> in <calculation>)
+        # and the denser kpoints_opt mesh do not overwrite one another.
+        # "header" is the top-level mesh, "calc" the last per-step mesh in
+        # <calculation>, and "kopt" the kpoints_opt mesh that lives inside
+        # <eigenvalues_kpoints_opt>.
+        self._v_target: list | None = None
+        self._header_k_weights: list[float] | None = None
+        self._calc_k_weights: list[float] | None = None
+        self._kopt_k_weights: list[float] | None = None
+        self._header_kpointlist: list[list[float]] | None = None
+        self._calc_kpointlist: list[list[float]] | None = None
+        self._kopt_kpointlist: list[list[float]] | None = None
+        self._header_k_mesh: list[int] | None = None
+        self._calc_k_mesh: list[int] | None = None
+
         self._eigenvalues: list | None = None
+        self._eigenvalues_kpoints_opt: list | None = None
+        self._eig_target: list | None = None
         self._eig_state = [0, 0]
+        self._has_kpoints_opt = False
+        self._efermi_kpoints_opt: float | None = None
         self._projectors: list | None = None
         self._proj_state = [0, 0, 0]
         self._field_val: str | None = None
@@ -1146,15 +1094,33 @@ class VasprunxmlExpat:
         """
         return np.array(self._all_energies, dtype="double", order="C")
 
+    def _resolve_scf(self, header, calc):
+        """Return the SCF-mesh quantity from the per-provenance buckets.
+
+        With kpoints_opt the per-step <kpoints> in <calculation> describes
+        the dense mesh, so the top-level (header) mesh is the SCF one.
+        Without kpoints_opt the historical behavior is preserved: the last
+        per-step mesh wins, falling back to the header mesh.
+
+        """
+        if self._has_kpoints_opt:
+            return header
+        return calc if calc is not None else header
+
     @property
     def k_mesh(self) -> NDArray[np.int64]:
         """Return k_mesh."""
-        return np.array(self._k_mesh, dtype="int64")
+        return np.array(
+            self._resolve_scf(self._header_k_mesh, self._calc_k_mesh), dtype="int64"
+        )
 
     @property
     def kpointlist(self) -> NDArray[np.double]:
         """Return kpoint list."""
-        return np.array(self._kpointlist, dtype="double")
+        return np.array(
+            self._resolve_scf(self._header_kpointlist, self._calc_kpointlist),
+            dtype="double",
+        )
 
     @property
     def k_weights(self) -> NDArray[np.double]:
@@ -1169,7 +1135,10 @@ class VasprunxmlExpat:
             shape=(irreducible_kpoints,)
 
         """
-        return np.array(self._k_weights, dtype="double")
+        return np.array(
+            self._resolve_scf(self._header_k_weights, self._calc_k_weights),
+            dtype="double",
+        )
 
     @property
     def k_weights_int(self) -> NDArray[np.int64]:
@@ -1202,6 +1171,68 @@ class VasprunxmlExpat:
 
         """
         return np.array(self._eigenvalues, dtype="double", order="C")
+
+    @property
+    def has_kpoints_opt(self) -> bool:
+        """Return whether the file contains KPOINTS_OPT data."""
+        return self._has_kpoints_opt
+
+    @property
+    def eigenvalues_kpoints_opt(self) -> NDArray[np.double]:
+        """Return eigenvalues on the kpoints_opt mesh.
+
+        The eigenvalues are read from <eigenvalues_kpoints_opt> and the
+        occupations from <projected_kpoints_opt> (the kpoints_opt mesh is
+        non-self-consistent, so occupations are only written together with
+        the projections). The shape therefore matches ``eigenvalues``.
+
+        Returns
+        -------
+        ndarray
+            Eigenvalues and occupations (the last index)
+            dtype='double'
+            shape=(spin, kpoints, bands, 2)
+
+        """
+        if self._eigenvalues_kpoints_opt is None:
+            if self._has_kpoints_opt:
+                raise RuntimeError(
+                    "kpoints_opt eigenvalues require <projected_kpoints_opt> "
+                    "(occupations), which was not found in vasprun.xml."
+                )
+            raise RuntimeError("No kpoints_opt data was found in vasprun.xml.")
+        return np.array(self._eigenvalues_kpoints_opt, dtype="double", order="C")
+
+    @property
+    def k_weights_kpoints_opt(self) -> NDArray[np.double]:
+        """Return k-point weights on the kpoints_opt mesh."""
+        if self._kopt_k_weights is None:
+            raise RuntimeError("No kpoints_opt k-point weights were found.")
+        return np.array(self._kopt_k_weights, dtype="double")
+
+    @property
+    def kpointlist_kpoints_opt(self) -> NDArray[np.double]:
+        """Return kpoint list on the kpoints_opt mesh."""
+        if self._kopt_kpointlist is None:
+            raise RuntimeError("No kpoints_opt kpoint list was found.")
+        return np.array(self._kopt_kpointlist, dtype="double")
+
+    @property
+    def k_mesh_kpoints_opt(self) -> NDArray[np.int64]:
+        """Return k_mesh on the kpoints_opt mesh.
+
+        With kpoints_opt the per-step <kpoints> in <calculation> is the
+        dense kpoints_opt mesh, so its generation divisions are returned.
+
+        """
+        if not self._has_kpoints_opt or self._calc_k_mesh is None:
+            raise RuntimeError("No kpoints_opt k_mesh was found.")
+        return np.array(self._calc_k_mesh, dtype="int64")
+
+    @property
+    def efermi_kpoints_opt(self) -> float | None:
+        """Return Fermi energy of the kpoints_opt DOS calculation."""
+        return self._efermi_kpoints_opt
 
     @property
     def projectors(self) -> list | None:
@@ -1243,10 +1274,29 @@ class VasprunxmlExpat:
         """Return number of electrons, NELECT."""
         return self._NELECT
 
+    def _inside(self, name: str) -> bool:
+        """Return whether an ancestor (or the current element) is ``name``."""
+        return any(n == name for n, _ in self._stack)
+
+    def _ancestor_attr(self, name: str, attr: str) -> str | None:
+        """Return ``attr`` of the nearest ancestor element named ``name``."""
+        for n, a in reversed(self._stack):
+            if n == name:
+                return a.get(attr)
+        return None
+
+    @staticmethod
+    def _set_index(comment: str) -> int:
+        """Return the 1-based index from a set comment.
+
+        Handles "spin 1", "kpoint 12", "band 3" (eigenvalues / projector
+        k-points and bands) as well as "spin1" (projector spin).
+
+        """
+        return int(comment.replace("spin", "").split()[-1])
+
     def _start_element(self, name: str, attrs: dict) -> None:
-        # Used not to collect energies in <scstep>
-        if name == "scstep":
-            self._is_scstep = True
+        self._stack.append((name, attrs))
 
         # Used not to collect basis and positions in
         # <structure name="initialpos" >
@@ -1265,7 +1315,7 @@ class VasprunxmlExpat:
             or self._is_volume
             or self._is_k_weights
             or self._is_kpointlist
-            or self._is_generation
+            or self._inside("generation")
         ):
             if name == "v":
                 self._cbuf = ""
@@ -1286,11 +1336,23 @@ class VasprunxmlExpat:
 
                 if attrs["name"] == "weights":
                     self._is_k_weights = True
-                    self._k_weights = []
+                    self._v_target = []
+                    if self._inside("eigenvalues_kpoints_opt"):
+                        self._kopt_k_weights = self._v_target
+                    elif self._inside("calculation"):
+                        self._calc_k_weights = self._v_target
+                    else:
+                        self._header_k_weights = self._v_target
 
                 if attrs["name"] == "kpointlist":
                     self._is_kpointlist = True
-                    self._kpointlist = []
+                    self._v_target = []
+                    if self._inside("eigenvalues_kpoints_opt"):
+                        self._kopt_kpointlist = self._v_target
+                    elif self._inside("calculation"):
+                        self._calc_kpointlist = self._v_target
+                    else:
+                        self._header_kpointlist = self._v_target
 
                 if attrs["name"] == "epsilon" or attrs["name"] == "epsilon_scf":
                     self._is_epsilon = True
@@ -1305,9 +1367,6 @@ class VasprunxmlExpat:
                         self._is_basis = True
                         self._lattice = []
 
-        if name == "kpoints":
-            self._is_kpoints = True
-
         if name == "field":
             if "type" in attrs:
                 self._cbuf = ""
@@ -1315,9 +1374,6 @@ class VasprunxmlExpat:
                     self._is_field_string = True
             else:
                 self._is_field = True
-
-        if name == "generation":
-            self._is_generation = True
 
         if name == "i":
             if "name" in attrs.keys():
@@ -1354,7 +1410,7 @@ class VasprunxmlExpat:
             self._cbuf = ""
             self._is_i = True
 
-        if name == "energy" and (not self._is_scstep):
+        if name == "energy" and not self._inside("scstep"):
             self._is_energy = True
             self._energies = []
 
@@ -1388,63 +1444,63 @@ class VasprunxmlExpat:
                 if attrs["name"] == "born_charges":
                     self._is_born = True
 
-        if self._is_projected and not self._is_proj_eig:
-            if name == "set":
-                if "comment" in attrs.keys():
-                    assert self._projectors is not None
-                    if "spin" in attrs["comment"]:
-                        self._projectors.append([])
-                        spin_num = int(attrs["comment"].replace("spin", ""))
-                        self._proj_state = [spin_num - 1, -1, -1]
-                    if "kpoint" in attrs["comment"]:
-                        self._projectors[self._proj_state[0]].append([])
-                        k_num = int(attrs["comment"].split()[1])
-                        self._proj_state[1:3] = k_num - 1, -1
-                    if "band" in attrs["comment"]:
-                        s, k = self._proj_state[:2]
-                        self._projectors[s][k].append([])
-                        b_num = int(attrs["comment"].split()[1])
-                        self._proj_state[2] = b_num - 1
+        # Per-ion projectors live under <projected> (not
+        # <projected_kpoints_opt>), excluding its <eigenvalues> child.
+        if self._inside("projected") and not self._inside("eigenvalues"):
+            if name == "set" and "comment" in attrs:
+                assert self._projectors is not None
+                comment = attrs["comment"]
+                if "spin" in comment:
+                    self._projectors.append([])
+                    self._proj_state = [self._set_index(comment) - 1, -1, -1]
+                if "kpoint" in comment:
+                    self._projectors[self._proj_state[0]].append([])
+                    self._proj_state[1:3] = self._set_index(comment) - 1, -1
+                if "band" in comment:
+                    s, k = self._proj_state[:2]
+                    self._projectors[s][k].append([])
+                    self._proj_state[2] = self._set_index(comment) - 1
             if name == "r":
                 self._cbuf = ""
                 self._is_r = True
 
-        if self._is_eigenvalues:
-            if name == "set":
-                if "comment" in attrs.keys():
-                    assert self._eigenvalues is not None
-                    if "spin" in attrs["comment"]:
-                        self._eigenvalues.append([])
-                        spin_num = int(attrs["comment"].split()[1])
-                        self._eig_state = [spin_num - 1, -1]
-                    if "kpoint" in attrs["comment"]:
-                        self._eigenvalues[self._eig_state[0]].append([])
-                        k_num = int(attrs["comment"].split()[1])
-                        self._eig_state[1] = k_num - 1
+        # Eigenvalue sets routed to the SCF mesh or the kpoints_opt mesh
+        # depending on the <eigenvalues> parent (set below via _eig_target).
+        if self._eig_target is not None and self._inside("eigenvalues"):
+            if name == "set" and "comment" in attrs:
+                comment = attrs["comment"]
+                if "spin" in comment:
+                    self._eig_target.append([])
+                    self._eig_state = [self._set_index(comment) - 1, -1]
+                if "kpoint" in comment:
+                    self._eig_target[self._eig_state[0]].append([])
+                    self._eig_state[1] = self._set_index(comment) - 1
             if name == "r":
                 self._cbuf = ""
                 self._is_r = True
+
+        if name in ("eigenvalues_kpoints_opt", "projected_kpoints_opt"):
+            self._has_kpoints_opt = True
+        if name == "dos" and attrs.get("comment") == "kpoints_opt":
+            self._has_kpoints_opt = True
 
         if name == "projected":
-            self._is_projected = True
             self._projectors = []
 
         if name == "eigenvalues":
-            if self._is_projected:
-                self._is_proj_eig = True
-            else:
-                self._is_eigenvalues = True
-                self._eigenvalues = []
+            parent = self._stack[-2][0]
+            if parent == "calculation":
+                self._eigenvalues = self._eig_target = []
+            elif parent == "projected_kpoints_opt":
+                self._eigenvalues_kpoints_opt = self._eig_target = []
+            else:  # <projected> or <eigenvalues_kpoints_opt>: not collected
+                self._eig_target = None
 
         if name == "separator":
-            self._is_separator = True
             if attrs["name"] == "grids":
                 self._is_grids = True
 
     def _end_element(self, name: str) -> None:
-        if name == "scstep":
-            self._is_scstep = False
-
         if name == "structure" and self._is_structure:
             self._is_structure = False
 
@@ -1461,9 +1517,11 @@ class VasprunxmlExpat:
 
             if self._is_k_weights:
                 self._is_k_weights = False
+                self._v_target = None
 
             if self._is_kpointlist:
                 self._is_kpointlist = False
+                self._v_target = None
 
             if self._is_positions:
                 self._is_positions = False
@@ -1478,14 +1536,6 @@ class VasprunxmlExpat:
             if self._is_epsilon:
                 self._is_epsilon = False
 
-        if name == "generation":
-            if self._is_generation:
-                self._is_generation = False
-
-        if name == "kpoints":
-            if self._is_kpoints:
-                self._is_kpoints = False
-
         if name == "array":
             if self._is_symbols:
                 self._is_symbols = False
@@ -1493,7 +1543,7 @@ class VasprunxmlExpat:
             if self._is_born:
                 self._is_born = False
 
-        if name == "energy" and (not self._is_scstep):
+        if name == "energy" and not self._inside("scstep"):
             self._is_energy = False
             assert self._energies is not None
             self._all_energies.append(self._energies)
@@ -1522,13 +1572,8 @@ class VasprunxmlExpat:
             self._run_r()
             self._is_r = False
 
-        if name == "projected":
-            self._is_projected = False
-
         if name == "eigenvalues":
-            self._is_eigenvalues = False
-            if self._is_projected:
-                self._is_proj_eig = False
+            self._eig_target = None
 
         if name == "set":
             self._is_set = False
@@ -1555,7 +1600,8 @@ class VasprunxmlExpat:
         if name == "separator":
             if self._is_grids:
                 self._is_grids = False
-            self._is_separator = False
+
+        self._stack.pop()
 
     def _run_v(self) -> None:
         if self._is_v:
@@ -1578,18 +1624,21 @@ class VasprunxmlExpat:
             if self._is_born:
                 assert self._born_atom is not None
                 self._born_atom.append([self._to_float(x) for x in self._cbuf.split()])
-            if self._is_kpoints:
+            if self._inside("kpoints"):
                 if self._is_k_weights:
-                    assert self._k_weights is not None
-                    self._k_weights.append(self._to_float(self._cbuf))
+                    assert self._v_target is not None
+                    self._v_target.append(self._to_float(self._cbuf))
                 if self._is_kpointlist:
-                    assert self._kpointlist is not None
-                    self._kpointlist.append(
+                    assert self._v_target is not None
+                    self._v_target.append(
                         [self._to_float(x) for x in self._cbuf.split()]
                     )
-                if self._is_generation:
-                    if self._is_divisions:
-                        self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
+                if self._is_divisions:
+                    mesh = [self._to_int(x) for x in self._cbuf.split()]
+                    if self._inside("calculation"):
+                        self._calc_k_mesh = mesh
+                    else:
+                        self._header_k_mesh = mesh
             self._cbuf = None
 
     def _run_i(self) -> None:
@@ -1599,7 +1648,11 @@ class VasprunxmlExpat:
                 assert self._energies is not None
                 self._energies.append(self._to_float(self._cbuf.strip()))
             if self._is_efermi:
-                self._efermi = self._to_float(self._cbuf.strip())
+                val = self._to_float(self._cbuf.strip())
+                if self._ancestor_attr("dos", "comment") == "kpoints_opt":
+                    self._efermi_kpoints_opt = val
+                else:
+                    self._efermi = val
                 self._is_efermi = False
             if self._is_NELECT:
                 self._NELECT = self._to_float(self._cbuf.strip())
@@ -1641,16 +1694,14 @@ class VasprunxmlExpat:
     def _run_r(self) -> None:
         if self._is_r:
             assert self._cbuf is not None
-            if self._is_projected and not self._is_proj_eig:
+            vals = [self._to_float(x) for x in self._cbuf.split()]
+            if self._inside("projected") and not self._inside("eigenvalues"):
                 assert self._projectors is not None
                 s, k, b = self._proj_state
-                vals = [self._to_float(x) for x in self._cbuf.split()]
                 self._projectors[s][k][b].append(vals)
-            elif self._is_eigenvalues:
-                assert self._eigenvalues is not None
+            elif self._eig_target is not None:
                 s, k = self._eig_state
-                vals = [self._to_float(x) for x in self._cbuf.split()]
-                self._eigenvalues[s][k].append(vals)
+                self._eig_target[s][k].append(vals)
             self._cbuf = None
 
     def _run_field_string(self) -> None:
@@ -1664,18 +1715,10 @@ class VasprunxmlExpat:
             self._cbuf += data
 
     def _to_float(self, x: str) -> float:
-        try:
-            val = float(x)
-            return val
-        except ValueError:
-            raise
+        return float(x)
 
     def _to_int(self, x: str) -> int:
-        try:
-            val = int(x)
-            return val
-        except ValueError:
-            raise
+        return int(x)
 
 
 def parse_vasprunxml(filename: str | os.PathLike) -> VasprunxmlExpat:

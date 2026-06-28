@@ -1,6 +1,7 @@
 """Tests of Phonopy API."""
 
 import copy
+import inspect
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,7 @@ import pytest
 import phonopy
 from phonopy import Phonopy
 from phonopy.interface.pypolymlp import PypolymlpParams
+from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.structure.cells import isclose
 from phonopy.structure.dataset import get_displacements_and_forces
 
@@ -357,6 +359,30 @@ def test_run_methods_return_result_objects(ph_nacl: Phonopy):
         [[0.5, 0.5, 0.5]], 300, scattering_lengths={"Na": 3.63, "Cl": 9.5770}
     )
     assert dsf is ph.dynamic_structure_factor
+
+
+def test_thermal_properties_dict_docstring_units() -> None:
+    """Thermal property dict accessor docstring carries physical units."""
+    raw_doc = Phonopy.get_thermal_properties_dict.__doc__
+    assert raw_doc is not None
+    doc = inspect.cleandoc(raw_doc)
+    doc_lines = doc.splitlines()
+
+    expected_descriptions = {
+        "temperatures": "Temperatures in K.",
+        "free_energy": "Helmholtz free energies in kJ/mol.",
+        "entropy": "Entropies in J/K/mol.",
+        "heat_capacity": "Heat capacities in J/K/mol.",
+    }
+    for attr, description in expected_descriptions.items():
+        index = doc_lines.index(f"{attr} : ndarray")
+        assert doc_lines[index + 1].strip() == description
+
+    for attr in ("free_energy", "entropy", "heat_capacity"):
+        source_doc = getattr(ThermalProperties, attr).__doc__
+        assert source_doc is not None
+        unit = expected_descriptions[attr].rsplit(" in ", maxsplit=1)[1].rstrip(".")
+        assert unit in source_doc
 
 
 def test_Phonopy_calculator():

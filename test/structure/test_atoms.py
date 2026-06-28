@@ -551,6 +551,57 @@ def test_PhonopyAtoms_mixture_weights_unity_for_unweighted_atom():
     np.testing.assert_allclose(cell.mixture_weights, [0.5, 0.5, 1.0])
 
 
+def test_PhonopyAtoms_weighted_species_yaml_roundtrip():
+    """Weighted species round-trip through YAML; pure sites show weight 1.0.
+
+    In a non-merge mixture cell the yaml is self-describing: every atom
+    carries an explicit weight, with a pure site (weight=None in the model)
+    written as 1.0 and normalized back to None on read.
+
+    """
+    species = [
+        _Species(symbol="Ge", atomic_number=32, weight=0.5),
+        _Species(symbol="Sn", atomic_number=50, weight=0.5),
+        _Species(symbol="Si", atomic_number=14),
+    ]
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0, 0, 0], [0.5, 0.5, 0.5]],
+        species_table=species,
+        species_ids=[0, 1, 2],
+    )
+
+    # Every atom carries an explicit weight; the pure Si site shows 1.0.
+    data = yaml.safe_load(str(cell))
+    assert data["points"][0]["weight"] == 0.5
+    assert data["points"][1]["weight"] == 0.5
+    assert data["points"][2]["weight"] == 1.0
+
+    cell2 = parse_cell_dict(data)
+    assert cell2 is not None
+    assert cell2.has_weighted_species
+    assert cell2.symbols == ["Ge", "Sn", "Si"]
+    np.testing.assert_allclose(cell2.mixture_weights, [0.5, 0.5, 1.0])
+    # The pure site is normalized back to a plain species (weight=None).
+    assert cell2.species_table[cell2.species_ids[2]].weight is None
+
+
+def test_parse_cell_dict_all_unity_weights_is_ordinary_cell():
+    """A hand-written cell with every weight 1.0 reads as an ordinary cell."""
+    data = {
+        "lattice": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        "points": [
+            {"symbol": "Si", "coordinates": [0, 0, 0], "weight": 1.0},
+            {"symbol": "Si", "coordinates": [0.5, 0.5, 0.5], "weight": 1.0},
+        ],
+    }
+    cell = parse_cell_dict(data)
+    assert cell is not None
+    assert not cell.has_weighted_species
+    assert cell.mixture_weights is None
+    assert cell.symbols == ["Si", "Si"]
+
+
 def test_PhonopyAtoms_merge_and_weighted_cannot_coexist():
     """Merged mixture sites and weighted species are mutually exclusive."""
     merged, _ = build_species_table_from_mixtures([[("Ge", 0.5), ("Sn", 0.5)]])

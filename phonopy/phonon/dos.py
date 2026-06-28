@@ -99,6 +99,7 @@ class Dos:
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
@@ -111,6 +112,10 @@ class Dos:
         sigma : float, optional
             Sigma for smearing method. When set, the smearing method is
             used regardless of ``use_tetrahedron_method``.
+        smearing_function : {"Normal", "Cauchy"}, optional
+            Distribution used by the smearing method.  "Normal" is a normal
+            distribution and "Cauchy" is a Cauchy (Lorentzian) distribution.
+            Default is "Normal".
         lang : {"C", "Rust"}, optional
             Backend selector for the tetrahedron-method kernels.  Default
             is "C".
@@ -123,39 +128,24 @@ class Dos:
         # method applies only without sigma.
         self._use_tetrahedron_method = use_tetrahedron_method and sigma is None
         self._frequency_points: NDArray[np.double]
+        self._smearing_function: NormalDistribution | CauchyDistribution
         self._sigma = sigma
         self._lang: Literal["C", "Rust"] = lang
 
         if self._use_tetrahedron_method:
             self.set_draw_area()
         else:
-            self._sigma = self.set_draw_area()
-            self.set_smearing_function("Normal")
+            sigma_value = self.set_draw_area()
+            self._sigma = sigma_value
+            if smearing_function == "Cauchy":
+                self._smearing_function = CauchyDistribution(sigma_value)
+            else:
+                self._smearing_function = NormalDistribution(sigma_value)
 
     @property
     def frequency_points(self) -> NDArray[np.double]:
         """Return frequency points."""
         return self._frequency_points
-
-    def set_smearing_function(self, function_name: Literal["Normal", "Cauchy"]) -> None:
-        """Set function form for smearing method.
-
-        Parameters
-        ----------
-        function_name : str
-            'Normal': smearing is done by normal distribution.
-            'Cauchy': smearing is done by Cauchy distribution.
-
-        """
-        assert self._sigma is not None
-        if function_name == "Cauchy":
-            self._smearing_function = CauchyDistribution(self._sigma)
-        else:
-            self._smearing_function = NormalDistribution(self._sigma)
-
-    def set_sigma(self, sigma: float) -> None:
-        """Set sigma."""
-        self._sigma = sigma
 
     def set_draw_area(
         self,
@@ -232,6 +222,7 @@ class TotalDos(Dos):
         mesh_object: Mesh,
         sigma: float | None = None,
         use_tetrahedron_method: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
@@ -239,6 +230,7 @@ class TotalDos(Dos):
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            smearing_function=smearing_function,
             lang=lang,
         )
         self._dos: NDArray[np.double] | None = None
@@ -259,13 +251,12 @@ class TotalDos(Dos):
         """Return total DOS."""
         return self._dos
 
-    def get_Debye_frequency(self) -> float | None:
+    @property
+    def debye_frequency(self) -> float | None:
         """Return a kind of Debye frequency."""
         return self._freq_Debye
 
-    def set_Debye_frequency(
-        self, num_atoms: int, freq_max_fit: float | None = None
-    ) -> None:
+    def run_debye_frequency(self, freq_max_fit: float | None = None) -> None:
         """Calculate a kind of Debye frequency."""
         try:
             from scipy.optimize import curve_fit
@@ -274,6 +265,8 @@ class TotalDos(Dos):
 
         if self._dos is None:
             raise RuntimeError("Run total DOS calculation first.")
+
+        num_atoms = len(self._mesh_object.primitive)
 
         def Debye_dos(freq, a):
             return a * freq**2
@@ -384,6 +377,7 @@ class ProjectedDos(Dos):
         use_tetrahedron_method: bool = False,
         direction: Sequence[float] | NDArray[np.double] | None = None,
         xyz_projection: bool = False,
+        smearing_function: Literal["Normal", "Cauchy"] = "Normal",
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method."""
@@ -391,31 +385,37 @@ class ProjectedDos(Dos):
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
+            smearing_function=smearing_function,
             lang=lang,
         )
-        if self._mesh_object.eigenvectors is None:
+        eigvecs = self._mesh_object.eigenvectors
+        if eigvecs is None:
             raise ValueError("Mesh object does not have eigenvectors.")
-        self._eigenvectors = self._mesh_object.eigenvectors
         self._projected_dos = None
 
         if xyz_projection:
-            self._eigvecs2 = np.abs(self._eigenvectors) ** 2
+            self._eigvecs2 = np.abs(eigvecs) ** 2
         else:
-            num_atom = self._frequencies.shape[1] // 3
-            i_x = np.arange(num_atom, dtype="int") * 3
-            i_y = np.arange(num_atom, dtype="int") * 3 + 1
-            i_z = np.arange(num_atom, dtype="int") * 3 + 2
+            n_ir, n_comp, n_mode = eigvecs.shape
+            # Split the component axis [x1,y1,z1,x2,y2,z2,...] into (atom, xyz).
+            ev = eigvecs.reshape(n_ir, n_comp // 3, 3, n_mode)
             if direction is None:
-                self._eigvecs2 = np.abs(self._eigenvectors[:, i_x, :]) ** 2
-                self._eigvecs2 += np.abs(self._eigenvectors[:, i_y, :]) ** 2
-                self._eigvecs2 += np.abs(self._eigenvectors[:, i_z, :]) ** 2
+                self._eigvecs2 = (np.abs(ev) ** 2).sum(axis=2)
             else:
-                d = np.array(direction, dtype="double")
-                d /= np.linalg.norm(direction)
-                proj_eigvecs = self._eigenvectors[:, i_x, :] * d[0]
-                proj_eigvecs += self._eigenvectors[:, i_y, :] * d[1]
-                proj_eigvecs += self._eigenvectors[:, i_z, :] * d[2]
-                self._eigvecs2 = np.abs(proj_eigvecs) ** 2
+                d = np.asarray(direction, dtype="double")
+                d = d / np.linalg.norm(d)
+                # Project each atom's xyz amplitude onto the direction (sum over
+                # the xyz axis j), then square.
+                proj = np.einsum("iajm,j->iam", ev, d)
+                self._eigvecs2 = np.abs(proj) ** 2
+
+        weights = self._mesh_object.primitive.mixture_weights
+        if weights is not None:
+            # Per-atom non-merge site-mixture concentration weight x_a scales
+            # each atom's PDOS linearly: |sqrt(x_a) e|^2 = x_a |e|^2. The xyz
+            # projection has 3 rows per atom.
+            row_weights = np.repeat(weights, 3) if xyz_projection else weights
+            self._eigvecs2 = self._eigvecs2 * row_weights[None, :, None]
 
     @property
     def projected_dos(self) -> NDArray[np.double] | None:
