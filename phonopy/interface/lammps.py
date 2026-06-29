@@ -109,14 +109,25 @@ def rotate_lammps_forces(
     lattice: NDArray[np.double],
     verbose: bool = True,
 ) -> None:
-    """Rotate forces of LAMMPS output.
+    """Rotate forces of LAMMPS output to the phonopy cell orientation in place.
+
+    LAMMPS requires the basis vectors to be given as a lower-triangular matrix
+    (a along x, b in the xy-plane), so the supercell written for LAMMPS is a
+    rotated copy of the phonopy supercell. The forces in the LAMMPS output are
+    therefore expressed in that rotated frame and are rotated back here to match
+    the phonopy cell. The rotation R is derived from ``lattice`` alone, so when
+    residual forces are subtracted they must be rotated with the same call for
+    consistency.
+
+    The arrays in ``force_sets`` are overwritten in place.
 
     Parameters
     ----------
     force_sets : list
-        Sets of supercell forces obtained by ``parse_set_of_forces``.
+        Sets of supercell forces obtained by ``parse_set_of_forces``. The arrays
+        are modified in place.
     lattice : ndarray
-        Basis vectors in row vectors.
+        Basis vectors of the supercell in row vectors.
     verbose : bool
         Verbosity.
 
@@ -153,7 +164,10 @@ class LammpsStructureDumper:
         self._lines: list[str] = []
         lattice = get_cell_matrix_from_lattice(cell.cell)
         lmps_cell = PhonopyAtoms(
-            cell=lattice, scaled_positions=cell.scaled_positions, symbols=cell.symbols
+            cell=lattice,
+            scaled_positions=cell.scaled_positions,
+            symbols=cell.symbols,
+            masses=cell.masses,
         )
         self._run(lmps_cell)
 
@@ -181,6 +195,14 @@ class LammpsStructureDumper:
         lines.append("")
         for i, symbol in enumerate(usyms):
             lines.append(f"{i + 1} {symbol}")
+        lines.append("")
+        lines.append("")
+        # "Masses" must come after "Atom Type Labels" because LAMMPS requires the
+        # type labels to be read before any section that involves atom types.
+        lines.append("Masses")
+        lines.append("")
+        for i, idx in enumerate(uids):
+            lines.append(f"{i + 1} {cell.masses[idx]} # {usyms[i]}")
         lines.append("")
         lines.append("")
         lines.append("Atoms")
@@ -286,6 +308,7 @@ class LammpsStructureLoader:
         """Init method."""
         self._header_tags: dict[str, Any] = {}
         self._atom_type_labels: dict[str, int] = {}
+        self._masses: dict[int, float] = {}
         self._atom_ids: NDArray[np.int64] | None = None
         self._atom_labels: list[str] | NDArray[np.int64] | None = None
         self._atom_positions: NDArray[np.double] | None = None
@@ -325,6 +348,10 @@ class LammpsStructureLoader:
             if re_ATL.search(line):
                 i += self._parse_AtomTypeLabels(lines[(i + 1) :])
                 continue
+            # Hook "Masses"
+            if "Masses" == line.split("#")[0].strip():
+                i += self._parse_Masses(lines[(i + 1) :])
+                continue
             # Hook "Atoms", this must be after "Atom Type Labels".
             if "Atoms" == line.split("#")[0].strip():
                 self._parse_Atoms(lines[(i + 1) :])
@@ -341,10 +368,17 @@ class LammpsStructureLoader:
         lattice[2, 1] = tag["xy_xz_yz"][2]  # yz
 
         if self._atom_type_labels:
+            masses = None
+            if self._masses:
+                masses = [
+                    self._masses[self._atom_type_labels[s]]
+                    for s in self._atom_labels  # type: ignore[union-attr]
+                ]
             self._cell = PhonopyAtoms(
                 cell=lattice,
                 positions=self._atom_positions,
                 symbols=self._atom_labels,  # type: ignore[arg-type]
+                masses=masses,
             )
         else:
             atom_data = get_atomic_data().atom_data
@@ -361,6 +395,20 @@ class LammpsStructureLoader:
                 continue
             ary = _line.split()
             self._atom_type_labels[ary[1]] = int(ary[0])
+            num_types += 1
+            if num_types == self._header_tags["atom_types"]:
+                break
+        assert num_types == self._header_tags["atom_types"]
+        return i + 1
+
+    def _parse_Masses(self, lines: list[str]) -> int:
+        num_types = 0
+        for i, line in enumerate(lines):  # noqa: B007
+            _line = line.split("#")[0].strip()
+            if _line == "":
+                continue
+            ary = _line.split()
+            self._masses[int(ary[0])] = float(ary[1])
             num_types += 1
             if num_types == self._header_tags["atom_types"]:
                 break

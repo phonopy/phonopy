@@ -7,7 +7,6 @@ from phonopy.interface.phonopy_yaml import read_cell_yaml
 cell = read_cell_yaml("phonopy_unitcell.yaml")
 ph = phonopy.load(
     unitcell=cell,
-    primitive_matrix="auto",
     supercell_matrix=[2, 2, 2],
     calculator="lammps",
 )
