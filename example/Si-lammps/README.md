@@ -39,28 +39,32 @@ LAMMPS interface.
 3. Make `FORCE_SETS`
 
    ```
-   % phonopy -f lammps_forces_Si.0
+   % phonopy-init -f lammps_forces_Si.0
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
-                                         2.18.0
+                                     4.3.1.dev1
 
-   Compiled with OpenMP support (max 10 threads).
-   Python version 3.11.0
-   Spglib version 2.0.2
+   -------------------------[time 2026-06-29 15:16:12]-------------------------
+   Rust backend (phonors) using rayon (10 threads).
+   Python version 3.13.11
+   Spglib version 2.7.0
 
    Calculator interface: lammps
    Displacements were read from "phonopy_disp.yaml".
+     Number of supercell files: 1
+     Number of displacements in "phonopy_disp.yaml": 1
    1. Drift force of "lammps_forces_Si.0" to be subtracted
     -0.00000000  -0.00000000  -0.00000000
    Forces parsed from LAMMPS output were rotated by F=R.F(lammps) with R:
-     0.00000 0.57735 0.57735
-     0.70711 0.57735 0.57735
-     0.70711 -0.57735 -0.57735
+     0.00000 0.81650 0.57735
+     0.70711 -0.40825 0.57735
+     0.70711 0.40825 -0.57735
    "FORCE_SETS" has been created.
+   -------------------------[time 2026-06-29 15:16:12]-------------------------
                     _
       ___ _ __   __| |
      / _ \ '_ \ / _` |
