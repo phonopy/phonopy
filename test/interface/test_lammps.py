@@ -81,6 +81,19 @@ def test_LammpsStructureDumper_Ti(symbol, helper_methods):
     helper_methods.compare_cells_with_order(cell, lmpsd_cell)
 
 
+def test_LammpsStructureDumper_masses(primcell_nacl: PhonopyAtoms):
+    """LammpsStructureDumper writes a Masses section that round-trips.
+
+    NaCl has two atom types with distinct masses, so this checks the per-type
+    mass mapping in both the writer and the loader.
+
+    """
+    text = "\n".join(LammpsStructureDumper(primcell_nacl).get_lines())
+    assert "Masses" in text
+    cell = LammpsStructureLoader().load(io.StringIO(text)).cell
+    np.testing.assert_allclose(cell.masses, primcell_nacl.masses)
+
+
 def test_LammpsForcesLoader():
     """Test of LammpsForcesLoader with HCP Ti.
 
