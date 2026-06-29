@@ -334,17 +334,25 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-handle-lammps-input-and-output-files-in-phonopy">How to handle LAMMPS input and output files in phonopy</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-lammps-structure-input-format">Supported LAMMPS structure input format</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords-in-the-header">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the header</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords-in-the-body">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the body</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow">Workflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-format">LAMMPS structure format</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-input-script-for-force-calculation">LAMMPS input script for force calculation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run-ti-lammps-example">How to run Ti-lammps example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-generation-from-unit-cell-defined-in-yaml">Supercell generation from unit cell defined in yaml</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-structure-optimization-using-lammps">Appendix: Structure optimization using LAMMPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-supercells-with-displacements">Generating supercells with displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-a-from-a-lammps-structure-file">Route (a): from a LAMMPS structure file</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-b-from-a-unit-cell-defined-in-yaml">Route (b): from a unit cell defined in yaml</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-calculation-and-force-sets">Force calculation and FORCE_SETS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-phonon-calculation">Running the phonon calculation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ti-lammps-and-si-lammps-polymlp">Ti-lammps and Si-lammps (polymlp)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#si-lammps-ace-ace">Si-lammps-ace (ACE)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-structure-optimization-using-lammps">Appendix: structure optimization using LAMMPS</a></li>
 </ul>
             </nav>
         </div>
@@ -358,26 +366,55 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="lammps-phonopy-calculation">
 <span id="lammps-interface"></span><h1>LAMMPS &amp; phonopy calculation<a class="headerlink" href="#lammps-phonopy-calculation" title="Link to this heading">#</a></h1>
-<section id="how-to-handle-lammps-input-and-output-files-in-phonopy">
-<h2>How to handle LAMMPS input and output files in phonopy<a class="headerlink" href="#how-to-handle-lammps-input-and-output-files-in-phonopy" title="Link to this heading">#</a></h2>
+<p>Phonopy drives a LAMMPS force calculation in the same way as an ab-initio
+calculator: it builds supercells with atomic displacements, LAMMPS evaluates the
+forces on every atom, and phonopy collects them into <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>.</p>
+<section id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>(Optional) Relax the unit cell with the potential
+(<a class="reference internal" href="#lammps-structure-optimization"><span class="std std-ref">Appendix: structure optimization using LAMMPS</span></a>).</p></li>
+<li><p>Generate supercells with displacements
+(<a class="reference internal" href="#lammps-supercell-generation"><span class="std std-ref">Generating supercells with displacements</span></a>).</p></li>
+<li><p>Compute forces with LAMMPS for each supercell
+(<a class="reference internal" href="#lammps-force-calculation"><span class="std std-ref">Force calculation and FORCE_SETS</span></a>).</p></li>
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> with <code class="docutils literal notranslate"><span class="pre">phonopy-init</span> <span class="pre">-f</span></code> (<a class="reference internal" href="#lammps-force-calculation"><span class="std std-ref">Force calculation and FORCE_SETS</span></a>).</p></li>
+<li><p>Run the phonon calculation (band structure, DOS, …) with <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code>.</p></li>
+</ol>
+<p>Assumptions:</p>
 <ul class="simple">
-<li><p>Phonopy assumes the LAMMPS calculation is performed in <code class="docutils literal notranslate"><span class="pre">units</span> <span class="pre">metal</span></code> and <code class="docutils literal notranslate"><span class="pre">atom_style</span> <span class="pre">atomic</span></code>.</p></li>
-<li><p>Format of version 15Sep2022 or later of LAMMPS is assumed.</p></li>
-<li><p>Force calculation has to performed by a specific setting as presented at
-<a class="reference internal" href="#lammps-input-script-format"><span class="std std-ref">LAMMPS input script for force calculation</span></a>.</p></li>
+<li><p>The LAMMPS calculation uses <code class="docutils literal notranslate"><span class="pre">units</span> <span class="pre">metal</span></code> and <code class="docutils literal notranslate"><span class="pre">atom_style</span> <span class="pre">atomic</span></code>.</p></li>
+<li><p>LAMMPS version 15Sep2022 or later is assumed.</p></li>
+<li><p>Forces are read from a LAMMPS dump written in a specific format
+(<a class="reference internal" href="#lammps-force-calculation"><span class="std std-ref">Force calculation and FORCE_SETS</span></a>).</p></li>
 </ul>
+<p>Worked examples are in the <a class="reference external" href="https://github.com/phonopy/phonopy/tree/develop/example">example
+directory</a>: <code class="docutils literal notranslate"><span class="pre">Ti-lammps</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Si-lammps</span></code> (<code class="docutils literal notranslate"><span class="pre">polymlp</span></code> potential) and <code class="docutils literal notranslate"><span class="pre">Si-lammps-ace</span></code> (ACE <code class="docutils literal notranslate"><span class="pre">pace</span></code>
+potential).</p>
 </section>
-<section id="supported-lammps-structure-input-format">
-<span id="lammps-structure-input-format"></span><h2>Supported LAMMPS structure input format<a class="headerlink" href="#supported-lammps-structure-input-format" title="Link to this heading">#</a></h2>
-<p>Two important limitations are:</p>
-<ul class="simple">
-<li><p>Crystal structure has to be described in the similar format for
-<a class="reference external" href="https://docs.lammps.org/read_data.html">read_data</a>.</p></li>
-<li><p>Basis vectors are rotated to match the LAMMPS structure file format of
-<a class="reference external" href="https://docs.lammps.org/Howto_triclinic.html">triclinic simulation box</a>.</p></li>
+<section id="lammps-structure-format">
+<span id="lammps-structure-input-format"></span><h2>LAMMPS structure format<a class="headerlink" href="#lammps-structure-format" title="Link to this heading">#</a></h2>
+<p>Phonopy reads and writes crystal structures in the LAMMPS
+<a class="reference external" href="https://docs.lammps.org/read_data.html">read_data</a> format, with two points to
+keep in mind:</p>
+<ul>
+<li><p>The structure must be described like a <code class="docutils literal notranslate"><span class="pre">read_data</span></code> file (see the supported
+keywords below).</p></li>
+<li><p>Basis vectors are rotated to the LAMMPS <a class="reference external" href="https://docs.lammps.org/Howto_triclinic.html">triclinic simulation
+box</a> convention,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a_x</span> <span class="mi">0</span>   <span class="mi">0</span>  <span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">b_x</span> <span class="n">b_y</span> <span class="mi">0</span>  <span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_x</span> <span class="n">c_y</span> <span class="n">c_z</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>so a structure written for LAMMPS is a rotated copy of the phonopy cell. The
+forces from LAMMPS are rotated back automatically when <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is created.</p>
+</li>
 </ul>
-<section id="supported-read-data-keywords-in-the-header">
-<h3>Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the header<a class="headerlink" href="#supported-read-data-keywords-in-the-header" title="Link to this heading">#</a></h3>
+<section id="supported-read-data-keywords">
+<h3>Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords<a class="headerlink" href="#supported-read-data-keywords" title="Link to this heading">#</a></h3>
+<p>Header:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">atoms</span>
 <span class="n">atom</span> <span class="n">types</span>
 <span class="n">xlo</span> <span class="n">xhi</span>
@@ -386,29 +423,21 @@
 <span class="n">xy</span> <span class="n">xz</span> <span class="n">yz</span>
 </pre></div>
 </div>
-</section>
-<section id="supported-read-data-keywords-in-the-body">
-<h3>Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the body<a class="headerlink" href="#supported-read-data-keywords-in-the-body" title="Link to this heading">#</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Atoms</span>
-<span class="n">Atom</span> <span class="n">Type</span> <span class="n">Labels</span>
+<p>Body:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Atom</span> <span class="n">Type</span> <span class="n">Labels</span>
+<span class="n">Masses</span>
+<span class="n">Atoms</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">Atom</span> <span class="pre">Type</span> <span class="pre">Labels</span></code> is the keyword new in version 15Sep2022 of LAMMPS. See
-<a class="reference external" href="https://docs.lammps.org/Howto_type_labels.html">Type labels</a>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Masses</span></code> has not been supported yet.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Atom</span> <span class="pre">Type</span> <span class="pre">Labels</span></code> is new in LAMMPS 15Sep2022; see <a class="reference external" href="https://docs.lammps.org/Howto_type_labels.html">Type
+labels</a>. Phonopy writes a
+<code class="docutils literal notranslate"><span class="pre">Masses</span></code> section (after <code class="docutils literal notranslate"><span class="pre">Atom</span> <span class="pre">Type</span> <span class="pre">Labels</span></code>, since LAMMPS requires the labels to
+be read first) and reads it back. Because the masses are in the structure file,
+the LAMMPS input script for the force calculation does not need a <code class="docutils literal notranslate"><span class="pre">mass</span></code> command.</p>
 </section>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
-<p>The crystal structure is converted to the LAMMPS structure format of <a class="reference external" href="https://docs.lammps.org/Howto_triclinic.html">triclinic
-simulation box</a>.</p>
-<p>LAMMPS triclinic simulation box requires basis vectors to be described in the
-following way</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a_x</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">b_x</span> <span class="n">b_y</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_x</span> <span class="n">c_y</span> <span class="n">c_z</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>An example of HCP crystal structure is given as follows:</p>
+<p>An HCP structure in the LAMMPS triclinic box format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
 
 <span class="mi">2</span> <span class="n">atoms</span>
@@ -424,124 +453,42 @@ following way</p>
 
 <span class="mi">1</span> <span class="n">Ti</span>
 
+<span class="n">Masses</span>
+
+<span class="mi">1</span> <span class="mf">47.867</span> <span class="c1"># Ti</span>
+
 <span class="n">Atoms</span>
 
 <span class="mi">1</span> <span class="n">Ti</span> <span class="mf">0.000000000000001</span> <span class="mf">1.687871785572226</span> <span class="mf">3.468017126937431</span>
 <span class="mi">2</span> <span class="n">Ti</span> <span class="mf">1.461739844636549</span> <span class="mf">0.843935892786111</span> <span class="mf">1.156005708979144</span>
 </pre></div>
 </div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Masses</span></code> section is optional in an input structure file: when <code class="docutils literal notranslate"><span class="pre">Atom</span> <span class="pre">Type</span> <span class="pre">Labels</span></code> are present, phonopy assigns the standard atomic mass of each element, so
+<code class="docutils literal notranslate"><span class="pre">Masses</span></code> can be omitted. Phonopy still writes a <code class="docutils literal notranslate"><span class="pre">Masses</span></code> section into the
+supercells it generates, so the force calculation needs no <code class="docutils literal notranslate"><span class="pre">mass</span></code> command.</p>
 </section>
 </section>
-<section id="lammps-input-script-for-force-calculation">
-<span id="lammps-input-script-format"></span><h2>LAMMPS input script for force calculation<a class="headerlink" href="#lammps-input-script-for-force-calculation" title="Link to this heading">#</a></h2>
-<p>Phonopy can reads forces only from LAMMPS output file written in a specific text
-format. An example of LAMMPS input script for phonopy force calculation is shown
-below.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">units</span> <span class="n">metal</span>
-
-<span class="n">read_data</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">001</span>
-
-<span class="n">pair_style</span>  <span class="n">polymlp</span>
-<span class="n">pair_coeff</span> <span class="o">*</span> <span class="o">*</span> <span class="n">mlp</span><span class="o">.</span><span class="n">lammps</span> <span class="n">dummy</span>
-
-<span class="n">dump</span> <span class="n">phonopy</span> <span class="nb">all</span> <span class="n">custom</span> <span class="mi">1</span> <span class="n">force</span><span class="o">.*</span> <span class="nb">id</span> <span class="nb">type</span> <span class="n">x</span> <span class="n">y</span> <span class="n">z</span> <span class="n">fx</span> <span class="n">fy</span> <span class="n">fz</span>
-<span class="n">dump_modify</span> <span class="n">phonopy</span> <span class="nb">format</span> <span class="n">line</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2">&quot;</span>
-<span class="n">run</span> <span class="mi">0</span>
+<section id="generating-supercells-with-displacements">
+<span id="lammps-supercell-generation"></span><h2>Generating supercells with displacements<a class="headerlink" href="#generating-supercells-with-displacements" title="Link to this heading">#</a></h2>
+<p>There are two routes, depending on how the unit cell is provided. After either
+route, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the supercell files (<code class="docutils literal notranslate"><span class="pre">supercell</span></code>,
+<code class="docutils literal notranslate"><span class="pre">supercell-001</span></code>, <code class="docutils literal notranslate"><span class="pre">supercell-002</span></code>, …) are created. Symmetry reduces the number
+of inequivalent displacements, so a high-symmetry crystal may have only
+<code class="docutils literal notranslate"><span class="pre">supercell-001</span></code>.</p>
+<section id="route-a-from-a-lammps-structure-file">
+<h3>Route (a): from a LAMMPS structure file<a class="headerlink" href="#route-a-from-a-lammps-structure-file" title="Link to this heading">#</a></h3>
+<p>When the unit cell is already in the LAMMPS format (e.g. <code class="docutils literal notranslate"><span class="pre">lammps_structure_Si</span></code>),
+generate the supercells directly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">lammps</span> <span class="o">-</span><span class="n">c</span> <span class="n">lammps_structure_Si</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">supercell-001</span></code> is that generated by phonopy. The <code class="docutils literal notranslate"><span class="pre">pair_style</span></code> of
-<code class="docutils literal notranslate"><span class="pre">polymlp</span></code> is a LAMMPS module of the polynomial machine learning potentials
-provided at <a class="reference external" href="https://sekocha.github.io/lammps/index-e.html">https://sekocha.github.io/lammps/index-e.html</a>. For the HCP Ti
-calculation found in the <a class="reference external" href="https://github.com/phonopy/phonopy/tree/develop/example">example
-directory</a>, <code class="docutils literal notranslate"><span class="pre">mlp.lammp</span></code>
-of gtinv-294 was obtained from <a class="reference external" href="http://cms.mtl.kyoto-u.ac.jp/seko/mlp-repository/index.html">Polynomial Machine Learning Potential Repository
-at Kyoto
-University</a>.</p>
 </section>
-<section id="how-to-run-ti-lammps-example">
-<h2>How to run Ti-lammps example<a class="headerlink" href="#how-to-run-ti-lammps-example" title="Link to this heading">#</a></h2>
-<ol class="arabic">
-<li><p>Read a lammps input structure file and create supercells with</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">--</span><span class="n">lammps</span> <span class="o">-</span><span class="n">c</span> <span class="n">lammps_structure_Ti</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">3</span>
-        <span class="n">_</span>
-  <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
- <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
- <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
- <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
- <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
-                                      <span class="mf">2.18.0</span>
-
-<span class="n">Compiled</span> <span class="k">with</span> <span class="n">OpenMP</span> <span class="n">support</span> <span class="p">(</span><span class="nb">max</span> <span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
-<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.10.8</span>
-<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.0.2</span>
-
-<span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">lammps</span>
-<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;lammps_structure_Ti&quot;</span><span class="o">.</span>
-<span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">angstrom</span>
-<span class="n">Displacements</span> <span class="n">creation</span> <span class="n">mode</span>
-<span class="n">Settings</span><span class="p">:</span>
-  <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span> <span class="mi">4</span> <span class="mi">3</span><span class="p">]</span>
-<span class="n">Spacegroup</span><span class="p">:</span> <span class="n">P6_3</span><span class="o">/</span><span class="n">mmc</span> <span class="p">(</span><span class="mi">194</span><span class="p">)</span>
-<span class="n">Use</span> <span class="o">-</span><span class="n">v</span> <span class="n">option</span> <span class="n">to</span> <span class="n">watch</span> <span class="n">primitive</span> <span class="n">cell</span><span class="p">,</span> <span class="n">unit</span> <span class="n">cell</span><span class="p">,</span> <span class="ow">and</span> <span class="n">supercell</span> <span class="n">structures</span><span class="o">.</span>
-
-<span class="s2">&quot;phonopy_disp.yaml&quot;</span> <span class="ow">and</span> <span class="n">supercells</span> <span class="n">have</span> <span class="n">been</span> <span class="n">created</span><span class="o">.</span>
-
-<span class="n">Summary</span> <span class="n">of</span> <span class="n">calculation</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
-                 <span class="n">_</span>
-   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
-  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
- <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
-  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
-</pre></div>
-</div>
-</li>
-<li><p>Run LAMMPS</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>lmp_serial<span class="w"> </span>-in<span class="w"> </span><span class="k">in</span>.polymlp
-</pre></div>
-</div>
-<p>Suppose that the LAMMPS output file name is renamed to <code class="docutils literal notranslate"><span class="pre">lammps_forces_Ti.0</span></code>
-after the LAMMPS calculation.</p>
-</li>
-<li><p>Make <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">-</span><span class="n">f</span> <span class="n">lammps_forces_Ti</span><span class="mf">.0</span>
-        <span class="n">_</span>
-  <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
- <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
- <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
- <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
- <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
-                                      <span class="mf">2.18.0</span>
-
-<span class="n">Compiled</span> <span class="k">with</span> <span class="n">OpenMP</span> <span class="n">support</span> <span class="p">(</span><span class="nb">max</span> <span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
-<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.10.8</span>
-<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.0.2</span>
-
-<span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">lammps</span>
-<span class="n">Displacements</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
-<span class="mf">1.</span> <span class="n">Drift</span> <span class="n">force</span> <span class="n">of</span> <span class="s2">&quot;lammps_forces_Ti.0&quot;</span> <span class="n">to</span> <span class="n">be</span> <span class="n">subtracted</span>
- <span class="o">-</span><span class="mf">0.00000000</span>  <span class="o">-</span><span class="mf">0.00000000</span>   <span class="mf">0.00000000</span>
-<span class="n">Forces</span> <span class="n">parsed</span> <span class="kn">from</span><span class="w"> </span><span class="nn">LAMMPS</span> <span class="n">output</span> <span class="n">were</span> <span class="n">rotated</span> <span class="n">by</span> <span class="n">F</span><span class="o">=</span><span class="n">R</span><span class="o">.</span><span class="n">F</span><span class="p">(</span><span class="n">lammps</span><span class="p">)</span> <span class="k">with</span> <span class="n">R</span><span class="p">:</span>
-  <span class="mf">1.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
-  <span class="mf">0.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
-  <span class="mf">0.00000</span> <span class="mf">1.00000</span> <span class="mf">1.00000</span>
-<span class="s2">&quot;FORCE_SETS&quot;</span> <span class="n">has</span> <span class="n">been</span> <span class="n">created</span><span class="o">.</span>
-                 <span class="n">_</span>
-   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
-  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
- <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
-  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</section>
-<section id="supercell-generation-from-unit-cell-defined-in-yaml">
-<h2>Supercell generation from unit cell defined in yaml<a class="headerlink" href="#supercell-generation-from-unit-cell-defined-in-yaml" title="Link to this heading">#</a></h2>
-<p>LAMMPS input structure that phonopy can read must follow the convention of the
-basis vector orientation in Cartesian coordinates. If it is unconformable for
-the phonon calculation setting, we can generate supercells with displacements
-from a structure format in yaml. A silicon primitive cell example is given as
-follows:</p>
+<section id="route-b-from-a-unit-cell-defined-in-yaml">
+<h3>Route (b): from a unit cell defined in yaml<a class="headerlink" href="#route-b-from-a-unit-cell-defined-in-yaml" title="Link to this heading">#</a></h3>
+<p>A LAMMPS structure file is expressed in the rotated triclinic convention. To keep
+the cell in its original (for example, the symmetric, unrotated primitive)
+orientation, define it in yaml and generate the supercells with a short script. A
+silicon primitive cell:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">lattice</span><span class="p">:</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.733099421887393</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.733099421887393</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># a</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2.733099421887393</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.733099421887393</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># b</span>
@@ -553,29 +500,111 @@ follows:</p>
 <span class="w">  </span><span class="nt">coordinates</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.125000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.125000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.125000000000000</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
-<p>With this saved in <code class="docutils literal notranslate"><span class="pre">phonopy_unitcell.yaml</span></code> file, we can generate 2x2x2 supercell
-of this primitive cell orientation by using a python script:</p>
+<p>Saved as <code class="docutils literal notranslate"><span class="pre">phonopy_unitcell.yaml</span></code>, generate a 2x2x2 supercell with:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.phonopy_yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cell_yaml</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_supercells_with_displacements</span>
 
 <span class="n">cell</span> <span class="o">=</span> <span class="n">read_cell_yaml</span><span class="p">(</span><span class="s2">&quot;phonopy_unitcell.yaml&quot;</span><span class="p">)</span>
-<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s1">&#39;lammps&#39;</span><span class="p">)</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s1">&#39;lammps&#39;</span><span class="p">)</span>
 <span class="n">ph</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">()</span>
 <span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
 <span class="n">write_supercells_with_displacements</span><span class="p">(</span><span class="s2">&quot;lammps&quot;</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The primitive and supercell structures are stored in <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> in the
-original orientation. But <code class="docutils literal notranslate"><span class="pre">supercell-001</span></code> follows the convention of the LAMMPS
-input structure file format.</p>
+<p>With route (b), <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> stores the cell in the original (unrotated)
+orientation, whereas route (a) stores the rotated triclinic cell. In both cases
+<code class="docutils literal notranslate"><span class="pre">supercell-001</span></code> follows the LAMMPS structure file format. The <code class="docutils literal notranslate"><span class="pre">Si-lammps</span></code> example
+uses route (b); <code class="docutils literal notranslate"><span class="pre">Ti-lammps</span></code> and <code class="docutils literal notranslate"><span class="pre">Si-lammps-ace</span></code> use route (a).</p>
+</section>
+</section>
+<section id="force-calculation-and-force-sets">
+<span id="lammps-force-calculation"></span><h2>Force calculation and FORCE_SETS<a class="headerlink" href="#force-calculation-and-force-sets" title="Link to this heading">#</a></h2>
+<p>Phonopy reads forces from a LAMMPS dump written in a fixed text format. For each
+<code class="docutils literal notranslate"><span class="pre">supercell-xxx</span></code>, evaluate the forces once with <code class="docutils literal notranslate"><span class="pre">run</span> <span class="pre">0</span></code> (no time integration):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">units</span> <span class="n">metal</span>
+
+<span class="n">read_data</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">001</span>
+
+<span class="n">pair_style</span>  <span class="o">&lt;</span><span class="n">potential</span><span class="o">&gt;</span>
+<span class="n">pair_coeff</span>  <span class="o">&lt;...&gt;</span>
+
+<span class="n">dump</span> <span class="n">phonopy</span> <span class="nb">all</span> <span class="n">custom</span> <span class="mi">1</span> <span class="n">force</span><span class="o">.*</span> <span class="nb">id</span> <span class="nb">type</span> <span class="n">x</span> <span class="n">y</span> <span class="n">z</span> <span class="n">fx</span> <span class="n">fy</span> <span class="n">fz</span>
+<span class="n">dump_modify</span> <span class="n">phonopy</span> <span class="nb">format</span> <span class="n">line</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2">&quot;</span>
+<span class="n">run</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>Only the <code class="docutils literal notranslate"><span class="pre">pair_style</span></code>/<code class="docutils literal notranslate"><span class="pre">pair_coeff</span></code> lines change between potentials. Keep the
+<code class="docutils literal notranslate"><span class="pre">dump</span></code> and <code class="docutils literal notranslate"><span class="pre">dump_modify</span></code> lines verbatim so that phonopy can parse the output;
+<code class="docutils literal notranslate"><span class="pre">force.*</span></code> expands to <code class="docutils literal notranslate"><span class="pre">force.0</span></code> for <code class="docutils literal notranslate"><span class="pre">run</span> <span class="pre">0</span></code>.</p>
+<p>Rename each output (e.g. to <code class="docutils literal notranslate"><span class="pre">lammps_forces_Si.0</span></code>, <code class="docutils literal notranslate"><span class="pre">lammps_forces_Si.1</span></code>, …) and
+create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">init</span> <span class="o">-</span><span class="n">f</span> <span class="n">lammps_forces_Si</span><span class="mf">.0</span> <span class="n">lammps_forces_Si</span><span class="mf">.1</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>List the force files in the same order as the supercells. Phonopy subtracts the
+drift force (the net force on the supercell) and rotates the forces back from the
+LAMMPS frame to the phonopy cell, printing the rotation matrix <code class="docutils literal notranslate"><span class="pre">R</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Forces</span> <span class="n">parsed</span> <span class="kn">from</span><span class="w"> </span><span class="nn">LAMMPS</span> <span class="n">output</span> <span class="n">were</span> <span class="n">rotated</span> <span class="n">by</span> <span class="n">F</span><span class="o">=</span><span class="n">R</span><span class="o">.</span><span class="n">F</span><span class="p">(</span><span class="n">lammps</span><span class="p">)</span> <span class="k">with</span> <span class="n">R</span><span class="p">:</span>
+  <span class="mf">1.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
+  <span class="mf">0.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
+  <span class="mf">0.00000</span> <span class="mf">1.00000</span> <span class="mf">1.00000</span>
+</pre></div>
+</div>
+</section>
+<section id="running-the-phonon-calculation">
+<h2>Running the phonon calculation<a class="headerlink" href="#running-the-phonon-calculation" title="Link to this heading">#</a></h2>
+<p>Once <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> exists, run phonopy with <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code>, which reads
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> automatically, e.g. to plot the band
+structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="n">phonopy_disp</span><span class="o">.</span><span class="n">yaml</span> <span class="o">--</span><span class="n">config</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<section id="ti-lammps-and-si-lammps-polymlp">
+<h3>Ti-lammps and Si-lammps (polymlp)<a class="headerlink" href="#ti-lammps-and-si-lammps-polymlp" title="Link to this heading">#</a></h3>
+<p>These use the <code class="docutils literal notranslate"><span class="pre">polymlp</span></code> polynomial machine-learning potential, a LAMMPS module
+provided at <a class="reference external" href="https://sekocha.github.io/lammps/index-e.html">https://sekocha.github.io/lammps/index-e.html</a>. The potential files
+(<code class="docutils literal notranslate"><span class="pre">mlp.lammps</span></code>, gtinv-294 for Ti and gtinv-289 for Si) are obtained from the
+<a class="reference external" href="http://cms.mtl.kyoto-u.ac.jp/seko/mlp-repository/index.html">Polynomial Machine Learning Potential Repository at Kyoto
+University</a>. The
+<code class="docutils literal notranslate"><span class="pre">pair_coeff</span></code> line uses a placeholder element label:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pair_style</span>  <span class="n">polymlp</span>
+<span class="n">pair_coeff</span> <span class="o">*</span> <span class="o">*</span> <span class="n">mlp</span><span class="o">.</span><span class="n">lammps</span> <span class="n">dummy</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Ti-lammps</span></code> uses route (a) with <code class="docutils literal notranslate"><span class="pre">lammps_structure_Ti</span></code>; <code class="docutils literal notranslate"><span class="pre">Si-lammps</span></code> uses route
+(b) with <code class="docutils literal notranslate"><span class="pre">phonopy_unitcell.yaml</span></code>. After generating supercells, run <code class="docutils literal notranslate"><span class="pre">lmp</span> <span class="pre">-in</span> <span class="pre">in.polymlp</span></code> and create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> as above.</p>
+</section>
+<section id="si-lammps-ace-ace">
+<h3>Si-lammps-ace (ACE)<a class="headerlink" href="#si-lammps-ace-ace" title="Link to this heading">#</a></h3>
+<p>This uses the LAMMPS <code class="docutils literal notranslate"><span class="pre">pair_style</span> <span class="pre">pace</span></code> (atomic cluster expansion). Any LAMMPS
+build with the <code class="docutils literal notranslate"><span class="pre">ML-PACE</span></code> package can run it, including the conda-forge <code class="docutils literal notranslate"><span class="pre">lammps</span></code>
+package:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pair_style</span> <span class="n">pace</span>
+<span class="n">pair_coeff</span> <span class="o">*</span> <span class="o">*</span> <span class="n">Si_npj_CompMat2021</span><span class="o">.</span><span class="n">ace</span> <span class="n">Si</span>
+</pre></div>
+</div>
+<p>The potential file <code class="docutils literal notranslate"><span class="pre">Si_npj_CompMat2021.ace</span></code> is from the dataset accompanying Y.
+Lysogorskiy <em>et al.</em>, “Performant implementation of the atomic cluster expansion
+(PACE) and application to copper and silicon”, npj Comput. Mater. <strong>7</strong>, 97
+(2021), distributed on Zenodo (<a class="reference external" href="https://doi.org/10.5281/zenodo.4734036">https://doi.org/10.5281/zenodo.4734036</a>) under
+the <strong>CC-BY-4.0</strong> license. Download it into the working directory; it is not
+redistributed with phonopy.</p>
+<p>The unit cell uses the experimental room-temperature lattice constant of
+silicon, a = 5.431 A. Because the ACE equilibrium constant differs slightly, a
+small residual stress may appear as near-zero or slightly imaginary acoustic
+frequencies around Gamma; relax the cell with the potential to remove it (see
+the appendix below).</p>
+</section>
 </section>
 <section id="appendix-structure-optimization-using-lammps">
-<h2>Appendix: Structure optimization using LAMMPS<a class="headerlink" href="#appendix-structure-optimization-using-lammps" title="Link to this heading">#</a></h2>
-<p>It is necessary to relax crystal structure before starting phonon calculation.
-At least vanishing residual forces on atoms are expected. Using LAMMPS, crystal
-structure can be optimized under different constraints. The following is the
-simplest optimization where only internal atomic positions are relaxed.</p>
+<span id="lammps-structure-optimization"></span><h2>Appendix: structure optimization using LAMMPS<a class="headerlink" href="#appendix-structure-optimization-using-lammps" title="Link to this heading">#</a></h2>
+<p>Relax the crystal structure with the potential before the phonon calculation so
+that the residual forces, and the residual stress on the lattice, vanish. The
+following relaxes both the cell and the internal coordinates:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>units metal
 
 read_data unitcell
@@ -588,12 +617,14 @@ variable ftol equal 1e-8
 variable maxiter equal 1000
 variable maxeval equal 100000
 
+fix relax all box/relax iso 0.0 vmax 0.001
 minimize ${etol} ${ftol} ${maxiter} ${maxeval}
 
 write_data dump.unitcell
 </pre></div>
 </div>
-<p>More instruction is found at
+<p>Drop the <code class="docutils literal notranslate"><span class="pre">fix</span> <span class="pre">box/relax</span></code> line to relax only the internal coordinates. More
+instruction is found at
 <a class="reference external" href="https://gist.github.com/lan496/e9dff8449cd7489f6722b276282e66a0">https://gist.github.com/lan496/e9dff8449cd7489f6722b276282e66a0</a>.</p>
 </section>
 </section>
@@ -645,17 +676,25 @@ write_data dump.unitcell
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-handle-lammps-input-and-output-files-in-phonopy">How to handle LAMMPS input and output files in phonopy</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-lammps-structure-input-format">Supported LAMMPS structure input format</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords-in-the-header">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the header</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords-in-the-body">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the body</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow">Workflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-structure-format">LAMMPS structure format</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-read-data-keywords">Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lammps-input-script-for-force-calculation">LAMMPS input script for force calculation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run-ti-lammps-example">How to run Ti-lammps example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-generation-from-unit-cell-defined-in-yaml">Supercell generation from unit cell defined in yaml</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-structure-optimization-using-lammps">Appendix: Structure optimization using LAMMPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generating-supercells-with-displacements">Generating supercells with displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-a-from-a-lammps-structure-file">Route (a): from a LAMMPS structure file</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-b-from-a-unit-cell-defined-in-yaml">Route (b): from a unit cell defined in yaml</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-calculation-and-force-sets">Force calculation and FORCE_SETS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-phonon-calculation">Running the phonon calculation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ti-lammps-and-si-lammps-polymlp">Ti-lammps and Si-lammps (polymlp)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#si-lammps-ace-ace">Si-lammps-ace (ACE)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-structure-optimization-using-lammps">Appendix: structure optimization using LAMMPS</a></li>
 </ul>
   </nav></div>
 
