@@ -2,6 +2,12 @@
 
 # Change Log
 
+## Jul-01-2026: Version 4.3.1
+
+- The LAMMPS interface now reads atomic masses from the `Masses` section of a
+  LAMMPS structure file. Added a silicon ACE example and reworked the LAMMPS
+  documentation.
+
 ## Jun-28-2026: Version 4.3.0
 
 - Batched diagonalization of dynamical matrices for mesh and q-points phonon
