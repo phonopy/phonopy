@@ -44,6 +44,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
+from phonopy.qha.calc import (
+    compute_gruneisen_parameters,
+    compute_heat_capacity_p_numerical,
+    compute_heat_capacity_p_polyfit,
+    compute_volumetric_thermal_expansion,
+)
 from phonopy.qha.eos import fit_to_eos, get_eos
 
 
@@ -1229,33 +1235,18 @@ class QHA:
     def _set_thermal_expansion(self) -> None:
         assert self._temperatures is not None
         assert self._equiv_volumes is not None
-        assert self._num_elems is not None
 
-        beta = [0.0]
-        for i in range(1, self._num_elems - 1):
-            dt = self._temperatures[i + 1] - self._temperatures[i - 1]
-            dv = self._equiv_volumes[i + 1] - self._equiv_volumes[i - 1]
-            beta.append(dv / dt / self._equiv_volumes[i])
-
-        self._thermal_expansions = np.array(beta, dtype="double")
+        self._thermal_expansions = compute_volumetric_thermal_expansion(
+            self._temperatures, self._equiv_volumes
+        )
 
     def _set_heat_capacity_P_numerical(self) -> None:
         assert self._temperatures is not None
         assert self._equiv_energies is not None
-        assert self._num_elems is not None
 
-        cp = []
-        g = np.array(self._equiv_energies) * get_physical_units().EvTokJmol * 1000
-        cp.append(0.0)
-
-        for i in range(1, self._num_elems - 1):
-            t = self._temperatures[i]
-            parameters = np.polyfit(
-                self._temperatures[i - 1 : i + 2], g[i - 1 : i + 2], 2
-            )
-            cp.append(-(2 * parameters[0]) * t)
-
-        self._cp_numerical = np.array(cp, dtype="double")
+        self._cp_numerical = compute_heat_capacity_p_numerical(
+            self._temperatures, self._equiv_energies
+        )
 
     def _set_heat_capacity_P_polyfit(self) -> None:
         assert self._temperatures is not None
@@ -1264,92 +1255,39 @@ class QHA:
         assert self._entropy is not None
         assert self._num_elems is not None
 
-        cp = [0.0]
-        dsdv = [0.0]
-        self._volume_entropy_parameters = []
-        self._volume_cv_parameters = []
-        self._volume_entropy = []
-        self._volume_cv = []
-
-        for j in range(1, self._num_elems - 1):
-            t = self._temperatures[j]
-            x = self._equiv_volumes[j]
-
-            try:
-                parameters = np.polyfit(self._volumes, self._cv[j], 4)
-            except np.lib.polynomial.RankWarning as exc:  # type: ignore
-                msg = ["Failed to fit heat capacities to polynomial of degree 4."]
-                if len(self._volumes) < 5:
-                    msg += ["At least 5 volume points are needed for the fitting."]
-                raise RuntimeError("\n".join(msg)) from exc
-
-            cv_p = np.dot(parameters, np.array([x**4, x**3, x**2, x, 1]))
-            self._volume_cv_parameters.append(parameters)
-
-            try:
-                parameters = np.polyfit(self._volumes, self._entropy[j], 4)
-            except np.lib.polynomial.RankWarning as exc:  # type: ignore
-                msg = ["Failed to fit entropies to polynomial of degree 4."]
-                if len(self._volumes) < 5:
-                    msg += ["At least 5 volume points are needed for the fitting."]
-                raise RuntimeError("\n".join(msg)) from exc
-
-            dsdv_t = np.dot(parameters[:4], np.array([4 * x**3, 3 * x**2, 2 * x, 1]))
-            self._volume_entropy_parameters.append(parameters)
-
-            try:
-                parameters = np.polyfit(
-                    self._temperatures[j - 1 : j + 2],
-                    self._equiv_volumes[j - 1 : j + 2],
-                    2,
-                )
-            except np.lib.polynomial.RankWarning as exc:  # type: ignore
-                msg = (
-                    "Failed to fit equilibrium volumes vs T to polynomial of degree 2."
-                )
-                raise RuntimeError(msg) from exc
-            dvdt = parameters[0] * 2 * t + parameters[1]
-
-            cp.append(cv_p + t * dvdt * dsdv_t)
-            dsdv.append(dsdv_t)
-
-            self._volume_cv.append(np.array([self._volumes, self._cv[j]]).T)
-            self._volume_entropy.append(np.array([self._volumes, self._entropy[j]]).T)
-
-        self._cp_polyfit = np.array(cp, dtype="double")
-        self._dsdv = np.array(dsdv, dtype="double")
+        result = compute_heat_capacity_p_polyfit(
+            self._temperatures,
+            self._volumes,
+            self._equiv_volumes,
+            self._cv,
+            self._entropy,
+        )
+        self._cp_polyfit = result.cp
+        self._dsdv = result.dsdv
+        self._volume_cv_parameters = result.volume_cv_parameters
+        self._volume_entropy_parameters = result.volume_entropy_parameters
+        self._volume_cv = [
+            np.array([self._volumes, self._cv[j]]).T
+            for j in range(1, self._num_elems - 1)
+        ]
+        self._volume_entropy = [
+            np.array([self._volumes, self._entropy[j]]).T
+            for j in range(1, self._num_elems - 1)
+        ]
 
     def _set_gruneisen_parameter(self) -> None:
         assert self._equiv_volumes is not None
         assert self._equiv_bulk_modulus is not None
         assert self._thermal_expansions is not None
         assert self._cv is not None
-        assert self._num_elems is not None
 
-        gamma = [0.0]
-        for i in range(1, self._num_elems - 1):
-            v = self._equiv_volumes[i]
-            kt = self._equiv_bulk_modulus[i]
-            beta = self._thermal_expansions[i]
-            try:
-                parameters = np.polyfit(self._volumes, self._cv[i], 4)
-            except np.lib.polynomial.RankWarning as exc:  # type: ignore
-                msg = ["Failed to fit heat capacities to polynomial of degree 4."]
-                if len(self._volumes) < 5:
-                    msg += ["At least 5 volume points are needed for the fitting."]
-                raise RuntimeError("\n".join(msg)) from exc
-            cv = (
-                np.dot(parameters, [v**4, v**3, v**2, v, 1])
-                / v
-                / 1000
-                / get_physical_units().EvTokJmol
-                * get_physical_units().EVAngstromToGPa
-            )
-            if cv < 1e-10:
-                gamma.append(0.0)
-            else:
-                gamma.append(beta * kt / cv)
-        self._gruneisen_parameters = np.array(gamma, dtype="double")
+        self._gruneisen_parameters = compute_gruneisen_parameters(
+            self._volumes,
+            self._equiv_volumes,
+            self._equiv_bulk_modulus,
+            self._thermal_expansions,
+            self._cv,
+        )
 
     def _get_num_elems(self, temperatures: NDArray[np.double]) -> int:
         if self._t_max is None:

@@ -252,6 +252,78 @@ def test_phonopy_vasp_efe_factor_main(tmp_path):
         os.chdir(original_cwd)
 
 
+def test_phonopy_vasp_efe_write_electronic_states(tmp_path):
+    """--write-electronic-states writes electronic_states.hdf5 and e-v.dat.
+
+    The stored states must reproduce the fe-v.dat values when the free
+    energies are recomputed from them.
+
+    """
+    from phonopy.qha.electron import (
+        get_free_energy_at_T,
+        read_electronic_states_hdf5,
+    )
+
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]
+    original_cwd = pathlib.Path.cwd()
+    os.chdir(tmp_path)
+    try:
+        mockargs = PhonopyVaspEfeMockArgs(
+            filenames=filenames, write_electronic_states=True, quiet=True
+        )
+        with pytest.raises(SystemExit) as excinfo:
+            main(args=mockargs)
+        assert excinfo.value.code == 0
+
+        assert not pathlib.Path("fe-v.dat").exists()
+        assert pathlib.Path("e-v.dat").exists()
+
+        volumes, energies, states = read_electronic_states_hdf5(
+            "electronic_states.hdf5"
+        )
+        assert len(states) == 3
+        np.testing.assert_allclose(volumes[0], 43.08047896, rtol=1e-6)
+        np.testing.assert_allclose(energies[0], -17.27885993, rtol=1e-6)
+        assert states[0].volume is not None
+        np.testing.assert_allclose(states[0].volume, 43.08047896, rtol=1e-6)
+
+        # Recomputed F_el(T=1000 K) matches the pinned fe-v.dat value of
+        # test_phonopy_vasp_efe_fe_values.
+        _, fe = get_free_energy_at_T(
+            0.0,
+            1000.0,
+            10.0,
+            states[0].eigenvalues,
+            states[0].weights,
+            states[0].n_electrons,
+        )
+        np.testing.assert_allclose(
+            energies[0] - fe[0] + fe[-1], -17.29111981, rtol=1e-6
+        )
+    finally:
+        os.chdir(original_cwd)
+
+
+def test_phonopy_vasp_efe_write_electronic_states_rejects_scale_factor(tmp_path):
+    """--scale-factor combined with --write-electronic-states exits with 1."""
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]
+    original_cwd = pathlib.Path.cwd()
+    os.chdir(tmp_path)
+    try:
+        mockargs = PhonopyVaspEfeMockArgs(
+            filenames=filenames,
+            write_electronic_states=True,
+            scale_factor=2.0,
+            quiet=True,
+        )
+        with pytest.raises(SystemExit) as excinfo:
+            main(args=mockargs)
+        assert excinfo.value.code == 1
+        _check_no_files()
+    finally:
+        os.chdir(original_cwd)
+
+
 def _data_rows(lines: list[str]) -> list[list[float]]:
     return [
         [float(v) for v in line.split()] for line in lines if not line.startswith("#")

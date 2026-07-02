@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from collections.abc import Sequence
 from typing import Any
 
@@ -47,7 +48,15 @@ from phonopy.qha.core import QHA, BulkModulus
 
 
 class PhonopyQHA:
-    """PhonopyQHA API."""
+    """PhonopyQHA API.
+
+    Deprecated: use phonopy.run_qha, which computes thermal properties
+    from Phonopy instances internally and returns an immutable QHAResult,
+    together with the file writers in phonopy.qha.output and the plotters
+    in phonopy.qha.plot. For fitting E(V) data without phonons, use
+    phonopy.qha.core.BulkModulus.
+
+    """
 
     def __init__(
         self,
@@ -116,6 +125,17 @@ class PhonopyQHA:
             Show log or not.
 
         """
+        warnings.warn(
+            (
+                "PhonopyQHA is deprecated and will be removed in a future "
+                "major release. Use phonopy.run_qha together with "
+                "phonopy.qha.output and phonopy.qha.plot instead. For "
+                "fitting E(V) data without phonons, use "
+                "phonopy.qha.core.BulkModulus."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._bulk_modulus = BulkModulus(
             volumes, electronic_energies, pressure=pressure, eos=eos
         )

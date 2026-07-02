@@ -36,10 +36,182 @@
 
 from __future__ import annotations
 
+import dataclasses
+import os
+from collections.abc import Sequence
+
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
+
+
+@dataclasses.dataclass(frozen=True)
+class ElectronicStates:
+    """Electronic states at a volume point.
+
+    Input container for computing electronic free energies with
+    ElectronFreeEnergy.
+
+    Attributes
+    ----------
+    eigenvalues : ndarray
+        Eigenvalues in eV. shape=(spin, kpoints, bands). The spin axis has
+        length 1 for non-spin-polarized and 2 for spin-polarized systems.
+    weights : ndarray
+        Relative k-point weights (e.g., number of arms of the k-star).
+        shape=(kpoints,)
+    n_electrons : float
+        Number of electrons in the unit cell.
+    volume : float, optional
+        Unit cell volume in angstrom^3. Used only for consistency checks
+        against the unit cells the states belong to.
+
+    """
+
+    eigenvalues: NDArray[np.double]
+    weights: NDArray[np.int64] | NDArray[np.double]
+    n_electrons: float
+    volume: float | None = None
+
+    def __post_init__(self) -> None:
+        """Validate shapes."""
+        if self.eigenvalues.ndim != 3:
+            raise ValueError(
+                "eigenvalues must have shape (spin, kpoints, bands), not "
+                f"{self.eigenvalues.shape}."
+            )
+        if self.eigenvalues.shape[0] not in (1, 2):
+            raise ValueError(
+                "The spin axis of eigenvalues must have length 1 or 2, not "
+                f"{self.eigenvalues.shape[0]}."
+            )
+        if self.weights.ndim != 1 or len(self.weights) != self.eigenvalues.shape[1]:
+            raise ValueError("weights must have one value per k-point of eigenvalues.")
+
+
+def compute_free_energy_and_entropy(
+    electronic_states: ElectronicStates,
+    temperatures: Sequence[float] | NDArray[np.double],
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
+    """Return band free energies and entropies at temperatures.
+
+    Parameters
+    ----------
+    electronic_states : ElectronicStates
+        Electronic states at a volume point.
+    temperatures : array_like
+        Temperatures in K. shape=(temperatures,)
+
+    Returns
+    -------
+    tuple of ndarray
+        Band free energies in eV and entropies S_el in eV/K at the given
+        temperatures. shape=(temperatures,) each.
+
+    """
+    efe = ElectronFreeEnergy(
+        electronic_states.eigenvalues,
+        electronic_states.weights,
+        electronic_states.n_electrons,
+    )
+    free_energies = []
+    entropies = []
+    for temp in np.array(temperatures, dtype="double"):
+        efe.run(float(temp))
+        free_energies.append(efe.free_energy)
+        # ElectronFreeEnergy.entropy returns T * S in eV.
+        if temp > 1e-10:
+            entropies.append(efe.entropy / temp)
+        else:
+            entropies.append(0.0)
+    return (
+        np.array(free_energies, dtype="double"),
+        np.array(entropies, dtype="double"),
+    )
+
+
+def write_electronic_states_hdf5(
+    electronic_structures: Sequence[ElectronicStates],
+    volumes: Sequence[float] | NDArray[np.double],
+    energies: Sequence[float] | NDArray[np.double],
+    filename: str | os.PathLike = "electronic_states.hdf5",
+) -> None:
+    """Write electronic states with volumes and static energies in hdf5.
+
+    The file contains one group "volume-XXX" per volume point with the
+    datasets eigenvalues ((spin, kpoints, bands), eV), weights
+    ((kpoints,)), n_electrons, volume (angstrom^3), and energy (eV,
+    static internal energy). The number of volume points is stored in
+    the root attribute "n_volumes".
+
+    """
+    import h5py
+
+    if not (len(electronic_structures) == len(volumes) == len(energies)):
+        raise ValueError(
+            "electronic_structures, volumes, and energies must have the same length."
+        )
+    with h5py.File(filename, "w") as w:
+        w.attrs["creator"] = "phonopy"
+        w.attrs["n_volumes"] = len(electronic_structures)
+        for i, (electronic_states, volume, energy) in enumerate(
+            zip(electronic_structures, volumes, energies, strict=True)
+        ):
+            group = w.create_group(f"volume-{i:03d}")
+            group.create_dataset(
+                "eigenvalues",
+                data=electronic_states.eigenvalues,
+                compression="gzip",
+            )
+            group.create_dataset("weights", data=electronic_states.weights)
+            group.create_dataset(
+                "n_electrons", data=float(electronic_states.n_electrons)
+            )
+            group.create_dataset("volume", data=float(volume))
+            group.create_dataset("energy", data=float(energy))
+
+
+def read_electronic_states_hdf5(
+    filename: str | os.PathLike = "electronic_states.hdf5",
+) -> tuple[NDArray[np.double], NDArray[np.double], list[ElectronicStates]]:
+    """Read electronic states with volumes and static energies from hdf5.
+
+    Returns
+    -------
+    tuple
+        Volumes in angstrom^3 with shape (volumes,), static internal
+        energies in eV with shape (volumes,), and a list of
+        ElectronicStates, in the file order. The latter two are the
+        internal_energies and electronic_structures parameters of
+        run_qha, respectively.
+
+    """
+    import h5py
+
+    volumes = []
+    energies = []
+    electronic_structures = []
+    with h5py.File(filename, "r") as f:
+        n_volumes = int(f.attrs["n_volumes"])
+        for i in range(n_volumes):
+            group = f[f"volume-{i:03d}"]
+            volume = float(group["volume"][()])
+            electronic_structures.append(
+                ElectronicStates(
+                    eigenvalues=group["eigenvalues"][:],
+                    weights=group["weights"][:],
+                    n_electrons=float(group["n_electrons"][()]),
+                    volume=volume,
+                )
+            )
+            volumes.append(volume)
+            energies.append(float(group["energy"][()]))
+    return (
+        np.array(volumes, dtype="double"),
+        np.array(energies, dtype="double"),
+        electronic_structures,
+    )
 
 
 def get_free_energy_at_T(
@@ -47,7 +219,7 @@ def get_free_energy_at_T(
     tmax: float,
     tstep: float,
     eigenvalues: NDArray[np.double],
-    weights: NDArray[np.int64],
+    weights: NDArray[np.int64] | NDArray[np.double],
     n_electrons: float,
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return free energies at given temperatures."""
@@ -107,7 +279,7 @@ class ElectronFreeEnergy:
     def __init__(
         self,
         eigenvalues: NDArray[np.double],
-        weights: NDArray[np.int64],
+        weights: NDArray[np.int64] | NDArray[np.double],
         n_electrons: float,
     ) -> None:
         """Init method.
@@ -119,8 +291,8 @@ class ElectronFreeEnergy:
             dtype='double'
             shape=(spin, kpoints, bands)
         weights: ndarray
-            Geometric k-point weights (number of arms of k-star in BZ).
-            dtype='int_'
+            Relative k-point weights, e.g., geometric k-point weights
+            (number of arms of k-star in BZ) or normalized weights.
             shape=(irreducible_kpoints,)
         n_electrons: float
             Number of electrons in unit cell.

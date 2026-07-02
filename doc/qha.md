@@ -2,12 +2,22 @@
 
 # Quasi harmonic approximation
 
+Using phonopy results of thermal properties at several volumes, thermal
+expansion and heat capacity at constant pressure can be calculated under the
+quasi-harmonic approximation. Two interfaces are provided: the `phonopy-qha`
+script described below, and the Python API {ref}`phonopy_qha_python_api`,
+which also computes lattice parameters as functions of temperature. The
+theoretical background is summarized in {ref}`theory_of_qha`.
+
+```{contents}
+:depth: 2
+:local:
+```
+
 ## Usage of `phonopy-qha`
 
-Using phonopy results of thermal properties, thermal expansion and heat capacity
-at constant pressure can be calculated under the quasi-harmonic approximation.
-`phonopy-qha` is the script to run fitting and calculation to perform it. Mind
-that at leave 5 volume points are needed to run `phonopy-qha` for fitting.
+`phonopy-qha` is the script to run the fitting and calculations. Mind that at
+least 5 volume points are needed for the fitting.
 
 An example of the usage for `example/Si-QHA` is as follows.
 
@@ -29,7 +39,7 @@ Without plots:
 
 The first argument is the filename of volume-energy data (in the above example,
 `e-v.dat`). The volumes and energies are given in {math}`\text{Angstrom}^3` and
-eV, respectively. Theses energies are only dependent on volume but not on
+eV, respectively. These energies are only dependent on volume but not on
 temperature unless using `--efe` option. Therefore in the simplest case, these
 are taken as the electronic total energies at 0K. An example of the
 volume-energy file is:
@@ -201,13 +211,24 @@ those used for `thermal_properties.yaml`. When `phonopy` was run with
 eigenvalues have to be carefully chosen to agree with those after applying
 `PRIMITIVE_AXES`, or energies are scaled a posteriori.
 
+Note that with `--efe`, the electronic free energies enter the fitting of
+{math}`F(V;T)` and therefore the equilibrium volumes, thermal expansion,
+Gibbs free energy, bulk modulus, and `Cp-temperature.dat` computed by
+{math}`-T\partial^2 G/\partial T^2` include the electronic contributions.
+However, `Cp-temperature_polyfit.dat` and `gruneisen-temperature.dat` are
+computed from the phonon-only {math}`C_V` and {math}`S`, i.e., the
+electronic entropy and heat capacity are not included there. Use
+`Cp-temperature.dat` for the heat capacity in this case. The Python API
+(see {ref}`phonopy_qha_electronic_structures`) includes the electronic
+contributions in both quantities instead.
+
 (phonopy_qha_output_files)=
 
 ### Output files
 
 The physical units of V and T are {math}`\text{Angstrom}^3` and K, respectively.
 The unit of eV for Helmholtz and Gibbs energies, J/K/mol for {math}`C_V` and
-entropy, GPa for for bulk modulus and pressure are used.
+entropy, GPa for bulk modulus and pressure are used.
 
 - Bulk modulus {math}`B_T` (GPa) vs {math}`T` (`bulk_modulus-temperature.*`)
 - Gibbs free energy {math}`G` (eV) vs {math}`T` (`gibbs-temperature.*`)
@@ -229,6 +250,248 @@ entropy, GPa for for bulk modulus and pressure are used.
 - Helmholtz free energy (eV) vs volume (`helmholtz-volume.*`). When `--pressure`
   option is specified, energy offset of {math}`pV` is added. See also the
   following section ({ref}`theory_of_qha`).
+
+(phonopy_qha_python_api)=
+
+## Python API: `run_qha`
+
+```{warning}
+This API is experimental. The function and class names, arguments, and
+return values described in this section may change in future releases
+without the usual deprecation process.
+```
+
+`phonopy.run_qha` is the successor of the deprecated `PhonopyQHA` class. It
+takes one `Phonopy` instance per volume point (with force constants set),
+computes mesh sampling and thermal properties internally on a given
+temperature grid, fits the total free energy to an equation of state at each
+temperature, and returns an immutable `QHAResult` dataclass. File writers
+live in `phonopy.qha.output` and plotting functions in `phonopy.qha.plot`;
+both take a `QHAResult` as the first argument.
+
+```python
+import numpy as np
+import phonopy
+from phonopy import run_qha
+from phonopy.qha.output import (
+    write_lattice_parameters_temperature,
+    write_volume_temperature,
+)
+from phonopy.qha.plot import plot_qha
+
+phonopys = [phonopy.load(f"phonopy_params-{i:02d}.yaml") for i in range(11)]
+internal_energies = np.loadtxt("e-v.dat")[:, 1]  # eV, one per volume
+temperatures = np.arange(0, 1101, 10)
+result = run_qha(phonopys, internal_energies, temperatures, mesh=100.0)
+
+print(result.equilibrium_volumes)  # V(T)
+write_volume_temperature(result)  # volume-temperature.dat
+if result.lattice is not None:
+    write_lattice_parameters_temperature(result)
+plot_qha(result).show()
+```
+
+Remarks:
+
+- `temperatures` must be strictly ascending. One temperature point is
+  consumed by the numerical differentiations, so supply one more point than
+  the temperature range of interest. All temperature-indexed arrays of
+  `QHAResult` share the same length.
+- `internal_energies` are the static internal energies {math}`U(V)` other
+  than the phonon free energy in eV with shape `(volumes,)`, e.g.,
+  electronic total energies from first-principles calculations or potential
+  energies from machine learning potentials. All energies and volumes of
+  `run_qha` refer to the primitive cell, to which the phonon thermal
+  properties are normalized. Temperature dependence of the electronic
+  system is supported through `electronic_structures` (see
+  {ref}`phonopy_qha_electronic_structures`); temperature-dependent
+  free-energy arrays like `fe-v.dat` are not accepted.
+- `pressure` (GPa) and `eos` (`vinet`, `birch_murnaghan`, `murnaghan`) work
+  as in `phonopy-qha`.
+- {math}`C_p` is computed by the polynomial-fitting method (see
+  {ref}`phonopy_qha_output_files`) and is available as
+  `result.heat_capacity_P.heat_capacities`. The
+  {math}`-T\partial^2 G/\partial T^2` variant of the legacy API is not
+  provided.
+- The file formats written by `phonopy.qha.output` are identical to those of
+  `phonopy-qha` for the shared quantities.
+
+(phonopy_qha_electronic_structures)=
+
+### Electronic free energies from eigenvalues
+
+Instead of preparing a `fe-v.dat` file with `phonopy-vasp-efe` and the
+`--efe` option of `phonopy-qha`, the same electronic free energies can be
+computed inside `run_qha` by supplying the electronic states at each volume
+point as `ElectronicStates` (eigenvalues in eV with shape
+`(spin, kpoints, bands)`, relative k-point weights, and the number of
+electrons per unit cell):
+
+```python
+from phonopy.interface.vasp import parse_vasprunxml
+from phonopy.qha.electron import ElectronicStates
+
+electronic_structures = []
+internal_energies = []
+for i in range(11):
+    vxml = parse_vasprunxml(f"vasprun.xml-{i:02d}")
+    electronic_structures.append(
+        ElectronicStates(
+            eigenvalues=vxml.eigenvalues[:, :, :, 0],
+            weights=vxml.k_weights,
+            n_electrons=vxml.NELECT,
+        )
+    )
+    internal_energies.append(vxml.energies[-1, 1])  # energy (sigma -> 0)
+
+result = run_qha(
+    phonopys,
+    internal_energies,
+    temperatures,
+    electronic_structures=electronic_structures,
+)
+```
+
+The electronic free energies
+{math}`F_\text{el}(T, V) = U(V) + f_\text{el}(T; V) - f_\text{el}(0; V)`
+are computed within the fixed density-of-states (Mermin) approximation with
+the temperature-dependent chemical potential conserving the number of
+electrons (see {ref}`phonopy_qha_efe_option` for the equations). This is
+intended for metals, i.e., the chemical potential is assumed not to lie in
+a band gap. The electronic entropies are obtained analytically and the
+electronic heat capacities by a single numerical differentiation; both
+enter {math}`C_p` and the Grüneisen parameters. Note that the deprecated
+`PhonopyQHA` computed the Grüneisen parameters with the phonon-only
+{math}`C_V` and {math}`C_p` was unavailable in this case, so these
+quantities differ from the legacy values where the electronic heat capacity
+is significant. The eigenvalues are not restricted to VASP; any code that
+provides eigenvalues, k-point weights, and the number of electrons can be
+used.
+
+For VASP, the collection above can also be done once with
+
+```
+% phonopy-vasp-efe --es vasprun.xml-{00..10}
+```
+
+(`--es` is short for `--write-electronic-states`)
+
+which writes `electronic_states.hdf5` containing the electronic states
+together with the volumes and the static energies (sigma->0) of all volume
+points, instead of computing `fe-v.dat`. The eigenvalues must be computed
+for the primitive cell (see the remark on `PRIMITIVE_AXES` in
+{ref}`phonopy_qha_efe_option`). The volumes stored with the electronic
+states are checked against the primitive cell volumes of `phonopys` by
+`run_qha`, which protects against ordering mistakes. The file is loaded
+with `read_electronic_states_hdf5`:
+
+```python
+from phonopy.qha.electron import read_electronic_states_hdf5
+
+volumes, internal_energies, electronic_structures = read_electronic_states_hdf5(
+    "electronic_states.hdf5"
+)
+result = run_qha(
+    phonopys,
+    internal_energies,
+    temperatures,
+    electronic_structures=electronic_structures,
+)
+```
+
+(phonopy_qha_lattice_parameters)=
+
+### Lattice parameters a(T), b(T), c(T)
+
+```{note}
+The setting assumed here is that the structures of the volume series were
+prepared by relaxing the cell shape under hydrostatic pressures (or
+equivalently at fixed volumes) using the static total energy only --
+without the phonon contribution -- e.g., by first-principles calculations
+or machine learning potentials, so that the axial ratios may vary along
+the volume series, e.g., {math}`c/a` of a hexagonal crystal changing with
+volume. This feature does **not** optimize {math}`a`, {math}`b`, {math}`c`
+with the phonon contribution included: the cell shape at each volume is
+fixed to the input shape and the phonon free energy optimizes the volume
+alone, i.e., the cell shape is a function of volume determined by the
+static total energy. An anisotropic QHA that minimizes
+{math}`F(a, b, c;\,T)` in the full lattice-parameter space is a different
+calculation and is beyond the scope of this feature.
+```
+
+Since each `Phonopy` instance carries its unit cell, the lattice parameters
+at each volume point are known. `run_qha` propagates their volume
+dependence to temperature through the equilibrium volumes {math}`V_0(T)`,
+giving {math}`a(T)`, {math}`b(T)`, {math}`c(T)` with generally anisotropic
+thermal expansion.
+
+The cell volume is modeled as {math}`V = k\,abc`, where {math}`a`,
+{math}`b`, {math}`c` are the lattice-vector lengths of the input unit
+cells and {math}`k` is a geometric constant containing the cell-angle
+factor. Since {math}`V` is the primitive cell volume, {math}`k` also
+absorbs the unit-cell to primitive-cell volume ratio. {math}`k` is
+determined from the input cells and no crystal-system flag is needed:
+cubic cells simply give constant axial ratios and hexagonal cells give
+{math}`b = a`. The axial ratios {math}`b/a` and {math}`c/a` are fitted as
+polynomials of {math}`V` (degree `lattice_fit_degree`, default 2), and the
+lattice parameters are recovered so that {math}`k\,a(V)\,b(V)\,c(V) = V`
+holds exactly. Evaluating them at the equilibrium volumes
+{math}`V_0(T)` gives {math}`a(T)`, {math}`b(T)`, {math}`c(T)`, and the
+linear thermal expansion coefficients
+{math}`\alpha_a = (1/a)\,\mathrm{d}a/\mathrm{d}T` etc. follow by central
+differences, satisfying {math}`\alpha_a + \alpha_b + \alpha_c = \beta`.
+
+The model requires the cell angles to be independent of volume. For
+triclinic and monoclinic crystals, where cell angles are free parameters,
+lattice-parameter fitting is therefore skipped with a warning and
+`result.lattice` is `None` (the crystal system is determined from the
+symmetry of the input cells). In addition, the constancy of {math}`k` over
+the volume points is verified, and the fitting is also skipped when this
+check fails. This happens when the unit cells are given in a setting whose
+angles vary with volume even though the crystal system is compatible, for
+example rhombohedral primitive cells, or fcc primitive cells of a crystal
+strained along a conventional axis; give the unit cells in a fixed-angle
+setting such as the conventional cell in such cases.
+
+The results are stored in `result.lattice` (`QHALatticeData`):
+`lattice_parameters` with shape `(temperatures, 3)`,
+`axial_thermal_expansions` with shape `(temperatures, 3)`, `k`, and
+`ratio_coefficients`. The corresponding output files are
+`lattice_parameters-temperature.dat` (columns {math}`T`, {math}`a`,
+{math}`b`, {math}`c`) by `write_lattice_parameters_temperature` and
+`axial_thermal_expansion.dat` (columns {math}`T`, {math}`\alpha_a`,
+{math}`\alpha_b`, {math}`\alpha_c`, {math}`\alpha_a+\alpha_b+\alpha_c`) by
+`write_axial_thermal_expansion`. The plotting counterparts are
+`plot_lattice_parameters` and `plot_axial_thermal_expansion`.
+
+### Migration from `PhonopyQHA` (deprecated)
+
+The `PhonopyQHA` class is deprecated and will be removed in a future major
+release. The correspondence between the legacy attributes and the new API
+is:
+
+| `PhonopyQHA` (deprecated)    | New API                                    |
+| ---------------------------- | ------------------------------------------ |
+| `volume_temperature`         | `QHAResult.equilibrium_volumes`            |
+| `gibbs_temperature`          | `QHAResult.gibbs_free_energies`            |
+| `bulk_modulus_temperature`   | `QHAResult.bulk_moduli`                    |
+| `thermal_expansion`          | `QHAResult.thermal_expansion`              |
+| `heat_capacity_P_polyfit`    | `QHAResult.heat_capacity_P.heat_capacities`|
+| `heat_capacity_P_numerical`  | not provided (use `heat_capacity_P`)       |
+| `gruneisen_temperature`      | `QHAResult.gruneisen_parameters`           |
+| `helmholtz_volume`           | `QHAResult.helmholtz_volume`               |
+| `write_*` methods            | functions in `phonopy.qha.output`          |
+| `plot_*` methods             | functions in `phonopy.qha.plot`            |
+| `bulk_modulus` (E-V fitting) | `phonopy.qha.core.BulkModulus`             |
+
+Behavioral differences: `run_qha` does not accept temperature-dependent
+electronic free-energy arrays (the `fe-v.dat` style input of the legacy
+API); supply `electronic_structures` instead (see
+{ref}`phonopy_qha_electronic_structures`). With the electronic
+contributions included there, `QHAResult.gruneisen_parameters` and
+`heat_capacity_P` differ from the legacy behavior, where the Grüneisen
+parameters used the phonon-only {math}`C_V` and the polyfit {math}`C_p`
+was unavailable.
 
 (theory_of_qha)=
 
@@ -262,5 +525,5 @@ brackets shifts from the value calculated only from electronic structure even at
 changes, then the equilibrium volume at temperatures changes. This is considered
 as thermal expansion under this approximation.
 
-`phonopy-qha` collects the values at volumes and transforms into the thermal
-properties at constant pressure.
+`phonopy-qha` and `run_qha` collect the values at volumes and transform them
+into the thermal properties at constant pressure.

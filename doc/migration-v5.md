@@ -125,6 +125,60 @@ frequencies = ph.run_qpoints([q]).frequencies[0]
 | `set_Debye_frequency()` | `run_total_dos()`, then `total_dos.run_debye_frequency(num_atoms)` and read `total_dos.debye_frequency` |
 | `produce_force_constants(forces=...)` | set the `forces` setter, then call `produce_force_constants()` |
 
+## Deprecated class: `PhonopyQHA` to `run_qha`
+
+The `PhonopyQHA` class is deprecated. The replacement is the function
+`phonopy.run_qha`, which takes one `Phonopy` instance per volume point,
+computes the thermal properties internally, and returns an immutable
+`QHAResult` dataclass. File writers and plotters became free functions in
+`phonopy.qha.output` and `phonopy.qha.plot`. See
+{ref}`phonopy_qha_python_api` for the full description including the new
+lattice-parameter output.
+
+| Deprecated (`PhonopyQHA`)    | Replacement                                |
+|------------------------------|--------------------------------------------|
+| `PhonopyQHA(volumes, ...)`   | `run_qha(phonopys, ...)` (`QHAResult`)     |
+| `volume_temperature`         | `QHAResult.equilibrium_volumes`            |
+| `gibbs_temperature`          | `QHAResult.gibbs_free_energies`            |
+| `bulk_modulus_temperature`   | `QHAResult.bulk_moduli`                    |
+| `thermal_expansion`          | `QHAResult.thermal_expansion`              |
+| `heat_capacity_P_polyfit`    | `QHAResult.heat_capacity_P.heat_capacities`|
+| `heat_capacity_P_numerical`  | not provided (use `heat_capacity_P`)       |
+| `gruneisen_temperature`      | `QHAResult.gruneisen_parameters`           |
+| `helmholtz_volume`           | `QHAResult.helmholtz_volume`               |
+| `write_*` methods            | functions in `phonopy.qha.output`          |
+| `plot_*` methods             | functions in `phonopy.qha.plot`            |
+| `bulk_modulus` (E-V fitting) | `phonopy.qha.core.BulkModulus`             |
+
+**Deprecated:**
+
+```python
+qha = PhonopyQHA(
+    volumes=volumes,
+    electronic_energies=energies,
+    temperatures=temperatures,
+    free_energy=fe_phonon,
+    cv=cv,
+    entropy=entropy,
+)
+volume_temperature = qha.volume_temperature
+qha.write_volume_temperature()
+```
+
+**Replacement:**
+
+```python
+from phonopy import run_qha
+from phonopy.qha.output import write_volume_temperature
+
+result = run_qha(phonopys, energies, temperatures)  # returns a QHAResult
+volume_temperature = result.equilibrium_volumes
+write_volume_temperature(result)
+```
+
+The `phonopy-qha` command-line script is not affected; it keeps working
+on the legacy implementation until a successor is provided.
+
 ## Deprecated utility method
 
 | Deprecated method | Replacement |
