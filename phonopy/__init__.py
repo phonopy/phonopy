@@ -41,6 +41,7 @@ from phonopy.api_gruneisen import PhonopyGruneisen
 from phonopy.api_phonopy import Phonopy
 from phonopy.api_qha import PhonopyQHA
 from phonopy.cui.load import load
+from phonopy.qha.qha import QHAResult, run_qha
 
 try:
     __version__ = _package_version("phonopy")
@@ -50,4 +51,12 @@ except PackageNotFoundError:  # running from a source tree without an install
     except ImportError:
         __version__ = "0.0.0"
 
-__all__ = ["PhonopyGruneisen", "Phonopy", "PhonopyQHA", "load", "__version__"]
+__all__ = [
+    "PhonopyGruneisen",
+    "Phonopy",
+    "PhonopyQHA",
+    "QHAResult",
+    "load",
+    "run_qha",
+    "__version__",
+]

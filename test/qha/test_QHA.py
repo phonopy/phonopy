@@ -461,6 +461,21 @@ def test_qha_plot_units(qha_si: PhonopyQHA) -> None:
     assert "GPa" in PhonopyQHA.bulk_modulus_temperature.__doc__
 
 
+def test_phonopy_qha_deprecation_warning() -> None:
+    """PhonopyQHA emits DeprecationWarning on instantiation."""
+    with pytest.warns(DeprecationWarning, match="PhonopyQHA is deprecated"):
+        PhonopyQHA(
+            volumes=ev_vs_v_Si[:, 0],
+            electronic_energies=ev_vs_v_Si[:, 1],
+            eos="vinet",
+            temperatures=temperatures_Si,
+            free_energy=fe_phonon_Si,
+            cv=cv_Si,
+            entropy=entropy_Si,
+            t_max=1000,
+        )
+
+
 def _print_values(values: NDArray[np.double]) -> None:
     print("%.7f," % values[0])
     for line in np.reshape(values[1:], (-1, 5)):

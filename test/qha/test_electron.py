@@ -1,8 +1,16 @@
 """Tests of electronic free energy calculations."""
 
 import numpy as np
+import pytest
 
-from phonopy.qha.electron import ElectronFreeEnergy, get_free_energy_at_T
+from phonopy.qha.electron import (
+    ElectronFreeEnergy,
+    ElectronicStates,
+    compute_free_energy_and_entropy,
+    get_free_energy_at_T,
+    read_electronic_states_hdf5,
+    write_electronic_states_hdf5,
+)
 
 eigvals_Al = """ -3.1277  20.6836  20.6836  20.6836  22.1491  22.1491  22.1491  24.4979  27.5181  27.5181  30.3260  32.6840
  -2.9388  18.0492  20.1052  20.1052  22.8186  23.0196  23.0196  26.3365  26.5334  26.5334  29.6719  33.6291
@@ -402,3 +410,86 @@ def test_spin_polarized():
 
     np.testing.assert_allclose(temperatures, reference_temperatures, atol=1e-8)
     np.testing.assert_allclose(free_energies, reference_free_energies, atol=1e-8)
+
+
+def test_compute_free_energy_and_entropy_Al():
+    """Free energies match get_free_energy_at_T and S_el = -dF/dT holds.
+
+    The entropy at 1000 K is also pinned against the VASP EENTRO reference
+    of test_Al (T * S = 0.00959209 eV at 1000 K).
+
+    """
+    eigenvalues = _al_eigenvalues()
+    states = ElectronicStates(
+        eigenvalues=eigenvalues, weights=WEIGHTS_AL, n_electrons=3.0
+    )
+    temperatures, fe_ref = get_free_energy_at_T(
+        0, 1000, 10, eigenvalues, WEIGHTS_AL, 3.0
+    )
+
+    free_energies, entropies = compute_free_energy_and_entropy(states, temperatures)
+
+    np.testing.assert_allclose(free_energies, fe_ref, rtol=0, atol=1e-12)
+    assert entropies[0] == 0.0
+    np.testing.assert_allclose(entropies[-1], 0.00959209 / 1000, rtol=1e-4)
+    # Thermodynamic identity S = -dF/dT, up to the O(dT^2) error of the
+    # numerical differentiation of F.
+    dfdt = -np.gradient(free_energies, temperatures, edge_order=2)
+    np.testing.assert_allclose(entropies[10:], dfdt[10:], rtol=1e-2)
+
+
+def test_electronic_states_hdf5_round_trip(tmp_path):
+    """Electronic states survive a write/read round trip."""
+    rng = np.random.default_rng(42)
+    states_in = [
+        ElectronicStates(
+            eigenvalues=rng.standard_normal((1, 5, 8)),
+            weights=np.ones(5),
+            n_electrons=4.0,
+            volume=10.0,
+            internal_energy=-1.0,
+        ),
+        ElectronicStates(
+            eigenvalues=rng.standard_normal((2, 7, 6)),
+            weights=np.arange(1, 8, dtype="double"),
+            n_electrons=6.0,
+            volume=12.0,
+            internal_energy=-2.0,
+        ),
+    ]
+    filename = tmp_path / "electronic_states.hdf5"
+
+    write_electronic_states_hdf5(states_in, filename=filename)
+    states = read_electronic_states_hdf5(filename)
+
+    for state, state_in in zip(states, states_in, strict=True):
+        np.testing.assert_array_equal(state.eigenvalues, state_in.eigenvalues)
+        np.testing.assert_array_equal(state.weights, state_in.weights)
+        assert state.n_electrons == state_in.n_electrons
+        assert state.volume == state_in.volume
+        assert state.internal_energy == state_in.internal_energy
+
+    # States without volume or internal_energy cannot be written.
+    incomplete = ElectronicStates(
+        eigenvalues=rng.standard_normal((1, 5, 8)),
+        weights=np.ones(5),
+        n_electrons=4.0,
+    )
+    with pytest.raises(ValueError):
+        write_electronic_states_hdf5([incomplete], filename=filename)
+
+
+def test_electronic_states_validation():
+    """Malformed ElectronicStates inputs raise ValueError."""
+    eigenvalues = np.zeros((1, 4, 6))
+    weights = np.ones(4)
+    ElectronicStates(eigenvalues=eigenvalues, weights=weights, n_electrons=1.0)
+
+    with pytest.raises(ValueError):
+        ElectronicStates(eigenvalues=np.zeros((4, 6)), weights=weights, n_electrons=1.0)
+    with pytest.raises(ValueError):
+        ElectronicStates(
+            eigenvalues=np.zeros((3, 4, 6)), weights=weights, n_electrons=1.0
+        )
+    with pytest.raises(ValueError):
+        ElectronicStates(eigenvalues=eigenvalues, weights=np.ones(5), n_electrons=1.0)
