@@ -143,7 +143,7 @@ class ElectronFreeEnergy:
             raise RuntimeError
 
         self._T: float
-        self._f: NDArray[np.double]
+        self._f: NDArray[np.double]  # occupation numbers, shape=(kpoints, spin, bands)
         self._mu = None
         self._entropy = None
         self._energy = None
@@ -193,16 +193,23 @@ class ElectronFreeEnergy:
         return self._mu
 
     def _get_entropy(self) -> float:
-        entropy = 0.0
-        for f_k, w in zip(
-            self._f.reshape(len(self._weights), -1), self._weights, strict=True
-        ):
-            _f = np.extract((f_k > 1e-12) * (f_k < 1 - 1e-12), f_k)
-            entropy -= (_f * np.log(_f) + (1 - _f) * np.log(1 - _f)).sum() * w
+        # f: shape=(kpoints, spin*bands), row i holds all (spin, band)
+        # occupation numbers at the i-th irreducible k-point.
+        f = self._f.reshape(len(self._weights), -1)
+        mask = (f > 1e-12) & (f < 1 - 1e-12)
+        f_safe = np.where(mask, f, 0.5)  # avoid log(0); masked out below anyway
+        terms = np.where(
+            mask, f_safe * np.log(f_safe) + (1 - f_safe) * np.log(1 - f_safe), 0.0
+        )
+        entropy = -(terms.sum(axis=1) * self._weights).sum()
         return float(entropy * self._g * self._T / self._weights.sum())
 
     def _get_energy(self) -> float:
+        # occ_eigvals: shape=(kpoints, spin, bands), same as self._eigenvalues.
         occ_eigvals = self._f * self._eigenvalues
+        # reshape to (kpoints, spin*bands), sum over spin*bands leaves
+        # shape=(kpoints,), one value per irreducible k-point, matching
+        # self._weights for the np.dot below.
         return float(
             np.dot(
                 occ_eigvals.reshape(len(self._weights), -1).sum(axis=1), self._weights
@@ -212,23 +219,30 @@ class ElectronFreeEnergy:
         )
 
     def _chemical_potential(self) -> float:
+        try:
+            from scipy.optimize import brentq
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError("You need to install python-scipy.") from exc
+
         emin = np.min(self._eigenvalues)
         emax = np.max(self._eigenvalues)
-        mu = (emin + emax) / 2
-
-        for _ in range(1000):
-            n = self._number_of_electrons(mu)
-            if abs(n - self._n_electrons) < 1e-10:
-                break
-            elif n < self._n_electrons:
-                emin = mu
-            else:
-                emax = mu
-            mu = (emin + emax) / 2
-
+        # brentq's default xtol (2e-12) is too loose here: near T -> 0 the
+        # occupation number is a near step function, so n(mu) can change by
+        # O(1e-3) for an O(1e-10) change in mu. A tight xtol is needed to
+        # match the occupation numbers (and hence energy/entropy) to the
+        # precision expected by callers.
+        mu = brentq(
+            lambda mu: self._number_of_electrons(mu) - self._n_electrons,
+            emin,
+            emax,
+            xtol=1e-14,
+        )
         return float(mu)
 
     def _number_of_electrons(self, mu: float) -> float:
+        # eigvals: shape=(kpoints, spin*bands); occupation_number keeps the
+        # same shape, and summing over spin*bands leaves shape=(kpoints,),
+        # matching self._weights for the np.dot below.
         eigvals = self._eigenvalues.reshape(len(self._weights), -1)
         n = (
             np.dot(self._occupation_number(eigvals, mu).sum(axis=1), self._weights)
@@ -240,6 +254,7 @@ class ElectronFreeEnergy:
     def _occupation_number(
         self, e: NDArray[np.double], mu: float
     ) -> NDArray[np.double]:
+        """Return occupation numbers, same shape as `e`."""
         de = (e - mu) / self._T
         de = np.where(de < 100, de, 100.0)  # To avoid overflow
         de = np.where(de > -100, de, -100.0)  # To avoid underflow
