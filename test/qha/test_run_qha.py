@@ -50,7 +50,11 @@ def test_run_qha_matches_phonopy_qha(
     el_energies = internal_energies(volumes)
 
     result = run_qha(
-        nacl_qha_phonopys, el_energies, TEMPERATURES, mesh=MESH, pressure=pressure
+        nacl_qha_phonopys,
+        TEMPERATURES,
+        internal_energies=el_energies,
+        mesh=MESH,
+        pressure=pressure,
     )
 
     fe_phonon, entropy, cv = thermal_properties(nacl_qha_phonopys)
@@ -165,7 +169,12 @@ def test_monoclinic_disables_lattice(ph_nacl: Phonopy) -> None:
 
     volumes = np.array([ph.primitive.volume for ph in phonopys])
     with pytest.warns(UserWarning, match="Lattice parameter fitting was skipped"):
-        result = run_qha(phonopys, internal_energies(volumes), TEMPERATURES, mesh=MESH)
+        result = run_qha(
+            phonopys,
+            TEMPERATURES,
+            internal_energies=internal_energies(volumes),
+            mesh=MESH,
+        )
 
     assert result.lattice is None
     assert result.equilibrium_volumes.shape == (len(TEMPERATURES) - 1,)
@@ -177,15 +186,22 @@ def test_validation_errors(nacl_qha_phonopys: list[Phonopy], ph_nacl: Phonopy) -
     el_energies = internal_energies(volumes)
 
     with pytest.raises(ValueError):
-        run_qha(nacl_qha_phonopys[:4], el_energies[:4], TEMPERATURES)
+        run_qha(nacl_qha_phonopys[:4], TEMPERATURES, internal_energies=el_energies[:4])
     with pytest.raises(ValueError):
-        run_qha(nacl_qha_phonopys, el_energies, TEMPERATURES[::-1])
+        run_qha(nacl_qha_phonopys, TEMPERATURES[::-1], internal_energies=el_energies)
     with pytest.raises(ValueError):
-        run_qha(nacl_qha_phonopys, el_energies[:-1], TEMPERATURES)
+        run_qha(nacl_qha_phonopys, TEMPERATURES, internal_energies=el_energies[:-1])
     with pytest.raises(ValueError):
-        run_qha(nacl_qha_phonopys, el_energies, TEMPERATURES, lattice_fit_degree=10)
+        run_qha(
+            nacl_qha_phonopys,
+            TEMPERATURES,
+            internal_energies=el_energies,
+            lattice_fit_degree=10,
+        )
     with pytest.raises(ValueError):
-        run_qha(nacl_qha_phonopys, el_energies, TEMPERATURES, eos="bogus")
+        run_qha(
+            nacl_qha_phonopys, TEMPERATURES, internal_energies=el_energies, eos="bogus"
+        )
 
     ph_bare = Phonopy(
         ph_nacl.unitcell,
@@ -194,7 +210,7 @@ def test_validation_errors(nacl_qha_phonopys: list[Phonopy], ph_nacl: Phonopy) -
         log_level=0,
     )
     with pytest.raises(RuntimeError):
-        run_qha([ph_bare] * 5, el_energies[:5], TEMPERATURES)
+        run_qha([ph_bare] * 5, TEMPERATURES, internal_energies=el_energies[:5])
 
 
 def test_run_qha_electronic_structures(nacl_qha_phonopys: list[Phonopy]) -> None:
@@ -214,8 +230,8 @@ def test_run_qha_electronic_structures(nacl_qha_phonopys: list[Phonopy]) -> None
 
     result = run_qha(
         nacl_qha_phonopys,
-        el_static,
         TEMPERATURES,
+        internal_energies=el_static,
         electronic_structures=states,
         mesh=MESH,
     )
@@ -264,24 +280,66 @@ def test_run_qha_electronic_structures_validation(
     el2d = np.zeros((len(TEMPERATURES), len(volumes)))
 
     with pytest.raises(ValueError):
-        run_qha(nacl_qha_phonopys, el2d, TEMPERATURES)
-    with pytest.raises(ValueError):
-        run_qha(nacl_qha_phonopys, el2d, TEMPERATURES, electronic_structures=states)
+        run_qha(nacl_qha_phonopys, TEMPERATURES, internal_energies=el2d)
     with pytest.raises(ValueError):
         run_qha(
             nacl_qha_phonopys,
-            el_static,
             TEMPERATURES,
+            internal_energies=el2d,
+            electronic_structures=states,
+        )
+    with pytest.raises(ValueError):
+        run_qha(
+            nacl_qha_phonopys,
+            TEMPERATURES,
+            internal_energies=el_static,
             electronic_structures=states[:-1],
         )
     # Volumes carried by ElectronicStates must match the unit cells.
     with pytest.raises(ValueError):
         run_qha(
             nacl_qha_phonopys,
-            el_static,
             TEMPERATURES,
+            internal_energies=el_static,
             electronic_structures=states[::-1],
         )
+    # internal_energies=None requires electronic_structures with energies.
+    with pytest.raises(ValueError):
+        run_qha(nacl_qha_phonopys, TEMPERATURES)
+    with pytest.raises(ValueError):
+        run_qha(nacl_qha_phonopys, TEMPERATURES, electronic_structures=states)
+
+
+def test_run_qha_internal_energies_from_states(
+    nacl_qha_phonopys: list[Phonopy],
+) -> None:
+    """internal_energies=None takes the energies from electronic_structures."""
+    volumes = np.array([ph.primitive.volume for ph in nacl_qha_phonopys])
+    el_static = internal_energies(volumes)
+    states = [
+        dataclasses.replace(electronic_states, internal_energy=energy)
+        for electronic_states, energy in zip(
+            _electronic_structures(volumes), el_static, strict=True
+        )
+    ]
+
+    result = run_qha(
+        nacl_qha_phonopys, TEMPERATURES, electronic_structures=states, mesh=MESH
+    )
+    ref = run_qha(
+        nacl_qha_phonopys,
+        TEMPERATURES,
+        internal_energies=el_static,
+        electronic_structures=states,
+        mesh=MESH,
+    )
+
+    np.testing.assert_allclose(
+        result.equilibrium_volumes, ref.equilibrium_volumes, rtol=0, atol=0
+    )
+    np.testing.assert_allclose(
+        result.gibbs_free_energies, ref.gibbs_free_energies, rtol=0, atol=0
+    )
 
 
 def test_result_immutability(qha_result_nacl: QHAResult) -> None:

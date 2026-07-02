@@ -36,7 +36,10 @@ def qha_result_nacl(nacl_qha_phonopys: list[Phonopy]) -> QHAResult:
     """QHAResult of the scaled NaCl series without pressure."""
     volumes = np.array([ph.primitive.volume for ph in nacl_qha_phonopys])
     return run_qha(
-        nacl_qha_phonopys, internal_energies(volumes), TEMPERATURES, mesh=MESH
+        nacl_qha_phonopys,
+        TEMPERATURES,
+        internal_energies=internal_energies(volumes),
+        mesh=MESH,
     )
 
 

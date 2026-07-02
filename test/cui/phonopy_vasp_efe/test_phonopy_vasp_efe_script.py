@@ -278,14 +278,12 @@ def test_phonopy_vasp_efe_write_electronic_states(tmp_path):
         assert not pathlib.Path("fe-v.dat").exists()
         assert pathlib.Path("e-v.dat").exists()
 
-        volumes, energies, states = read_electronic_states_hdf5(
-            "electronic_states.hdf5"
-        )
+        states = read_electronic_states_hdf5("electronic_states.hdf5")
         assert len(states) == 3
-        np.testing.assert_allclose(volumes[0], 43.08047896, rtol=1e-6)
-        np.testing.assert_allclose(energies[0], -17.27885993, rtol=1e-6)
         assert states[0].volume is not None
         np.testing.assert_allclose(states[0].volume, 43.08047896, rtol=1e-6)
+        assert states[0].internal_energy is not None
+        np.testing.assert_allclose(states[0].internal_energy, -17.27885993, rtol=1e-6)
 
         # Recomputed F_el(T=1000 K) matches the pinned fe-v.dat value of
         # test_phonopy_vasp_efe_fe_values.
@@ -298,7 +296,7 @@ def test_phonopy_vasp_efe_write_electronic_states(tmp_path):
             states[0].n_electrons,
         )
         np.testing.assert_allclose(
-            energies[0] - fe[0] + fe[-1], -17.29111981, rtol=1e-6
+            states[0].internal_energy - fe[0] + fe[-1], -17.29111981, rtol=1e-6
         )
     finally:
         os.chdir(original_cwd)

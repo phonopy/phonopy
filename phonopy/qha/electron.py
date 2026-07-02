@@ -1,39 +1,5 @@
 """Calculation of free energy of one-electronic states."""
 
-# Copyright (C) 2018 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
 from __future__ import annotations
 
 import dataclasses
@@ -66,6 +32,9 @@ class ElectronicStates:
     volume : float, optional
         Unit cell volume in angstrom^3. Used only for consistency checks
         against the unit cells the states belong to.
+    internal_energy : float, optional
+        Static internal energy of the unit cell in eV, e.g., the
+        energy (sigma->0) of the calculation the eigenvalues come from.
 
     """
 
@@ -73,6 +42,7 @@ class ElectronicStates:
     weights: NDArray[np.int64] | NDArray[np.double]
     n_electrons: float
     volume: float | None = None
+    internal_energy: float | None = None
 
     def __post_init__(self) -> None:
         """Validate shapes."""
@@ -133,31 +103,31 @@ def compute_free_energy_and_entropy(
 
 def write_electronic_states_hdf5(
     electronic_structures: Sequence[ElectronicStates],
-    volumes: Sequence[float] | NDArray[np.double],
-    energies: Sequence[float] | NDArray[np.double],
     filename: str | os.PathLike = "electronic_states.hdf5",
 ) -> None:
-    """Write electronic states with volumes and static energies in hdf5.
+    """Write electronic states in hdf5.
 
-    The file contains one group "volume-XXX" per volume point with the
-    datasets eigenvalues ((spin, kpoints, bands), eV), weights
-    ((kpoints,)), n_electrons, volume (angstrom^3), and energy (eV,
-    static internal energy). The number of volume points is stored in
-    the root attribute "n_volumes".
+    All ElectronicStates must carry volume and internal_energy. The file
+    contains one group "volume-XXX" per volume point with the datasets
+    eigenvalues ((spin, kpoints, bands), eV), weights ((kpoints,)),
+    n_electrons, volume (angstrom^3), and energy (eV, static internal
+    energy). The number of volume points is stored in the root attribute
+    "n_volumes".
 
     """
     import h5py
 
-    if not (len(electronic_structures) == len(volumes) == len(energies)):
-        raise ValueError(
-            "electronic_structures, volumes, and energies must have the same length."
-        )
     with h5py.File(filename, "w") as w:
         w.attrs["creator"] = "phonopy"
         w.attrs["n_volumes"] = len(electronic_structures)
-        for i, (electronic_states, volume, energy) in enumerate(
-            zip(electronic_structures, volumes, energies, strict=True)
-        ):
+        for i, electronic_states in enumerate(electronic_structures):
+            if (
+                electronic_states.volume is None
+                or electronic_states.internal_energy is None
+            ):
+                raise ValueError(
+                    f"electronic_structures[{i}] must carry volume and internal_energy."
+                )
             group = w.create_group(f"volume-{i:03d}")
             group.create_dataset(
                 "eigenvalues",
@@ -168,50 +138,39 @@ def write_electronic_states_hdf5(
             group.create_dataset(
                 "n_electrons", data=float(electronic_states.n_electrons)
             )
-            group.create_dataset("volume", data=float(volume))
-            group.create_dataset("energy", data=float(energy))
+            group.create_dataset("volume", data=float(electronic_states.volume))
+            group.create_dataset(
+                "energy", data=float(electronic_states.internal_energy)
+            )
 
 
 def read_electronic_states_hdf5(
     filename: str | os.PathLike = "electronic_states.hdf5",
-) -> tuple[NDArray[np.double], NDArray[np.double], list[ElectronicStates]]:
-    """Read electronic states with volumes and static energies from hdf5.
+) -> list[ElectronicStates]:
+    """Read electronic states from hdf5.
 
-    Returns
-    -------
-    tuple
-        Volumes in angstrom^3 with shape (volumes,), static internal
-        energies in eV with shape (volumes,), and a list of
-        ElectronicStates, in the file order. The latter two are the
-        internal_energies and electronic_structures parameters of
-        run_qha, respectively.
+    Returns a list of ElectronicStates in the file order, each carrying
+    volume and internal_energy. The list is the electronic_structures
+    parameter of run_qha; internal_energies can then be given as None.
 
     """
     import h5py
 
-    volumes = []
-    energies = []
     electronic_structures = []
     with h5py.File(filename, "r") as f:
         n_volumes = int(f.attrs["n_volumes"])
         for i in range(n_volumes):
             group = f[f"volume-{i:03d}"]
-            volume = float(group["volume"][()])
             electronic_structures.append(
                 ElectronicStates(
                     eigenvalues=group["eigenvalues"][:],
                     weights=group["weights"][:],
                     n_electrons=float(group["n_electrons"][()]),
-                    volume=volume,
+                    volume=float(group["volume"][()]),
+                    internal_energy=float(group["energy"][()]),
                 )
             )
-            volumes.append(volume)
-            energies.append(float(group["energy"][()]))
-    return (
-        np.array(volumes, dtype="double"),
-        np.array(energies, dtype="double"),
-        electronic_structures,
-    )
+    return electronic_structures
 
 
 def get_free_energy_at_T(

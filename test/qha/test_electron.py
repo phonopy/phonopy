@@ -439,34 +439,44 @@ def test_compute_free_energy_and_entropy_Al():
 
 
 def test_electronic_states_hdf5_round_trip(tmp_path):
-    """Electronic states with volumes and energies survive a write/read."""
+    """Electronic states survive a write/read round trip."""
     rng = np.random.default_rng(42)
     states_in = [
         ElectronicStates(
             eigenvalues=rng.standard_normal((1, 5, 8)),
             weights=np.ones(5),
             n_electrons=4.0,
+            volume=10.0,
+            internal_energy=-1.0,
         ),
         ElectronicStates(
             eigenvalues=rng.standard_normal((2, 7, 6)),
             weights=np.arange(1, 8, dtype="double"),
             n_electrons=6.0,
+            volume=12.0,
+            internal_energy=-2.0,
         ),
     ]
-    volumes_in = np.array([10.0, 12.0])
-    energies_in = np.array([-1.0, -2.0])
     filename = tmp_path / "electronic_states.hdf5"
 
-    write_electronic_states_hdf5(states_in, volumes_in, energies_in, filename=filename)
-    volumes, energies, states = read_electronic_states_hdf5(filename)
+    write_electronic_states_hdf5(states_in, filename=filename)
+    states = read_electronic_states_hdf5(filename)
 
-    np.testing.assert_array_equal(volumes, volumes_in)
-    np.testing.assert_array_equal(energies, energies_in)
-    for state, state_in, volume_in in zip(states, states_in, volumes_in, strict=True):
+    for state, state_in in zip(states, states_in, strict=True):
         np.testing.assert_array_equal(state.eigenvalues, state_in.eigenvalues)
         np.testing.assert_array_equal(state.weights, state_in.weights)
         assert state.n_electrons == state_in.n_electrons
-        assert state.volume == volume_in
+        assert state.volume == state_in.volume
+        assert state.internal_energy == state_in.internal_energy
+
+    # States without volume or internal_energy cannot be written.
+    incomplete = ElectronicStates(
+        eigenvalues=rng.standard_normal((1, 5, 8)),
+        weights=np.ones(5),
+        n_electrons=4.0,
+    )
+    with pytest.raises(ValueError):
+        write_electronic_states_hdf5([incomplete], filename=filename)
 
 
 def test_electronic_states_validation():

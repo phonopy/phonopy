@@ -282,7 +282,7 @@ from phonopy.qha.plot import plot_qha
 phonopys = [phonopy.load(f"phonopy_params-{i:02d}.yaml") for i in range(11)]
 internal_energies = np.loadtxt("e-v.dat")[:, 1]  # eV, one per volume
 temperatures = np.arange(0, 1101, 10)
-result = run_qha(phonopys, internal_energies, temperatures, mesh=100.0)
+result = run_qha(phonopys, temperatures, internal_energies, mesh=100.0)
 
 print(result.equilibrium_volumes)  # V(T)
 write_volume_temperature(result)  # volume-temperature.dat
@@ -332,7 +332,6 @@ from phonopy.interface.vasp import parse_vasprunxml
 from phonopy.qha.electron import ElectronicStates
 
 electronic_structures = []
-internal_energies = []
 for i in range(11):
     vxml = parse_vasprunxml(f"vasprun.xml-{i:02d}")
     electronic_structures.append(
@@ -340,17 +339,20 @@ for i in range(11):
             eigenvalues=vxml.eigenvalues[:, :, :, 0],
             weights=vxml.k_weights,
             n_electrons=vxml.NELECT,
+            volume=vxml.volume[-1],
+            internal_energy=vxml.energies[-1, 1],  # energy (sigma -> 0)
         )
     )
-    internal_energies.append(vxml.energies[-1, 1])  # energy (sigma -> 0)
 
 result = run_qha(
-    phonopys,
-    internal_energies,
-    temperatures,
-    electronic_structures=electronic_structures,
+    phonopys, temperatures, electronic_structures=electronic_structures
 )
 ```
+
+Since the electronic states carry the volumes and the static internal
+energies, `internal_energies` may be omitted (an explicitly given array
+takes precedence); the volumes are also used for a consistency check
+against the primitive cell volumes of `phonopys`.
 
 The electronic free energies
 {math}`F_\text{el}(T, V) = U(V) + f_\text{el}(T; V) - f_\text{el}(0; V)`
@@ -388,14 +390,9 @@ with `read_electronic_states_hdf5`:
 ```python
 from phonopy.qha.electron import read_electronic_states_hdf5
 
-volumes, internal_energies, electronic_structures = read_electronic_states_hdf5(
-    "electronic_states.hdf5"
-)
+electronic_structures = read_electronic_states_hdf5("electronic_states.hdf5")
 result = run_qha(
-    phonopys,
-    internal_energies,
-    temperatures,
-    electronic_structures=electronic_structures,
+    phonopys, temperatures, electronic_structures=electronic_structures
 )
 ```
 

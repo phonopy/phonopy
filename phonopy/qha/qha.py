@@ -183,8 +183,8 @@ class QHAResult:
 
 def run_qha(
     phonopys: Sequence[Phonopy],
-    internal_energies: Sequence[float] | NDArray[np.double],
     temperatures: Sequence[float] | NDArray[np.double],
+    internal_energies: Sequence[float] | NDArray[np.double] | None = None,
     electronic_structures: Sequence[ElectronicStates] | None = None,
     mesh: float | Sequence[int] | NDArray[np.int64] = 100.0,
     pressure: float | None = None,
@@ -212,16 +212,21 @@ def run_qha(
     phonopys : Sequence[Phonopy]
         One Phonopy instance per volume point with force constants set.
         At least 5 instances are needed.
-    internal_energies : array_like
+    temperatures : array_like
+        Temperatures in K in strictly ascending order. shape=(temperatures,)
+    internal_energies : array_like, optional
         Static internal energies U(V) other than the phonon free energy,
         e.g., electronic total energies from first-principles
         calculations or potential energies from machine learning
         potentials, in eV per primitive cell (consistently with the
         normalization of the phonon thermal properties).
-        shape=(volumes,). Temperature dependence of the electronic
-        system is supported through electronic_structures.
-    temperatures : array_like
-        Temperatures in K in strictly ascending order. shape=(temperatures,)
+        shape=(volumes,). When None, the internal energies carried by
+        electronic_structures are used (e.g., loaded from
+        electronic_states.hdf5); an explicitly given array takes
+        precedence. At least one of internal_energies and
+        electronic_structures is therefore required. Temperature
+        dependence of the electronic system is supported through
+        electronic_structures.
     electronic_structures : Sequence[ElectronicStates], optional
         Electronic states (eigenvalues, k-point weights, number of
         electrons) at each volume point, computed for the primitive
@@ -332,7 +337,7 @@ def run_qha(
 
 def _validate_inputs(
     phonopys: Sequence[Phonopy],
-    internal_energies: Sequence[float] | NDArray[np.double],
+    internal_energies: Sequence[float] | NDArray[np.double] | None,
     temperatures: Sequence[float] | NDArray[np.double],
     electronic_structures: Sequence[ElectronicStates] | None,
     eos: str,
@@ -363,7 +368,29 @@ def _validate_inputs(
         raise ValueError(
             f"eos must be 'vinet', 'murnaghan' or 'birch_murnaghan', not {eos!r}."
         )
-    el = np.array(internal_energies, dtype="double")
+    if internal_energies is None:
+        if electronic_structures is None:
+            raise ValueError(
+                "internal_energies can be omitted only when "
+                "electronic_structures are given."
+            )
+        if any(
+            electronic_states.internal_energy is None
+            for electronic_states in electronic_structures
+        ):
+            raise ValueError(
+                "internal_energies can be omitted only when all "
+                "electronic_structures carry internal_energy."
+            )
+        el = np.array(
+            [
+                electronic_states.internal_energy
+                for electronic_states in electronic_structures
+            ],
+            dtype="double",
+        )
+    else:
+        el = np.array(internal_energies, dtype="double")
     if el.ndim != 1 or len(el) != nvol:
         raise ValueError(
             "internal_energies must be a 1D array of static energies "

@@ -171,7 +171,7 @@ qha.write_volume_temperature()
 from phonopy import run_qha
 from phonopy.qha.output import write_volume_temperature
 
-result = run_qha(phonopys, energies, temperatures)  # returns a QHAResult
+result = run_qha(phonopys, temperatures, energies)  # returns a QHAResult
 volume_temperature = result.equilibrium_volumes
 write_volume_temperature(result)
 ```
