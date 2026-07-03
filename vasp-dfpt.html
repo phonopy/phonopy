@@ -335,6 +335,7 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run">How to run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
 </ul>
             </nav>
         </div>
@@ -377,23 +378,16 @@ following structure is a conventional unit cell of NaCl.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell
 </pre></div>
 </div>
-</li>
-<li><p>For later convenience, it is recommended to generate <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>
-using <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> file,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>--pa<span class="w"> </span>auto<span class="w"> </span>-c<span class="w"> </span>SPOSCAR
-</pre></div>
-</div>
-</li>
-<li><p>Rename <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> created in (3) to <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> to be used in the VASP
-calculation.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mv<span class="w"> </span>SPOSCAR<span class="w"> </span>POSCAR
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> files will never be used.</p>
+<p>This command writes <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, and the displacement
+cells <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code>. For VASP-DFPT, only the perfect supercell <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>
+is needed, and it will be used as <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> of the VASP calculation in the
+next step. The displacement cells <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> are not used here; the
+<code class="docutils literal notranslate"><span class="pre">-d</span></code> option is invoked only to write <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, which stores the
+cell information read back by <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> in the post-process.</p>
 </li>
 <li><p>Calculate force constants of the perfect supercell by running VASP
-with <code class="docutils literal notranslate"><span class="pre">IBRION</span> <span class="pre">=</span> <span class="pre">8</span></code>. An example of <code class="docutils literal notranslate"><span class="pre">INCAR</span></code> for
-insulator may be such like (<strong>just an example!</strong>)</p>
+with <code class="docutils literal notranslate"><span class="pre">IBRION</span> <span class="pre">=</span> <span class="pre">8</span></code>. An example of <code class="docutils literal notranslate"><span class="pre">INCAR</span></code> for an
+insulator may look like (<strong>just an example!</strong>)</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">PREC</span> <span class="o">=</span> <span class="n">Accurate</span>
    <span class="n">ENCUT</span> <span class="o">=</span> <span class="mi">500</span>
   <span class="n">IBRION</span> <span class="o">=</span> <span class="mi">8</span>
@@ -414,54 +408,68 @@ contains <code class="docutils literal notranslate"><span class="pre">hessian</s
 </div>
 </li>
 <li><p>Run phonopy</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">band</span> <span class="s2">&quot;0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5&quot;</span> <span class="o">-</span><span class="n">p</span>
-
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">band</span> <span class="n">auto</span> <span class="o">-</span><span class="n">p</span>
         <span class="n">_</span>
-  <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
- <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
- <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
- <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
- <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
-                                      <span class="mf">2.26.6</span>
+ <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
+<span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
+<span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+<span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
+<span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
+                                      <span class="mf">4.3.1</span>
 
-<span class="n">Compiled</span> <span class="k">with</span> <span class="n">OpenMP</span> <span class="n">support</span> <span class="p">(</span><span class="nb">max</span> <span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
+<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2026</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">03</span> <span class="mi">16</span><span class="p">:</span><span class="mi">51</span><span class="p">:</span><span class="mi">48</span><span class="p">]</span><span class="o">-------------------------</span>
+<span class="n">Rust</span> <span class="n">backend</span> <span class="p">(</span><span class="n">phonors</span><span class="p">)</span> <span class="n">using</span> <span class="n">rayon</span> <span class="p">(</span><span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
 <span class="n">Running</span> <span class="ow">in</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span> <span class="n">mode</span><span class="o">.</span>
-<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.12.4</span>
-<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.4.0</span>
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.13.11</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.7.0</span>
+
+<span class="n">WARNING</span><span class="p">:</span>
+  <span class="n">primitive_matrix</span> <span class="n">defaulted</span> <span class="n">to</span> <span class="s1">&#39;auto&#39;</span> <span class="ow">and</span> <span class="n">was</span> <span class="n">resolved</span> <span class="n">to</span> <span class="n">a</span> <span class="n">non</span><span class="o">-</span><span class="n">identity</span>
+  <span class="n">matrix</span><span class="p">:</span>
+    <span class="p">[</span> <span class="mf">0.00000</span><span class="p">,</span>  <span class="mf">0.50000</span><span class="p">,</span>  <span class="mf">0.50000</span><span class="p">]</span>
+    <span class="p">[</span> <span class="mf">0.50000</span><span class="p">,</span>  <span class="mf">0.00000</span><span class="p">,</span>  <span class="mf">0.50000</span><span class="p">]</span>
+    <span class="p">[</span> <span class="mf">0.50000</span><span class="p">,</span>  <span class="mf">0.50000</span><span class="p">,</span>  <span class="mf">0.00000</span><span class="p">]</span>
+  <span class="n">This</span> <span class="n">differs</span> <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span> <span class="n">v3</span><span class="p">,</span> <span class="n">whose</span> <span class="n">default</span> <span class="n">was</span> <span class="n">the</span> <span class="n">identity</span> <span class="n">matrix</span><span class="o">.</span> <span class="n">Pass</span>
+  <span class="n">primitive_matrix</span><span class="o">=</span><span class="s1">&#39;P&#39;</span> <span class="p">(</span><span class="ow">or</span> <span class="o">--</span><span class="n">pa</span> <span class="n">P</span> <span class="n">on</span> <span class="n">the</span> <span class="n">command</span> <span class="n">line</span><span class="p">)</span> <span class="n">to</span> <span class="n">restore</span> <span class="n">the</span> <span class="n">v3</span>
+  <span class="n">behaviour</span><span class="o">.</span>
 
 <span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
 <span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">angstrom</span>
-<span class="n">Band</span> <span class="n">structure</span> <span class="n">mode</span>
+<span class="n">Band</span> <span class="n">structure</span> <span class="n">mode</span> <span class="p">(</span><span class="n">Auto</span><span class="p">)</span>
 <span class="n">Settings</span><span class="p">:</span>
-  <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span>
-  <span class="n">Primitive</span> <span class="n">matrix</span><span class="p">:</span>
-    <span class="p">[</span><span class="mf">0.</span>   <span class="mf">0.25</span> <span class="mf">0.25</span><span class="p">]</span>
-    <span class="p">[</span><span class="mf">0.25</span> <span class="mf">0.</span>   <span class="mf">0.25</span><span class="p">]</span>
-    <span class="p">[</span><span class="mf">0.25</span> <span class="mf">0.25</span> <span class="mf">0.</span>  <span class="p">]</span>
+  <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">]</span>
+  <span class="n">Primitive</span> <span class="n">matrix</span> <span class="p">(</span><span class="n">Auto</span><span class="p">):</span>
+    <span class="p">[</span><span class="mf">0.</span>  <span class="mf">0.5</span> <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">[</span><span class="mf">0.5</span> <span class="mf">0.</span>  <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">[</span><span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.</span> <span class="p">]</span>
 <span class="n">Spacegroup</span><span class="p">:</span> <span class="n">Fm</span><span class="o">-</span><span class="mi">3</span><span class="n">m</span> <span class="p">(</span><span class="mi">225</span><span class="p">)</span>
 <span class="n">Number</span> <span class="n">of</span> <span class="n">symmetry</span> <span class="n">operations</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">:</span> <span class="mi">1536</span>
 <span class="n">Use</span> <span class="o">-</span><span class="n">v</span> <span class="n">option</span> <span class="n">to</span> <span class="n">watch</span> <span class="n">primitive</span> <span class="n">cell</span><span class="p">,</span> <span class="n">unit</span> <span class="n">cell</span><span class="p">,</span> <span class="ow">and</span> <span class="n">supercell</span> <span class="n">structures</span><span class="o">.</span>
 
-<span class="n">Force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;FORCE_CONSTANTS&quot;</span><span class="o">.</span>
+<span class="n">Force</span> <span class="n">constants</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;FORCE_CONSTANTS&quot;</span><span class="o">.</span>
 <span class="n">Force</span> <span class="n">constants</span> <span class="nb">format</span> <span class="n">was</span> <span class="n">transformed</span> <span class="n">to</span> <span class="n">compact</span> <span class="nb">format</span><span class="o">.</span>
-<span class="n">Array</span> <span class="n">shape</span> <span class="n">of</span> <span class="n">force</span> <span class="n">constants</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="n">Max</span> <span class="n">drift</span> <span class="n">after</span> <span class="n">symmetrization</span> <span class="n">by</span> <span class="n">translation</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.000000</span> <span class="p">(</span><span class="n">zz</span><span class="p">)</span> <span class="o">-</span><span class="mf">0.000000</span> <span class="p">(</span><span class="n">zz</span><span class="p">)</span>
+<span class="n">Max</span> <span class="n">drift</span> <span class="n">after</span> <span class="n">symmetrization</span> <span class="n">by</span> <span class="n">symfc</span> <span class="n">projector</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span>
 
+<span class="n">SeeK</span><span class="o">-</span><span class="n">path</span> <span class="ow">is</span> <span class="n">used</span> <span class="n">to</span> <span class="n">generate</span> <span class="n">band</span> <span class="n">paths</span><span class="o">.</span>
+  <span class="n">About</span> <span class="n">SeeK</span><span class="o">-</span><span class="n">path</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">seekpath</span><span class="o">.</span><span class="n">readthedocs</span><span class="o">.</span><span class="n">io</span><span class="o">/</span> <span class="p">(</span><span class="n">citation</span> <span class="n">there</span><span class="o">-</span><span class="ow">in</span><span class="p">)</span>
 <span class="n">Reciprocal</span> <span class="n">space</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">reduced</span> <span class="n">coordinates</span><span class="p">:</span>
-<span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span>
-<span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.000</span><span class="p">]</span>
-<span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.000</span>  <span class="mf">0.500</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.000</span>  <span class="mf">0.500</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.625</span>  <span class="mf">0.250</span>  <span class="mf">0.625</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.375</span>  <span class="mf">0.375</span>  <span class="mf">0.750</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span>
 <span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.500</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.500</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.250</span>  <span class="mf">0.750</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.250</span>  <span class="mf">0.750</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.000</span>  <span class="mf">0.500</span><span class="p">]</span>
 
 <span class="n">Summary</span> <span class="n">of</span> <span class="n">calculation</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">&quot;phonopy.yaml&quot;</span><span class="o">.</span>
-                 <span class="n">_</span>
-   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
-  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
- <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
-  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
+<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2026</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">03</span> <span class="mi">16</span><span class="p">:</span><span class="mi">58</span><span class="p">:</span><span class="mi">27</span><span class="p">]</span><span class="o">-------------------------</span>
+                <span class="n">_</span>
+  <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
+ <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
+<span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+ \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/NaCl-VASPdfpt.png"><img alt="_images/NaCl-VASPdfpt.png" height="306" src="_images/NaCl-VASPdfpt.png" width="406" />
+<a class="reference internal image-reference" href="_images/NaCl-VASPdfpt.png"><img alt="_images/NaCl-VASPdfpt.png" height="240" src="_images/NaCl-VASPdfpt.png" width="320" />
 </a>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy</span></code> reads <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> automatically when the file is found
 alongside <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>.  Settings can be supplied through a
@@ -471,6 +479,14 @@ configuration file:</p>
 </div>
 </li>
 </ol>
+</section>
+<section id="non-analytical-term-correction-optional">
+<h2>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Link to this heading">#</a></h2>
+<p>Non-analytical term correction requires the Born effective charges and
+dielectric constant supplied through a <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>).
+These are obtained from a separate VASP calculation with <code class="docutils literal notranslate"><span class="pre">LEPSILON</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>, and the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file can be generated with the <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-born</span></code>
+auxiliary tool. The procedure is identical to the finite-displacement
+case; see <a class="reference internal" href="vasp.html#vasp-interface"><span class="std std-ref">VASP &amp; phonopy calculation</span></a> for details.</p>
 </section>
 </section>
 
@@ -522,6 +538,7 @@ configuration file:</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-run">How to run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
 </ul>
   </nav></div>
 

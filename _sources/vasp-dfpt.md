@@ -27,32 +27,22 @@ procedure to calculate phonon properties may be as follows:
       0.0000000000000000  0.0000000000000000  0.5000000000000000
    ```
 
-
 2) Prepare a perfect supercell structure from `POSCAR-unitcell`,
 
    ```bash
    % phonopy-init -d --dim 2 2 2 -c POSCAR-unitcell
    ```
 
-3) For later convenience, it is recommended to generate `phonopy_disp.yaml`
-   using `SPOSCAR` file,
+   This command writes `SPOSCAR`, `phonopy_disp.yaml`, and the displacement
+   cells `POSCAR-{number}`. For VASP-DFPT, only the perfect supercell `SPOSCAR`
+   is needed, and it will be used as `POSCAR` of the VASP calculation in the
+   next step. The displacement cells `POSCAR-{number}` are not used here; the
+   `-d` option is invoked only to write `phonopy_disp.yaml`, which stores the
+   cell information read back by `phonopy` in the post-process.
 
-   ```bash
-   % phonopy-init -d --dim 1 1 1 --pa auto -c SPOSCAR
-   ```
-
-4) Rename `SPOSCAR` created in (3) to `POSCAR` to be used in the VASP
-   calculation.
-
-   ```bash
-   % mv SPOSCAR POSCAR
-   ```
-
-   `POSCAR-{number}` files will never be used.
-
-4) Calculate force constants of the perfect supercell by running VASP
-   with `IBRION = 8`. An example of `INCAR` for
-   insulator may be such like (**just an example!**)
+3) Calculate force constants of the perfect supercell by running VASP
+   with `IBRION = 8`. An example of `INCAR` for an
+   insulator may look like (**just an example!**)
 
    ```
        PREC = Accurate
@@ -67,61 +57,75 @@ procedure to calculate phonon properties may be as follows:
      LCHARG = .FALSE.
    ```
 
-5) After finishing the VASP calculation, confirm `vasprun.xml`
+4) After finishing the VASP calculation, confirm `vasprun.xml`
    contains `hessian` elements, and then create `FORCE_CONSTANTS` by
 
    ```bash
    % phonopy-init --fc vasprun.xml
    ```
 
-6) Run phonopy
+5) Run phonopy
 
    ~~~
-   % phonopy --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
-
+   % phonopy --band auto -p
            _
-     _ __ | |__   ___  _ __   ___   _ __  _   _
-    | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
-    | |_) | | | | (_) | | | | (_) || |_) | |_| |
-    | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
-    |_|                            |_|    |___/
-                                         2.26.6
+    _ __ | |__   ___  _ __   ___   _ __  _   _
+   | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
+   | |_) | | | | (_) | | | | (_) || |_) | |_| |
+   | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+   |_|                            |_|    |___/
+                                         4.3.1
 
-   Compiled with OpenMP support (max 10 threads).
+   -------------------------[time 2026-07-03 16:51:48]-------------------------
+   Rust backend (phonors) using rayon (10 threads).
    Running in phonopy.load mode.
-   Python version 3.12.4
-   Spglib version 2.4.0
+   Python version 3.13.11
+   Spglib version 2.7.0
+
+   WARNING:
+     primitive_matrix defaulted to 'auto' and was resolved to a non-identity
+     matrix:
+       [ 0.00000,  0.50000,  0.50000]
+       [ 0.50000,  0.00000,  0.50000]
+       [ 0.50000,  0.50000,  0.00000]
+     This differs from phonopy v3, whose default was the identity matrix. Pass
+     primitive_matrix='P' (or --pa P on the command line) to restore the v3
+     behaviour.
 
    Crystal structure was read from "phonopy_disp.yaml".
    Unit of length: angstrom
-   Band structure mode
+   Band structure mode (Auto)
    Settings:
-     Supercell: [1 1 1]
-     Primitive matrix:
-       [0.   0.25 0.25]
-       [0.25 0.   0.25]
-       [0.25 0.25 0.  ]
+     Supercell: [2 2 2]
+     Primitive matrix (Auto):
+       [0.  0.5 0.5]
+       [0.5 0.  0.5]
+       [0.5 0.5 0. ]
    Spacegroup: Fm-3m (225)
    Number of symmetry operations in supercell: 1536
    Use -v option to watch primitive cell, unit cell, and supercell structures.
 
-   Force constants are read from "FORCE_CONSTANTS".
+   Force constants were read from "FORCE_CONSTANTS".
    Force constants format was transformed to compact format.
-   Array shape of force constants: (2, 64, 3, 3)
-   Max drift after symmetrization by translation: -0.000000 (zz) -0.000000 (zz)
+   Max drift after symmetrization by symfc projector: -0.00000000 (yy) -0.00000000 (yy)
 
+   SeeK-path is used to generate band paths.
+     About SeeK-path https://seekpath.readthedocs.io/ (citation there-in)
    Reciprocal space paths in reduced coordinates:
-   [ 0.000  0.000  0.000] --> [ 0.500  0.000  0.000]
-   [ 0.500  0.000  0.000] --> [ 0.500  0.500  0.000]
-   [ 0.500  0.500  0.000] --> [ 0.000  0.000  0.000]
+   [ 0.000  0.000  0.000] --> [ 0.500  0.000  0.500]
+   [ 0.500  0.000  0.500] --> [ 0.625  0.250  0.625]
+   [ 0.375  0.375  0.750] --> [ 0.000  0.000  0.000]
    [ 0.000  0.000  0.000] --> [ 0.500  0.500  0.500]
+   [ 0.500  0.500  0.500] --> [ 0.500  0.250  0.750]
+   [ 0.500  0.250  0.750] --> [ 0.500  0.000  0.500]
 
    Summary of calculation was written in "phonopy.yaml".
-                    _
-      ___ _ __   __| |
-     / _ \ '_ \ / _` |
-    |  __/ | | | (_| |
-     \___|_| |_|\__,_|
+   -------------------------[time 2026-07-03 16:58:27]-------------------------
+                   _
+     ___ _ __   __| |
+    / _ \ '_ \ / _` |
+   |  __/ | | | (_| |
+    \___|_| |_|\__,_|
    ~~~
 
    ```{image} NaCl-VASPdfpt.png
@@ -135,3 +139,12 @@ procedure to calculate phonon properties may be as follows:
    ```bash
    % phonopy band.conf
    ```
+
+## Non-analytical term correction (Optional)
+
+Non-analytical term correction requires the Born effective charges and
+dielectric constant supplied through a `BORN` file ({ref}`born_file`).
+These are obtained from a separate VASP calculation with `LEPSILON =
+.TRUE.`, and the `BORN` file can be generated with the `phonopy-vasp-born`
+auxiliary tool. The procedure is identical to the finite-displacement
+case; see {ref}`vasp_interface` for details.

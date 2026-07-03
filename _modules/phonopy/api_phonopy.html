@@ -3285,7 +3285,6 @@ window.runMermaid = runMermaid;</script>
         <span class="n">cutoff_frequency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">pretend_real</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">band_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">is_projection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">classical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalProperties</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run calculation of thermal properties at constant volume.</span>
@@ -3313,12 +3312,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            properties are calculated only including specified bands.</span>
 <span class="sd">            Note that use of this results in unphysical values, and it is not</span>
 <span class="sd">            recommended to use this feature. Default is None.</span>
-<span class="sd">        is_projection : bool, optional</span>
-<span class="sd">            When True, fractions of squared eigenvector elements are</span>
-<span class="sd">            multiplied with the mode thermal-property quantities at the</span>
-<span class="sd">            respective phonon modes. Note that using this results in</span>
-<span class="sd">            unphysical values, so this feature is not recommended.</span>
-<span class="sd">            Default is False.</span>
 <span class="sd">        classical : bool, optional</span>
 <span class="sd">            If True, use classical statistics; if False, use quantum</span>
 <span class="sd">            statistics. Default is False.</span>
@@ -3343,7 +3336,6 @@ window.runMermaid = runMermaid;</script>
             <span class="n">cutoff_frequency</span><span class="o">=</span><span class="n">cutoff_frequency</span><span class="p">,</span>
             <span class="n">pretend_real</span><span class="o">=</span><span class="n">pretend_real</span><span class="p">,</span>
             <span class="n">band_indices</span><span class="o">=</span><span class="n">band_indices</span><span class="p">,</span>
-            <span class="n">is_projection</span><span class="o">=</span><span class="n">is_projection</span><span class="p">,</span>
             <span class="n">classical</span><span class="o">=</span><span class="n">classical</span><span class="p">,</span>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
         <span class="p">)</span>
