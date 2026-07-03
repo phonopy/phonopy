@@ -2435,7 +2435,6 @@ class Phonopy:
         cutoff_frequency: float | None = None,
         pretend_real: bool = False,
         band_indices: Sequence[Sequence[int]] | None = None,
-        is_projection: bool = False,
         classical: bool = False,
     ) -> ThermalProperties:
         """Run calculation of thermal properties at constant volume.
@@ -2463,12 +2462,6 @@ class Phonopy:
             properties are calculated only including specified bands.
             Note that use of this results in unphysical values, and it is not
             recommended to use this feature. Default is None.
-        is_projection : bool, optional
-            When True, fractions of squared eigenvector elements are
-            multiplied with the mode thermal-property quantities at the
-            respective phonon modes. Note that using this results in
-            unphysical values, so this feature is not recommended.
-            Default is False.
         classical : bool, optional
             If True, use classical statistics; if False, use quantum
             statistics. Default is False.
@@ -2493,7 +2486,6 @@ class Phonopy:
             cutoff_frequency=cutoff_frequency,
             pretend_real=pretend_real,
             band_indices=band_indices,
-            is_projection=is_projection,
             classical=classical,
             lang=self._lang,
         )

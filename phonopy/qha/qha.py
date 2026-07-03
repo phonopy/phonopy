@@ -270,7 +270,9 @@ def run_qha(
         [np.linalg.norm(ph.unitcell.cell, axis=1) for ph in phonopys], dtype="double"
     )
 
-    fe_phonon, entropy, cv = _compute_thermal_properties(phonopys, temps_in, mesh)
+    fe_phonon, entropy, cv = _compute_thermal_properties(
+        phonopys, temps_in, mesh, verbose
+    )
 
     units = get_physical_units()
     fe_phonon_ev = fe_phonon / units.EvTokJmol
@@ -448,6 +450,7 @@ def _compute_thermal_properties(
     phonopys: Sequence[Phonopy],
     temperatures: NDArray[np.double],
     mesh: float | Sequence[int] | NDArray[np.int64],
+    verbose: bool = False,
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Compute phonon thermal properties at each volume point.
 
@@ -455,11 +458,19 @@ def _compute_thermal_properties(
     with shape (temperatures, volumes).
 
     """
-    shape = (len(temperatures), len(phonopys))
+    nvol = len(phonopys)
+    shape = (len(temperatures), nvol)
     fe_phonon = np.zeros(shape, dtype="double")
     entropy = np.zeros(shape, dtype="double")
     cv = np.zeros(shape, dtype="double")
+    if verbose:
+        print("# Phonon thermal properties")
     for i, ph in enumerate(phonopys):
+        if verbose:
+            print(
+                "Computing phonon thermal properties "
+                f"(volume {i + 1}/{nvol}, V = {ph.primitive.volume:.4f} A^3)"
+            )
         ph.run_mesh(mesh)
         tp = ph.run_thermal_properties(temperatures=temperatures)
         fe_phonon[:, i] = tp.free_energy
@@ -510,6 +521,7 @@ def _fit_eos_at_temperatures(
     eos_func = get_eos(eos)
 
     if verbose:
+        print("# EOS fitting")
         print(("#%11s" + "%14s" * 4) % ("T", "E_0", "B_0", "B'_0", "V_0"))
 
     kept: list[int] = []

@@ -1147,10 +1147,7 @@ def _run_thermal_properties(
 ) -> None:
     """Run thermal properties calculation."""
     if log_level:
-        if settings.is_projected_thermal_properties:
-            print("Calculating projected thermal properties...")
-        else:
-            print("Calculating thermal properties...")
+        print("Calculating thermal properties...")
     phonon.run_thermal_properties(
         t_min=settings.min_temperature,
         t_max=settings.max_temperature,
@@ -1158,7 +1155,6 @@ def _run_thermal_properties(
         cutoff_frequency=settings.cutoff_frequency,
         pretend_real=settings.pretend_real,
         band_indices=settings.band_indices,
-        is_projection=settings.is_projected_thermal_properties,
         classical=settings.classical,
     )
     phonon.write_yaml_thermal_properties()
