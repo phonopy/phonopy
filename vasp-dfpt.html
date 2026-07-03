@@ -381,9 +381,9 @@ following structure is a conventional unit cell of NaCl.</p>
 <p>This command writes <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, and the displacement
 cells <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code>. For VASP-DFPT, only the perfect supercell <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>
 is needed, and it will be used as <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> of the VASP calculation in the
-next step. The displacement cells <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> are not used here; the
-<code class="docutils literal notranslate"><span class="pre">-d</span></code> option is invoked only to write <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, which stores the
-cell information read back by <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> in the post-process.</p>
+next step. The displacement cells <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> are not used here,
+whereas <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is needed because it is read by <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> in the
+post-process.</p>
 </li>
 <li><p>Calculate force constants of the perfect supercell by running VASP
 with <code class="docutils literal notranslate"><span class="pre">IBRION</span> <span class="pre">=</span> <span class="pre">8</span></code>. An example of <code class="docutils literal notranslate"><span class="pre">INCAR</span></code> for an
