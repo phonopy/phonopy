@@ -766,14 +766,6 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
-        "--pt",
-        "--projected-thermal-property",
-        dest="is_projected_thermal_properties",
-        action="store_true",
-        default=None,
-        help="Output projected thermal properties",
-    )
-    parser.add_argument(
         "--pypolymlp",
         dest="use_pypolymlp",
         action="store_true",
