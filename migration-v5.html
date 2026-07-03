@@ -341,6 +341,7 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-q-one-off-evaluators-use-run-qpoints">Single-q one-off evaluators: use <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-deprecated-analysis-methods">Other deprecated analysis methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecated-class-phonopyqha-to-run-qha">Deprecated class: <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> to <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecated-utility-method">Deprecated utility method</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#removed-the-factor-argument">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#surfacing-the-warnings-in-existing-code">Surfacing the warnings in existing code</a></li>
@@ -391,9 +392,10 @@ names and list.</p>
 </li>
 <li><p><a class="reference internal" href="#single-q-one-off-evaluators-use-run-qpoints" id="id4">Single-q one-off evaluators: use <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code></a></p></li>
 <li><p><a class="reference internal" href="#other-deprecated-analysis-methods" id="id5">Other deprecated analysis methods</a></p></li>
-<li><p><a class="reference internal" href="#deprecated-utility-method" id="id6">Deprecated utility method</a></p></li>
-<li><p><a class="reference internal" href="#removed-the-factor-argument" id="id7">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a></p></li>
-<li><p><a class="reference internal" href="#surfacing-the-warnings-in-existing-code" id="id8">Surfacing the warnings in existing code</a></p></li>
+<li><p><a class="reference internal" href="#deprecated-class-phonopyqha-to-run-qha" id="id6">Deprecated class: <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> to <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a></p></li>
+<li><p><a class="reference internal" href="#deprecated-utility-method" id="id7">Deprecated utility method</a></p></li>
+<li><p><a class="reference internal" href="#removed-the-factor-argument" id="id8">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a></p></li>
+<li><p><a class="reference internal" href="#surfacing-the-warnings-in-existing-code" id="id9">Surfacing the warnings in existing code</a></p></li>
 </ul>
 </nav>
 <section id="result-accessors-get-dict-to-result-object-properties">
@@ -539,8 +541,88 @@ returns a <code class="docutils literal notranslate"><span class="pre">QpointsPh
 </table>
 </div>
 </section>
+<section id="deprecated-class-phonopyqha-to-run-qha">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Deprecated class: <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> to <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a><a class="headerlink" href="#deprecated-class-phonopyqha-to-run-qha" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> class is deprecated. The replacement is the function
+<code class="docutils literal notranslate"><span class="pre">phonopy.run_qha</span></code>, which takes one <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance per volume point,
+computes the thermal properties internally, and returns an immutable
+<code class="docutils literal notranslate"><span class="pre">QHAResult</span></code> dataclass. File writers and plotters became free functions in
+<code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy.qha.plot</span></code>. See
+<a class="reference internal" href="qha.html#phonopy-qha-python-api"><span class="std std-ref">Python API: run_qha</span></a> for the full description including the new
+lattice-parameter output.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Deprecated (<code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code>)</p></th>
+<th class="head"><p>Replacement</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PhonopyQHA(volumes,</span> <span class="pre">...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_qha(phonopys,</span> <span class="pre">...)</span></code> (<code class="docutils literal notranslate"><span class="pre">QHAResult</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">volume_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.equilibrium_volumes</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gibbs_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.gibbs_free_energies</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bulk_modulus_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.bulk_moduli</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">thermal_expansion</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.thermal_expansion</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">heat_capacity_P_polyfit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.heat_capacity_P.heat_capacities</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">heat_capacity_P_numerical</span></code></p></td>
+<td><p>not provided (use <code class="docutils literal notranslate"><span class="pre">heat_capacity_P</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gruneisen_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.gruneisen_parameters</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">helmholtz_volume</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.helmholtz_volume</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">write_*</span></code> methods</p></td>
+<td><p>functions in <code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">plot_*</span></code> methods</p></td>
+<td><p>functions in <code class="docutils literal notranslate"><span class="pre">phonopy.qha.plot</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bulk_modulus</span></code> (E-V fitting)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">phonopy.qha.core.BulkModulus</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Deprecated:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qha</span> <span class="o">=</span> <span class="n">PhonopyQHA</span><span class="p">(</span>
+    <span class="n">volumes</span><span class="o">=</span><span class="n">volumes</span><span class="p">,</span>
+    <span class="n">electronic_energies</span><span class="o">=</span><span class="n">energies</span><span class="p">,</span>
+    <span class="n">temperatures</span><span class="o">=</span><span class="n">temperatures</span><span class="p">,</span>
+    <span class="n">free_energy</span><span class="o">=</span><span class="n">fe_phonon</span><span class="p">,</span>
+    <span class="n">cv</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span>
+    <span class="n">entropy</span><span class="o">=</span><span class="n">entropy</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">volume_temperature</span> <span class="o">=</span> <span class="n">qha</span><span class="o">.</span><span class="n">volume_temperature</span>
+<span class="n">qha</span><span class="o">.</span><span class="n">write_volume_temperature</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Replacement:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_qha</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_volume_temperature</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">run_qha</span><span class="p">(</span><span class="n">phonopys</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">,</span> <span class="n">energies</span><span class="p">)</span>  <span class="c1"># returns a QHAResult</span>
+<span class="n">volume_temperature</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">equilibrium_volumes</span>
+<span class="n">write_volume_temperature</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command-line script is not affected; it keeps working
+on the legacy implementation until a successor is provided.</p>
+</section>
 <section id="deprecated-utility-method">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">Deprecated utility method</a><a class="headerlink" href="#deprecated-utility-method" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Deprecated utility method</a><a class="headerlink" href="#deprecated-utility-method" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Deprecated method</p></th>
@@ -560,7 +642,7 @@ constants or NAC parameters. <code class="docutils literal notranslate"><span cl
 extend the notice period.</p>
 </section>
 <section id="removed-the-factor-argument">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a><a class="headerlink" href="#removed-the-factor-argument" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a><a class="headerlink" href="#removed-the-factor-argument" title="Link to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument of <code class="docutils literal notranslate"><span class="pre">Phonopy(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy.load(...)</span></code> has
 already been removed (it raised an error in recent v4.x). Set the
 frequency unit conversion factor through the <code class="docutils literal notranslate"><span class="pre">unit_conversion_factor</span></code>
@@ -576,7 +658,7 @@ setter instead.</p>
 </div>
 </section>
 <section id="surfacing-the-warnings-in-existing-code">
-<h2><a class="toc-backref" href="#id8" role="doc-backlink">Surfacing the warnings in existing code</a><a class="headerlink" href="#surfacing-the-warnings-in-existing-code" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Surfacing the warnings in existing code</a><a class="headerlink" href="#surfacing-the-warnings-in-existing-code" title="Link to this heading">#</a></h2>
 <p>Python hides <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> by default in many contexts. To see
 which deprecated calls a script makes before v5.0 removes them, run it
 with warnings made visible:</p>
@@ -647,6 +729,7 @@ deprecations, for example:</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-q-one-off-evaluators-use-run-qpoints">Single-q one-off evaluators: use <code class="docutils literal notranslate"><span class="pre">run_qpoints</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-deprecated-analysis-methods">Other deprecated analysis methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecated-class-phonopyqha-to-run-qha">Deprecated class: <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> to <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deprecated-utility-method">Deprecated utility method</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#removed-the-factor-argument">Removed: the <code class="docutils literal notranslate"><span class="pre">factor</span></code> argument</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#surfacing-the-warnings-in-existing-code">Surfacing the warnings in existing code</a></li>
