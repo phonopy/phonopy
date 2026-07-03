@@ -1,44 +1,10 @@
 """Phonon thermal properties at constant volume."""
 
-# Copyright (C) 2011 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
 from __future__ import annotations
 
 import os
 import warnings
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Any, Literal, TypedDict
 
 import numpy as np
@@ -97,135 +63,6 @@ def mode_cv(
         return get_physical_units().KB * x**2 * expVal / (expVal - 1.0) ** 2
 
 
-def mode_F(
-    temp: float,
-    freqs: float | NDArray[np.double],
-    classical: bool = False,
-) -> float | NDArray[np.double]:
-    """Return mode Helmholtz free energy.
-
-    Parameters
-    ----------
-    temp : float
-        Temperature in K.
-    freqs : float or ndarray
-        Phonon frequency in eV.
-    classical : bool
-        If True use classical statistics.
-        If False use quantum statistics.
-
-    Returns
-    -------
-    float or ndarray
-        Mode Helmholtz free energy in eV.
-
-    """
-    if classical:
-        return (
-            get_physical_units().KB
-            * temp
-            * np.log(freqs / (get_physical_units().KB * temp))
-        )
-    else:
-        return (
-            get_physical_units().KB
-            * temp
-            * np.log(1.0 - np.exp((-freqs) / (get_physical_units().KB * temp)))
-            + freqs / 2
-        )
-
-
-def mode_S(
-    temp: float,
-    freqs: float | NDArray[np.double],
-    classical: bool = False,
-) -> float | NDArray[np.double]:
-    """Return mode entropy.
-
-    Parameters
-    ----------
-    temp : float
-        Temperature in K.
-    freqs : float or ndarray
-        Phonon frequency in eV.
-    classical : bool
-        If True use classical statistics.
-        If False use quantum statistics.
-
-    Returns
-    -------
-    float or ndarray
-        Mode entropy in eV/K.
-
-    """
-    if classical:
-        return get_physical_units().KB - get_physical_units().KB * np.log(
-            freqs / (get_physical_units().KB * temp)
-        )
-    else:
-        val = freqs / (2 * get_physical_units().KB * temp)
-        return 1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(
-            val
-        ) - get_physical_units().KB * np.log(2 * np.sinh(val))
-
-
-def mode_ZPE(
-    temp: float,
-    freqs: float | NDArray[np.double],
-    classical: bool = False,
-) -> float | NDArray[np.double]:
-    """Return half of phonon frequency as mode zero point energy.
-
-    Parameters
-    ----------
-    temp : float
-        Dummy parameter. This is not used but needed to exist.
-    freqs : float or ndarray
-        Phonon frequency in eV.
-    classical : bool
-        If True use classical statistics.
-        If False use quantum statistics.
-
-    Returns
-    -------
-    float or ndarray
-        Half of phonon frequency as mode zero point energy in eV.
-
-    """
-    if classical:
-        return np.array(len(freqs) * [0.0])  # type: ignore[arg-type]
-    else:
-        return freqs / 2
-
-
-def mode_zero(
-    temp: float,
-    freqs: float | NDArray[np.double],
-    classical: bool = False,
-) -> float | NDArray[np.double]:
-    """Return zero.
-
-    Parameters
-    ----------
-    temp : float
-        Dummy parameter. This is not used but needed to exist.
-    freqs : float or ndarray
-        Dummy parameter. This is not used except for determining the array shape.
-    classical : bool
-        Dummy parameter. This is not used but needed to exist.
-
-    Returns
-    -------
-    float or ndarray
-        0 or an array of zero.
-
-    """
-    if isinstance(freqs, np.ndarray):
-        return np.zeros_like(freqs)
-    else:
-        return 0.0
-
-
 class ThermalPropertiesBase:
     """Base class of thermal property calculation."""
 
@@ -235,7 +72,6 @@ class ThermalPropertiesBase:
         cutoff_frequency: float | None = None,
         pretend_real: bool = False,
         band_indices: Sequence[Sequence[int]] | None = None,
-        is_projection: bool = False,
         classical: bool = False,
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
@@ -252,7 +88,6 @@ class ThermalPropertiesBase:
          See Phonopy.run_thermal_properties().
 
         """
-        self._is_projection = is_projection
         self._band_indices = None
         self._classical = classical
         self._lang: Literal["C", "Rust"] = lang
@@ -268,13 +103,8 @@ class ThermalPropertiesBase:
             self._frequencies = np.array(
                 mesh.frequencies[:, bi], dtype="double", order="C"
             )
-            if mesh.eigenvectors is not None:
-                self._eigenvectors = np.array(
-                    mesh.eigenvectors[:, :, bi], dtype="double", order="C"
-                )
         else:
             self._frequencies = mesh.frequencies
-            self._eigenvectors = mesh.eigenvectors
 
         if pretend_real:
             self._frequencies = abs(self._frequencies)
@@ -284,9 +114,18 @@ class ThermalPropertiesBase:
         )
         self._weights = mesh.weights
         self._num_modes = self._frequencies.shape[1] * self._weights.sum()
-        self._num_integrated_modes = np.sum(
-            self._weights * (self._frequencies > self._cutoff_frequency).sum(axis=1)
+
+        # Precompute masked (frequency, weight) pairs once. The cutoff mask
+        # does not depend on temperature, so each thermal property reduces to a
+        # single weighted sum over the surviving modes (see
+        # _run_py_thermal_properties).
+        cond = self._frequencies > self._cutoff_frequency
+        self._masked_freqs = self._frequencies[cond]
+        weights_per_mode = np.broadcast_to(
+            self._weights[:, None], self._frequencies.shape
         )
+        self._masked_weights = np.array(weights_per_mode[cond], dtype="double")
+        self._num_integrated_modes = np.sum(self._weights * cond.sum(axis=1))
 
         self._num_formula_units = mesh.dynamical_matrix.primitive.Z
 
@@ -303,61 +142,6 @@ class ThermalPropertiesBase:
         """Return cutoff frequency in eV."""
         return self._cutoff_frequency
 
-    def run_free_energy(self, t: float) -> float | NDArray[np.double]:
-        """Calculate mode Helmholtz free energy in kJ/mol."""
-        if t > 0:
-            free_energy = self._calculate_thermal_property(mode_F, t)
-        else:
-            free_energy = self._calculate_thermal_property(mode_ZPE, -1)
-        return free_energy / np.sum(self._weights) * get_physical_units().EvTokJmol  # type: ignore[return-value]
-
-    def run_heat_capacity(self, t: float) -> float | NDArray[np.double]:
-        """Calculate mode heat capacity in kJ/K/mol."""
-        if t > 0:
-            cv = self._calculate_thermal_property(mode_cv, t)
-        else:
-            cv = self._calculate_thermal_property(mode_zero, -1)
-        return cv / np.sum(self._weights) * get_physical_units().EvTokJmol  # type: ignore[return-value]
-
-    def run_entropy(self, t: float) -> float | NDArray[np.double]:
-        """Calculate mode entropy in kJ/K/mol."""
-        if t > 0:
-            entropy = self._calculate_thermal_property(mode_S, t)
-        else:
-            entropy = self._calculate_thermal_property(mode_zero, -1)
-        return entropy / np.sum(self._weights) * get_physical_units().EvTokJmol  # type: ignore[return-value]
-
-    def _calculate_thermal_property(
-        self,
-        func: Callable[..., float | NDArray[np.double]],
-        t: float,
-    ) -> float | NDArray[np.double]:
-        if not self._is_projection:
-            t_property = 0.0
-            for freqs, w in zip(self._frequencies, self._weights, strict=True):
-                cond = freqs > self._cutoff_frequency
-                t_property += (
-                    np.sum(func(t, freqs[cond], classical=self._classical)) * w
-                )
-            return t_property
-        else:
-            t_property = np.zeros(len(self._frequencies[0]), dtype="double")
-            for freqs, eigvecs2, w in zip(
-                self._frequencies,
-                np.abs(self._eigenvectors) ** 2,  # type: ignore[arg-type]
-                self._weights,
-                strict=True,
-            ):
-                cond = freqs > self._cutoff_frequency
-                t_property += (
-                    np.dot(
-                        eigvecs2[:, cond],
-                        func(t, freqs[cond], classical=self._classical),
-                    )
-                    * w
-                )
-            return t_property
-
 
 class ThermalProperties(ThermalPropertiesBase):
     """Phonon thermal property calculation."""
@@ -368,7 +152,6 @@ class ThermalProperties(ThermalPropertiesBase):
         cutoff_frequency: float | None = None,
         pretend_real: bool = False,
         band_indices: Sequence[Sequence[int]] | None = None,
-        is_projection: bool = False,
         classical: bool = False,
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
@@ -390,14 +173,12 @@ class ThermalProperties(ThermalPropertiesBase):
             cutoff_frequency=cutoff_frequency,
             pretend_real=pretend_real,
             band_indices=band_indices,
-            is_projection=is_projection,
             classical=classical,
             lang=lang,
         )
         self._thermal_properties = None
         self._temperatures = None
         self._zero_point_energy = None
-        self._projected_thermal_properties = None
 
         zp_energy = 0.0
         if classical:
@@ -633,22 +414,6 @@ class ThermalProperties(ThermalPropertiesBase):
         else:
             self._run_py_thermal_properties()
 
-        if self._is_projection:
-            fe = []
-            entropy = []
-            cv = []
-            for t in self._temperatures:  # type: ignore[union-attr]
-                fe.append(self.run_free_energy(t))
-                entropy.append(self.run_entropy(t) * 1000)
-                cv.append(self.run_heat_capacity(t) * 1000)
-
-            self._projected_thermal_properties = (
-                self._temperatures,
-                np.array(fe, dtype="double"),
-                np.array(entropy, dtype="double"),
-                np.array(cv, dtype="double"),
-            )
-
     def write_yaml(
         self,
         filename: str | os.PathLike = "thermal_properties.yaml",
@@ -656,8 +421,6 @@ class ThermalProperties(ThermalPropertiesBase):
     ) -> None:
         """Write thermal properties in yaml file."""
         lines = self._get_tp_yaml_lines(volume=volume)
-        if self._is_projection:
-            lines += self._get_projected_tp_yaml_lines()
         with open(filename, "w") as w:
             w.write("\n".join(lines))
 
@@ -674,13 +437,6 @@ class ThermalProperties(ThermalPropertiesBase):
             get_physical_units().KB,
             self._classical,
         )
-        # for f, w in zip(self._frequencies, self._weights):
-        #     phonoc.thermal_properties(
-        #         props,
-        #         self._temperatures,
-        #         np.array(f, dtype='double', order='C')[None, :],
-        #         np.array([w], dtype='int64'),
-        #         cutoff_frequency)
 
         props /= np.sum(self._weights)
         fe = props[:, 0] * get_physical_units().EvTokJmol + self._zero_point_energy  # type: ignore[operator]
@@ -689,19 +445,56 @@ class ThermalProperties(ThermalPropertiesBase):
         self._thermal_properties = (self._temperatures, fe, entropy, cv)
 
     def _run_py_thermal_properties(self) -> None:
-        fe = []
-        entropy = []
-        cv = []
-        for t in self._temperatures:  # type: ignore[union-attr]
-            props = self._get_py_thermal_properties(t)
-            fe.append(props[0])
-            entropy.append(props[1] * 1000)
-            cv.append(props[2] * 1000)
+        # Free energy, entropy and heat capacity are computed over the whole
+        # (temperature x mode) grid at once, reusing the precomputed masked
+        # frequencies and weights. The per-mode formulas are inlined here so
+        # free energy / entropy / heat capacity can be evaluated in a single
+        # vectorized pass without a Python loop over temperatures.
+        temps = np.asarray(self._temperatures, dtype="double")
+        freqs = self._masked_freqs
+        weights = self._masked_weights
+        KB = get_physical_units().KB
+        EvTokJmol = get_physical_units().EvTokJmol
+        sumw = np.sum(self._weights)
+
+        fe = np.zeros(len(temps), dtype="double")
+        entropy = np.zeros(len(temps), dtype="double")
+        cv = np.zeros(len(temps), dtype="double")
+
+        # t = 0: free energy is the zero-point energy (quantum) or 0
+        # (classical); entropy and heat capacity vanish.
+        if not self._classical:
+            fe[temps <= 0] = np.dot(freqs / 2, weights)
+
+        # t > 0: evaluate in temperature blocks to bound peak memory (a single
+        # (n_temp, n_mode) array can be large for dense non-symmetric meshes).
+        pos_idx = np.flatnonzero(temps > 0)
+        block = max(1, 4_000_000 // max(1, freqs.size))
+        f = freqs[None, :]
+        for lo in range(0, len(pos_idx), block):
+            idx = pos_idx[lo : lo + block]
+            T = temps[idx][:, None]
+            if self._classical:
+                ln = np.log(f / (KB * T))
+                fe[idx] = (KB * T * ln) @ weights
+                entropy[idx] = (KB - KB * ln) @ weights
+                cv[idx] = KB * weights.sum()
+            else:
+                x = f / (KB * T)
+                ex = np.exp(x)
+                fe[idx] = (KB * T * np.log(1.0 - np.exp(-x)) + f / 2) @ weights
+                v = x / 2
+                sinh_v = np.sinh(v)
+                entropy[idx] = (
+                    KB * v * np.cosh(v) / sinh_v - KB * np.log(2 * sinh_v)
+                ) @ weights
+                cv[idx] = (KB * x**2 * ex / (ex - 1.0) ** 2) @ weights
+
         self._thermal_properties = (
             self._temperatures,
-            np.array(fe, dtype="double"),
-            np.array(entropy, dtype="double"),
-            np.array(cv, dtype="double"),
+            fe / sumw * EvTokJmol,
+            entropy / sumw * EvTokJmol * 1000,
+            cv / sumw * EvTokJmol * 1000,
         )
 
     def _get_tp_yaml_lines(self, volume: float | None = None) -> list[str]:
@@ -747,48 +540,3 @@ class ThermalProperties(ThermalPropertiesBase):
             lines.append("  energy:        %15.7f" % (fe[i] + entropy[i] * t / 1000))
             lines.append("")
         return lines
-
-    def _get_projected_tp_yaml_lines(self) -> list[str]:
-        lines = []
-        lines.append("projected_thermal_properties:")
-        temperatures, fe, entropy, cv = self._projected_thermal_properties  # type: ignore[misc]
-        for i, t in enumerate(temperatures):  # type: ignore[arg-type]
-            lines.append("- temperature:   %13.7f" % t)
-            line = "  free_energy:   [ "
-            line += ", ".join(["%13.7f" % x for x in fe[i]])
-            line += " ] # %13.7f" % np.sum(fe[i])
-            lines.append(line)
-            line = "  entropy:       [ "
-            line += ", ".join(["%13.7f" % x for x in entropy[i]])
-            line += " ] # %13.7f" % np.sum(entropy[i])
-            lines.append(line)
-            # Sometimes 'nan' of C_V is returned at low temperature.
-            line = "  heat_capacity: [ "
-            sum_cv = 0.0
-            for j, cv_i in enumerate(cv[i]):
-                if np.isnan(cv_i):
-                    line += "%13.7f" % 0
-                else:
-                    sum_cv += cv_i
-                    line += "%13.7f" % cv_i
-                if j < len(cv[i]) - 1:
-                    line += ", "
-                else:
-                    line += " ]"
-            line += " # %13.7f" % sum_cv
-            lines.append(line)
-            energy = fe[i] + entropy[i] * t / 1000
-            line = "  energy:        [ "
-            line += ", ".join(["%13.7f" % x for x in energy])
-            line += " ] # %13.7f" % np.sum(energy)
-            lines.append(line)
-        return lines
-
-    def _get_py_thermal_properties(
-        self, t: float
-    ) -> tuple[
-        float | NDArray[np.double],
-        float | NDArray[np.double],
-        float | NDArray[np.double],
-    ]:
-        return self.run_free_energy(t), self.run_entropy(t), self.run_heat_capacity(t)

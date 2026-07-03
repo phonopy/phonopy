@@ -1155,7 +1155,6 @@ class PhonopySettings(Settings):
         self.is_thermal_displacement_matrices: bool = False
         self.is_thermal_distances: bool = False
         self.is_thermal_properties: bool = False
-        self.is_projected_thermal_properties: bool = False
         self.include_force_constants: bool = False
         self.include_force_sets: bool = False
         self.include_nac_params: bool = True
@@ -1285,10 +1284,6 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
         if "pretend_real" in arg_list:
             if args.pretend_real:
                 self._confs["pretend_real"] = ".true."
-
-        if "is_projected_thermal_properties" in arg_list:
-            if args.is_projected_thermal_properties:
-                self._confs["ptprop"] = ".true."
 
         if "is_thermal_displacements" in arg_list:
             if args.is_thermal_displacements:
@@ -1662,13 +1657,6 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
                 if confs["tprop"].lower() == ".false.":
                     self._set_parameter("tprop", False)
 
-            # Projected thermal properties
-            if conf_key == "ptprop":
-                if confs["ptprop"].lower() == ".true.":
-                    self._set_parameter("ptprop", True)
-                elif confs["ptprop"].lower() == ".false.":
-                    self._set_parameter("ptprop", False)
-
             # Use imaginary frequency as real for thermal property calculation
             if conf_key == "pretend_real":
                 if confs["pretend_real"].lower() == ".true.":
@@ -2007,17 +1995,6 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
         # Thermal properties
         if "tprop" in params:
             settings.is_thermal_properties = params["tprop"]
-            # Exclusive conditions
-            settings.is_thermal_displacements = False
-            settings.is_thermal_displacement_matrices = False
-            settings.is_thermal_distances = False
-
-        # Projected thermal properties
-        if "ptprop" in params and params["ptprop"]:
-            settings.is_thermal_properties = True
-            settings.is_projected_thermal_properties = True
-            settings.is_eigenvectors = True
-            settings.is_mesh_symmetry = False
             # Exclusive conditions
             settings.is_thermal_displacements = False
             settings.is_thermal_displacement_matrices = False

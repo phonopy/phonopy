@@ -201,9 +201,20 @@ def get_fe_ev_lines(
         args, verbose=verbose
     )
 
+    n_vol = len(states_list)
+    if verbose:
+        print("Computing electronic free energies for %d volume(s)" % n_vol)
+        sys.stdout.flush()
     free_energies = []
     temperatures = None
-    for energy, electronic_states in zip(energy_sigma0, states_list, strict=True):
+    for i, (energy, electronic_states) in enumerate(
+        zip(energy_sigma0, states_list, strict=True)
+    ):
+        if verbose:
+            print(
+                "  [%d/%d] volume = %.4f A^3" % (i + 1, n_vol, electronic_states.volume)
+            )
+            sys.stdout.flush()
         temps, fe = get_free_energy_at_T(
             args.tmin,
             args.tmax,
@@ -218,6 +229,9 @@ def get_fe_ev_lines(
         else:
             assert (np.abs(temperatures - temps) < 1e-5).all()
     assert temperatures is not None
+    if verbose:
+        print("Done. %d volume(s) processed." % n_vol)
+        sys.stdout.flush()
 
     scale_factor = args.scale_factor
     volumes = volumes * scale_factor
