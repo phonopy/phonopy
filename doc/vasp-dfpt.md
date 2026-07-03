@@ -36,9 +36,9 @@ procedure to calculate phonon properties may be as follows:
    This command writes `SPOSCAR`, `phonopy_disp.yaml`, and the displacement
    cells `POSCAR-{number}`. For VASP-DFPT, only the perfect supercell `SPOSCAR`
    is needed, and it will be used as `POSCAR` of the VASP calculation in the
-   next step. The displacement cells `POSCAR-{number}` are not used here; the
-   `-d` option is invoked only to write `phonopy_disp.yaml`, which stores the
-   cell information read back by `phonopy` in the post-process.
+   next step. The displacement cells `POSCAR-{number}` are not used here,
+   whereas `phonopy_disp.yaml` is needed because it is read by `phonopy` in the
+   post-process.
 
 3) Calculate force constants of the perfect supercell by running VASP
    with `IBRION = 8`. An example of `INCAR` for an
