@@ -1,8 +1,16 @@
 """Tests of electronic free energy calculations."""
 
 import numpy as np
+import pytest
 
-from phonopy.qha.electron import ElectronFreeEnergy, get_free_energy_at_T
+from phonopy.qha.electron import (
+    ElectronFreeEnergy,
+    ElectronicStates,
+    compute_free_energy_and_entropy,
+    get_free_energy_at_T,
+    read_electronic_states_hdf5,
+    write_electronic_states_hdf5,
+)
 
 eigvals_Al = """ -3.1277  20.6836  20.6836  20.6836  22.1491  22.1491  22.1491  24.4979  27.5181  27.5181  30.3260  32.6840
  -2.9388  18.0492  20.1052  20.1052  22.8186  23.0196  23.0196  26.3365  26.5334  26.5334  29.6719  33.6291
@@ -77,6 +85,89 @@ eigvals_Al = """ -3.1277  20.6836  20.6836  20.6836  22.1491  22.1491  22.1491  
   6.0139   7.3687   8.7944  10.3799  19.9725  21.8262  28.1228  29.1805  35.1953  40.0277  42.0199  42.2035
   7.1712   7.1712   8.1868   9.1337  23.8810  23.8810  24.4184  26.4784  35.2568  40.0588  42.6207  42.6207"""
 
+WEIGHTS_AL = np.array(
+    [
+        1,
+        8,
+        8,
+        8,
+        8,
+        8,
+        4,
+        6,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        12,
+        6,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        12,
+        6,
+        24,
+        24,
+        24,
+        24,
+        24,
+        12,
+        6,
+        24,
+        24,
+        24,
+        12,
+        6,
+        24,
+        12,
+        3,
+        24,
+        48,
+        48,
+        48,
+        24,
+        24,
+        48,
+        48,
+        48,
+        48,
+        48,
+        24,
+        24,
+        48,
+        48,
+        48,
+        24,
+        24,
+        48,
+        24,
+        12,
+        24,
+        48,
+        24,
+        24,
+        48,
+        24,
+        12,
+        6,
+    ],
+    dtype="int64",
+)
+
+
+def _al_eigenvalues() -> np.ndarray:
+    """Return Al eigenvalues reshaped to (spin=1, kpoints, bands)."""
+    return np.reshape([float(x) for x in eigvals_Al.split()], (1, len(WEIGHTS_AL), -1))
+
 
 def test_Al():
     """Test of ElectronFreeEnergy by Aluminium.
@@ -126,84 +217,8 @@ def test_Al():
     PAW_PBE Al 04Jan2001
 
     """
-    weights = np.array(
-        [
-            1,
-            8,
-            8,
-            8,
-            8,
-            8,
-            4,
-            6,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            12,
-            6,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            24,
-            12,
-            6,
-            24,
-            24,
-            24,
-            24,
-            24,
-            12,
-            6,
-            24,
-            24,
-            24,
-            12,
-            6,
-            24,
-            12,
-            3,
-            24,
-            48,
-            48,
-            48,
-            24,
-            24,
-            48,
-            48,
-            48,
-            48,
-            48,
-            24,
-            24,
-            48,
-            48,
-            48,
-            24,
-            24,
-            48,
-            24,
-            12,
-            24,
-            48,
-            24,
-            24,
-            48,
-            24,
-            12,
-            6,
-        ],
-        dtype="int64",
-    )
-    eigvals = np.reshape([float(x) for x in eigvals_Al.split()], (1, len(weights), -1))
+    weights = WEIGHTS_AL
+    eigvals = _al_eigenvalues()
     n_electrons = 3.0
     efe = ElectronFreeEnergy(eigvals, weights, n_electrons)
     efe.run(1000)
@@ -218,3 +233,263 @@ def test_Al():
     (temperaturs, free_energy) = get_free_energy_at_T(
         0, 1000, 10, eigvals, weights, n_electrons
     )
+
+
+def test_Al_free_energy_vs_temperature():
+    """Regression test locking down the full T-dependence of free energy.
+
+    Reference values were captured from the pre-optimization implementation
+    of ElectronFreeEnergy (bisection root-finding, Python-loop entropy sum)
+    so that later performance work does not silently change results.
+    """
+    eigvals = _al_eigenvalues()
+    n_electrons = 3.0
+    temperatures, free_energies = get_free_energy_at_T(
+        0, 1000, 10, eigvals, WEIGHTS_AL, n_electrons
+    )
+
+    reference_temperatures = np.arange(0, 1000 + 1e-8, 10, dtype="double")
+    reference_free_energies = np.array(
+        [
+            10.761700891302382,
+            10.761689849563359,
+            10.761678656292363,
+            10.761667464765186,
+            10.761656271445391,
+            10.761645078427547,
+            10.761633885560743,
+            10.761622694235996,
+            10.761611501349405,
+            10.761600308477922,
+            10.76158911660751,
+            10.761577923927417,
+            10.761566730331525,
+            10.761555538060685,
+            10.761544341925653,
+            10.761533143962284,
+            10.761521937158621,
+            10.76151071185174,
+            10.76149945781969,
+            10.76148815141021,
+            10.761476763839504,
+            10.761465254592446,
+            10.761453568819881,
+            10.761441645145657,
+            10.761429403496932,
+            10.761416759789876,
+            10.761403617498878,
+            10.76138988037014,
+            10.761375447000646,
+            10.761360221994307,
+            10.761344111492797,
+            10.761327034661518,
+            10.761308911845282,
+            10.76128968147177,
+            10.761269283538072,
+            10.761247671733763,
+            10.761224804278141,
+            10.76120065105271,
+            10.76117518411368,
+            10.761148386615517,
+            10.76112024098224,
+            10.761090736612067,
+            10.761059869408315,
+            10.761027633728084,
+            10.760994029269835,
+            10.760959060138218,
+            10.76092272771057,
+            10.760885036835402,
+            10.760845998077464,
+            10.760805616497775,
+            10.760763901510618,
+            10.760720864034907,
+            10.760676513359767,
+            10.760630861132126,
+            10.760583919629708,
+            10.760535697549544,
+            10.760486208516662,
+            10.76043546537135,
+            10.760383478154148,
+            10.760330258705595,
+            10.760275820851579,
+            10.760220175445196,
+            10.760163334638335,
+            10.760105309167166,
+            10.760046112041456,
+            10.759985751862775,
+            10.759924242764013,
+            10.7598615947628,
+            10.759797818294114,
+            10.75973292390678,
+            10.75966692202405,
+            10.759599822894332,
+            10.75953163483578,
+            10.759462370868883,
+            10.759392037809842,
+            10.759320644883049,
+            10.759248202957412,
+            10.759174718291796,
+            10.759100202168675,
+            10.75902466094541,
+            10.758948102091582,
+            10.758870536993163,
+            10.758791969153513,
+            10.7587124088803,
+            10.758631863161606,
+            10.758550339760548,
+            10.758467842914158,
+            10.758384381314704,
+            10.758299961487063,
+            10.758214589323387,
+            10.758128270484994,
+            10.758041011754145,
+            10.757952819176586,
+            10.757863698198994,
+            10.757773653732965,
+            10.757682692238893,
+            10.75759081747962,
+            10.757498034565502,
+            10.75740434872408,
+            10.757309765059365,
+            10.757214287214996,
+        ],
+        dtype="double",
+    )
+
+    np.testing.assert_allclose(temperatures, reference_temperatures, atol=1e-8)
+    np.testing.assert_allclose(free_energies, reference_free_energies, atol=1e-8)
+
+
+def test_spin_polarized():
+    """Regression test for spin-polarized (g=1) free energy calculation.
+
+    Eigenvalues are synthetic but deterministic (fixed RNG seed) so the
+    reference values below stay reproducible. Reference values were
+    captured from the pre-optimization implementation of
+    ElectronFreeEnergy.
+    """
+    rng = np.random.default_rng(12345)
+    nk = 20
+    nb = 15
+    eig_up = rng.uniform(-5, 15, size=(nk, nb))
+    eig_dn = rng.uniform(-5, 15, size=(nk, nb))
+    eigvals = np.stack([eig_up, eig_dn], axis=0)  # shape=(spin=2, kpoints, bands)
+    weights = rng.integers(1, 10, size=nk).astype("int64")
+    n_electrons = 12.0
+
+    efe = ElectronFreeEnergy(eigvals, weights, n_electrons)
+    assert efe._g == 1
+
+    temperatures, free_energies = get_free_energy_at_T(
+        0, 800, 50, eigvals, weights, n_electrons
+    )
+
+    reference_temperatures = np.arange(0, 800 + 1e-8, 50, dtype="double")
+    reference_free_energies = np.array(
+        [
+            -13.488757960764245,
+            -13.48883253756736,
+            -13.48894031927619,
+            -13.4891825668506,
+            -13.489596855038558,
+            -13.49016611385322,
+            -13.490866778293316,
+            -13.491681047248083,
+            -13.492597259139984,
+            -13.493608457217602,
+            -13.49471113842609,
+            -13.495904302400268,
+            -13.497188691035994,
+            -13.498566169814145,
+            -13.500039233028605,
+            -13.501610633806317,
+            -13.503283119147643,
+        ],
+        dtype="double",
+    )
+
+    np.testing.assert_allclose(temperatures, reference_temperatures, atol=1e-8)
+    np.testing.assert_allclose(free_energies, reference_free_energies, atol=1e-8)
+
+
+def test_compute_free_energy_and_entropy_Al():
+    """Free energies match get_free_energy_at_T and S_el = -dF/dT holds.
+
+    The entropy at 1000 K is also pinned against the VASP EENTRO reference
+    of test_Al (T * S = 0.00959209 eV at 1000 K).
+
+    """
+    eigenvalues = _al_eigenvalues()
+    states = ElectronicStates(
+        eigenvalues=eigenvalues, weights=WEIGHTS_AL, n_electrons=3.0
+    )
+    temperatures, fe_ref = get_free_energy_at_T(
+        0, 1000, 10, eigenvalues, WEIGHTS_AL, 3.0
+    )
+
+    free_energies, entropies = compute_free_energy_and_entropy(states, temperatures)
+
+    np.testing.assert_allclose(free_energies, fe_ref, rtol=0, atol=1e-12)
+    assert entropies[0] == 0.0
+    np.testing.assert_allclose(entropies[-1], 0.00959209 / 1000, rtol=1e-4)
+    # Thermodynamic identity S = -dF/dT, up to the O(dT^2) error of the
+    # numerical differentiation of F.
+    dfdt = -np.gradient(free_energies, temperatures, edge_order=2)
+    np.testing.assert_allclose(entropies[10:], dfdt[10:], rtol=1e-2)
+
+
+def test_electronic_states_hdf5_round_trip(tmp_path):
+    """Electronic states survive a write/read round trip."""
+    rng = np.random.default_rng(42)
+    states_in = [
+        ElectronicStates(
+            eigenvalues=rng.standard_normal((1, 5, 8)),
+            weights=np.ones(5),
+            n_electrons=4.0,
+            volume=10.0,
+            internal_energy=-1.0,
+        ),
+        ElectronicStates(
+            eigenvalues=rng.standard_normal((2, 7, 6)),
+            weights=np.arange(1, 8, dtype="double"),
+            n_electrons=6.0,
+            volume=12.0,
+            internal_energy=-2.0,
+        ),
+    ]
+    filename = tmp_path / "electronic_states.hdf5"
+
+    write_electronic_states_hdf5(states_in, filename=filename)
+    states = read_electronic_states_hdf5(filename)
+
+    for state, state_in in zip(states, states_in, strict=True):
+        np.testing.assert_array_equal(state.eigenvalues, state_in.eigenvalues)
+        np.testing.assert_array_equal(state.weights, state_in.weights)
+        assert state.n_electrons == state_in.n_electrons
+        assert state.volume == state_in.volume
+        assert state.internal_energy == state_in.internal_energy
+
+    # States without volume or internal_energy cannot be written.
+    incomplete = ElectronicStates(
+        eigenvalues=rng.standard_normal((1, 5, 8)),
+        weights=np.ones(5),
+        n_electrons=4.0,
+    )
+    with pytest.raises(ValueError):
+        write_electronic_states_hdf5([incomplete], filename=filename)
+
+
+def test_electronic_states_validation():
+    """Malformed ElectronicStates inputs raise ValueError."""
+    eigenvalues = np.zeros((1, 4, 6))
+    weights = np.ones(4)
+    ElectronicStates(eigenvalues=eigenvalues, weights=weights, n_electrons=1.0)
+
+    with pytest.raises(ValueError):
+        ElectronicStates(eigenvalues=np.zeros((4, 6)), weights=weights, n_electrons=1.0)
+    with pytest.raises(ValueError):
+        ElectronicStates(
+            eigenvalues=np.zeros((3, 4, 6)), weights=weights, n_electrons=1.0
+        )
+    with pytest.raises(ValueError):
+        ElectronicStates(eigenvalues=eigenvalues, weights=np.ones(5), n_electrons=1.0)

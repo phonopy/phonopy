@@ -1,37 +1,3 @@
-# Copyright (C) 2018 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
 """Calculate electronic free energy from vasprun.xml at temperatures.
 
 Here the free energy is approximately given by:
@@ -52,7 +18,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.interface.vasp import parse_vasprunxml
-from phonopy.qha.electron import get_free_energy_at_T
+from phonopy.qha.electron import (
+    ElectronicStates,
+    get_free_energy_at_T,
+    write_electronic_states_hdf5,
+)
 
 
 @dataclasses.dataclass
@@ -64,6 +34,7 @@ class PhonopyVaspEfeMockArgs:
     tmin: float = 0.0
     tstep: float = 10.0
     quiet: bool = False
+    write_electronic_states: bool = False
     filenames: Sequence[os.PathLike | str] | None = None
 
 
@@ -107,6 +78,17 @@ def get_options() -> argparse.Namespace:
         help="Suppress progress messages printed while reading vasprun.xml files",
     )
     parser.add_argument(
+        "--es",
+        "--write-electronic-states",
+        dest="write_electronic_states",
+        action="store_true",
+        default=default_vals.write_electronic_states,
+        help=(
+            'Write eigenvalues etc. in "electronic_states.hdf5" instead of '
+            'computing electronic free energies ("fe-v.dat")'
+        ),
+    )
+    parser.add_argument(
         "filenames",
         nargs="*",
         help="Filenames: vasprun.xml's of all volumes in correct order",
@@ -124,28 +106,36 @@ def get_free_energy_lines(temperatures: NDArray, free_energies: NDArray) -> list
     return lines
 
 
-def get_fe_ev_lines(
+def get_ev_lines(
+    volumes: NDArray[np.double], energies: NDArray[np.double]
+) -> list[str]:
+    """Return e-v.dat lines."""
+    lines_ev = ["#   cell volume        energy of cell other than phonon"]
+    lines_ev += [
+        "%20.8f %20.8f" % (v, e) for v, e in zip(volumes, energies, strict=True)
+    ]
+    return lines_ev
+
+
+def collect_electronic_states(
     args: argparse.Namespace | PhonopyVaspEfeMockArgs,
     verbose: bool = False,
-) -> tuple[list[str], list[str]]:
-    """Return Free energy vs volume lines.
+) -> tuple[NDArray[np.double], NDArray[np.double], list[ElectronicStates]]:
+    """Parse vasprun.xml files into volumes, energies, and electronic states.
 
-    When ``verbose`` is True, progress is printed to stdout: which file is
-    being read and what is found in it (volume, NELECT, the k-point mesh
-    used for the electronic free energy).
+    Returns (volumes (angstrom^3), energies (eV, sigma->0), electronic
+    states) in the file order. When ``verbose`` is True, progress is
+    printed to stdout: which file is being read and what is found in it
+    (volume, NELECT, the k-point mesh used).
 
     """
     volumes = []
     energy_sigma0 = []
-    free_energies = []
-    temperatures = None
+    states_list = []
     assert args.filenames is not None
     filenames = list(args.filenames)
     if verbose:
-        print(
-            "Reading %d vasprun.xml file(s), T = %g..%g K step %g K"
-            % (len(filenames), args.tmin, args.tmax, args.tstep)
-        )
+        print("Reading %d vasprun.xml file(s)" % len(filenames))
         sys.stdout.flush()
     for i, filename in enumerate(filenames):
         if verbose:
@@ -166,44 +156,80 @@ def get_fe_ev_lines(
             kpoints_label = "SCF mesh"
         n_electrons = vxml.NELECT
         assert n_electrons is not None
-        energy = vxml.energies[-1, 1]
         if verbose:
             k_mesh_str = "x".join("%d" % m for m in k_mesh)
             print(
                 "        volume = %.4f A^3, NELECT = %g, "
-                "free energy on %s (%s)"
+                "electronic states on %s (%s)"
                 % (vxml.volume[-1], n_electrons, kpoints_label, k_mesh_str)
             )
             sys.stdout.flush()
-        temps, fe = get_free_energy_at_T(
-            args.tmin, args.tmax, args.tstep, eigenvalues, weights, n_electrons
+        states_list.append(
+            ElectronicStates(
+                eigenvalues=eigenvalues,
+                weights=weights,
+                n_electrons=n_electrons,
+                volume=vxml.volume[-1],
+                internal_energy=vxml.energies[-1, 1],
+            )
         )
         volumes.append(vxml.volume[-1])
-        energy_sigma0.append(energy)
+        energy_sigma0.append(vxml.energies[-1, 1])
+    if verbose:
+        print("Done. %d volume(s) processed." % len(filenames))
+        sys.stdout.flush()
+    return (
+        np.array(volumes, dtype="double"),
+        np.array(energy_sigma0, dtype="double"),
+        states_list,
+    )
+
+
+def get_fe_ev_lines(
+    args: argparse.Namespace | PhonopyVaspEfeMockArgs,
+    verbose: bool = False,
+) -> tuple[list[str], list[str]]:
+    """Return Free energy vs volume lines.
+
+    When ``verbose`` is True, progress is printed to stdout.
+
+    """
+    if verbose:
+        print("T = %g..%g K step %g K" % (args.tmin, args.tmax, args.tstep))
+        sys.stdout.flush()
+    volumes, energy_sigma0, states_list = collect_electronic_states(
+        args, verbose=verbose
+    )
+
+    free_energies = []
+    temperatures = None
+    for energy, electronic_states in zip(energy_sigma0, states_list, strict=True):
+        temps, fe = get_free_energy_at_T(
+            args.tmin,
+            args.tmax,
+            args.tstep,
+            electronic_states.eigenvalues,
+            electronic_states.weights,
+            electronic_states.n_electrons,
+        )
         free_energies.append(energy - fe[0] + fe)
         if temperatures is None:
             temperatures = temps
         else:
             assert (np.abs(temperatures - temps) < 1e-5).all()
     assert temperatures is not None
-    if verbose:
-        print("Done. %d volume(s) processed." % len(filenames))
-        sys.stdout.flush()
 
     scale_factor = args.scale_factor
-    volumes = np.array(volumes) * scale_factor
-    energy_sigma0 = np.array(energy_sigma0) * scale_factor
-    free_energies = np.array(free_energies) * scale_factor
+    volumes = volumes * scale_factor
+    energy_sigma0 = energy_sigma0 * scale_factor
+    free_energies_arr = np.array(free_energies) * scale_factor
 
     lines_fe = []
     lines_fe.append(("# volume:  " + " %15.8f" * len(volumes)) % tuple(volumes))
     lines_fe.append("#    T(K)     Free energies")
-    lines_fe += get_free_energy_lines(temperatures, free_energies.T)
+    lines_fe += get_free_energy_lines(temperatures, free_energies_arr.T)
 
-    lines_ev = ["#   cell volume        energy of cell other than phonon"]
-    lines_ev += [
-        "%20.8f %20.8f" % (v, e) for v, e in zip(volumes, energy_sigma0, strict=True)
-    ]
+    lines_ev = get_ev_lines(volumes, energy_sigma0)
 
     return lines_fe, lines_ev
 
@@ -217,6 +243,24 @@ def main(**argparse_control: PhonopyVaspEfeMockArgs) -> None:
         args = get_options()
 
     verbose = not getattr(args, "quiet", False)
+
+    if getattr(args, "write_electronic_states", False):
+        if args.scale_factor != 1.0:
+            print("--scale-factor cannot be combined with --write-electronic-states.")
+            sys.exit(1)
+        volumes, energy_sigma0, states_list = collect_electronic_states(
+            args, verbose=verbose
+        )
+        write_electronic_states_hdf5(states_list)
+        print('* Electronic states are written in "electronic_states.hdf5".')
+
+        with open("e-v.dat", "w") as w:
+            w.write("\n".join(get_ev_lines(volumes, energy_sigma0)))
+            w.write("\n")
+            print('* energy (sigma->0) and volumes are written in "e-v.dat".')
+
+        sys.exit(0)
+
     lines_fe, lines_ev = get_fe_ev_lines(args, verbose=verbose)
 
     with open("fe-v.dat", "w") as w:
