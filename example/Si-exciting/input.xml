@@ -17,8 +17,8 @@
                 useAPWprecision="true"
                 APWprecision="0.8"
                 gmaxvr="27"
-                lmaxvr="9" 
-                lmaxmat="9" 
+                lmaxvr="9"
+                lmaxmat="9"
                 lmaxapw="9"
                 nempty="10"
                 tforce="true"
@@ -28,4 +28,3 @@
   </groundstate>
 
 </input>
-

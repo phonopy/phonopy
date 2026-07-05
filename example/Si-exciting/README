@@ -17,4 +17,3 @@ Once the calculation has finished, generate the `FORCE_SETS` file by running:
 ```bash
 % phonopy-init --exciting -f 001/INFO.OUT
 ```
-
