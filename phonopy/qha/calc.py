@@ -229,3 +229,81 @@ def compute_gruneisen_parameters(
             gamma.append(beta * kt / cv_v)
 
     return np.array(gamma, dtype="double")
+
+
+def _compositions(total: int, ndim: int) -> list[tuple[int, ...]]:
+    """Return all non-negative integer tuples of length ndim summing to total."""
+    if ndim == 1:
+        return [(total,)]
+    result: list[tuple[int, ...]] = []
+    for first in range(total + 1):
+        for rest in _compositions(total - first, ndim - 1):
+            result.append((first, *rest))
+    return result
+
+
+def generate_total_degree_exponents(ndim: int, degree: int) -> NDArray[np.int64]:
+    """Return exponent tuples of all monomials up to a total degree.
+
+    A total-degree polynomial in ndim variables of degree `degree`
+    consists of the monomials prod_k x_k^e_k with sum_k e_k <= degree.
+    The returned rows are these exponent tuples (e_0, ..., e_{ndim-1}),
+    ordered by increasing total degree, so the first row is the constant
+    term (all zeros). The number of terms is C(ndim + degree, degree),
+    which is far fewer than the (degree + 1)^ndim of a tensor-product
+    basis (e.g. 10 vs 16 for ndim=2, degree=3).
+
+    Parameters
+    ----------
+    ndim : int
+        Number of variables (1 to 3 for lattice-length DOF).
+    degree : int
+        Maximum total degree.
+
+    Returns
+    -------
+    ndarray
+        Exponent tuples. shape=(n_terms, ndim)
+
+    """
+    if ndim < 1:
+        raise ValueError("ndim must be at least 1.")
+    if degree < 0:
+        raise ValueError("degree must be non-negative.")
+    exponents: list[tuple[int, ...]] = []
+    for total in range(degree + 1):
+        exponents.extend(_compositions(total, ndim))
+    return np.array(exponents, dtype="int64")
+
+
+def polynomial_design_matrix(
+    points: NDArray[np.double], exponents: NDArray[np.int64]
+) -> NDArray[np.double]:
+    """Build the design matrix of monomials at sample points.
+
+    Column t is the monomial prod_k x_k^exponents[t, k] evaluated at each
+    point. With non-dimensionalized points the matrix is well conditioned
+    for least-squares polynomial fitting.
+
+    Parameters
+    ----------
+    points : ndarray
+        Sample points. shape=(n_points, ndim)
+    exponents : ndarray
+        Monomial exponent tuples. shape=(n_terms, ndim)
+
+    Returns
+    -------
+    ndarray
+        Design matrix. shape=(n_points, n_terms)
+
+    """
+    pts = np.asarray(points, dtype="double")
+    if pts.ndim != 2:
+        raise ValueError("points must be a 2D array of shape (n_points, ndim).")
+    if exponents.shape[1] != pts.shape[1]:
+        raise ValueError("exponents and points must have the same ndim.")
+    design = np.ones((pts.shape[0], exponents.shape[0]), dtype="double")
+    for d in range(pts.shape[1]):
+        design *= pts[:, d : d + 1] ** exponents[:, d][None, :]
+    return design

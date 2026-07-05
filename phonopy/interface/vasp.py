@@ -205,6 +205,56 @@ def parse_force_constants(
     return fc
 
 
+def read_vasprun_calculation(
+    filename: str | os.PathLike,
+) -> tuple[PhonopyAtoms, float, NDArray[np.double], NDArray[np.double] | None]:
+    """Read the final ionic step of a vasprun.xml as training data.
+
+    Intended for assembling machine-learning-potential datasets, this
+    returns the final structure together with its total energy, atomic
+    forces and stress.
+
+    Parameters
+    ----------
+    filename : str or os.PathLike
+        vasprun.xml file name (optionally lzma/gzip/bz2 compressed).
+
+    Returns
+    -------
+    cell : PhonopyAtoms
+        Final structure of the calculation.
+    energy : float
+        Total energy extrapolated to zero smearing ("energy(sigma->0)")
+        in eV, the same quantity pypolymlp uses for training.
+    forces : ndarray
+        Atomic forces in eV/angstrom. shape=(natoms, 3)
+    stress : ndarray or None
+        Stress tensor in GPa (shape=(3, 3)), or None when the vasprun.xml
+        does not contain stress.
+
+    """
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename, "rb") as f:
+        vasprun = VasprunxmlExpat(f)
+        vasprun.parse()
+        if vasprun.symbols is None:
+            raise RuntimeError("Atomic symbols could not be read from vasprun.xml.")
+        cell = PhonopyAtoms(
+            symbols=vasprun.symbols,
+            cell=vasprun.lattice[-1],
+            scaled_positions=vasprun.points[-1],
+        )
+        energy = float(vasprun.energies[-1][1])
+        forces = np.array(vasprun.forces[-1], dtype="double", order="C")
+        stress_steps = vasprun.stress
+        # vasprun stores stress in kBar; convert to GPa (1 GPa = 10 kBar).
+        if len(stress_steps) > 0:
+            stress = np.array(stress_steps[-1] / 10.0, dtype="double", order="C")
+        else:
+            stress = None
+    return cell, energy, forces, stress
+
+
 #
 # read VASP POSCAR
 #
