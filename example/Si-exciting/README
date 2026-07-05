@@ -1,0 +1,20 @@
+This is an example using the exciting interface.
+
+To create supercells with atomic displacements, run:
+
+```bash
+% phonopy-init --exciting -c input.xml -d --dim="4 4 4"
+```
+
+This command creates a perfect (4 \times 4 \times 4) supercell (`supercell.xml`) and a displaced (4 \times 4 \times 4) supercell (`supercell-001.in`).
+
+Create a directory named `001` and copy `supercell-001.in` into it as `input.xml`. The `input.xml` file must then be modified by adding the `groundstate` block from the original input file and adjusting the k-point mesh appropriately for the supercell calculation. In addition, copy the required species files (e.g., `Si.xml`) into the `001` directory, or alternatively update the `speciespath` attribute to point to the directory containing the species files.
+
+When running supercell calculations with exciting, it is important to use the SIRIUS library.
+
+Once the calculation has finished, generate the `FORCE_SETS` file by running:
+
+```bash
+% phonopy-init --exciting -f 001/INFO.OUT
+```
+
