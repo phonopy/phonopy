@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -46,6 +47,7 @@ from numpy.typing import NDArray
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpRelaxationError
 from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.harmonic.displacement import Type2DisplacementDataset
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 
 try:
@@ -183,6 +185,273 @@ def develop_pypolymlp(
         test_data.forces.transpose(0, 2, 1),
         test_data.supercell_energies,
         phonopy_cell_to_structure(supercell),
+    )
+    try:
+        polymlp.run(verbose=verbose)
+    except RuntimeError as e:
+        if "singular" in str(e):
+            raise PypolymlpDevelopmentError(
+                "Pypolymlp development failed due to singularity of "
+                "(X.T @ X + alpha * I)"
+            ) from e
+        else:
+            raise RuntimeError(str(e)) from e
+    return polymlp
+
+
+@dataclass
+class PypolymlpStructureData:
+    """Structure dataset for pypolymlp training with energies, forces, stresses.
+
+    Unlike PypolymlpData, which stores displacements relative to a single
+    reference supercell, this stores full structures and can therefore mix
+    cells with different lattices (e.g. strained cells) and carry stress.
+
+    structures : list of PhonopyAtoms
+        Structures, possibly with different lattices. Length n.
+    energies : ndarray
+        Total energies in eV. shape=(n,)
+    forces : list of ndarray
+        Atomic forces in eV/angstrom, one (natoms, 3) array per structure.
+    stresses : ndarray or None
+        Stress tensors in GPa. shape=(n, 3, 3), or None when stresses are
+        not available for all structures.
+
+    """
+
+    structures: list[PhonopyAtoms]
+    energies: NDArray[np.double]
+    forces: list[NDArray[np.double]]
+    stresses: NDArray[np.double] | None
+
+
+def read_vasprun_dataset(
+    filenames: Sequence[str | os.PathLike],
+) -> PypolymlpStructureData:
+    """Assemble a pypolymlp structure dataset from vasprun.xml files.
+
+    Each file contributes its final ionic step. Stresses are included only
+    when every file provides them.
+
+    Parameters
+    ----------
+    filenames : sequence of str or os.PathLike
+        vasprun.xml file names (optionally compressed).
+
+    Returns
+    -------
+    PypolymlpStructureData
+
+    """
+    from phonopy.interface.vasp import read_vasprun_calculation
+
+    structures: list[PhonopyAtoms] = []
+    energies: list[float] = []
+    forces: list[NDArray[np.double]] = []
+    stresses: list[NDArray[np.double]] = []
+    have_stress = True
+    for filename in filenames:
+        cell, energy, force, stress = read_vasprun_calculation(filename)
+        structures.append(cell)
+        energies.append(energy)
+        forces.append(force)
+        if stress is None:
+            have_stress = False
+        else:
+            stresses.append(stress)
+    return PypolymlpStructureData(
+        structures=structures,
+        energies=np.array(energies, dtype="double"),
+        forces=forces,
+        stresses=np.array(stresses, dtype="double")
+        if have_stress and stresses
+        else None,
+    )
+
+
+def write_pypolymlp_structure_dataset(
+    data: PypolymlpStructureData,
+    filename: str | os.PathLike = "polymlp_dataset.hdf5",
+) -> None:
+    """Write a structure dataset to an HDF5 file.
+
+    Per-atom quantities (numbers, scaled positions, forces) are stored
+    concatenated over structures with an ``n_atoms`` index, so structures
+    with different numbers of atoms are supported.
+
+    Parameters
+    ----------
+    data : PypolymlpStructureData
+        Dataset to write.
+    filename : str or os.PathLike, optional
+        Output HDF5 file name.
+
+    """
+    try:
+        import h5py  # type: ignore[import-untyped]
+    except ImportError as exc:
+        raise ModuleNotFoundError("You need to install python-h5py.") from exc
+
+    n_atoms = np.array([len(cell) for cell in data.structures], dtype="int64")
+    lattices = np.array([cell.cell for cell in data.structures], dtype="double")
+    numbers = np.concatenate([cell.numbers for cell in data.structures])
+    positions = np.concatenate([cell.scaled_positions for cell in data.structures])
+    forces = np.concatenate(data.forces)
+    with h5py.File(filename, "w") as w:
+        w.create_dataset("n_atoms", data=n_atoms)
+        w.create_dataset("lattices", data=lattices)
+        w.create_dataset("numbers", data=numbers)
+        w.create_dataset("scaled_positions", data=positions)
+        w.create_dataset("energies", data=data.energies)
+        w.create_dataset("forces", data=forces)
+        if data.stresses is not None:
+            w.create_dataset("stresses", data=data.stresses)
+
+
+def read_pypolymlp_structure_dataset(
+    filename: str | os.PathLike = "polymlp_dataset.hdf5",
+) -> PypolymlpStructureData:
+    """Read a structure dataset written by write_pypolymlp_structure_dataset.
+
+    Parameters
+    ----------
+    filename : str or os.PathLike, optional
+        Input HDF5 file name.
+
+    Returns
+    -------
+    PypolymlpStructureData
+
+    """
+    try:
+        import h5py  # type: ignore[import-untyped]
+    except ImportError as exc:
+        raise ModuleNotFoundError("You need to install python-h5py.") from exc
+
+    with h5py.File(filename, "r") as f:
+        n_atoms = f["n_atoms"][:]
+        lattices = f["lattices"][:]
+        numbers = f["numbers"][:]
+        positions = f["scaled_positions"][:]
+        energies = np.array(f["energies"][:], dtype="double")
+        forces_flat = f["forces"][:]
+        stresses = (
+            np.array(f["stresses"][:], dtype="double") if "stresses" in f else None
+        )
+
+    offsets = np.concatenate([[0], np.cumsum(n_atoms)])
+    structures: list[PhonopyAtoms] = []
+    forces: list[NDArray[np.double]] = []
+    for i in range(len(n_atoms)):
+        start, end = int(offsets[i]), int(offsets[i + 1])
+        structures.append(
+            PhonopyAtoms(
+                numbers=numbers[start:end],
+                cell=lattices[i],
+                scaled_positions=positions[start:end],
+            )
+        )
+        forces.append(np.array(forces_flat[start:end], dtype="double"))
+    return PypolymlpStructureData(
+        structures=structures,
+        energies=energies,
+        forces=forces,
+        stresses=stresses,
+    )
+
+
+def _structures_virial(data: PypolymlpStructureData) -> NDArray[np.double] | None:
+    """Convert stored stresses (GPa) to pypolymlp virials (eV, 3x3 each).
+
+    The pypolymlp virial is stress times cell volume; here the stress in
+    GPa is converted with the eV/angstrom^3-to-GPa factor.
+
+    """
+    if data.stresses is None:
+        return None
+    ev_angstrom_to_gpa = get_physical_units().EVAngstromToGPa
+    return np.array(
+        [
+            stress * structure.volume / ev_angstrom_to_gpa
+            for stress, structure in zip(data.stresses, data.structures, strict=True)
+        ],
+        dtype="double",
+    )
+
+
+def develop_pypolymlp_from_structures(
+    train_data: PypolymlpStructureData,
+    test_data: PypolymlpStructureData,
+    params: PypolymlpParams | None = None,
+    verbose: bool = False,
+) -> Pypolymlp:  # type: ignore
+    """Develop a pypolymlp MLP from structure datasets.
+
+    This uses pypolymlp's structure-based training, so the training
+    structures may have different lattices and stress (virial) data are
+    used in addition to energies and forces. Use this for datasets built
+    from arbitrary first-principles calculations (e.g. strained cells),
+    where develop_pypolymlp (displacement based, single reference cell,
+    no stress) does not apply.
+
+    Parameters
+    ----------
+    train_data : PypolymlpStructureData
+        Training dataset.
+    test_data : PypolymlpStructureData
+        Test dataset.
+    params : PypolymlpParams, optional
+        Parameters for pypolymlp. Default is None.
+    verbose : bool, optional
+        Verbosity. Default is False.
+
+    Returns
+    -------
+    polymlp : Pypolymlp
+
+    """
+    try:
+        from pypolymlp.mlp_dev.pypolymlp import (
+            Pypolymlp,  # type: ignore[import-untyped]
+        )
+        from pypolymlp.utils.phonopy_utils import (
+            phonopy_cell_to_structure,  # type: ignore[import-untyped]
+        )
+    except ImportError as exc:
+        raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
+
+    _params = PypolymlpParams() if params is None else params
+
+    symbols = train_data.structures[0].symbols
+    if _params.atom_energies is None:
+        elements_energies = {s: 0.0 for s in symbols}
+    else:
+        elements_energies = {s: _params.atom_energies[s] for s in symbols}
+
+    polymlp = Pypolymlp()
+    polymlp.set_params(
+        elements=tuple(elements_energies.keys()),
+        cutoff=_params.cutoff,
+        model_type=_params.model_type,
+        max_p=_params.max_p,
+        gtinv_order=_params.gtinv_order,
+        gtinv_maxl=_params.gtinv_maxl,
+        gaussian_params2=_params.gaussian_params2,
+        atomic_energy=tuple(elements_energies.values()),
+    )
+    polymlp.set_datasets_structures(
+        train_structures=[
+            phonopy_cell_to_structure(cell) for cell in train_data.structures
+        ],
+        test_structures=[
+            phonopy_cell_to_structure(cell) for cell in test_data.structures
+        ],
+        train_energies=train_data.energies,
+        test_energies=test_data.energies,
+        train_forces=[force.T for force in train_data.forces],
+        test_forces=[force.T for force in test_data.forces],
+        train_stresses=_structures_virial(train_data),
+        test_stresses=_structures_virial(test_data),
     )
     try:
         polymlp.run(verbose=verbose)

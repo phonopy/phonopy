@@ -41,6 +41,7 @@ from phonopy.api_gruneisen import PhonopyGruneisen
 from phonopy.api_phonopy import Phonopy
 from phonopy.api_qha import PhonopyQHA
 from phonopy.cui.load import load
+from phonopy.qha.anisotropic import AnisotropicQHAResult, run_anisotropic_qha
 from phonopy.qha.qha import QHAResult, run_qha
 
 try:
@@ -52,11 +53,13 @@ except PackageNotFoundError:  # running from a source tree without an install
         __version__ = "0.0.0"
 
 __all__ = [
+    "AnisotropicQHAResult",
     "PhonopyGruneisen",
     "Phonopy",
     "PhonopyQHA",
     "QHAResult",
     "load",
+    "run_anisotropic_qha",
     "run_qha",
     "__version__",
 ]
