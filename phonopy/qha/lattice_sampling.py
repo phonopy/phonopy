@@ -15,7 +15,9 @@ no unit conversion is performed.
 from __future__ import annotations
 
 import dataclasses
+import os
 from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 import spglib
@@ -270,3 +272,125 @@ def build_random_displacement_supercells(
             raise RuntimeError("Failed to generate a displacement supercell.")
         supercells.append(displaced[0])
     return supercells
+
+
+def build_strain_cells_manifest(
+    *,
+    phonopy_version: str,
+    calculator: str,
+    length_unit: str,
+    source: str,
+    dof: LatticeDOF,
+    command_line: str,
+    ranges: dict[str, tuple[float, float]],
+    num: int,
+    rd_distance: float | None,
+    symprec: float,
+    seed: int,
+    prefix: str,
+    kind: str,
+    unitcells: Sequence[PhonopyAtoms],
+    filenames: Sequence[str],
+) -> dict[str, Any]:
+    """Build a provenance manifest for a phonopy-strain-cells run.
+
+    The manifest records everything needed to reproduce the run -- most
+    importantly the resolved random seed -- together with the sampled free
+    lattice lengths of every generated cell, so the (a[, b], c) grid can be
+    matched against the files later consumed by run_anisotropic_qha.
+
+    The recorded per-cell lengths are the unit-cell free-DOF lengths (the
+    physically meaningful strained grid), even when the written files are
+    random-displacement supercells.
+
+    Parameters
+    ----------
+    phonopy_version : str
+        Version string of phonopy that produced the cells.
+    calculator : str
+        Calculator (interface) name the cells were written for.
+    length_unit : str
+        Native length unit of the cells.
+    source : str
+        Input phonopy(_disp).yaml filename.
+    dof : LatticeDOF
+        Free lattice DOF from get_free_lattice_dof.
+    command_line : str
+        Human-readable reconstruction of the invoked command.
+    ranges : dict
+        Sampled (min, max) length range per free-DOF label.
+    num : int
+        Number of cells requested.
+    rd_distance : float or None
+        Random-displacement distance, or None for plain unit cells.
+    symprec : float
+        Symmetry tolerance used for DOF detection.
+    seed : int
+        Resolved random seed (never None).
+    prefix : str
+        Filename prefix of the written cells ("unitcell" or "supercell").
+    kind : str
+        Human-readable description of the written cell kind.
+    unitcells : sequence of PhonopyAtoms
+        Sampled unit cells (before any supercell expansion).
+    filenames : sequence of str
+        Written filenames, aligned with unitcells.
+
+    Returns
+    -------
+    dict
+
+    """
+    cells: list[dict[str, Any]] = []
+    for filename, unitcell in zip(filenames, unitcells, strict=True):
+        lengths = np.linalg.norm(unitcell.cell, axis=1)
+        entry: dict[str, Any] = {"file": filename}
+        for label in dof.labels:
+            entry[label] = round(float(lengths[dof.rows[label][0]]), 6)
+        cells.append(entry)
+
+    return {
+        "phonopy_version": phonopy_version,
+        "calculator": calculator,
+        "length_unit": length_unit,
+        "source": source,
+        "crystal_system": dof.crystal_system,
+        "spacegroup_number": int(dof.spacegroup_number),
+        "free_dof": list(dof.labels),
+        "tie": dof.tie_description,
+        "command_line": command_line,
+        "parameters": {
+            "ranges": {
+                label: [float(lo), float(hi)] for label, (lo, hi) in ranges.items()
+            },
+            "num": int(num),
+            "rd_distance": None if rd_distance is None else float(rd_distance),
+            "symprec": float(symprec),
+            "seed": int(seed),
+        },
+        "output": {
+            "prefix": prefix,
+            "kind": kind,
+            "num_cells": len(cells),
+            "cells": cells,
+        },
+    }
+
+
+def write_strain_cells_manifest(
+    filename: str | os.PathLike, manifest: dict[str, Any]
+) -> None:
+    """Write a strain-cells provenance manifest to a YAML file.
+
+    Parameters
+    ----------
+    filename : str or os.PathLike
+        Output path.
+    manifest : dict
+        Manifest from build_strain_cells_manifest.
+
+    """
+    import yaml  # type: ignore[import-untyped]
+
+    with open(filename, "w") as w:
+        yaml.dump(manifest, w, sort_keys=False, default_flow_style=False)
