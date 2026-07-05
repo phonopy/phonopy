@@ -1,0 +1,661 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Anisotropic QHA with a stress-trained pypolymlp – end-to-end recipe &#8212; Phonopy v.4.3.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=c42b8a28"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'anisotropic-qha';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.3" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.3.1</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v5.html">Migrating toward phonopy v5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/anisotropic-qha.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Anisotropic QHA with a stress-trained pypolymlp – end-to-end recipe</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-the-mlp-training-set-strained-supercells">1. Generate the MLP training set (strained supercells)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-first-principles-calculations">2. Run the first-principles calculations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-training-dataset-with-stress">3. Build the training dataset (with stress)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-the-mlp-using-energies-forces-and-stresses">4. Train the MLP using energies, forces and stresses</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-a-c-grid-of-unit-cells">5. Build the (a, c) grid of unit cells</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-grid-cell-force-constants-from-the-mlp">6. Per grid cell: force constants from the MLP</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">7. Run the anisotropic QHA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp-equilibrium-shape-recommended">8. Validate the MLP equilibrium shape (recommended)</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-qha-with-a-stress-trained-pypolymlp-end-to-end-recipe">
+<h1>Anisotropic QHA with a stress-trained pypolymlp – end-to-end recipe<a class="headerlink" href="#anisotropic-qha-with-a-stress-trained-pypolymlp-end-to-end-recipe" title="Link to this heading">#</a></h1>
+<p>This recipe ties together the pieces that support anisotropic (axis-resolved)
+quasi-harmonic thermal expansion driven by a machine-learning potential
+(pypolymlp) trained on first-principles energies, forces and <strong>stresses</strong>.</p>
+<p>Status: working recipe for an in-progress feature. Commands and functions
+referenced here exist in the codebase; the exact per-cell settings
+(internal-coordinate relaxation, number of snapshots, symfc options, energy
+normalization) are case dependent and are flagged below.</p>
+<p>Prerequisites: <code class="docutils literal notranslate"><span class="pre">pypolymlp</span></code>, <code class="docutils literal notranslate"><span class="pre">symfc</span></code>, <code class="docutils literal notranslate"><span class="pre">h5py</span></code>, and a VASP setup (VASP is the
+supported first-principles source for the dataset builder).</p>
+<p>All lengths are in the native length unit of the input cell (Angstrom for
+VASP); no unit conversion is applied by the tools.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>                 <span class="n">phonopy</span><span class="o">-</span><span class="n">strain</span><span class="o">-</span><span class="n">cells</span> <span class="o">--</span><span class="n">rd</span>            <span class="n">VASP</span>
+ <span class="n">equilibrium</span> <span class="n">cell</span> <span class="o">-----------------------&gt;</span> <span class="n">training</span> <span class="n">supercells</span> <span class="o">----&gt;</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
+                                                                        <span class="o">|</span>
+                                        <span class="n">phonopy</span><span class="o">-</span><span class="n">vasp</span><span class="o">-</span><span class="n">mlp</span><span class="o">-</span><span class="n">dataset</span>        <span class="o">|</span>
+ <span class="n">polymlp_dataset</span><span class="o">.</span><span class="n">hdf5</span>  <span class="o">&lt;-------------------------------------------------</span>
+        <span class="o">|</span>
+        <span class="o">|</span> <span class="n">develop_pypolymlp_from_structures</span>  <span class="p">(</span><span class="n">energies</span> <span class="o">+</span> <span class="n">forces</span> <span class="o">+</span> <span class="n">STRESS</span><span class="p">)</span>
+        <span class="n">v</span>
+ <span class="n">polymlp</span><span class="o">.</span><span class="n">yaml</span> <span class="p">(</span><span class="n">trained</span> <span class="n">MLP</span><span class="p">)</span>
+        <span class="o">|</span>
+        <span class="o">|</span>            <span class="n">phonopy</span><span class="o">-</span><span class="n">strain</span><span class="o">-</span><span class="n">cells</span> <span class="o">--</span><span class="n">a</span> <span class="o">--</span><span class="n">c</span>
+ <span class="n">equilibrium</span> <span class="n">cell</span> <span class="o">-----------------------&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="n">grid</span> <span class="n">unit</span> <span class="n">cells</span>
+        <span class="o">|</span>                                          <span class="o">|</span>
+        <span class="o">|</span>  <span class="n">per</span> <span class="n">grid</span> <span class="n">cell</span><span class="p">:</span> <span class="n">load_mlp</span> <span class="o">-&gt;</span> <span class="n">random</span> <span class="n">disp</span> <span class="o">-&gt;</span> <span class="n">evaluate_mlp</span> <span class="o">-&gt;</span> <span class="n">force</span> <span class="n">constants</span>
+        <span class="n">v</span>                                          <span class="n">v</span>
+ <span class="n">internal_energies</span> <span class="p">(</span><span class="n">U</span> <span class="n">per</span> <span class="n">primitive</span> <span class="n">cell</span><span class="p">)</span>     <span class="n">phonopys</span> <span class="p">(</span><span class="n">one</span> <span class="n">per</span> <span class="n">grid</span> <span class="n">point</span><span class="p">,</span> <span class="n">FC</span> <span class="nb">set</span><span class="p">)</span>
+        \\                                        <span class="o">/</span>
+         \\        <span class="n">run_anisotropic_qha</span>           <span class="o">/</span>
+          <span class="o">--------------------------------------&gt;</span>  <span class="n">AnisotropicQHAResult</span>
+                                                     <span class="o">|</span>
+                              <span class="n">anisotropic_output</span> <span class="o">/</span> <span class="n">anisotropic_plot</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-the-mlp-training-set-strained-supercells">
+<h2>1. Generate the MLP training set (strained supercells)<a class="headerlink" href="#generate-the-mlp-training-set-strained-supercells" title="Link to this heading">#</a></h2>
+<p>Starting from an equilibrium <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> (which carries the unit cell,
+supercell matrix and calculator), sample strained supercells with random
+atomic displacements. Training on strained cells is what lets the MLP span the
+(a, c) region used later; random displacements make relaxation unnecessary for
+these training structures.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inspect the free lattice DOF first (no ranges -&gt; DOF report):</span>
+phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml
+
+<span class="c1"># Then sample e.g. 100 random-displacement supercells spanning the region:</span>
+phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">0</span>.03
+<span class="c1"># -&gt; supercell-00001 .. supercell-00100 in the calculator-native format</span>
+</pre></div>
+</div>
+</section>
+<section id="run-the-first-principles-calculations">
+<h2>2. Run the first-principles calculations<a class="headerlink" href="#run-the-first-principles-calculations" title="Link to this heading">#</a></h2>
+<p>Run a single-point VASP calculation for each <code class="docutils literal notranslate"><span class="pre">supercell-*</span></code> (compute stress:
+<code class="docutils literal notranslate"><span class="pre">ISIF</span> <span class="pre">&gt;=</span> <span class="pre">2</span></code> so <code class="docutils literal notranslate"><span class="pre">&lt;varray</span> <span class="pre">name=&quot;stress&quot;&gt;</span></code> is written). Collect the resulting
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> files.</p>
+</section>
+<section id="build-the-training-dataset-with-stress">
+<h2>3. Build the training dataset (with stress)<a class="headerlink" href="#build-the-training-dataset-with-stress" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-vasp-mlp-dataset<span class="w"> </span>vasprun-*.xml<span class="w"> </span>-o<span class="w"> </span>polymlp_dataset.hdf5
+<span class="c1"># Wrote N structures to polymlp_dataset.hdf5 (stress: yes).</span>
+</pre></div>
+</div>
+<p>The dataset stores, per structure, the cell, total energy (eV), forces
+(eV/Angstrom) and stress (GPa). Stress is included only when every vasprun
+provides it.</p>
+</section>
+<section id="train-the-mlp-using-energies-forces-and-stresses">
+<h2>4. Train the MLP using energies, forces and stresses<a class="headerlink" href="#train-the-mlp-using-energies-forces-and-stresses" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PypolymlpParams</span><span class="p">,</span>
+    <span class="n">develop_pypolymlp_from_structures</span><span class="p">,</span>
+    <span class="n">read_pypolymlp_structure_dataset</span><span class="p">,</span>
+    <span class="n">save_pypolymlp</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">read_pypolymlp_structure_dataset</span><span class="p">(</span><span class="s2">&quot;polymlp_dataset.hdf5&quot;</span><span class="p">)</span>
+
+<span class="c1"># Simple train/test split (see PypolymlpParams for model settings).</span>
+<span class="n">n_test</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">structures</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">structures</span><span class="p">)</span> <span class="o">-</span> <span class="n">n_test</span><span class="p">)</span>  <span class="c1"># your split helper</span>
+
+<span class="n">polymlp</span> <span class="o">=</span> <span class="n">develop_pypolymlp_from_structures</span><span class="p">(</span>
+    <span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">PypolymlpParams</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">save_pypolymlp</span><span class="p">(</span><span class="n">polymlp</span><span class="p">,</span> <span class="s2">&quot;polymlp.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">develop_pypolymlp_from_structures</span></code> uses pypolymlp’s structure-based training
+(<code class="docutils literal notranslate"><span class="pre">set_datasets_structures</span></code>), so the training structures may have different
+lattices and the stress (virial) data are used in addition to energies and
+forces. This is the key difference from the displacement-based
+<code class="docutils literal notranslate"><span class="pre">develop_pypolymlp</span></code> / <code class="docutils literal notranslate"><span class="pre">Phonopy.develop_mlp</span></code>, which assume a single reference
+lattice and no stress.</p>
+</section>
+<section id="build-the-a-c-grid-of-unit-cells">
+<h2>5. Build the (a, c) grid of unit cells<a class="headerlink" href="#build-the-a-c-grid-of-unit-cells" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.17<span class="w"> </span><span class="m">3</span>.23<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.14<span class="w"> </span><span class="m">5</span>.26<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span><span class="m">25</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">2</span>
+<span class="c1"># -&gt; unitcell-00001 .. unitcell-00025 (the anisotropic QHA grid)</span>
+</pre></div>
+</div>
+<p>Relax the internal coordinates of each grid cell if the structure has free
+internal parameters (e.g. the wurtzite <code class="docutils literal notranslate"><span class="pre">u</span></code>): this is the user’s
+responsibility. With a smooth MLP this relaxation is cheap.</p>
+</section>
+<section id="per-grid-cell-force-constants-from-the-mlp">
+<h2>6. Per grid cell: force constants from the MLP<a class="headerlink" href="#per-grid-cell-force-constants-from-the-mlp" title="Link to this heading">#</a></h2>
+<p>For each grid unit cell, build a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance whose force constants come
+from the trained MLP, following phonopy’s standard pypolymlp usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span>
+
+<span class="c1"># Take the supercell and primitive matrices from the equilibrium disp yaml so</span>
+<span class="c1"># that every grid cell uses the SAME cell conventions (needed for consistent</span>
+<span class="c1"># lattice-parameter and per-primitive-cell energy normalization).</span>
+<span class="n">eq</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_nac</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">SUPERCELL_MATRIX</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">supercell_matrix</span>
+<span class="n">PRIMITIVE_MATRIX</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">primitive_matrix</span>
+
+<span class="n">phonopys</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">internal_energies</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">grid_unitcell_files</span><span class="p">:</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span>
+        <span class="n">cell</span><span class="p">,</span>
+        <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">SUPERCELL_MATRIX</span><span class="p">,</span>
+        <span class="n">primitive_matrix</span><span class="o">=</span><span class="n">PRIMITIVE_MATRIX</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ph</span><span class="o">.</span><span class="n">load_mlp</span><span class="p">(</span><span class="s2">&quot;polymlp.yaml&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Random-displacement supercells; a small distance is numerically stable</span>
+    <span class="c1"># for MLP-based force constants.</span>
+    <span class="n">ph</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">number_of_snapshots</span><span class="o">=</span><span class="n">NSNAP</span><span class="p">)</span>
+    <span class="n">ph</span><span class="o">.</span><span class="n">evaluate_mlp</span><span class="p">()</span>                                    <span class="c1"># forces from the MLP</span>
+    <span class="n">ph</span><span class="o">.</span><span class="n">produce_force_constants</span><span class="p">(</span><span class="n">fc_calculator</span><span class="o">=</span><span class="s2">&quot;symfc&quot;</span><span class="p">)</span>    <span class="c1"># random-disp -&gt; FC</span>
+
+    <span class="n">phonopys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ph</span><span class="p">)</span>
+
+    <span class="c1"># Static energy U per primitive cell for run_anisotropic_qha. Evaluate the</span>
+    <span class="c1"># perfect (undisplaced) supercell with the MLP and normalize to the</span>
+    <span class="c1"># primitive cell (consistently with the phonon thermal-property</span>
+    <span class="c1"># normalization).</span>
+    <span class="n">e_supercell</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">mlp</span><span class="o">.</span><span class="n">evaluate</span><span class="p">([</span><span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_ratio</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">primitive</span><span class="p">)</span>
+    <span class="n">internal_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_supercell</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_ratio</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SUPERCELL_MATRIX</span></code> and <code class="docutils literal notranslate"><span class="pre">NSNAP</span></code> are user choices; the supercell matrix should
+match the one used for training-set generation. Pass the SAME
+<code class="docutils literal notranslate"><span class="pre">PRIMITIVE_MATRIX</span></code> to every grid cell; otherwise <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code>
+(which reads <code class="docutils literal notranslate"><span class="pre">ph.unitcell</span></code> lengths and <code class="docutils literal notranslate"><span class="pre">ph.primitive.volume</span></code>) and the
+per-primitive-cell energy normalization become inconsistent across the grid.</p></li>
+<li><p>Random-displacement force constants require the fitting fc calculator, so
+pass <code class="docutils literal notranslate"><span class="pre">fc_calculator=&quot;symfc&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">internal_energies</span></code> and the phonon thermal properties must use the same
+per-primitive-cell normalization; <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> expects energies in
+eV per primitive cell.</p></li>
+<li><p>This whole chain (train -&gt; save -&gt; load_mlp -&gt; generate_displacements -&gt;
+evaluate_mlp -&gt; produce_force_constants -&gt; run_anisotropic_qha) has been
+run end-to-end; a physically meaningful result of course requires an MLP
+trained on enough data over the relevant (a, c) region.</p></li>
+</ul>
+</section>
+<section id="run-the-anisotropic-qha">
+<h2>7. Run the anisotropic QHA<a class="headerlink" href="#run-the-anisotropic-qha" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha</span><span class="w"> </span><span class="kn">import</span> <span class="n">anisotropic_output</span><span class="p">,</span> <span class="n">anisotropic_plot</span>
+
+<span class="n">temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1001</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># one extra point for finite diff</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">run_anisotropic_qha</span><span class="p">(</span>
+    <span class="n">phonopys</span><span class="p">,</span>
+    <span class="n">temperatures</span><span class="p">,</span>
+    <span class="n">internal_energies</span><span class="o">=</span><span class="n">internal_energies</span><span class="p">,</span>
+    <span class="n">mesh</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">anisotropic_output</span><span class="o">.</span><span class="n">write_lattice_parameters_temperature</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">anisotropic_output</span><span class="o">.</span><span class="n">write_axial_thermal_expansion</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">plt</span> <span class="o">=</span> <span class="n">anisotropic_plot</span><span class="o">.</span><span class="n">plot_anisotropic_qha</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;anisotropic_qha.png&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> detects the free lattice DOF from the input cells, fits
+the free energy surface F(a, c; T) and minimizes it per temperature, giving
+a(T), c(T) and the axial thermal expansions alpha_a, alpha_c.</p>
+</section>
+<section id="validate-the-mlp-equilibrium-shape-recommended">
+<h2>8. Validate the MLP equilibrium shape (recommended)<a class="headerlink" href="#validate-the-mlp-equilibrium-shape-recommended" title="Link to this heading">#</a></h2>
+<p>A smooth MLP is not automatically a correct one. Before trusting the anisotropic
+result, validate the MLP’s equilibrium shape against DFT at a few points:</p>
+<ul class="simple">
+<li><p>Compare MLP-relaxed vs DFT-relaxed equilibrium <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">c</span></code> and especially the
+<code class="docutils literal notranslate"><span class="pre">c/a</span></code> ratio (the anisotropy is encoded there).</p></li>
+<li><p>Compare MLP and DFT stresses at a few cells (the stress is the free-energy
+gradient the QHA minimizes).</p></li>
+<li><p>Optionally compare elastic constants (the surface curvature).</p></li>
+</ul>
+<p>If the MLP equilibrium shape agrees with DFT within tolerance, the dense (a, c)
+grid can be trusted.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-the-mlp-training-set-strained-supercells">1. Generate the MLP training set (strained supercells)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-first-principles-calculations">2. Run the first-principles calculations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-training-dataset-with-stress">3. Build the training dataset (with stress)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-the-mlp-using-energies-forces-and-stresses">4. Train the MLP using energies, forces and stresses</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-a-c-grid-of-unit-cells">5. Build the (a, c) grid of unit cells</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-grid-cell-force-constants-from-the-mlp">6. Per grid cell: force constants from the MLP</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">7. Run the anisotropic QHA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp-equilibrium-shape-recommended">8. Validate the MLP equilibrium shape (recommended)</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
