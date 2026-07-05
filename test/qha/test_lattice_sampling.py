@@ -7,8 +7,10 @@ import pytest
 
 from phonopy.qha.lattice_sampling import (
     build_random_displacement_supercells,
+    build_strain_cells_manifest,
     get_free_lattice_dof,
     sample_strained_cells,
+    write_strain_cells_manifest,
 )
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -137,3 +139,74 @@ def test_random_displacement_supercells() -> None:
         assert len(sc) == 8 * len(uc)
     # Different cells give different displaced structures.
     assert not np.allclose(supercells[0].positions, supercells[1].positions)
+
+
+def test_build_strain_cells_manifest() -> None:
+    """The manifest records the seed, ranges and per-cell free lengths."""
+    cell = _hexagonal()
+    dof = get_free_lattice_dof(cell)
+    ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
+    unitcells = sample_strained_cells(cell, dof, ranges, num=3, seed=7)
+    filenames = [f"unitcell-{i + 1:05d}" for i in range(len(unitcells))]
+
+    manifest = build_strain_cells_manifest(
+        phonopy_version="0.0.0",
+        calculator="vasp",
+        length_unit="angstrom",
+        source="phonopy_disp.yaml",
+        dof=dof,
+        command_line="phonopy-strain-cells phonopy_disp.yaml",
+        ranges=ranges,
+        num=3,
+        rd_distance=None,
+        symprec=1e-5,
+        seed=7,
+        prefix="unitcell",
+        kind="strained unit cell",
+        unitcells=unitcells,
+        filenames=filenames,
+    )
+
+    assert manifest["free_dof"] == ["a", "c"]
+    assert manifest["parameters"]["seed"] == 7
+    assert manifest["parameters"]["ranges"] == {"a": [3.9, 4.1], "c": [5.8, 6.2]}
+    assert manifest["parameters"]["rd_distance"] is None
+    cells = manifest["output"]["cells"]
+    assert manifest["output"]["num_cells"] == 3
+    assert len(cells) == 3
+    for entry, uc in zip(cells, unitcells, strict=True):
+        lengths = np.linalg.norm(uc.cell, axis=1)
+        assert entry["a"] == pytest.approx(lengths[0], abs=1e-6)
+        assert entry["c"] == pytest.approx(lengths[2], abs=1e-6)
+
+
+def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
+    """The manifest is written as YAML that loads back with plain types."""
+    yaml = pytest.importorskip("yaml")
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
+    unitcells = sample_strained_cells(cell, dof, ranges, num=2, seed=1)
+    filenames = [f"unitcell-{i + 1:05d}" for i in range(len(unitcells))]
+    manifest = build_strain_cells_manifest(
+        phonopy_version="0.0.0",
+        calculator="vasp",
+        length_unit="angstrom",
+        source="phonopy_disp.yaml",
+        dof=dof,
+        command_line="phonopy-strain-cells phonopy_disp.yaml",
+        ranges=ranges,
+        num=2,
+        rd_distance=0.03,
+        symprec=1e-5,
+        seed=1,
+        prefix="supercell",
+        kind="random-displacement supercell",
+        unitcells=unitcells,
+        filenames=filenames,
+    )
+
+    path = tmp_path / "strain_cells.yaml"
+    write_strain_cells_manifest(path, manifest)
+    loaded = yaml.safe_load(path.read_text())
+    assert loaded == manifest
