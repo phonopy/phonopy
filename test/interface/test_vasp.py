@@ -17,6 +17,8 @@ from phonopy.interface.vasp import (
     Vasprun,
     VasprunxmlExpat,
     check_forces,
+    get_born_vaspout,
+    get_born_vasprunxml,
     get_drift_forces,
     get_scaled_positions_lines,
     get_vasp_structure_lines,
@@ -26,6 +28,8 @@ from phonopy.interface.vasp import (
     parse_vasprunxml,
     read_vasp,
     read_vasp_from_strings,
+    read_vaspout_calculation,
+    read_vasprun_calculation,
     read_XDATCAR,
     write_supercells_with_displacements,
     write_vasp,
@@ -1007,3 +1011,131 @@ def test_GeSn_vca_phonopy_load_builds_FC_symfc(tmp_path):
     assert fc.ndim == 4
     assert fc.shape[1] == n_sites
     assert fc.shape[2:] == (3, 3)
+
+
+#
+# vaspout.h5
+#
+def _write_minimal_vaspout(path, with_stress=True, with_nac=False):
+    """Build a minimal vaspout.h5 with known values for reader tests."""
+    h5py = pytest.importorskip("h5py")
+    lattice = np.array([[4.0, 0.0, 0.0], [0.0, 4.0, 0.0], [0.0, 0.0, 4.0]])
+    positions = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]])
+    forces = np.array([[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]])
+    stress_kbar = np.array([[-15.0, 0.0, 0.0], [0.0, -15.0, 0.0], [0.0, 0.0, -15.0]])
+    energies = np.array([[-10.0, -11.0, -12.0]])  # [free, wo_entropy, sigma->0]
+    tags = np.array(
+        [b"free energy    TOTEN", b"energy without entropy", b"energy(sigma->0)"]
+    )
+    with h5py.File(path, "w") as f:
+        f["input/poscar/ion_types"] = np.array([b"Na", b"Cl"])
+        f["input/poscar/number_ion_types"] = np.array([1, 1], dtype="int32")
+        f["input/poscar/direct_coordinates"] = np.int32(1)
+        f["input/poscar/scale"] = 1.0
+        f["input/poscar/lattice_vectors"] = lattice
+        f["input/poscar/position_ions"] = positions
+        g = "intermediate/ion_dynamics"
+        f[f"{g}/scale"] = 1.0
+        f[f"{g}/lattice_vectors"] = lattice[None, :, :]
+        f[f"{g}/position_ions"] = positions[None, :, :]
+        f[f"{g}/forces"] = forces[None, :, :]
+        if with_stress:
+            f[f"{g}/stress"] = stress_kbar[None, :, :]
+        f[f"{g}/energies"] = energies
+        f[f"{g}/energies_tags"] = tags
+        if with_nac:
+            lr = "results/linear_response"
+            born = np.array([np.eye(3) * 1.09, -np.eye(3) * 1.09], dtype="double")
+            f[f"{lr}/born_charges"] = born
+            f[f"{lr}/electron_dielectric_tensor"] = np.eye(3) * 2.5
+
+
+def test_read_vaspout_calculation(tmp_path):
+    """read_vaspout_calculation returns sigma->0 energy, forces, GPa stress."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path)
+    cell, energy, forces, stress = read_vaspout_calculation(path)
+
+    assert cell.symbols == ["Na", "Cl"]
+    np.testing.assert_allclose(cell.cell, np.eye(3) * 4.0)
+    assert energy == pytest.approx(-12.0)  # energy(sigma->0), not -11.0
+    np.testing.assert_allclose(forces, [[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]])
+    # kBar -> GPa
+    np.testing.assert_allclose(stress, np.eye(3) * -1.5)
+
+
+def test_read_vaspout_calculation_no_stress(tmp_path):
+    """Stress is None when the vaspout.h5 has no stress dataset."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path, with_stress=False)
+    _, _, _, stress = read_vaspout_calculation(path)
+    assert stress is None
+
+
+def test_parse_set_of_forces_vaspout(tmp_path):
+    """parse_set_of_forces dispatches to the h5 reader for .h5 files."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path)
+    dataset = parse_set_of_forces(2, [path], verbose=False)
+    np.testing.assert_allclose(
+        dataset["forces"][0], [[0.1, 0.2, 0.3], [-0.1, -0.2, -0.3]]
+    )
+    assert dataset["supercell_energies"][0] == pytest.approx(-12.0)
+
+
+def test_read_vasprun_calculation_dispatches_h5(tmp_path):
+    """read_vasprun_calculation routes .h5 files to the h5 reader."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path)
+    _, energy, _, _ = read_vasprun_calculation(path)
+    assert energy == pytest.approx(-12.0)
+
+
+def test_get_born_vaspout(tmp_path):
+    """get_born_vaspout reads Born charges and dielectric tensor."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path, with_nac=True)
+    borns, epsilon, atom_indices = get_born_vaspout(path, is_symmetry=False)
+    np.testing.assert_allclose(epsilon, np.eye(3) * 2.5)
+    np.testing.assert_allclose(borns[0], np.eye(3) * 1.09)
+    np.testing.assert_allclose(borns[1], -np.eye(3) * 1.09)
+    np.testing.assert_array_equal(atom_indices, [0, 1])
+
+
+def test_get_born_vasprunxml_dispatches_h5(tmp_path):
+    """get_born_vasprunxml routes .h5 files to get_born_vaspout."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path, with_nac=True)
+    _, epsilon, _ = get_born_vasprunxml(path, is_symmetry=False)
+    np.testing.assert_allclose(epsilon, np.eye(3) * 2.5)
+
+
+def test_get_born_vaspout_without_lepsilon(tmp_path):
+    """get_born_vaspout raises when linear_response data are absent."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path, with_nac=False)
+    with pytest.raises(RuntimeError):
+        get_born_vaspout(path)
+
+
+def test_energy_sigma0_version_index():
+    """energy_sigma0 selects the version-dependent column and needs a version."""
+    vasprun = VasprunxmlExpat(BytesIO(b""))
+    vasprun._all_energies = [[-10.0, -11.0, -12.0]]
+
+    vasprun._version = "6.4.2"  # VASP 6: e_0_energy (index 2)
+    assert vasprun.energy_sigma0 == pytest.approx(-12.0)
+
+    vasprun._version = "5.4.4"  # VASP 5: e_wo_entrp slot (index 1)
+    assert vasprun.energy_sigma0 == pytest.approx(-11.0)
+
+    vasprun._version = None  # unknown version cannot pick a column
+    with pytest.raises(RuntimeError):
+        _ = vasprun.energy_sigma0

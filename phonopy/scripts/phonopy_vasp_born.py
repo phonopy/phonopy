@@ -53,7 +53,12 @@ def get_options():
     """Parse command-line options."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Phonopy vasp-born command-line-tool")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Phonopy vasp-born command-line-tool. Reads NAC parameters from "
+            "vaspout.h5, vasprun.xml, or OUTCAR."
+        )
+    )
     parser.set_defaults(
         num_atoms=None,
         primitive_axes=None,
@@ -89,7 +94,12 @@ def get_options():
         help=("Read OUTCAR instead of vasprun.xml. POSCAR is necessary in this case."),
     )
     parser.add_argument(
-        "filenames", nargs="*", help="Filenames: vasprun.xml or OUTCAR and POSCAR"
+        "filenames",
+        nargs="*",
+        help=(
+            "Filenames: vaspout.h5, vasprun.xml, or OUTCAR and POSCAR. A "
+            "vaspout.h5 file (.h5 suffix) is read directly."
+        ),
     )
     args = parser.parse_args()
     return args
