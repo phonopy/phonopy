@@ -1,0 +1,30 @@
+<input>
+  <title>Cubic bulk Silicon</title>
+  <structure speciespath=".." autormt="false">
+    <crystal>
+      <basevect>0.00 5.1636045 5.1636045</basevect>
+      <basevect>5.1636045 0.00 5.1636045</basevect>
+      <basevect>5.1636045 5.1636045 0.00</basevect>
+    </crystal>
+    <species speciesfile="Si.xml">
+      <atom coord="0.00 0.00 0.00"></atom>
+      <atom coord="0.25 0.25 0.25"></atom>
+    </species>
+  </structure>
+
+  <groundstate
+                do="fromscratch"
+                useAPWprecision="true"
+                APWprecision="0.8"
+                gmaxvr="27"
+                lmaxvr="9"
+                lmaxmat="9"
+                lmaxapw="9"
+                nempty="10"
+                tforce="true"
+                ngridk="12 12 12">
+                <libxc correlation="XC_GGA_C_PBE_SOL" exchange="XC_GGA_X_PBE_SOL"/>
+		<sirius xc="true" vha="true" eigenstates="true" density="true" densityinit="true" cfun="true"/>
+  </groundstate>
+
+</input>

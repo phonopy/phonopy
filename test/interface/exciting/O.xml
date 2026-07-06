@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spdb xsi:noNamespaceSchemaLocation="../../xml/species.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <sp chemicalSymbol="O" name="oxygen" z="-8.00000" mass="29165.12203">
+    <muffinTin rmin="0.100000E-05" radius="1.4500" rinf="17.0873" radialmeshPoints="200"/>
+    <atomicState n="1" l="0" kappa="1" occ="2.00000" core="true"/>
+    <atomicState n="2" l="0" kappa="1" occ="2.00000" core="false"/>
+    <atomicState n="2" l="1" kappa="1" occ="2.00000" core="false"/>
+    <atomicState n="2" l="1" kappa="2" occ="2.00000" core="false"/>
+    <basis>
+      <default type="lapw" trialEnergy="0.1500" searchE="false"/>
+      <custom l="0" type="apw+lo" trialEnergy="-0.2" searchE="false"/>
+      <lo l="0">
+        <wf matchingOrder="0" trialEnergy="-0.2" searchE="false"/>
+        <wf matchingOrder="2" trialEnergy="-0.2" searchE="false"/>
+      </lo>
+      <custom l="1" type="apw+lo" trialEnergy="0.15" searchE="false"/>
+      <lo l="1">
+        <wf matchingOrder="0" trialEnergy="0.15" searchE="false"/>
+        <wf matchingOrder="2" trialEnergy="0.15" searchE="false"/>
+      </lo>
+    </basis>
+  </sp>
+</spdb>

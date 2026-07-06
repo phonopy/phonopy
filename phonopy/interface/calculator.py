@@ -188,6 +188,7 @@ calculator_info = {
     "vasp": {"option": {"name": "--vasp", "help": "Invoke Vasp mode"}},
     "wien2k": {"option": {"name": "--wien2k", "help": "Invoke Wien2k mode"}},
     "pwmat": {"option": {"name": "--pwmat", "help": "Invoke PWmat mode"}},
+    "exciting": {"option": {"name": "--exciting", "help": "Invoke exciting mode"}},
 }
 
 
@@ -275,6 +276,12 @@ def write_crystal_structure(
         import phonopy.interface.abinit as abinit
 
         abinit.write_abinit(filename, cell)
+
+    elif interface_mode == "exciting":
+        import phonopy.interface.exciting as exciting
+
+        exciting.write_exciting(filename, cell)
+
     elif interface_mode == "qe":
         import phonopy.interface.qe as qe
 
@@ -643,6 +650,10 @@ def _write_supercells_generic(
         import phonopy.interface.abinit as abinit
 
         writer = abinit.write_supercells_with_displacements
+    elif interface_mode == "exciting":
+        import phonopy.interface.exciting as exciting
+
+        writer = exciting.write_supercells_with_displacements
     else:
         msg = f"No handler found for calculator interface: {interface_mode}"
         raise RuntimeError(msg)
@@ -678,7 +689,8 @@ def _get_writer_handler(
 
     2. Generic handlers (unified implementation):
        - Use a standard call pattern without special processing
-       - Examples: ABINIT, SIESTA, DFTB+, TURBOMOLE, FHI-aims, CASTEP, LAMMPS, PWmat
+       - Examples: ABINIT, SIESTA, DFTB+, TURBOMOLE, FHI-aims, CASTEP, LAMMPS, PWmat,
+         exciting
        - Share a single generic handler via _write_supercells_generic()
 
     Parameters
@@ -883,6 +895,13 @@ def read_crystal_structure(
 
         unitcell = read_abinit(cell_filename)
         return unitcell, StructureInfo(unitcell_filename=cell_filename)
+
+    elif interface_mode == "exciting":
+        from phonopy.interface.exciting import read_exciting
+
+        unitcell = read_exciting(cell_filename)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
+
     elif interface_mode == "qe":
         from phonopy.interface.qe import read_pwscf
 
@@ -986,6 +1005,8 @@ def get_default_cell_filename(interface_mode: str | None) -> str:
         return "POSCAR"
     elif interface_mode in ("abinit", "qe"):
         return "unitcell.in"
+    elif interface_mode == "exciting":
+        return "input.xml"
     elif interface_mode == "wien2k":
         return "case.struct"
     elif interface_mode == "elk":
@@ -1026,6 +1047,8 @@ def get_default_supercell_filename(interface_mode: str | None) -> str | None:
         return "SPOSCAR"
     elif interface_mode in ("abinit", "elk", "qe", "fleur"):
         return "supercell.in"
+    elif interface_mode == "exciting":
+        return "supercell.xml"
     elif interface_mode == "wien2k":
         return "case.structS"
     elif interface_mode == "siesta":
@@ -1060,6 +1083,7 @@ def get_default_displacement_distance(interface_mode: str | None) -> float:
     if interface_mode in (
         "wien2k",
         "abinit",
+        "exciting",
         "elk",
         "qe",
         "siesta",
@@ -1114,6 +1138,8 @@ def get_calc_dataset(
         from phonopy.interface.vasp import parse_set_of_forces
     elif interface_mode == "abinit":
         from phonopy.interface.abinit import parse_set_of_forces
+    elif interface_mode == "exciting":
+        from phonopy.interface.exciting import parse_set_of_forces
     elif interface_mode == "qe":
         from phonopy.interface.qe import parse_set_of_forces
     elif interface_mode == "elk":
