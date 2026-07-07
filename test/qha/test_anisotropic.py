@@ -123,6 +123,36 @@ def test_extrapolation_warning() -> None:
     fit = FreeEnergySurfaceFit(pts, values, degree=2)
     with pytest.warns(UserWarning):
         fit.minimize()
+    assert fit.minimum_extrapolated is True
+
+
+def test_fit_diagnostics() -> None:
+    """The fit exposes RMS residual, rank, and minimize state."""
+    points = _grid([3.0, 5.0], [0.2, 0.3], 5)
+    values = _quadratic_2d(points)
+    fit = FreeEnergySurfaceFit(points, values, degree=2)
+
+    assert fit.n_terms == 6
+    assert fit.rank == 6
+    assert not fit.is_rank_deficient
+    assert fit.rms_residual == pytest.approx(0.0, abs=1e-10)
+
+    # Convergence flags are unset until minimize runs.
+    assert fit.minimize_converged is None
+    assert fit.minimum_extrapolated is None
+    fit.minimize()
+    assert fit.minimize_converged
+    assert fit.minimum_extrapolated is False
+
+
+def test_fit_rank_deficient() -> None:
+    """Collinear sample points give a rank-deficient design matrix."""
+    t = np.linspace(-1.0, 1.0, 8)
+    points = np.stack([3.0 + 0.1 * t, 5.0 + 0.2 * t], axis=1)  # points on a line
+    values = t**2
+    fit = FreeEnergySurfaceFit(points, values, degree=2)
+    assert fit.is_rank_deficient
+    assert fit.rank < fit.n_terms
 
 
 def test_too_few_points() -> None:
@@ -246,6 +276,14 @@ def test_run_anisotropic_tetragonal(ph_nacl: Phonopy) -> None:
     low = result.lattice_lengths.min(axis=0)
     high = result.lattice_lengths.max(axis=0)
     assert (elp >= low - 1e-9).all() and (elp <= high + 1e-9).all()
+
+    # Fit diagnostics: full rank, finite residuals, no extrapolation.
+    assert result.surface_fit_rms.shape == (n,)
+    assert (result.surface_fit_rms >= 0.0).all()
+    assert result.minimum_extrapolated.shape == (n,)
+    assert not result.minimum_extrapolated.any()
+    assert result.surface_n_terms == 6  # C(2 + 2, 2)
+    assert result.surface_fit_rank == result.surface_n_terms
 
     # Volume consistency: k * a * b * c == equilibrium volume.
     volumes = np.array([ph.primitive.volume for ph in phonopys])
