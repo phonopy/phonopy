@@ -36,6 +36,10 @@ def _synthetic_result(n: int = 6) -> AnisotropicQHAResult:
         gibbs_free_energies=-40.0 + 1e-3 * temperatures,
         thermal_expansion=beta,
         axial_thermal_expansions=axial,
+        surface_fit_rms=np.zeros(n),
+        surface_fit_rank=6,
+        surface_n_terms=6,
+        minimum_extrapolated=np.zeros(n, dtype=bool),
     )
 
 

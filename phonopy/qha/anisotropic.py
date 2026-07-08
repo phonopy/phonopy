@@ -106,8 +106,16 @@ class FreeEnergySurfaceFit:
             )
 
         design = polynomial_design_matrix(self._scaled(self._points), self._exponents)
-        coefficients, _, _, _ = np.linalg.lstsq(design, self._values, rcond=None)
+        coefficients, _, rank, _ = np.linalg.lstsq(design, self._values, rcond=None)
         self._coefficients = coefficients
+        self._n_terms = n_terms
+        self._rank = int(rank)
+        self._rms_residual = float(
+            np.sqrt(np.mean((design @ coefficients - self._values) ** 2))
+        )
+        # Set by minimize(); None until it has run.
+        self._minimize_converged: bool | None = None
+        self._minimum_extrapolated: bool | None = None
 
     def _scaled(self, points: NDArray[np.double]) -> NDArray[np.double]:
         """Non-dimensionalize points as (x - center) / scale."""
@@ -136,6 +144,50 @@ class FreeEnergySurfaceFit:
     def exponents(self) -> NDArray[np.int64]:
         """Return the monomial exponent tuples, shape (n_terms, ndim)."""
         return self._exponents
+
+    @property
+    def n_terms(self) -> int:
+        """Return the number of polynomial terms C(ndim + degree, degree)."""
+        return self._n_terms
+
+    @property
+    def rank(self) -> int:
+        """Return the rank of the least-squares design matrix.
+
+        Equal to n_terms for a well-posed fit. A smaller value means the
+        sample points do not constrain every polynomial term (rank
+        deficient), so the fitted surface is under-determined.
+
+        """
+        return self._rank
+
+    @property
+    def is_rank_deficient(self) -> bool:
+        """Return whether the design matrix rank is below n_terms."""
+        return self._rank < self._n_terms
+
+    @property
+    def rms_residual(self) -> float:
+        """Return the RMS residual of the fit over the sample points in eV."""
+        return self._rms_residual
+
+    @property
+    def minimize_converged(self) -> bool | None:
+        """Return whether the last minimize() converged.
+
+        None until minimize() has been called.
+
+        """
+        return self._minimize_converged
+
+    @property
+    def minimum_extrapolated(self) -> bool | None:
+        """Return whether the last minimize() left the sampled box.
+
+        None until minimize() has been called.
+
+        """
+        return self._minimum_extrapolated
 
     def evaluate(
         self, points: Sequence[Sequence[float]] | NDArray[np.double]
@@ -224,6 +276,7 @@ class FreeEnergySurfaceFit:
             return self.gradient(x[None, :])[0]
 
         result = minimize(fun, start, jac=jac, method="BFGS")
+        self._minimize_converged = bool(result.success)
         if not result.success:
             warnings.warn(
                 f"Free energy surface minimization did not converge: {result.message}",
@@ -233,7 +286,9 @@ class FreeEnergySurfaceFit:
         x_min = np.array(result.x, dtype="double")
         low = self._points.min(axis=0)
         high = self._points.max(axis=0)
-        if (x_min < low).any() or (x_min > high).any():
+        extrapolated = bool((x_min < low).any() or (x_min > high).any())
+        self._minimum_extrapolated = extrapolated
+        if extrapolated:
             warnings.warn(
                 "The free energy minimum lies outside the sampled lattice "
                 "range; the equilibrium lattice parameters are extrapolated.",
@@ -288,6 +343,23 @@ class AnisotropicQHAResult:
     axial_thermal_expansions : ndarray
         Linear thermal expansion coefficients (alpha_a, alpha_b, alpha_c)
         at temperatures in 1/K with a leading row of zeros. shape=(N, 3)
+    surface_fit_rms : ndarray
+        RMS residual of the free-energy surface polynomial fit at each
+        temperature in eV; a fit-quality diagnostic. shape=(N,)
+    surface_fit_rank : int
+        Rank of the least-squares design matrix. Constant across
+        temperatures, because the sample points and the monomial basis do
+        not depend on temperature. Equal to surface_n_terms for a
+        well-posed fit; a smaller value flags a rank-deficient
+        (under-determined) fit.
+    surface_n_terms : int
+        Number of polynomial terms, C(ndim + surface_degree,
+        surface_degree). The fit is rank deficient when surface_fit_rank
+        is below this value.
+    minimum_extrapolated : ndarray
+        Per-temperature boolean flag, True when the located free-energy
+        minimum lies outside the sampled lattice box, i.e. the equilibrium
+        lattice parameters are extrapolated. shape=(N,)
 
     """
 
@@ -301,6 +373,10 @@ class AnisotropicQHAResult:
     gibbs_free_energies: NDArray[np.double]
     thermal_expansion: NDArray[np.double]
     axial_thermal_expansions: NDArray[np.double]
+    surface_fit_rms: NDArray[np.double]
+    surface_fit_rank: int
+    surface_n_terms: int
+    minimum_extrapolated: NDArray[np.bool_]
 
     def __post_init__(self) -> None:
         """Make ndarray fields read-only."""
@@ -405,20 +481,62 @@ def run_anisotropic_qha(
     helmholtz_lattice = np.zeros((m, n_points), dtype="double")
     equilibrium_lattice_parameters = np.zeros((m, 3), dtype="double")
     gibbs_free_energies = np.zeros(m, dtype="double")
+    surface_fit_rms = np.zeros(m, dtype="double")
+    minimum_extrapolated = np.zeros(m, dtype=bool)
+    surface_fit_rank = n_terms
+
+    axis_labels = ("a", "b", "c")
     if verbose:
         print("# Anisotropic free energy surface fitting")
+        free_axes = ", ".join(axis_labels[col] for col in free_indices)
+        print(f"Free lattice DOF: {ndim} ({free_axes})")
+        for col in range(3):
+            if column_map[col] < 0:
+                print(f"Fixed length {axis_labels[col]} = {fixed_values[col]:.6f} A")
+        print(
+            f"Sample cells: {n_points}, polynomial terms: {n_terms} "
+            f"(total degree {surface_degree})"
+        )
+        for pos, col in enumerate(free_indices):
+            lo = free_points[:, pos].min()
+            hi = free_points[:, pos].max()
+            print(f"Sampled range {axis_labels[col]}: [{lo:.6f}, {hi:.6f}] A")
+
     for i in range(m):
         fe = el[i]
         helmholtz_lattice[i] = fe
         fit = FreeEnergySurfaceFit(free_points, fe, degree=surface_degree)
+        if i == 0:
+            # The design matrix rank is temperature independent (only the
+            # fitted values change), so it is inspected once.
+            surface_fit_rank = fit.rank
+            if fit.is_rank_deficient:
+                warnings.warn(
+                    f"The free energy surface fit is rank deficient "
+                    f"(rank {fit.rank} < {fit.n_terms} terms): the sampled "
+                    f"lattice cells do not constrain every polynomial term. "
+                    f"Add or better spread the sample cells, or lower "
+                    f"surface_degree.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+            if verbose:
+                status = "rank deficient" if fit.is_rank_deficient else "full rank"
+                print(f"Design matrix rank: {fit.rank} / {fit.n_terms} ({status})")
         x_min = fit.minimize()
+        surface_fit_rms[i] = fit.rms_residual
+        minimum_extrapolated[i] = bool(fit.minimum_extrapolated)
         gibbs_free_energies[i] = float(fit.evaluate(x_min[None, :])[0])
         equilibrium_lattice_parameters[i] = _reconstruct_lattice_parameters(
             x_min, column_map, fixed_values
         )
         if verbose:
             a, b, c = equilibrium_lattice_parameters[i]
-            print(f"T = {temps_in[i]:8.2f} K  a = {a:.6f}  b = {b:.6f}  c = {c:.6f} A")
+            flag = "  [extrapolated]" if minimum_extrapolated[i] else ""
+            print(
+                f"T = {temps_in[i]:8.2f} K  a = {a:.6f}  b = {b:.6f}  "
+                f"c = {c:.6f} A  fit RMS = {fit.rms_residual:.3e} eV{flag}"
+            )
 
     k = float((volumes / lattice_lengths.prod(axis=1)).mean())
     equilibrium_volumes = k * equilibrium_lattice_parameters.prod(axis=1)
@@ -441,6 +559,10 @@ def run_anisotropic_qha(
         gibbs_free_energies=gibbs_free_energies[:n],
         thermal_expansion=thermal_expansion,
         axial_thermal_expansions=axial_thermal_expansions,
+        surface_fit_rms=surface_fit_rms[:n],
+        surface_fit_rank=surface_fit_rank,
+        surface_n_terms=n_terms,
+        minimum_extrapolated=minimum_extrapolated[:n],
     )
 
 
