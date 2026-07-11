@@ -186,7 +186,7 @@ pair_style  <potential>
 pair_coeff  <...>
 
 dump phonopy all custom 1 force.* id type x y z fx fy fz
-dump_modify phonopy format line "%d %d %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f"
+dump_modify phonopy format line "%d %d %15.10f %15.10f %15.10f %15.10f %15.10f %15.10f"
 run 0
 ```
 
