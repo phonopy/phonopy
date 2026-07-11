@@ -274,6 +274,57 @@ def build_species_table_from_mixtures(
     return species_list, ids
 
 
+def build_species_table_from_symbols(
+    symbols: Sequence[str],
+    order: Sequence[str] | None = None,
+) -> tuple[list[_Species], NDArray[np.int64]]:
+    """Convert per-atom chemical symbols into a (species_table, species_ids) pair.
+
+    Each entry of ``symbols`` is a chemical symbol with an optional
+    natural-number suffix (e.g. ``"Cl"``, ``"Cl1"``); atoms sharing the same
+    symbol string share one species entry. This is the single-element
+    counterpart of ``build_species_table_from_mixtures``.
+
+    Parameters
+    ----------
+    symbols :
+        Per-atom chemical symbols.
+    order :
+        Optional sequence of distinct symbol strings giving the desired order
+        of entries in the returned species table. When omitted the table keeps
+        first-appearance order (as ``PhonopyAtoms(symbols=...)`` does). When
+        given, entries follow this order; symbols listed in ``order`` but
+        absent from ``symbols`` are dropped, and every symbol appearing in
+        ``symbols`` must be present in ``order``. This lets calculator readers
+        that carry an explicit type ordering (e.g. LAMMPS "Atom Type Labels")
+        preserve it through to ``PhonopyAtoms(species_table=...,
+        species_ids=...)``.
+
+    """
+    symbol_map = get_atomic_data().symbol_map
+    per_atom_species: list[_Species] = []
+    for symnum in symbols:
+        base, _ = split_symbol_and_index(symnum)
+        if base not in symbol_map:
+            raise RuntimeError(f"Invalid symbol: {symnum}.")
+        per_atom_species.append(_Species(symbol=symnum, atomic_number=symbol_map[base]))
+    table, ids = _dedup_species(per_atom_species)
+    if order is None:
+        return table, ids
+
+    sym_to_old = {sp.symbol: i for i, sp in enumerate(table)}
+    missing = set(sym_to_old) - set(order)
+    if missing:
+        raise ValueError(
+            f"order is missing symbols present in symbols: {sorted(missing)}."
+        )
+    ordered = [s for s in order if s in sym_to_old]
+    new_table = [table[sym_to_old[s]] for s in ordered]
+    old_to_new = {sym_to_old[s]: i for i, s in enumerate(ordered)}
+    new_ids = np.array([old_to_new[int(i)] for i in ids], dtype="int64")
+    return new_table, new_ids
+
+
 def _disambiguate_composite_labels(
     species_table: list[_Species],
 ) -> list[_Species]:
@@ -763,16 +814,7 @@ class PhonopyAtoms:
 
     def _build_species_from_symbols(self, symbols: list[str]) -> None:
         """Parse symbol strings and populate _species and _species_ids."""
-        symbol_map = get_atomic_data().symbol_map
-        per_atom_species: list[_Species] = []
-        for symnum in symbols:
-            base, _ = split_symbol_and_index(symnum)
-            if base not in symbol_map:
-                raise RuntimeError(f"Invalid symbol: {symnum}.")
-            per_atom_species.append(
-                _Species(symbol=symnum, atomic_number=symbol_map[base])
-            )
-        self._species, self._species_ids = _dedup_species(per_atom_species)
+        self._species, self._species_ids = build_species_table_from_symbols(symbols)
 
     def _build_species_from_numbers(self, numbers: NDArray[np.int64]) -> None:
         """Populate _species and _species_ids from atomic numbers (1..118)."""
