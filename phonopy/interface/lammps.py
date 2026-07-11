@@ -41,7 +41,7 @@ import os
 import re
 import typing
 from collections.abc import Sequence
-from typing import Any, TypeVar
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -50,8 +50,6 @@ from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_symbols
 from phonopy.structure.cells import get_cell_matrix_from_lattice
-
-_T = TypeVar("_T")
 
 
 def write_supercells_with_displacements(
@@ -179,11 +177,15 @@ class LammpsStructureDumper:
         return self._lines
 
     def _run(self, cell: PhonopyAtoms) -> None:
-        # Atom types follow cell.species_table order rather than being sorted
-        # by atomic number. get_supercell preserves the unit cell's
-        # species_table order, so this keeps the LAMMPS type ids (1, 2, ...)
-        # aligned with the input structure. This matters because type ids map
-        # to pair_coeff / potential files in LAMMPS.
+        """Build the LAMMPS structure lines from cell.
+
+        Atom types follow cell.species_table order rather than being sorted by
+        atomic number. get_supercell preserves the unit cell's species_table
+        order, so this keeps the LAMMPS type ids (1, 2, ...) aligned with the
+        input structure. This matters because type ids map to pair_coeff /
+        potential files in LAMMPS.
+
+        """
         species_ids = cell.species_ids
         usyms = [sp.symbol for sp in cell.species_table]
         n_types = len(usyms)
@@ -324,7 +326,7 @@ class LammpsStructureLoader:
         self._atom_type_labels: dict[str, int] = {}
         self._masses: dict[int, float] = {}
         self._atom_ids: NDArray[np.int64] | None = None
-        self._atom_labels: list[str] | NDArray[np.int64] | None = None
+        self._atom_labels: list[str] | list[int] | None = None
         self._atom_positions: NDArray[np.double] | None = None
         self._cell: PhonopyAtoms | None = None
 
@@ -385,7 +387,7 @@ class LammpsStructureLoader:
             masses = None
             if self._masses:
                 masses = [
-                    self._masses[self._atom_type_labels[s]]
+                    self._masses[self._atom_type_labels[s]]  # type: ignore[index]
                     for s in self._atom_labels  # type: ignore[union-attr]
                 ]
             # Build the species table in "Atom Type Labels" order so a
@@ -442,11 +444,17 @@ class LammpsStructureLoader:
         return i + 1
 
     def _parse_Atoms(self, lines: list[str]) -> None:
+        """Parse the Atoms section into ids, labels, and positions.
+
+        Atoms are reordered by ascending LAMMPS atom id (the first column) so
+        the atom ordering is deterministic regardless of how the section was
+        laid out (LAMMPS "write_data" does not necessarily list atoms in id
+        order). This also makes phonopy atom index i correspond to LAMMPS id
+        ids[i], consistent with the id-indexed forces in LammpsForcesLoader.
+
+        """
         positions = np.zeros((self._header_tags["atoms"], 3), dtype="double", order="C")
-        if self._atom_type_labels:
-            lables: Any = []
-        else:
-            lables = np.zeros(self._header_tags["atoms"], dtype="int64")
+        labels: list[Any] = []
         ids = np.zeros(self._header_tags["atoms"], dtype="int64")
         num_atoms = 0
         for line in lines:
@@ -461,10 +469,10 @@ class LammpsStructureLoader:
             if self._atom_type_labels:
                 for key, val in self._atom_type_labels.items():
                     if ary[1] in (key, f"{val}"):
-                        lables.append(key)
+                        labels.append(key)
                         break
             else:
-                lables[num_atoms] = int(ary[1])
+                labels.append(int(ary[1]))
             positions[num_atoms] = [float(v) for v in ary[2:5]]
             num_atoms += 1
             if num_atoms == self._header_tags["atoms"]:
@@ -472,9 +480,11 @@ class LammpsStructureLoader:
         assert num_atoms == self._header_tags["atoms"], (
             f"{num_atoms} != {self._header_tags['atoms']}"
         )
-        self._atom_ids = ids
-        self._atom_labels = lables
-        self._atom_positions = positions
+        # Reorder atoms by ascending atom id (see the method docstring).
+        perm = np.argsort(ids, kind="stable")
+        self._atom_ids = ids[perm]
+        self._atom_positions = positions[perm]
+        self._atom_labels = [labels[i] for i in perm]
 
     def _set_xlo_xhi(self, key: str, line: str) -> None:
         self._header_tags[key] = np.array(

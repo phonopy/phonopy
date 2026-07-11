@@ -151,6 +151,67 @@ def test_LammpsStructureDumper_preserves_type_label_order():
     assert _section_entries(text, "Masses") == ["1 35.453 # Cl", "2 22.98976928 # Na"]
 
 
+# Atoms section whose first column (atom id) is out of order. Sorting by id
+# gives id1=Cl, id2=Cl, id3=Na regardless of the file line order.
+_lammps_scrambled_ids = """#
+
+3 atoms
+2 atom types
+
+0.0 4.0 xlo xhi
+0.0 4.0 ylo yhi
+0.0 4.0 zlo zhi
+
+0.0 0.0 0.0 xy xz yz
+
+Atom Type Labels
+
+1 Cl
+2 Na
+
+Masses
+
+1 35.453 # Cl
+2 22.98976928 # Na
+
+Atoms
+
+3 Na 3.0 3.0 3.0
+1 Cl 1.0 1.0 1.0
+2 Cl 2.0 2.0 2.0
+"""
+
+# Same atom ordering but using atomic numbers in the type column and no
+# "Atom Type Labels" section (the legacy numeric path).
+_lammps_scrambled_ids_numeric = """#
+
+3 atoms
+2 atom types
+
+0.0 4.0 xlo xhi
+0.0 4.0 ylo yhi
+0.0 4.0 zlo zhi
+
+0.0 0.0 0.0 xy xz yz
+
+Atoms
+
+3 11 3.0 3.0 3.0
+1 17 1.0 1.0 1.0
+2 17 2.0 2.0 2.0
+"""
+
+
+@pytest.mark.parametrize("text", [_lammps_scrambled_ids, _lammps_scrambled_ids_numeric])
+def test_LammpsStructureLoader_sorts_atoms_by_id(text):
+    """Atoms are reordered by ascending atom id regardless of file layout."""
+    cell = LammpsStructureLoader().load(io.StringIO(text)).cell
+    assert cell.symbols == ["Cl", "Cl", "Na"]
+    np.testing.assert_allclose(
+        cell.positions, [[1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [3.0, 3.0, 3.0]]
+    )
+
+
 def test_LammpsForcesLoader():
     """Test of LammpsForcesLoader with HCP Ti.
 
