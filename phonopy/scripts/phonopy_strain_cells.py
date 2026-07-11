@@ -11,8 +11,11 @@ unit of the input cell.
 
 from __future__ import annotations
 
+import os
 import sys
 from argparse import ArgumentParser, Namespace
+
+import numpy as np
 
 import phonopy
 from phonopy.interface.calculator import write_crystal_structure
@@ -20,9 +23,13 @@ from phonopy.physical_units import get_calculator_physical_units
 from phonopy.qha.lattice_sampling import (
     LatticeDOF,
     build_random_displacement_supercells,
+    build_strain_cells_manifest,
     get_free_lattice_dof,
     sample_strained_cells,
+    write_strain_cells_manifest,
 )
+
+MANIFEST_FILENAME = "strain_cells.yaml"
 
 
 def get_options() -> Namespace:
@@ -64,8 +71,17 @@ def get_options() -> Namespace:
     return parser.parse_args()
 
 
-def _print_dof(dof: LatticeDOF, calculator: str, length_unit: str) -> None:
-    """Print the free lattice DOF and how to specify their ranges."""
+def _print_dof(
+    dof: LatticeDOF, volume: float, calculator: str, length_unit: str
+) -> None:
+    """Print the free lattice DOF and how to specify their ranges.
+
+    For a few reference strains (+/-1, 2, 3 percent) the ready-to-copy
+    ranges and the spanned min/max cell volume are shown. Because every
+    lattice vector is scaled, the extreme volumes are the all-min and
+    all-max corners, i.e. volume * (1 -/+ p)^3.
+
+    """
     print(f"Calculator: {calculator}   Length unit: {length_unit}")
     print(
         f"Crystal system: {dof.crystal_system} "
@@ -76,13 +92,18 @@ def _print_dof(dof: LatticeDOF, calculator: str, length_unit: str) -> None:
     current = "   ".join(
         f"{label} = {dof.current_lengths[label]:.6f}" for label in dof.labels
     )
-    print(f"  current: {current} {length_unit}")
-    example = "  ".join(
-        f"--{label} {dof.current_lengths[label] * 0.98:.4f} "
-        f"{dof.current_lengths[label] * 1.02:.4f}"
-        for label in dof.labels
-    )
-    print(f"Give a range per free parameter, e.g.  {example}")
+    print(f"  current: {current} {length_unit}   volume {volume:.4f} {length_unit}^3")
+    print("Give a range per free parameter, e.g.")
+    for percent in (1, 2, 3):
+        factor = percent / 100
+        ranges = "   ".join(
+            f"--{label} {dof.current_lengths[label] * (1 - factor):.4f} "
+            f"{dof.current_lengths[label] * (1 + factor):.4f}"
+            for label in dof.labels
+        )
+        v_lo = volume * (1 - factor) ** 3
+        v_hi = volume * (1 + factor) ** 3
+        print(f"  +/-{percent}%   {ranges}   (volume {v_lo:.4f} .. {v_hi:.4f})")
 
 
 def run() -> None:
@@ -106,7 +127,7 @@ def run() -> None:
     }
 
     if not provided:
-        _print_dof(dof, calculator, length_unit)
+        _print_dof(dof, cell.volume, calculator, length_unit)
         return
 
     extra = [label for label in provided if label not in dof.labels]
@@ -120,11 +141,20 @@ def run() -> None:
         sys.exit(f"Error: ranges are required for free DOF {missing}.")
 
     ranges = {label: provided[label] for label in dof.labels}
-    unitcells = sample_strained_cells(cell, dof, ranges, num=args.num, seed=args.seed)
+
+    # Resolve the seed to a concrete integer so the run is reproducible and
+    # can be replayed from the recorded value in the manifest.
+    seed = (
+        args.seed
+        if args.seed is not None
+        else int(np.random.default_rng().integers(2**32))
+    )
+
+    unitcells = sample_strained_cells(cell, dof, ranges, num=args.num, seed=seed)
 
     if args.rd is not None:
         cells = build_random_displacement_supercells(
-            unitcells, phonon.supercell_matrix, distance=args.rd, seed=args.seed
+            unitcells, phonon.supercell_matrix, distance=args.rd, seed=seed
         )
         prefix = "supercell"
         kind = "random-displacement supercell"
@@ -133,14 +163,35 @@ def run() -> None:
         prefix = "unitcell"
         kind = "strained unit cell"
 
-    for i, structure in enumerate(cells):
-        write_crystal_structure(
-            f"{prefix}-{i + 1:05d}", structure, interface_mode=calculator
-        )
+    filenames = [f"{prefix}-{i + 1:05d}" for i in range(len(cells))]
+    for filename, structure in zip(filenames, cells, strict=True):
+        write_crystal_structure(filename, structure, interface_mode=calculator)
+
+    manifest = build_strain_cells_manifest(
+        phonopy_version=phonopy.__version__,
+        calculator=calculator,
+        length_unit=length_unit,
+        source=args.filename,
+        dof=dof,
+        command_line=" ".join([os.path.basename(sys.argv[0]), *sys.argv[1:]]),
+        ranges=ranges,
+        num=args.num,
+        rd_distance=args.rd,
+        symprec=args.symprec,
+        seed=seed,
+        prefix=prefix,
+        kind=kind,
+        unitcells=unitcells,
+        filenames=filenames,
+    )
+    write_strain_cells_manifest(MANIFEST_FILENAME, manifest)
+
     print(
         f"Wrote {len(cells)} {kind}(s) as "
         f"{prefix}-00001 .. {prefix}-{len(cells):05d} in {calculator} format."
     )
+    print(f"Random seed: {seed}")
+    print(f"Provenance written to {MANIFEST_FILENAME}")
 
 
 if __name__ == "__main__":

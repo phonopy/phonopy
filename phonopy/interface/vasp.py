@@ -125,9 +125,13 @@ def parse_set_of_forces(
             forces, points, energy = _get_forces_points_and_energy(
                 cast(typing.IO, fp), use_expat=use_expat
             )
-        else:
-            myio = get_io_module_to_decompress(fp)
+        elif _is_vaspout_h5(fp):
             assert isinstance(fp, (str, os.PathLike))
+            forces, points, energy = _read_vaspout_forces(fp)
+        else:
+            assert isinstance(fp, (str, os.PathLike))
+            _vaspout_hint(fp)
+            myio = get_io_module_to_decompress(fp)
             with myio.open(fp, "rb") as _fp:
                 forces, points, energy = _get_forces_points_and_energy(
                     _fp, use_expat=use_expat, filename=fp
@@ -212,12 +216,14 @@ def read_vasprun_calculation(
 
     Intended for assembling machine-learning-potential datasets, this
     returns the final structure together with its total energy, atomic
-    forces and stress.
+    forces and stress. When ``filename`` is a vaspout.h5 file (``.h5``
+    suffix), the data are read from it instead.
 
     Parameters
     ----------
     filename : str or os.PathLike
-        vasprun.xml file name (optionally lzma/gzip/bz2 compressed).
+        vasprun.xml file name (optionally lzma/gzip/bz2 compressed), or a
+        vaspout.h5 file.
 
     Returns
     -------
@@ -229,10 +235,13 @@ def read_vasprun_calculation(
     forces : ndarray
         Atomic forces in eV/angstrom. shape=(natoms, 3)
     stress : ndarray or None
-        Stress tensor in GPa (shape=(3, 3)), or None when the vasprun.xml
+        Stress tensor in GPa (shape=(3, 3)), or None when the calculation
         does not contain stress.
 
     """
+    if _is_vaspout_h5(filename):
+        return read_vaspout_calculation(filename)
+    _vaspout_hint(filename)
     myio = get_io_module_to_decompress(filename)
     with myio.open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
@@ -244,7 +253,7 @@ def read_vasprun_calculation(
             cell=vasprun.lattice[-1],
             scaled_positions=vasprun.points[-1],
         )
-        energy = float(vasprun.energies[-1][1])
+        energy = vasprun.energy_sigma0
         forces = np.array(vasprun.forces[-1], dtype="double", order="C")
         stress_steps = vasprun.stress
         # vasprun stores stress in kBar; convert to GPa (1 GPa = 10 kBar).
@@ -253,6 +262,206 @@ def read_vasprun_calculation(
         else:
             stress = None
     return cell, energy, forces, stress
+
+
+#
+# vaspout.h5 handling
+#
+_VASPOUT_HINT_SHOWN = False
+
+
+def _is_vaspout_h5(filename) -> bool:
+    """Return whether filename designates a vaspout.h5 file by suffix."""
+    if isinstance(filename, io.IOBase):
+        return False
+    return pathlib.Path(os.fspath(filename)).name.endswith(".h5")
+
+
+def _vaspout_hint(vasprun_filename) -> None:
+    """Print a one-time hint if a sibling vaspout.h5 exists.
+
+    Emitted at most once per process so that reading many vasprun.xml files
+    does not repeat the message.
+
+    """
+    global _VASPOUT_HINT_SHOWN
+    if _VASPOUT_HINT_SHOWN or isinstance(vasprun_filename, io.IOBase):
+        return
+    sibling = pathlib.Path(os.fspath(vasprun_filename)).parent / "vaspout.h5"
+    if sibling.exists():
+        print(
+            f'Hint: "vaspout.h5" found alongside "{vasprun_filename}"; '
+            "you can read from it instead."
+        )
+        _VASPOUT_HINT_SHOWN = True
+
+
+def _load_h5py():
+    try:
+        import h5py  # type: ignore[import-untyped]
+    except ImportError as exc:
+        raise ModuleNotFoundError(
+            "h5py is required to read vaspout.h5. Please install python-h5py."
+        ) from exc
+    return h5py
+
+
+def _vaspout_species(f) -> list[str]:
+    """Return the per-atom chemical symbols from the input POSCAR block."""
+    ion_types = [s.decode().strip() for s in f["input/poscar/ion_types"][:]]
+    counts = f["input/poscar/number_ion_types"][:]
+    symbols: list[str] = []
+    for sym, n in zip(ion_types, counts, strict=True):
+        symbols += [sym] * int(n)
+    return symbols
+
+
+def _vaspout_apply_scale(
+    lattice: NDArray[np.double], scale: float
+) -> NDArray[np.double]:
+    """Apply the POSCAR scale to lattice vectors.
+
+    A positive scale multiplies the lattice; a negative scale is a target
+    volume, matching the VASP POSCAR convention.
+
+    """
+    if scale < 0:
+        volume = abs(float(np.linalg.det(lattice)))
+        return lattice * (abs(scale) / volume) ** (1.0 / 3.0)
+    return lattice * scale
+
+
+def _vaspout_atoms(
+    f,
+    lattice: NDArray[np.double],
+    positions: NDArray[np.double],
+    scale: float,
+) -> PhonopyAtoms:
+    """Build a PhonopyAtoms from vaspout.h5 lattice and positions arrays."""
+    scaled_lattice = _vaspout_apply_scale(lattice, scale)
+    if int(f["input/poscar/direct_coordinates"][()]):
+        return PhonopyAtoms(
+            symbols=_vaspout_species(f),
+            cell=scaled_lattice,
+            scaled_positions=positions,
+        )
+    return PhonopyAtoms(
+        symbols=_vaspout_species(f),
+        cell=scaled_lattice,
+        positions=positions * scale,
+    )
+
+
+def _vaspout_energy_sigma0(f) -> float:
+    """Return energy(sigma->0) of the last ionic step from vaspout.h5.
+
+    The column is chosen by matching the energies_tags string, so no VASP
+    version handling is needed (vaspout.h5 exists only in VASP 6+).
+
+    """
+    tags = [t.decode() for t in f["intermediate/ion_dynamics/energies_tags"][:]]
+    for i, tag in enumerate(tags):
+        if "sigma->0" in tag:
+            return float(f["intermediate/ion_dynamics/energies"][-1][i])
+    raise RuntimeError('vaspout.h5 does not contain "energy(sigma->0)".')
+
+
+def _read_vaspout_forces(
+    filename: str | os.PathLike,
+) -> tuple[NDArray[np.double], NDArray[np.double], float]:
+    """Read forces, positions and energy of the last ionic step.
+
+    HDF5 counterpart of the vasprun.xml force reading used by
+    parse_set_of_forces.
+
+    """
+    h5py = _load_h5py()
+    with h5py.File(filename, "r") as f:
+        g = f["intermediate/ion_dynamics"]
+        forces = np.array(g["forces"][-1], dtype="double", order="C")
+        points = np.array(g["position_ions"][-1], dtype="double", order="C")
+        energy = _vaspout_energy_sigma0(f)
+    return forces, points, energy
+
+
+def read_vaspout_calculation(
+    filename: str | os.PathLike,
+) -> tuple[PhonopyAtoms, float, NDArray[np.double], NDArray[np.double] | None]:
+    """Read the final ionic step of a vaspout.h5 as training data.
+
+    HDF5 counterpart of read_vasprun_calculation. Returns the final
+    structure with its total energy(sigma->0) in eV, atomic forces in
+    eV/angstrom, and stress in GPa (or None when stress is absent).
+
+    """
+    h5py = _load_h5py()
+    with h5py.File(filename, "r") as f:
+        g = f["intermediate/ion_dynamics"]
+        scale = float(g["scale"][()])
+        lattice = np.array(g["lattice_vectors"][-1], dtype="double")
+        positions = np.array(g["position_ions"][-1], dtype="double")
+        cell = _vaspout_atoms(f, lattice, positions, scale)
+        energy = _vaspout_energy_sigma0(f)
+        forces = np.array(g["forces"][-1], dtype="double", order="C")
+        if "stress" in g:
+            # vaspout.h5 stores stress in kBar; convert to GPa (1 GPa = 10 kBar).
+            stress = np.array(g["stress"][-1] / 10.0, dtype="double", order="C")
+        else:
+            stress = None
+    return cell, energy, forces, stress
+
+
+def get_born_vaspout(
+    filename: str | os.PathLike = "vaspout.h5",
+    primitive_matrix: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    supercell_matrix: Sequence[Sequence[int]] | NDArray[np.int64] | None = None,
+    is_symmetry: bool = True,
+    symmetrize_tensors: bool = False,
+    symprec: float = 1e-5,
+) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.int64]]:
+    """Parse vaspout.h5 to get NAC parameters.
+
+    HDF5 counterpart of get_born_vasprunxml. Born effective charges and the
+    electronic (ion-clamped) dielectric tensor are read from
+    results/linear_response, which requires a VASP run with
+    LEPSILON = .TRUE. (or LCALCEPS).
+
+    Returns
+    -------
+    See elaborate_borns_and_epsilon.
+
+    """
+    h5py = _load_h5py()
+    with h5py.File(filename, "r") as f:
+        lr = "results/linear_response"
+        if (
+            lr not in f
+            or "born_charges" not in f[lr]
+            or "electron_dielectric_tensor" not in f[lr]
+        ):
+            raise RuntimeError(
+                f'"{filename}" does not contain Born effective charges and a '
+                "dielectric tensor. Run VASP with LEPSILON = .TRUE."
+            )
+        borns = np.array(f[lr]["born_charges"][:], dtype="double", order="C")
+        epsilon = np.array(
+            f[lr]["electron_dielectric_tensor"][:], dtype="double", order="C"
+        )
+        scale = float(f["input/poscar/scale"][()])
+        lattice = np.array(f["input/poscar/lattice_vectors"][:], dtype="double")
+        positions = np.array(f["input/poscar/position_ions"][:], dtype="double")
+        ucell = _vaspout_atoms(f, lattice, positions, scale)
+
+    return elaborate_borns_and_epsilon(
+        ucell,
+        borns,
+        epsilon,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        is_symmetry=is_symmetry,
+        symmetrize_tensors=symmetrize_tensors,
+        symprec=symprec,
+    )
 
 
 #
@@ -573,13 +782,24 @@ def get_born_vasprunxml(
     In phonopy, primitive cell is created through the path of
     unit cell -> supercell -> primitive cell. To trace this path exactly,
     `primitive_matrix` and `supercell_matrix` can be given, but these are
-    optional.
+    optional. When ``filename`` is a vaspout.h5 file (``.h5`` suffix), the
+    NAC parameters are read from it instead.
 
     Returns
     -------
     See elaborate_borns_and_epsilon.
 
     """
+    if _is_vaspout_h5(filename):
+        return get_born_vaspout(
+            filename,
+            primitive_matrix=primitive_matrix,
+            supercell_matrix=supercell_matrix,
+            is_symmetry=is_symmetry,
+            symmetrize_tensors=symmetrize_tensors,
+            symprec=symprec,
+        )
+    _vaspout_hint(filename)
     myio = get_io_module_to_decompress(filename)
     with myio.open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
@@ -920,7 +1140,7 @@ class Vasprun:
         if target == "points":
             return self._vasprun_expat.points[-1]
         if target == "energy":
-            return float(self._vasprun_expat.energies[-1][1])
+            return self._vasprun_expat.energy_sigma0
 
     def _is_version528(self) -> bool:
         for line in self._fileptr:
@@ -967,6 +1187,7 @@ class VasprunxmlExpat:
         self._is_efermi = False
         self._is_divisions = False
         self._is_NELECT = False
+        self._is_version = False
         self._is_NGXYZ = [False, False, False]
         self._is_NGXYZF = [False, False, False]
 
@@ -1034,6 +1255,7 @@ class VasprunxmlExpat:
         self._efermi: float | None = None
         self._symbols: list[str] | None = None
         self._NELECT: float | None = None
+        self._version: str | None = None
 
         self._p = xml.parsers.expat.ParserCreate()
         self._p.buffer_text = True
@@ -1105,10 +1327,45 @@ class VasprunxmlExpat:
         ndarray
             dtype='double'
             shape=(structure opt. steps, 3)
-            [free energy TOTEN, energy(sigma->0), entropy T*S EENTRO]
+            Columns are the three <i> values of the final <energy> block in
+            file order: [e_fr_energy, e_wo_entrp, e_0_energy]. The column
+            holding energy(sigma->0) is version dependent (see
+            energy_sigma0); use energy_sigma0 rather than indexing directly.
 
         """
         return np.array(self._all_energies, dtype="double", order="C")
+
+    @property
+    def version(self) -> str | None:
+        """Return the VASP version string from <generator>, e.g. '6.6.0'."""
+        return self._version
+
+    def _sigma0_index(self) -> int:
+        """Return the energies column that holds energy(sigma->0).
+
+        VASP 5 mislabeled the final <energy> block, so energy(sigma->0) sat
+        in the e_wo_entrp slot (index 1). VASP 6 fixed the labels, moving it
+        to the e_0_energy slot (index 2). The version is therefore required;
+        raise when it is unknown because the correct column cannot be chosen.
+
+        """
+        if self._version is None:
+            raise RuntimeError(
+                "VASP version was not found in vasprun.xml, so the "
+                "energy(sigma->0) column cannot be identified. The file may "
+                "be truncated, malformed, or not a VASP vasprun.xml."
+            )
+        major = int(self._version.split(".")[0])
+        return 2 if major >= 6 else 1
+
+    @property
+    def energy_sigma0(self) -> float:
+        """Return energy(sigma->0) of the last ionic step in eV.
+
+        Selects the correct energies column for the parsed VASP version.
+
+        """
+        return float(self.energies[-1][self._sigma0_index()])
 
     def _resolve_scf(self, header, calc):
         """Return the SCF-mesh quantity from the per-provenance buckets.
@@ -1421,6 +1678,9 @@ class VasprunxmlExpat:
                 if attrs["name"] == "NGZF":
                     self._is_i = True
                     self._is_NGXYZF[2] = True
+                if self._inside("generator") and attrs["name"] == "version":
+                    self._is_i = True
+                    self._is_version = True
 
         if self._is_energy and name == "i":
             self._cbuf = ""
@@ -1673,6 +1933,9 @@ class VasprunxmlExpat:
             if self._is_NELECT:
                 self._NELECT = self._to_float(self._cbuf.strip())
                 self._is_NELECT = False
+            if self._is_version:
+                self._version = self._cbuf.strip()
+                self._is_version = False
             if self._is_volume:
                 self._all_volumes.append(self._to_float(self._cbuf.strip()))
                 self._is_volume = False
