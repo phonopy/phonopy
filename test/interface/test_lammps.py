@@ -94,6 +94,63 @@ def test_LammpsStructureDumper_masses(primcell_nacl: PhonopyAtoms):
     np.testing.assert_allclose(cell.masses, primcell_nacl.masses)
 
 
+# "Atom Type Labels" numbering that disagrees with both atomic-number order
+# (Na=11 < Cl=17) and first-appearance order (Na atom is listed before Cl).
+_lammps_type_order = """#
+
+2 atoms
+2 atom types
+
+0.0 4.0 xlo xhi
+0.0 4.0 ylo yhi
+0.0 4.0 zlo zhi
+
+0.0 0.0 0.0 xy xz yz
+
+Atom Type Labels
+
+1 Cl
+2 Na
+
+Masses
+
+1 35.453 # Cl
+2 22.98976928 # Na
+
+Atoms
+
+1 Na 0.0 0.0 0.0
+2 Cl 2.0 2.0 2.0
+"""
+
+
+def _section_entries(text: str, header: str) -> list[str]:
+    """Return the non-empty lines of a named LAMMPS section body."""
+    lines = [line.strip() for line in text.splitlines()]
+    out: list[str] = []
+    for line in lines[lines.index(header) + 1 :]:
+        if line == "":
+            if out:
+                break
+            continue
+        out.append(line)
+    return out
+
+
+def test_LammpsStructureDumper_preserves_type_label_order():
+    """Input "Atom Type Labels" numbering survives a round trip.
+
+    The type ids map to pair_coeff / potential files in LAMMPS, so they must
+    not be re-sorted by atomic number or first-appearance order.
+
+    """
+    cell = LammpsStructureLoader().load(io.StringIO(_lammps_type_order)).cell
+    assert [sp.symbol for sp in cell.species_table] == ["Cl", "Na"]
+    text = "\n".join(LammpsStructureDumper(cell).get_lines())
+    assert _section_entries(text, "Atom Type Labels") == ["1 Cl", "2 Na"]
+    assert _section_entries(text, "Masses") == ["1 35.453 # Cl", "2 22.98976928 # Na"]
+
+
 def test_LammpsForcesLoader():
     """Test of LammpsForcesLoader with HCP Ti.
 
