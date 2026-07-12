@@ -60,7 +60,7 @@ def test_cli_sample_unitcells(tmp_path, monkeypatch) -> None:
             "6.2",
             "-n",
             "4",
-            "--seed",
+            "--random-seed",
             "0",
         ],
     )
@@ -71,8 +71,84 @@ def test_cli_sample_unitcells(tmp_path, monkeypatch) -> None:
     assert len(files) == 4
 
 
+def test_cli_grid_sampling(tmp_path, monkeypatch, capsys) -> None:
+    """--grid writes a tensor grid and records a deterministic (seedless) run."""
+    yaml = pytest.importorskip("yaml")
+    _write_disp_yaml(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "phonopy-strain-cells",
+            "phonopy_disp.yaml",
+            "--a",
+            "3.92",
+            "4.08",
+            "--c",
+            "5.88",
+            "6.12",
+            "--grid",
+            "5",
+        ],
+    )
+
+    run()
+
+    out = capsys.readouterr().out
+    files = sorted(tmp_path.glob("unitcell-*"))
+    assert len(files) == 25  # 5 x 5
+    assert "Grid sampling: 5 x 5" in out
+    # The selected volume path is shown, with the c/a shape column.
+    assert "Main diagonal (5 cells)" in out
+    assert "c/a" in out
+    assert "Random seed:" not in out  # deterministic grid, no --rd
+
+    manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
+    assert manifest["parameters"]["sampling"] == "grid"
+    assert manifest["parameters"]["seed"] is None
+    assert manifest["parameters"]["grid_shape"] == [5, 5]
+    assert manifest["parameters"]["num"] is None
+    assert manifest["output"]["num_cells"] == 25
+
+
+def test_cli_grid_rectangular(tmp_path, monkeypatch, capsys) -> None:
+    """--grid with one value per free DOF makes a rectangular grid."""
+    yaml = pytest.importorskip("yaml")
+    _write_disp_yaml(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "phonopy-strain-cells",
+            "phonopy_disp.yaml",
+            "--a",
+            "3.92",
+            "4.08",
+            "--c",
+            "5.88",
+            "6.12",
+            "--grid",
+            "5",
+            "6",
+        ],
+    )
+
+    run()
+
+    out = capsys.readouterr().out
+    assert len(sorted(tmp_path.glob("unitcell-*"))) == 30  # 5 x 6
+    assert "Grid sampling: 5 x 6" in out
+    # The diagonal is min(5, 6) = 5 cells; the path is shown either way.
+    assert "Main diagonal (5 cells)" in out
+    manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
+    assert manifest["parameters"]["grid_shape"] == [5, 6]
+
+
 def test_cli_sample_rd_supercells(tmp_path, monkeypatch) -> None:
     """--rd produces random-displacement supercells instead of unit cells."""
+    yaml = pytest.importorskip("yaml")
     _write_disp_yaml(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
@@ -89,17 +165,24 @@ def test_cli_sample_rd_supercells(tmp_path, monkeypatch) -> None:
             "6.2",
             "-n",
             "3",
-            "--seed",
+            "--random-seed",
             "0",
-            "--rd",
+            "--amplitude",
             "0.1",
+            "--rd",
+            "2",
         ],
     )
 
     run()
 
-    assert len(sorted(tmp_path.glob("supercell-*"))) == 3
+    # 3 strained cells x 2 random-displacement supercells each.
+    assert len(sorted(tmp_path.glob("supercell-*"))) == 6
     assert not sorted(tmp_path.glob("unitcell-*"))
+    manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
+    assert manifest["parameters"]["random_displacements"] == 2
+    assert manifest["parameters"]["displacement_distance"] == 0.1
+    assert manifest["output"]["num_cells"] == 6
 
 
 def test_cli_writes_manifest(tmp_path, monkeypatch, capsys) -> None:
@@ -129,7 +212,7 @@ def test_cli_writes_manifest(tmp_path, monkeypatch, capsys) -> None:
     out = capsys.readouterr().out
     assert "Random seed:" in out
     manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
-    # No --seed was given, so a concrete integer seed must have been recorded.
+    # No --random-seed was given, so a concrete integer seed must have been recorded.
     assert isinstance(manifest["parameters"]["seed"], int)
     assert manifest["free_dof"] == ["a", "c"]
     assert manifest["parameters"]["ranges"] == {"a": [3.9, 4.1], "c": [5.8, 6.2]}
@@ -169,7 +252,7 @@ def test_cli_manifest_seed_is_reproducible(tmp_path, monkeypatch) -> None:
     seed = manifest1["parameters"]["seed"]
 
     monkeypatch.chdir(run2)
-    monkeypatch.setattr(sys, "argv", argv + ["--seed", str(seed)])
+    monkeypatch.setattr(sys, "argv", argv + ["--random-seed", str(seed)])
     run()
     manifest2 = yaml.safe_load((run2 / "strain_cells.yaml").read_text())
 

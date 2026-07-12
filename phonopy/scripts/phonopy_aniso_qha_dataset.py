@@ -95,6 +95,10 @@ def build_dft_grid_point(
     phonon-grid/grid-NNN/phonopy_disp.yaml (the relaxed cell that was
     displaced); the forces from its disp-* subdirectories in displacement
     order; U and the optional electronic states from static-grid/grid-NNN.
+    phonopy_disp.yaml may hold either a type-1 (site-symmetry-reduced, one
+    displaced atom per supercell -- the ``phonopy -d`` default) or a type-2
+    (dense/random) dataset; the forces are set on the phonopy object, which
+    embeds them into the dataset in its native form.
 
     """
     gdir = os.path.join(phonon_grid, f"grid-{idx:03d}")
@@ -110,12 +114,15 @@ def build_dft_grid_point(
         _, _, force, _ = read_vasprun_calculation(calc_file(disp_dir))
         force_sets.append(force)
     forces = np.array(force_sets, dtype="double")
-    displacements = np.array(ph.displacements, dtype="double")
-    if forces.shape != displacements.shape:
+    n_disp = len(ph.displacements)
+    if len(forces) != n_disp:
         raise ValueError(
             f"grid {idx:03d}: {len(forces)} force set(s) do not match "
-            f"{len(displacements)} displacement(s)."
+            f"{n_disp} displacement(s)."
         )
+    ph.forces = forces
+    dataset = ph.dataset
+    assert dataset is not None
 
     sdir = os.path.join(static_grid, f"grid-{idx:03d}")
     _, energy, _, _ = read_vasprun_calculation(calc_file(sdir))
@@ -130,8 +137,7 @@ def build_dft_grid_point(
         cell=ph.unitcell,
         supercell_matrix=np.array(ph.supercell_matrix, dtype="int64"),
         primitive_matrix=np.array(ph.primitive_matrix, dtype="double"),
-        displacements=displacements,
-        forces=forces,
+        dataset=dataset,
         internal_energy=energy,
         electronic_states=electronic,
     )
@@ -169,6 +175,8 @@ def build_mlp_grid_point(
         distance=distance, number_of_snapshots=snapshots, random_seed=seed
     )
     ph.evaluate_mlp()
+    dataset = ph.dataset
+    assert dataset is not None
 
     electronic = (
         electronic_states_from_vaspout(os.path.join(sdir, "vaspout.h5"))
@@ -181,8 +189,7 @@ def build_mlp_grid_point(
         cell=cell,
         supercell_matrix=np.array(ph.supercell_matrix, dtype="int64"),
         primitive_matrix=np.array(ph.primitive_matrix, dtype="double"),
-        displacements=np.array(ph.displacements, dtype="double"),
-        forces=np.array(ph.forces, dtype="double"),
+        dataset=dataset,
         internal_energy=energy,
         electronic_states=electronic,
     )
@@ -284,7 +291,7 @@ def run() -> None:
         points.append(point)
         print(
             f"  grid {idx:03d} U={point.internal_energy:.6f} eV "
-            f"n_disp={len(point.displacements)}"
+            f"n_disp={point.n_displacements}"
         )
 
     dataset = AnisoQHADataset(

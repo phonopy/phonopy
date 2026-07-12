@@ -48,7 +48,7 @@ from numpy.typing import NDArray
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atomic_data import get_atomic_data
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_symbols
 from phonopy.structure.cells import get_cell_matrix_from_lattice
 
 _T = TypeVar("_T")
@@ -163,10 +163,13 @@ class LammpsStructureDumper:
         """Init method."""
         self._lines: list[str] = []
         lattice = get_cell_matrix_from_lattice(cell.cell)
+        # Preserve species_table order (not symbols, which would rebuild the
+        # table in first-appearance order) so the LAMMPS type ids stay put.
         lmps_cell = PhonopyAtoms(
             cell=lattice,
             scaled_positions=cell.scaled_positions,
-            symbols=cell.symbols,
+            species_table=cell.species_table,
+            species_ids=cell.species_ids,
             masses=cell.masses,
         )
         self._run(lmps_cell)
@@ -176,13 +179,24 @@ class LammpsStructureDumper:
         return self._lines
 
     def _run(self, cell: PhonopyAtoms) -> None:
-        unums, uids = np.unique(cell.numbers, return_index=True)
-        usyms = [cell.symbols[i] for i in uids]
-        num_map = {n: i for i, n in enumerate(unums)}
+        # Atom types follow cell.species_table order rather than being sorted
+        # by atomic number. get_supercell preserves the unit cell's
+        # species_table order, so this keeps the LAMMPS type ids (1, 2, ...)
+        # aligned with the input structure. This matters because type ids map
+        # to pair_coeff / potential files in LAMMPS.
+        species_ids = cell.species_ids
+        usyms = [sp.symbol for sp in cell.species_table]
+        n_types = len(usyms)
+
+        # Representative mass per type: the mass of the first atom of that type.
+        type_masses: list[float | None] = [None] * n_types
+        for sid, mass in zip(species_ids, cell.masses, strict=True):
+            if type_masses[sid] is None:
+                type_masses[sid] = mass
 
         lines = ["#", ""]
-        lines.append(f"{len(cell.numbers)} atoms")
-        lines.append(f"{len(np.unique(cell.numbers))} atom types")
+        lines.append(f"{len(species_ids)} atoms")
+        lines.append(f"{n_types} atom types")
         lines.append("")
         lines.append(f"0.0 {cell.cell[0, 0]} xlo xhi")
         lines.append(f"0.0 {cell.cell[1, 1]} ylo yhi")
@@ -201,17 +215,17 @@ class LammpsStructureDumper:
         # type labels to be read before any section that involves atom types.
         lines.append("Masses")
         lines.append("")
-        for i, idx in enumerate(uids):
-            lines.append(f"{i + 1} {cell.masses[idx]} # {usyms[i]}")
+        for i, symbol in enumerate(usyms):
+            lines.append(f"{i + 1} {type_masses[i]} # {symbol}")
         lines.append("")
         lines.append("")
         lines.append("Atoms")
         lines.append("")
-        for i, (position, number) in enumerate(
-            zip(cell.positions, cell.numbers, strict=True)
+        for i, (position, sid) in enumerate(
+            zip(cell.positions, species_ids, strict=True)
         ):
             pos_str = f"{position[0]} {position[1]} {position[2]}"
-            lines.append(f"{i + 1} {usyms[num_map[number]]} {pos_str}")
+            lines.append(f"{i + 1} {usyms[sid]} {pos_str}")
         self._lines = lines
 
 
@@ -374,10 +388,22 @@ class LammpsStructureLoader:
                     self._masses[self._atom_type_labels[s]]
                     for s in self._atom_labels  # type: ignore[union-attr]
                 ]
+            # Build the species table in "Atom Type Labels" order so a
+            # LAMMPS -> LAMMPS round trip preserves the type ids (which map to
+            # pair_coeff / potential files) instead of falling back to
+            # first-appearance order.
+            order = sorted(
+                self._atom_type_labels, key=lambda s: self._atom_type_labels[s]
+            )
+            species_table, species_ids = build_species_table_from_symbols(
+                self._atom_labels,  # type: ignore[arg-type]
+                order=order,
+            )
             self._cell = PhonopyAtoms(
                 cell=lattice,
                 positions=self._atom_positions,
-                symbols=self._atom_labels,  # type: ignore[arg-type]
+                species_table=species_table,
+                species_ids=species_ids,
                 masses=masses,
             )
         else:

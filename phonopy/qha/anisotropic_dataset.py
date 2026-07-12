@@ -1,17 +1,15 @@
 """Intermediate dataset for the anisotropic QHA workflow.
 
-Gathers the per-grid-point results -- the relaxed unit cell, the
-random-displacement supercell displacements and forces, the static internal
-energy U, and optional electronic states -- that the anisotropic QHA analysis
-consumes, into a single self-contained HDF5 file.
+A single self-contained HDF5 file gathers the per-grid-point inputs the
+analysis needs: the relaxed cell, the phonopy displacement-force dataset (raw
+displacements and forces), the static internal energy U, and optional
+electronic states. Storing raw forces rather than force constants keeps the
+file a method-independent archive.
 
-Displacements and forces are stored raw (not as force constants), so the force
-constants are recomputed at analysis time. This keeps the file independent of
-the force-constant method (symfc options, cutoff, sum rules can be revisited)
-and lets it serve as a self-contained archive once the calculator scratch is
-discarded. Whether the forces came from DFT or from a machine-learning
-potential is not recorded: the analysis reads (displacements, forces)
-uniformly, blind to their origin.
+The displacement dataset is stored in its native phonopy form -- type-1 (one
+displaced atom per supercell, the ``phonopy -d`` default) or type-2
+(dense/random) -- so the FC solver is chosen from the dataset type, never
+guessed from the data.
 
 """
 
@@ -19,15 +17,23 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.harmonic.displacement import (
+    DisplacementDataset,
+    FirstAtomDisplacementWithForces,
+    Type1DisplacementDataset,
+    Type2DisplacementDataset,
+)
 from phonopy.qha.electron import ElectronicStates
 from phonopy.structure.atoms import PhonopyAtoms
 
 if TYPE_CHECKING:
+    import h5py  # type: ignore[import-untyped]
+
     from phonopy import Phonopy
 
 
@@ -45,10 +51,9 @@ class AnisoQHAGridPoint:
         Supercell matrix, shape (3, 3), dtype int64.
     primitive_matrix : ndarray
         Primitive matrix, shape (3, 3), dtype double.
-    displacements : ndarray
-        Supercell displacements, shape (n_disp, n_satom, 3), dtype double.
-    forces : ndarray
-        Supercell forces, same shape as displacements, dtype double.
+    dataset : DisplacementDataset
+        Phonopy displacement-force dataset with forces embedded, in either the
+        type-1 or type-2 format (see :attr:`phonopy.Phonopy.dataset`).
     internal_energy : float
         Static internal energy U of the unit cell (eV).
     electronic_states : ElectronicStates, optional
@@ -61,18 +66,25 @@ class AnisoQHAGridPoint:
     cell: PhonopyAtoms
     supercell_matrix: NDArray[np.int64]
     primitive_matrix: NDArray[np.double]
-    displacements: NDArray[np.double]
-    forces: NDArray[np.double]
+    dataset: DisplacementDataset
     internal_energy: float
     electronic_states: ElectronicStates | None = None
 
-    def to_phonopy(self, fc_calculator: str = "symfc") -> Phonopy:
-        """Return a Phonopy with force constants from the stored disp/forces.
+    @property
+    def n_displacements(self) -> int:
+        """Return the number of displaced supercells."""
+        if "first_atoms" in self.dataset:
+            return len(cast(Type1DisplacementDataset, self.dataset)["first_atoms"])
+        return len(cast(Type2DisplacementDataset, self.dataset)["displacements"])
 
-        The raw displacements and forces are set as a type-2 dataset and the
-        force constants are produced with the given calculator (symfc by
-        default, needed for random displacements). The origin of the forces
-        (DFT or MLP) does not matter here.
+    def to_phonopy(self, fc_calculator: str = "symfc") -> Phonopy:
+        """Return a Phonopy with force constants from the stored dataset.
+
+        For a type-1 dataset (one displaced atom per supercell) phonopy's
+        site-symmetry solver produces the force constants and ``fc_calculator``
+        is ignored, since that minimal data requires it. For a type-2
+        (dense/random) dataset the given ``fc_calculator`` (symfc by default)
+        is used. The origin of the forces (DFT or MLP) does not matter here.
 
         """
         from phonopy import Phonopy
@@ -83,12 +95,12 @@ class AnisoQHAGridPoint:
             primitive_matrix=self.primitive_matrix,
             log_level=0,
         )
-        phonon.dataset = {
-            "displacements": self.displacements,
-            "forces": self.forces,
-        }
-        # fc_calculator is a user string; phonopy validates it at runtime.
-        phonon.produce_force_constants(fc_calculator=fc_calculator)  # type: ignore[arg-type]
+        phonon.dataset = self.dataset
+        if "first_atoms" in self.dataset:
+            phonon.produce_force_constants()
+        else:
+            # fc_calculator is a user string; phonopy validates it at runtime.
+            phonon.produce_force_constants(fc_calculator=fc_calculator)  # type: ignore[arg-type]
         return phonon
 
 
@@ -131,9 +143,9 @@ def write_aniso_qha_dataset(
     """Write an anisotropic QHA dataset to an HDF5 file.
 
     One group "grid/NNN" per grid point holds the cell, supercell / primitive
-    matrices, raw displacements and forces, and (optionally) the electronic
-    states. Global metadata is stored in root attributes. Displacements,
-    forces and eigenvalues are gzip-compressed.
+    matrices, the displacement-force dataset (tagged type-1 or type-2), and
+    (optionally) the electronic states. Global metadata is stored in root
+    attributes. Displacements, forces and eigenvalues are gzip-compressed.
 
     Parameters
     ----------
@@ -163,13 +175,8 @@ def write_aniso_qha_dataset(
             _write_grid_point(grid, point)
 
 
-def _write_grid_point(grid, point: AnisoQHAGridPoint) -> None:
+def _write_grid_point(grid: h5py.Group, point: AnisoQHAGridPoint) -> None:
     """Write one grid point into a subgroup "NNN" of the grid group."""
-    if point.displacements.shape != point.forces.shape:
-        raise ValueError(
-            "displacements and forces must have the same shape, got "
-            f"{point.displacements.shape} and {point.forces.shape}."
-        )
     g = grid.create_group(f"{point.index:03d}")
     g.attrs["index"] = point.index
     g.attrs["internal_energy"] = float(point.internal_energy)
@@ -189,19 +196,59 @@ def _write_grid_point(grid, point: AnisoQHAGridPoint) -> None:
     g.create_dataset(
         "primitive_matrix", data=np.array(point.primitive_matrix, dtype="double")
     )
-    g.create_dataset(
-        "displacements",
-        data=np.array(point.displacements, dtype="double"),
-        compression="gzip",
-    )
-    g.create_dataset(
-        "forces", data=np.array(point.forces, dtype="double"), compression="gzip"
-    )
+    _write_dataset(g, point.dataset)
     if point.electronic_states is not None:
         _write_electronic_states(g, point.electronic_states)
 
 
-def _write_electronic_states(g, electronic_states: ElectronicStates) -> None:
+def _write_dataset(g: h5py.Group, dataset: DisplacementDataset) -> None:
+    """Write the displacement-force dataset, tagged by its type.
+
+    Type-1 stores the displaced-atom index, its displacement and the supercell
+    forces per entry; type-2 stores the full displacement and force arrays.
+    The "displacement_type" attribute selects the layout on read.
+
+    """
+    if "first_atoms" in dataset:
+        first_atoms = cast(Type1DisplacementDataset, dataset)["first_atoms"]
+        if any("forces" not in entry for entry in first_atoms):
+            raise ValueError("Every type-1 displacement must carry forces.")
+        g.attrs["displacement_type"] = "type1"
+        g.create_dataset(
+            "displaced_atoms",
+            data=np.array([entry["number"] for entry in first_atoms], dtype="int64"),
+        )
+        g.create_dataset(
+            "displacements",
+            data=np.array(
+                [entry["displacement"] for entry in first_atoms], dtype="double"
+            ),
+            compression="gzip",
+        )
+        g.create_dataset(
+            "forces",
+            data=np.array([entry["forces"] for entry in first_atoms], dtype="double"),
+            compression="gzip",
+        )
+    else:
+        type2 = cast(Type2DisplacementDataset, dataset)
+        if "forces" not in type2:
+            raise ValueError("The type-2 dataset must carry forces.")
+        displacements = np.array(type2["displacements"], dtype="double")
+        forces = np.array(type2["forces"], dtype="double")
+        if displacements.shape != forces.shape:
+            raise ValueError(
+                "displacements and forces must have the same shape, got "
+                f"{displacements.shape} and {forces.shape}."
+            )
+        g.attrs["displacement_type"] = "type2"
+        g.create_dataset("displacements", data=displacements, compression="gzip")
+        g.create_dataset("forces", data=forces, compression="gzip")
+
+
+def _write_electronic_states(
+    g: h5py.Group, electronic_states: ElectronicStates
+) -> None:
     """Write electronic states into an "electronic_states" subgroup of g."""
     eg = g.create_group("electronic_states")
     eg.create_dataset(
@@ -245,7 +292,9 @@ def read_aniso_qha_dataset(
         version = f.attrs.get("phonopy_version")
         phonopy_version = None if version is None else str(version)
         grid = f["grid"]
-        points = tuple(_read_grid_point(grid[key]) for key in sorted(grid.keys()))
+        points = tuple(
+            _read_grid_point(grid[key]) for key in sorted(grid.keys(), key=int)
+        )
 
     return AnisoQHADataset(
         grid_points=points,
@@ -258,7 +307,7 @@ def read_aniso_qha_dataset(
     )
 
 
-def _read_grid_point(g) -> AnisoQHAGridPoint:
+def _read_grid_point(g: h5py.Group) -> AnisoQHAGridPoint:
     """Read one grid point from a subgroup of the grid group."""
     cell = PhonopyAtoms(
         numbers=g["numbers"][:],
@@ -276,14 +325,34 @@ def _read_grid_point(g) -> AnisoQHAGridPoint:
         cell=cell,
         supercell_matrix=np.array(g["supercell_matrix"][:], dtype="int64"),
         primitive_matrix=np.array(g["primitive_matrix"][:], dtype="double"),
-        displacements=np.array(g["displacements"][:], dtype="double"),
-        forces=np.array(g["forces"][:], dtype="double"),
+        dataset=_read_dataset(g),
         internal_energy=float(g.attrs["internal_energy"]),
         electronic_states=electronic_states,
     )
 
 
-def _read_electronic_states(eg) -> ElectronicStates:
+def _read_dataset(g: h5py.Group) -> DisplacementDataset:
+    """Read the displacement-force dataset written by _write_dataset."""
+    if str(g.attrs["displacement_type"]) == "type1":
+        forces = g["forces"][:]
+        first_atoms: list[FirstAtomDisplacementWithForces] = [
+            {
+                "number": int(number),
+                "displacement": np.array(displacement, dtype="double"),
+                "forces": np.array(force, dtype="double"),
+            }
+            for number, displacement, force in zip(
+                g["displaced_atoms"][:], g["displacements"][:], forces, strict=True
+            )
+        ]
+        return {"natom": int(forces.shape[1]), "first_atoms": first_atoms}
+    return {
+        "displacements": np.array(g["displacements"][:], dtype="double"),
+        "forces": np.array(g["forces"][:], dtype="double"),
+    }
+
+
+def _read_electronic_states(eg: h5py.Group) -> ElectronicStates:
     """Read electronic states from an "electronic_states" subgroup."""
     return ElectronicStates(
         eigenvalues=eg["eigenvalues"][:],
