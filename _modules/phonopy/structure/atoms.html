@@ -1081,6 +1081,57 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">species_list</span><span class="p">,</span> <span class="n">ids</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">build_species_table_from_symbols</span><span class="p">(</span>
+    <span class="n">symbols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">order</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert per-atom chemical symbols into a (species_table, species_ids) pair.</span>
+
+<span class="sd">    Each entry of ``symbols`` is a chemical symbol with an optional</span>
+<span class="sd">    natural-number suffix (e.g. ``&quot;Cl&quot;``, ``&quot;Cl1&quot;``); atoms sharing the same</span>
+<span class="sd">    symbol string share one species entry. This is the single-element</span>
+<span class="sd">    counterpart of ``build_species_table_from_mixtures``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    symbols :</span>
+<span class="sd">        Per-atom chemical symbols.</span>
+<span class="sd">    order :</span>
+<span class="sd">        Optional sequence of distinct symbol strings giving the desired order</span>
+<span class="sd">        of entries in the returned species table. When omitted the table keeps</span>
+<span class="sd">        first-appearance order (as ``PhonopyAtoms(symbols=...)`` does). When</span>
+<span class="sd">        given, entries follow this order; symbols listed in ``order`` but</span>
+<span class="sd">        absent from ``symbols`` are dropped, and every symbol appearing in</span>
+<span class="sd">        ``symbols`` must be present in ``order``. This lets calculator readers</span>
+<span class="sd">        that carry an explicit type ordering (e.g. LAMMPS &quot;Atom Type Labels&quot;)</span>
+<span class="sd">        preserve it through to ``PhonopyAtoms(species_table=...,</span>
+<span class="sd">        species_ids=...)``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
+    <span class="n">per_atom_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">symnum</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">symnum</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">per_atom_species</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symnum</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">]))</span>
+    <span class="n">table</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">table</span><span class="p">,</span> <span class="n">ids</span>
+
+    <span class="n">sym_to_old</span> <span class="o">=</span> <span class="p">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">table</span><span class="p">)}</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sym_to_old</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;order is missing symbols present in symbols: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">order</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sym_to_old</span><span class="p">]</span>
+    <span class="n">new_table</span> <span class="o">=</span> <span class="p">[</span><span class="n">table</span><span class="p">[</span><span class="n">sym_to_old</span><span class="p">[</span><span class="n">s</span><span class="p">]]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">]</span>
+    <span class="n">old_to_new</span> <span class="o">=</span> <span class="p">{</span><span class="n">sym_to_old</span><span class="p">[</span><span class="n">s</span><span class="p">]:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ordered</span><span class="p">)}</span>
+    <span class="n">new_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">old_to_new</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_table</span><span class="p">,</span> <span class="n">new_ids</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_disambiguate_composite_labels</span><span class="p">(</span>
     <span class="n">species_table</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]:</span>
@@ -1572,16 +1623,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse symbol strings and populate _species and _species_ids.&quot;&quot;&quot;</span>
-        <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
-        <span class="n">per_atom_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">symnum</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
-            <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">symnum</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-            <span class="n">per_atom_species</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symnum</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">])</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">build_species_table_from_symbols</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numbers</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate _species and _species_ids from atomic numbers (1..118).&quot;&quot;&quot;</span>

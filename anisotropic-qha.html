@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Anisotropic QHA – end-to-end recipe &#8212; Phonopy v.4.3.1</title>
+    <title>Anisotropic QHA &#8212; Phonopy v.4.3.1</title>
   
   
   
@@ -843,7 +843,7 @@ window.runMermaid = runMermaid;</script>
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Anisotropic QHA – end-to-end recipe</h1>
+    <h1>Anisotropic QHA</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -855,6 +855,7 @@ window.runMermaid = runMermaid;</script>
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-dft-the-mlp-is-phonons-only">Design principle: U is always DFT, the MLP is phonons-only</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u-both-routes">1. Build the static grid (internal energy U, both routes)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-full-dft-phonons-phonon-grid">2A. Route A – full-DFT phonons (phonon grid)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#b-route-b-mlp-phonons-train-once-then-evaluate">2B. Route B – MLP phonons (train once, then evaluate)</a></li>
@@ -872,8 +873,8 @@ window.runMermaid = runMermaid;</script>
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-qha-end-to-end-recipe">
-<h1>Anisotropic QHA – end-to-end recipe<a class="headerlink" href="#anisotropic-qha-end-to-end-recipe" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-qha">
+<h1>Anisotropic QHA<a class="headerlink" href="#anisotropic-qha" title="Link to this heading">#</a></h1>
 <p>This recipe computes the anisotropic (axis-resolved) quasi-harmonic thermal
 expansion of a crystal by directly optimizing the lattice parameters on a grid,
 rather than the 1D volume-path QHA. It covers two interchangeable phonon
@@ -884,13 +885,29 @@ potential is not required); and</p></li>
 <li><p><strong>MLP phonons</strong>: force sets from a pypolymlp trained on first-principles
 energies, forces and stresses (cheap dense sampling).</p></li>
 </ul>
-<p>Status: working recipe for an in-progress feature. The tools referenced here
-exist except the one-command analysis CLI (<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>), which is
-forthcoming; until it lands, the analysis is a short script shown in step 4.</p>
+<p>The free lattice degrees of freedom are detected from the symmetry: one for
+cubic (<code class="docutils literal notranslate"><span class="pre">a</span></code>), two for hexagonal, tetragonal and rhombohedral (<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">c</span></code>), and three
+for orthorhombic (<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c</span></code>). Cell angles are held fixed, so monoclinic and
+triclinic crystals are out of scope. This page uses <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">c)</span></code> throughout as a
+concrete example; substitute the free DOF of your system. The lattice parameters
+and axial thermal expansions are produced for any of the supported systems, but
+the <code class="docutils literal notranslate"><span class="pre">F</span></code> contour maps are drawn only when there are exactly two free DOF.</p>
+<p>Status: working recipe. All tools referenced here are implemented –
+<code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-mlp-dataset</span></code>, the dataset builder
+<code class="docutils literal notranslate"><span class="pre">phonopy-aniso-qha-dataset</span></code> and the analysis command <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>.
+Step 4 gives the one-command analysis; the API script beneath it is an
+equivalent alternative for finer control.</p>
 <p>Prerequisites: <code class="docutils literal notranslate"><span class="pre">h5py</span></code>, <code class="docutils literal notranslate"><span class="pre">symfc</span></code>, a VASP setup (VASP is the supported
 first-principles source), and, for the MLP route, <code class="docutils literal notranslate"><span class="pre">pypolymlp</span></code>.</p>
 <p>All lengths are in the native length unit of the input cell (Angstrom for
 VASP); no unit conversion is applied by the tools.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This page is written with VASP in mind, the only first-principles interface this
+workflow has been exercised with. The commands and helper scripts assume VASP
+inputs and outputs (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code>); other calculators are
+not tested here.</p>
+</div>
 <section id="design-principle-u-is-always-dft-the-mlp-is-phonons-only">
 <h2>Design principle: U is always DFT, the MLP is phonons-only<a class="headerlink" href="#design-principle-u-is-always-dft-the-mlp-is-phonons-only" title="Link to this heading">#</a></h2>
 <p>The free energy minimized per temperature is</p>
@@ -917,14 +934,14 @@ routes converge on the same intermediate dataset and analysis.</p>
     SC --&gt; RELAX{{&quot;DFT relax + static&quot;}}
     RELAX --&gt; SGRID([&quot;static-grid/grid-NNN&lt;br/&gt;U, F_el&quot;])
 
-    SGRID --&gt;|&quot;route A&quot;| PD[&quot;phonopy -d&lt;br/&gt;per relaxed cell&quot;]
+    SGRID --&gt;|&quot;route A&quot;| PD[&quot;generate displacements&lt;br/&gt;per relaxed cell&quot;]
     PD --&gt; DFTF{{&quot;DFT forces&quot;}}
     DFTF --&gt; PGRID([&quot;phonon-grid/grid-NNN&lt;br/&gt;disp-*&quot;])
 
     EQ --&gt;|&quot;route B&quot;| SCT[&quot;phonopy-strain-cells --rd&quot;]
     SCT --&gt; DFTT{{&quot;DFT E / F / stress&quot;}}
     DFTT --&gt; MLPDS[&quot;phonopy-vasp-mlp-dataset&quot;]
-    MLPDS --&gt; DEV[&quot;develop_pypolymlp&quot;]
+    MLPDS --&gt; DEV[&quot;develop_pypolymlp_from_structures&quot;]
     DEV --&gt; MLP([&quot;polymlp.yaml&quot;])
 
     SGRID --&gt; BUILD[&quot;phonopy-aniso-qha-dataset&quot;]
@@ -932,23 +949,66 @@ routes converge on the same intermediate dataset and analysis.</p>
     MLP --&gt;|&quot;--from-mlp&quot;| BUILD
     BUILD --&gt; DS([&quot;aniso_qha_dataset.hdf5&quot;])
 
-    DS --&gt; ANA[&quot;run_anisotropic_qha&quot;]
+    DS --&gt; ANA[&quot;phonopy-anisotropic-qha&quot;]
     ANA --&gt; RES([&quot;a(T), c(T),&lt;br/&gt;alpha_a, alpha_c,&lt;br/&gt;F(a,c) maps&quot;])
     </pre></section>
+<section id="the-equilibrium-reference-phonopy-disp-yaml">
+<h2>0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)<a class="headerlink" href="#the-equilibrium-reference-phonopy-disp-yaml" title="Link to this heading">#</a></h2>
+<p>The recipe starts from one relaxed equilibrium cell. Turn it into the reference
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> once with <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>; every later step reads this file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-c<span class="w"> </span>REFERENCE_UNITCELL<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">4</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--dim</span></code> fixes the supercell matrix, which <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> records together with
+the unit cell, the primitive matrix and the calculator. <code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>
+reads the equilibrium cell and calculator from it (plus the supercell matrix when
+<code class="docutils literal notranslate"><span class="pre">--rd</span></code> builds MLP training supercells); <code class="docutils literal notranslate"><span class="pre">phonopy-aniso-qha-dataset</span></code> reads the
+calculator and the free lattice DOF it implies (which lengths are independent –
+<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">c</span></code> with <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">a</span></code> for hexagonal), and, on the MLP route, the supercell and
+primitive matrices. Keep <code class="docutils literal notranslate"><span class="pre">--dim</span></code> consistent with the phonon-grid supercell in
+step 2A.</p>
+</section>
 <section id="build-the-static-grid-internal-energy-u-both-routes">
 <h2>1. Build the static grid (internal energy U, both routes)<a class="headerlink" href="#build-the-static-grid-internal-energy-u-both-routes" title="Link to this heading">#</a></h2>
 <p>Sample strained unit cells over the free lattice DOF, then relax and run a
 static single point for each with DFT. The static grid supplies <span class="math notranslate nohighlight">\(U(a, c)\)</span>
 and, optionally, the electronic states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inspect the free lattice DOF first (no ranges -&gt; DOF report):</span>
-phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml
+%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml
 
-<span class="c1"># Sample e.g. 25 strained unit cells spanning the (a, c) grid (no --rd):</span>
-phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.17<span class="w"> </span><span class="m">3</span>.23<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.14<span class="w"> </span><span class="m">5</span>.26<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-n<span class="w"> </span><span class="m">25</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">2</span>
+<span class="c1"># Random sampling: -n N cells over the (a, c) box (--grid is not used here):</span>
+%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.168<span class="w"> </span><span class="m">3</span>.232<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.148<span class="w"> </span><span class="m">5</span>.252<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span><span class="m">25</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">2</span>
 <span class="c1"># -&gt; unitcell-00001 .. unitcell-00025</span>
+
+<span class="c1"># Regular grid instead (--grid replaces -n): --grid N is the number of points</span>
+<span class="c1"># per free axis (5 -&gt; 5 x 5 = 25 cells); one N per free DOF gives a rectangular</span>
+<span class="c1"># grid, e.g. --grid 5 6 -&gt; 30 cells.</span>
+%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.168<span class="w"> </span><span class="m">3</span>.232<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.148<span class="w"> </span><span class="m">5</span>.252<span class="w"> </span>--grid<span class="w"> </span><span class="m">5</span>
+Wrote<span class="w"> </span><span class="m">25</span><span class="w"> </span>strained<span class="w"> </span>unit<span class="w"> </span>cell<span class="o">(</span>s<span class="o">)</span><span class="w"> </span>as<span class="w"> </span>unitcell-00001<span class="w"> </span>..<span class="w"> </span>unitcell-00025<span class="w"> </span><span class="k">in</span><span class="w"> </span>vasp<span class="w"> </span>format.
+Grid<span class="w"> </span>sampling:<span class="w"> </span><span class="m">5</span><span class="w"> </span>x<span class="w"> </span><span class="m">5</span><span class="w"> </span>over<span class="w"> </span><span class="o">(</span>a,<span class="w"> </span>c<span class="o">)</span>.
+<span class="w">  </span>Main<span class="w"> </span>diagonal<span class="w"> </span><span class="o">(</span><span class="m">5</span><span class="w"> </span>cells<span class="o">)</span>,<span class="w"> </span>the<span class="w"> </span>--compare-vinet<span class="w"> </span>volume<span class="w"> </span>path:
+<span class="w">    </span>a<span class="w">  </span>c<span class="w">   </span>c/a
+<span class="w">    </span><span class="m">3</span>.1680<span class="w">  </span><span class="m">5</span>.1480<span class="w">   </span><span class="m">1</span>.6250
+<span class="w">    </span><span class="m">3</span>.1840<span class="w">  </span><span class="m">5</span>.1740<span class="w">   </span><span class="m">1</span>.6250
+<span class="w">    </span><span class="m">3</span>.2000<span class="w">  </span><span class="m">5</span>.2000<span class="w">   </span><span class="m">1</span>.6250
+<span class="w">    </span><span class="m">3</span>.2160<span class="w">  </span><span class="m">5</span>.2260<span class="w">   </span><span class="m">1</span>.6250
+<span class="w">    </span><span class="m">3</span>.2320<span class="w">  </span><span class="m">5</span>.2520<span class="w">   </span><span class="m">1</span>.6250
+Provenance<span class="w"> </span>written<span class="w"> </span>to<span class="w"> </span>strain_cells.yaml
 </pre></div>
 </div>
+<p>Prefer a grid when you want the Vinet cross-check: its main diagonal (printed
+above, with each cell’s c/a) is the volume path <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span> <span class="pre">--compare-vinet</span></code> fits, which random sampling does not provide. With equal
+fractional ranges and equal counts the c/a is constant (isotropic scaling) –
+the cleanest input to the cross-check; unequal ranges or counts still yield a
+path, but a varying-shape one.</p>
+<p>What each option writes: <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">N</span></code> and <code class="docutils literal notranslate"><span class="pre">--grid</span> <span class="pre">N</span> <span class="pre">[N</span> <span class="pre">...]</span></code> set how many strained
+cells are made and, without <code class="docutils literal notranslate"><span class="pre">--rd</span></code>, write them as strained <strong>unit cells</strong>
+<code class="docutils literal notranslate"><span class="pre">unitcell-NNNNN</span></code> – what this step (the static grid) needs. Adding <code class="docutils literal notranslate"><span class="pre">--rd</span> <span class="pre">M</span></code>
+instead writes M random-displacement <strong>supercells</strong> per strained cell,
+<code class="docutils literal notranslate"><span class="pre">supercell-NNNNN</span></code> (that is the route-B, step 2B use, not this step);
+<code class="docutils literal notranslate"><span class="pre">--amplitude</span></code> sets their displacement distance. Either way a <code class="docutils literal notranslate"><span class="pre">strain_cells.yaml</span></code>
+provenance manifest is written.</p>
 <p>For each <code class="docutils literal notranslate"><span class="pre">unitcell-*</span></code>:</p>
 <ol class="arabic simple">
 <li><p>Relax the internal coordinates if the structure has free internal parameters
@@ -960,22 +1020,68 @@ phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </
 containing <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>). The builder discovers grid points
 from these <code class="docutils literal notranslate"><span class="pre">grid-NNN</span></code> directories; no index file is needed.</p></li>
 </ol>
+<p>To scaffold the static-grid input POSCARs from the <code class="docutils literal notranslate"><span class="pre">unitcell-*</span></code> of step 1, edit
+the paths at the top and run (distribute the VASP inputs separately):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span><span class="p">,</span> <span class="n">write_crystal_structure</span>
+
+<span class="n">UNITCELLS</span> <span class="o">=</span> <span class="s2">&quot;unitcell-*&quot;</span>  <span class="c1"># strained cells from phonopy-strain-cells</span>
+<span class="n">STATIC_GRID</span> <span class="o">=</span> <span class="s2">&quot;static-grid&quot;</span>
+
+<span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">UNITCELLS</span><span class="p">)):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
+    <span class="n">static_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">STATIC_GRID</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">static_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">write_crystal_structure</span><span class="p">(</span><span class="n">static_dir</span> <span class="o">/</span> <span class="s2">&quot;POSCAR&quot;</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: static POSCAR&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then relax (if the crystal has internal DOF) and run the static single point in
+each <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/</span></code>.</p>
 </section>
 <section id="a-route-a-full-dft-phonons-phonon-grid">
 <h2>2A. Route A – full-DFT phonons (phonon grid)<a class="headerlink" href="#a-route-a-full-dft-phonons-phonon-grid" title="Link to this heading">#</a></h2>
 <p>For each relaxed static-grid cell, generate displaced supercells and compute
 their forces with DFT.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Per relaxed unit cell (its CONTCAR), build displaced supercells:</span>
-phonopy<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="s2">&quot;4 4 4&quot;</span><span class="w"> </span>-c<span class="w"> </span>CONTCAR
-<span class="c1"># -&gt; phonopy_disp.yaml + supercells; run VASP forces for each displacement.</span>
-</pre></div>
-</div>
 <p>Place the results as <code class="docutils literal notranslate"><span class="pre">phonon-grid/grid-NNN/</span></code> each containing the
 <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the per-displacement subdirectories <code class="docutils literal notranslate"><span class="pre">disp-001/</span></code>,
 <code class="docutils literal notranslate"><span class="pre">disp-002/</span></code>, … (each with <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>). The grid indices
 must match those under <code class="docutils literal notranslate"><span class="pre">static-grid/</span></code>.</p>
+<p>To scaffold the whole phonon grid from the relaxed static-grid cells, edit the
+paths at the top and run. It reads each <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/CONTCAR</span></code> (the
+relaxed structure; equal to the input POSCAR when there is no internal DOF), so
+run it only after the static grid is done. Distribute the VASP inputs
+separately.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span><span class="p">,</span> <span class="n">write_crystal_structure</span>
+
+<span class="n">STATIC_GRID</span> <span class="o">=</span> <span class="s2">&quot;static-grid&quot;</span>  <span class="c1"># relaxed cells at static-grid/grid-NNN/CONTCAR</span>
+<span class="n">PHONON_GRID</span> <span class="o">=</span> <span class="s2">&quot;phonon-grid&quot;</span>
+<span class="n">SUPERCELL_MATRIX</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+<span class="n">DISTANCE</span> <span class="o">=</span> <span class="mf">0.03</span>
+
+<span class="k">for</span> <span class="n">contcar</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">STATIC_GRID</span><span class="si">}</span><span class="s2">/grid-*/CONTCAR&quot;</span><span class="p">)):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">contcar</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">contcar</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">Phonopy</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">SUPERCELL_MATRIX</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
+    <span class="n">ph</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="n">DISTANCE</span><span class="p">)</span>
+    <span class="n">phonon_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">PHONON_GRID</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">phonon_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">phonon_dir</span> <span class="o">/</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">sc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">disp_dir</span> <span class="o">=</span> <span class="n">phonon_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;disp-</span><span class="si">{</span><span class="n">k</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">disp_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">write_crystal_structure</span><span class="p">(</span><span class="n">disp_dir</span> <span class="o">/</span> <span class="s2">&quot;POSCAR&quot;</span><span class="p">,</span> <span class="n">sc</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span><span class="si">}</span><span class="s2"> disp&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Then build the intermediate dataset:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-aniso-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-dft<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-aniso-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-dft<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--static-grid<span class="w"> </span>static-grid<span class="w"> </span>--phonon-grid<span class="w"> </span>phonon-grid<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
 <span class="c1"># add --electronic to include F_el from static-grid vaspout.h5</span>
@@ -992,11 +1098,12 @@ from that point’s <code class="docutils literal notranslate"><span class="pre"
 box that must <strong>cover the static grid with margin</strong>, since an MLP extrapolates
 badly at its domain edges).</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Training structures: strained supercells with random displacements (--rd):</span>
-phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">0</span>.03
+<span class="c1"># --rd N gives N displaced supercells per cell; --amplitude sets the distance.</span>
+%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">1</span><span class="w"> </span>--amplitude<span class="w"> </span><span class="m">0</span>.03
 <span class="c1"># -&gt; supercell-00001 .. supercell-00100 ; run a single-point VASP (ISIF &gt;= 2)</span>
 <span class="c1">#    for each, then assemble the dataset (stress included):</span>
-phonopy-vasp-mlp-dataset<span class="w"> </span>vasprun-*.xml<span class="w"> </span>-o<span class="w"> </span>polymlp_dataset.hdf5
+%<span class="w"> </span>phonopy-vasp-mlp-dataset<span class="w"> </span>vasprun-*.xml<span class="w"> </span>-o<span class="w"> </span>polymlp_dataset.hdf5
 </pre></div>
 </div>
 <p>Train the MLP with energies, forces and stresses (structure-based training, so
@@ -1020,7 +1127,7 @@ the varying lattices and the stress/virial are used):</p>
 <p>Then build the intermediate dataset. The MLP forces are evaluated at build time
 and stored raw, so the analysis is blind to their MLP origin; <span class="math notranslate nohighlight">\(U\)</span> still
 comes from the DFT static grid:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-aniso-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-mlp<span class="w"> </span>polymlp.yaml<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-aniso-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-mlp<span class="w"> </span>polymlp.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--static-grid<span class="w"> </span>static-grid<span class="w"> </span>--distance<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span>--snapshots<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
 <span class="c1"># add --electronic to include F_el from static-grid vaspout.h5</span>
@@ -1029,19 +1136,29 @@ comes from the DFT static grid:</p>
 </section>
 <section id="the-intermediate-dataset">
 <h2>3. The intermediate dataset<a class="headerlink" href="#the-intermediate-dataset" title="Link to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The anisotropic QHA workflow is under active development. The
+<code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> layout and the <code class="docutils literal notranslate"><span class="pre">phonopy.qha.anisotropic_dataset</span></code> API
+are not yet stable and may change in a backward-incompatible way between
+releases. Rebuild the dataset from the calculator outputs rather than relying on
+an old file being readable.</p>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> is self-contained: per grid point it stores the relaxed
 cell, supercell / primitive matrices, the raw displacements and forces, the
-static internal energy <span class="math notranslate nohighlight">\(U\)</span>, and optionally the electronic states. Because
-the
-displacements and forces are stored raw (not force constants), the file is
-independent of the force-constant method and can serve as an archive after the
-calculator scratch is discarded. The same file feeds the analysis whether the
-forces came from DFT or the MLP.</p>
+static internal energy <span class="math notranslate nohighlight">\(U\)</span>, and optionally the electronic states. The
+displacements and forces are kept in phonopy’s native displacement-force dataset
+form – type-1 (one displaced atom per supercell) or type-2 (dense/random) –
+tagged so the force-constant solver is chosen from the dataset type, not guessed.
+Because the displacements and forces are stored raw (not force constants), the
+file is independent of the force-constant method and can serve as an archive
+after the calculator scratch is discarded. The same file feeds the analysis
+whether the forces came from DFT or the MLP.</p>
 </section>
 <section id="run-the-anisotropic-qha">
 <h2>4. Run the anisotropic QHA<a class="headerlink" href="#run-the-anisotropic-qha" title="Link to this heading">#</a></h2>
 <p>Run the analysis directly on the intermediate dataset:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--tmax<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--dt<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--tmax<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--dt<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--contour-temp<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span>--compare-vinet
 </pre></div>
 </div>
@@ -1051,11 +1168,13 @@ displacements and forces), runs <code class="docutils literal notranslate"><span
 <code class="docutils literal notranslate"><span class="pre">volume-temperature.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">anisotropic_qha.png</span></code>. With exactly two free
 lattice DOF it also writes the <code class="docutils literal notranslate"><span class="pre">F(a,</span> <span class="pre">c)</span></code> contour maps; <code class="docutils literal notranslate"><span class="pre">--decompose-contours</span></code>
 adds the U / F_ph / F_el / total panels and <code class="docutils literal notranslate"><span class="pre">--compare-vinet</span></code> adds a
-volume-path cross-check. The electronic free energy is used automatically when
-the dataset carries the electronic states (<code class="docutils literal notranslate"><span class="pre">--no-electronic</span></code> to ignore it).</p>
+volume-path cross-check (it needs the grid main diagonal from a <code class="docutils literal notranslate"><span class="pre">--grid</span></code> run in
+step 1, and is skipped when no such diagonal is found). The electronic free
+energy is used automatically when the dataset carries the electronic states
+(<code class="docutils literal notranslate"><span class="pre">--no-electronic</span></code> to ignore it).</p>
 <p>Equivalently, drive <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> from the API:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Phonopy</span><span class="p">,</span> <span class="n">run_anisotropic_qha</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha</span><span class="w"> </span><span class="kn">import</span> <span class="n">anisotropic_output</span><span class="p">,</span> <span class="n">anisotropic_plot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
 
@@ -1065,15 +1184,9 @@ the dataset carries the electronic states (<code class="docutils literal notrans
 <span class="n">internal_energies</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">electronic_structures</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">:</span>
-    <span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span>
-        <span class="n">point</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
-        <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">supercell_matrix</span><span class="p">,</span>
-        <span class="n">primitive_matrix</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">primitive_matrix</span><span class="p">,</span>
-        <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">ph</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;displacements&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">displacements</span><span class="p">,</span> <span class="s2">&quot;forces&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">forces</span><span class="p">}</span>
-    <span class="n">ph</span><span class="o">.</span><span class="n">produce_force_constants</span><span class="p">(</span><span class="n">fc_calculator</span><span class="o">=</span><span class="s2">&quot;symfc&quot;</span><span class="p">)</span>
-    <span class="n">phonopys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ph</span><span class="p">)</span>
+    <span class="c1"># to_phonopy() rebuilds the Phonopy and force constants from the stored</span>
+    <span class="c1"># dataset, picking the site-symmetry or symfc solver by dataset type.</span>
+    <span class="n">phonopys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">())</span>
     <span class="n">internal_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">internal_energy</span><span class="p">)</span>
     <span class="n">electronic_structures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">electronic_states</span><span class="p">)</span>
 
@@ -1151,6 +1264,7 @@ dense (a, c) grid can be trusted.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-dft-the-mlp-is-phonons-only">Design principle: U is always DFT, the MLP is phonons-only</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u-both-routes">1. Build the static grid (internal energy U, both routes)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-full-dft-phonons-phonon-grid">2A. Route A – full-DFT phonons (phonon grid)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#b-route-b-mlp-phonons-train-once-then-evaluate">2B. Route B – MLP phonons (train once, then evaluate)</a></li>
