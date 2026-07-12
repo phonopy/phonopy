@@ -87,9 +87,9 @@ def test_build_dft_grid_point(tmp_path):
             for j in range(3)
         ]
     )
-    np.testing.assert_allclose(point.forces, expected_forces)
-    assert point.forces.shape == point.displacements.shape
-    assert point.forces.shape[0] == 3
+    np.testing.assert_allclose(point.dataset["forces"], expected_forces)
+    assert point.dataset["forces"].shape == point.dataset["displacements"].shape
+    assert point.n_displacements == 3
 
     # Internal energy matches the static single point.
     _, energy, _, _ = read_vasprun_calculation(str(sgrid / "grid-000" / "vasprun.xml"))

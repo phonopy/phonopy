@@ -1,20 +1,22 @@
-"""Symmetry-aware random sampling of lattice parameters.
+"""Symmetry-aware sampling of lattice parameters.
 
 Supports the anisotropic QHA / machine-learning-potential workflow by
-generating cells whose free lattice-vector lengths are randomly sampled
-within user-given ranges. The independent free lattice degrees of freedom
-(1 for cubic, 2 for tetragonal / hexagonal / trigonal in the hexagonal
-setting, 3 for orthorhombic) are determined from the crystal symmetry.
-Cell angles are held fixed, so monoclinic and triclinic crystals (whose
-angles are additional degrees of freedom) are out of scope. All lengths
-are in the native length unit of the input cell (calculator dependent);
-no unit conversion is performed.
+generating cells whose free lattice-vector lengths are sampled within
+user-given ranges, either randomly (:func:`sample_strained_cells`) or on a
+regular tensor grid (:func:`grid_strained_cells`). The independent free
+lattice degrees of freedom (1 for cubic, 2 for tetragonal / hexagonal /
+trigonal in the hexagonal setting, 3 for orthorhombic) are determined from
+the crystal symmetry. Cell angles are held fixed, so monoclinic and
+triclinic crystals (whose angles are additional degrees of freedom) are out
+of scope. All lengths are in the native length unit of the input cell
+(calculator dependent); no unit conversion is performed.
 
 """
 
 from __future__ import annotations
 
 import dataclasses
+import itertools
 import os
 from collections.abc import Sequence
 from typing import Any
@@ -227,18 +229,98 @@ def sample_strained_cells(
     return cells
 
 
+def grid_strained_cells(
+    cell: PhonopyAtoms,
+    dof: LatticeDOF,
+    ranges: dict[str, tuple[float, float]],
+    num: int | dict[str, int],
+) -> list[PhonopyAtoms]:
+    """Return cells on a regular tensor grid of the free lattice lengths.
+
+    Each free DOF is sampled at evenly spaced points over its (min, max)
+    range, and the cells are the full tensor (Cartesian) product. With a
+    single ``num`` every axis gets that many points (a square grid of
+    ``num ** len(dof.labels)`` cells); a per-axis mapping allows different
+    counts per DOF. The lattice vectors a free DOF controls are scaled to the
+    target length, so cell angles and fractional atomic positions are
+    preserved.
+
+    On this grid the cells whose rank is equal along every free axis form the
+    main diagonal, a monotone 1D volume path. When every free DOF spans the
+    same fractional strain with the same count -- e.g. symmetric +/- p percent
+    ranges and equal counts -- that diagonal has constant cell shape and is the
+    isotropic volume path a Vinet EOS cross-check fits.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Base crystal structure.
+    dof : LatticeDOF
+        Free lattice DOF from get_free_lattice_dof.
+    ranges : dict
+        Maps each free-DOF label to its (min, max) length range, in the
+        native length unit of the cell. Must cover exactly dof.labels.
+    num : int or dict
+        Grid points per free DOF (each >= 2), as a single count shared by all
+        axes or a mapping from each free-DOF label to its own count. The total
+        number of cells is the product of the per-axis counts.
+
+    Returns
+    -------
+    list of PhonopyAtoms
+
+    """
+    if set(ranges) != set(dof.labels):
+        raise ValueError(
+            f"ranges must be given for exactly the free DOF {dof.labels}, "
+            f"but got {tuple(ranges)}."
+        )
+    for label, (lo, hi) in ranges.items():
+        if not lo < hi:
+            raise ValueError(f"range for {label} must have min < max, got {(lo, hi)}.")
+    counts = {label: num for label in dof.labels} if isinstance(num, int) else dict(num)
+    if set(counts) != set(dof.labels):
+        raise ValueError(
+            f"grid counts must be given for exactly the free DOF {dof.labels}, "
+            f"but got {tuple(counts)}."
+        )
+    for label, n in counts.items():
+        if n < 2:
+            raise ValueError(f"grid count for {label} must be at least 2, got {n}.")
+
+    axes = {label: np.linspace(*ranges[label], counts[label]) for label in dof.labels}
+    cells = []
+    for targets in itertools.product(*(axes[label] for label in dof.labels)):
+        lattice = cell.cell.copy()
+        for label, target in zip(dof.labels, targets, strict=True):
+            scale = target / dof.current_lengths[label]
+            for row in dof.rows[label]:
+                lattice[row] *= scale
+        cells.append(
+            PhonopyAtoms(
+                symbols=cell.symbols,
+                cell=lattice,
+                scaled_positions=cell.scaled_positions,
+                masses=cell.masses,
+            )
+        )
+    return cells
+
+
 def build_random_displacement_supercells(
     unitcells: Sequence[PhonopyAtoms],
     supercell_matrix: NDArray[np.int64] | Sequence[Sequence[int]],
-    distance: float,
+    distance: float | None = None,
+    count: int = 1,
     seed: int | None = None,
 ) -> list[PhonopyAtoms]:
-    """Return one random-displacement supercell per input unit cell.
+    """Return random-displacement supercells for the input unit cells.
 
     Each unit cell is expanded by supercell_matrix and all its atoms are
-    displaced in random directions by a fixed distance, producing a
-    structure ready for machine-learning-potential training without any
-    prior internal-coordinate relaxation.
+    displaced in random directions by a fixed distance, producing structures
+    ready for machine-learning-potential training without any prior
+    internal-coordinate relaxation. ``count`` supercells are generated per
+    unit cell; the returned list is flat, cell 0's supercells first.
 
     Parameters
     ----------
@@ -246,8 +328,11 @@ def build_random_displacement_supercells(
         Unit cells, e.g. from sample_strained_cells.
     supercell_matrix : array_like
         Supercell matrix, e.g. from the phonopy_disp.yaml.
-    distance : float
-        Displacement distance in the native length unit of the cells.
+    distance : float, optional
+        Displacement distance in the native length unit of the cells. None
+        uses phonopy's default distance.
+    count : int, optional
+        Number of random-displacement supercells per unit cell (default 1).
     seed : int, optional
         Base seed; cell i uses seed + i so the set is reproducible while
         each supercell gets distinct displacements.
@@ -264,13 +349,13 @@ def build_random_displacement_supercells(
         phonon = Phonopy(unitcell, supercell_matrix=supercell_matrix, log_level=0)
         phonon.generate_displacements(
             distance=distance,
-            number_of_snapshots=1,
+            number_of_snapshots=count,
             random_seed=None if seed is None else seed + i,
         )
         displaced = phonon.supercells_with_displacements
-        if displaced is None or displaced[0] is None:
+        if displaced is None or any(d is None for d in displaced):
             raise RuntimeError("Failed to generate a displacement supercell.")
-        supercells.append(displaced[0])
+        supercells.extend(displaced)
     return supercells
 
 
@@ -283,10 +368,13 @@ def build_strain_cells_manifest(
     dof: LatticeDOF,
     command_line: str,
     ranges: dict[str, tuple[float, float]],
-    num: int,
-    rd_distance: float | None,
+    num: int | None,
+    grid_shape: list[int] | None,
+    displacement_distance: float | None,
+    random_displacements: int | None,
     symprec: float,
-    seed: int,
+    seed: int | None,
+    sampling: str,
     prefix: str,
     kind: str,
     unitcells: Sequence[PhonopyAtoms],
@@ -319,14 +407,23 @@ def build_strain_cells_manifest(
         Human-readable reconstruction of the invoked command.
     ranges : dict
         Sampled (min, max) length range per free-DOF label.
-    num : int
-        Number of cells requested.
-    rd_distance : float or None
-        Random-displacement distance, or None for plain unit cells.
+    num : int or None
+        Number of random cells requested; None for grid sampling.
+    grid_shape : list of int or None
+        Grid points per free DOF for grid sampling; None for random sampling.
+    displacement_distance : float or None
+        Random-displacement distance, or None for plain unit cells (or the
+        phonopy default distance).
+    random_displacements : int or None
+        Number of random-displacement supercells per cell, or None for plain
+        unit cells.
     symprec : float
         Symmetry tolerance used for DOF detection.
-    seed : int
-        Resolved random seed (never None).
+    seed : int or None
+        Resolved random seed, or None when the run is fully deterministic
+        (grid sampling without random displacements).
+    sampling : str
+        Sampling mode of the free lattice lengths ("random" or "grid").
     prefix : str
         Filename prefix of the written cells ("unitcell" or "supercell").
     kind : str
@@ -360,13 +457,20 @@ def build_strain_cells_manifest(
         "tie": dof.tie_description,
         "command_line": command_line,
         "parameters": {
+            "sampling": sampling,
             "ranges": {
                 label: [float(lo), float(hi)] for label, (lo, hi) in ranges.items()
             },
-            "num": int(num),
-            "rd_distance": None if rd_distance is None else float(rd_distance),
+            "num": None if num is None else int(num),
+            "grid_shape": None if grid_shape is None else [int(n) for n in grid_shape],
+            "displacement_distance": (
+                None if displacement_distance is None else float(displacement_distance)
+            ),
+            "random_displacements": (
+                None if random_displacements is None else int(random_displacements)
+            ),
             "symprec": float(symprec),
-            "seed": int(seed),
+            "seed": None if seed is None else int(seed),
         },
         "output": {
             "prefix": prefix,
