@@ -460,16 +460,16 @@ which is downloaded at <a class="github reference external" href="https://github
 recommended to create conda’s virtual environment by
 <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">create</span> <span class="pre">-n</span> <span class="pre">&lt;venvname&gt;</span></code> as written above. The installation of necessary
 libraries is done as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>numpy<span class="w"> </span>scipy<span class="w"> </span>h5py<span class="w"> </span>pyyaml<span class="w"> </span>matplotlib-base<span class="w"> </span>seekpath<span class="w"> </span>symfc<span class="w"> </span>spglib
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>numpy<span class="w"> </span>scipy<span class="w"> </span>h5py<span class="w"> </span>pyyaml<span class="w"> </span>matplotlib-base<span class="w"> </span>seekpath<span class="w"> </span>symfc<span class="w"> </span>spglib<span class="w"> </span>phonors<span class="w"> </span>cmake
 </pre></div>
 </div>
-<p>A libblas library installed can be chosen among <code class="docutils literal notranslate"><span class="pre">[openblas,</span> <span class="pre">mkl,</span> <span class="pre">blis,</span> <span class="pre">netlib]</span></code>.
-If specific one is expected, it is installed by (e.g. <code class="docutils literal notranslate"><span class="pre">openblas</span></code>)</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="s2">&quot;libblas=*=*openblas&quot;</span>
-</pre></div>
-</div>
-<p>If you need a compiler,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">c</span><span class="o">-</span><span class="n">compiler</span> <span class="n">cxx</span><span class="o">-</span><span class="n">compiler</span> <span class="n">cmake</span>
+<p>Here <code class="docutils literal notranslate"><span class="pre">phonors</span></code> is the Rust backend, installed as a pre-built binary from conda;
+usually this is all that is needed. Only when a development version of <code class="docutils literal notranslate"><span class="pre">phonors</span></code>
+is required is it necessary to build <code class="docutils literal notranslate"><span class="pre">phonors</span></code> from source; see
+<a class="reference internal" href="rust-backend.html#rust-backend"><span class="std std-ref">Rust backend</span></a>.</p>
+<p>The default build below skips the C extension, so no C/C++ compiler is needed.
+To also build the legacy C extension, additionally install C/C++ compilers:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">c</span><span class="o">-</span><span class="n">compiler</span> <span class="n">cxx</span><span class="o">-</span><span class="n">compiler</span>
 </pre></div>
 </div>
 </section>
@@ -490,19 +490,19 @@ removed.</p>
 </div>
 </li>
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">.</span> <span class="o">-</span><span class="n">vvv</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">PHONOPY_NO_C_EXT</span><span class="o">=</span><span class="mi">1</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">.</span> <span class="o">-</span><span class="n">vvv</span>
 </pre></div>
 </div>
 <p>The editable install (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span></code>) may not work depending on the
 computer environment.</p>
 </li>
 </ol>
-<p>Since v4, <code class="docutils literal notranslate"><span class="pre">phonors</span></code> is the default backend and a required runtime
-dependency. It is installed automatically from PyPI by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">phonopy</span></code>. The C extension is still built by default and remains
-selectable as a legacy backend (<code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code>).
-A Rust-only build that skips the C extension entirely is available
-via <code class="docutils literal notranslate"><span class="pre">PHONOPY_NO_C_EXT=1</span></code> at install time. See <a class="reference internal" href="rust-backend.html#rust-backend"><span class="std std-ref">Rust backend</span></a>
-for details.</p>
+<p>Since v4, <code class="docutils literal notranslate"><span class="pre">phonors</span></code> is the default backend and a required runtime dependency.
+It is installed automatically from PyPI by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">phonopy</span></code>, so the C
+extension is not required; setting <code class="docutils literal notranslate"><span class="pre">PHONOPY_NO_C_EXT=1</span></code> skips building it
+entirely (no C/C++ compiler needed). To also build the legacy C extension,
+which remains selectable at run time (<code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">--legacy-backend</span></code>), run
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span> <span class="pre">-vvv</span></code> without the env var. See <a class="reference internal" href="rust-backend.html#rust-backend"><span class="std std-ref">Rust backend</span></a> for details.</p>
 </section>
 </section>
 <section id="trouble-shooting">
