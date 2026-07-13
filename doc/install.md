@@ -110,20 +110,19 @@ recommended to create conda's virtual environment by
 libraries is done as follows:
 
 ```bash
-% conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base seekpath symfc spglib
+% conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base seekpath symfc spglib phonors cmake
 ```
 
-A libblas library installed can be chosen among `[openblas, mkl, blis, netlib]`.
-If specific one is expected, it is installed by (e.g. `openblas`)
+Here `phonors` is the Rust backend, installed as a pre-built binary from conda;
+usually this is all that is needed. Only when a development version of `phonors`
+is required is it necessary to build `phonors` from source; see
+{ref}`rust_backend`.
+
+The default build below skips the C extension, so no C/C++ compiler is needed.
+To also build the legacy C extension, additionally install C/C++ compilers:
 
 ```
-% conda install -c conda-forge "libblas=*=*openblas"
-```
-
-If you need a compiler,
-
-```
-% conda install -c conda-forge c-compiler cxx-compiler cmake
+% conda install -c conda-forge c-compiler cxx-compiler
 ```
 
 (install_setup_py)=
@@ -149,19 +148,18 @@ removed.
 2. Run `pip install`
 
    ```
-   % pip install . -vvv
+   % PHONOPY_NO_C_EXT=1 pip install . -vvv
    ```
 
    The editable install (`pip install -e`) may not work depending on the
    computer environment.
 
-Since v4, `phonors` is the default backend and a required runtime
-dependency. It is installed automatically from PyPI by `pip install
-phonopy`. The C extension is still built by default and remains
-selectable as a legacy backend (`lang="C"` / `--legacy-backend`).
-A Rust-only build that skips the C extension entirely is available
-via `PHONOPY_NO_C_EXT=1` at install time. See {ref}`rust_backend`
-for details.
+Since v4, `phonors` is the default backend and a required runtime dependency.
+It is installed automatically from PyPI by `pip install phonopy`, so the C
+extension is not required; setting `PHONOPY_NO_C_EXT=1` skips building it
+entirely (no C/C++ compiler needed). To also build the legacy C extension,
+which remains selectable at run time (`lang="C"` / `--legacy-backend`), run
+`pip install . -vvv` without the env var. See {ref}`rust_backend` for details.
 
 (install_trouble_shooting)=
 
