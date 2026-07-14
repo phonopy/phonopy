@@ -1,6 +1,6 @@
 """Run the anisotropic QHA from an intermediate dataset.
 
-Reads aniso_qha_dataset.hdf5 (built by phonopy-aniso-qha-dataset), rebuilds one
+Reads aniso_qha_dataset.hdf5 (built by phonopy-anisotropic-qha-dataset), rebuilds one
 Phonopy per grid point from the stored displacements and forces, runs
 run_anisotropic_qha and writes the lattice parameters, axial thermal expansion
 and volume versus temperature, plus optional free-energy surface diagnostics.
@@ -435,9 +435,10 @@ def get_options() -> Namespace:
         help="total degree of the F(a, c) surface polynomial (default: 3)",
     )
     parser.add_argument(
-        "--no-electronic",
+        "--electronic",
         action="store_true",
-        help="ignore the electronic states even if the dataset carries them",
+        help="add the electronic free energy F_el from the electronic states "
+        "stored in the dataset (default: ignore them)",
     )
     parser.add_argument(
         "--contour-temp",
@@ -474,7 +475,7 @@ def run() -> None:
 
     phonopys = []
     internal_energies = []
-    electronic_structures: list | None = []
+    electronic_structures: list | None = [] if args.electronic else None
     for point in dataset.grid_points:
         phonopys.append(point.to_phonopy(fc_calculator=args.fc_calculator))
         internal_energies.append(point.internal_energy)
@@ -483,8 +484,8 @@ def run() -> None:
                 electronic_structures = None
             else:
                 electronic_structures.append(point.electronic_states)
-    if args.no_electronic:
-        electronic_structures = None
+    if args.electronic and electronic_structures is None:
+        print("  requested --electronic but the dataset has no electronic states")
     print(
         f"Loaded {len(phonopys)} grid point(s) from {args.filename} "
         f"(electronic F_el: {'on' if electronic_structures is not None else 'off'})"

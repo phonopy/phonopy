@@ -24,7 +24,7 @@ the `F` contour maps are drawn only when there are exactly two free DOF.
 
 Status: working recipe. All tools referenced here are implemented --
 `phonopy-strain-cells`, `phonopy-vasp-mlp-dataset`, the dataset builder
-`phonopy-aniso-qha-dataset` and the analysis command `phonopy-anisotropic-qha`.
+`phonopy-anisotropic-qha-dataset` and the analysis command `phonopy-anisotropic-qha`.
 Step 4 gives the one-command analysis; the API script beneath it is an
 equivalent alternative for finer control.
 
@@ -81,8 +81,8 @@ flowchart TD
     MLPDS --> DEV["develop_pypolymlp_from_structures"]
     DEV --> MLP(["polymlp.yaml"])
 
-    SGRID --> BUILD["phonopy-aniso-qha-dataset"]
-    PGRID -->|"--from-dft"| BUILD
+    SGRID --> BUILD["phonopy-anisotropic-qha-dataset"]
+    PGRID -->|"default"| BUILD
     MLP -->|"--from-mlp"| BUILD
     BUILD --> DS(["aniso_qha_dataset.hdf5"])
 
@@ -102,7 +102,7 @@ The recipe starts from one relaxed equilibrium cell. Turn it into the reference
 `--dim` fixes the supercell matrix, which `phonopy-init` records together with
 the unit cell, the primitive matrix and the calculator. `phonopy-strain-cells`
 reads the equilibrium cell and calculator from it (plus the supercell matrix when
-`--rd` builds MLP training supercells); `phonopy-aniso-qha-dataset` reads the
+`--rd` builds MLP training supercells); `phonopy-anisotropic-qha-dataset` reads the
 calculator and the free lattice DOF it implies (which lengths are independent --
 `a, c` with `b = a` for hexagonal), and, on the MLP route, the supercell and
 primitive matrices. Keep `--dim` consistent with the phonon-grid supercell in
@@ -231,18 +231,66 @@ for contcar in sorted(glob.glob(f"{STATIC_GRID}/grid-*/CONTCAR")):
     print(f"grid-{idx:03d}: {len(ph.supercells_with_displacements)} disp")
 ```
 
-Then build the intermediate dataset:
-
-```bash
-% phonopy-aniso-qha-dataset phonopy_disp.yaml --from-dft \
-    --static-grid static-grid --phonon-grid phonon-grid \
-    -o aniso_qha_dataset.hdf5
-# add --electronic to include F_el from static-grid vaspout.h5
+```{note}
+`phonopy-anisotropic-qha-dataset` supports only the VASP calculator. The static
+internal energy {math}`U(a, c)`, the forces, and the electronic states are read
+from VASP outputs (`vaspout.h5` / `vasprun.xml`); a reference specifying any
+other calculator is rejected, because phonopy has no interface yet to read the
+static single-point energy of other calculators.
 ```
 
-The positional `phonopy_disp.yaml` is the equilibrium reference; it supplies the
-free lattice DOF metadata (the supercell / primitive matrices for each point come
-from that point's `phonon-grid` yaml).
+Then build the intermediate dataset. The builder expects the two grids below.
+Grid indices are zero-padded to three digits (`grid-000`, `grid-001`, ...) and
+must match between `static-grid` and `phonon-grid`:
+
+```text
+static-grid/                 # --static-grid (default: static-grid)
+  grid-000/
+    vaspout.h5               # or vasprun.xml; static single point -> U(a, c)
+  grid-001/
+    vaspout.h5
+  ...
+phonon-grid/                 # --phonon-grid (default: phonon-grid)
+  grid-000/
+    phonopy_disp.yaml        # relaxed displaced cell + supercell/primitive
+    disp-001/
+      vaspout.h5             # or vasprun.xml; forces for displacement 1
+    disp-002/
+      vaspout.h5
+    ...
+  grid-001/
+    ...
+```
+
+```bash
+% phonopy-anisotropic-qha-dataset phonopy_disp.yaml \
+    --static-grid static-grid --phonon-grid phonon-grid \
+    -o aniso_qha_dataset.hdf5
+# F_el is stored automatically when static-grid/grid-NNN/vaspout.h5 carries the
+#   electron eigenvalues; pass --no-electronic to skip it
+```
+
+For each grid point the builder reads:
+
+- `static-grid/grid-NNN/` -- the static single point, giving the internal energy
+  {math}`U(a, c)`; its relaxed cell becomes the grid-point cell. The electronic
+  states for {math}`F_\mathrm{el}` are read automatically from the same
+  `vaspout.h5` when it carries the eigenvalues (a static grid written with only
+  `vasprun.xml` is built without {math}`F_\mathrm{el}`; pass `--no-electronic` to
+  skip them deliberately).
+- `phonon-grid/grid-NNN/phonopy_disp.yaml` -- the displaced cell with its
+  supercell / primitive matrices and the displacement dataset (type-1 or
+  type-2).
+- `phonon-grid/grid-NNN/disp-*/` -- the per-displacement forces, read in sorted
+  `disp-*` order; their count must equal the number of displacements in
+  `phonopy_disp.yaml`.
+
+`vaspout.h5` is used when present (full numerical precision), `vasprun.xml`
+otherwise. Grid points are discovered from the `static-grid/grid-NNN`
+directories, so a `grid-NNN` that exists only under `phonon-grid` is ignored. The
+positional `phonopy_disp.yaml` is the equilibrium reference; it supplies the free
+lattice DOF metadata and the calculator (the per-point supercell / primitive
+matrices come from each point's `phonon-grid` yaml).
 
 ## 2B. Route B -- MLP phonons (train once, then evaluate)
 
@@ -281,15 +329,21 @@ polymlp = develop_pypolymlp_from_structures(
 save_pypolymlp(polymlp, "polymlp.yaml")
 ```
 
-Then build the intermediate dataset. The MLP forces are evaluated at build time
-and stored raw, so the analysis is blind to their MLP origin; {math}`U` still
-comes from the DFT static grid:
+Then build the intermediate dataset. `--from-mlp` needs only the `static-grid`
+layout of step 1 (no `phonon-grid`): the displacements are generated and their
+forces evaluated on the fly from the MLP -- `--distance` sets the displacement
+amplitude and `--snapshots` the number of random-displacement supercells per grid
+point (`--seed` for reproducibility). The MLP forces are stored raw, so the
+analysis is blind to their MLP origin; {math}`U` still comes from the static
+grid, and the per-point supercell / primitive matrices come from the reference
+`phonopy_disp.yaml`:
 
 ```bash
-% phonopy-aniso-qha-dataset phonopy_disp.yaml --from-mlp polymlp.yaml \
+% phonopy-anisotropic-qha-dataset phonopy_disp.yaml --from-mlp polymlp.yaml \
     --static-grid static-grid --distance 0.03 --snapshots 20 \
     -o aniso_qha_dataset.hdf5
-# add --electronic to include F_el from static-grid vaspout.h5
+# F_el is stored automatically when static-grid/grid-NNN/vaspout.h5 carries the
+#   electron eigenvalues; pass --no-electronic to skip it
 ```
 
 ## 3. The intermediate dataset
@@ -319,7 +373,7 @@ Run the analysis directly on the intermediate dataset:
 
 ```bash
 % phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --tmax 1000 --dt 10 \
-    --contour-temp 0 500 1000 --compare-vinet
+    --contour-temp 0 500 1000 --compare-vinet --electronic
 ```
 
 This rebuilds one Phonopy per grid point (force constants from the stored
@@ -330,8 +384,8 @@ lattice DOF it also writes the `F(a, c)` contour maps; `--decompose-contours`
 adds the U / F_ph / F_el / total panels and `--compare-vinet` adds a
 volume-path cross-check (it needs the grid main diagonal from a `--grid` run in
 step 1, and is skipped when no such diagonal is found). The electronic free
-energy is used automatically when the dataset carries the electronic states
-(`--no-electronic` to ignore it).
+energy {math}`F_\mathrm{el}` is added only with `--electronic` (and only when
+the dataset carries the electronic states); by default it is ignored.
 
 Equivalently, drive `run_anisotropic_qha` from the API:
 
