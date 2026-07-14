@@ -894,6 +894,32 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
         assert len(d) == 4
 
 
+def test_random_displacements_persist_after_temperature_generation(
+    ph_tio2: Phonopy,
+):
+    """random_displacements must survive temperature-based generation.
+
+    generate_displacements assigns a new dataset, which invalidates
+    derived quantities. The finite-temperature sampler stored in
+    random_displacements must not be cleared by that assignment, so its
+    q-points, integrated modes, and frequencies remain available for
+    reporting.
+
+    """
+    # Use an independent instance: generate_displacements replaces the
+    # dataset, which also invalidates force constants, so the
+    # session-scoped fixture must not be mutated.
+    ph = ph_tio2.replicate()
+    ph.nac_params = ph_tio2.nac_params
+    ph.force_constants = ph_tio2.force_constants
+    ph.generate_displacements(number_of_snapshots=4, temperature=300)
+
+    assert ph.random_displacements is not None
+    assert ph.random_displacements.qpoints is not None
+    assert ph.random_displacements.integrated_modes is not None
+    assert ph.random_displacements.frequencies is not None
+
+
 def test_treat_imaginary_modes(ph_srtio3: Phonopy):
     """Test imaginary mode treatment of force constants.
 
