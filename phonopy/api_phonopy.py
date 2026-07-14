@@ -915,6 +915,10 @@ class Phonopy:
 
         """
         displacement_dataset: DisplacementDataset
+        # self._random_displacements is set only in the finite-temperature
+        # branch below. The `self.dataset = ...` assignment later in this
+        # method clears it, so remember it here and put it back afterward.
+        random_displacements: RandomDisplacements | None = None
         if number_of_snapshots is not None and (
             number_of_snapshots == "auto" or number_of_snapshots > 0
         ):
@@ -962,6 +966,7 @@ class Phonopy:
                     is_plusminus=(is_plusminus is True),
                     random_seed=_random_seed,
                 )
+                random_displacements = self._random_displacements
             displacement_dataset_type2: Type2DisplacementDataset = {"displacements": d}
             if _random_seed is not None:
                 displacement_dataset_type2["random_seed"] = _random_seed
@@ -982,6 +987,11 @@ class Phonopy:
                 displacement_directions, _distance, self._supercell
             )
         self.dataset = displacement_dataset
+        # The assignment above cleared self._random_displacements. Put it
+        # back so callers can read its q-points, frequencies, and
+        # integrated modes after temperature-based generation.
+        if random_displacements is not None:
+            self._random_displacements = random_displacements
 
     def produce_force_constants(
         self,
