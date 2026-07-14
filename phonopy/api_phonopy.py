@@ -304,7 +304,7 @@ class Phonopy:
         self._total_dos = None
         self._modulation = None
         self._irreps = None
-        self._random_displacements = None
+        self._random_displacements: RandomDisplacements | None = None
         self._moment = None
         self._qpoints = None
 
@@ -915,83 +915,169 @@ class Phonopy:
 
         """
         displacement_dataset: DisplacementDataset
-        # self._random_displacements is set only in the finite-temperature
-        # branch below. The `self.dataset = ...` assignment later in this
-        # method clears it, so remember it here and put it back afterward.
-        random_displacements: RandomDisplacements | None = None
         if number_of_snapshots is not None and (
             number_of_snapshots == "auto" or number_of_snapshots > 0
         ):
             if number_of_snapshots == "auto":
-                from phonopy.interface.symfc import SymfcFCSolver
-
-                _number_of_snapshots = SymfcFCSolver(
-                    self._supercell, symmetry=self._symmetry
-                ).estimate_numbers_of_supercells(orders=[2])[2]
-                if number_estimation_factor is None:
-                    if max_distance is None:
-                        _number_of_snapshots *= 4
-                    else:
-                        _number_of_snapshots *= 8
-                else:
-                    _number_of_snapshots *= number_estimation_factor
-                    _number_of_snapshots = int(_number_of_snapshots)
+                _number_of_snapshots = self._estimate_number_of_snapshots(
+                    max_distance, number_estimation_factor
+                )
             else:
                 _number_of_snapshots = number_of_snapshots
-
-            if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
+            if random_seed is not None and 0 <= random_seed < 2**32:
                 _random_seed = random_seed
             else:
                 _random_seed = None
             if temperature is None:
-                if distance is None:
-                    _distance = 0.01
-                else:
-                    _distance = distance
-                d = get_random_displacements_dataset(
+                displacement_dataset = self._generate_random_displacement_dataset(
                     _number_of_snapshots,
-                    len(self._supercell),
-                    _distance,
+                    distance=distance,
+                    is_plusminus=is_plusminus,
                     random_seed=_random_seed,
-                    is_plusminus=(is_plusminus is True),
                     max_distance=max_distance,
                 )
+                self.dataset = displacement_dataset
             else:
-                self.init_random_displacements(
-                    cutoff_frequency=cutoff_frequency, max_distance=max_distance
+                displacement_dataset, random_displacements = (
+                    self._generate_finite_temperature_displacement_dataset(
+                        _number_of_snapshots,
+                        temperature=temperature,
+                        is_plusminus=is_plusminus,
+                        random_seed=_random_seed,
+                        cutoff_frequency=cutoff_frequency,
+                        max_distance=max_distance,
+                    )
                 )
-                d = self.get_random_displacements_at_temperature(
-                    temperature,
-                    _number_of_snapshots,
-                    is_plusminus=(is_plusminus is True),
-                    random_seed=_random_seed,
-                )
-                random_displacements = self._random_displacements
-            displacement_dataset_type2: Type2DisplacementDataset = {"displacements": d}
-            if _random_seed is not None:
-                displacement_dataset_type2["random_seed"] = _random_seed
-            displacement_dataset = displacement_dataset_type2
+                self.dataset = displacement_dataset
+                # The self.dataset assignment above clears
+                # self._random_displacements via _invalidate_derived. Restore
+                # the finite-temperature instance so callers can read its
+                # q-points, frequencies, and integrated modes.
+                self._random_displacements = random_displacements
         else:
-            if distance is None:
-                _distance = 0.01
-            else:
-                _distance = distance
-            displacement_directions = get_least_displacements(
-                self._symmetry,
+            displacement_dataset = self._generate_systematic_displacement_dataset(
+                distance=distance,
                 is_plusminus=is_plusminus,
                 is_diagonal=is_diagonal,
                 is_trigonal=is_trigonal,
-                log_level=self._log_level,
             )
-            displacement_dataset = directions_to_displacement_dataset(
-                displacement_directions, _distance, self._supercell
-            )
-        self.dataset = displacement_dataset
-        # The assignment above cleared self._random_displacements. Put it
-        # back so callers can read its q-points, frequencies, and
-        # integrated modes after temperature-based generation.
-        if random_displacements is not None:
-            self._random_displacements = random_displacements
+            self.dataset = displacement_dataset
+
+    def _generate_random_displacement_dataset(
+        self,
+        number_of_snapshots: int,
+        distance: float | None,
+        is_plusminus: Literal["auto"] | bool,
+        random_seed: int | None,
+        max_distance: float | None,
+    ) -> Type2DisplacementDataset:
+        """Build a type-2 dataset of random displacements at a fixed distance.
+
+        See :meth:`generate_displacements` for the meaning of the
+        parameters.
+
+        """
+        _distance = 0.01 if distance is None else distance
+        d = get_random_displacements_dataset(
+            number_of_snapshots,
+            len(self._supercell),
+            _distance,
+            random_seed=random_seed,
+            is_plusminus=(is_plusminus is True),
+            max_distance=max_distance,
+        )
+        dataset: Type2DisplacementDataset = {"displacements": d}
+        if random_seed is not None:
+            dataset["random_seed"] = random_seed
+        return dataset
+
+    def _generate_finite_temperature_displacement_dataset(
+        self,
+        number_of_snapshots: int,
+        temperature: float,
+        is_plusminus: Literal["auto"] | bool,
+        random_seed: int | None,
+        cutoff_frequency: float | None,
+        max_distance: float | None,
+    ) -> tuple[Type2DisplacementDataset, RandomDisplacements]:
+        """Build a type-2 dataset of random displacements at finite temperature.
+
+        This is a helper for :meth:`generate_displacements`; see there for
+        the meaning of the parameters.
+
+        Returns
+        -------
+        tuple[Type2DisplacementDataset, RandomDisplacements]
+            The generated type-2 displacement dataset and the
+            RandomDisplacements instance used to create it.
+
+        Note
+        ----
+        This method sets self._random_displacements as a side effect:
+        init_random_displacements creates the instance and
+        get_random_displacements_at_temperature runs it. The instance
+        returned here is that same object.
+
+        IMPORTANT: the caller must put the returned instance back into
+        self._random_displacements *after* assigning self.dataset. That
+        assignment triggers _invalidate_derived, which resets
+        self._random_displacements to None. Without the restore, the
+        q-points, frequencies, and integrated modes computed here are
+        lost, and Phonopy.random_displacements returns None even though
+        generation succeeded.
+
+        """
+        self.init_random_displacements(
+            cutoff_frequency=cutoff_frequency, max_distance=max_distance
+        )
+        d = self.get_random_displacements_at_temperature(
+            temperature,
+            number_of_snapshots,
+            is_plusminus=(is_plusminus is True),
+            random_seed=random_seed,
+        )
+        assert self._random_displacements is not None
+        dataset: Type2DisplacementDataset = {"displacements": d}
+        if random_seed is not None:
+            dataset["random_seed"] = random_seed
+        return dataset, self._random_displacements
+
+    def _estimate_number_of_snapshots(
+        self,
+        max_distance: float | None,
+        number_estimation_factor: float | None,
+    ) -> int:
+        """Estimate the number of random-displacement snapshots via symfc."""
+        from phonopy.interface.symfc import SymfcFCSolver
+
+        number_of_snapshots = SymfcFCSolver(
+            self._supercell, symmetry=self._symmetry
+        ).estimate_numbers_of_supercells(orders=[2])[2]
+        if number_estimation_factor is None:
+            number_of_snapshots *= 8 if max_distance is not None else 4
+        else:
+            number_of_snapshots = int(number_of_snapshots * number_estimation_factor)
+        return number_of_snapshots
+
+    def _generate_systematic_displacement_dataset(
+        self,
+        distance: float | None,
+        is_plusminus: Literal["auto"] | bool,
+        is_diagonal: bool,
+        is_trigonal: bool,
+    ) -> DisplacementDataset:
+        """Build a dataset of systematic finite-difference displacements."""
+        _distance = 0.01 if distance is None else distance
+        displacement_directions = get_least_displacements(
+            self._symmetry,
+            is_plusminus=is_plusminus,
+            is_diagonal=is_diagonal,
+            is_trigonal=is_trigonal,
+            log_level=self._log_level,
+        )
+        return directions_to_displacement_dataset(
+            displacement_directions, _distance, self._supercell
+        )
 
     def produce_force_constants(
         self,
