@@ -112,6 +112,7 @@ class DynamicStructureFactor:
         scattering_lengths: dict[str, float] | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
+        factor: float | None = None,
     ) -> None:
         """Init method.
 
@@ -149,6 +150,9 @@ class DynamicStructureFactor:
         freq_max: float
             Maximum phonon frequency to determine whether include or not. Only
             for Debye-Waller factor.
+        factor: float, optional
+            Unit conversion factor for phonon frequencies. Default is
+            DefaultToTHz of the physical units.
 
         """
         self._mesh_phonon = mesh_phonon
@@ -177,7 +181,7 @@ class DynamicStructureFactor:
         )
         self._frequencies: NDArray[np.double]
         self._eigvecs: NDArray[np.cdouble]
-        self._set_phonon()
+        self._set_phonon(factor)
 
         self._q_count = 0
         self._unit_conversion_factor = 1.0 / (
@@ -260,9 +264,12 @@ class DynamicStructureFactor:
                 S[i] = abs(F) ** 2 * (n + 1)
         return S * self._unit_conversion_factor
 
-    def _set_phonon(self) -> None:
+    def _set_phonon(self, factor: float | None) -> None:
         qpoints_phonon = QpointsPhonon(
-            self._qpoints_1bz, self._dynamical_matrix, with_eigenvectors=True
+            self._qpoints_1bz,
+            self._dynamical_matrix,
+            with_eigenvectors=True,
+            factor=factor,
         )
         self._frequencies = qpoints_phonon.frequencies
         assert qpoints_phonon.eigenvectors is not None
