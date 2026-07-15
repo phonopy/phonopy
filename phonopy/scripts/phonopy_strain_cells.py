@@ -77,11 +77,23 @@ def get_options() -> Namespace:
     )
     parser.add_argument(
         "--amplitude",
+        "--amin",
         dest="displacement_distance",
         type=float,
         default=None,
         metavar="DISTANCE",
-        help="random displacement distance (default: phonopy's default)",
+        help="random displacement distance, and its minimum when --amax is "
+        "given (default: phonopy's default)",
+    )
+    parser.add_argument(
+        "--amax",
+        dest="displacement_distance_max",
+        type=float,
+        default=None,
+        metavar="DISTANCE",
+        help="maximum random displacement distance; the distance is then "
+        "sampled uniformly from [--amin, --amax], spanning the large-amplitude "
+        "region needed to train an MLP for SSCHA",
     )
     parser.add_argument(
         "--rd",
@@ -227,6 +239,14 @@ def run() -> None:
     # deterministic grid run without --rd records no seed and can be replayed
     # from the manifest verbatim.
     with_rd = args.random_displacements is not None
+    if args.displacement_distance_max is not None:
+        if not with_rd:
+            sys.exit("Error: --amax applies to random displacements; add --rd.")
+        if (
+            args.displacement_distance is not None
+            and args.displacement_distance_max <= args.displacement_distance
+        ):
+            sys.exit("Error: --amax must be larger than --amin.")
     needs_random = args.grid is None or with_rd
     if args.random_seed is not None:
         seed = args.random_seed
@@ -249,6 +269,7 @@ def run() -> None:
             unitcells,
             phonon.supercell_matrix,
             distance=args.displacement_distance,
+            max_distance=args.displacement_distance_max,
             count=args.random_displacements,
             seed=seed,
         )
@@ -285,6 +306,7 @@ def run() -> None:
         num=None if grid_counts is not None else args.num,
         grid_shape=grid_shape,
         displacement_distance=args.displacement_distance,
+        displacement_distance_max=args.displacement_distance_max,
         random_displacements=args.random_displacements,
         symprec=args.symprec,
         seed=seed,

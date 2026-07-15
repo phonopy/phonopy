@@ -99,6 +99,17 @@ The recipe starts from one relaxed equilibrium cell. Turn it into the reference
 % phonopy-init -c REFERENCE_UNITCELL -d --dim 4 4 4
 ```
 
+`REFERENCE_UNITCELL` must be the standardized conventional cell, whose lattice
+vectors are the crystal axes a, b and c in that row order. The free lattice DOF
+are taken per row, so a primitive cell of a centred lattice cannot be used: its
+rows are centring vectors rather than crystal axes. For body-centred tetragonal,
+for example, all three primitive rows have the same length, and scaling them
+would only change the volume, never c/a. A rhombohedral cell must likewise be
+given in the hexagonal setting. `phonopy-strain-cells` rejects such a cell; if
+in doubt, take the `BPOSCAR` written by {ref}`phonopy --symmetry <symmetry_option>`,
+which is the conventional cell. A conventional cell that is merely rotated in
+Cartesian space is fine.
+
 `--dim` fixes the supercell matrix, which `phonopy-init` records together with
 the unit cell, the primitive matrix and the calculator. `phonopy-strain-cells`
 reads the equilibrium cell and calculator from it (plus the supercell matrix when
@@ -301,12 +312,28 @@ badly at its domain edges).
 
 ```bash
 # Training structures: strained supercells with random displacements (--rd):
-# --rd N gives N displaced supercells per cell; --amplitude sets the distance.
+# --rd N gives N displaced supercells per cell; --amplitude (= --amin) sets the
+# distance.
 % phonopy-strain-cells phonopy_disp.yaml --a 3.15 3.25 --c 5.10 5.30 \
     -n 100 --random-seed 1 --rd 1 --amplitude 0.03
 # -> supercell-00001 .. supercell-00100 ; run a single-point VASP (ISIF >= 2)
 #    for each, then assemble the dataset (stress included):
 % phonopy-vasp-mlp-dataset vasprun-*.xml -o polymlp_dataset.hdf5
+```
+
+Adding `--amax` samples the displacement distance uniformly from
+`[--amin, --amax]` instead of fixing it (the distance is drawn per supercell;
+within one supercell every atom moves by that same distance). A fixed small
+distance is what harmonic force constants need and is the default here. The
+range form matters when the MLP is to be used beyond the harmonic regime, e.g.
+for the temperature-dependent force constants of {ref}`mlp-sscha`, whose
+supercells at temperature reach far larger displacements than 0.03 Angstrom;
+an MLP trained only near equilibrium would extrapolate there. Then train over
+both the lattice box and the amplitude range at once:
+
+```bash
+% phonopy-strain-cells phonopy_disp.yaml --a 3.15 3.25 --c 5.10 5.30 \
+    -n 100 --random-seed 1 --rd 1 --amin 0.03 --amax 1.5
 ```
 
 Train the MLP with energies, forces and stresses (structure-based training, so
