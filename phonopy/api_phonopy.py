@@ -3336,6 +3336,7 @@ class Phonopy:
             scattering_lengths=scattering_lengths,
             freq_min=freq_min,
             freq_max=freq_max,
+            factor=self._unit_conversion_factor,
         )
         return self._dynamic_structure_factor
 
