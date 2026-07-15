@@ -325,32 +325,49 @@ def get_random_displacements_dataset(
     is_plusminus: bool = False,
     max_distance: float | None = None,
 ) -> NDArray[np.double]:
-    """Return random displacements at constant displacement distance.
+    """Return supercell displacements in random directions.
 
-    number_of_snapshots : int,
-        Number of snapshots of supercells with random displacements. Random
-        displacements are generated displacing all atoms in random directions
-        with a fixed displacement distance specified by 'distance' parameter,
-        i.e., all atoms in supercell are displaced with the same displacement
-        distance in direct space.
+    Every atom is displaced in a direction drawn uniformly on the unit sphere.
+    The displacement distance is drawn once per supercell and shared by all its
+    atoms, not drawn per atom, so within one supercell all atoms are displaced
+    by the same distance in direct space.
+
+    The distance is fixed to `distance` unless `max_distance` is given, in
+    which case it is random; see `max_distance` for its distribution.
+
+    Parameters
+    ----------
+    number_of_snapshots : int
+        Number of supercells with random displacements to generate.
     num_atoms : int
         Number of atoms in supercell.
     distance : float
         Displacement distance. Unit is the same as that used for crystal
-        structure. In random direction displacements generation with random
-        distance, the displacement distance smaller than this value is set to
-        this value.
+        structure. With `max_distance` None, this is the distance every atom
+        is displaced by. Otherwise it is the lower bound of the random
+        distance; see `max_distance`.
     random_seed : int or None, optional
         Random seed for random displacements generation. Default is None.
-    is_plusminus : True, or False, optional
+    is_plusminus : bool, optional
         In addition to sets of usual random displacements for supercell, sets of
         the opposite displacements for supercell are concatenated. Therefore,
         total number of sets of displacements is `2 * number_of_snapshots`.
         Default is False.
     max_distance : float or None, optional
-        In random direction and distance displacements generation, this value is
-        specified. In random direction and random distance displacements
-        generation, this value is used as `max_distance`.
+        Upper bound of the random displacement distance. The distance of each
+        supercell is drawn from the uniform distribution over
+        [0, max_distance) and is then raised to `distance` when smaller. The
+        distances are therefore uniform over [distance, max_distance) except
+        for the weight `distance / max_distance` piled up exactly at
+        `distance`. `distance` acts as a floor here, not as a sampling bound.
+        When None, the distance is fixed to `distance`. Default is None.
+
+    Returns
+    -------
+    NDArray[np.double]
+        Displacements of atoms in supercells.
+        shape=(number_of_snapshots, num_atoms, 3), dtype='double', order='C'.
+        With `is_plusminus` True, shape[0] is `2 * number_of_snapshots`.
 
     """
     if np.issubdtype(type(random_seed), np.integer):

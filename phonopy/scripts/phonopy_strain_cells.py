@@ -29,10 +29,12 @@ from phonopy.qha.lattice_sampling import (
     get_free_lattice_dof,
     grid_strained_cells,
     sample_strained_cells,
+    write_strain_cells,
     write_strain_cells_manifest,
 )
 
 MANIFEST_FILENAME = "strain_cells.yaml"
+STRUCTURE_FILENAME = "strain_cells.hdf5"
 
 
 def get_options() -> Namespace:
@@ -82,7 +84,7 @@ def get_options() -> Namespace:
         type=float,
         default=None,
         metavar="DISTANCE",
-        help="random displacement distance, and its minimum when --amax is "
+        help="random displacement distance, and its floor when --amax is "
         "given (default: phonopy's default)",
     )
     parser.add_argument(
@@ -91,9 +93,10 @@ def get_options() -> Namespace:
         type=float,
         default=None,
         metavar="DISTANCE",
-        help="maximum random displacement distance; the distance is then "
-        "sampled uniformly from [--amin, --amax], spanning the large-amplitude "
-        "region needed to train an MLP for SSCHA",
+        help="maximum random displacement distance; one distance per supercell "
+        "is then drawn uniformly from [0, --amax) and raised to --amin when "
+        "smaller, spanning the large-amplitude region needed to train an MLP "
+        "for SSCHA",
     )
     parser.add_argument(
         "--rd",
@@ -264,8 +267,9 @@ def run() -> None:
         unitcells = sample_strained_cells(cell, dof, ranges, num=args.num, seed=seed)
         sampling = "random"
 
+    displacements = None
     if with_rd:
-        cells = build_random_displacement_supercells(
+        cells, displacements = build_random_displacement_supercells(
             unitcells,
             phonon.supercell_matrix,
             distance=args.displacement_distance,
@@ -318,6 +322,20 @@ def run() -> None:
     )
     write_strain_cells_manifest(MANIFEST_FILENAME, manifest)
 
+    if displacements is not None:
+        write_strain_cells(
+            STRUCTURE_FILENAME,
+            unitcells=unitcells,
+            supercells=cells,
+            displacements=displacements,
+            supercell_matrix=phonon.supercell_matrix,
+            phonopy_version=phonopy.__version__,
+            calculator=calculator,
+            length_unit=length_unit,
+            displacement_distance=args.displacement_distance,
+            displacement_distance_max=args.displacement_distance_max,
+        )
+
     print(
         f"Wrote {len(cells)} {kind}(s) as "
         f"{prefix}-00001 .. {prefix}-{len(cells):05d} in {calculator} format."
@@ -329,6 +347,8 @@ def run() -> None:
     if seed is not None:
         print(f"Random seed: {seed}")
     print(f"Provenance written to {MANIFEST_FILENAME}")
+    if displacements is not None:
+        print(f"Structures and displacements written to {STRUCTURE_FILENAME}")
 
 
 if __name__ == "__main__":
