@@ -10,7 +10,9 @@ from phonopy.qha.lattice_sampling import (
     build_strain_cells_manifest,
     get_free_lattice_dof,
     grid_strained_cells,
+    read_strain_cells,
     sample_strained_cells,
+    write_strain_cells,
     write_strain_cells_manifest,
 )
 from phonopy.structure.atoms import PhonopyAtoms
@@ -216,7 +218,7 @@ def test_random_displacement_supercells() -> None:
         cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3, seed=0
     )
     supercell_matrix = np.diag([2, 2, 2])
-    supercells = build_random_displacement_supercells(
+    supercells, _ = build_random_displacement_supercells(
         unitcells, supercell_matrix, distance=0.1, seed=0
     )
 
@@ -260,13 +262,13 @@ def test_random_displacement_supercells_distance_range() -> None:
         unitcells[0], supercell_matrix=supercell_matrix, log_level=0
     ).supercell
 
-    fixed = build_random_displacement_supercells(
+    fixed, _ = build_random_displacement_supercells(
         unitcells, supercell_matrix, distance=0.1, count=20, seed=0
     )
     for supercell in fixed:
         assert _displacement_norms(supercell, reference) == pytest.approx(0.1)
 
-    ranged = build_random_displacement_supercells(
+    ranged, _ = build_random_displacement_supercells(
         unitcells, supercell_matrix, distance=0.03, max_distance=1.5, count=20, seed=0
     )
     norms = np.concatenate([_displacement_norms(sc, reference) for sc in ranged])
@@ -364,7 +366,7 @@ def test_random_displacement_count_per_cell() -> None:
     cell = _tetragonal()
     dof = get_free_lattice_dof(cell)
     unitcells = sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3)
-    supercells = build_random_displacement_supercells(
+    supercells, _ = build_random_displacement_supercells(
         unitcells, np.diag([2, 2, 2]), distance=0.1, count=2, seed=0
     )
     assert len(supercells) == 6  # 3 cells x 2 each
@@ -451,3 +453,77 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
     write_strain_cells_manifest(path, manifest)
     loaded = yaml.safe_load(path.read_text())
     assert loaded == manifest
+
+
+def test_strain_cells_hdf5_round_trip(tmp_path):
+    """The written structures and displacements reproduce the supercells."""
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    unitcells = sample_strained_cells(
+        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3, seed=0
+    )
+    supercell_matrix = np.diag([2, 2, 2])
+    supercells, displacements = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.03, max_distance=0.6, count=2, seed=0
+    )
+
+    path = tmp_path / "strain_cells.hdf5"
+    write_strain_cells(
+        path,
+        unitcells=unitcells,
+        supercells=supercells,
+        displacements=displacements,
+        supercell_matrix=supercell_matrix,
+        phonopy_version="0.0.0",
+        calculator="vasp",
+        length_unit="angstrom",
+        displacement_distance=0.03,
+        displacement_distance_max=0.6,
+    )
+    loaded = read_strain_cells(path)
+
+    assert loaded.calculator == "vasp"
+    assert loaded.length_unit == "angstrom"
+    assert loaded.phonopy_version == "0.0.0"
+    assert loaded.displacement_distance == pytest.approx(0.03)
+    assert loaded.displacement_distance_max == pytest.approx(0.6)
+    np.testing.assert_array_equal(loaded.supercell_matrix, supercell_matrix)
+    assert loaded.displacements.shape == (6, 8 * len(cell), 3)
+    np.testing.assert_allclose(loaded.displacements, displacements)
+
+    # Ideal positions plus displacements reproduce every displaced supercell.
+    for i, supercell in enumerate(supercells):
+        np.testing.assert_allclose(loaded.lattices[i], supercell.cell, atol=1e-12)
+        positions = (
+            loaded.ideal_scaled_positions @ loaded.lattices[i] + loaded.displacements[i]
+        )
+        np.testing.assert_allclose(positions, supercell.positions, atol=1e-12)
+
+
+def test_strain_cells_hdf5_rejects_differing_fractional_coordinates(tmp_path):
+    """Storing one ideal-position array requires cells to share it."""
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    unitcells = sample_strained_cells(
+        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 2, seed=0
+    )
+    supercell_matrix = np.diag([2, 2, 2])
+    supercells, displacements = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.1, seed=0
+    )
+    shifted = unitcells[1].scaled_positions.copy()
+    shifted[0] += 0.01
+    unitcells[1] = PhonopyAtoms(
+        cell=unitcells[1].cell,
+        scaled_positions=shifted,
+        symbols=unitcells[1].symbols,
+    )
+
+    with pytest.raises(ValueError, match="fractional coordinates"):
+        write_strain_cells(
+            tmp_path / "strain_cells.hdf5",
+            unitcells=unitcells,
+            supercells=supercells,
+            displacements=displacements,
+            supercell_matrix=supercell_matrix,
+        )
