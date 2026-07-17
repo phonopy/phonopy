@@ -45,10 +45,13 @@ from numpy.typing import NDArray
 
 from phonopy.harmonic.displacement import Type2DisplacementDataset
 from phonopy.interface.pypolymlp import (
+    PypolymlpData,
     PypolymlpParams,
-    develop_mlp_by_pypolymlp,
+    PypolymlpStructureData,
+    develop_pypolymlp,
     evalulate_pypolymlp,
     load_pypolymlp,
+    parse_mlp_params,
     save_pypolymlp,
 )
 from phonopy.structure.atoms import PhonopyAtoms
@@ -98,11 +101,32 @@ class PhonopyMLP:
         params: PypolymlpParams | dict | str | None = None,
         test_size: float = 0.1,
     ) -> None:
-        """Develop MLP."""
-        self._mlp = develop_mlp_by_pypolymlp(
-            mlp_dataset,
-            supercell,
+        """Develop MLP from displacements of one supercell."""
+        self._mlp = develop_pypolymlp(
+            PypolymlpData.from_displacement_dataset(mlp_dataset, supercell),
+            params=None if params is None else parse_mlp_params(params),
+            test_size=test_size,
+            verbose=self._log_level - 1 > 0,
+        )
+
+    def develop_from_structures(
+        self,
+        train_data: PypolymlpStructureData,
+        test_data: PypolymlpStructureData | None = None,
+        params: PypolymlpParams | None = None,
+        test_size: float = 0.1,
+    ) -> None:
+        """Develop MLP from structures with individual lattices.
+
+        Unlike `develop`, the structures need not share one supercell, and
+        stress is used in the training. This suits datasets of strained
+        cells; see develop_pypolymlp.
+
+        """
+        self._mlp = develop_pypolymlp(
+            train_data,
+            test_data=test_data,
             params=params,
             test_size=test_size,
-            log_level=self._log_level,
+            verbose=self._log_level > 0,
         )

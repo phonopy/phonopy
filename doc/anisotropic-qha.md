@@ -78,7 +78,7 @@ flowchart TD
     EQ -->|"route B"| SCT["phonopy-strain-cells --rd"]
     SCT --> DFTT{{"DFT E / F / stress"}}
     DFTT --> MLPDS["phonopy-vasp-mlp-dataset"]
-    MLPDS --> DEV["develop_pypolymlp_from_structures"]
+    MLPDS --> DEV["develop_pypolymlp"]
     DEV --> MLP(["polymlp.yaml"])
 
     SGRID --> BUILD["phonopy-anisotropic-qha-dataset"]
@@ -349,18 +349,35 @@ the varying lattices and the stress/virial are used):
 ```python
 from phonopy.interface.pypolymlp import (
     PypolymlpParams,
-    develop_pypolymlp_from_structures,
+    develop_pypolymlp,
     read_pypolymlp_structure_dataset,
     save_pypolymlp,
 )
 
 data = read_pypolymlp_structure_dataset("polymlp_dataset.hdf5")
-n_test = max(1, len(data.structures) // 10)
-train, test = _split(data, len(data.structures) - n_test)  # your split helper
-polymlp = develop_pypolymlp_from_structures(
-    train, test, params=PypolymlpParams(), verbose=True
+polymlp = develop_pypolymlp(
+    data, params=PypolymlpParams(), test_size=0.1, verbose=True
 )
 save_pypolymlp(polymlp, "polymlp.yaml")
+```
+
+`develop_pypolymlp` picks the training mode from the dataset type: a
+`PypolymlpStructureData` like this one trains on independent structures, so the
+lattices may differ and the stress is used; a `PypolymlpData` trains on
+displacements of one supercell instead.
+
+`test_size` splits the dataset without shuffling: the first 90 percent trains
+and the rest tests. Pass `test_data` explicitly when it must stay fixed while
+the training dataset varies, as when measuring how many structures the MLP
+needs. Datasets slice like sequences, so a training-set size series needs no
+helper:
+
+```python
+from phonopy.interface.pypolymlp import split_pypolymlp_dataset
+
+train, test = split_pypolymlp_dataset(data, test_size=0.1)
+for n in (20, 40, 70, len(train)):
+    polymlp = develop_pypolymlp(train[:n], test, params=PypolymlpParams())
 ```
 
 Then build the intermediate dataset. `--from-mlp` needs only the `static-grid`
