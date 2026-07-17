@@ -279,6 +279,10 @@ def write_pypolymlp_structure_dataset(
     concatenated over structures with an ``n_atoms`` index, so structures
     with different numbers of atoms are supported.
 
+    All datasets are gzip compressed and stored in their full precision;
+    floating-point quantities stay double so that the training data keeps
+    the precision of the calculation it was read from.
+
     Parameters
     ----------
     data : PypolymlpStructureData
@@ -298,14 +302,14 @@ def write_pypolymlp_structure_dataset(
     positions = np.concatenate([cell.scaled_positions for cell in data.structures])
     forces = np.concatenate(data.forces)
     with h5py.File(filename, "w") as w:
-        w.create_dataset("n_atoms", data=n_atoms)
-        w.create_dataset("lattices", data=lattices)
-        w.create_dataset("numbers", data=numbers)
-        w.create_dataset("scaled_positions", data=positions)
-        w.create_dataset("energies", data=data.energies)
-        w.create_dataset("forces", data=forces)
+        w.create_dataset("n_atoms", data=n_atoms, compression="gzip")
+        w.create_dataset("lattices", data=lattices, compression="gzip")
+        w.create_dataset("numbers", data=numbers, compression="gzip")
+        w.create_dataset("scaled_positions", data=positions, compression="gzip")
+        w.create_dataset("energies", data=data.energies, compression="gzip")
+        w.create_dataset("forces", data=forces, compression="gzip")
         if data.stresses is not None:
-            w.create_dataset("stresses", data=data.stresses)
+            w.create_dataset("stresses", data=data.stresses, compression="gzip")
 
 
 def read_pypolymlp_structure_dataset(

@@ -162,8 +162,9 @@ cells are made and, without `--rd`, write them as strained **unit cells**
 `unitcell-NNNNN` -- what this step (the static grid) needs. Adding `--rd M`
 instead writes M random-displacement **supercells** per strained cell,
 `supercell-NNNNN` (that is the route-B, step 2B use, not this step);
-`--amplitude` sets their displacement distance. Either way a `strain_cells.yaml`
-provenance manifest is written.
+`--amplitude` sets their displacement distance, or `--amin` / `--amax` draw it
+from a range (see step 2B). Either way a `strain_cells.yaml` provenance
+manifest is written.
 
 For each `unitcell-*`:
 
@@ -318,15 +319,21 @@ badly at its domain edges).
     -n 100 --random-seed 1 --rd 1 --amplitude 0.03
 # -> supercell-00001 .. supercell-00100 ; run a single-point VASP (ISIF >= 2)
 #    for each, then assemble the dataset (stress included):
-% phonopy-vasp-mlp-dataset vasprun-*.xml -o polymlp_dataset.hdf5
+% phonopy-vasp-mlp-dataset disp-*/vaspout.h5 -o polymlp_dataset.hdf5
 ```
 
-Adding `--amax` samples the displacement distance uniformly from
-`[--amin, --amax]` instead of fixing it (the distance is drawn per supercell;
-within one supercell every atom moves by that same distance). A fixed small
-distance is what harmonic force constants need and is the default here. The
-range form matters when the MLP is to be used beyond the harmonic regime, e.g.
-for the temperature-dependent force constants of {ref}`mlp-sscha`, whose
+`phonopy-vasp-mlp-dataset` reads `vaspout.h5` or `vasprun.xml`. Prefer
+`vaspout.h5`: it carries the full precision of the calculation, whereas
+`vasprun.xml` is written with six digits.
+
+Adding `--amax` makes the displacement distance random instead of fixed (the
+distance is drawn per supercell; within one supercell every atom moves by that
+same distance). The draw is uniform over `[0, --amax)` and is raised to
+`--amin` when smaller, so the distances are uniform over `[--amin, --amax)`
+except for the weight `--amin / --amax` piled up exactly at `--amin`. A fixed
+small distance is what harmonic force constants need and is the default here.
+The range form matters when the MLP is to be used beyond the harmonic regime,
+e.g. for the temperature-dependent force constants of {ref}`mlp-sscha`, whose
 supercells at temperature reach far larger displacements than 0.03 Angstrom;
 an MLP trained only near equilibrium would extrapolate there. Then train over
 both the lattice box and the amplitude range at once:
