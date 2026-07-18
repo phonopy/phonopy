@@ -95,8 +95,19 @@ def get_options() -> Namespace:
         metavar="DISTANCE",
         help="maximum random displacement distance; one distance per supercell "
         "is then drawn uniformly from [0, --amax) and raised to --amin when "
-        "smaller, spanning the large-amplitude region needed to train an MLP "
-        "for SSCHA",
+        "smaller, which reserves a share of wholly near-equilibrium "
+        "supercells, spanning the large-amplitude region needed to train an "
+        "MLP for SSCHA (see --amax-per-atom for the per-atom draw)",
+    )
+    parser.add_argument(
+        "--amax-per-atom",
+        dest="displacement_distance_per_atom",
+        action="store_true",
+        help="with --amax, draw the distance per atom instead of per supercell, "
+        "uniformly over [--amin, --amax), so every supercell spans the whole "
+        "range; this decorrelates the displacement amplitude from the lattice "
+        "strain, which matters when few supercells are generated per strained "
+        "cell. --amin is a sampling bound here rather than a floor",
     )
     parser.add_argument(
         "--rd",
@@ -250,6 +261,8 @@ def run() -> None:
             and args.displacement_distance_max <= args.displacement_distance
         ):
             sys.exit("Error: --amax must be larger than --amin.")
+    elif args.displacement_distance_per_atom:
+        sys.exit("Error: --amax-per-atom applies to --amax; add --amax.")
     needs_random = args.grid is None or with_rd
     if args.random_seed is not None:
         seed = args.random_seed
@@ -274,6 +287,7 @@ def run() -> None:
             phonon.supercell_matrix,
             distance=args.displacement_distance,
             max_distance=args.displacement_distance_max,
+            distance_per_atom=args.displacement_distance_per_atom,
             count=args.random_displacements,
             seed=seed,
         )
@@ -311,6 +325,7 @@ def run() -> None:
         grid_shape=grid_shape,
         displacement_distance=args.displacement_distance,
         displacement_distance_max=args.displacement_distance_max,
+        displacement_distance_per_atom=args.displacement_distance_per_atom,
         random_displacements=args.random_displacements,
         symprec=args.symprec,
         seed=seed,
@@ -334,6 +349,7 @@ def run() -> None:
             length_unit=length_unit,
             displacement_distance=args.displacement_distance,
             displacement_distance_max=args.displacement_distance_max,
+            displacement_distance_per_atom=args.displacement_distance_per_atom,
         )
 
     print(

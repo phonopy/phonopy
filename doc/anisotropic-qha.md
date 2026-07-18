@@ -343,6 +343,34 @@ both the lattice box and the amplitude range at once:
     -n 100 --random-seed 1 --rd 1 --amin 0.03 --amax 1.5
 ```
 
+With `--rd 1` as above, each strained cell receives a single distance, so
+which amplitude lands on which lattice is left to chance and the two can end
+up correlated -- large amplitudes falling mostly on large-volume cells, say,
+which the MLP then cannot separate from the volume dependence itself. Adding
+`--amax-per-atom` draws the distance per atom instead, so every supercell
+covers the whole `[--amin, --amax)` range internally and the amplitude
+coverage is complete at every lattice point:
+
+```bash
+% phonopy-strain-cells phonopy_disp.yaml --a 3.15 3.25 --c 5.10 5.30 \
+    -n 100 --random-seed 1 --rd 1 --amin 0.03 --amax 1.5 --amax-per-atom
+```
+
+The per-atom draw is uniform over `[--amin, --amax)` directly, with no weight
+piled up at `--amin`. The pile-up the per-supercell draw produces is not an
+implementation detail to be carried over: it reserves a share of supercells
+whose atoms all sit near equilibrium, which is a useful population to have in
+the training set. Drawn per atom, the same rule would instead put a spike of
+identical displacement magnitudes inside every supercell, which has no such
+use, so `--amin` becomes a genuine lower bound there rather than a floor.
+
+The price of the per-atom draw is that a supercell no longer has one amplitude
+that labels it, which is why the per-supercell draw remains the default: it
+keeps each supercell a shell of one amplitude in configuration space,
+convenient when the structures are to be grouped by amplitude. For training an
+MLP over a lattice box, the per-atom draw is usually the better use of a given
+number of supercells.
+
 Train the MLP with energies, forces and stresses (structure-based training, so
 the varying lattices and the stress/virial are used):
 

@@ -338,6 +338,7 @@ def build_random_displacement_supercells(
     supercell_matrix: NDArray[np.int64] | Sequence[Sequence[int]],
     distance: float | None = None,
     max_distance: float | None = None,
+    distance_per_atom: bool = False,
     count: int = 1,
     seed: int | None = None,
 ) -> tuple[list[PhonopyAtoms], NDArray[np.double]]:
@@ -351,8 +352,21 @@ def build_random_displacement_supercells(
 
     Without max_distance every atom is displaced by exactly ``distance``, which
     suits training for harmonic force constants. Giving max_distance instead
-    draws one distance per supercell, spanning the large-amplitude region a
+    draws a random distance, spanning the large-amplitude region a
     temperature-dependent (SSCHA) calculation visits; see `max_distance`.
+
+    With max_distance, distance_per_atom decides how the amplitude axis is
+    sampled against the strain axis. Drawn per supercell (the default), a
+    strained cell gets only ``count`` amplitudes, so with a small count the
+    amplitude and the strain can end up correlated by chance -- large
+    amplitudes landing mostly on large-volume cells, which an MLP cannot then
+    separate. Drawn per atom, every supercell covers the whole amplitude range
+    internally, so the coverage is complete at every strain even for
+    ``count = 1``, at the cost of a supercell no longer having one amplitude
+    that labels it. It also samples [distance, max_distance) directly instead
+    of flooring at ``distance``: the reserved weight at the floor buys a share
+    of wholly near-equilibrium supercells only when the distance is drawn per
+    supercell.
 
     Parameters
     ----------
@@ -367,9 +381,14 @@ def build_random_displacement_supercells(
         distance.
     max_distance : float, optional
         Upper bound of the random displacement distance. One distance is drawn
-        per supercell and shared by all its atoms, from the uniform
-        distribution over [0, max_distance) and then raised to ``distance``
-        when smaller. When None, the distance is fixed to ``distance``.
+        per supercell from the uniform distribution over [0, max_distance) and
+        then raised to ``distance`` when smaller. When None, the distance is
+        fixed to ``distance``.
+    distance_per_atom : bool, optional
+        Requires ``max_distance``. Draw the random distance per atom rather
+        than per supercell, uniformly over [distance, max_distance). Default
+        is False; see the note below on which to use when the lattice is
+        strained.
     count : int, optional
         Number of random-displacement supercells per unit cell (default 1).
     seed : int, optional
@@ -394,6 +413,7 @@ def build_random_displacement_supercells(
         phonon.generate_displacements(
             distance=distance,
             max_distance=max_distance,
+            distance_per_atom=distance_per_atom,
             number_of_snapshots=count,
             random_seed=None if seed is None else seed + i,
         )
@@ -418,6 +438,7 @@ def build_strain_cells_manifest(
     grid_shape: list[int] | None,
     displacement_distance: float | None,
     displacement_distance_max: float | None,
+    displacement_distance_per_atom: bool,
     random_displacements: int | None,
     symprec: float,
     seed: int | None,
@@ -465,6 +486,9 @@ def build_strain_cells_manifest(
     displacement_distance_max : float or None
         Maximum random-displacement distance, or None when the distance is
         fixed rather than sampled from a range.
+    displacement_distance_per_atom : bool
+        Whether the random distance was drawn per atom rather than per
+        supercell.
     random_displacements : int or None
         Number of random-displacement supercells per cell, or None for plain
         unit cells.
@@ -522,6 +546,7 @@ def build_strain_cells_manifest(
                 if displacement_distance_max is None
                 else float(displacement_distance_max)
             ),
+            "displacement_distance_per_atom": bool(displacement_distance_per_atom),
             "random_displacements": (
                 None if random_displacements is None else int(random_displacements)
             ),
@@ -600,6 +625,9 @@ class StrainCells:
     displacement_distance_max: float | None = None
     """Upper bound of the random displacement distance."""
 
+    displacement_distance_per_atom: bool = False
+    """Whether the random distance was drawn per atom rather than per supercell."""
+
 
 def write_strain_cells(
     filename: str | os.PathLike,
@@ -613,6 +641,7 @@ def write_strain_cells(
     length_unit: str = "angstrom",
     displacement_distance: float | None = None,
     displacement_distance_max: float | None = None,
+    displacement_distance_per_atom: bool = False,
 ) -> None:
     """Write structures and displacements of a phonopy-strain-cells run.
 
@@ -650,6 +679,9 @@ def write_strain_cells(
         given. Default is None.
     displacement_distance_max : float or None, optional
         Upper bound of the random displacement distance. Default is None.
+    displacement_distance_per_atom : bool, optional
+        Whether the random distance was drawn per atom rather than per
+        supercell. Default is False.
 
     """
     try:
@@ -691,6 +723,9 @@ def write_strain_cells(
             w.attrs["displacement_distance"] = float(displacement_distance)
         if displacement_distance_max is not None:
             w.attrs["displacement_distance_max"] = float(displacement_distance_max)
+            w.attrs["displacement_distance_per_atom"] = bool(
+                displacement_distance_per_atom
+            )
         w.create_dataset(
             "supercell_matrix", data=np.array(supercell_matrix, dtype="int64")
         )
@@ -726,6 +761,8 @@ def read_strain_cells(filename: str | os.PathLike) -> StrainCells:
         phonopy_version = r.attrs.get("phonopy_version")
         distance = r.attrs.get("displacement_distance")
         distance_max = r.attrs.get("displacement_distance_max")
+        # Absent in files written before the per-atom mode existed.
+        per_atom = r.attrs.get("displacement_distance_per_atom", False)
         return StrainCells(
             ideal_scaled_positions=r["ideal_scaled_positions"][:],
             lattices=r["lattices"][:],
@@ -740,4 +777,5 @@ def read_strain_cells(filename: str | os.PathLike) -> StrainCells:
             displacement_distance_max=(
                 None if distance_max is None else float(distance_max)
             ),
+            displacement_distance_per_atom=bool(per_atom),
         )

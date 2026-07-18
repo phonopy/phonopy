@@ -324,16 +324,14 @@ def get_random_displacements_dataset(
     random_seed: int | None = None,
     is_plusminus: bool = False,
     max_distance: float | None = None,
+    distance_per_atom: bool = False,
 ) -> NDArray[np.double]:
     """Return supercell displacements in random directions.
 
     Every atom is displaced in a direction drawn uniformly on the unit sphere.
-    The displacement distance is drawn once per supercell and shared by all its
-    atoms, not drawn per atom, so within one supercell all atoms are displaced
-    by the same distance in direct space.
-
     The distance is fixed to `distance` unless `max_distance` is given, in
-    which case it is random; see `max_distance` for its distribution.
+    which case it is random; see `max_distance` for its distribution and
+    `distance_per_atom` for whether it is drawn per supercell or per atom.
 
     Parameters
     ----------
@@ -354,13 +352,26 @@ def get_random_displacements_dataset(
         total number of sets of displacements is `2 * number_of_snapshots`.
         Default is False.
     max_distance : float or None, optional
-        Upper bound of the random displacement distance. The distance of each
-        supercell is drawn from the uniform distribution over
-        [0, max_distance) and is then raised to `distance` when smaller. The
-        distances are therefore uniform over [distance, max_distance) except
-        for the weight `distance / max_distance` piled up exactly at
-        `distance`. `distance` acts as a floor here, not as a sampling bound.
-        When None, the distance is fixed to `distance`. Default is None.
+        Upper bound of the random displacement distance. One distance is drawn
+        from the uniform distribution over [0, max_distance) and is then raised
+        to `distance` when smaller, so the distances are uniform over
+        [distance, max_distance) except for the weight
+        `distance / max_distance` piled up exactly at `distance`. `distance`
+        acts as a floor here, not as a sampling bound -- unless
+        `distance_per_atom` is True, where it is the lower sampling bound and
+        no weight piles up. When None, the distance is fixed to `distance`.
+        Default is None.
+    distance_per_atom : bool, optional
+        Requires `max_distance`. When False, one distance is drawn per
+        supercell and shared by all its atoms, so a supercell is a shell of
+        one amplitude in configuration space, and the weight at `distance`
+        reserves a share of wholly near-equilibrium supercells. When True, a
+        distance is drawn independently for every atom, uniformly over
+        [distance, max_distance), so every supercell spans the whole range
+        internally. The floor is dropped in that case because per atom it
+        would only put a spike of identical displacement magnitudes in every
+        supercell rather than reserving near-equilibrium structures. Default
+        is False.
 
     Returns
     -------
@@ -370,6 +381,9 @@ def get_random_displacements_dataset(
         With `is_plusminus` True, shape[0] is `2 * number_of_snapshots`.
 
     """
+    if distance_per_atom and max_distance is None:
+        raise ValueError("distance_per_atom requires max_distance.")
+
     if np.issubdtype(type(random_seed), np.integer):
         rng = np.random.default_rng(seed=random_seed)
     else:
@@ -388,16 +402,26 @@ def get_random_displacements_dataset(
             raise RuntimeError(
                 "Random displacements generation failed. max_distance is too small."
             )
-        supercell_disps = np.zeros(
-            (num_supercells, num_atoms, 3), dtype="double", order="C"
-        )
         directions = _get_random_directions(num_atoms * num_supercells, rng).reshape(
             num_supercells, num_atoms, 3
         )
-        dists = rng.random(num_supercells) * max_distance
-        dists[dists < distance] = distance
-        for i, (dirs, dist) in enumerate(zip(directions, dists, strict=True)):
-            supercell_disps[i] = dirs * dist
+        # Shape (num_supercells, 1) draws and broadcasts one distance over the
+        # atoms of a supercell; (num_supercells, num_atoms) draws one per atom.
+        # Both consume the same random stream as a flat draw of their size.
+        shape = (num_supercells, num_atoms if distance_per_atom else 1)
+        if distance_per_atom:
+            # Sample [distance, max_distance) directly. Flooring instead would
+            # pile weight exactly at `distance`, which is meaningful per
+            # supercell -- it reserves a share of wholly near-equilibrium
+            # supercells -- but per atom only plants a spike of identical
+            # displacement magnitudes in every supercell.
+            dists = distance + rng.random(shape) * (max_distance - distance)
+        else:
+            dists = rng.random(shape) * max_distance
+            dists[dists < distance] = distance
+        supercell_disps = np.array(
+            directions * dists[:, :, None], dtype="double", order="C"
+        )
 
     if is_plusminus is True:
         supercell_disps = np.array(
@@ -483,6 +507,7 @@ def generate_random_displacements(
     is_plusminus: bool = False,
     random_seed: int | None = None,
     max_distance: float | None = None,
+    distance_per_atom: bool = False,
 ) -> Type2DisplacementDataset:
     """Return a dataset of random-direction displacements at a fixed distance.
 
@@ -511,12 +536,16 @@ def generate_random_displacements(
         Default is None.
     max_distance : float or None, optional
         Upper bound of the displacement distance. One distance is drawn per
-        supercell and shared by all its atoms, from the uniform distribution
-        over [0, max_distance), and is then raised to `distance` when smaller.
-        The distances are therefore uniform over [distance, max_distance)
-        except for the weight distance / max_distance piled up exactly at
-        `distance`. When None, the distance is fixed to `distance`. Default
-        is None.
+        supercell from the uniform distribution over [0, max_distance) and is
+        then raised to `distance` when smaller, so the distances are uniform
+        over [distance, max_distance) except for the weight
+        distance / max_distance piled up exactly at `distance`. When None, the
+        distance is fixed to `distance`. Default is None.
+    distance_per_atom : bool, optional
+        Requires `max_distance`. Draw the random distance per atom rather than
+        per supercell, uniformly over [distance, max_distance) and without the
+        weight at `distance`, so every supercell spans the whole range
+        internally. Default is False.
 
     Returns
     -------
@@ -532,6 +561,7 @@ def generate_random_displacements(
         random_seed=random_seed,
         is_plusminus=is_plusminus,
         max_distance=max_distance,
+        distance_per_atom=distance_per_atom,
     )
     dataset: Type2DisplacementDataset = {"displacements": d}
     if random_seed is not None:
