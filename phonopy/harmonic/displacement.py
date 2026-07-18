@@ -416,3 +416,168 @@ def _get_random_directions(
     r = np.linalg.norm(xy, axis=0)
     condition = r > 1e-10
     return (xy[:, condition][:, :num_atoms] / r[condition][:num_atoms]).T
+
+
+def generate_systematic_displacements(
+    supercell: PhonopyAtoms,
+    symmetry: Symmetry,
+    distance: float | None = None,
+    is_plusminus: Literal["auto"] | bool = "auto",
+    is_diagonal: bool = True,
+    is_trigonal: bool = False,
+    log_level: int = 0,
+) -> Type1DisplacementDataset:
+    """Return a dataset of systematic finite-difference displacements.
+
+    One atom is displaced at a time, along the symmetrically inequivalent
+    directions found from the site symmetry, which is the displacement
+    pattern the built-in finite-difference force-constants calculation
+    consumes.
+
+    Parameters
+    ----------
+    supercell : PhonopyAtoms
+        Supercell the displacements are generated for.
+    symmetry : Symmetry
+        Symmetry of the supercell, used to reduce the displacements to the
+        symmetrically inequivalent ones.
+    distance : float, optional
+        Displacement distance. Unit is the same as that used for the crystal
+        structure. None uses 0.01. Default is None.
+    is_plusminus : 'auto', True, or False, optional
+        For each atom, generate displacements in one direction (False), in
+        both directions (True), or in both directions only when symmetry
+        requires it ('auto'). Default is 'auto'.
+    is_diagonal : bool, optional
+        When False, displacements are made only along basis vectors; when
+        True, displacements may be off the basis vectors if doing so reduces
+        the number of displacements by symmetry. Default is True.
+    is_trigonal : bool, optional
+        Exists only for testing purposes. Default is False.
+    log_level : int, optional
+        Verbosity of the site-symmetry report. Default is 0.
+
+    Returns
+    -------
+    Type1DisplacementDataset
+        Dataset in the type-1 format, one displaced atom per entry.
+
+    """
+    _distance = 0.01 if distance is None else distance
+    displacement_directions = get_least_displacements(
+        symmetry,
+        is_plusminus=is_plusminus,
+        is_diagonal=is_diagonal,
+        is_trigonal=is_trigonal,
+        log_level=log_level,
+    )
+    return directions_to_displacement_dataset(
+        displacement_directions, _distance, supercell
+    )
+
+
+def generate_random_displacements(
+    supercell: PhonopyAtoms,
+    number_of_snapshots: int,
+    distance: float | None = None,
+    is_plusminus: bool = False,
+    random_seed: int | None = None,
+    max_distance: float | None = None,
+) -> Type2DisplacementDataset:
+    """Return a dataset of random-direction displacements at a fixed distance.
+
+    All atoms of a supercell are displaced simultaneously in random
+    directions, which is the displacement pattern an external force-constants
+    calculator (symfc, ALM) or a machine-learning-potential training set
+    consumes. The distance is the same for every atom of a supercell unless
+    max_distance is given; see `max_distance`.
+
+    Parameters
+    ----------
+    supercell : PhonopyAtoms
+        Supercell the displacements are generated for. Only its number of
+        atoms is used.
+    number_of_snapshots : int
+        Number of supercells with random displacements to generate.
+    distance : float, optional
+        Displacement distance. Unit is the same as that used for the crystal
+        structure. With max_distance given, this is not the distance itself
+        but its floor; see `max_distance`. None uses 0.01. Default is None.
+    is_plusminus : bool, optional
+        When True, the opposite displacements are concatenated, so the number
+        of generated supercells is 2 * number_of_snapshots. Default is False.
+    random_seed : int or None, optional
+        Random seed. It is recorded in the returned dataset when given.
+        Default is None.
+    max_distance : float or None, optional
+        Upper bound of the displacement distance. One distance is drawn per
+        supercell and shared by all its atoms, from the uniform distribution
+        over [0, max_distance), and is then raised to `distance` when smaller.
+        The distances are therefore uniform over [distance, max_distance)
+        except for the weight distance / max_distance piled up exactly at
+        `distance`. When None, the distance is fixed to `distance`. Default
+        is None.
+
+    Returns
+    -------
+    Type2DisplacementDataset
+        Dataset in the type-2 format, carrying the random seed when given.
+
+    """
+    _distance = 0.01 if distance is None else distance
+    d = get_random_displacements_dataset(
+        number_of_snapshots,
+        len(supercell),
+        _distance,
+        random_seed=random_seed,
+        is_plusminus=is_plusminus,
+        max_distance=max_distance,
+    )
+    dataset: Type2DisplacementDataset = {"displacements": d}
+    if random_seed is not None:
+        dataset["random_seed"] = random_seed
+    return dataset
+
+
+def estimate_number_of_snapshots(
+    supercell: PhonopyAtoms,
+    symmetry: Symmetry,
+    max_distance: float | None = None,
+    number_estimation_factor: float | None = None,
+) -> int:
+    """Return an estimate of the number of random-displacement snapshots.
+
+    symfc counts the supercells needed to determine the second-order force
+    constants, and that count is multiplied by a safety factor because the
+    estimate assumes an ideal, noise-free fit.
+
+    Parameters
+    ----------
+    supercell : PhonopyAtoms
+        Supercell the displacements are generated for.
+    symmetry : Symmetry
+        Symmetry of the supercell.
+    max_distance : float or None, optional
+        Upper bound of the random displacement distance, used only to pick
+        the default safety factor. Random distances spread the data over a
+        range of amplitudes, so more snapshots are needed. Default is None.
+    number_estimation_factor : float, optional
+        Safety factor multiplying the symfc estimate. None uses 8 when
+        max_distance is given and 4 otherwise. Default is None.
+
+    Returns
+    -------
+    int
+        Estimated number of snapshots.
+
+    """
+    from phonopy.interface.symfc import SymfcFCSolver
+
+    number_of_snapshots = SymfcFCSolver(
+        supercell, symmetry=symmetry
+    ).estimate_numbers_of_supercells(orders=[2])[2]
+    if number_estimation_factor is None:
+        number_of_snapshots *= 8 if max_distance is not None else 4
+    else:
+        number_of_snapshots = int(number_of_snapshots * number_estimation_factor)
+    return number_of_snapshots
