@@ -186,6 +186,68 @@ def test_tio2_random_disp_with_random_max_distance(ph_tio2: Phonopy):
     assert (dists < 0.1 + 1e-8).all()
 
 
+def test_tio2_random_disp_distance_per_atom(ph_tio2: Phonopy):
+    """Test per-atom random distance of TiO2.
+
+    Every supercell has to span a range of distances internally, whereas the
+    default per-supercell draw gives all atoms of a supercell one distance.
+    The distances are sampled over [distance, max_distance) directly, so
+    unlike the per-supercell draw no weight piles up at `distance`.
+
+    """
+    ph = ph_tio2.copy()
+
+    n_snapshots = 20
+    ph.generate_displacements(
+        number_of_snapshots=n_snapshots,
+        distance=0.01,
+        max_distance=0.1,
+        distance_per_atom=True,
+        random_seed=1,
+    )
+    d = ph.displacements
+    assert len(d) == n_snapshots
+    dists = np.linalg.norm(d, axis=2)
+    assert (dists < 0.1 + 1e-8).all() and (dists > 0.01 - 1e-8).all()
+    # Spread within every supercell, not just across supercells.
+    assert (dists.max(axis=1) - dists.min(axis=1) > 0.01).all()
+    # No pile-up at the lower bound: flooring would put a weight of
+    # 0.01 / 0.1 = 0.1 of the atoms exactly there.
+    assert (dists <= 0.01 + 1e-8).mean() < 0.01
+
+    ph.generate_displacements(
+        number_of_snapshots=n_snapshots,
+        distance=0.01,
+        max_distance=0.1,
+        random_seed=1,
+    )
+    per_cell = np.linalg.norm(ph.displacements, axis=2)
+    np.testing.assert_allclose(per_cell.max(axis=1), per_cell.min(axis=1), atol=1e-12)
+
+
+def test_tio2_random_disp_distance_per_atom_requires_max_distance(ph_tio2: Phonopy):
+    """Test that per-atom random distance is rejected without max_distance."""
+    ph = ph_tio2.copy()
+
+    with pytest.raises(ValueError):
+        ph.generate_displacements(number_of_snapshots=2, distance_per_atom=True)
+
+
+def test_tio2_random_disp_per_supercell_unchanged(ph_tio2: Phonopy):
+    """Test that the default per-supercell draw is unaffected by the new option.
+
+    Pins the random stream so that adding distance_per_atom cannot silently
+    change the displacements a given seed produces.
+
+    """
+    ph = ph_tio2.copy()
+    ph.generate_displacements(
+        number_of_snapshots=3, distance=0.01, max_distance=0.1, random_seed=1
+    )
+    dists = np.linalg.norm(ph.displacements, axis=2)[:, 0]
+    np.testing.assert_allclose(dists, [0.02414535, 0.05495249, 0.08854725], atol=1e-8)
+
+
 def test_tio2_random_disp_plusminus(ph_tio2: Phonopy):
     """Test random plus-minus displacements of TiO2.
 

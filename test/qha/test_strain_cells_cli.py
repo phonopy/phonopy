@@ -185,6 +185,74 @@ def test_cli_sample_rd_supercells(tmp_path, monkeypatch) -> None:
     assert manifest["output"]["num_cells"] == 6
 
 
+def test_cli_amax_per_atom(tmp_path, monkeypatch) -> None:
+    """--amax-per-atom is recorded and gives each atom its own distance."""
+    yaml = pytest.importorskip("yaml")
+    h5py = pytest.importorskip("h5py")
+    _write_disp_yaml(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "phonopy-strain-cells",
+            "phonopy_disp.yaml",
+            "--a",
+            "3.9",
+            "4.1",
+            "--c",
+            "5.8",
+            "6.2",
+            "-n",
+            "2",
+            "--random-seed",
+            "0",
+            "--amin",
+            "0.05",
+            "--amax",
+            "0.3",
+            "--amax-per-atom",
+            "--rd",
+        ],
+    )
+
+    run()
+
+    manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
+    assert manifest["parameters"]["displacement_distance_per_atom"] is True
+    with h5py.File(tmp_path / "strain_cells.hdf5", "r") as f:
+        assert f.attrs["displacement_distance_per_atom"]
+        dists = np.linalg.norm(f["displacements"][:], axis=2)
+    assert (dists < 0.3 + 1e-8).all() and (dists > 0.05 - 1e-8).all()
+    # Each supercell spans a range of distances rather than one shared value.
+    assert (dists.max(axis=1) - dists.min(axis=1) > 0.05).all()
+
+
+def test_cli_rejects_amax_per_atom_without_amax(tmp_path, monkeypatch) -> None:
+    """--amax-per-atom is meaningless without --amax."""
+    _write_disp_yaml(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "phonopy-strain-cells",
+            "phonopy_disp.yaml",
+            "--a",
+            "3.9",
+            "4.1",
+            "--c",
+            "5.8",
+            "6.2",
+            "--amax-per-atom",
+            "--rd",
+        ],
+    )
+
+    with pytest.raises(SystemExit):
+        run()
+
+
 def test_cli_writes_manifest(tmp_path, monkeypatch, capsys) -> None:
     """Sampling writes a provenance manifest recording a resolved seed."""
     yaml = pytest.importorskip("yaml")
