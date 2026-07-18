@@ -14,8 +14,13 @@ import pytest
 import yaml
 
 import phonopy
-from phonopy.cui.phonopy_argparse import PhonopyMockArgs
-from phonopy.cui.phonopy_script import main
+from phonopy.cui.phonopy_argparse import (
+    PhonopyMockArgs,
+    get_init_parser,
+    get_run_parser,
+)
+from phonopy.cui.phonopy_script import _detect_init_operation, main
+from phonopy.cui.settings import PhonopySettings
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpFileNotFoundError
 from phonopy.structure.atomic_data import set_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
@@ -1174,6 +1179,86 @@ def test_phonopy_init_mode_requires_init_flag(capsys: pytest.CaptureFixture[str]
             assert excinfo.value.code == 1
             captured = capsys.readouterr()
             assert "No setup operation" in captured.out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_run_parser_accepts_displacement_flag():
+    """The phonopy (run) parser accepts -d instead of rejecting it at parse time.
+
+    -d is a shared flag now: the run parser must parse it (so --pypolymlp -d can
+    proceed), deferring the setup-operation decision to the settings-level gate.
+
+    """
+    parser, _ = get_run_parser()
+    args = parser.parse_args(["phonopy_disp.yaml", "-d", "--pypolymlp"])
+    assert args.is_displacement is True
+    assert args.use_pypolymlp is True
+
+    args = parser.parse_args(["phonopy_disp.yaml", "-d"])
+    assert args.is_displacement is True
+
+
+def test_init_parser_still_accepts_displacement_flag():
+    """The phonopy-init parser continues to accept -d after it became shared."""
+    parser, _ = get_init_parser()
+    args = parser.parse_args(["-c", "POSCAR", "--dim", "2", "2", "2", "-d"])
+    assert args.is_displacement is True
+
+
+def test_detect_init_operation_displacements_with_pypolymlp():
+    """-d combined with --pypolymlp is a run operation, not a setup operation.
+
+    Plain -d generates displacement supercells and exits (setup/init), but with
+    --pypolymlp it drives displacement generation followed by MLP force
+    evaluation and a phonon calculation, so it must not be flagged as init-only.
+
+    """
+    settings = PhonopySettings()
+    settings.create_displacements = True
+
+    assert _detect_init_operation(False, settings) == "-d"
+
+    settings.use_pypolymlp = True
+    assert _detect_init_operation(False, settings) is None
+
+
+def test_phonopy_run_mode_accepts_pypolymlp_displacements(
+    capsys: pytest.CaptureFixture[str],
+):
+    """Phonopy in mode='run' accepts -d when combined with --pypolymlp.
+
+    Plain -d is rejected in run mode (see test_phonopy_run_mode_rejects_init_flag),
+    but --pypolymlp -d is a phonon-calculation workflow and must pass the
+    setup-operation guard, entering the pypolymlp displacement-creation path.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_disp_NaCl.yaml",
+                is_displacement=True,
+                use_pypolymlp=True,
+            )
+            argparse_control["mode"] = "run"
+            with (
+                patch("phonopy.cui.phonopy_script.prepare_dataset_by_pypolymlp"),
+                patch("phonopy.cui.phonopy_script.develop_or_load_pypolymlp"),
+            ):
+                with pytest.raises(SystemExit):
+                    main(**argparse_control)
+            # The run-mode gate must not reject the flag combination. Any exit
+            # comes from later stages, so only assert the guard was passed.
+            captured = capsys.readouterr()
+            assert "setup operation" not in captured.out
+            assert "Pypolymlp displacements creation mode" in captured.out
+
+            for created_filename in ("phonopy.yaml",):
+                file_path = pathlib.Path(created_filename)
+                if file_path.exists():
+                    file_path.unlink()
         finally:
             os.chdir(original_cwd)
 
