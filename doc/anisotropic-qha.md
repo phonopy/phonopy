@@ -9,9 +9,9 @@ expansion of a crystal by directly optimizing the lattice parameters on a grid,
 rather than the 1D volume-path QHA. It covers two interchangeable phonon
 sources that share the same downstream pipeline:
 
-- **full-DFT phonons**: force sets from displaced supercells (a machine-learning
-  potential is not required); and
-- **MLP phonons**: force sets from a pypolymlp trained on first-principles
+- **calculator phonons**: force sets from displaced supercells (a
+  machine-learning potential is not required); and
+- **MLP phonons**: force sets from a pypolymlp trained on calculator
   energies, forces and stresses (cheap dense sampling).
 
 The free lattice degrees of freedom are detected from the symmetry: one for
@@ -29,19 +29,19 @@ Step 4 gives the one-command analysis; the API script beneath it is an
 equivalent alternative for finer control.
 
 Prerequisites: `h5py`, `symfc`, a VASP setup (VASP is the supported
-first-principles source), and, for the MLP route, `pypolymlp`.
+calculator), and, for the MLP route, `pypolymlp`.
 
 All lengths are in the native length unit of the input cell (Angstrom for
 VASP); no unit conversion is applied by the tools.
 
 ```{note}
-This page is written with VASP in mind, the only first-principles interface this
+This page is written with VASP in mind, the only calculator interface this
 workflow has been exercised with. The commands and helper scripts assume VASP
 inputs and outputs (`POSCAR`, `vasprun.xml`, `vaspout.h5`); other calculators are
 not tested here.
 ```
 
-## Design principle: U is always DFT, the MLP is phonons-only
+## Design principle: U is always from the calculator, the MLP is phonons-only
 
 The free energy minimized per temperature is
 
@@ -51,7 +51,7 @@ F(a, c; T) = U(a, c) + F_\mathrm{ph}(a, c; T) + F_\mathrm{el}(a, c; T),
 
 where the electronic term {math}`F_\mathrm{el}` is optional. The static internal
 energy {math}`U(a, c)` (and any elastic response) sets the valley *shape* and is
-sensitive; it is **always taken from DFT** on the static grid. The
+sensitive; it is **always taken from the calculator** on the static grid. The
 machine-learning potential, when used, supplies **only the phonon force
 constants** {math}`F_\mathrm{ph}(a, c; T)`, where the quantity is smooth and
 cheap. Never take {math}`U` from the MLP. This keeps everything single-functional
@@ -59,8 +59,8 @@ and avoids the static-surface error that can flip {math}`\alpha_c` negative.
 
 ## Overview
 
-The boxes are jobs run by phonopy tools or the API, the hexagons are DFT
-calculations, and the rounded nodes are input and intermediate data. Both phonon
+The boxes are jobs run by phonopy tools or the API, the hexagons are calculator
+runs, and the rounded nodes are input and intermediate data. Both phonon
 routes converge on the same intermediate dataset and analysis.
 
 ```{mermaid}
@@ -68,16 +68,16 @@ flowchart TD
     EQ(["Equilibrium cell<br/>(phonopy_disp.yaml)"])
 
     EQ --> SC["phonopy-strain-cells<br/>(a, c grid)"]
-    SC --> RELAX{{"DFT relax + static"}}
+    SC --> RELAX{{"calculator relax + static"}}
     RELAX --> SGRID(["static-grid/grid-NNN<br/>U, F_el"])
 
     SGRID -->|"route A"| PD["generate displacements<br/>per relaxed cell"]
-    PD --> DFTF{{"DFT forces"}}
-    DFTF --> PGRID(["phonon-grid/grid-NNN<br/>disp-*"])
+    PD --> CALCF{{"calculator forces"}}
+    CALCF --> PGRID(["phonon-grid/grid-NNN<br/>disp-*"])
 
     EQ -->|"route B"| SCT["phonopy-strain-cells --rd"]
-    SCT --> DFTT{{"DFT E / F / stress"}}
-    DFTT --> MLPDS["phonopy-vasp-mlp-dataset"]
+    SCT --> CALCT{{"calculator E / F / stress"}}
+    CALCT --> MLPDS["phonopy-vasp-mlp-dataset"]
     MLPDS --> DEV["develop_pypolymlp"]
     DEV --> MLP(["polymlp.yaml"])
 
@@ -122,8 +122,8 @@ step 2A.
 ## 1. Build the static grid (internal energy U, both routes)
 
 Sample strained unit cells over the free lattice DOF, then relax and run a
-static single point for each with DFT. The static grid supplies {math}`U(a, c)`
-and, optionally, the electronic states for {math}`F_\mathrm{el}`.
+static single point for each with the calculator. The static grid supplies
+{math}`U(a, c)` and, optionally, the electronic states for {math}`F_\mathrm{el}`.
 
 ```bash
 # Inspect the free lattice DOF first (no ranges -> DOF report):
@@ -200,10 +200,10 @@ for path in sorted(glob.glob(UNITCELLS)):
 Then relax (if the crystal has internal DOF) and run the static single point in
 each `static-grid/grid-NNN/`.
 
-## 2A. Route A -- full-DFT phonons (phonon grid)
+## 2A. Route A -- calculator phonons (phonon grid)
 
 For each relaxed static-grid cell, generate displaced supercells and compute
-their forces with DFT.
+their forces with the calculator.
 
 Place the results as `phonon-grid/grid-NNN/` each containing the
 `phonopy_disp.yaml` and the per-displacement subdirectories `disp-001/`,
@@ -444,7 +444,7 @@ tagged so the force-constant solver is chosen from the dataset type, not guessed
 Because the displacements and forces are stored raw (not force constants), the
 file is independent of the force-constant method and can serve as an archive
 after the calculator scratch is discarded. The same file feeds the analysis
-whether the forces came from DFT or the MLP.
+whether the forces came from the calculator or the MLP.
 
 ## 4. Run the anisotropic QHA
 
@@ -518,14 +518,14 @@ the static-grid single point is the primitive (unit) cell.
 ## 5. Validate the MLP equilibrium shape (MLP route, recommended)
 
 A smooth MLP is not automatically a correct one. Before trusting an MLP-phonon
-result, validate against DFT at a few points:
+result, validate against the calculator at a few points:
 
-- Compare the MLP vs DFT phonon anisotropy directly. With a full-DFT phonon grid
-  available, a same-displacement force-swap comparison isolates any anisotropic
-  Gruneisen error.
-- Compare MLP and DFT stresses at a few cells (the stress is the free-energy
-  gradient the QHA minimizes), and optionally elastic constants (the surface
-  curvature).
+- Compare the MLP vs calculator phonon anisotropy directly. With a calculator
+  phonon grid available, a same-displacement force-swap comparison isolates any
+  anisotropic Gruneisen error.
+- Compare MLP and calculator stresses at a few cells (the stress is the
+  free-energy gradient the QHA minimizes), and optionally elastic constants (the
+  surface curvature).
 
-If the MLP phonons and equilibrium shape agree with DFT within tolerance, the
-dense (a, c) grid can be trusted.
+If the MLP phonons and equilibrium shape agree with the calculator within
+tolerance, the dense (a, c) grid can be trusted.
