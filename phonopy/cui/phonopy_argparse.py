@@ -226,6 +226,14 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         help="Save parameters that can run phonopy in phonopy_params.yaml.",
     )
     parser.add_argument(
+        "-d",
+        "--displacement",
+        dest="is_displacement",
+        action="store_true",
+        default=None,
+        help="Create supercells with displacements",
+    )
+    parser.add_argument(
         "--rd",
         "--random-displacements",
         dest="random_displacements",
@@ -281,14 +289,6 @@ def _add_init_options(parser: argparse.ArgumentParser) -> None:
         dest="supercell_dimension",
         default=None,
         help="Same behavior as DIM tag",
-    )
-    parser.add_argument(
-        "-d",
-        "--displacement",
-        dest="is_displacement",
-        action="store_true",
-        default=None,
-        help="Create supercells with displacements",
     )
     parser.add_argument(
         "--rd-auto-factor",
@@ -1026,7 +1026,6 @@ def _reject_init_options(parser: argparse.ArgumentParser) -> None:
     specs: list[tuple[tuple[str, ...], int | str]] = [
         (("-c", "--cell"), 1),
         (("--dim",), "+"),
-        (("-d", "--displacement"), 0),
         (("-f", "--force-sets"), "+"),
         (("--fz", "--force-sets-zero"), "+"),
         (("--fc", "--force-constants"), 1),

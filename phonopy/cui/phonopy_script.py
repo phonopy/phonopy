@@ -1802,8 +1802,9 @@ def _detect_init_operation(
     that exits the program once done: symmetry display, FORCE_SETS /
     FORCE_CONSTANTS file creation from external calculator results, and
     pre-calculation displacement generation. Finite-temperature random
-    displacements and pypolymlp-driven random displacements need phonon
-    information and are therefore not setup operations.
+    displacements and pypolymlp-driven displacements (-d or --rd combined
+    with --pypolymlp) need phonon information and are therefore not setup
+    operations.
 
     """
     if run_symmetry_info:
@@ -1812,7 +1813,7 @@ def _detect_init_operation(
         return "-f / --fz"
     if settings.create_force_constants:
         return "--fc"
-    if settings.create_displacements:
+    if settings.create_displacements and not settings.use_pypolymlp:
         return "-d"
     if (
         settings.random_displacements is not None
@@ -1979,7 +1980,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     if mode == "init" and init_op_label is None:
         print_error_message(
             "No setup operation requested. 'phonopy-init' requires one of: "
-            "-d, --rd (without RANDOM_DISPLACEMENT_TEMPERATURE/PYPOLYMLP), "
+            "-d or --rd (without RANDOM_DISPLACEMENT_TEMPERATURE/PYPOLYMLP), "
             "-f, --fz, --fc, or --symmetry. "
             "For phonon calculations, use 'phonopy'."
         )
