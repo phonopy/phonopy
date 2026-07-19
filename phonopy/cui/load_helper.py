@@ -487,58 +487,6 @@ def _develop_and_save_pypolymlp(
         )
 
 
-def prepare_dataset_by_pypolymlp(
-    phonon: Phonopy,
-    displacement_distance: float | None = None,
-    number_of_snapshots: int | Literal["auto"] | None = None,
-    rd_number_estimation_factor: float | None = None,
-    random_seed: int | None = None,
-    log_level: int = 0,
-) -> None:
-    """Generate displacements and evaluate forces by pypolymlp."""
-    if displacement_distance is None:
-        _displacement_distance = 0.01
-    else:
-        _displacement_distance = displacement_distance
-
-    if log_level:
-        if number_of_snapshots:
-            print("Generate random displacements")
-            print(
-                "  Twice of number of snapshots will be generated "
-                "for plus-minus displacements."
-            )
-        else:
-            print("Generate displacements")
-        print(
-            f"  Displacement distance: {_displacement_distance:.5f}".rstrip("0").rstrip(
-                "."
-            )
-        )
-    phonon.generate_displacements(
-        distance=_displacement_distance,
-        is_plusminus=True,
-        number_of_snapshots=number_of_snapshots,
-        random_seed=random_seed,
-        number_estimation_factor=rd_number_estimation_factor,
-    )
-    assert phonon.supercells_with_displacements is not None
-
-    if log_level and number_of_snapshots == "auto":
-        print(
-            "  Number of generated supercells with random displacements: "
-            f"{len(phonon.supercells_with_displacements)}",
-        )
-
-    if log_level:
-        print(
-            f"Evaluate forces in {len(phonon.displacements)} supercells by pypolymlp",
-            flush=True,
-        )
-
-    phonon.evaluate_mlp()
-
-
 def _read_force_constants_file(
     phonon: Phonopy, force_constants_filename: str | os.PathLike
 ) -> NDArray[np.double]:

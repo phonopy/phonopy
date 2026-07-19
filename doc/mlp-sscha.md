@@ -498,14 +498,14 @@ SSCHA force constants are written into "phonopy_sscha_fc_10.yaml.xz".
 
 -------------------------------- SSCHA end ---------------------------------
 ----------------------------------------------------------------------------
- One of the following run modes may be specified for phonon calculations.
+ No run mode was specified, so no phonon calculation was performed.
+ Specify one of the following to calculate phonons.
  - Mesh sampling (MESH, --mesh)
  - Q-points (QPOINTS, --qpoints)
  - Band structure (BAND, --band)
  - Animation (ANIME, --anime)
  - Modulation (MODULATION, --modulation)
  - Characters of Irreps (IRREPS, --irreps)
- - Create displacements (CREATE_DISPLACEMENTS, -d)
 ----------------------------------------------------------------------------
 
 Summary of calculation was written in "phonopy.yaml".
