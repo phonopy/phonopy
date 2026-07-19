@@ -219,9 +219,9 @@ def test_cli_amax_per_atom(tmp_path, monkeypatch) -> None:
     run()
 
     manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
-    assert manifest["parameters"]["displacement_distance_per_atom"] is True
+    assert manifest["parameters"]["displacement_distance_sampling"] == "atom"
     with h5py.File(tmp_path / "strain_cells.hdf5", "r") as f:
-        assert f.attrs["displacement_distance_per_atom"]
+        assert f.attrs["displacement_distance_sampling"] == "atom"
         dists = np.linalg.norm(f["displacements"][:], axis=2)
     assert (dists < 0.3 + 1e-8).all() and (dists > 0.05 - 1e-8).all()
     # Each supercell spans a range of distances rather than one shared value.

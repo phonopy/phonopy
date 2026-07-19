@@ -73,6 +73,7 @@ class Settings:
         self.cutoff_frequency: float | None = None
         self.displacement_distance: float | None = None
         self.displacement_distance_max: float | None = None
+        self.displacement_distance_sampling: Literal["supercell", "atom"] = "supercell"
         self.dm_decimals: int | None = None
         self.calculator: str | None = None
         self.create_displacements: bool = False
@@ -224,6 +225,10 @@ class ConfParser(Generic[TSettings]):
                 self._confs["displacement_distance_max"] = (
                     args.displacement_distance_max
                 )
+
+        if "displacement_distance_per_atom" in arg_list:
+            if args.displacement_distance_per_atom:
+                self._confs["displacement_distance_sampling"] = "atom"
 
         if "dynamical_matrix_decimals" in arg_list:
             if args.dynamical_matrix_decimals:
@@ -610,6 +615,15 @@ class ConfParser(Generic[TSettings]):
                     float(confs["displacement_distance_max"]),
                 )
 
+            if conf_key == "displacement_distance_sampling":
+                sampling = confs["displacement_distance_sampling"].lower()
+                if sampling not in ("supercell", "atom"):
+                    self.setting_error(
+                        "DISPLACEMENT_DISTANCE_SAMPLING tag has to be either "
+                        "SUPERCELL or ATOM."
+                    )
+                self._set_parameter("displacement_distance_sampling", sampling)
+
             if conf_key == "dm_decimals":
                 self._set_parameter("dm_decimals", confs["dm_decimals"])
 
@@ -936,6 +950,11 @@ class ConfParser(Generic[TSettings]):
 
         if "displacement_distance_max" in params:
             settings.displacement_distance_max = params["displacement_distance_max"]
+
+        if "displacement_distance_sampling" in params:
+            settings.displacement_distance_sampling = params[
+                "displacement_distance_sampling"
+            ]
 
         # Decimals of values of dynamical matrxi
         if "dm_decimals" in params:

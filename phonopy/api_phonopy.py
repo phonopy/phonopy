@@ -841,7 +841,7 @@ class Phonopy:
         temperature: float | None = None,
         cutoff_frequency: float | None = None,
         max_distance: float | None = None,
-        distance_per_atom: bool = False,
+        distance_sampling: Literal["supercell", "atom"] = "supercell",
         number_estimation_factor: float | None = None,
     ) -> None:
         """Generate displacement dataset and store it in Phonopy.dataset.
@@ -900,19 +900,19 @@ class Phonopy:
             ``temperature``, one distance per supercell is drawn from
             ``[0, max_distance)`` and floored at ``distance``. Default is
             None.
-        distance_per_atom : bool, optional
-            Requires ``max_distance`` and is incompatible with
-            ``temperature``, which already draws per atom. Draw the random
-            distance per atom rather than per supercell, uniformly over
-            ``[distance, max_distance)`` and without the weight at
-            ``distance``. Default is False.
+        distance_sampling : "supercell" or "atom", optional
+            Unit the random distance is drawn for. Requires ``max_distance``
+            and is incompatible with ``temperature``, which already draws per
+            atom. With "atom" the distance is drawn per atom rather than per
+            supercell, uniformly over ``[distance, max_distance)`` and without
+            the weight at ``distance``. Default is "supercell".
         number_estimation_factor : float, optional
             Safety factor on the symfc estimate used by
             ``number_of_snapshots="auto"``. Default is None.
 
         """
-        if distance_per_atom and max_distance is None:
-            raise ValueError("distance_per_atom requires max_distance.")
+        if distance_sampling == "atom" and max_distance is None:
+            raise ValueError('distance_sampling="atom" requires max_distance.')
         if number_of_snapshots is not None and (
             number_of_snapshots == "auto" or number_of_snapshots > 0
         ):
@@ -937,14 +937,14 @@ class Phonopy:
                     is_plusminus=(is_plusminus is True),
                     random_seed=_random_seed,
                     max_distance=max_distance,
-                    distance_per_atom=distance_per_atom,
+                    distance_sampling=distance_sampling,
                 )
             else:
-                if distance_per_atom:
+                if distance_sampling == "atom":
                     raise ValueError(
-                        "distance_per_atom is incompatible with temperature; "
-                        "the canonical ensemble already gives each atom its "
-                        "own displacement."
+                        'distance_sampling="atom" is incompatible with '
+                        "temperature; the canonical ensemble already gives "
+                        "each atom its own displacement."
                     )
                 displacement_dataset, random_displacements = (
                     self._generate_finite_temperature_displacement_dataset(

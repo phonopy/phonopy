@@ -482,6 +482,8 @@ def _print_settings(
                         "  Max displacement distance: "
                         f"{settings.displacement_distance_max}"
                     )
+                    if settings.displacement_distance_sampling == "atom":
+                        print("  Displacement distance drawn per atom: on")
             if settings.random_seed is not None:
                 print("  Random seed: %d" % settings.random_seed)
         elif settings.displacement_distance is not None:
@@ -703,12 +705,15 @@ def _prepare_dataset_by_pypolymlp(
                 f"  Displacement distance: {_format_distance(distance)} - "
                 f"{_format_distance(settings.displacement_distance_max)}"
             )
+            if settings.displacement_distance_sampling == "atom":
+                print("  Displacement distance drawn per atom: on")
         print(f"  Plus-minus displacements: {is_plusminus}")
 
     phonon.generate_displacements(
         distance=distance,
         is_plusminus=is_plusminus,
         max_distance=settings.displacement_distance_max,
+        distance_sampling=settings.displacement_distance_sampling,
         number_of_snapshots=number_of_snapshots,
         random_seed=settings.random_seed,
         number_estimation_factor=settings.rd_number_estimation_factor,
@@ -2079,6 +2084,16 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             print_error()
         sys.exit(1)
 
+    ###########################################
+    # Check --amax-per-atom option dependency #
+    ###########################################
+    if settings.displacement_distance_sampling == "atom":
+        if settings.displacement_distance_max is None:
+            print_error_message("--amax-per-atom applies to --amax; add --amax.")
+            if log_level:
+                print_error()
+            sys.exit(1)
+
     # -----------------------------------------------------------------------
     # ----------------- 'args' should not be used below. --------------------
     # -----------------------------------------------------------------------
@@ -2211,6 +2226,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
             max_distance=settings.displacement_distance_max,
+            distance_sampling=settings.displacement_distance_sampling,
             number_estimation_factor=settings.rd_number_estimation_factor,
         )
         assert phonon.supercells_with_displacements is not None
