@@ -60,7 +60,6 @@ from phonopy.cui.load_helper import (
     develop_or_load_pypolymlp,
     get_nac_params,
     move_force_dataset_to_mlp_dataset,
-    prepare_dataset_by_pypolymlp,
     produce_force_constants,
     select_and_extract_force_constants,
     select_and_load_dataset,
@@ -120,6 +119,30 @@ from phonopy.structure.atomic_data import (
 from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.cells import print_cell
 from phonopy.structure.dataset import forces_in_dataset
+
+# Width of the horizontal rules and centered headers in the console log.
+_LOG_WIDTH = 76
+
+# Run modes that perform a phonon calculation, and how a user asks for each.
+# "band_mesh" has no entry of its own: it is what --band and --mesh together
+# resolve to, never requested directly.
+_PHONON_RUN_MODES = (
+    "band",
+    "mesh",
+    "band_mesh",
+    "anime",
+    "modulation",
+    "irreps",
+    "qpoints",
+)
+_PHONON_RUN_MODE_OPTIONS = (
+    "Mesh sampling (MESH, --mesh)",
+    "Q-points (QPOINTS, --qpoints)",
+    "Band structure (BAND, --band)",
+    "Animation (ANIME, --anime)",
+    "Modulation (MODULATION, --modulation)",
+    "Characters of Irreps (IRREPS, --irreps)",
+)
 
 
 # AA is created at http://www.network-science.de/ascii/ with standard.
@@ -359,9 +382,9 @@ def _print_cells(phonon: Phonopy):
     u2u_map = supercell.u2u_map
     u_indep_atoms = [u2u_map[x] for x in s_indep_atoms]
     print_cell(unitcell, mapping=mapping[u2s_map], stars=u_indep_atoms)
-    print("-" * 32 + " super cell " + "-" * 32)
+    print(" super cell ".center(_LOG_WIDTH, "-"))
     print_cell(supercell, mapping=mapping, stars=s_indep_atoms)
-    print("-" * 76)
+    print("-" * _LOG_WIDTH)
 
 
 def _print_settings(
@@ -637,6 +660,81 @@ def _create_FORCE_SETS_from_settings(
     )
 
 
+def _prepare_dataset_by_pypolymlp(
+    phonon: Phonopy,
+    settings: PhonopySettings,
+    log_level: int,
+) -> None:
+    """Generate displacements and evaluate their forces by pypolymlp.
+
+    The displacements are shaped by the same options as elsewhere
+    (``--amplitude``, ``--amax``, ``--pm``, ``--rd``), with the same 'auto'
+    plus-minus default: MLP forces are numerically cleaner than calculator
+    ones, so there is no reason to force plus-minus pairs here. Only the
+    displacement distance has its own default, 0.01, which suits the harmonic
+    force constants an MLP is usually asked for.
+
+    The effective distance and plus-minus choice are printed, because they are
+    what shapes the supercells the MLP is about to be evaluated on.
+
+    """
+    distance = (
+        0.01
+        if settings.displacement_distance is None
+        else (settings.displacement_distance)
+    )
+    is_plusminus = settings.is_plusminus_displacement
+    number_of_snapshots = settings.random_displacements
+
+    if log_level:
+        if number_of_snapshots:
+            print("Generate random displacements")
+            if is_plusminus is True:
+                print(
+                    "  Twice of number of snapshots will be generated "
+                    "for plus-minus displacements."
+                )
+        else:
+            print("Generate displacements")
+        if settings.displacement_distance_max is None:
+            print(f"  Displacement distance: {_format_distance(distance)}")
+        else:
+            print(
+                f"  Displacement distance: {_format_distance(distance)} - "
+                f"{_format_distance(settings.displacement_distance_max)}"
+            )
+        print(f"  Plus-minus displacements: {is_plusminus}")
+
+    phonon.generate_displacements(
+        distance=distance,
+        is_plusminus=is_plusminus,
+        max_distance=settings.displacement_distance_max,
+        number_of_snapshots=number_of_snapshots,
+        random_seed=settings.random_seed,
+        number_estimation_factor=settings.rd_number_estimation_factor,
+    )
+    assert phonon.supercells_with_displacements is not None
+
+    if log_level and number_of_snapshots == "auto":
+        print(
+            "  Number of generated supercells with random displacements: "
+            f"{len(phonon.supercells_with_displacements)}",
+        )
+
+    if log_level:
+        print(
+            f"Evaluate forces in {len(phonon.displacements)} supercells by pypolymlp",
+            flush=True,
+        )
+
+    phonon.evaluate_mlp()
+
+
+def _format_distance(distance: float) -> str:
+    """Return a displacement distance without trailing zeros."""
+    return f"{distance:.5f}".rstrip("0").rstrip(".")
+
+
 def _produce_force_constants(
     phonon: Phonopy,
     settings: PhonopySettings,
@@ -651,14 +749,7 @@ def _produce_force_constants(
     """
     if settings.use_pypolymlp:
         if settings.create_displacements or settings.random_displacements is not None:
-            prepare_dataset_by_pypolymlp(
-                phonon,
-                displacement_distance=settings.displacement_distance,
-                number_of_snapshots=settings.random_displacements,
-                rd_number_estimation_factor=settings.rd_number_estimation_factor,
-                random_seed=settings.random_seed,
-                log_level=log_level,
-            )
+            _prepare_dataset_by_pypolymlp(phonon, settings, log_level)
         else:
             if log_level:
                 print(
@@ -965,7 +1056,7 @@ def store_nac_params(
                     else:
                         text = "        "
                     print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
-            print("-" * 76)
+            print("-" * _LOG_WIDTH)
 
 
 def _run_qpoints(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> None:
@@ -2215,7 +2306,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
                         relaxed_unitcell, phonon.unitcell, verbose=log_level > 0
                     )
                     print("Note: This unit cell is not used in phonon calculations.")
-                print("-" * 76)
+                print("-" * _LOG_WIDTH)
 
         ###########################
         # Produce force constants #
@@ -2256,50 +2347,23 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             phonon, settings, confs, cell_info.optional_structure_info, log_level
         )
 
-    ######################
-    # Additional message #
-    ######################
-    if log_level and not load_phonopy_yaml:
-        print("*" * 76)
-
-        print(
-            ' The "phonopy" command for running phonon calculations '
-            "will be phased out in "
-        )
-        print(
-            ' the future. It is recommended to use the "phonopy-load" command instead.'
-        )
-        print(" For more details, please refer to this link.")
-        print(" https://phonopy.github.io/phonopy/phonopy-load.html")
-        print("*" * 76)
-
     #######################
     # Phonon calculations #
     #######################
-    if settings.run_mode not in (
-        "band",
-        "mesh",
-        "band_mesh",
-        "anime",
-        "modulation",
-        "irreps",
-        "qpoints",
+    # Writing force constants is a complete job on its own, so a run mode is
+    # not missing in that case and the hint below would only second-guess the
+    # user.
+    if (
+        log_level
+        and settings.run_mode not in _PHONON_RUN_MODES
+        and not settings.write_force_constants
     ):
-        print("-" * 76)
-        print(
-            " One of the following run modes may be specified for phonon calculations."
-        )
-        for mode in [
-            "Mesh sampling (MESH, --mesh)",
-            "Q-points (QPOINTS, --qpoints)",
-            "Band structure (BAND, --band)",
-            "Animation (ANIME, --anime)",
-            "Modulation (MODULATION, --modulation)",
-            "Characters of Irreps (IRREPS, --irreps)",
-            "Create displacements (CREATE_DISPLACEMENTS, -d)",
-        ]:
-            print(" - %s" % mode)
-        print("-" * 76)
+        print("-" * _LOG_WIDTH)
+        print(" No run mode was specified, so no phonon calculation was performed.")
+        print(" Specify one of the following to calculate phonons.")
+        for mode in _PHONON_RUN_MODE_OPTIONS:
+            print(f" - {mode}")
+        print("-" * _LOG_WIDTH)
 
     _run_calculation(phonon, settings, plot_conf, log_level)
 

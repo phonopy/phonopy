@@ -2,6 +2,16 @@
 
 # Change Log
 
+## Unreleased
+
+- Behavior change: with `--pypolymlp`, displacement generation no longer forces
+  plus-minus pairs, but follows `--pm` (the `PM` tag) as every other path does,
+  whose default is `auto`. Fewer supercells are therefore generated: `--rd N`
+  gives N supercells instead of 2N, and `-d` omits the counter displacements
+  that symmetry does not require. Add `--pm` to recover the previous
+  displacements. The forces of a machine-learning potential are smooth enough
+  that the error cancellation of plus-minus pairs is not needed.
+
 ## Jul-17-2026: Version 4.4.0
 
 - Added the exciting code interface and its documentation.

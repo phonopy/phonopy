@@ -6,7 +6,7 @@ import itertools
 import os
 import pathlib
 import tempfile
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import h5py
 import numpy as np
@@ -19,7 +19,11 @@ from phonopy.cui.phonopy_argparse import (
     get_init_parser,
     get_run_parser,
 )
-from phonopy.cui.phonopy_script import _detect_init_operation, main
+from phonopy.cui.phonopy_script import (
+    _detect_init_operation,
+    _prepare_dataset_by_pypolymlp,
+    main,
+)
 from phonopy.cui.settings import PhonopySettings
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpFileNotFoundError
 from phonopy.structure.atomic_data import set_atomic_data
@@ -1199,6 +1203,187 @@ def test_run_parser_accepts_displacement_flag():
     assert args.is_displacement is True
 
 
+def test_run_parser_accepts_displacement_distance_flags():
+    """The run parser accepts the options shaping the displacements -d/--rd make.
+
+    --amplitude (--amin) sets the distance and --rd-auto-factor the estimated
+    number of snapshots; both reach the pypolymlp displacement path, so leaving
+    them on phonopy-init alone would make '--pypolymlp -d' unable to set them.
+
+    """
+    parser, _ = get_run_parser()
+    args = parser.parse_args(
+        ["phonopy_disp.yaml", "--pypolymlp", "-d", "--amplitude", "0.03"]
+    )
+    assert args.displacement_distance == pytest.approx(0.03)
+    assert args.is_displacement is True
+    assert args.use_pypolymlp is True
+
+    args = parser.parse_args(
+        ["phonopy_disp.yaml", "--pypolymlp", "--rd", "auto", "--rd-auto-factor", "3"]
+    )
+    assert args.rd_number_estimation_factor == pytest.approx(3.0)
+
+    # --amin is the same option under its random-displacement name.
+    args = parser.parse_args(["phonopy_disp.yaml", "--amin", "0.05"])
+    assert args.displacement_distance == pytest.approx(0.05)
+
+
+@pytest.mark.parametrize("log_level,expected", [(1, True), (0, False)])
+def test_run_mode_hint_respects_log_level(
+    log_level: int, expected: bool, capsys: pytest.CaptureFixture[str]
+):
+    """The 'no run mode' hint is silenced by -q like every other log message.
+
+    The hint used to print unconditionally, so --quiet still emitted it.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "NaCl" / "vasprun.xml-001.xz",
+                    cwd / "NaCl" / "vasprun.xml-002.xz",
+                ],
+                load_phonopy_yaml=False,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+            capsys.readouterr()
+
+            # No run mode is requested, so the hint is the thing under test.
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                log_level=log_level,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+
+            out = capsys.readouterr().out
+            assert ("No run mode was specified" in out) is expected
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_run_mode_hint_suppressed_by_writefc(capsys: pytest.CaptureFixture[str]):
+    """Writing force constants is a job in itself, so the hint is not shown.
+
+    Force constants without a phonon calculation is a common use, and the
+    hint would read as a complaint about a run that did what was asked.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "NaCl" / "vasprun.xml-001.xz",
+                    cwd / "NaCl" / "vasprun.xml-002.xz",
+                ],
+                load_phonopy_yaml=False,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+            capsys.readouterr()
+
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                write_force_constants=True,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+
+            out = capsys.readouterr().out
+            assert "Force constants are written" in out
+            assert "No run mode was specified" not in out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_prepare_dataset_by_pypolymlp_passes_displacement_options():
+    """--amplitude, --amax and --pm reach generate_displacements unchanged.
+
+    The pypolymlp path used to hardcode the distance and plus-minus policy, so
+    these options were silently unavailable to '--pypolymlp -d / --rd'.
+
+    """
+    settings = PhonopySettings()
+    settings.displacement_distance = 0.05
+    settings.displacement_distance_max = 1.5
+    settings.random_displacements = 40
+    settings.random_seed = 7
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["distance"] == pytest.approx(0.05)
+    assert kwargs["max_distance"] == pytest.approx(1.5)
+    assert kwargs["number_of_snapshots"] == 40
+    assert kwargs["random_seed"] == 7
+    # 'auto' is passed through, not coerced: MLP forces are numerically clean
+    # enough that plus-minus pairs need not be forced here.
+    assert kwargs["is_plusminus"] == "auto"
+    phonon.evaluate_mlp.assert_called_once()
+
+
+@pytest.mark.parametrize("is_plusminus", [True, False])
+def test_prepare_dataset_by_pypolymlp_honors_explicit_plusminus(is_plusminus: bool):
+    """An explicit --pm or PM = .FALSE. reaches generate_displacements verbatim."""
+    settings = PhonopySettings()
+    settings.is_plusminus_displacement = is_plusminus
+    settings.random_displacements = 10
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["is_plusminus"] is is_plusminus
+    # The distance still falls back to the pypolymlp default.
+    assert kwargs["distance"] == pytest.approx(0.01)
+
+
+def test_prepare_dataset_by_pypolymlp_reports_effective_options(
+    capsys: pytest.CaptureFixture[str],
+):
+    """The distance and plus-minus choice actually used are printed.
+
+    Neither is visible in the command line when left at its default, and the
+    distance default (0.01) is specific to this path, so the log is the only
+    place a user can confirm what the MLP was evaluated on.
+
+    """
+    settings = PhonopySettings()
+    settings.displacement_distance_max = 1.5
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=1)
+
+    out = capsys.readouterr().out
+    assert "Displacement distance: 0.01 - 1.5" in out
+    assert "Plus-minus displacements: auto" in out
+
+
+def test_init_parser_still_accepts_displacement_distance_flags():
+    """phonopy-init keeps the distance options after they became shared."""
+    parser, _ = get_init_parser()
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2", "-d", "--amplitude", "0.03"]
+    )
+    assert args.displacement_distance == pytest.approx(0.03)
+
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2"]
+        + ["--rd", "auto", "--rd-auto-factor", "3"]
+    )
+    assert args.rd_number_estimation_factor == pytest.approx(3.0)
+
+
 def test_init_parser_still_accepts_displacement_flag():
     """The phonopy-init parser continues to accept -d after it became shared."""
     parser, _ = get_init_parser()
@@ -1244,7 +1429,7 @@ def test_phonopy_run_mode_accepts_pypolymlp_displacements(
             )
             argparse_control["mode"] = "run"
             with (
-                patch("phonopy.cui.phonopy_script.prepare_dataset_by_pypolymlp"),
+                patch("phonopy.cui.phonopy_script._prepare_dataset_by_pypolymlp"),
                 patch("phonopy.cui.phonopy_script.develop_or_load_pypolymlp"),
             ):
                 with pytest.raises(SystemExit):
@@ -1320,6 +1505,7 @@ def _get_phonopy_args(
     is_graph_save: bool | None = None,
     is_hdf5: bool | None = None,
     load_phonopy_yaml: bool = False,
+    log_level: int = 1,
     magmoms: str | None = None,
     mesh_numbers: str | None = None,
     primitive_axes: str | None = None,
@@ -1356,7 +1542,7 @@ def _get_phonopy_args(
         is_graph_plot=is_graph_plot,
         is_graph_save=is_graph_save,
         is_hdf5=is_hdf5,
-        log_level=1,
+        log_level=log_level,
         magmoms=magmoms,
         mesh_numbers=mesh_numbers,
         primitive_axes=primitive_axes,

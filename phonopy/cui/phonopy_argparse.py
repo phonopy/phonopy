@@ -248,6 +248,38 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         help="Random seed by a 32 bit unsigned integer",
     )
     parser.add_argument(
+        "--amplitude",
+        "--amin",
+        dest="displacement_distance",
+        type=float,
+        default=None,
+        help=(
+            "Distance of displacements and also minimum distance of displacements "
+            "in random displacements"
+        ),
+    )
+    parser.add_argument(
+        "--amax",
+        dest="displacement_distance_max",
+        type=float,
+        default=None,
+        help="Maximum distance of displacements in random displacements",
+    )
+    parser.add_argument(
+        "--rd-auto-factor",
+        dest="rd_number_estimation_factor",
+        type=float,
+        default=None,
+        help="Factor to estimate number of supercells with random displacements",
+    )
+    parser.add_argument(
+        "--pm",
+        dest="is_plusminus_displacements",
+        action="store_true",
+        default=None,
+        help="Set plus minus displacements",
+    )
+    parser.add_argument(
         "-q",
         "--quiet",
         dest="quiet",
@@ -291,13 +323,6 @@ def _add_init_options(parser: argparse.ArgumentParser) -> None:
         help="Same behavior as DIM tag",
     )
     parser.add_argument(
-        "--rd-auto-factor",
-        dest="rd_number_estimation_factor",
-        type=float,
-        default=None,
-        help="Factor to estimate number of supercells with random displacements",
-    )
-    parser.add_argument(
         "-f",
         "--force-sets",
         nargs="+",
@@ -335,31 +360,6 @@ def _add_init_options(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         default=None,
         help="Check crystal symmetry",
-    )
-    parser.add_argument(
-        "--amplitude",
-        "--amin",
-        dest="displacement_distance",
-        type=float,
-        default=None,
-        help=(
-            "Distance of displacements and also minimum distance of displacements "
-            "in random displacements"
-        ),
-    )
-    parser.add_argument(
-        "--amax",
-        dest="displacement_distance_max",
-        type=float,
-        default=None,
-        help="Maximum distance of displacements in random displacements",
-    )
-    parser.add_argument(
-        "--pm",
-        dest="is_plusminus_displacements",
-        action="store_true",
-        default=None,
-        help="Set plus minus displacements",
     )
     parser.add_argument(
         "--nodiag",
