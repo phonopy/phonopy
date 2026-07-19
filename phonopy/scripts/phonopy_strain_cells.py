@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from typing import Literal
 
 import numpy as np
 
@@ -263,6 +264,9 @@ def run() -> None:
             sys.exit("Error: --amax must be larger than --amin.")
     elif args.displacement_distance_per_atom:
         sys.exit("Error: --amax-per-atom applies to --amax; add --amax.")
+    distance_sampling: Literal["supercell", "atom"] = (
+        "atom" if args.displacement_distance_per_atom else "supercell"
+    )
     needs_random = args.grid is None or with_rd
     if args.random_seed is not None:
         seed = args.random_seed
@@ -287,7 +291,7 @@ def run() -> None:
             phonon.supercell_matrix,
             distance=args.displacement_distance,
             max_distance=args.displacement_distance_max,
-            distance_per_atom=args.displacement_distance_per_atom,
+            distance_sampling=distance_sampling,
             count=args.random_displacements,
             seed=seed,
         )
@@ -325,7 +329,7 @@ def run() -> None:
         grid_shape=grid_shape,
         displacement_distance=args.displacement_distance,
         displacement_distance_max=args.displacement_distance_max,
-        displacement_distance_per_atom=args.displacement_distance_per_atom,
+        displacement_distance_sampling=distance_sampling,
         random_displacements=args.random_displacements,
         symprec=args.symprec,
         seed=seed,
@@ -349,7 +353,7 @@ def run() -> None:
             length_unit=length_unit,
             displacement_distance=args.displacement_distance,
             displacement_distance_max=args.displacement_distance_max,
-            displacement_distance_per_atom=args.displacement_distance_per_atom,
+            displacement_distance_sampling=distance_sampling,
         )
 
     print(

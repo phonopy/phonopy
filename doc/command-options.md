@@ -8,6 +8,8 @@ Some of command-line options are equivalent to respective setting tags:
 
 - `--alm` (`FC_CALCULATOR = ALM`) [{ref}`fc_calculator_alm_tag`]
 - `--amax` (`DISPLACEMENT_DISTANCE_MAX`) [{ref}`displacement_distance_max_tag`]
+- `--amax-per-atom` (`DISPLACEMENT_DISTANCE_SAMPLING = ATOM`)
+  [{ref}`displacement_distance_sampling_tag`]
 - `--amplitude` (`DISPLACEMENT_DISTANCE`) [{ref}`displacement_distance_tag`]
 - `--anime` (`ANIME`) [{ref}`anime_tag`]
 - `--band` (`BAND`) [{ref}`band_tag`]

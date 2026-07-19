@@ -266,6 +266,17 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         help="Maximum distance of displacements in random displacements",
     )
     parser.add_argument(
+        "--amax-per-atom",
+        dest="displacement_distance_per_atom",
+        action="store_true",
+        default=None,
+        help=(
+            "With --amax, draw the random displacement distance per atom "
+            "instead of per supercell, uniformly over [--amin, --amax), so "
+            "every supercell spans the whole amplitude range"
+        ),
+    )
+    parser.add_argument(
         "--rd-auto-factor",
         dest="rd_number_estimation_factor",
         type=float,

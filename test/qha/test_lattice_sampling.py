@@ -392,7 +392,7 @@ def test_build_strain_cells_manifest() -> None:
         grid_shape=None,
         displacement_distance=None,
         displacement_distance_max=None,
-        displacement_distance_per_atom=False,
+        displacement_distance_sampling="supercell",
         random_displacements=None,
         symprec=1e-5,
         seed=7,
@@ -440,7 +440,7 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
         grid_shape=None,
         displacement_distance=0.03,
         displacement_distance_max=1.5,
-        displacement_distance_per_atom=False,
+        displacement_distance_sampling="supercell",
         random_displacements=1,
         symprec=1e-5,
         seed=1,
@@ -500,6 +500,48 @@ def test_strain_cells_hdf5_round_trip(tmp_path):
             loaded.ideal_scaled_positions @ loaded.lattices[i] + loaded.displacements[i]
         )
         np.testing.assert_allclose(positions, supercell.positions, atol=1e-12)
+
+
+@pytest.mark.parametrize("per_atom", [True, False])
+def test_strain_cells_hdf5_rejects_superseded_per_atom_bool(tmp_path, per_atom: bool):
+    """Files carrying the bool this attribute replaced are rejected.
+
+    'displacement_distance_per_atom' was written by phonopy only between the
+    introduction of the per-atom draw and its replacement by
+    'displacement_distance_sampling'. Such files are not read: ignoring the
+    old attribute would report the per-supercell default for a file that may
+    have been made per atom.
+
+    """
+    h5py = pytest.importorskip("h5py")
+
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    unitcells = sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 2)
+    supercell_matrix = np.diag([2, 2, 2])
+    supercells, displacements = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.03, max_distance=0.6, seed=0
+    )
+
+    path = tmp_path / "strain_cells.hdf5"
+    write_strain_cells(
+        path,
+        unitcells=unitcells,
+        supercells=supercells,
+        displacements=displacements,
+        supercell_matrix=supercell_matrix,
+        calculator="vasp",
+        length_unit="angstrom",
+        displacement_distance=0.03,
+        displacement_distance_max=0.6,
+    )
+    # Rewrite the file the way the superseded phonopy version wrote it.
+    with h5py.File(path, "r+") as f:
+        del f.attrs["displacement_distance_sampling"]
+        f.attrs["displacement_distance_per_atom"] = per_atom
+
+    with pytest.raises(ValueError):
+        read_strain_cells(path)
 
 
 def test_strain_cells_hdf5_rejects_differing_fractional_coordinates(tmp_path):

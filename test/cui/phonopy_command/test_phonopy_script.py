@@ -24,7 +24,7 @@ from phonopy.cui.phonopy_script import (
     _prepare_dataset_by_pypolymlp,
     main,
 )
-from phonopy.cui.settings import PhonopySettings
+from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpFileNotFoundError
 from phonopy.structure.atomic_data import set_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
@@ -1382,6 +1382,117 @@ def test_init_parser_still_accepts_displacement_distance_flags():
         + ["--rd", "auto", "--rd-auto-factor", "3"]
     )
     assert args.rd_number_estimation_factor == pytest.approx(3.0)
+
+
+def test_parsers_accept_amax_per_atom():
+    """Both parsers accept --amax-per-atom.
+
+    The per-atom draw shapes the same random displacements as --amax, so it has
+    to be reachable from 'phonopy-init --rd' and from '--pypolymlp --rd' alike.
+
+    """
+    init_parser, _ = get_init_parser()
+    args = init_parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2"]
+        + ["--rd", "100", "--amin", "0.03", "--amax", "1.5", "--amax-per-atom"]
+    )
+    assert args.displacement_distance_per_atom is True
+    assert args.displacement_distance_max == pytest.approx(1.5)
+
+    run_parser, _ = get_run_parser()
+    args = run_parser.parse_args(
+        ["phonopy_disp.yaml", "--pypolymlp", "--rd", "100", "--amax", "1.5"]
+        + ["--amax-per-atom"]
+    )
+    assert args.displacement_distance_per_atom is True
+
+    # Absent, it stays None so that Settings owns the default.
+    args = init_parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2", "--rd", "10"]
+    )
+    assert args.displacement_distance_per_atom is None
+
+
+@pytest.mark.parametrize("value", ["ATOM", "atom", "Atom"])
+def test_displacement_distance_sampling_tag(tmp_path, value: str):
+    """The conf tag selects the sampling unit regardless of its case."""
+    conf = tmp_path / "sampling.conf"
+    conf.write_text(f"DISPLACEMENT_DISTANCE_SAMPLING = {value}\n")
+
+    settings = PhonopyConfParser(filename=conf).settings
+    assert settings.displacement_distance_sampling == "atom"
+
+
+def test_displacement_distance_sampling_tag_defaults_to_supercell(tmp_path):
+    """Without the tag the per-supercell draw is kept."""
+    conf = tmp_path / "sampling.conf"
+    conf.write_text("DISPLACEMENT_DISTANCE_MAX = 1.5\n")
+
+    settings = PhonopyConfParser(filename=conf).settings
+    assert settings.displacement_distance_sampling == "supercell"
+
+
+def test_displacement_distance_sampling_tag_rejects_unknown_value(tmp_path):
+    """An unknown value fails rather than falling back to per-supercell.
+
+    The tag takes a name rather than .TRUE./.FALSE., so a typo is possible and
+    would otherwise silently produce the default sampling.
+
+    """
+    conf = tmp_path / "sampling.conf"
+    conf.write_text("DISPLACEMENT_DISTANCE_SAMPLING = PER_ATOM\n")
+
+    with pytest.raises(SystemExit):
+        PhonopyConfParser(filename=conf)
+
+
+def test_amax_per_atom_flag_sets_sampling_tag():
+    """--amax-per-atom selects the ATOM value of the tag.
+
+    The flag takes no value, so it has to be translated into the tag the same
+    way --alm selects FC_CALCULATOR = alm.
+
+    """
+    parser, _ = get_init_parser()
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2"]
+        + ["--rd", "10", "--amax", "1.5", "--amax-per-atom"]
+    )
+    settings = PhonopyConfParser(args=args).settings
+    assert settings.displacement_distance_sampling == "atom"
+
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2", "--rd", "10", "--amax", "1.5"]
+    )
+    settings = PhonopyConfParser(args=args).settings
+    assert settings.displacement_distance_sampling == "supercell"
+
+
+def test_prepare_dataset_by_pypolymlp_passes_amax_per_atom():
+    """--amax-per-atom reaches generate_displacements on the pypolymlp path."""
+    settings = PhonopySettings()
+    settings.displacement_distance_max = 1.5
+    settings.displacement_distance_sampling = "atom"
+    settings.random_displacements = 40
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["distance_sampling"] == "atom"
+
+
+def test_prepare_dataset_by_pypolymlp_defaults_amax_per_atom_off():
+    """Without the option the per-supercell draw is kept."""
+    settings = PhonopySettings()
+    settings.displacement_distance_max = 1.5
+    settings.random_displacements = 40
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["distance_sampling"] == "supercell"
 
 
 def test_init_parser_still_accepts_displacement_flag():

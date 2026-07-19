@@ -186,7 +186,7 @@ def test_tio2_random_disp_with_random_max_distance(ph_tio2: Phonopy):
     assert (dists < 0.1 + 1e-8).all()
 
 
-def test_tio2_random_disp_distance_per_atom(ph_tio2: Phonopy):
+def test_tio2_random_disp_distance_sampling_atom(ph_tio2: Phonopy):
     """Test per-atom random distance of TiO2.
 
     Every supercell has to span a range of distances internally, whereas the
@@ -202,7 +202,7 @@ def test_tio2_random_disp_distance_per_atom(ph_tio2: Phonopy):
         number_of_snapshots=n_snapshots,
         distance=0.01,
         max_distance=0.1,
-        distance_per_atom=True,
+        distance_sampling="atom",
         random_seed=1,
     )
     d = ph.displacements
@@ -225,18 +225,35 @@ def test_tio2_random_disp_distance_per_atom(ph_tio2: Phonopy):
     np.testing.assert_allclose(per_cell.max(axis=1), per_cell.min(axis=1), atol=1e-12)
 
 
-def test_tio2_random_disp_distance_per_atom_requires_max_distance(ph_tio2: Phonopy):
+def test_tio2_random_disp_atom_sampling_requires_max_distance(ph_tio2: Phonopy):
     """Test that per-atom random distance is rejected without max_distance."""
     ph = ph_tio2.copy()
 
     with pytest.raises(ValueError):
-        ph.generate_displacements(number_of_snapshots=2, distance_per_atom=True)
+        ph.generate_displacements(number_of_snapshots=2, distance_sampling="atom")
+
+
+def test_tio2_random_disp_rejects_unknown_distance_sampling(ph_tio2: Phonopy):
+    """A typo in distance_sampling has to fail rather than fall back silently.
+
+    A bool flag could only be true or false, but a string can be misspelled,
+    so the unknown value is rejected instead of being read as per-supercell.
+
+    """
+    ph = ph_tio2.copy()
+
+    with pytest.raises(ValueError):
+        ph.generate_displacements(
+            number_of_snapshots=2,
+            max_distance=0.1,
+            distance_sampling="per_atom",  # type: ignore[arg-type]
+        )
 
 
 def test_tio2_random_disp_per_supercell_unchanged(ph_tio2: Phonopy):
     """Test that the default per-supercell draw is unaffected by the new option.
 
-    Pins the random stream so that adding distance_per_atom cannot silently
+    Pins the random stream so that adding distance_sampling cannot silently
     change the displacements a given seed produces.
 
     """
