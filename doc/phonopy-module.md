@@ -923,7 +923,7 @@ how `phonopy` generates a VASP-compatible POSCAR/INCAR pair.
 The same merge can be requested at the command line:
 
 ```bash
-phonopy --dim "2 2 2" --site-mixture "0.5 0.5 0.5 0.5" -d
+phonopy-init --dim "2 2 2" --site-mixture "0.5 0.5 0.5 0.5" -d
 ```
 
 `--site-mixture` takes a space-separated list of per-atom weights in the
