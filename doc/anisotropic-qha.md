@@ -106,7 +106,8 @@ rows are centring vectors rather than crystal axes. For body-centred tetragonal,
 for example, all three primitive rows have the same length, and scaling them
 would only change the volume, never c/a. A rhombohedral cell must likewise be
 given in the hexagonal setting. `phonopy-strain-cells` rejects such a cell; if
-in doubt, take the `BPOSCAR` written by {ref}`phonopy --symmetry <symmetry_option>`,
+in doubt, take the `BPOSCAR` written by
+{ref}`phonopy-init --symmetry <symmetry_option>`,
 which is the conventional cell. A conventional cell that is merely rotated in
 Cartesian space is fine.
 
@@ -244,16 +245,21 @@ for contcar in sorted(glob.glob(f"{STATIC_GRID}/grid-*/CONTCAR")):
 ```
 
 ```{note}
-`phonopy-anisotropic-qha-dataset` supports only the VASP calculator. The static
-internal energy {math}`U(a, c)`, the forces, and the electronic states are read
-from VASP outputs (`vaspout.h5` / `vasprun.xml`); a reference specifying any
-other calculator is rejected, because phonopy has no interface yet to read the
-static single-point energy of other calculators.
+`phonopy-anisotropic-qha-dataset` works with VASP only for now, simply because
+the readers for the other calculators are not implemented yet. The binding
+constraint is the static grid: the internal energy {math}`U(a, c)` and the
+electronic states are read from VASP outputs (`vaspout.h5` / `vasprun.xml`), and
+phonopy has no interface yet to read the static single-point energy of the other
+calculators. A reference naming one of them therefore stops the command early,
+rather than producing a dataset with a missing {math}`U(a, c)`.
 ```
 
-Then build the intermediate dataset. The builder expects the two grids below.
-Grid indices are zero-padded to three digits (`grid-000`, `grid-001`, ...) and
-must match between `static-grid` and `phonon-grid`:
+Then build the intermediate dataset. Without path options the builder assumes
+the conventional layout below, pairing the two grids by the index in the
+`grid-NNN` directory names (any zero padding is accepted). This is a
+convenience, not a requirement -- see
+[Grid points in any layout](#grid-points-in-any-layout) to place the points
+freely:
 
 ```text
 static-grid/                 # --static-grid (default: static-grid)
@@ -303,6 +309,57 @@ directories, so a `grid-NNN` that exists only under `phonon-grid` is ignored. Th
 positional `phonopy_disp.yaml` is the equilibrium reference; it supplies the free
 lattice DOF metadata and the calculator (the per-point supercell / primitive
 matrices come from each point's `phonon-grid` yaml).
+
+(grid-points-in-any-layout)=
+
+### Grid points in any layout
+
+`--static` and `--phonon` take the grid points as explicit path lists, usually
+expanded by the shell, and replace `--static-grid` and `--phonon-grid`
+respectively (giving both forms of one side is an error). No naming convention
+then applies at all:
+
+```bash
+% phonopy-anisotropic-qha-dataset phonopy_disp.yaml \
+    --static runs/*/static/vaspout.h5 \
+    --phonon runs/*/phonons/phonopy_params.yaml \
+    -o aniso_qha_dataset.hdf5
+```
+
+The two lists are paired **by position**, not by any index parsed from the
+names, and their lengths must match. The grid-point index recorded in the
+dataset is the position in the list; it is a label only, since the analysis
+reads the lattice parameters from each stored cell. Note that the shell expands
+a glob in lexicographic order, so `point-1, point-10, point-2, ...` orders the
+points unintuitively -- harmless for the pairing, which shifts identically on
+both sides, but worth avoiding if the recorded indices are to be read back
+against `strain_cells.yaml`.
+
+Each `--static` entry is the static single-point output, or the directory
+holding it (`vaspout.h5` is preferred over `vasprun.xml`, as in the
+conventional layout).
+
+### Pre-collected force sets
+
+Each `--phonon` entry is either a directory holding `phonopy_disp.yaml` and the
+`disp-*` subdirectories, exactly as in the conventional layout, or a
+phonopy.yaml-like file whose forces {ref}`phonopy-init -f
+<f_force_sets_option>` has already collected. Run in each grid point's own
+directory, whatever its structure:
+
+```bash
+% phonopy-init --sp -f disp-*/vasprun.xml   # -> phonopy_params.yaml
+% phonopy-init -f disp-*/vasprun.xml        # -> FORCE_SETS, beside phonopy_disp.yaml
+```
+
+Pass the resulting `phonopy_params.yaml`, or the `phonopy_disp.yaml` whose
+`FORCE_SETS` sits beside it ({ref}`--sp <save_params_option>` merges the two
+into one file). This is usually the simpler route when the phonon calculations
+were not laid out by the scaffolding script above: collecting the forces stays
+a job for phonopy's own tools, in whatever directory structure the calculations
+already have, and the builder only consumes the result. A file with no forces
+and no neighboring `FORCE_SETS` is rejected rather than silently producing an
+empty grid point. The forms may be mixed within one `--phonon` list.
 
 ## 2B. Route B -- MLP phonons (train once, then evaluate)
 
