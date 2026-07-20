@@ -30,12 +30,15 @@ from phonopy.qha.anisotropic import AnisotropicQHAResult, FreeEnergySurfaceFit
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.qha.thermal import compute_electronic_contributions_from_states
 
+# Free energies are handled in eV throughout and converted only for plotting.
+_EV_TO_MEV = 1000.0
+
 
 def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) -> dict:
     """Rebuild the fitted F surface at the nearest temperature and evaluate it.
 
     Returns the sample cells, the dense n x n evaluation mesh, and F offset by
-    its own minimum (F - F_min) so that only the surface shape remains.
+    its own minimum (F - F_min) in eV, so that only the surface shape remains.
 
     """
     fi = result.free_lattice_indices
@@ -80,26 +83,25 @@ def plot_F_contours(
         return []
 
     data = [_evaluate_surface(result, t, n) for t in temperatures]
-    vmax = max(float(d["fe"].max()) for d in data)
+    vmax = max(float(d["fe"].max()) for d in data) * _EV_TO_MEV
     levels = np.linspace(0.0, vmax, 41)
 
     axis = ("a", "b", "c")
     written = []
     for d in data:
         i = d["i"]
+        fe = d["fe"] * _EV_TO_MEV
         fig, ax = plt.subplots()
-        filled = ax.contourf(
-            d["grid0"], d["grid1"], d["fe"], levels=levels, extend="max"
-        )
+        filled = ax.contourf(d["grid0"], d["grid1"], fe, levels=levels, extend="max")
         ax.contour(
             d["grid0"],
             d["grid1"],
-            d["fe"],
+            fe,
             levels=levels[::2],
             colors="k",
             linewidths=0.4,
         )
-        fig.colorbar(filled, label="F - F_min (eV)")
+        fig.colorbar(filled, label="F - F_min (meV)")
 
         ax.plot(
             d["free_points"][:, 0],
@@ -204,6 +206,7 @@ def plot_component_contours(
         row = []
         for p, (_, values) in enumerate(fr["panels"]):
             g0, g1, fe = _fit_and_grid(free_points, values, degree, n)
+            fe = fe * _EV_TO_MEV
             row.append((g0, g1, fe))
             panel_vmax[p] = max(panel_vmax[p], float(fe.max()))
         fitted.append(row)
@@ -222,7 +225,7 @@ def plot_component_contours(
         ):
             filled = ax.contourf(g0, g1, fe, levels=levels, extend="max")
             ax.contour(g0, g1, fe, levels=levels[::2], colors="k", linewidths=0.3)
-            fig.colorbar(filled, ax=ax, label=f"{name} - min (eV)")
+            fig.colorbar(filled, ax=ax, label=f"{name} - min (meV)")
             ax.plot(free_points[:, 0], free_points[:, 1], "wo", ms=2)
             ax.plot(eq[fi[0]], eq[fi[1]], "r*", ms=12)
             ax.set_xlabel(f"{axis[fi[0]]} (A)")
