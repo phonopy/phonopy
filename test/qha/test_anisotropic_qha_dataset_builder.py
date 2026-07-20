@@ -17,6 +17,7 @@ from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.scripts.phonopy_anisotropic_qha_dataset import (
     build_calculator_grid_point,
     discover_grid_dirs,
+    electronic_states_from_vaspout,
     load_phonon,
     load_phonon_from_disp_dirs,
     read_electronic_states,
@@ -301,3 +302,39 @@ def test_builder_run_rejects_length_mismatch(tmp_path, monkeypatch):
     )
     with pytest.raises(SystemExit, match="do not match"):
         run()
+
+
+def _write_minimal_vaspout(path, lnoncollinear: int | None) -> None:
+    """Write the smallest vaspout.h5 electronic_states_from_vaspout can read.
+
+    ``lnoncollinear`` of None omits the tag, which is what VASP does when the
+    INCAR did not set it.
+    """
+    import h5py
+
+    with h5py.File(path, "w") as w:
+        g = w.create_group("results/electron_eigenvalues")
+        g.create_dataset("eigenvalues", data=np.zeros((1, 2, 3), dtype="double"))
+        g.create_dataset("kpoints_symmetry_weight", data=np.ones(2, dtype="double"))
+        g.create_dataset("nelectrons", data=4.0)
+        incar = w.create_group("input/incar")
+        if lnoncollinear is not None:
+            incar.create_dataset("LNONCOLLINEAR", data=np.int32(lnoncollinear))
+
+
+@pytest.mark.parametrize("lnoncollinear,expected", [(1, 1), (0, None), (None, None)])
+def test_electronic_states_from_vaspout_spin_degeneracy(
+    tmp_path, lnoncollinear, expected
+):
+    """LNONCOLLINEAR in vaspout.h5 sets the spin degeneracy of the states.
+
+    vaspout.h5 echoes only the tags the INCAR set, so an absent key means a
+    collinear calculation and leaves the degeneracy to the spin axis.
+    """
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path, lnoncollinear)
+
+    states = electronic_states_from_vaspout(str(path))
+
+    assert states.spin_degeneracy == expected
+    assert states.n_electrons == pytest.approx(4.0)

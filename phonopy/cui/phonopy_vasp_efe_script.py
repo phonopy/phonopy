@@ -170,6 +170,7 @@ def collect_electronic_states(
                 eigenvalues=eigenvalues,
                 weights=weights,
                 n_electrons=n_electrons,
+                spin_degeneracy=vxml.spin_degeneracy,
                 volume=vxml.volume[-1],
                 internal_energy=vxml.energies[-1, 1],
             )
