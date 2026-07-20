@@ -30,12 +30,15 @@ from phonopy.qha.anisotropic import AnisotropicQHAResult, FreeEnergySurfaceFit
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.qha.thermal import compute_electronic_contributions_from_states
 
+# Free energies are handled in eV throughout and converted only for plotting.
+_EV_TO_MEV = 1000.0
+
 
 def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) -> dict:
     """Rebuild the fitted F surface at the nearest temperature and evaluate it.
 
     Returns the sample cells, the dense n x n evaluation mesh, and F offset by
-    its own minimum (F - F_min) in meV, so that only the surface shape remains.
+    its own minimum (F - F_min) in eV, so that only the surface shape remains.
 
     """
     fi = result.free_lattice_indices
@@ -50,7 +53,7 @@ def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) 
     grid0, grid1 = np.meshgrid(np.linspace(lo0, hi0, n), np.linspace(lo1, hi1, n))
     mesh = np.column_stack([grid0.ravel(), grid1.ravel()])
     fe = fit.evaluate(mesh).reshape(grid0.shape)
-    fe = (fe - fe.min()) * 1000
+    fe = fe - fe.min()
     return {
         "i": i,
         "t": float(result.temperatures[i]),
@@ -80,21 +83,20 @@ def plot_F_contours(
         return []
 
     data = [_evaluate_surface(result, t, n) for t in temperatures]
-    vmax = max(float(d["fe"].max()) for d in data)
+    vmax = max(float(d["fe"].max()) for d in data) * _EV_TO_MEV
     levels = np.linspace(0.0, vmax, 41)
 
     axis = ("a", "b", "c")
     written = []
     for d in data:
         i = d["i"]
+        fe = d["fe"] * _EV_TO_MEV
         fig, ax = plt.subplots()
-        filled = ax.contourf(
-            d["grid0"], d["grid1"], d["fe"], levels=levels, extend="max"
-        )
+        filled = ax.contourf(d["grid0"], d["grid1"], fe, levels=levels, extend="max")
         ax.contour(
             d["grid0"],
             d["grid1"],
-            d["fe"],
+            fe,
             levels=levels[::2],
             colors="k",
             linewidths=0.4,
@@ -138,9 +140,8 @@ def _fit_and_grid(
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Fit a total-degree polynomial to values and evaluate it on a mesh.
 
-    Returns (grid0, grid1, fe) with fe offset by its own minimum and converted
-    to meV, so only the surface shape and tilt remain (any additive constant
-    drops out).
+    Returns (grid0, grid1, fe) with fe offset by its own minimum, so only the
+    surface shape and tilt remain (any additive constant drops out).
 
     """
     fit = FreeEnergySurfaceFit(free_points, values, degree=degree)
@@ -149,7 +150,7 @@ def _fit_and_grid(
     grid0, grid1 = np.meshgrid(np.linspace(lo0, hi0, n), np.linspace(lo1, hi1, n))
     mesh = np.column_stack([grid0.ravel(), grid1.ravel()])
     fe = fit.evaluate(mesh).reshape(grid0.shape)
-    return grid0, grid1, (fe - fe.min()) * 1000
+    return grid0, grid1, fe - fe.min()
 
 
 def plot_component_contours(
@@ -205,6 +206,7 @@ def plot_component_contours(
         row = []
         for p, (_, values) in enumerate(fr["panels"]):
             g0, g1, fe = _fit_and_grid(free_points, values, degree, n)
+            fe = fe * _EV_TO_MEV
             row.append((g0, g1, fe))
             panel_vmax[p] = max(panel_vmax[p], float(fe.max()))
         fitted.append(row)
