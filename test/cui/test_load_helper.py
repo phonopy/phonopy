@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from phonopy.cui.load_helper import move_force_dataset_to_mlp_dataset
+from phonopy.cui.load_helper import (
+    _load_pypolymlp,
+    move_force_dataset_to_mlp_dataset,
+)
 
 
 def test_move_force_dataset_to_mlp_dataset_no_dataset():
@@ -39,3 +42,28 @@ def test_move_force_dataset_to_mlp_dataset_displacement_only():
     move_force_dataset_to_mlp_dataset(phonon)
     assert phonon.mlp_dataset is None
     assert phonon.dataset is None
+
+
+def test_load_pypolymlp_ignores_unsupported_suffix(monkeypatch, tmp_path):
+    """A file such as polymlp.yaml.bak must not be loaded as MLPs.
+
+    Its name matches the glob of the default MLP filename, but its suffix is
+    not supported. Loading it would break the development of new MLPs after
+    renaming polymlp.yaml to keep it aside.
+
+    """
+    (tmp_path / "polymlp.yaml.bak").write_text("dummy")
+    monkeypatch.chdir(tmp_path)
+    loaded = []
+    _load_pypolymlp(SimpleNamespace(load_mlp=loaded.append))
+    assert loaded == []
+
+
+def test_load_pypolymlp_selects_supported_suffix(monkeypatch, tmp_path):
+    """A supported file is found even when an unsupported one also matches."""
+    (tmp_path / "polymlp.yaml.bak").write_text("dummy")
+    (tmp_path / "polymlp.yaml").write_text("dummy")
+    monkeypatch.chdir(tmp_path)
+    loaded = []
+    _load_pypolymlp(SimpleNamespace(load_mlp=loaded.append))
+    assert [path.name for path in loaded] == ["polymlp.yaml"]

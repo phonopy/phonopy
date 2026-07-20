@@ -838,7 +838,10 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
         )
         if log_level:
             sscha.calculate_free_energy()
-            print(f"SSCHA free energy: {sscha.free_energy * 1000:.3f} meV")
+            print(
+                f"SSCHA free energy: {sscha.free_energy * 1000:.3f} "
+                f"+/- {sscha.free_energy_error * 1000:.3f} meV"
+            )
             if iter_num == 0:
                 print("Initial ", end="")
             else:

@@ -43,6 +43,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy import Phonopy
+from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.physical_units import get_physical_units
 
@@ -128,7 +129,10 @@ class MLPSSCHA:
             if log_level:
                 print("Use provided force constants.")
                 print("")
-            self._ph.force_constants = ph.force_constants
+            fc = ph.force_constants
+            if fc.shape[0] != fc.shape[1]:  # compact form
+                fc = compact_fc_to_full_fc(self._ph.primitive, fc)
+            self._ph.force_constants = fc
             self._iter_counter = 1
 
     @property
@@ -149,29 +153,124 @@ class MLPSSCHA:
         return fc
 
     @property
+    def free_energy_error(self) -> float:
+        """Return statistical error of free energy in eV.
+
+        This is the standard error of the mean of the anharmonic correction
+        over the supercells with random displacements. The harmonic free
+        energy is determined by the force constants and does not contribute
+        to it.
+
+        """
+        return self._free_energy_error
+
+    @property
     def harmonic_potential_energy(self) -> float:
         """Return supercell energies."""
-        d = self._ph.displacements
-        assert isinstance(d, np.ndarray)
-        pe = np.einsum("ijkl,mik,mjl", self.force_constants, d, d) / len(d) / 2
-        return float(pe)
+        return float(np.average(self._harmonic_potential_energies))
 
     @property
     def potential_energy(self) -> float:
         """Return potential energy."""
-        return float(np.average(self._ph.supercell_energies - self._supercell_energy))
+        return float(np.average(self._potential_energies))
+
+    @property
+    def _harmonic_potential_energies(self) -> NDArray[np.double]:
+        """Return harmonic potential energies of individual supercells."""
+        d = self._ph.displacements
+        assert isinstance(d, np.ndarray)
+        return np.einsum("ijkl,mik,mjl->m", self.force_constants, d, d) / 2
+
+    @property
+    def _potential_energies(self) -> NDArray[np.double]:
+        """Return potential energies of individual supercells."""
+        return self._ph.supercell_energies - self._supercell_energy
+
+    def sample_supercells(self) -> None:
+        """Sample supercells with random displacements and evaluate the MLPs.
+
+        The displacements are sampled from the canonical ensemble of the
+        harmonic phonons of the current force constants at the temperature,
+        and the forces and energies of the supercells are evaluated by the
+        MLPs.
+
+        This is the sampling step of one SSCHA iteration. It is also usable on
+        its own, followed by ``calculate_free_energy``, to obtain the free
+        energy of the force constants currently set.
+
+        """
+        # Mutating the dataset clears the force constants, which are needed to
+        # evaluate the free energy of this sampling. They are restored below.
+        fc = self._ph.force_constants
+        self._ph.generate_displacements(
+            number_of_snapshots=self._number_of_snapshots,
+            temperature=self._temperature,
+            random_seed=self._random_seed,
+        )
+
+        if self._log_level:
+            displacements = self._ph.displacements
+            assert isinstance(displacements, np.ndarray)
+            hist, bin_edges = np.histogram(
+                np.linalg.norm(displacements, axis=2), bins=10
+            )
+            size = np.prod(displacements.shape[0:2])
+            for i, h in enumerate(hist):
+                length = round(h / size * 100)
+                print(
+                    f"  [{bin_edges[i]:4.3f}, {bin_edges[i + 1]:4.3f}] " + "*" * length
+                )
+            print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
+
+        self._ph.evaluate_mlp()
+        self._ph.force_constants = fc
 
     def calculate_free_energy(self, mesh: float = 100.0) -> None:
-        """Calculate SSCHA free energy."""
+        """Calculate SSCHA free energy and its statistical error.
+
+        Given the force constants Phi, the free energy per primitive cell is
+
+            F = F_harm + (1/N) sum_i a_i,
+
+        where F_harm is the harmonic free energy of the current force
+        constants and
+
+            a_i = (E_i - E_0 - (1/2) sum_ab Phi_ab u_ia u_ib) / n_cell
+
+        is the anharmonic correction obtained from the i-th of the N
+        supercells with random displacements. E_i is the supercell energy,
+        E_0 the energy of the supercell without displacements, Phi the force
+        constants, u_i the displacements, and n_cell the number of primitive
+        cells in the supercell. The indices a and b run over the atoms in
+        the supercell and the Cartesian directions.
+
+        F_harm is determined by the force constants and carries no sampling
+        noise. Therefore the statistical error of F is the standard error of
+        the mean of a_i,
+
+            error = std(a, ddof=1) / sqrt(N),
+
+        which is returned by the ``free_energy_error`` property. This error is
+        conditional on Phi. The uncertainty of Phi itself, which is determined
+        from a stochastic sampling, is not included.
+
+        """
         self._ph.run_mesh(mesh=mesh)
         self._ph.run_thermal_properties(temperatures=[self._temperature])
         hfe = (
             self._ph.thermal_properties.free_energy[0] / get_physical_units().EvTokJmol
         )
         n_cell = len(self._ph.supercell) / len(self._ph.primitive)
-        pe = self.potential_energy / n_cell
-        hpe = self.harmonic_potential_energy / n_cell
-        self._free_energy = hfe + pe - hpe
+        anharmonic = (
+            self._potential_energies - self._harmonic_potential_energies
+        ) / n_cell
+        self._free_energy = hfe + float(np.average(anharmonic))
+        if len(anharmonic) > 1:
+            self._free_energy_error = float(
+                np.std(anharmonic, ddof=1) / np.sqrt(len(anharmonic))
+            )
+        else:
+            self._free_energy_error = float("nan")
 
     def run(self) -> MLPSSCHA:
         """Run through all iterations."""
@@ -214,31 +313,11 @@ class MLPSSCHA:
                 number_of_snapshots=self._number_of_snapshots,
                 random_seed=self._random_seed,
             )
-        else:
-            self._ph.generate_displacements(
-                number_of_snapshots=self._number_of_snapshots,
-                temperature=self._temperature,
-                random_seed=self._random_seed,
-            )
-            displacements = self._ph.displacements
-            assert isinstance(displacements, np.ndarray)
-            hist, bin_edges = np.histogram(
-                np.linalg.norm(displacements, axis=2), bins=10
-            )
-
             if self._log_level:
-                size = np.prod(displacements.shape[0:2])
-                for i, h in enumerate(hist):
-                    length = round(h / size * 100)
-                    print(
-                        f"  [{bin_edges[i]:4.3f}, {bin_edges[i + 1]:4.3f}] "
-                        + "*" * length
-                    )
-
-        if self._log_level:
-            print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
-
-        self._ph.evaluate_mlp()
+                print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
+            self._ph.evaluate_mlp()
+        else:
+            self.sample_supercells()
 
         if self._log_level:
             print("Calculate force constants using symfc", flush=True)

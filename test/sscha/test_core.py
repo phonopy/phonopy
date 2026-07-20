@@ -104,3 +104,54 @@ def test_MLPSSCHA_free_energy(sscha_result: MLPSSCHA):
     # implementations and floating-point ordering.
     assert np.isclose(sscha_result.free_energy, -0.0986, atol=1e-3)
     print(sscha_result.free_energy)
+    # The error is a standard error of the mean over the sampled supercells,
+    # so its value depends on the random numbers.
+    assert np.isfinite(sscha_result.free_energy_error)
+    assert sscha_result.free_energy_error > 0
+
+
+def test_MLPSSCHA_sample_supercells(ph_kcl: Phonopy, mlp_kcl, sscha_result: MLPSSCHA):
+    """Force constants must survive the sampling to give the free energy.
+
+    Mutating the displacement dataset clears the force constants of the
+    Phonopy instance. In the iteration they are computed again just after the
+    sampling, but the free energy of given force constants can be evaluated
+    only if the sampling keeps them.
+
+    """
+    ph = ph_kcl.replicate()
+    ph.force_constants = sscha_result.force_constants
+    sscha = MLPSSCHA(
+        ph, mlp_kcl, number_of_snapshots=10, temperature=300, random_seed=42
+    )
+    sscha.sample_supercells()
+
+    assert sscha.phonopy.force_constants is not None
+    np.testing.assert_allclose(
+        sscha.phonopy.force_constants, sscha_result.force_constants, atol=1e-10
+    )
+
+    sscha.calculate_free_energy()
+    assert np.isfinite(sscha.free_energy)
+
+
+def test_MLPSSCHA_compact_force_constants(
+    ph_kcl: Phonopy, mlp_kcl, sscha_result: MLPSSCHA
+):
+    """Compact force constants must be expanded to the full form.
+
+    The harmonic potential energy is computed with the full force constants.
+
+    """
+    fc = sscha_result.force_constants
+    ph = ph_kcl.replicate()
+    p2s_map = ph.primitive.p2s_map
+    ph.force_constants = fc[p2s_map]
+    assert ph.force_constants.shape[0] != ph.force_constants.shape[1]
+
+    sscha = MLPSSCHA(ph, mlp_kcl, number_of_snapshots=2, temperature=300)
+    n_atoms = len(sscha.phonopy.supercell)
+    assert sscha.phonopy.force_constants.shape == (n_atoms, n_atoms, 3, 3)
+    np.testing.assert_allclose(
+        sscha.phonopy.force_constants[p2s_map], fc[p2s_map], atol=1e-10
+    )
