@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for phonopy.qha.lattice_sampling."""
 
 from __future__ import annotations
@@ -10,7 +11,9 @@ from phonopy.qha.lattice_sampling import (
     build_strain_cells_manifest,
     get_free_lattice_dof,
     grid_strained_cells,
+    read_strain_cells,
     sample_strained_cells,
+    write_strain_cells,
     write_strain_cells_manifest,
 )
 from phonopy.structure.atoms import PhonopyAtoms
@@ -82,6 +85,91 @@ def test_dof_monoclinic_rejected() -> None:
         get_free_lattice_dof(_monoclinic())
 
 
+def test_dof_tetragonal_with_c_close_to_a() -> None:
+    """A tetragonal cell keeps two DOF when c is accidentally close to a.
+
+    The DOF follow the crystal system, so a near-degenerate c/a ~ 1 must not
+    look isotropic and collapse the cell onto a single volume-like DOF.
+
+    """
+    cell = PhonopyAtoms(
+        symbols=["Cu", "Cu"],
+        cell=np.diag([3.0, 3.0, 3.002]),
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+    )
+    dof = get_free_lattice_dof(cell)
+    assert dof.crystal_system == "tetragonal"
+    assert dof.labels == ("a", "c")
+    assert dof.current_lengths["c"] == pytest.approx(3.002)
+
+
+def test_dof_rotated_conventional_cell_accepted() -> None:
+    """A rigidly rotated conventional cell is still accepted.
+
+    A rotation leaves every lattice-vector length unchanged, so each row is
+    still its crystal axis and the DOF are unaffected.
+
+    """
+    cell = _hexagonal()
+    angle = np.deg2rad(53.13)
+    rotation = np.array(
+        [
+            [np.cos(angle), -np.sin(angle), 0.0],
+            [np.sin(angle), np.cos(angle), 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    rotated = PhonopyAtoms(
+        symbols=cell.symbols,
+        cell=cell.cell @ rotation.T,
+        scaled_positions=cell.scaled_positions,
+    )
+    dof = get_free_lattice_dof(rotated)
+    assert dof.labels == ("a", "c")
+    assert dof.rows["c"] == (2,)
+
+
+def test_dof_centred_primitive_cell_rejected() -> None:
+    """The primitive cell of a centred lattice is rejected.
+
+    Its rows are centring vectors rather than crystal axes. For this
+    body-centred tetragonal cell all three rows have the same length, so
+    scaling them could only change the volume and never c/a -- the
+    anisotropic calculation would silently degenerate to the volume path.
+
+    """
+    a, c = 3.0, 5.0
+    cell = PhonopyAtoms(
+        symbols=["In"],
+        cell=np.array(
+            [[-a / 2, a / 2, c / 2], [a / 2, -a / 2, c / 2], [a / 2, a / 2, -c / 2]]
+        ),
+        scaled_positions=[[0, 0, 0]],
+    )
+    with pytest.raises(ValueError, match="standardized conventional cell"):
+        get_free_lattice_dof(cell)
+
+
+def test_dof_rhombohedral_setting_rejected() -> None:
+    """A rhombohedral cell in the rhombohedral setting is rejected.
+
+    Its three rows are equally long whatever the angle, so the hexagonal
+    setting is required to expose the a and c DOF.
+
+    """
+    a, alpha = 4.0, np.deg2rad(70.0)
+    cos_a = np.cos(alpha)
+    row2 = np.array([a * cos_a, a * (cos_a - cos_a**2) / np.sin(alpha), 0.0])
+    row2[2] = np.sqrt(a**2 - row2[0] ** 2 - row2[1] ** 2)
+    cell = PhonopyAtoms(
+        symbols=["As"],
+        cell=np.array([[a, 0, 0], [a * cos_a, a * np.sin(alpha), 0], row2]),
+        scaled_positions=[[0, 0, 0]],
+    )
+    with pytest.raises(ValueError, match="standardized conventional cell"):
+        get_free_lattice_dof(cell)
+
+
 def test_sample_hexagonal() -> None:
     """Sampling preserves b = a and fractional positions and honors ranges."""
     cell = _hexagonal()
@@ -131,7 +219,7 @@ def test_random_displacement_supercells() -> None:
         cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3, seed=0
     )
     supercell_matrix = np.diag([2, 2, 2])
-    supercells = build_random_displacement_supercells(
+    supercells, _ = build_random_displacement_supercells(
         unitcells, supercell_matrix, distance=0.1, seed=0
     )
 
@@ -140,6 +228,55 @@ def test_random_displacement_supercells() -> None:
         assert len(sc) == 8 * len(uc)
     # Different cells give different displaced structures.
     assert not np.allclose(supercells[0].positions, supercells[1].positions)
+
+
+def _displacement_norms(supercell: PhonopyAtoms, reference: PhonopyAtoms) -> np.ndarray:
+    """Return the per-atom displacement lengths of supercell from reference.
+
+    The minimum image convention is applied, because an atom displaced across
+    a cell boundary comes back wrapped into the cell and a raw Cartesian
+    difference would then report the cell size instead of the displacement.
+
+    """
+    diff = supercell.scaled_positions - reference.scaled_positions
+    diff -= np.rint(diff)
+    return np.linalg.norm(diff @ reference.cell, axis=1)
+
+
+def test_random_displacement_supercells_distance_range() -> None:
+    """max_distance samples the distance from [distance, max_distance].
+
+    Without max_distance every atom moves by exactly distance, which suits
+    harmonic force constants. With it, the distances spread over the range,
+    covering the large-amplitude region an SSCHA calculation visits.
+
+    """
+    from phonopy import Phonopy
+
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    unitcells = sample_strained_cells(
+        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 1, seed=0
+    )
+    supercell_matrix = np.diag([2, 2, 2])
+    reference = Phonopy(
+        unitcells[0], supercell_matrix=supercell_matrix, log_level=0
+    ).supercell
+
+    fixed, _ = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.1, count=20, seed=0
+    )
+    for supercell in fixed:
+        assert _displacement_norms(supercell, reference) == pytest.approx(0.1)
+
+    ranged, _ = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.03, max_distance=1.5, count=20, seed=0
+    )
+    norms = np.concatenate([_displacement_norms(sc, reference) for sc in ranged])
+    assert norms.min() >= 0.03 - 1e-8
+    assert norms.max() <= 1.5 + 1e-8
+    # The distances are sampled over the range rather than staying fixed.
+    assert norms.max() - norms.min() > 0.5
 
 
 def test_grid_hexagonal_tensor_product() -> None:
@@ -230,7 +367,7 @@ def test_random_displacement_count_per_cell() -> None:
     cell = _tetragonal()
     dof = get_free_lattice_dof(cell)
     unitcells = sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3)
-    supercells = build_random_displacement_supercells(
+    supercells, _ = build_random_displacement_supercells(
         unitcells, np.diag([2, 2, 2]), distance=0.1, count=2, seed=0
     )
     assert len(supercells) == 6  # 3 cells x 2 each
@@ -255,6 +392,8 @@ def test_build_strain_cells_manifest() -> None:
         num=3,
         grid_shape=None,
         displacement_distance=None,
+        displacement_distance_max=None,
+        displacement_distance_sampling="supercell",
         random_displacements=None,
         symprec=1e-5,
         seed=7,
@@ -271,6 +410,7 @@ def test_build_strain_cells_manifest() -> None:
     assert manifest["parameters"]["ranges"] == {"a": [3.9, 4.1], "c": [5.8, 6.2]}
     assert manifest["parameters"]["grid_shape"] is None
     assert manifest["parameters"]["displacement_distance"] is None
+    assert manifest["parameters"]["displacement_distance_max"] is None
     assert manifest["parameters"]["random_displacements"] is None
     cells = manifest["output"]["cells"]
     assert manifest["output"]["num_cells"] == 3
@@ -300,6 +440,8 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
         num=2,
         grid_shape=None,
         displacement_distance=0.03,
+        displacement_distance_max=1.5,
+        displacement_distance_sampling="supercell",
         random_displacements=1,
         symprec=1e-5,
         seed=1,
@@ -314,3 +456,119 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
     write_strain_cells_manifest(path, manifest)
     loaded = yaml.safe_load(path.read_text())
     assert loaded == manifest
+
+
+def test_strain_cells_hdf5_round_trip(tmp_path):
+    """The written structures and displacements reproduce the supercells."""
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    unitcells = sample_strained_cells(
+        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3, seed=0
+    )
+    supercell_matrix = np.diag([2, 2, 2])
+    supercells, displacements = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.03, max_distance=0.6, count=2, seed=0
+    )
+
+    path = tmp_path / "strain_cells.hdf5"
+    write_strain_cells(
+        path,
+        unitcells=unitcells,
+        supercells=supercells,
+        displacements=displacements,
+        supercell_matrix=supercell_matrix,
+        phonopy_version="0.0.0",
+        calculator="vasp",
+        length_unit="angstrom",
+        displacement_distance=0.03,
+        displacement_distance_max=0.6,
+    )
+    loaded = read_strain_cells(path)
+
+    assert loaded.calculator == "vasp"
+    assert loaded.length_unit == "angstrom"
+    assert loaded.phonopy_version == "0.0.0"
+    assert loaded.displacement_distance == pytest.approx(0.03)
+    assert loaded.displacement_distance_max == pytest.approx(0.6)
+    np.testing.assert_array_equal(loaded.supercell_matrix, supercell_matrix)
+    assert loaded.displacements.shape == (6, 8 * len(cell), 3)
+    np.testing.assert_allclose(loaded.displacements, displacements)
+
+    # Ideal positions plus displacements reproduce every displaced supercell.
+    for i, supercell in enumerate(supercells):
+        np.testing.assert_allclose(loaded.lattices[i], supercell.cell, atol=1e-12)
+        positions = (
+            loaded.ideal_scaled_positions @ loaded.lattices[i] + loaded.displacements[i]
+        )
+        np.testing.assert_allclose(positions, supercell.positions, atol=1e-12)
+
+
+@pytest.mark.parametrize("per_atom", [True, False])
+def test_strain_cells_hdf5_rejects_superseded_per_atom_bool(tmp_path, per_atom: bool):
+    """Files carrying the bool this attribute replaced are rejected.
+
+    'displacement_distance_per_atom' was written by phonopy only between the
+    introduction of the per-atom draw and its replacement by
+    'displacement_distance_sampling'. Such files are not read: ignoring the
+    old attribute would report the per-supercell default for a file that may
+    have been made per atom.
+
+    """
+    h5py = pytest.importorskip("h5py")
+
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    unitcells = sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 2)
+    supercell_matrix = np.diag([2, 2, 2])
+    supercells, displacements = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.03, max_distance=0.6, seed=0
+    )
+
+    path = tmp_path / "strain_cells.hdf5"
+    write_strain_cells(
+        path,
+        unitcells=unitcells,
+        supercells=supercells,
+        displacements=displacements,
+        supercell_matrix=supercell_matrix,
+        calculator="vasp",
+        length_unit="angstrom",
+        displacement_distance=0.03,
+        displacement_distance_max=0.6,
+    )
+    # Rewrite the file the way the superseded phonopy version wrote it.
+    with h5py.File(path, "r+") as f:
+        del f.attrs["displacement_distance_sampling"]
+        f.attrs["displacement_distance_per_atom"] = per_atom
+
+    with pytest.raises(ValueError):
+        read_strain_cells(path)
+
+
+def test_strain_cells_hdf5_rejects_differing_fractional_coordinates(tmp_path):
+    """Storing one ideal-position array requires cells to share it."""
+    cell = _tetragonal()
+    dof = get_free_lattice_dof(cell)
+    unitcells = sample_strained_cells(
+        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 2, seed=0
+    )
+    supercell_matrix = np.diag([2, 2, 2])
+    supercells, displacements = build_random_displacement_supercells(
+        unitcells, supercell_matrix, distance=0.1, seed=0
+    )
+    shifted = unitcells[1].scaled_positions.copy()
+    shifted[0] += 0.01
+    unitcells[1] = PhonopyAtoms(
+        cell=unitcells[1].cell,
+        scaled_positions=shifted,
+        symbols=unitcells[1].symbols,
+    )
+
+    with pytest.raises(ValueError, match="fractional coordinates"):
+        write_strain_cells(
+            tmp_path / "strain_cells.hdf5",
+            unitcells=unitcells,
+            supercells=supercells,
+            displacements=displacements,
+            supercell_matrix=supercell_matrix,
+        )

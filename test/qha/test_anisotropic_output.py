@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for phonopy.qha.anisotropic_output and anisotropic_plot."""
 
 from __future__ import annotations

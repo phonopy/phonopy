@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
+
 #include <assert.h>
 #include <stdint.h>
 /* #include <stdio.h> */

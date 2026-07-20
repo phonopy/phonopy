@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Building blocks shared by the QHA drivers.
 
 These helpers are used by both the volume-path driver (phonopy.qha.qha

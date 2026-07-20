@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for phonopy.cui.show_symmetry helpers."""
 
 import pytest

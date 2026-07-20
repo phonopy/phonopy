@@ -2,6 +2,31 @@
 
 # Change Log
 
+## Unreleased
+
+- Behavior change: with `--pypolymlp`, displacement generation no longer forces
+  plus-minus pairs, but follows `--pm` (the `PM` tag) as every other path does,
+  whose default is `auto`. Fewer supercells are therefore generated: `--rd N`
+  gives N supercells instead of 2N, and `-d` omits the counter displacements
+  that symmetry does not require. Add `--pm` to recover the previous
+  displacements. The forces of a machine-learning potential are smooth enough
+  that the error cancellation of plus-minus pairs is not needed.
+
+## Jul-17-2026: Version 4.4.0
+
+- Added the exciting code interface and its documentation.
+- The VASP interface reads `vaspout.h5` for forces, MLP datasets, and NAC
+  parameters, and selects energy(sigma->0) according to the VASP version.
+- The LAMMPS interface sorts atoms by atom id and preserves the input atom
+  type label order in supercell output.
+- Speed up of thermal properties (vectorized pure-Python path) and of the
+  electronic free energy calculation (scipy root-finding and vectorized
+  entropy).
+- Bug fix: the dynamical structure factor now propagates the frequency
+  conversion factor.
+- Bug fix: `random_displacements` is preserved after temperature-based
+  displacement generation.
+
 ## Jul-01-2026: Version 4.3.1
 
 - The LAMMPS interface now reads atomic masses from the `Masses` section of a

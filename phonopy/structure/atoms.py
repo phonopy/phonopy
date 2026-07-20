@@ -1,38 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """PhonopyAtoms class and routines related to atoms."""
-
-# Copyright (C) 2011 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
@@ -231,12 +198,17 @@ def build_species_table_from_mixtures(
     mixtures :
         Per-site lists of ``(symbol, weight)`` pairs.
     sort_constituents :
-        If True (default), each per-site mixture is reordered alphabetically
-        by symbol before deriving species identity and the composite label.
-        This treats two physically equivalent sites that differ only in the
-        order constituents were listed (e.g. ``[("Ge", 0.5), ("Sn", 0.5)]``
-        and ``[("Sn", 0.5), ("Ge", 0.5)]``) as the same species. Pass False
-        to preserve the caller's order verbatim.
+        If True (default), each per-site mixture is reordered into a canonical
+        constituent order before deriving species identity and the composite
+        label. This treats two physically equivalent sites that differ only in
+        the order constituents were listed (e.g. ``[("Ge", 0.5), ("Sn", 0.5)]``
+        and ``[("Sn", 0.5), ("Ge", 0.5)]``) as the same species. The canonical
+        order is the order in which symbols first appear while scanning
+        ``mixtures`` in atom order, so the constituent order supplied by the
+        caller is preserved instead of being reordered alphabetically. The
+        rule is idempotent, so re-canonicalizing an already canonical set of
+        mixtures (e.g. on reload from yaml) is a no-op. Pass False to preserve
+        the caller's per-site order verbatim without deriving a common order.
 
     The returned pair can be passed to ``PhonopyAtoms(species_table=...,
     species_ids=...)``. Use cases include site mixtures
@@ -245,13 +217,18 @@ def build_species_table_from_mixtures(
 
     """
     symbol_map = get_atomic_data().symbol_map
+    rank: dict[str, int] = {}
+    if sort_constituents:
+        for atom_mixture in mixtures:
+            for s, _ in atom_mixture:
+                rank.setdefault(str(s), len(rank))
     per_atom_species: list[_Species] = []
     for atom_mixture in mixtures:
         mix = tuple((str(s), float(w)) for s, w in atom_mixture)
         if not mix:
             raise ValueError("mixture entry must be non-empty.")
         if sort_constituents:
-            mix = tuple(sorted(mix, key=lambda sw: sw[0]))
+            mix = tuple(sorted(mix, key=lambda sw: rank[sw[0]]))
         wsum = sum(w for _, w in mix)
         if not np.isclose(wsum, 1.0):
             raise ValueError(f"mixture weights must sum to 1.0, got {wsum} for {mix}.")

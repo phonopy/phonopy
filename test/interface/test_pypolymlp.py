@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for pypolymlp calculater interface."""
 
 import pathlib
@@ -235,18 +236,15 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     # ph_nacl_rd.auto_band_structure(write_yaml=True, filename="band-orig.yaml")
 
     ndata = 4
+    data = PypolymlpData(
+        displacements=disps,
+        forces=forces,
+        supercell_energies=energies,
+        supercell=ph_nacl_rd.supercell,
+    )
     polymlp = develop_pypolymlp(
-        ph_nacl_rd.supercell,
-        PypolymlpData(
-            displacements=disps[:ndata],
-            forces=forces[:ndata],
-            supercell_energies=energies[:ndata],
-        ),
-        PypolymlpData(
-            displacements=disps[8:],
-            forces=forces[8:],
-            supercell_energies=energies[8:],
-        ),
+        data[:ndata],
+        data[8:],
         params=params,
         verbose=True,
     )

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for VASP-to-pypolymlp structure dataset assembly."""
 
 from __future__ import annotations
@@ -12,9 +13,10 @@ import pytest
 from phonopy.interface.pypolymlp import (
     PypolymlpStructureData,
     _structures_virial,
-    develop_pypolymlp_from_structures,
+    develop_pypolymlp,
     read_pypolymlp_structure_dataset,
     read_vasprun_dataset,
+    split_pypolymlp_dataset,
     write_pypolymlp_structure_dataset,
 )
 from phonopy.interface.vasp import read_vasprun_calculation
@@ -94,22 +96,48 @@ def test_hdf5_round_trip(tmp_path) -> None:
         np.testing.assert_allclose(new_f, orig_f)
 
 
-def _split(data: PypolymlpStructureData, k: int):
-    """Split a dataset into first-k train and rest test."""
+def test_split_pypolymlp_dataset() -> None:
+    """Split takes the first 1 - test_size fraction as training data."""
+    data = read_vasprun_dataset(vasprun_files)
+    n = len(data.structures)
+    train, test = split_pypolymlp_dataset(data, test_size=0.5)
 
-    def take(sl):
-        return PypolymlpStructureData(
-            structures=data.structures[sl],
-            energies=data.energies[sl],
-            forces=data.forces[sl],
-            stresses=None if data.stresses is None else data.stresses[sl],
-        )
+    assert len(train.structures) == n // 2
+    assert len(test.structures) == n - n // 2
+    # No shuffling: the split is a plain slice of the input order.
+    np.testing.assert_allclose(train.energies, data.energies[: n // 2])
+    np.testing.assert_allclose(test.energies, data.energies[n // 2 :])
+    np.testing.assert_allclose(train.stresses, data.stresses[: n // 2])
+    np.testing.assert_allclose(test.forces[0], data.forces[n // 2])
+    np.testing.assert_allclose(test.structures[0].cell, data.structures[n // 2].cell)
 
-    return take(slice(0, k)), take(slice(k, None))
+
+def test_split_pypolymlp_dataset_without_stresses() -> None:
+    """Split keeps stresses None rather than trying to slice it."""
+    data = read_vasprun_dataset(vasprun_files)
+    data = PypolymlpStructureData(
+        structures=data.structures,
+        energies=data.energies,
+        forces=data.forces,
+        stresses=None,
+    )
+    train, test = split_pypolymlp_dataset(data)
+    assert train.stresses is None
+    assert test.stresses is None
 
 
-def test_develop_marshals_energy_force_stress(monkeypatch) -> None:
-    """develop_pypolymlp_from_structures passes E/F/stress in pypolymlp form."""
+def test_split_pypolymlp_dataset_empty_side() -> None:
+    """A test_size that empties either side is rejected."""
+    data = read_vasprun_dataset(vasprun_files)
+    with pytest.raises(ValueError):
+        split_pypolymlp_dataset(data, test_size=0.0)
+    with pytest.raises(ValueError):
+        split_pypolymlp_dataset(data, test_size=1.0)
+
+
+@pytest.fixture
+def captured_polymlp(monkeypatch):
+    """Replace Pypolymlp by a stub and return what it is handed."""
     pytest.importorskip("pypolymlp")
     import pypolymlp.mlp_dev.pypolymlp as ppm
 
@@ -126,13 +154,17 @@ def test_develop_marshals_energy_force_stress(monkeypatch) -> None:
             captured["ran"] = True
 
     monkeypatch.setattr(ppm, "Pypolymlp", FakePolymlp)
+    return captured
 
+
+def test_develop_marshals_energy_force_stress(captured_polymlp) -> None:
+    """develop_pypolymlp passes E/F/stress in pypolymlp form."""
     data = read_vasprun_dataset(vasprun_files)
-    train, test = _split(data, 3)
-    develop_pypolymlp_from_structures(train, test)
+    train, test = data[:3], data[3:]
+    develop_pypolymlp(train, test)
 
-    ds = captured["datasets"]
-    assert captured["ran"] is True
+    ds = captured_polymlp["datasets"]
+    assert captured_polymlp["ran"] is True
     # Forces are transposed to pypolymlp's (3, natoms) convention.
     assert ds["train_forces"][0].shape == (3, 64)
     np.testing.assert_allclose(ds["train_forces"][0], train.forces[0].T)
@@ -141,6 +173,19 @@ def test_develop_marshals_energy_force_stress(monkeypatch) -> None:
     # Stresses become (n, 3, 3) virials in eV.
     assert ds["train_stresses"].shape == (3, 3, 3)
     np.testing.assert_allclose(ds["train_stresses"], _structures_virial(train))
+
+
+def test_develop_splits_when_test_data_is_omitted(captured_polymlp) -> None:
+    """With test_data None the dataset is split by test_size internally."""
+    data = read_vasprun_dataset(vasprun_files)
+    develop_pypolymlp(data, test_size=0.5)
+
+    n = len(data.structures)
+    ds = captured_polymlp["datasets"]
+    assert len(ds["train_structures"]) == n // 2
+    assert len(ds["test_structures"]) == n - n // 2
+    np.testing.assert_allclose(ds["train_energies"], data.energies[: n // 2])
+    np.testing.assert_allclose(ds["test_energies"], data.energies[n // 2 :])
 
 
 def test_cli_vasp_mlp_dataset(tmp_path, monkeypatch, capsys) -> None:

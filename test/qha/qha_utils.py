@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Shared helpers for QHA tests (not collected by pytest)."""
 
 from __future__ import annotations

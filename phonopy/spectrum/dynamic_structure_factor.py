@@ -1,38 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Calculate dynamic structure factor at harmonic level."""
-
-# Copyright (C) 2016 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
@@ -112,6 +79,7 @@ class DynamicStructureFactor:
         scattering_lengths: dict[str, float] | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
+        factor: float | None = None,
     ) -> None:
         """Init method.
 
@@ -149,6 +117,9 @@ class DynamicStructureFactor:
         freq_max: float
             Maximum phonon frequency to determine whether include or not. Only
             for Debye-Waller factor.
+        factor: float, optional
+            Unit conversion factor for phonon frequencies. Default is
+            DefaultToTHz of the physical units.
 
         """
         self._mesh_phonon = mesh_phonon
@@ -177,7 +148,7 @@ class DynamicStructureFactor:
         )
         self._frequencies: NDArray[np.double]
         self._eigvecs: NDArray[np.cdouble]
-        self._set_phonon()
+        self._set_phonon(factor)
 
         self._q_count = 0
         self._unit_conversion_factor = 1.0 / (
@@ -260,9 +231,12 @@ class DynamicStructureFactor:
                 S[i] = abs(F) ** 2 * (n + 1)
         return S * self._unit_conversion_factor
 
-    def _set_phonon(self) -> None:
+    def _set_phonon(self, factor: float | None) -> None:
         qpoints_phonon = QpointsPhonon(
-            self._qpoints_1bz, self._dynamical_matrix, with_eigenvectors=True
+            self._qpoints_1bz,
+            self._dynamical_matrix,
+            with_eigenvectors=True,
+            factor=factor,
         )
         self._frequencies = qpoints_phonon.frequencies
         assert qpoints_phonon.eigenvectors is not None

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for phonon calculation on sampling mesh."""
 
 from __future__ import annotations

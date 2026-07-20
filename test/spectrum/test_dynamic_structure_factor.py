@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for dynamic structure factor."""
 
 from __future__ import annotations
@@ -9,6 +10,7 @@ from numpy.typing import ArrayLike
 
 from phonopy.api_phonopy import Phonopy
 from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
+from phonopy.structure.atoms import PhonopyAtoms
 
 # D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)
 # f(Q) = \sum_i a_i \exp((-b_i Q^2) + c
@@ -168,6 +170,28 @@ def test_IXS_G_to_L_NaCl(ph_nacl: Phonopy):
         degeneracies,
         verbose=False,
     )
+
+
+def test_dsf_frequencies_use_unit_conversion_factor():
+    """DSF and band frequencies use the same configured factor."""
+    phonon = Phonopy(
+        PhonopyAtoms(
+            symbols=["Si"],
+            cell=np.eye(3),
+            scaled_positions=[[0, 0, 0]],
+        ),
+        supercell_matrix=np.eye(3, dtype=int),
+        primitive_matrix=np.eye(3),
+    )
+    phonon.force_constants = np.diag([1.0, 4.0, 9.0]).reshape(1, 1, 3, 3)
+    phonon.unit_conversion_factor *= 2
+
+    qpoint = [0.25, 0.0, 0.0]
+    phonon.run_mesh([1, 1, 1], is_mesh_symmetry=False, with_eigenvectors=True)
+    dsf = phonon.init_dynamic_structure_factor([qpoint], 300)
+    band = phonon.run_band_structure([[qpoint]])
+
+    np.testing.assert_allclose(dsf.frequencies, band.frequencies[0])
 
 
 def _test_IXS_G_to_L(

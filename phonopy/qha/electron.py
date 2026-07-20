@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Calculation of free energy of one-electronic states."""
 
 from __future__ import annotations

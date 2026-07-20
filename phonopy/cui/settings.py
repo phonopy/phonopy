@@ -1,38 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Phonopy input and command option tools."""
-
-# Copyright (C) 2011 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
@@ -73,6 +40,7 @@ class Settings:
         self.cutoff_frequency: float | None = None
         self.displacement_distance: float | None = None
         self.displacement_distance_max: float | None = None
+        self.displacement_distance_sampling: Literal["supercell", "atom"] = "supercell"
         self.dm_decimals: int | None = None
         self.calculator: str | None = None
         self.create_displacements: bool = False
@@ -224,6 +192,10 @@ class ConfParser(Generic[TSettings]):
                 self._confs["displacement_distance_max"] = (
                     args.displacement_distance_max
                 )
+
+        if "displacement_distance_per_atom" in arg_list:
+            if args.displacement_distance_per_atom:
+                self._confs["displacement_distance_sampling"] = "atom"
 
         if "dynamical_matrix_decimals" in arg_list:
             if args.dynamical_matrix_decimals:
@@ -610,6 +582,15 @@ class ConfParser(Generic[TSettings]):
                     float(confs["displacement_distance_max"]),
                 )
 
+            if conf_key == "displacement_distance_sampling":
+                sampling = confs["displacement_distance_sampling"].lower()
+                if sampling not in ("supercell", "atom"):
+                    self.setting_error(
+                        "DISPLACEMENT_DISTANCE_SAMPLING tag has to be either "
+                        "SUPERCELL or ATOM."
+                    )
+                self._set_parameter("displacement_distance_sampling", sampling)
+
             if conf_key == "dm_decimals":
                 self._set_parameter("dm_decimals", confs["dm_decimals"])
 
@@ -936,6 +917,11 @@ class ConfParser(Generic[TSettings]):
 
         if "displacement_distance_max" in params:
             settings.displacement_distance_max = params["displacement_distance_max"]
+
+        if "displacement_distance_sampling" in params:
+            settings.displacement_distance_sampling = params[
+                "displacement_distance_sampling"
+            ]
 
         # Decimals of values of dynamical matrxi
         if "dm_decimals" in params:

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests of VASP calculator interface."""
 
 import lzma
@@ -839,7 +840,8 @@ def test_expand_mixtures_caseD_distinct_constituents():
     cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
     lines = get_vasp_structure_lines(cell, expand_mixtures=True)
     species, counts = _parse_species_and_counts(lines)
-    # Constituents are sorted alphabetically by default in build_mixture_cell.
+    # build_mixture_cell canonicalizes constituents to the order in which the
+    # symbols first appear in the cell, so the Si-Ge site emits Ge before Si.
     assert species == ["Ge", "Sn", "Ge", "Si"]
     assert counts == [1, 1, 1, 1]
 

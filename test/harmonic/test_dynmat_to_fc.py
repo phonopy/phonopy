@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for dynmat_to_fc, inverse phonon transformation."""
 
 import os

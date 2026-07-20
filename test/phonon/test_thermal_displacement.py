@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for thermal displacement calculations."""
 
 from pathlib import Path

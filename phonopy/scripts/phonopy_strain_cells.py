@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Command to generate cells with sampled lattice parameters.
 
 The free lattice-length degrees of freedom are determined from the
@@ -16,6 +17,7 @@ from __future__ import annotations
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from typing import Literal
 
 import numpy as np
 
@@ -29,10 +31,12 @@ from phonopy.qha.lattice_sampling import (
     get_free_lattice_dof,
     grid_strained_cells,
     sample_strained_cells,
+    write_strain_cells,
     write_strain_cells_manifest,
 )
 
 MANIFEST_FILENAME = "strain_cells.yaml"
+STRUCTURE_FILENAME = "strain_cells.hdf5"
 
 
 def get_options() -> Namespace:
@@ -77,11 +81,35 @@ def get_options() -> Namespace:
     )
     parser.add_argument(
         "--amplitude",
+        "--amin",
         dest="displacement_distance",
         type=float,
         default=None,
         metavar="DISTANCE",
-        help="random displacement distance (default: phonopy's default)",
+        help="random displacement distance, and its floor when --amax is "
+        "given (default: phonopy's default)",
+    )
+    parser.add_argument(
+        "--amax",
+        dest="displacement_distance_max",
+        type=float,
+        default=None,
+        metavar="DISTANCE",
+        help="maximum random displacement distance; one distance per supercell "
+        "is then drawn uniformly from [0, --amax) and raised to --amin when "
+        "smaller, which reserves a share of wholly near-equilibrium "
+        "supercells, spanning the large-amplitude region needed to train an "
+        "MLP for SSCHA (see --amax-per-atom for the per-atom draw)",
+    )
+    parser.add_argument(
+        "--amax-per-atom",
+        dest="displacement_distance_per_atom",
+        action="store_true",
+        help="with --amax, draw the distance per atom instead of per supercell, "
+        "uniformly over [--amin, --amax), so every supercell spans the whole "
+        "range; this decorrelates the displacement amplitude from the lattice "
+        "strain, which matters when few supercells are generated per strained "
+        "cell. --amin is a sampling bound here rather than a floor",
     )
     parser.add_argument(
         "--rd",
@@ -227,6 +255,19 @@ def run() -> None:
     # deterministic grid run without --rd records no seed and can be replayed
     # from the manifest verbatim.
     with_rd = args.random_displacements is not None
+    if args.displacement_distance_max is not None:
+        if not with_rd:
+            sys.exit("Error: --amax applies to random displacements; add --rd.")
+        if (
+            args.displacement_distance is not None
+            and args.displacement_distance_max <= args.displacement_distance
+        ):
+            sys.exit("Error: --amax must be larger than --amin.")
+    elif args.displacement_distance_per_atom:
+        sys.exit("Error: --amax-per-atom applies to --amax; add --amax.")
+    distance_sampling: Literal["supercell", "atom"] = (
+        "atom" if args.displacement_distance_per_atom else "supercell"
+    )
     needs_random = args.grid is None or with_rd
     if args.random_seed is not None:
         seed = args.random_seed
@@ -244,11 +285,14 @@ def run() -> None:
         unitcells = sample_strained_cells(cell, dof, ranges, num=args.num, seed=seed)
         sampling = "random"
 
+    displacements = None
     if with_rd:
-        cells = build_random_displacement_supercells(
+        cells, displacements = build_random_displacement_supercells(
             unitcells,
             phonon.supercell_matrix,
             distance=args.displacement_distance,
+            max_distance=args.displacement_distance_max,
+            distance_sampling=distance_sampling,
             count=args.random_displacements,
             seed=seed,
         )
@@ -285,6 +329,8 @@ def run() -> None:
         num=None if grid_counts is not None else args.num,
         grid_shape=grid_shape,
         displacement_distance=args.displacement_distance,
+        displacement_distance_max=args.displacement_distance_max,
+        displacement_distance_sampling=distance_sampling,
         random_displacements=args.random_displacements,
         symprec=args.symprec,
         seed=seed,
@@ -295,6 +341,21 @@ def run() -> None:
         filenames=filenames,
     )
     write_strain_cells_manifest(MANIFEST_FILENAME, manifest)
+
+    if displacements is not None:
+        write_strain_cells(
+            STRUCTURE_FILENAME,
+            unitcells=unitcells,
+            supercells=cells,
+            displacements=displacements,
+            supercell_matrix=phonon.supercell_matrix,
+            phonopy_version=phonopy.__version__,
+            calculator=calculator,
+            length_unit=length_unit,
+            displacement_distance=args.displacement_distance,
+            displacement_distance_max=args.displacement_distance_max,
+            displacement_distance_sampling=distance_sampling,
+        )
 
     print(
         f"Wrote {len(cells)} {kind}(s) as "
@@ -307,6 +368,8 @@ def run() -> None:
     if seed is not None:
         print(f"Random seed: {seed}")
     print(f"Provenance written to {MANIFEST_FILENAME}")
+    if displacements is not None:
+        print(f"Structures and displacements written to {STRUCTURE_FILENAME}")
 
 
 if __name__ == "__main__":

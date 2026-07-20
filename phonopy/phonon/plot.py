@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Figure-level plotting of phonon calculation results."""
 
 from __future__ import annotations

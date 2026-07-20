@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests of Phonopy --symmetry."""
 
 from __future__ import annotations
@@ -6,7 +7,7 @@ import itertools
 import os
 import pathlib
 import tempfile
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import h5py
 import numpy as np
@@ -14,8 +15,17 @@ import pytest
 import yaml
 
 import phonopy
-from phonopy.cui.phonopy_argparse import PhonopyMockArgs
-from phonopy.cui.phonopy_script import main
+from phonopy.cui.phonopy_argparse import (
+    PhonopyMockArgs,
+    get_init_parser,
+    get_run_parser,
+)
+from phonopy.cui.phonopy_script import (
+    _detect_init_operation,
+    _prepare_dataset_by_pypolymlp,
+    main,
+)
+from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpFileNotFoundError
 from phonopy.structure.atomic_data import set_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
@@ -1178,6 +1188,378 @@ def test_phonopy_init_mode_requires_init_flag(capsys: pytest.CaptureFixture[str]
             os.chdir(original_cwd)
 
 
+def test_run_parser_accepts_displacement_flag():
+    """The phonopy (run) parser accepts -d instead of rejecting it at parse time.
+
+    -d is a shared flag now: the run parser must parse it (so --pypolymlp -d can
+    proceed), deferring the setup-operation decision to the settings-level gate.
+
+    """
+    parser, _ = get_run_parser()
+    args = parser.parse_args(["phonopy_disp.yaml", "-d", "--pypolymlp"])
+    assert args.is_displacement is True
+    assert args.use_pypolymlp is True
+
+    args = parser.parse_args(["phonopy_disp.yaml", "-d"])
+    assert args.is_displacement is True
+
+
+def test_run_parser_accepts_displacement_distance_flags():
+    """The run parser accepts the options shaping the displacements -d/--rd make.
+
+    --amplitude (--amin) sets the distance and --rd-auto-factor the estimated
+    number of snapshots; both reach the pypolymlp displacement path, so leaving
+    them on phonopy-init alone would make '--pypolymlp -d' unable to set them.
+
+    """
+    parser, _ = get_run_parser()
+    args = parser.parse_args(
+        ["phonopy_disp.yaml", "--pypolymlp", "-d", "--amplitude", "0.03"]
+    )
+    assert args.displacement_distance == pytest.approx(0.03)
+    assert args.is_displacement is True
+    assert args.use_pypolymlp is True
+
+    args = parser.parse_args(
+        ["phonopy_disp.yaml", "--pypolymlp", "--rd", "auto", "--rd-auto-factor", "3"]
+    )
+    assert args.rd_number_estimation_factor == pytest.approx(3.0)
+
+    # --amin is the same option under its random-displacement name.
+    args = parser.parse_args(["phonopy_disp.yaml", "--amin", "0.05"])
+    assert args.displacement_distance == pytest.approx(0.05)
+
+
+@pytest.mark.parametrize("log_level,expected", [(1, True), (0, False)])
+def test_run_mode_hint_respects_log_level(
+    log_level: int, expected: bool, capsys: pytest.CaptureFixture[str]
+):
+    """The 'no run mode' hint is silenced by -q like every other log message.
+
+    The hint used to print unconditionally, so --quiet still emitted it.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "NaCl" / "vasprun.xml-001.xz",
+                    cwd / "NaCl" / "vasprun.xml-002.xz",
+                ],
+                load_phonopy_yaml=False,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+            capsys.readouterr()
+
+            # No run mode is requested, so the hint is the thing under test.
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                log_level=log_level,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+
+            out = capsys.readouterr().out
+            assert ("No run mode was specified" in out) is expected
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_run_mode_hint_suppressed_by_writefc(capsys: pytest.CaptureFixture[str]):
+    """Writing force constants is a job in itself, so the hint is not shown.
+
+    Force constants without a phonon calculation is a common use, and the
+    hint would read as a complaint about a run that did what was asked.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "NaCl" / "vasprun.xml-001.xz",
+                    cwd / "NaCl" / "vasprun.xml-002.xz",
+                ],
+                load_phonopy_yaml=False,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+            capsys.readouterr()
+
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                write_force_constants=True,
+            )
+            with pytest.raises(SystemExit):
+                main(**argparse_control)
+
+            out = capsys.readouterr().out
+            assert "Force constants are written" in out
+            assert "No run mode was specified" not in out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_prepare_dataset_by_pypolymlp_passes_displacement_options():
+    """--amplitude, --amax and --pm reach generate_displacements unchanged.
+
+    The pypolymlp path used to hardcode the distance and plus-minus policy, so
+    these options were silently unavailable to '--pypolymlp -d / --rd'.
+
+    """
+    settings = PhonopySettings()
+    settings.displacement_distance = 0.05
+    settings.displacement_distance_max = 1.5
+    settings.random_displacements = 40
+    settings.random_seed = 7
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["distance"] == pytest.approx(0.05)
+    assert kwargs["max_distance"] == pytest.approx(1.5)
+    assert kwargs["number_of_snapshots"] == 40
+    assert kwargs["random_seed"] == 7
+    # 'auto' is passed through, not coerced: MLP forces are numerically clean
+    # enough that plus-minus pairs need not be forced here.
+    assert kwargs["is_plusminus"] == "auto"
+    phonon.evaluate_mlp.assert_called_once()
+
+
+@pytest.mark.parametrize("is_plusminus", [True, False])
+def test_prepare_dataset_by_pypolymlp_honors_explicit_plusminus(is_plusminus: bool):
+    """An explicit --pm or PM = .FALSE. reaches generate_displacements verbatim."""
+    settings = PhonopySettings()
+    settings.is_plusminus_displacement = is_plusminus
+    settings.random_displacements = 10
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["is_plusminus"] is is_plusminus
+    # The distance still falls back to the pypolymlp default.
+    assert kwargs["distance"] == pytest.approx(0.01)
+
+
+def test_prepare_dataset_by_pypolymlp_reports_effective_options(
+    capsys: pytest.CaptureFixture[str],
+):
+    """The distance and plus-minus choice actually used are printed.
+
+    Neither is visible in the command line when left at its default, and the
+    distance default (0.01) is specific to this path, so the log is the only
+    place a user can confirm what the MLP was evaluated on.
+
+    """
+    settings = PhonopySettings()
+    settings.displacement_distance_max = 1.5
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=1)
+
+    out = capsys.readouterr().out
+    assert "Displacement distance: 0.01 - 1.5" in out
+    assert "Plus-minus displacements: auto" in out
+
+
+def test_init_parser_still_accepts_displacement_distance_flags():
+    """phonopy-init keeps the distance options after they became shared."""
+    parser, _ = get_init_parser()
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2", "-d", "--amplitude", "0.03"]
+    )
+    assert args.displacement_distance == pytest.approx(0.03)
+
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2"]
+        + ["--rd", "auto", "--rd-auto-factor", "3"]
+    )
+    assert args.rd_number_estimation_factor == pytest.approx(3.0)
+
+
+def test_parsers_accept_amax_per_atom():
+    """Both parsers accept --amax-per-atom.
+
+    The per-atom draw shapes the same random displacements as --amax, so it has
+    to be reachable from 'phonopy-init --rd' and from '--pypolymlp --rd' alike.
+
+    """
+    init_parser, _ = get_init_parser()
+    args = init_parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2"]
+        + ["--rd", "100", "--amin", "0.03", "--amax", "1.5", "--amax-per-atom"]
+    )
+    assert args.displacement_distance_per_atom is True
+    assert args.displacement_distance_max == pytest.approx(1.5)
+
+    run_parser, _ = get_run_parser()
+    args = run_parser.parse_args(
+        ["phonopy_disp.yaml", "--pypolymlp", "--rd", "100", "--amax", "1.5"]
+        + ["--amax-per-atom"]
+    )
+    assert args.displacement_distance_per_atom is True
+
+    # Absent, it stays None so that Settings owns the default.
+    args = init_parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2", "--rd", "10"]
+    )
+    assert args.displacement_distance_per_atom is None
+
+
+@pytest.mark.parametrize("value", ["ATOM", "atom", "Atom"])
+def test_displacement_distance_sampling_tag(tmp_path, value: str):
+    """The conf tag selects the sampling unit regardless of its case."""
+    conf = tmp_path / "sampling.conf"
+    conf.write_text(f"DISPLACEMENT_DISTANCE_SAMPLING = {value}\n")
+
+    settings = PhonopyConfParser(filename=conf).settings
+    assert settings.displacement_distance_sampling == "atom"
+
+
+def test_displacement_distance_sampling_tag_defaults_to_supercell(tmp_path):
+    """Without the tag the per-supercell draw is kept."""
+    conf = tmp_path / "sampling.conf"
+    conf.write_text("DISPLACEMENT_DISTANCE_MAX = 1.5\n")
+
+    settings = PhonopyConfParser(filename=conf).settings
+    assert settings.displacement_distance_sampling == "supercell"
+
+
+def test_displacement_distance_sampling_tag_rejects_unknown_value(tmp_path):
+    """An unknown value fails rather than falling back to per-supercell.
+
+    The tag takes a name rather than .TRUE./.FALSE., so a typo is possible and
+    would otherwise silently produce the default sampling.
+
+    """
+    conf = tmp_path / "sampling.conf"
+    conf.write_text("DISPLACEMENT_DISTANCE_SAMPLING = PER_ATOM\n")
+
+    with pytest.raises(SystemExit):
+        PhonopyConfParser(filename=conf)
+
+
+def test_amax_per_atom_flag_sets_sampling_tag():
+    """--amax-per-atom selects the ATOM value of the tag.
+
+    The flag takes no value, so it has to be translated into the tag the same
+    way --alm selects FC_CALCULATOR = alm.
+
+    """
+    parser, _ = get_init_parser()
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2"]
+        + ["--rd", "10", "--amax", "1.5", "--amax-per-atom"]
+    )
+    settings = PhonopyConfParser(args=args).settings
+    assert settings.displacement_distance_sampling == "atom"
+
+    args = parser.parse_args(
+        ["-c", "POSCAR", "--dim", "2", "2", "2", "--rd", "10", "--amax", "1.5"]
+    )
+    settings = PhonopyConfParser(args=args).settings
+    assert settings.displacement_distance_sampling == "supercell"
+
+
+def test_prepare_dataset_by_pypolymlp_passes_amax_per_atom():
+    """--amax-per-atom reaches generate_displacements on the pypolymlp path."""
+    settings = PhonopySettings()
+    settings.displacement_distance_max = 1.5
+    settings.displacement_distance_sampling = "atom"
+    settings.random_displacements = 40
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["distance_sampling"] == "atom"
+
+
+def test_prepare_dataset_by_pypolymlp_defaults_amax_per_atom_off():
+    """Without the option the per-supercell draw is kept."""
+    settings = PhonopySettings()
+    settings.displacement_distance_max = 1.5
+    settings.random_displacements = 40
+
+    phonon = MagicMock()
+    _prepare_dataset_by_pypolymlp(phonon, settings, log_level=0)
+
+    kwargs = phonon.generate_displacements.call_args.kwargs
+    assert kwargs["distance_sampling"] == "supercell"
+
+
+def test_init_parser_still_accepts_displacement_flag():
+    """The phonopy-init parser continues to accept -d after it became shared."""
+    parser, _ = get_init_parser()
+    args = parser.parse_args(["-c", "POSCAR", "--dim", "2", "2", "2", "-d"])
+    assert args.is_displacement is True
+
+
+def test_detect_init_operation_displacements_with_pypolymlp():
+    """-d combined with --pypolymlp is a run operation, not a setup operation.
+
+    Plain -d generates displacement supercells and exits (setup/init), but with
+    --pypolymlp it drives displacement generation followed by MLP force
+    evaluation and a phonon calculation, so it must not be flagged as init-only.
+
+    """
+    settings = PhonopySettings()
+    settings.create_displacements = True
+
+    assert _detect_init_operation(False, settings) == "-d"
+
+    settings.use_pypolymlp = True
+    assert _detect_init_operation(False, settings) is None
+
+
+def test_phonopy_run_mode_accepts_pypolymlp_displacements(
+    capsys: pytest.CaptureFixture[str],
+):
+    """Phonopy in mode='run' accepts -d when combined with --pypolymlp.
+
+    Plain -d is rejected in run mode (see test_phonopy_run_mode_rejects_init_flag),
+    but --pypolymlp -d is a phonon-calculation workflow and must pass the
+    setup-operation guard, entering the pypolymlp displacement-creation path.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_disp_NaCl.yaml",
+                is_displacement=True,
+                use_pypolymlp=True,
+            )
+            argparse_control["mode"] = "run"
+            with (
+                patch("phonopy.cui.phonopy_script._prepare_dataset_by_pypolymlp"),
+                patch("phonopy.cui.phonopy_script.develop_or_load_pypolymlp"),
+            ):
+                with pytest.raises(SystemExit):
+                    main(**argparse_control)
+            # The run-mode gate must not reject the flag combination. Any exit
+            # comes from later stages, so only assert the guard was passed.
+            captured = capsys.readouterr()
+            assert "setup operation" not in captured.out
+            assert "Pypolymlp displacements creation mode" in captured.out
+
+            for created_filename in ("phonopy.yaml",):
+                file_path = pathlib.Path(created_filename)
+                if file_path.exists():
+                    file_path.unlink()
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_phonopy_load_deprecation_warning(capsys: pytest.CaptureFixture[str]):
     """Phonopy-load prints a deprecation message pointing to phonopy."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -1235,6 +1617,7 @@ def _get_phonopy_args(
     is_graph_save: bool | None = None,
     is_hdf5: bool | None = None,
     load_phonopy_yaml: bool = False,
+    log_level: int = 1,
     magmoms: str | None = None,
     mesh_numbers: str | None = None,
     primitive_axes: str | None = None,
@@ -1271,7 +1654,7 @@ def _get_phonopy_args(
         is_graph_plot=is_graph_plot,
         is_graph_save=is_graph_save,
         is_hdf5=is_hdf5,
-        log_level=1,
+        log_level=log_level,
         magmoms=magmoms,
         mesh_numbers=mesh_numbers,
         primitive_axes=primitive_axes,

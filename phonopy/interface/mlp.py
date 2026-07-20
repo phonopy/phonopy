@@ -1,38 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """MLP interfaces."""
-
-# Copyright (C) 2024 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
@@ -45,10 +12,13 @@ from numpy.typing import NDArray
 
 from phonopy.harmonic.displacement import Type2DisplacementDataset
 from phonopy.interface.pypolymlp import (
+    PypolymlpData,
     PypolymlpParams,
-    develop_mlp_by_pypolymlp,
+    PypolymlpStructureData,
+    develop_pypolymlp,
     evalulate_pypolymlp,
     load_pypolymlp,
+    parse_mlp_params,
     save_pypolymlp,
 )
 from phonopy.structure.atoms import PhonopyAtoms
@@ -98,11 +68,32 @@ class PhonopyMLP:
         params: PypolymlpParams | dict | str | None = None,
         test_size: float = 0.1,
     ) -> None:
-        """Develop MLP."""
-        self._mlp = develop_mlp_by_pypolymlp(
-            mlp_dataset,
-            supercell,
+        """Develop MLP from displacements of one supercell."""
+        self._mlp = develop_pypolymlp(
+            PypolymlpData.from_displacement_dataset(mlp_dataset, supercell),
+            params=None if params is None else parse_mlp_params(params),
+            test_size=test_size,
+            verbose=self._log_level - 1 > 0,
+        )
+
+    def develop_from_structures(
+        self,
+        train_data: PypolymlpStructureData,
+        test_data: PypolymlpStructureData | None = None,
+        params: PypolymlpParams | None = None,
+        test_size: float = 0.1,
+    ) -> None:
+        """Develop MLP from structures with individual lattices.
+
+        Unlike `develop`, the structures need not share one supercell, and
+        stress is used in the training. This suits datasets of strained
+        cells; see develop_pypolymlp.
+
+        """
+        self._mlp = develop_pypolymlp(
+            train_data,
+            test_data=test_data,
             params=params,
             test_size=test_size,
-            log_level=self._log_level,
+            verbose=self._log_level > 0,
         )

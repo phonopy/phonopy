@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Anisotropic quasi-harmonic approximation over lattice degrees of freedom.
 
 Unlike the volume-path QHA in phonopy.qha.qha, which fits a 1D equation of
@@ -242,7 +243,10 @@ class FreeEnergySurfaceFit:
         return gradient
 
     def minimize(
-        self, x0: Sequence[float] | NDArray[np.double] | None = None
+        self,
+        x0: Sequence[float] | NDArray[np.double] | None = None,
+        gtol: float = 1e-9,
+        convergence_gtol: float = 1e-6,
     ) -> NDArray[np.double]:
         """Return the lattice DOF x that minimize the fitted free energy.
 
@@ -251,10 +255,29 @@ class FreeEnergySurfaceFit:
         located minimum lies outside the sampled box, i.e. the result is
         an extrapolation of the fit.
 
+        The default gtol is much tighter than the scipy default of 1e-5.
+        The position error of the located minimum scales as
+        gtol / curvature, so a soft lattice DOF stops far from the true
+        minimum under a loose tolerance. Minima located independently at
+        neighbouring temperatures then scatter by that amount, and the
+        finite differences taken to obtain thermal expansion coefficients
+        amplify the scatter. The fit is a polynomial with an analytic
+        gradient, so a tight tolerance costs little.
+
+        Convergence is judged on the gradient actually reached rather than
+        on the scipy success flag. Under a tight gtol the line search
+        routinely stops with "precision loss" after descending far below
+        the requested tolerance, which is not a failure.
+
         Parameters
         ----------
         x0 : array_like, optional
             Initial guess for the lattice DOF in angstrom. shape=(ndim,)
+        gtol : float, optional
+            Gradient inf-norm at which BFGS terminates, in eV/angstrom.
+        convergence_gtol : float, optional
+            Gradient inf-norm in eV/angstrom below which the located point
+            counts as a minimum regardless of the scipy success flag.
 
         Returns
         -------
@@ -275,15 +298,18 @@ class FreeEnergySurfaceFit:
         def jac(x: NDArray[np.double]) -> NDArray[np.double]:
             return self.gradient(x[None, :])[0]
 
-        result = minimize(fun, start, jac=jac, method="BFGS")
-        self._minimize_converged = bool(result.success)
-        if not result.success:
+        result = minimize(fun, start, jac=jac, method="BFGS", options={"gtol": gtol})
+        x_min = np.array(result.x, dtype="double")
+        gradient_norm = float(np.abs(jac(x_min)).max())
+        converged = bool(result.success) or gradient_norm < convergence_gtol
+        self._minimize_converged = converged
+        if not converged:
             warnings.warn(
-                f"Free energy surface minimization did not converge: {result.message}",
+                f"Free energy surface minimization did not converge: "
+                f"{result.message} (gradient inf-norm {gradient_norm:.3e} eV/A)",
                 UserWarning,
                 stacklevel=2,
             )
-        x_min = np.array(result.x, dtype="double")
         low = self._points.min(axis=0)
         high = self._points.max(axis=0)
         extrapolated = bool((x_min < low).any() or (x_min > high).any())

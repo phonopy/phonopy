@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Pure computation routines shared by QHA implementations.
 
 Functions in this module operate on plain arrays and have no I/O,

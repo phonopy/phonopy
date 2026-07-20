@@ -1,38 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Helper methods of phonopy loader."""
-
-# Copyright (C) 2018 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
@@ -417,19 +384,13 @@ def _load_pypolymlp(
     """Load MLPs from polymlp.yaml or phonopy.pmlp."""
     _mlp_filename = None
     if mlp_filename is None:
+        suffixes = (".yaml", ".pmlp", ".xz", ".gz", ".bz2", ".lzma")
         for default_mlp_filename in ["polymlp.yaml", "phonopy.pmlp", "phono3py.pmlp"]:
-            _mlp_filename_list = list(pathlib.Path().glob(f"{default_mlp_filename}*"))
-            if _mlp_filename_list:
-                _mlp_filename = _mlp_filename_list[0]
-                if _mlp_filename.suffix not in [
-                    ".yaml",
-                    ".pmlp",
-                    ".xz",
-                    ".gz",
-                    ".bz2",
-                    "lzma",
-                ]:
-                    continue
+            for path in sorted(pathlib.Path().glob(f"{default_mlp_filename}*")):
+                if path.suffix in suffixes:
+                    _mlp_filename = path
+                    break
+            if _mlp_filename is not None:
                 if log_level and "pmlp" in default_mlp_filename:
                     print(f'Loading MLPs from "{_mlp_filename}" is obsolete.')
                 break
@@ -485,58 +446,6 @@ def _develop_and_save_pypolymlp(
         raise PypolymlpTrainingDatasetNotFoundError(
             "Pypolymlp training dataset is not found."
         )
-
-
-def prepare_dataset_by_pypolymlp(
-    phonon: Phonopy,
-    displacement_distance: float | None = None,
-    number_of_snapshots: int | Literal["auto"] | None = None,
-    rd_number_estimation_factor: float | None = None,
-    random_seed: int | None = None,
-    log_level: int = 0,
-) -> None:
-    """Generate displacements and evaluate forces by pypolymlp."""
-    if displacement_distance is None:
-        _displacement_distance = 0.01
-    else:
-        _displacement_distance = displacement_distance
-
-    if log_level:
-        if number_of_snapshots:
-            print("Generate random displacements")
-            print(
-                "  Twice of number of snapshots will be generated "
-                "for plus-minus displacements."
-            )
-        else:
-            print("Generate displacements")
-        print(
-            f"  Displacement distance: {_displacement_distance:.5f}".rstrip("0").rstrip(
-                "."
-            )
-        )
-    phonon.generate_displacements(
-        distance=_displacement_distance,
-        is_plusminus=True,
-        number_of_snapshots=number_of_snapshots,
-        random_seed=random_seed,
-        number_estimation_factor=rd_number_estimation_factor,
-    )
-    assert phonon.supercells_with_displacements is not None
-
-    if log_level and number_of_snapshots == "auto":
-        print(
-            "  Number of generated supercells with random displacements: "
-            f"{len(phonon.supercells_with_displacements)}",
-        )
-
-    if log_level:
-        print(
-            f"Evaluate forces in {len(phonon.displacements)} supercells by pypolymlp",
-            flush=True,
-        )
-
-    phonon.evaluate_mlp()
 
 
 def _read_force_constants_file(

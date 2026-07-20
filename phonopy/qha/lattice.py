@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Fit of lattice parameters as functions of cell volume.
 
 This module contains pure math routines with no I/O and no plotting.

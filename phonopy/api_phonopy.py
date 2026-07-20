@@ -1,38 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Phonopy class."""
-
-# Copyright (C) 2015 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
@@ -53,9 +20,9 @@ from phonopy.harmonic.displacement import (
     DisplacementDataset,
     Type1DisplacementDataset,
     Type2DisplacementDataset,
-    directions_to_displacement_dataset,
-    get_least_displacements,
-    get_random_displacements_dataset,
+    estimate_number_of_snapshots,
+    generate_random_displacements,
+    generate_systematic_displacements,
 )
 from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
@@ -304,7 +271,7 @@ class Phonopy:
         self._total_dos = None
         self._modulation = None
         self._irreps = None
-        self._random_displacements = None
+        self._random_displacements: RandomDisplacements | None = None
         self._moment = None
         self._qpoints = None
 
@@ -841,147 +808,188 @@ class Phonopy:
         temperature: float | None = None,
         cutoff_frequency: float | None = None,
         max_distance: float | None = None,
+        distance_sampling: Literal["supercell", "atom"] = "supercell",
         number_estimation_factor: float | None = None,
     ) -> None:
-        """Generate displacement dataset.
+        """Generate displacement dataset and store it in Phonopy.dataset.
 
-        There are two modes, finite difference method with systematic
-        displacements and fitting approach between arbitrary displacements and
-        their forces. The default approach is the finite difference method that
-        is built-in phonopy. The fitting approach requires external force
-        constant calculator.
+        This method selects one of three generators and stores its result;
+        the generators hold the details of each mode.
 
-        The random displacement supercells are created by setting positive
-        integer values 'number_of_snapshots' keyword argument. Unless this is
-        specified, systematic displacements are created for the finite
-        difference method as the default behaviour.
+        Systematic displacements for the built-in finite-difference method
+        are the default. Random displacements, which require an external
+        force-constants calculator (symfc, ALM), are selected by giving
+        ``number_of_snapshots``, and come in two flavours: random directions
+        at a fixed or randomly drawn distance, or displacements sampled from
+        the canonical ensemble of harmonic phonons at ``temperature``. The
+        latter needs force constants to be set already.
+
+        See Also
+        --------
+        phonopy.harmonic.displacement.generate_systematic_displacements
+        phonopy.harmonic.displacement.generate_random_displacements
+        phonopy.harmonic.displacement.estimate_number_of_snapshots
+        Phonopy.init_random_displacements
+        Phonopy.get_random_displacements_at_temperature
 
         Parameters
         ----------
         distance : float, optional
-            Displacement distance. Unit is the same as that used for the
-            crystal structure. Default is 0.01. For random-direction
-            random-distance displacement generation, this value is also
-            used as ``min_distance``: any generated random distance
-            smaller than this value is replaced by this value.
+            Displacement distance in the unit of the crystal structure.
+            Default is 0.01. With ``max_distance`` and without
+            ``temperature``, it is the floor of the random distance rather
+            than the distance itself.
         is_plusminus : 'auto', True, or False, optional
-            For each atom, generate displacements in one direction
-            (False), in both directions (True), or in both directions
-            only when symmetry requires it (``'auto'``). Default is
-            ``'auto'``.
+            For each atom, generate displacements in one direction (False),
+            in both directions (True), or in both directions only when
+            symmetry requires it (``'auto'``). Default is ``'auto'``.
         is_diagonal : bool, optional
-            When False, displacements are made only along basis vectors;
-            when True, displacements may be off the basis vectors if
-            doing so reduces the number of displacements by symmetry.
-            Default is True.
+            Systematic displacements only. When False, displace only along
+            basis vectors. Default is True.
         is_trigonal : bool, optional
             Exists only for testing purposes. Default is False.
         number_of_snapshots : int, "auto", or None, optional
-            Number of snapshots of supercells with random displacements.
-            Random displacements are generated by shifting all atoms in
-            random directions by a fixed distance specified by the
-            ``distance`` parameter. In other words, all atoms in the
-            supercell are displaced by the same distance in direct space.
-            When ``"auto"``, the minimum required number of snapshots is
-            estimated using symfc and then doubled. The default is None.
+            Number of supercells with random displacements. When ``"auto"``,
+            it is estimated with symfc. None selects systematic
+            displacements. Default is None.
         random_seed : int or None, optional
-            Random seed for random displacements generation. Default is
-            None.
+            Random seed, used when in ``[0, 2**32)``. Default is None.
         temperature : float or None, optional
-            When given, random displacements at this temperature are
-            generated by sampling the canonical ensemble of harmonic
-            oscillators (harmonic phonons). Default is None.
+            When given, random displacements are sampled from the canonical
+            ensemble of harmonic phonons at this temperature. Default is
+            None.
         cutoff_frequency : float or None, optional
-            In random displacements generation from the canonical
-            ensemble of harmonic phonons, the phonon occupation number
-            is used to determine the deviation of the distribution
-            function. To avoid too large deviation, this value is used
-            to exclude phonon modes whose absolute frequencies are
-            smaller than this value. Default is None.
+            Finite-temperature generation only. Phonon modes whose absolute
+            frequencies are below this value are excluded. Default is None.
         max_distance : float or None, optional
-            In random displacements generation from canonical ensemble of
-            harmonic phonons, displacements larger than max distance are
-            renormalized to the max distance, i.e., a displacement ``d`` is
-            shortened by ``d -> d / norm(d) * max_distance`` if
-            ``norm(d) > max_distance``. In random displacements without using
-            temperature, this value serves as the maximum distance, while the
-            ``distance`` parameter sets the minimum distance. The displacement
-            distance is randomly sampled from a uniform distribution between
-            these two bounds.
+            Upper bound of the displacement distance. With ``temperature``,
+            a displacement longer than this is renormalized to it; without
+            ``temperature``, one distance per supercell is drawn from
+            ``[0, max_distance)`` and floored at ``distance``. Default is
+            None.
+        distance_sampling : "supercell" or "atom", optional
+            Unit the random distance is drawn for. Requires ``max_distance``
+            and is incompatible with ``temperature``, which already draws per
+            atom. With "atom" the distance is drawn per atom rather than per
+            supercell, uniformly over ``[distance, max_distance)`` and without
+            the weight at ``distance``. Default is "supercell".
         number_estimation_factor : float, optional
-            This factor multiplies the number of snapshots estimated by symfc
-            when `number_of_snapshots` is set to "auto". Default is None, which
-            sets this factor to 8 when `max_distance` is specified, otherwise 4.
+            Safety factor on the symfc estimate used by
+            ``number_of_snapshots="auto"``. Default is None.
 
         """
-        displacement_dataset: DisplacementDataset
+        if distance_sampling == "atom" and max_distance is None:
+            raise ValueError('distance_sampling="atom" requires max_distance.')
         if number_of_snapshots is not None and (
             number_of_snapshots == "auto" or number_of_snapshots > 0
         ):
             if number_of_snapshots == "auto":
-                from phonopy.interface.symfc import SymfcFCSolver
-
-                _number_of_snapshots = SymfcFCSolver(
-                    self._supercell, symmetry=self._symmetry
-                ).estimate_numbers_of_supercells(orders=[2])[2]
-                if number_estimation_factor is None:
-                    if max_distance is None:
-                        _number_of_snapshots *= 4
-                    else:
-                        _number_of_snapshots *= 8
-                else:
-                    _number_of_snapshots *= number_estimation_factor
-                    _number_of_snapshots = int(_number_of_snapshots)
+                _number_of_snapshots = estimate_number_of_snapshots(
+                    self._supercell,
+                    self._symmetry,
+                    max_distance=max_distance,
+                    number_estimation_factor=number_estimation_factor,
+                )
             else:
                 _number_of_snapshots = number_of_snapshots
-
-            if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
+            if random_seed is not None and 0 <= random_seed < 2**32:
                 _random_seed = random_seed
             else:
                 _random_seed = None
             if temperature is None:
-                if distance is None:
-                    _distance = 0.01
-                else:
-                    _distance = distance
-                d = get_random_displacements_dataset(
+                self.dataset = generate_random_displacements(
+                    self._supercell,
                     _number_of_snapshots,
-                    len(self._supercell),
-                    _distance,
-                    random_seed=_random_seed,
+                    distance=distance,
                     is_plusminus=(is_plusminus is True),
+                    random_seed=_random_seed,
                     max_distance=max_distance,
+                    distance_sampling=distance_sampling,
                 )
             else:
-                self.init_random_displacements(
-                    cutoff_frequency=cutoff_frequency, max_distance=max_distance
+                if distance_sampling == "atom":
+                    raise ValueError(
+                        'distance_sampling="atom" is incompatible with '
+                        "temperature; the canonical ensemble already gives "
+                        "each atom its own displacement."
+                    )
+                displacement_dataset, random_displacements = (
+                    self._generate_finite_temperature_displacement_dataset(
+                        _number_of_snapshots,
+                        temperature=temperature,
+                        is_plusminus=is_plusminus,
+                        random_seed=_random_seed,
+                        cutoff_frequency=cutoff_frequency,
+                        max_distance=max_distance,
+                    )
                 )
-                d = self.get_random_displacements_at_temperature(
-                    temperature,
-                    _number_of_snapshots,
-                    is_plusminus=(is_plusminus is True),
-                    random_seed=_random_seed,
-                )
-            displacement_dataset_type2: Type2DisplacementDataset = {"displacements": d}
-            if _random_seed is not None:
-                displacement_dataset_type2["random_seed"] = _random_seed
-            displacement_dataset = displacement_dataset_type2
+                self.dataset = displacement_dataset
+                # The self.dataset assignment above clears
+                # self._random_displacements via _invalidate_derived. Restore
+                # the finite-temperature instance so callers can read its
+                # q-points, frequencies, and integrated modes.
+                self._random_displacements = random_displacements
         else:
-            if distance is None:
-                _distance = 0.01
-            else:
-                _distance = distance
-            displacement_directions = get_least_displacements(
+            self.dataset = generate_systematic_displacements(
+                self._supercell,
                 self._symmetry,
+                distance=distance,
                 is_plusminus=is_plusminus,
                 is_diagonal=is_diagonal,
                 is_trigonal=is_trigonal,
                 log_level=self._log_level,
             )
-            displacement_dataset = directions_to_displacement_dataset(
-                displacement_directions, _distance, self._supercell
-            )
-        self.dataset = displacement_dataset
+
+    def _generate_finite_temperature_displacement_dataset(
+        self,
+        number_of_snapshots: int,
+        temperature: float,
+        is_plusminus: Literal["auto"] | bool,
+        random_seed: int | None,
+        cutoff_frequency: float | None,
+        max_distance: float | None,
+    ) -> tuple[Type2DisplacementDataset, RandomDisplacements]:
+        """Build a type-2 dataset of random displacements at finite temperature.
+
+        This is a helper for :meth:`generate_displacements`; see there for
+        the meaning of the parameters.
+
+        Returns
+        -------
+        tuple[Type2DisplacementDataset, RandomDisplacements]
+            The generated type-2 displacement dataset and the
+            RandomDisplacements instance used to create it.
+
+        Note
+        ----
+        This method sets self._random_displacements as a side effect:
+        init_random_displacements creates the instance and
+        get_random_displacements_at_temperature runs it. The instance
+        returned here is that same object.
+
+        IMPORTANT: the caller must put the returned instance back into
+        self._random_displacements *after* assigning self.dataset. That
+        assignment triggers _invalidate_derived, which resets
+        self._random_displacements to None. Without the restore, the
+        q-points, frequencies, and integrated modes computed here are
+        lost, and Phonopy.random_displacements returns None even though
+        generation succeeded.
+
+        """
+        self.init_random_displacements(
+            cutoff_frequency=cutoff_frequency, max_distance=max_distance
+        )
+        d = self.get_random_displacements_at_temperature(
+            temperature,
+            number_of_snapshots,
+            is_plusminus=(is_plusminus is True),
+            random_seed=random_seed,
+        )
+        assert self._random_displacements is not None
+        dataset: Type2DisplacementDataset = {"displacements": d}
+        if random_seed is not None:
+            dataset["random_seed"] = random_seed
+        return dataset, self._random_displacements
 
     def produce_force_constants(
         self,
@@ -3240,6 +3248,7 @@ class Phonopy:
             scattering_lengths=scattering_lengths,
             freq_min=freq_min,
             freq_max=freq_max,
+            factor=self._unit_conversion_factor,
         )
         return self._dynamic_structure_factor
 

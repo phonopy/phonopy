@@ -1,45 +1,12 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Polynomial machine learning potential interface."""
-
-# Copyright (C) 2024 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
 import os
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -54,6 +21,8 @@ try:
     from pypolymlp.mlp_dev.pypolymlp import Pypolymlp  # type: ignore[import-untyped]
 except ImportError:
     Pypolymlp = Any
+
+_DatasetT = TypeVar("_DatasetT", "PypolymlpData", "PypolymlpStructureData")
 
 
 @dataclass
@@ -103,7 +72,11 @@ class PypolymlpParams:
 
 @dataclass
 class PypolymlpData:
-    """Dataset for pypolymlp input.
+    """Displacement dataset for pypolymlp input.
+
+    All the snapshots are displacements of one reference supercell, so the
+    lattice is shared and stress is not carried. See
+    PypolymlpStructureData for the dataset of independent structures.
 
     displacements : np.ndarray
         Displacements of atoms. shape=(n, natoms, 3)
@@ -111,33 +84,86 @@ class PypolymlpData:
         Displacements of atoms. shape=(n, natoms, 3)
     supercell_energies : np.ndarray, optional
         Energies of supercells. shape=(n,)
+    supercell : PhonopyAtoms
+        Reference supercell the displacements are relative to.
 
     """
 
     displacements: NDArray[np.double]
     forces: NDArray[np.double]
     supercell_energies: NDArray[np.double]
+    supercell: PhonopyAtoms
+
+    @classmethod
+    def from_displacement_dataset(
+        cls, dataset: Type2DisplacementDataset, supercell: PhonopyAtoms
+    ) -> PypolymlpData:
+        """Return the dataset built from a phonopy type-2 dataset.
+
+        Parameters
+        ----------
+        dataset : Type2DisplacementDataset
+            Displacements with their forces and supercell energies.
+        supercell : PhonopyAtoms
+            Supercell the displacements are relative to.
+
+        """
+        return cls(
+            displacements=dataset["displacements"],
+            forces=dataset["forces"],  # type: ignore[typeddict-item]
+            supercell_energies=dataset["supercell_energies"],  # type: ignore[typeddict-item]
+            supercell=supercell,
+        )
+
+    def __len__(self) -> int:
+        """Return number of snapshots."""
+        return len(self.displacements)
+
+    def __getitem__(self, index: slice) -> PypolymlpData:
+        """Return the sliced snapshots, sharing the reference supercell."""
+        if not isinstance(index, slice):
+            raise TypeError("Only slices are supported.")
+        return PypolymlpData(
+            displacements=self.displacements[index],
+            forces=self.forces[index],
+            supercell_energies=self.supercell_energies[index],
+            supercell=self.supercell,
+        )
 
 
 def develop_pypolymlp(
-    supercell: PhonopyAtoms,
-    train_data: PypolymlpData,
-    test_data: PypolymlpData,
+    train_data: PypolymlpData | PypolymlpStructureData,
+    test_data: PypolymlpData | PypolymlpStructureData | None = None,
     params: PypolymlpParams | None = None,
+    test_size: float = 0.1,
     verbose: bool = False,
 ) -> Pypolymlp:  # type: ignore
     """Develop polynomial MLPs of pypolymlp.
 
+    The training mode follows the dataset type. PypolymlpData holds
+    displacements of one reference supercell and trains on energies and
+    forces. PypolymlpStructureData holds independent structures, so the
+    lattices may differ (e.g. strained cells) and stress is used as well.
+    Both datasets must be of the same type.
+
     Parameters
     ----------
-    supercell : PhonopyAtoms
-        Supercell structure.
-    train_data : PyPolymlpData
-        Training dataset.
-    test_data : PyPolymlpData
-        Test dataset.
+    train_data : PypolymlpData or PypolymlpStructureData
+        Training dataset. With `test_data` None, this is the whole dataset
+        and it is split by `test_size`.
+    test_data : PypolymlpData or PypolymlpStructureData, optional
+        Test dataset. Default is None, i.e. split `train_data` instead.
+        Pass it explicitly to keep the test dataset fixed while the
+        training dataset varies, e.g. when measuring how many structures
+        the MLP needs.
     params : PypolymlpParams, optional
-        Parameters for pypolymlp. Default is None.
+        Parameters for pypolymlp. Default is None. When `test_data` is None
+        and both `params.ntrain` and `params.ntest` are given, they select
+        that many entries from the head and the tail, respectively, and
+        `test_size` is unused.
+    test_size : float, optional
+        Fraction of `train_data` used as the test dataset when `test_data`
+        is None; see split_pypolymlp_dataset. Default is 0.1.
     verbose : bool, optional
         Verbosity. Default is False.
 
@@ -157,15 +183,35 @@ def develop_pypolymlp(
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
-    if params is None:
-        _params = PypolymlpParams()
-    else:
-        _params = params
+    if test_data is None:
+        if (
+            params is not None
+            and params.ntrain is not None
+            and params.ntest is not None
+        ):
+            train_data, test_data = (
+                train_data[: params.ntrain],
+                train_data[-params.ntest :],
+            )
+        else:
+            n = _split_index(len(train_data), test_size)
+            train_data, test_data = train_data[:n], train_data[n:]
+    if type(train_data) is not type(test_data):
+        raise TypeError(
+            "train_data and test_data must be of the same type, but they are "
+            f"{type(train_data).__name__} and {type(test_data).__name__}."
+        )
 
-    if _params.atom_energies is None:
-        elements_energies = {s: 0.0 for s in supercell.symbols}
+    _params = PypolymlpParams() if params is None else params
+
+    if isinstance(train_data, PypolymlpData):
+        symbols = train_data.supercell.symbols
     else:
-        elements_energies = {s: _params.atom_energies[s] for s in supercell.symbols}
+        symbols = train_data.structures[0].symbols
+    if _params.atom_energies is None:
+        elements_energies = {s: 0.0 for s in symbols}
+    else:
+        elements_energies = {s: _params.atom_energies[s] for s in symbols}
     polymlp = Pypolymlp()
     polymlp.set_params(
         elements=tuple(elements_energies.keys()),
@@ -177,15 +223,33 @@ def develop_pypolymlp(
         gaussian_params2=_params.gaussian_params2,
         atomic_energy=tuple(elements_energies.values()),
     )
-    polymlp.set_datasets_displacements(
-        train_data.displacements.transpose(0, 2, 1),
-        train_data.forces.transpose(0, 2, 1),
-        train_data.supercell_energies,
-        test_data.displacements.transpose(0, 2, 1),
-        test_data.forces.transpose(0, 2, 1),
-        test_data.supercell_energies,
-        phonopy_cell_to_structure(supercell),
-    )
+    if isinstance(train_data, PypolymlpData):
+        assert isinstance(test_data, PypolymlpData)
+        polymlp.set_datasets_displacements(
+            train_data.displacements.transpose(0, 2, 1),
+            train_data.forces.transpose(0, 2, 1),
+            train_data.supercell_energies,
+            test_data.displacements.transpose(0, 2, 1),
+            test_data.forces.transpose(0, 2, 1),
+            test_data.supercell_energies,
+            phonopy_cell_to_structure(train_data.supercell),
+        )
+    else:
+        assert isinstance(test_data, PypolymlpStructureData)
+        polymlp.set_datasets_structures(
+            train_structures=[
+                phonopy_cell_to_structure(cell) for cell in train_data.structures
+            ],
+            test_structures=[
+                phonopy_cell_to_structure(cell) for cell in test_data.structures
+            ],
+            train_energies=train_data.energies,
+            test_energies=test_data.energies,
+            train_forces=[force.T for force in train_data.forces],
+            test_forces=[force.T for force in test_data.forces],
+            train_stresses=_structures_virial(train_data),
+            test_stresses=_structures_virial(test_data),
+        )
     try:
         polymlp.run(verbose=verbose)
     except RuntimeError as e:
@@ -223,6 +287,59 @@ class PypolymlpStructureData:
     energies: NDArray[np.double]
     forces: list[NDArray[np.double]]
     stresses: NDArray[np.double] | None
+
+    def __len__(self) -> int:
+        """Return number of structures."""
+        return len(self.structures)
+
+    def __getitem__(self, index: slice) -> PypolymlpStructureData:
+        """Return the sliced structures and their properties."""
+        if not isinstance(index, slice):
+            raise TypeError("Only slices are supported.")
+        return PypolymlpStructureData(
+            structures=self.structures[index],
+            energies=self.energies[index],
+            forces=self.forces[index],
+            stresses=None if self.stresses is None else self.stresses[index],
+        )
+
+
+def _split_index(n_total: int, test_size: float) -> int:
+    """Return the index that splits n_total entries by test_size."""
+    n = int(n_total * (1 - test_size))
+    if n < 1 or n >= n_total:
+        raise ValueError(
+            f"test_size={test_size} leaves {n} training entries out of "
+            f"{n_total}; both datasets must be non-empty."
+        )
+    return n
+
+
+def split_pypolymlp_dataset(
+    data: _DatasetT, test_size: float = 0.1
+) -> tuple[_DatasetT, _DatasetT]:
+    """Split a dataset into training and test datasets.
+
+    The dataset is not shuffled: the first `1 - test_size` fraction becomes
+    the training dataset and the rest becomes the test dataset. Datasets
+    also slice directly, e.g. `data[:20]`, which is what a series over
+    training-set sizes needs.
+
+    Parameters
+    ----------
+    data : PypolymlpData or PypolymlpStructureData
+        Dataset to split.
+    test_size : float, optional
+        Fraction of the dataset used as the test dataset. Default is 0.1.
+
+    Returns
+    -------
+    train_data : PypolymlpData or PypolymlpStructureData
+    test_data : PypolymlpData or PypolymlpStructureData
+
+    """
+    n = _split_index(len(data), test_size)
+    return data[:n], data[n:]
 
 
 def read_vasprun_dataset(
@@ -279,6 +396,10 @@ def write_pypolymlp_structure_dataset(
     concatenated over structures with an ``n_atoms`` index, so structures
     with different numbers of atoms are supported.
 
+    All datasets are gzip compressed and stored in their full precision;
+    floating-point quantities stay double so that the training data keeps
+    the precision of the calculation it was read from.
+
     Parameters
     ----------
     data : PypolymlpStructureData
@@ -298,14 +419,14 @@ def write_pypolymlp_structure_dataset(
     positions = np.concatenate([cell.scaled_positions for cell in data.structures])
     forces = np.concatenate(data.forces)
     with h5py.File(filename, "w") as w:
-        w.create_dataset("n_atoms", data=n_atoms)
-        w.create_dataset("lattices", data=lattices)
-        w.create_dataset("numbers", data=numbers)
-        w.create_dataset("scaled_positions", data=positions)
-        w.create_dataset("energies", data=data.energies)
-        w.create_dataset("forces", data=forces)
+        w.create_dataset("n_atoms", data=n_atoms, compression="gzip")
+        w.create_dataset("lattices", data=lattices, compression="gzip")
+        w.create_dataset("numbers", data=numbers, compression="gzip")
+        w.create_dataset("scaled_positions", data=positions, compression="gzip")
+        w.create_dataset("energies", data=data.energies, compression="gzip")
+        w.create_dataset("forces", data=forces, compression="gzip")
         if data.stresses is not None:
-            w.create_dataset("stresses", data=data.stresses)
+            w.create_dataset("stresses", data=data.stresses, compression="gzip")
 
 
 def read_pypolymlp_structure_dataset(
@@ -377,93 +498,6 @@ def _structures_virial(data: PypolymlpStructureData) -> NDArray[np.double] | Non
         ],
         dtype="double",
     )
-
-
-def develop_pypolymlp_from_structures(
-    train_data: PypolymlpStructureData,
-    test_data: PypolymlpStructureData,
-    params: PypolymlpParams | None = None,
-    verbose: bool = False,
-) -> Pypolymlp:  # type: ignore
-    """Develop a pypolymlp MLP from structure datasets.
-
-    This uses pypolymlp's structure-based training, so the training
-    structures may have different lattices and stress (virial) data are
-    used in addition to energies and forces. Use this for datasets built
-    from arbitrary first-principles calculations (e.g. strained cells),
-    where develop_pypolymlp (displacement based, single reference cell,
-    no stress) does not apply.
-
-    Parameters
-    ----------
-    train_data : PypolymlpStructureData
-        Training dataset.
-    test_data : PypolymlpStructureData
-        Test dataset.
-    params : PypolymlpParams, optional
-        Parameters for pypolymlp. Default is None.
-    verbose : bool, optional
-        Verbosity. Default is False.
-
-    Returns
-    -------
-    polymlp : Pypolymlp
-
-    """
-    try:
-        from pypolymlp.mlp_dev.pypolymlp import (
-            Pypolymlp,  # type: ignore[import-untyped]
-        )
-        from pypolymlp.utils.phonopy_utils import (
-            phonopy_cell_to_structure,  # type: ignore[import-untyped]
-        )
-    except ImportError as exc:
-        raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
-
-    _params = PypolymlpParams() if params is None else params
-
-    symbols = train_data.structures[0].symbols
-    if _params.atom_energies is None:
-        elements_energies = {s: 0.0 for s in symbols}
-    else:
-        elements_energies = {s: _params.atom_energies[s] for s in symbols}
-
-    polymlp = Pypolymlp()
-    polymlp.set_params(
-        elements=tuple(elements_energies.keys()),
-        cutoff=_params.cutoff,
-        model_type=_params.model_type,
-        max_p=_params.max_p,
-        gtinv_order=_params.gtinv_order,
-        gtinv_maxl=_params.gtinv_maxl,
-        gaussian_params2=_params.gaussian_params2,
-        atomic_energy=tuple(elements_energies.values()),
-    )
-    polymlp.set_datasets_structures(
-        train_structures=[
-            phonopy_cell_to_structure(cell) for cell in train_data.structures
-        ],
-        test_structures=[
-            phonopy_cell_to_structure(cell) for cell in test_data.structures
-        ],
-        train_energies=train_data.energies,
-        test_energies=test_data.energies,
-        train_forces=[force.T for force in train_data.forces],
-        test_forces=[force.T for force in test_data.forces],
-        train_stresses=_structures_virial(train_data),
-        test_stresses=_structures_virial(test_data),
-    )
-    try:
-        polymlp.run(verbose=verbose)
-    except RuntimeError as e:
-        if "singular" in str(e):
-            raise PypolymlpDevelopmentError(
-                "Pypolymlp development failed due to singularity of "
-                "(X.T @ X + alpha * I)"
-            ) from e
-        else:
-            raise RuntimeError(str(e)) from e
-    return polymlp
 
 
 def evalulate_pypolymlp(
@@ -585,61 +619,6 @@ def load_pypolymlp(filename: str | os.PathLike | None) -> Pypolymlp:  # type: ig
     myio = get_io_module_to_decompress(filename)
     with myio.open(filename, "rt") as fp:
         mlp.load_mlp(fp)
-    return mlp
-
-
-def develop_mlp_by_pypolymlp(
-    mlp_dataset: Type2DisplacementDataset,
-    supercell: PhonopyAtoms,
-    params: PypolymlpParams | dict | str | None = None,
-    test_size: float = 0.1,
-    log_level: int = 0,
-) -> Pypolymlp:  # type: ignore
-    """Develop MLPs by pypolymlp."""
-    _params: PypolymlpParams | None
-    if params is not None:
-        _params = parse_mlp_params(params)
-    else:
-        _params = None
-
-    if _params is not None and _params.ntrain is not None and _params.ntest is not None:
-        ntrain = _params.ntrain
-        ntest = _params.ntest
-        disps = mlp_dataset["displacements"]
-        forces = mlp_dataset["forces"]  # type: ignore[typeddict-item]
-        energies = mlp_dataset["supercell_energies"]  # type: ignore[typeddict-item]
-        train_data = PypolymlpData(
-            displacements=disps[:ntrain],
-            forces=forces[:ntrain],
-            supercell_energies=energies[:ntrain],
-        )
-        test_data = PypolymlpData(
-            displacements=disps[-ntest:],
-            forces=forces[-ntest:],
-            supercell_energies=energies[-ntest:],
-        )
-    else:
-        disps = mlp_dataset["displacements"]
-        forces = mlp_dataset["forces"]  # type: ignore[typeddict-item]
-        energies = mlp_dataset["supercell_energies"]  # type: ignore[typeddict-item]
-        n = int(len(disps) * (1 - test_size))
-        train_data = PypolymlpData(
-            displacements=disps[:n],
-            forces=forces[:n],
-            supercell_energies=energies[:n],
-        )
-        test_data = PypolymlpData(
-            displacements=disps[n:],
-            forces=forces[n:],
-            supercell_energies=energies[n:],
-        )
-    mlp = develop_pypolymlp(
-        supercell,
-        train_data,
-        test_data,
-        params=_params,
-        verbose=log_level - 1 > 0,
-    )
     return mlp
 
 

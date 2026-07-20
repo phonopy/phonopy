@@ -1,38 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Phonopy command line argument parser."""
-
-# Copyright (C) 2016 Atsushi Togo
-# All rights reserved.
-#
-# This file is part of phonopy.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in
-#   the documentation and/or other materials provided with the
-#   distribution.
-#
-# * Neither the name of the phonopy project nor the names of its
-#   contributors may be used to endorse or promote products derived
-#   from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
 
@@ -226,6 +193,14 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         help="Save parameters that can run phonopy in phonopy_params.yaml.",
     )
     parser.add_argument(
+        "-d",
+        "--displacement",
+        dest="is_displacement",
+        action="store_true",
+        default=None,
+        help="Create supercells with displacements",
+    )
+    parser.add_argument(
         "--rd",
         "--random-displacements",
         dest="random_displacements",
@@ -238,6 +213,49 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         type=int,
         default=None,
         help="Random seed by a 32 bit unsigned integer",
+    )
+    parser.add_argument(
+        "--amplitude",
+        "--amin",
+        dest="displacement_distance",
+        type=float,
+        default=None,
+        help=(
+            "Distance of displacements and also minimum distance of displacements "
+            "in random displacements"
+        ),
+    )
+    parser.add_argument(
+        "--amax",
+        dest="displacement_distance_max",
+        type=float,
+        default=None,
+        help="Maximum distance of displacements in random displacements",
+    )
+    parser.add_argument(
+        "--amax-per-atom",
+        dest="displacement_distance_per_atom",
+        action="store_true",
+        default=None,
+        help=(
+            "With --amax, draw the random displacement distance per atom "
+            "instead of per supercell, uniformly over [--amin, --amax), so "
+            "every supercell spans the whole amplitude range"
+        ),
+    )
+    parser.add_argument(
+        "--rd-auto-factor",
+        dest="rd_number_estimation_factor",
+        type=float,
+        default=None,
+        help="Factor to estimate number of supercells with random displacements",
+    )
+    parser.add_argument(
+        "--pm",
+        dest="is_plusminus_displacements",
+        action="store_true",
+        default=None,
+        help="Set plus minus displacements",
     )
     parser.add_argument(
         "-q",
@@ -283,21 +301,6 @@ def _add_init_options(parser: argparse.ArgumentParser) -> None:
         help="Same behavior as DIM tag",
     )
     parser.add_argument(
-        "-d",
-        "--displacement",
-        dest="is_displacement",
-        action="store_true",
-        default=None,
-        help="Create supercells with displacements",
-    )
-    parser.add_argument(
-        "--rd-auto-factor",
-        dest="rd_number_estimation_factor",
-        type=float,
-        default=None,
-        help="Factor to estimate number of supercells with random displacements",
-    )
-    parser.add_argument(
         "-f",
         "--force-sets",
         nargs="+",
@@ -335,31 +338,6 @@ def _add_init_options(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         default=None,
         help="Check crystal symmetry",
-    )
-    parser.add_argument(
-        "--amplitude",
-        "--amin",
-        dest="displacement_distance",
-        type=float,
-        default=None,
-        help=(
-            "Distance of displacements and also minimum distance of displacements "
-            "in random displacements"
-        ),
-    )
-    parser.add_argument(
-        "--amax",
-        dest="displacement_distance_max",
-        type=float,
-        default=None,
-        help="Maximum distance of displacements in random displacements",
-    )
-    parser.add_argument(
-        "--pm",
-        dest="is_plusminus_displacements",
-        action="store_true",
-        default=None,
-        help="Set plus minus displacements",
     )
     parser.add_argument(
         "--nodiag",
@@ -1026,7 +1004,6 @@ def _reject_init_options(parser: argparse.ArgumentParser) -> None:
     specs: list[tuple[tuple[str, ...], int | str]] = [
         (("-c", "--cell"), 1),
         (("--dim",), "+"),
-        (("-d", "--displacement"), 0),
         (("-f", "--force-sets"), "+"),
         (("--fz", "--force-sets-zero"), "+"),
         (("--fc", "--force-constants"), 1),

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Create atomic displacements."""
 
 from __future__ import annotations
