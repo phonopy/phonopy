@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Anisotropic QHA &#8212; Phonopy v.4.3.1</title>
+    <title>Anisotropic QHA &#8212; Phonopy v.4.4.0</title>
   
   
   
@@ -27,200 +27,35 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
   
   <!-- So that users can add custom icons -->
-  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="_static/documentation_options.js?v=c42b8a28"></script>
+    <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -267,6 +102,13 @@ let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
 let _lazyObserver = null;
 let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
 
 // Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
 // so this is safe to call both for the initial batch and for diagrams that
@@ -363,8 +205,10 @@ const runMermaid = async (rerun) => {
                                     el.removeAttribute('data-mermaid-deferred');
                                     // Apply zoom to the now-rendered diagram, matching
                                     // the decoration visible diagrams receive.
-                                    if ("False" === "True") {
-                                        addZoomToSvgs(d3.selectAll(""));
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
                                     }
                                 } catch (e) {
                                     console.error("Mermaid deferred rendering failed:", e);
@@ -385,10 +229,12 @@ const runMermaid = async (rerun) => {
     const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
     const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? mermaids_active.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
             // Wait until every active (visible) diagram has rendered. Deferred
             // diagrams are excluded, so a fixed d3_node_count that counts a
             // hidden diagram no longer loops forever waiting for its SVG.
@@ -405,7 +251,7 @@ const runMermaid = async (rerun) => {
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -428,7 +274,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -439,12 +285,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -464,8 +304,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -477,7 +317,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -489,9 +329,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -514,8 +354,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -525,10 +368,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -553,35 +394,40 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
 window.addEventListener("load", load);
 window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'anisotropic-qha';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.3" />
+  <meta name="docsearch:version" content="4.4" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
   </head>
-  
-  
-  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
-
+  <body data-default-mode="">
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-
+  
+  
+  
   
   <dialog id="pst-search-dialog">
     
@@ -607,7 +453,51 @@ window.runMermaid = runMermaid;</script>
 </div>
 
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
     </header>
   
 
@@ -644,7 +534,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.3.1</p>
+    <p class="title logo__title">Phonopy v.4.4.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -852,12 +742,16 @@ window.runMermaid = runMermaid;</script>
                 <h2> Contents </h2>
             </div>
             <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-dft-the-mlp-is-phonons-only">Design principle: U is always DFT, the MLP is phonons-only</a></li>
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only">Design principle: U is always from the calculator, the MLP is phonons-only</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u-both-routes">1. Build the static grid (internal energy U, both routes)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-full-dft-phonons-phonon-grid">2A. Route A – full-DFT phonons (phonon grid)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-calculator-phonons-phonon-grid">2A. Route A – calculator phonons (phonon grid)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grid-points-in-any-layout">Grid points in any layout</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-collected-force-sets">Pre-collected force sets</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#b-route-b-mlp-phonons-train-once-then-evaluate">2B. Route B – MLP phonons (train once, then evaluate)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-intermediate-dataset">3. The intermediate dataset</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a></li>
@@ -880,9 +774,9 @@ expansion of a crystal by directly optimizing the lattice parameters on a grid,
 rather than the 1D volume-path QHA. It covers two interchangeable phonon
 sources that share the same downstream pipeline:</p>
 <ul class="simple">
-<li><p><strong>full-DFT phonons</strong>: force sets from displaced supercells (a machine-learning
-potential is not required); and</p></li>
-<li><p><strong>MLP phonons</strong>: force sets from a pypolymlp trained on first-principles
+<li><p><strong>calculator phonons</strong>: force sets from displaced supercells (a
+machine-learning potential is not required); and</p></li>
+<li><p><strong>MLP phonons</strong>: force sets from a pypolymlp trained on calculator
 energies, forces and stresses (cheap dense sampling).</p></li>
 </ul>
 <p>The free lattice degrees of freedom are detected from the symmetry: one for
@@ -894,28 +788,28 @@ and axial thermal expansions are produced for any of the supported systems, but
 the <code class="docutils literal notranslate"><span class="pre">F</span></code> contour maps are drawn only when there are exactly two free DOF.</p>
 <p>Status: working recipe. All tools referenced here are implemented –
 <code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-mlp-dataset</span></code>, the dataset builder
-<code class="docutils literal notranslate"><span class="pre">phonopy-aniso-qha-dataset</span></code> and the analysis command <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>.
+<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> and the analysis command <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>.
 Step 4 gives the one-command analysis; the API script beneath it is an
 equivalent alternative for finer control.</p>
 <p>Prerequisites: <code class="docutils literal notranslate"><span class="pre">h5py</span></code>, <code class="docutils literal notranslate"><span class="pre">symfc</span></code>, a VASP setup (VASP is the supported
-first-principles source), and, for the MLP route, <code class="docutils literal notranslate"><span class="pre">pypolymlp</span></code>.</p>
+calculator), and, for the MLP route, <code class="docutils literal notranslate"><span class="pre">pypolymlp</span></code>.</p>
 <p>All lengths are in the native length unit of the input cell (Angstrom for
 VASP); no unit conversion is applied by the tools.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This page is written with VASP in mind, the only first-principles interface this
+<p>This page is written with VASP in mind, the only calculator interface this
 workflow has been exercised with. The commands and helper scripts assume VASP
 inputs and outputs (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code>); other calculators are
 not tested here.</p>
 </div>
-<section id="design-principle-u-is-always-dft-the-mlp-is-phonons-only">
-<h2>Design principle: U is always DFT, the MLP is phonons-only<a class="headerlink" href="#design-principle-u-is-always-dft-the-mlp-is-phonons-only" title="Link to this heading">#</a></h2>
+<section id="design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only">
+<h2>Design principle: U is always from the calculator, the MLP is phonons-only<a class="headerlink" href="#design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only" title="Link to this heading">#</a></h2>
 <p>The free energy minimized per temperature is</p>
 <div class="math notranslate nohighlight">
 \[F(a, c; T) = U(a, c) + F_\mathrm{ph}(a, c; T) + F_\mathrm{el}(a, c; T),\]</div>
 <p>where the electronic term <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> is optional. The static internal
 energy <span class="math notranslate nohighlight">\(U(a, c)\)</span> (and any elastic response) sets the valley <em>shape</em> and is
-sensitive; it is <strong>always taken from DFT</strong> on the static grid. The
+sensitive; it is <strong>always taken from the calculator</strong> on the static grid. The
 machine-learning potential, when used, supplies <strong>only the phonon force
 constants</strong> <span class="math notranslate nohighlight">\(F_\mathrm{ph}(a, c; T)\)</span>, where the quantity is smooth and
 cheap. Never take <span class="math notranslate nohighlight">\(U\)</span> from the MLP. This keeps everything single-functional
@@ -923,29 +817,29 @@ and avoids the static-surface error that can flip <span class="math notranslate 
 </section>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
-<p>The boxes are jobs run by phonopy tools or the API, the hexagons are DFT
-calculations, and the rounded nodes are input and intermediate data. Both phonon
+<p>The boxes are jobs run by phonopy tools or the API, the hexagons are calculator
+runs, and the rounded nodes are input and intermediate data. Both phonon
 routes converge on the same intermediate dataset and analysis.</p>
 <pre  class="mermaid">
         flowchart TD
     EQ([&quot;Equilibrium cell&lt;br/&gt;(phonopy_disp.yaml)&quot;])
 
     EQ --&gt; SC[&quot;phonopy-strain-cells&lt;br/&gt;(a, c grid)&quot;]
-    SC --&gt; RELAX{{&quot;DFT relax + static&quot;}}
+    SC --&gt; RELAX{{&quot;calculator relax + static&quot;}}
     RELAX --&gt; SGRID([&quot;static-grid/grid-NNN&lt;br/&gt;U, F_el&quot;])
 
     SGRID --&gt;|&quot;route A&quot;| PD[&quot;generate displacements&lt;br/&gt;per relaxed cell&quot;]
-    PD --&gt; DFTF{{&quot;DFT forces&quot;}}
-    DFTF --&gt; PGRID([&quot;phonon-grid/grid-NNN&lt;br/&gt;disp-*&quot;])
+    PD --&gt; CALCF{{&quot;calculator forces&quot;}}
+    CALCF --&gt; PGRID([&quot;phonon-grid/grid-NNN&lt;br/&gt;disp-*&quot;])
 
     EQ --&gt;|&quot;route B&quot;| SCT[&quot;phonopy-strain-cells --rd&quot;]
-    SCT --&gt; DFTT{{&quot;DFT E / F / stress&quot;}}
-    DFTT --&gt; MLPDS[&quot;phonopy-vasp-mlp-dataset&quot;]
-    MLPDS --&gt; DEV[&quot;develop_pypolymlp_from_structures&quot;]
+    SCT --&gt; CALCT{{&quot;calculator E / F / stress&quot;}}
+    CALCT --&gt; MLPDS[&quot;phonopy-vasp-mlp-dataset&quot;]
+    MLPDS --&gt; DEV[&quot;develop_pypolymlp&quot;]
     DEV --&gt; MLP([&quot;polymlp.yaml&quot;])
 
-    SGRID --&gt; BUILD[&quot;phonopy-aniso-qha-dataset&quot;]
-    PGRID --&gt;|&quot;--from-dft&quot;| BUILD
+    SGRID --&gt; BUILD[&quot;phonopy-anisotropic-qha-dataset&quot;]
+    PGRID --&gt;|&quot;default&quot;| BUILD
     MLP --&gt;|&quot;--from-mlp&quot;| BUILD
     BUILD --&gt; DS([&quot;aniso_qha_dataset.hdf5&quot;])
 
@@ -959,10 +853,21 @@ routes converge on the same intermediate dataset and analysis.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-c<span class="w"> </span>REFERENCE_UNITCELL<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">4</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">REFERENCE_UNITCELL</span></code> must be the standardized conventional cell, whose lattice
+vectors are the crystal axes a, b and c in that row order. The free lattice DOF
+are taken per row, so a primitive cell of a centred lattice cannot be used: its
+rows are centring vectors rather than crystal axes. For body-centred tetragonal,
+for example, all three primitive rows have the same length, and scaling them
+would only change the volume, never c/a. A rhombohedral cell must likewise be
+given in the hexagonal setting. <code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code> rejects such a cell; if
+in doubt, take the <code class="docutils literal notranslate"><span class="pre">BPOSCAR</span></code> written by
+<a class="reference internal" href="command-options.html#symmetry-option"><span class="std std-ref">phonopy-init –symmetry</span></a>,
+which is the conventional cell. A conventional cell that is merely rotated in
+Cartesian space is fine.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--dim</span></code> fixes the supercell matrix, which <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> records together with
 the unit cell, the primitive matrix and the calculator. <code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>
 reads the equilibrium cell and calculator from it (plus the supercell matrix when
-<code class="docutils literal notranslate"><span class="pre">--rd</span></code> builds MLP training supercells); <code class="docutils literal notranslate"><span class="pre">phonopy-aniso-qha-dataset</span></code> reads the
+<code class="docutils literal notranslate"><span class="pre">--rd</span></code> builds MLP training supercells); <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> reads the
 calculator and the free lattice DOF it implies (which lengths are independent –
 <code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">c</span></code> with <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">a</span></code> for hexagonal), and, on the MLP route, the supercell and
 primitive matrices. Keep <code class="docutils literal notranslate"><span class="pre">--dim</span></code> consistent with the phonon-grid supercell in
@@ -971,8 +876,8 @@ step 2A.</p>
 <section id="build-the-static-grid-internal-energy-u-both-routes">
 <h2>1. Build the static grid (internal energy U, both routes)<a class="headerlink" href="#build-the-static-grid-internal-energy-u-both-routes" title="Link to this heading">#</a></h2>
 <p>Sample strained unit cells over the free lattice DOF, then relax and run a
-static single point for each with DFT. The static grid supplies <span class="math notranslate nohighlight">\(U(a, c)\)</span>
-and, optionally, the electronic states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.</p>
+static single point for each with the calculator. The static grid supplies
+<span class="math notranslate nohighlight">\(U(a, c)\)</span> and, optionally, the electronic states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inspect the free lattice DOF first (no ranges -&gt; DOF report):</span>
 %<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml
 
@@ -1007,8 +912,9 @@ cells are made and, without <code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">unitcell-NNNNN</span></code> – what this step (the static grid) needs. Adding <code class="docutils literal notranslate"><span class="pre">--rd</span> <span class="pre">M</span></code>
 instead writes M random-displacement <strong>supercells</strong> per strained cell,
 <code class="docutils literal notranslate"><span class="pre">supercell-NNNNN</span></code> (that is the route-B, step 2B use, not this step);
-<code class="docutils literal notranslate"><span class="pre">--amplitude</span></code> sets their displacement distance. Either way a <code class="docutils literal notranslate"><span class="pre">strain_cells.yaml</span></code>
-provenance manifest is written.</p>
+<code class="docutils literal notranslate"><span class="pre">--amplitude</span></code> sets their displacement distance, or <code class="docutils literal notranslate"><span class="pre">--amin</span></code> / <code class="docutils literal notranslate"><span class="pre">--amax</span></code> draw it
+from a range (see step 2B). Either way a <code class="docutils literal notranslate"><span class="pre">strain_cells.yaml</span></code> provenance
+manifest is written.</p>
 <p>For each <code class="docutils literal notranslate"><span class="pre">unitcell-*</span></code>:</p>
 <ol class="arabic simple">
 <li><p>Relax the internal coordinates if the structure has free internal parameters
@@ -1041,10 +947,10 @@ the paths at the top and run (distribute the VASP inputs separately):</p>
 <p>Then relax (if the crystal has internal DOF) and run the static single point in
 each <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/</span></code>.</p>
 </section>
-<section id="a-route-a-full-dft-phonons-phonon-grid">
-<h2>2A. Route A – full-DFT phonons (phonon grid)<a class="headerlink" href="#a-route-a-full-dft-phonons-phonon-grid" title="Link to this heading">#</a></h2>
+<section id="a-route-a-calculator-phonons-phonon-grid">
+<h2>2A. Route A – calculator phonons (phonon grid)<a class="headerlink" href="#a-route-a-calculator-phonons-phonon-grid" title="Link to this heading">#</a></h2>
 <p>For each relaxed static-grid cell, generate displaced supercells and compute
-their forces with DFT.</p>
+their forces with the calculator.</p>
 <p>Place the results as <code class="docutils literal notranslate"><span class="pre">phonon-grid/grid-NNN/</span></code> each containing the
 <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the per-displacement subdirectories <code class="docutils literal notranslate"><span class="pre">disp-001/</span></code>,
 <code class="docutils literal notranslate"><span class="pre">disp-002/</span></code>, … (each with <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>). The grid indices
@@ -1080,16 +986,111 @@ separately.</p>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span><span class="si">}</span><span class="s2"> disp&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Then build the intermediate dataset:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-aniso-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-dft<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--static-grid<span class="w"> </span>static-grid<span class="w"> </span>--phonon-grid<span class="w"> </span>phonon-grid<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
-<span class="c1"># add --electronic to include F_el from static-grid vaspout.h5</span>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> works with VASP only for now, simply because
+the readers for the other calculators are not implemented yet. The binding
+constraint is the static grid: the internal energy <span class="math notranslate nohighlight">\(U(a, c)\)</span> and the
+electronic states are read from VASP outputs (<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> / <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>), and
+phonopy has no interface yet to read the static single-point energy of the other
+calculators. A reference naming one of them therefore stops the command early,
+rather than producing a dataset with a missing <span class="math notranslate nohighlight">\(U(a, c)\)</span>.</p>
+</div>
+<p>Then build the intermediate dataset. Without path options the builder assumes
+the conventional layout below, pairing the two grids by the index in the
+<code class="docutils literal notranslate"><span class="pre">grid-NNN</span></code> directory names (any zero padding is accepted). This is a
+convenience, not a requirement – see
+<a class="reference internal" href="#grid-points-in-any-layout">Grid points in any layout</a> to place the points
+freely:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>static-grid/                 # --static-grid (default: static-grid)
+  grid-000/
+    vaspout.h5               # or vasprun.xml; static single point -&gt; U(a, c)
+  grid-001/
+    vaspout.h5
+  ...
+phonon-grid/                 # --phonon-grid (default: phonon-grid)
+  grid-000/
+    phonopy_disp.yaml        # relaxed displaced cell + supercell/primitive
+    disp-001/
+      vaspout.h5             # or vasprun.xml; forces for displacement 1
+    disp-002/
+      vaspout.h5
+    ...
+  grid-001/
+    ...
 </pre></div>
 </div>
-<p>The positional <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is the equilibrium reference; it supplies the
-free lattice DOF metadata (the supercell / primitive matrices for each point come
-from that point’s <code class="docutils literal notranslate"><span class="pre">phonon-grid</span></code> yaml).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--static-grid<span class="w"> </span>static-grid<span class="w"> </span>--phonon-grid<span class="w"> </span>phonon-grid<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
+<span class="c1"># F_el is stored automatically when static-grid/grid-NNN/vaspout.h5 carries the</span>
+<span class="c1">#   electron eigenvalues; pass --no-electronic to skip it</span>
+</pre></div>
+</div>
+<p>For each grid point the builder reads:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/</span></code> – the static single point, giving the internal energy
+<span class="math notranslate nohighlight">\(U(a, c)\)</span>; its relaxed cell becomes the grid-point cell. The electronic
+states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> are read automatically from the same
+<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> when it carries the eigenvalues (a static grid written with only
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> is built without <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>; pass <code class="docutils literal notranslate"><span class="pre">--no-electronic</span></code> to
+skip them deliberately).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonon-grid/grid-NNN/phonopy_disp.yaml</span></code> – the displaced cell with its
+supercell / primitive matrices and the displacement dataset (type-1 or
+type-2).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonon-grid/grid-NNN/disp-*/</span></code> – the per-displacement forces, read in sorted
+<code class="docutils literal notranslate"><span class="pre">disp-*</span></code> order; their count must equal the number of displacements in
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> is used when present (full numerical precision), <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>
+otherwise. Grid points are discovered from the <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN</span></code>
+directories, so a <code class="docutils literal notranslate"><span class="pre">grid-NNN</span></code> that exists only under <code class="docutils literal notranslate"><span class="pre">phonon-grid</span></code> is ignored. The
+positional <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is the equilibrium reference; it supplies the free
+lattice DOF metadata and the calculator (the per-point supercell / primitive
+matrices come from each point’s <code class="docutils literal notranslate"><span class="pre">phonon-grid</span></code> yaml).</p>
+<section id="grid-points-in-any-layout">
+<span id="id1"></span><h3>Grid points in any layout<a class="headerlink" href="#grid-points-in-any-layout" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">--static</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> take the grid points as explicit path lists, usually
+expanded by the shell, and replace <code class="docutils literal notranslate"><span class="pre">--static-grid</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon-grid</span></code>
+respectively (giving both forms of one side is an error). No naming convention
+then applies at all:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--static<span class="w"> </span>runs/*/static/vaspout.h5<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--phonon<span class="w"> </span>runs/*/phonons/phonopy_params.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
+</pre></div>
+</div>
+<p>The two lists are paired <strong>by position</strong>, not by any index parsed from the
+names, and their lengths must match. The grid-point index recorded in the
+dataset is the position in the list; it is a label only, since the analysis
+reads the lattice parameters from each stored cell. Note that the shell expands
+a glob in lexicographic order, so <code class="docutils literal notranslate"><span class="pre">point-1,</span> <span class="pre">point-10,</span> <span class="pre">point-2,</span> <span class="pre">...</span></code> orders the
+points unintuitively – harmless for the pairing, which shifts identically on
+both sides, but worth avoiding if the recorded indices are to be read back
+against <code class="docutils literal notranslate"><span class="pre">strain_cells.yaml</span></code>.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">--static</span></code> entry is the static single-point output, or the directory
+holding it (<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> is preferred over <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>, as in the
+conventional layout).</p>
+</section>
+<section id="pre-collected-force-sets">
+<h3>Pre-collected force sets<a class="headerlink" href="#pre-collected-force-sets" title="Link to this heading">#</a></h3>
+<p>Each <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> entry is either a directory holding <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">disp-*</span></code> subdirectories, exactly as in the conventional layout, or a
+phonopy.yaml-like file whose forces <a class="reference internal" href="command-options.html#f-force-sets-option"><span class="std std-ref">phonopy-init -f</span></a> has already collected. Run in each grid point’s own
+directory, whatever its structure:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--sp<span class="w"> </span>-f<span class="w"> </span>disp-*/vasprun.xml<span class="w">   </span><span class="c1"># -&gt; phonopy_params.yaml</span>
+%<span class="w"> </span>phonopy-init<span class="w"> </span>-f<span class="w"> </span>disp-*/vasprun.xml<span class="w">        </span><span class="c1"># -&gt; FORCE_SETS, beside phonopy_disp.yaml</span>
+</pre></div>
+</div>
+<p>Pass the resulting <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>, or the <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> whose
+<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> sits beside it (<a class="reference internal" href="command-options.html#save-params-option"><span class="std std-ref">–sp</span></a> merges the two
+into one file). This is usually the simpler route when the phonon calculations
+were not laid out by the scaffolding script above: collecting the forces stays
+a job for phonopy’s own tools, in whatever directory structure the calculations
+already have, and the builder only consumes the result. A file with no forces
+and no neighboring <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is rejected rather than silently producing an
+empty grid point. The forms may be mixed within one <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> list.</p>
+</section>
 </section>
 <section id="b-route-b-mlp-phonons-train-once-then-evaluate">
 <h2>2B. Route B – MLP phonons (train once, then evaluate)<a class="headerlink" href="#b-route-b-mlp-phonons-train-once-then-evaluate" title="Link to this heading">#</a></h2>
@@ -1098,39 +1099,102 @@ from that point’s <code class="docutils literal notranslate"><span class="pre"
 box that must <strong>cover the static grid with margin</strong>, since an MLP extrapolates
 badly at its domain edges).</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Training structures: strained supercells with random displacements (--rd):</span>
-<span class="c1"># --rd N gives N displaced supercells per cell; --amplitude sets the distance.</span>
+<span class="c1"># --rd N gives N displaced supercells per cell; --amplitude (= --amin) sets the</span>
+<span class="c1"># distance.</span>
 %<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">1</span><span class="w"> </span>--amplitude<span class="w"> </span><span class="m">0</span>.03
 <span class="c1"># -&gt; supercell-00001 .. supercell-00100 ; run a single-point VASP (ISIF &gt;= 2)</span>
 <span class="c1">#    for each, then assemble the dataset (stress included):</span>
-%<span class="w"> </span>phonopy-vasp-mlp-dataset<span class="w"> </span>vasprun-*.xml<span class="w"> </span>-o<span class="w"> </span>polymlp_dataset.hdf5
+%<span class="w"> </span>phonopy-vasp-mlp-dataset<span class="w"> </span>disp-*/vaspout.h5<span class="w"> </span>-o<span class="w"> </span>polymlp_dataset.hdf5
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-mlp-dataset</span></code> reads <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>. Prefer
+<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code>: it carries the full precision of the calculation, whereas
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> is written with six digits.</p>
+<p>Adding <code class="docutils literal notranslate"><span class="pre">--amax</span></code> makes the displacement distance random instead of fixed (the
+distance is drawn per supercell; within one supercell every atom moves by that
+same distance). The draw is uniform over <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">--amax)</span></code> and is raised to
+<code class="docutils literal notranslate"><span class="pre">--amin</span></code> when smaller, so the distances are uniform over <code class="docutils literal notranslate"><span class="pre">[--amin,</span> <span class="pre">--amax)</span></code>
+except for the weight <code class="docutils literal notranslate"><span class="pre">--amin</span> <span class="pre">/</span> <span class="pre">--amax</span></code> piled up exactly at <code class="docutils literal notranslate"><span class="pre">--amin</span></code>. A fixed
+small distance is what harmonic force constants need and is the default here.
+The range form matters when the MLP is to be used beyond the harmonic regime,
+e.g. for the temperature-dependent force constants of <a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a>, whose
+supercells at temperature reach far larger displacements than 0.03 Angstrom;
+an MLP trained only near equilibrium would extrapolate there. Then train over
+both the lattice box and the amplitude range at once:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">1</span><span class="w"> </span>--amin<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span>--amax<span class="w"> </span><span class="m">1</span>.5
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">--rd</span> <span class="pre">1</span></code> as above, each strained cell receives a single distance, so
+which amplitude lands on which lattice is left to chance and the two can end
+up correlated – large amplitudes falling mostly on large-volume cells, say,
+which the MLP then cannot separate from the volume dependence itself. Adding
+<code class="docutils literal notranslate"><span class="pre">--amax-per-atom</span></code> draws the distance per atom instead, so every supercell
+covers the whole <code class="docutils literal notranslate"><span class="pre">[--amin,</span> <span class="pre">--amax)</span></code> range internally and the amplitude
+coverage is complete at every lattice point:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">1</span><span class="w"> </span>--amin<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span>--amax<span class="w"> </span><span class="m">1</span>.5<span class="w"> </span>--amax-per-atom
+</pre></div>
+</div>
+<p>The per-atom draw is uniform over <code class="docutils literal notranslate"><span class="pre">[--amin,</span> <span class="pre">--amax)</span></code> directly, with no weight
+piled up at <code class="docutils literal notranslate"><span class="pre">--amin</span></code>. The pile-up the per-supercell draw produces is not an
+implementation detail to be carried over: it reserves a share of supercells
+whose atoms all sit near equilibrium, which is a useful population to have in
+the training set. Drawn per atom, the same rule would instead put a spike of
+identical displacement magnitudes inside every supercell, which has no such
+use, so <code class="docutils literal notranslate"><span class="pre">--amin</span></code> becomes a genuine lower bound there rather than a floor.</p>
+<p>The price of the per-atom draw is that a supercell no longer has one amplitude
+that labels it, which is why the per-supercell draw remains the default: it
+keeps each supercell a shell of one amplitude in configuration space,
+convenient when the structures are to be grouped by amplitude. For training an
+MLP over a lattice box, the per-atom draw is usually the better use of a given
+number of supercells.</p>
 <p>Train the MLP with energies, forces and stresses (structure-based training, so
 the varying lattices and the stress/virial are used):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">PypolymlpParams</span><span class="p">,</span>
-    <span class="n">develop_pypolymlp_from_structures</span><span class="p">,</span>
+    <span class="n">develop_pypolymlp</span><span class="p">,</span>
     <span class="n">read_pypolymlp_structure_dataset</span><span class="p">,</span>
     <span class="n">save_pypolymlp</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">read_pypolymlp_structure_dataset</span><span class="p">(</span><span class="s2">&quot;polymlp_dataset.hdf5&quot;</span><span class="p">)</span>
-<span class="n">n_test</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">structures</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
-<span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">structures</span><span class="p">)</span> <span class="o">-</span> <span class="n">n_test</span><span class="p">)</span>  <span class="c1"># your split helper</span>
-<span class="n">polymlp</span> <span class="o">=</span> <span class="n">develop_pypolymlp_from_structures</span><span class="p">(</span>
-    <span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">PypolymlpParams</span><span class="p">(),</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="n">polymlp</span> <span class="o">=</span> <span class="n">develop_pypolymlp</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">PypolymlpParams</span><span class="p">(),</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 <span class="n">save_pypolymlp</span><span class="p">(</span><span class="n">polymlp</span><span class="p">,</span> <span class="s2">&quot;polymlp.yaml&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Then build the intermediate dataset. The MLP forces are evaluated at build time
-and stored raw, so the analysis is blind to their MLP origin; <span class="math notranslate nohighlight">\(U\)</span> still
-comes from the DFT static grid:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-aniso-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-mlp<span class="w"> </span>polymlp.yaml<span class="w"> </span><span class="se">\</span>
+<p><code class="docutils literal notranslate"><span class="pre">develop_pypolymlp</span></code> picks the training mode from the dataset type: a
+<code class="docutils literal notranslate"><span class="pre">PypolymlpStructureData</span></code> like this one trains on independent structures, so the
+lattices may differ and the stress is used; a <code class="docutils literal notranslate"><span class="pre">PypolymlpData</span></code> trains on
+displacements of one supercell instead.</p>
+<p><code class="docutils literal notranslate"><span class="pre">test_size</span></code> splits the dataset without shuffling: the first 90 percent trains
+and the rest tests. Pass <code class="docutils literal notranslate"><span class="pre">test_data</span></code> explicitly when it must stay fixed while
+the training dataset varies, as when measuring how many structures the MLP
+needs. Datasets slice like sequences, so a training-set size series needs no
+helper:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_pypolymlp_dataset</span>
+
+<span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">split_pypolymlp_dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">)):</span>
+    <span class="n">polymlp</span> <span class="o">=</span> <span class="n">develop_pypolymlp</span><span class="p">(</span><span class="n">train</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">test</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">PypolymlpParams</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Then build the intermediate dataset. <code class="docutils literal notranslate"><span class="pre">--from-mlp</span></code> needs only the <code class="docutils literal notranslate"><span class="pre">static-grid</span></code>
+layout of step 1 (no <code class="docutils literal notranslate"><span class="pre">phonon-grid</span></code>): the displacements are generated and their
+forces evaluated on the fly from the MLP – <code class="docutils literal notranslate"><span class="pre">--distance</span></code> sets the displacement
+amplitude and <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> the number of random-displacement supercells per grid
+point (<code class="docutils literal notranslate"><span class="pre">--seed</span></code> for reproducibility). The MLP forces are stored raw, so the
+analysis is blind to their MLP origin; <span class="math notranslate nohighlight">\(U\)</span> still comes from the static
+grid, and the per-point supercell / primitive matrices come from the reference
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-mlp<span class="w"> </span>polymlp.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--static-grid<span class="w"> </span>static-grid<span class="w"> </span>--distance<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span>--snapshots<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
-<span class="c1"># add --electronic to include F_el from static-grid vaspout.h5</span>
+<span class="c1"># F_el is stored automatically when static-grid/grid-NNN/vaspout.h5 carries the</span>
+<span class="c1">#   electron eigenvalues; pass --no-electronic to skip it</span>
 </pre></div>
 </div>
 </section>
@@ -1153,13 +1217,13 @@ tagged so the force-constant solver is chosen from the dataset type, not guessed
 Because the displacements and forces are stored raw (not force constants), the
 file is independent of the force-constant method and can serve as an archive
 after the calculator scratch is discarded. The same file feeds the analysis
-whether the forces came from DFT or the MLP.</p>
+whether the forces came from the calculator or the MLP.</p>
 </section>
 <section id="run-the-anisotropic-qha">
 <h2>4. Run the anisotropic QHA<a class="headerlink" href="#run-the-anisotropic-qha" title="Link to this heading">#</a></h2>
 <p>Run the analysis directly on the intermediate dataset:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--tmax<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--dt<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--contour-temp<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span>--compare-vinet
+<span class="w">    </span>--contour-temp<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span>--compare-vinet<span class="w"> </span>--electronic
 </pre></div>
 </div>
 <p>This rebuilds one Phonopy per grid point (force constants from the stored
@@ -1170,8 +1234,8 @@ lattice DOF it also writes the <code class="docutils literal notranslate"><span 
 adds the U / F_ph / F_el / total panels and <code class="docutils literal notranslate"><span class="pre">--compare-vinet</span></code> adds a
 volume-path cross-check (it needs the grid main diagonal from a <code class="docutils literal notranslate"><span class="pre">--grid</span></code> run in
 step 1, and is skipped when no such diagonal is found). The electronic free
-energy is used automatically when the dataset carries the electronic states
-(<code class="docutils literal notranslate"><span class="pre">--no-electronic</span></code> to ignore it).</p>
+energy <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> is added only with <code class="docutils literal notranslate"><span class="pre">--electronic</span></code> (and only when
+the dataset carries the electronic states); by default it is ignored.</p>
 <p>Equivalently, drive <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> from the API:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
@@ -1219,17 +1283,17 @@ the static-grid single point is the primitive (unit) cell.</p>
 <section id="validate-the-mlp-equilibrium-shape-mlp-route-recommended">
 <h2>5. Validate the MLP equilibrium shape (MLP route, recommended)<a class="headerlink" href="#validate-the-mlp-equilibrium-shape-mlp-route-recommended" title="Link to this heading">#</a></h2>
 <p>A smooth MLP is not automatically a correct one. Before trusting an MLP-phonon
-result, validate against DFT at a few points:</p>
+result, validate against the calculator at a few points:</p>
 <ul class="simple">
-<li><p>Compare the MLP vs DFT phonon anisotropy directly. With a full-DFT phonon grid
-available, a same-displacement force-swap comparison isolates any anisotropic
-Gruneisen error.</p></li>
-<li><p>Compare MLP and DFT stresses at a few cells (the stress is the free-energy
-gradient the QHA minimizes), and optionally elastic constants (the surface
-curvature).</p></li>
+<li><p>Compare the MLP vs calculator phonon anisotropy directly. With a calculator
+phonon grid available, a same-displacement force-swap comparison isolates any
+anisotropic Gruneisen error.</p></li>
+<li><p>Compare MLP and calculator stresses at a few cells (the stress is the
+free-energy gradient the QHA minimizes), and optionally elastic constants (the
+surface curvature).</p></li>
 </ul>
-<p>If the MLP phonons and equilibrium shape agree with DFT within tolerance, the
-dense (a, c) grid can be trusted.</p>
+<p>If the MLP phonons and equilibrium shape agree with the calculator within
+tolerance, the dense (a, c) grid can be trusted.</p>
 </section>
 </section>
 
@@ -1261,12 +1325,16 @@ dense (a, c) grid can be trusted.</p>
     <i class="fa-solid fa-list"></i> Contents
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-dft-the-mlp-is-phonons-only">Design principle: U is always DFT, the MLP is phonons-only</a></li>
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only">Design principle: U is always from the calculator, the MLP is phonons-only</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u-both-routes">1. Build the static grid (internal energy U, both routes)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-full-dft-phonons-phonon-grid">2A. Route A – full-DFT phonons (phonon grid)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-calculator-phonons-phonon-grid">2A. Route A – calculator phonons (phonon grid)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grid-points-in-any-layout">Grid points in any layout</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-collected-force-sets">Pre-collected force sets</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#b-route-b-mlp-phonons-train-once-then-evaluate">2B. Route B – MLP phonons (train once, then evaluate)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-intermediate-dataset">3. The intermediate dataset</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a></li>
@@ -1319,8 +1387,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
 
   <footer class="bd-footer">
   </footer>

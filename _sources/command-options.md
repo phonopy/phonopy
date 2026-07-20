@@ -8,6 +8,8 @@ Some of command-line options are equivalent to respective setting tags:
 
 - `--alm` (`FC_CALCULATOR = ALM`) [{ref}`fc_calculator_alm_tag`]
 - `--amax` (`DISPLACEMENT_DISTANCE_MAX`) [{ref}`displacement_distance_max_tag`]
+- `--amax-per-atom` (`DISPLACEMENT_DISTANCE_SAMPLING = ATOM`)
+  [{ref}`displacement_distance_sampling_tag`]
 - `--amplitude` (`DISPLACEMENT_DISTANCE`) [{ref}`displacement_distance_tag`]
 - `--anime` (`ANIME`) [{ref}`anime_tag`]
 - `--band` (`BAND`) [{ref}`band_tag`]
@@ -229,6 +231,8 @@ learning potentials such as pypolymlp. See {ref}`save_params_option`.
 (f_force_sets_option)=
 ### `-f` or `--forces`
 
+**This option belongs to `phonopy-init`.**
+
 (vasp_force_sets_option)=
 #### VASP interface
 
@@ -239,7 +243,7 @@ read. The order of displacements written in `phonopy_disp.yaml` file has to
 correpond to that of `vasprun.xml` files.
 
 ```bash
-% phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml ...
+% phonopy-init -f disp-001/vasprun.xml disp-002/vasprun.xml ...
 ```
 
 ```{note}
@@ -258,7 +262,7 @@ correpond to that of `vasprun.xml` files.
 eV/Angstrom are read. The unit conversion factor is determined with this unit.
 
 ```bash
-% phonopy -f disp-001/supercell.out disp-002/supercell.out ...
+% phonopy-init -f disp-001/supercell.out disp-002/supercell.out ...
 ```
 
 (qe_force_sets_option)=
@@ -267,7 +271,7 @@ eV/Angstrom are read. The unit conversion factor is determined with this unit.
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and QE-PW output files.
 
 ```bash
-% phonopy -f disp-001/supercell.out disp-002/supercell.out ...
+% phonopy-init -f disp-001/supercell.out disp-002/supercell.out ...
 ```
 
 Here `*.out` files are the saved texts of standard outputs of PWscf
@@ -286,7 +290,7 @@ the order of `case.scf`'s have to be same. **For WIEN2k struct file, only
 negative atom index with the P lattice format is supported.**
 
 ```bash
-% phonopy -f case_001/case_001.scf case_002/case_002.scf ...
+% phonopy-init -f case_001/case_001.scf case_002/case_002.scf ...
 ```
 
 For more information, {ref}`wien2k_interface`.
@@ -297,7 +301,7 @@ For more information, {ref}`wien2k_interface`.
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and Elk output files.
 
 ```bash
-% phonopy -f disp-001/INFO.OUT disp-002/INFO.OUT ...
+% phonopy-init -f disp-001/INFO.OUT disp-002/INFO.OUT ...
 ```
 
 (crystal_force_sets_option)=
@@ -305,7 +309,7 @@ For more information, {ref}`wien2k_interface`.
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and CRYSTAL output files.
 
 ```bash
-% phonopy -f supercell-001.o supercell-002.o ...
+% phonopy-init -f supercell-001.o supercell-002.o ...
 ```
 
 (turbomole_force_sets_option)=
@@ -315,7 +319,7 @@ For more information, {ref}`wien2k_interface`.
 files.
 
 ```bash
-% phonopy -f supercell-001 supercell-002 ...
+% phonopy-init -f supercell-001 supercell-002 ...
 ```
 
 (fleur_force_sets_option)=
@@ -325,7 +329,7 @@ files.
 output files.
 
 ```bash
-% phonopy -f disp-001/FORCES disp-002/FORCES ...
+% phonopy-init -f disp-001/FORCES disp-002/FORCES ...
 ```
 
 (cp2k_force_sets_option)=
@@ -335,7 +339,7 @@ output files.
 with:
 
 ```bash
-% phonopy -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz ...
+% phonopy-init -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz ...
 ```
 
 Please note: the files containing the forces can be prefixed with the
@@ -457,11 +461,13 @@ No log is shown.
 
 ### `--symmetry`
 
+**This option belongs to `phonopy-init`.**
+
 Using this option, various crystal symmetry information is just printed out and
 phonopy stops without going to phonon analysis.
 
 ```bash
-% phonopy --symmetry
+% phonopy-init --symmetry
 ```
 
 This tag can be used together with the `--cell` (`-c`), `--abinit`, `--qe`,

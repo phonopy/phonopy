@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>phonopy.api_phonopy &#8212; Phonopy v.4.3.1</title>
+    <title>phonopy.api_phonopy &#8212; Phonopy v.4.4.0</title>
   
   
   
@@ -26,198 +26,33 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
   
   <!-- So that users can add custom icons -->
-  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../_static/documentation_options.js?v=c42b8a28"></script>
+    <script src="../../_static/documentation_options.js?v=e4428b72"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -264,6 +99,13 @@ let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
 let _lazyObserver = null;
 let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
 
 // Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
 // so this is safe to call both for the initial batch and for diagrams that
@@ -360,8 +202,10 @@ const runMermaid = async (rerun) => {
                                     el.removeAttribute('data-mermaid-deferred');
                                     // Apply zoom to the now-rendered diagram, matching
                                     // the decoration visible diagrams receive.
-                                    if ("False" === "True") {
-                                        addZoomToSvgs(d3.selectAll(""));
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
                                     }
                                 } catch (e) {
                                     console.error("Mermaid deferred rendering failed:", e);
@@ -382,10 +226,12 @@ const runMermaid = async (rerun) => {
     const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
     const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? mermaids_active.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
             // Wait until every active (visible) diagram has rendered. Deferred
             // diagrams are excluded, so a fixed d3_node_count that counts a
             // hidden diagram no longer loops forever waiting for its SVG.
@@ -402,7 +248,7 @@ const runMermaid = async (rerun) => {
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -425,7 +271,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -436,12 +282,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -461,8 +301,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -474,7 +314,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -486,9 +326,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -511,8 +351,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -522,10 +365,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -550,35 +391,40 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
 window.addEventListener("load", load);
 window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/phonopy/api_phonopy';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.3" />
+  <meta name="docsearch:version" content="4.4" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
   </head>
-  
-  
-  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
-
+  <body data-default-mode="">
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-
+  
+  
+  
   
   <dialog id="pst-search-dialog">
     
@@ -604,7 +450,47 @@ window.runMermaid = runMermaid;</script>
 </div>
 
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
     </header>
   
 
@@ -641,7 +527,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.3.1</p>
+    <p class="title logo__title">Phonopy v.4.4.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -805,41 +691,8 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for phonopy.api_phonopy</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Phonopy class.&quot;&quot;&quot;</span>
-
-<span class="c1"># Copyright (C) 2015 Atsushi Togo</span>
-<span class="c1"># All rights reserved.</span>
-<span class="c1">#</span>
-<span class="c1"># This file is part of phonopy.</span>
-<span class="c1">#</span>
-<span class="c1"># Redistribution and use in source and binary forms, with or without</span>
-<span class="c1"># modification, are permitted provided that the following conditions</span>
-<span class="c1"># are met:</span>
-<span class="c1">#</span>
-<span class="c1"># * Redistributions of source code must retain the above copyright</span>
-<span class="c1">#   notice, this list of conditions and the following disclaimer.</span>
-<span class="c1">#</span>
-<span class="c1"># * Redistributions in binary form must reproduce the above copyright</span>
-<span class="c1">#   notice, this list of conditions and the following disclaimer in</span>
-<span class="c1">#   the documentation and/or other materials provided with the</span>
-<span class="c1">#   distribution.</span>
-<span class="c1">#</span>
-<span class="c1"># * Neither the name of the phonopy project nor the names of its</span>
-<span class="c1">#   contributors may be used to endorse or promote products derived</span>
-<span class="c1">#   from this software without specific prior written permission.</span>
-<span class="c1">#</span>
-<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
-<span class="c1"># &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
-<span class="c1"># LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS</span>
-<span class="c1"># FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE</span>
-<span class="c1"># COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,</span>
-<span class="c1"># INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,</span>
-<span class="c1"># BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
-<span class="c1"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
-<span class="c1"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT</span>
-<span class="c1"># LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN</span>
-<span class="c1"># ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
-<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+<span></span><span class="c1"># SPDX-License-Identifier: BSD-3-Clause</span>
+<span class="sd">&quot;&quot;&quot;Phonopy class.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -860,9 +713,9 @@ window.runMermaid = runMermaid;</script>
     <span class="n">DisplacementDataset</span><span class="p">,</span>
     <span class="n">Type1DisplacementDataset</span><span class="p">,</span>
     <span class="n">Type2DisplacementDataset</span><span class="p">,</span>
-    <span class="n">directions_to_displacement_dataset</span><span class="p">,</span>
-    <span class="n">get_least_displacements</span><span class="p">,</span>
-    <span class="n">get_random_displacements_dataset</span><span class="p">,</span>
+    <span class="n">estimate_number_of_snapshots</span><span class="p">,</span>
+    <span class="n">generate_random_displacements</span><span class="p">,</span>
+    <span class="n">generate_systematic_displacements</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.dynamical_matrix</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DynamicalMatrix</span><span class="p">,</span>
@@ -1113,7 +966,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_dos</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_modulation</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_random_displacements</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_random_displacements</span><span class="p">:</span> <span class="n">RandomDisplacements</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_moment</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_qpoints</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -1655,148 +1508,189 @@ window.runMermaid = runMermaid;</script>
         <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cutoff_frequency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">distance_sampling</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;supercell&quot;</span><span class="p">,</span> <span class="s2">&quot;atom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;supercell&quot;</span><span class="p">,</span>
         <span class="n">number_estimation_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate displacement dataset.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate displacement dataset and store it in Phonopy.dataset.</span>
 
-<span class="sd">        There are two modes, finite difference method with systematic</span>
-<span class="sd">        displacements and fitting approach between arbitrary displacements and</span>
-<span class="sd">        their forces. The default approach is the finite difference method that</span>
-<span class="sd">        is built-in phonopy. The fitting approach requires external force</span>
-<span class="sd">        constant calculator.</span>
+<span class="sd">        This method selects one of three generators and stores its result;</span>
+<span class="sd">        the generators hold the details of each mode.</span>
 
-<span class="sd">        The random displacement supercells are created by setting positive</span>
-<span class="sd">        integer values &#39;number_of_snapshots&#39; keyword argument. Unless this is</span>
-<span class="sd">        specified, systematic displacements are created for the finite</span>
-<span class="sd">        difference method as the default behaviour.</span>
+<span class="sd">        Systematic displacements for the built-in finite-difference method</span>
+<span class="sd">        are the default. Random displacements, which require an external</span>
+<span class="sd">        force-constants calculator (symfc, ALM), are selected by giving</span>
+<span class="sd">        ``number_of_snapshots``, and come in two flavours: random directions</span>
+<span class="sd">        at a fixed or randomly drawn distance, or displacements sampled from</span>
+<span class="sd">        the canonical ensemble of harmonic phonons at ``temperature``. The</span>
+<span class="sd">        latter needs force constants to be set already.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        phonopy.harmonic.displacement.generate_systematic_displacements</span>
+<span class="sd">        phonopy.harmonic.displacement.generate_random_displacements</span>
+<span class="sd">        phonopy.harmonic.displacement.estimate_number_of_snapshots</span>
+<span class="sd">        Phonopy.init_random_displacements</span>
+<span class="sd">        Phonopy.get_random_displacements_at_temperature</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        distance : float, optional</span>
-<span class="sd">            Displacement distance. Unit is the same as that used for the</span>
-<span class="sd">            crystal structure. Default is 0.01. For random-direction</span>
-<span class="sd">            random-distance displacement generation, this value is also</span>
-<span class="sd">            used as ``min_distance``: any generated random distance</span>
-<span class="sd">            smaller than this value is replaced by this value.</span>
+<span class="sd">            Displacement distance in the unit of the crystal structure.</span>
+<span class="sd">            Default is 0.01. With ``max_distance`` and without</span>
+<span class="sd">            ``temperature``, it is the floor of the random distance rather</span>
+<span class="sd">            than the distance itself.</span>
 <span class="sd">        is_plusminus : &#39;auto&#39;, True, or False, optional</span>
-<span class="sd">            For each atom, generate displacements in one direction</span>
-<span class="sd">            (False), in both directions (True), or in both directions</span>
-<span class="sd">            only when symmetry requires it (``&#39;auto&#39;``). Default is</span>
-<span class="sd">            ``&#39;auto&#39;``.</span>
+<span class="sd">            For each atom, generate displacements in one direction (False),</span>
+<span class="sd">            in both directions (True), or in both directions only when</span>
+<span class="sd">            symmetry requires it (``&#39;auto&#39;``). Default is ``&#39;auto&#39;``.</span>
 <span class="sd">        is_diagonal : bool, optional</span>
-<span class="sd">            When False, displacements are made only along basis vectors;</span>
-<span class="sd">            when True, displacements may be off the basis vectors if</span>
-<span class="sd">            doing so reduces the number of displacements by symmetry.</span>
-<span class="sd">            Default is True.</span>
+<span class="sd">            Systematic displacements only. When False, displace only along</span>
+<span class="sd">            basis vectors. Default is True.</span>
 <span class="sd">        is_trigonal : bool, optional</span>
 <span class="sd">            Exists only for testing purposes. Default is False.</span>
 <span class="sd">        number_of_snapshots : int, &quot;auto&quot;, or None, optional</span>
-<span class="sd">            Number of snapshots of supercells with random displacements.</span>
-<span class="sd">            Random displacements are generated by shifting all atoms in</span>
-<span class="sd">            random directions by a fixed distance specified by the</span>
-<span class="sd">            ``distance`` parameter. In other words, all atoms in the</span>
-<span class="sd">            supercell are displaced by the same distance in direct space.</span>
-<span class="sd">            When ``&quot;auto&quot;``, the minimum required number of snapshots is</span>
-<span class="sd">            estimated using symfc and then doubled. The default is None.</span>
+<span class="sd">            Number of supercells with random displacements. When ``&quot;auto&quot;``,</span>
+<span class="sd">            it is estimated with symfc. None selects systematic</span>
+<span class="sd">            displacements. Default is None.</span>
 <span class="sd">        random_seed : int or None, optional</span>
-<span class="sd">            Random seed for random displacements generation. Default is</span>
-<span class="sd">            None.</span>
+<span class="sd">            Random seed, used when in ``[0, 2**32)``. Default is None.</span>
 <span class="sd">        temperature : float or None, optional</span>
-<span class="sd">            When given, random displacements at this temperature are</span>
-<span class="sd">            generated by sampling the canonical ensemble of harmonic</span>
-<span class="sd">            oscillators (harmonic phonons). Default is None.</span>
+<span class="sd">            When given, random displacements are sampled from the canonical</span>
+<span class="sd">            ensemble of harmonic phonons at this temperature. Default is</span>
+<span class="sd">            None.</span>
 <span class="sd">        cutoff_frequency : float or None, optional</span>
-<span class="sd">            In random displacements generation from the canonical</span>
-<span class="sd">            ensemble of harmonic phonons, the phonon occupation number</span>
-<span class="sd">            is used to determine the deviation of the distribution</span>
-<span class="sd">            function. To avoid too large deviation, this value is used</span>
-<span class="sd">            to exclude phonon modes whose absolute frequencies are</span>
-<span class="sd">            smaller than this value. Default is None.</span>
+<span class="sd">            Finite-temperature generation only. Phonon modes whose absolute</span>
+<span class="sd">            frequencies are below this value are excluded. Default is None.</span>
 <span class="sd">        max_distance : float or None, optional</span>
-<span class="sd">            In random displacements generation from canonical ensemble of</span>
-<span class="sd">            harmonic phonons, displacements larger than max distance are</span>
-<span class="sd">            renormalized to the max distance, i.e., a displacement ``d`` is</span>
-<span class="sd">            shortened by ``d -&gt; d / norm(d) * max_distance`` if</span>
-<span class="sd">            ``norm(d) &gt; max_distance``. In random displacements without using</span>
-<span class="sd">            temperature, this value serves as the maximum distance, while the</span>
-<span class="sd">            ``distance`` parameter sets the minimum distance. The displacement</span>
-<span class="sd">            distance is randomly sampled from a uniform distribution between</span>
-<span class="sd">            these two bounds.</span>
+<span class="sd">            Upper bound of the displacement distance. With ``temperature``,</span>
+<span class="sd">            a displacement longer than this is renormalized to it; without</span>
+<span class="sd">            ``temperature``, one distance per supercell is drawn from</span>
+<span class="sd">            ``[0, max_distance)`` and floored at ``distance``. Default is</span>
+<span class="sd">            None.</span>
+<span class="sd">        distance_sampling : &quot;supercell&quot; or &quot;atom&quot;, optional</span>
+<span class="sd">            Unit the random distance is drawn for. Requires ``max_distance``</span>
+<span class="sd">            and is incompatible with ``temperature``, which already draws per</span>
+<span class="sd">            atom. With &quot;atom&quot; the distance is drawn per atom rather than per</span>
+<span class="sd">            supercell, uniformly over ``[distance, max_distance)`` and without</span>
+<span class="sd">            the weight at ``distance``. Default is &quot;supercell&quot;.</span>
 <span class="sd">        number_estimation_factor : float, optional</span>
-<span class="sd">            This factor multiplies the number of snapshots estimated by symfc</span>
-<span class="sd">            when `number_of_snapshots` is set to &quot;auto&quot;. Default is None, which</span>
-<span class="sd">            sets this factor to 8 when `max_distance` is specified, otherwise 4.</span>
+<span class="sd">            Safety factor on the symfc estimate used by</span>
+<span class="sd">            ``number_of_snapshots=&quot;auto&quot;``. Default is None.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">displacement_dataset</span><span class="p">:</span> <span class="n">DisplacementDataset</span>
+        <span class="k">if</span> <span class="n">distance_sampling</span> <span class="o">==</span> <span class="s2">&quot;atom&quot;</span> <span class="ow">and</span> <span class="n">max_distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;distance_sampling=&quot;atom&quot; requires max_distance.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">number_of_snapshots</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
             <span class="n">number_of_snapshots</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">or</span> <span class="n">number_of_snapshots</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="p">):</span>
             <span class="k">if</span> <span class="n">number_of_snapshots</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
-                <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.symfc</span><span class="w"> </span><span class="kn">import</span> <span class="n">SymfcFCSolver</span>
-
-                <span class="n">_number_of_snapshots</span> <span class="o">=</span> <span class="n">SymfcFCSolver</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symmetry</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">estimate_numbers_of_supercells</span><span class="p">(</span><span class="n">orders</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">])[</span><span class="mi">2</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">number_estimation_factor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">max_distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">_number_of_snapshots</span> <span class="o">*=</span> <span class="mi">4</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">_number_of_snapshots</span> <span class="o">*=</span> <span class="mi">8</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">_number_of_snapshots</span> <span class="o">*=</span> <span class="n">number_estimation_factor</span>
-                    <span class="n">_number_of_snapshots</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_number_of_snapshots</span><span class="p">)</span>
+                <span class="n">_number_of_snapshots</span> <span class="o">=</span> <span class="n">estimate_number_of_snapshots</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_symmetry</span><span class="p">,</span>
+                    <span class="n">max_distance</span><span class="o">=</span><span class="n">max_distance</span><span class="p">,</span>
+                    <span class="n">number_estimation_factor</span><span class="o">=</span><span class="n">number_estimation_factor</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">_number_of_snapshots</span> <span class="o">=</span> <span class="n">number_of_snapshots</span>
-
-            <span class="k">if</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">random_seed</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">random_seed</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">random_seed</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">:</span>
                 <span class="n">_random_seed</span> <span class="o">=</span> <span class="n">random_seed</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">_random_seed</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">temperature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">_distance</span> <span class="o">=</span> <span class="mf">0.01</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">_distance</span> <span class="o">=</span> <span class="n">distance</span>
-                <span class="n">d</span> <span class="o">=</span> <span class="n">get_random_displacements_dataset</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">generate_random_displacements</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">,</span>
                     <span class="n">_number_of_snapshots</span><span class="p">,</span>
-                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">),</span>
-                    <span class="n">_distance</span><span class="p">,</span>
-                    <span class="n">random_seed</span><span class="o">=</span><span class="n">_random_seed</span><span class="p">,</span>
+                    <span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">,</span>
                     <span class="n">is_plusminus</span><span class="o">=</span><span class="p">(</span><span class="n">is_plusminus</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">),</span>
+                    <span class="n">random_seed</span><span class="o">=</span><span class="n">_random_seed</span><span class="p">,</span>
                     <span class="n">max_distance</span><span class="o">=</span><span class="n">max_distance</span><span class="p">,</span>
+                    <span class="n">distance_sampling</span><span class="o">=</span><span class="n">distance_sampling</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">init_random_displacements</span><span class="p">(</span>
-                    <span class="n">cutoff_frequency</span><span class="o">=</span><span class="n">cutoff_frequency</span><span class="p">,</span> <span class="n">max_distance</span><span class="o">=</span><span class="n">max_distance</span>
+                <span class="k">if</span> <span class="n">distance_sampling</span> <span class="o">==</span> <span class="s2">&quot;atom&quot;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s1">&#39;distance_sampling=&quot;atom&quot; is incompatible with &#39;</span>
+                        <span class="s2">&quot;temperature; the canonical ensemble already gives &quot;</span>
+                        <span class="s2">&quot;each atom its own displacement.&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">displacement_dataset</span><span class="p">,</span> <span class="n">random_displacements</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_generate_finite_temperature_displacement_dataset</span><span class="p">(</span>
+                        <span class="n">_number_of_snapshots</span><span class="p">,</span>
+                        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                        <span class="n">is_plusminus</span><span class="o">=</span><span class="n">is_plusminus</span><span class="p">,</span>
+                        <span class="n">random_seed</span><span class="o">=</span><span class="n">_random_seed</span><span class="p">,</span>
+                        <span class="n">cutoff_frequency</span><span class="o">=</span><span class="n">cutoff_frequency</span><span class="p">,</span>
+                        <span class="n">max_distance</span><span class="o">=</span><span class="n">max_distance</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
-                <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_random_displacements_at_temperature</span><span class="p">(</span>
-                    <span class="n">temperature</span><span class="p">,</span>
-                    <span class="n">_number_of_snapshots</span><span class="p">,</span>
-                    <span class="n">is_plusminus</span><span class="o">=</span><span class="p">(</span><span class="n">is_plusminus</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">),</span>
-                    <span class="n">random_seed</span><span class="o">=</span><span class="n">_random_seed</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">displacement_dataset_type2</span><span class="p">:</span> <span class="n">Type2DisplacementDataset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;displacements&quot;</span><span class="p">:</span> <span class="n">d</span><span class="p">}</span>
-            <span class="k">if</span> <span class="n">_random_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">displacement_dataset_type2</span><span class="p">[</span><span class="s2">&quot;random_seed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_random_seed</span>
-            <span class="n">displacement_dataset</span> <span class="o">=</span> <span class="n">displacement_dataset_type2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">displacement_dataset</span>
+                <span class="c1"># The self.dataset assignment above clears</span>
+                <span class="c1"># self._random_displacements via _invalidate_derived. Restore</span>
+                <span class="c1"># the finite-temperature instance so callers can read its</span>
+                <span class="c1"># q-points, frequencies, and integrated modes.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_random_displacements</span> <span class="o">=</span> <span class="n">random_displacements</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">_distance</span> <span class="o">=</span> <span class="mf">0.01</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_distance</span> <span class="o">=</span> <span class="n">distance</span>
-            <span class="n">displacement_directions</span> <span class="o">=</span> <span class="n">get_least_displacements</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">generate_systematic_displacements</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_symmetry</span><span class="p">,</span>
+                <span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">,</span>
                 <span class="n">is_plusminus</span><span class="o">=</span><span class="n">is_plusminus</span><span class="p">,</span>
                 <span class="n">is_diagonal</span><span class="o">=</span><span class="n">is_diagonal</span><span class="p">,</span>
                 <span class="n">is_trigonal</span><span class="o">=</span><span class="n">is_trigonal</span><span class="p">,</span>
                 <span class="n">log_level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_level</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">displacement_dataset</span> <span class="o">=</span> <span class="n">directions_to_displacement_dataset</span><span class="p">(</span>
-                <span class="n">displacement_directions</span><span class="p">,</span> <span class="n">_distance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">displacement_dataset</span></div>
+            <span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_finite_temperature_displacement_dataset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">number_of_snapshots</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">is_plusminus</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cutoff_frequency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_distance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Type2DisplacementDataset</span><span class="p">,</span> <span class="n">RandomDisplacements</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a type-2 dataset of random displacements at finite temperature.</span>
+
+<span class="sd">        This is a helper for :meth:`generate_displacements`; see there for</span>
+<span class="sd">        the meaning of the parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[Type2DisplacementDataset, RandomDisplacements]</span>
+<span class="sd">            The generated type-2 displacement dataset and the</span>
+<span class="sd">            RandomDisplacements instance used to create it.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        This method sets self._random_displacements as a side effect:</span>
+<span class="sd">        init_random_displacements creates the instance and</span>
+<span class="sd">        get_random_displacements_at_temperature runs it. The instance</span>
+<span class="sd">        returned here is that same object.</span>
+
+<span class="sd">        IMPORTANT: the caller must put the returned instance back into</span>
+<span class="sd">        self._random_displacements *after* assigning self.dataset. That</span>
+<span class="sd">        assignment triggers _invalidate_derived, which resets</span>
+<span class="sd">        self._random_displacements to None. Without the restore, the</span>
+<span class="sd">        q-points, frequencies, and integrated modes computed here are</span>
+<span class="sd">        lost, and Phonopy.random_displacements returns None even though</span>
+<span class="sd">        generation succeeded.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_random_displacements</span><span class="p">(</span>
+            <span class="n">cutoff_frequency</span><span class="o">=</span><span class="n">cutoff_frequency</span><span class="p">,</span> <span class="n">max_distance</span><span class="o">=</span><span class="n">max_distance</span>
+        <span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_random_displacements_at_temperature</span><span class="p">(</span>
+            <span class="n">temperature</span><span class="p">,</span>
+            <span class="n">number_of_snapshots</span><span class="p">,</span>
+            <span class="n">is_plusminus</span><span class="o">=</span><span class="p">(</span><span class="n">is_plusminus</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="n">random_seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_displacements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">Type2DisplacementDataset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;displacements&quot;</span><span class="p">:</span> <span class="n">d</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;random_seed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">random_seed</span>
+        <span class="k">return</span> <span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_displacements</span>
 
 <div class="viewcode-block" id="Phonopy.produce_force_constants">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.produce_force_constants">[docs]</a>
@@ -4246,6 +4140,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">scattering_lengths</span><span class="o">=</span><span class="n">scattering_lengths</span><span class="p">,</span>
             <span class="n">freq_min</span><span class="o">=</span><span class="n">freq_min</span><span class="p">,</span>
             <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">,</span>
+            <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_structure_factor</span></div>
 
@@ -5077,8 +4972,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
 
   <footer class="bd-footer">
   </footer>

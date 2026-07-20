@@ -327,6 +327,40 @@ variation not only in direction, but also in distance, with distances randomly
 sampled uniformly between the values of `DISPLACEMENT_DISTANCE` and
 `DISPLACEMENT_DISTANCE_MAX`.
 
+One distance is drawn per supercell, so all atoms in a supercell share it. The
+draw is uniform over `[0, DISPLACEMENT_DISTANCE_MAX)` and is raised to
+`DISPLACEMENT_DISTANCE` when smaller, which piles the weight
+`DISPLACEMENT_DISTANCE / DISPLACEMENT_DISTANCE_MAX` exactly at
+`DISPLACEMENT_DISTANCE`. See `DISPLACEMENT_DISTANCE_PER_ATOM` for the per-atom
+draw.
+
+(displacement_distance_sampling_tag)=
+### `DISPLACEMENT_DISTANCE_SAMPLING`
+
+The unit the random displacement distance is drawn for, either `SUPERCELL`
+(default) or `ATOM`. This is used along with `DISPLACEMENT_DISTANCE_MAX` but
+not with `RANDOM_DISPLACEMENT_TEMPERATURE`, whose canonical ensemble already
+gives each atom its own displacement.
+
+With `ATOM` the random distance is drawn per atom instead of per supercell, so
+every supercell spans the whole amplitude range internally rather than sitting
+at one amplitude. The draw is uniform over
+`[DISPLACEMENT_DISTANCE, DISPLACEMENT_DISTANCE_MAX)` directly, with no weight
+piled up at `DISPLACEMENT_DISTANCE`.
+
+This is useful for building training data for a machine learning potential,
+where the amplitude diversity within each supercell matters more than the number
+of supercells.
+
+```
+CREATE_DISPLACEMENTS = .TRUE.
+DIM = 2 2 2
+RANDOM_DISPLACEMENTS = 100
+DISPLACEMENT_DISTANCE = 0.03
+DISPLACEMENT_DISTANCE_MAX = 1.5
+DISPLACEMENT_DISTANCE_SAMPLING = ATOM
+```
+
 (rd_number_estimation_factor_tag)=
 ### `RD_NUMBER_ESTIMATION_FACTOR`
 
