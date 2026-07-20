@@ -42,7 +42,6 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
@@ -109,31 +108,46 @@ def parse_set_of_forces(
     forces_filenames: Sequence[str | os.PathLike],
     verbose: bool = True,
 ) -> list[NDArray[np.double]] | None:
-    """Parse forces from Octopus static/info files."""
+    """Parse forces from Octopus static/info files.
+
+    Forces are read from the "Forces on the ions" block of Octopus'
+    ``static/info`` file, which looks like::
+
+        Forces on the ions [H/b]
+         Ion                        x              y              z
+           1        Si  -7.96388897E-03  -4.49992101E-03  -3.91040537E-03
+           2        Si   7.96388897E-03   4.49992101E-03   3.91040537E-03
+         ----------------------------------------------------------
+
+    Forces are printed in Hartree/bohr ([H/b]) by default. If the run uses
+    eV/Angstrom units ([eV/A]), they are converted back to atomic units.
+    """
     units = get_physical_units()
     force_sets = []
     is_parsed = True
-    hook = "Ion "
 
     for i, filename in enumerate(forces_filenames):
         if verbose:
             print(f"{i + 1}. {filename}")
 
-        conversion = 1.0
+        octopus_forces: list[list[float]] = []
         with open(filename) as f:
             for line in f:
-                if "Forces on the ions [H/b]" in line:
-                    conversion = 1.0
-                elif "Forces on the ions [eV/A]" in line:
-                    conversion = units.Hartree / units.EV * units.Bohr / units.Angstrom
-
-            f.seek(0)
-            octopus_forces = collect_forces(f, num_atoms, "Forces on the ions", [2, 3, 4], word="Ion")
-
-        for force in octopus_forces:
-            force[0] *= conversion
-            force[1] *= conversion
-            force[2] *= conversion
+                if "Forces on the ions" in line:
+                    if "[eV/A]" in line:
+                        # eV/Angstrom -> Hartree/bohr
+                        conversion = units.Bohr / units.Hartree
+                    else:  # [H/b], atomic units
+                        conversion = 1.0
+                    f.readline()  # skip the " Ion   x   y   z" header line
+                    for _ in range(num_atoms):
+                        vals = f.readline().split()
+                        if len(vals) < 5:
+                            break
+                        octopus_forces.append(
+                            [float(vals[j]) * conversion for j in (2, 3, 4)]
+                        )
+                    break
 
         if check_forces(octopus_forces, num_atoms, filename, verbose=verbose):
             drift_force = get_drift_forces(

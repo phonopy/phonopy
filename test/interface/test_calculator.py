@@ -64,8 +64,10 @@ def test_parse_set_of_forces_octopus_records_are_converted_and_drift_removed(tmp
     info = tmp_path / "static_info.txt"
     info.write_text(
         "Forces on the ions [eV/A]\n"
-        "Ion 1 0.1 0.2 0.3\n"
-        "Ion 2 0.4 0.5 0.6\n"
+        " Ion                        x              y              z\n"
+        "   1        Na   0.1   0.2   0.3\n"
+        "   2        Cl   0.4   0.5   0.6\n"
+        " ----------------------------------------------------------\n"
     )
 
     result = parse_set_of_forces(2, [str(info)], verbose=False)
