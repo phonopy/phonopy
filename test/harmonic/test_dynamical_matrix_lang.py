@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Parity tests comparing Rust and C dispatch paths in DynamicalMatrix.
 
 Covers the dipole-dipole and Wang-NAC charge-sum dispatch sites:

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for VASP-to-pypolymlp structure dataset assembly."""
 
 from __future__ import annotations

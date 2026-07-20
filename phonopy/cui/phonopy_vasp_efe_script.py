@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Calculate electronic free energy from vasprun.xml at temperatures.
 
 Here the free energy is approximately given by:

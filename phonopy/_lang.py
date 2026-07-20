@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Dispatch logging helper for the C/Rust backend switch.
 
 The dedicated ``phonopy.lang`` logger records which backend is selected

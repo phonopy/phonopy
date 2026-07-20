@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for the pure-Python backend of get_dynamical_matrices_at_qpoints.
 
 The Python (NumPy) backend needs neither the C extension nor ``phonors``.

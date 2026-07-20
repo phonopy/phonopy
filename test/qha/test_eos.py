@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for equation-of-state functions in phonopy.qha.eos."""
 
 from __future__ import annotations

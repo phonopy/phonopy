@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Questaal/LMTO calculator interface."""
 
 # Initial version by GCGS, adaptation to phonopy v2 and subsequent revision by DLP

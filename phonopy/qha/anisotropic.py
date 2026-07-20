@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Anisotropic quasi-harmonic approximation over lattice degrees of freedom.
 
 Unlike the volume-path QHA in phonopy.qha.qha, which fits a 1D equation of

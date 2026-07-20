@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Symmetry-aware sampling of lattice parameters.
 
 Supports the anisotropic QHA / machine-learning-potential workflow by

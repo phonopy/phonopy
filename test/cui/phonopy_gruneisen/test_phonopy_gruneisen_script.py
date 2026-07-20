@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests of phonopy-gruneisen command."""
 
 from __future__ import annotations

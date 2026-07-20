@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for phonopy.cui.load_helper."""
 
 from __future__ import annotations

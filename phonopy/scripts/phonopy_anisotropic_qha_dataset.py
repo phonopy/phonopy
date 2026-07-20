@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Build the anisotropic QHA intermediate dataset from calculator outputs.
 
 Gathers the scattered per-grid-point outputs into one self-contained

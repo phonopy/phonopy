@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Quasi-harmonic approximation driver returning immutable results.
 
 The public entry point is run_qha(), which takes one Phonopy instance per

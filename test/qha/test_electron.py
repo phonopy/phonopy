@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests of electronic free energy calculations."""
 
 import numpy as np

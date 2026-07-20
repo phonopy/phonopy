@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Run the anisotropic QHA from an intermediate dataset.
 
 Reads aniso_qha_dataset.hdf5 (built by phonopy-anisotropic-qha-dataset), rebuilds one

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for QHA calculations."""
 
 from __future__ import annotations

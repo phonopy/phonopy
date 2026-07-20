@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Parity tests for get_dynamical_matrices_at_qpoints.
 
 Confirms bit-level (machine-epsilon) parity between

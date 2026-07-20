@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Test Conversion between calculator formats."""
 
 import pathlib

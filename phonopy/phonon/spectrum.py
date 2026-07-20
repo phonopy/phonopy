@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Spectrum-like quantities computed from per-mode values on an irreducible grid.
 
 Two complementary backends are provided:

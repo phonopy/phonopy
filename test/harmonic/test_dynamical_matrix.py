@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for dynamical matrix classes."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for derived-state invalidation in the Phonopy class.
 
 Regression tests for the Lane A2 invalidation policy (see

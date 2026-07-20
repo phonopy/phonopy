@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Phonon thermal properties at constant volume."""
 
 from __future__ import annotations

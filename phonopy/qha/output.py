@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """File writers for QHA results.
 
 All functions take a QHAResult as the first argument. File formats of the
