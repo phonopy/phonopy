@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Functional tests for the anisotropic QHA dataset builder (calculator front-end)."""
 
 from __future__ import annotations

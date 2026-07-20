@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Plotting functions for QHA results.
 
 All functions take a QHAResult as the first argument and return the

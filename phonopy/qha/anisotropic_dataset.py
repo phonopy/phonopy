@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Intermediate dataset for the anisotropic QHA workflow.
 
 A single self-contained HDF5 file gathers the per-grid-point inputs the

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Pytest fixtures shared by QHA tests."""
 
 from __future__ import annotations

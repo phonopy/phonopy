@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Smoke tests for figure-level plotting of phonon results."""
 
 from __future__ import annotations

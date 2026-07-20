@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """File writers for anisotropic QHA results.
 
 All functions take an AnisotropicQHAResult as the first argument and write

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for lattice-parameter fitting in phonopy.qha.lattice."""
 
 from __future__ import annotations

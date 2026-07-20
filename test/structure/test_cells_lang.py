@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Parity tests comparing Rust and C dispatch paths for cells helpers.
 
 Confirms bit-for-bit parity between ``phonopy._phonopy.compute_permutation``

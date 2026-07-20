@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Script to plot unfolding result."""
 
 import sys

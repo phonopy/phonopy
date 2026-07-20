@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Atomic data."""
 
 from __future__ import annotations

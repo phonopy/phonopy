@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for FHI-aims calculator interface."""
 
 import pathlib

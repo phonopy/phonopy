@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for routines in derivative_dynmat.py."""
 
 import numpy as np

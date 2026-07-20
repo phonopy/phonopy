@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Parity tests for DynmatToForceConstants.
 
 Verifies machine-precision parity between the C and Rust backends of

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """VASP calculator interface."""
 
 from __future__ import annotations

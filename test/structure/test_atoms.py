@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for PhonopyAtoms."""
 
 from __future__ import annotations

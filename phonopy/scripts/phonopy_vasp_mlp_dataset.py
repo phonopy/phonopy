@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Command to build a pypolymlp training dataset from VASP output files.
 
 Extracts the final structure, total energy, forces and stress from each

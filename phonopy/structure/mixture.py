@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Utilities for mixed-species (site-mixture) cells.
 
 This module hosts helpers that operate on PhonopyAtoms whose species

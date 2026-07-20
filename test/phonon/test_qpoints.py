@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for phonon calculation at specific q-points."""
 
 from __future__ import annotations

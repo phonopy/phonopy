@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for mode Grueneisen parameter calculations."""
 # ruff: noqa: E501  # tabular reference data in g_mesh has long lines
 

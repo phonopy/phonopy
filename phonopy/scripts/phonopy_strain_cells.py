@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Command to generate cells with sampled lattice parameters.
 
 The free lattice-length degrees of freedom are determined from the

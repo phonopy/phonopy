@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
+
 #ifndef __snf3x3_H__
 #define __snf3x3_H__
 

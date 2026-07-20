@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Regression tests comparing Rust and C snf3x3 implementations."""
 
 from __future__ import annotations

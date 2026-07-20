@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for the non-merge site-mixture scheme (apply_site_mixture)."""
 
 from __future__ import annotations

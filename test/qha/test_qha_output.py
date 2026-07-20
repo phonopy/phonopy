@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for phonopy.qha.output and phonopy.qha.plot."""
 
 from __future__ import annotations

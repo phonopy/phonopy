@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: BSD-3-Clause
 """Tests for generation of random displacements at finite temperatures."""
 
 import os
