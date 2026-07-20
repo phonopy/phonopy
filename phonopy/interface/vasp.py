@@ -1188,6 +1188,7 @@ class VasprunxmlExpat:
         self._is_efermi = False
         self._is_divisions = False
         self._is_NELECT = False
+        self._is_LNONCOLLINEAR = False
         self._is_version = False
         self._is_NGXYZ = [False, False, False]
         self._is_NGXYZF = [False, False, False]
@@ -1256,6 +1257,7 @@ class VasprunxmlExpat:
         self._efermi: float | None = None
         self._symbols: list[str] | None = None
         self._NELECT: float | None = None
+        self._LNONCOLLINEAR: bool | None = None
         self._version: str | None = None
 
         self._p = xml.parsers.expat.ParserCreate()
@@ -1548,6 +1550,27 @@ class VasprunxmlExpat:
         """Return number of electrons, NELECT."""
         return self._NELECT
 
+    @property
+    def is_noncollinear(self) -> bool | None:
+        """Return whether the calculation is non-collinear, LNONCOLLINEAR.
+
+        None when the tag was not found in the file.
+
+        """
+        return self._LNONCOLLINEAR
+
+    @property
+    def spin_degeneracy(self) -> int | None:
+        """Return the number of electrons one eigenvalue holds.
+
+        1 for a non-collinear calculation, whose eigenvalues are spinor
+        states, and None otherwise, which leaves the choice to the spin axis
+        of the eigenvalues. Feeds the parameter of the same name of
+        ElectronicStates and ElectronFreeEnergy.
+
+        """
+        return 1 if self._LNONCOLLINEAR else None
+
     def _inside(self, name: str) -> bool:
         """Return whether an ancestor (or the current element) is ``name``."""
         return any(n == name for n, _ in self._stack)
@@ -1658,6 +1681,9 @@ class VasprunxmlExpat:
                 if attrs["name"] == "NELECT":
                     self._is_i = True
                     self._is_NELECT = True
+                if attrs["name"] == "LNONCOLLINEAR":
+                    self._is_i = True
+                    self._is_LNONCOLLINEAR = True
                 if not self._is_structure and attrs["name"] == "volume":
                     self._is_i = True
                     self._is_volume = True
@@ -1934,6 +1960,12 @@ class VasprunxmlExpat:
             if self._is_NELECT:
                 self._NELECT = self._to_float(self._cbuf.strip())
                 self._is_NELECT = False
+            if self._is_LNONCOLLINEAR:
+                # <incar> echoes the tag only when the user set it, while
+                # <parameters> always carries the value VASP actually used.
+                # <parameters> comes later, so the last value read wins.
+                self._LNONCOLLINEAR = self._cbuf.strip() == "T"
+                self._is_LNONCOLLINEAR = False
             if self._is_version:
                 self._version = self._cbuf.strip()
                 self._is_version = False

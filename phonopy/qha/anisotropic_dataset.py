@@ -259,6 +259,10 @@ def _write_electronic_states(
     )
     eg.create_dataset("weights", data=electronic_states.weights)
     eg.create_dataset("n_electrons", data=float(electronic_states.n_electrons))
+    if electronic_states.spin_degeneracy is not None:
+        eg.create_dataset(
+            "spin_degeneracy", data=int(electronic_states.spin_degeneracy)
+        )
 
 
 def read_aniso_qha_dataset(
@@ -359,4 +363,7 @@ def _read_electronic_states(eg: h5py.Group) -> ElectronicStates:
         eigenvalues=eg["eigenvalues"][:],
         weights=eg["weights"][:],
         n_electrons=float(eg["n_electrons"][()]),
+        spin_degeneracy=(
+            int(eg["spin_degeneracy"][()]) if "spin_degeneracy" in eg else None
+        ),
     )

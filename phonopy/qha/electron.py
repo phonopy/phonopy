@@ -36,6 +36,12 @@ class ElectronicStates:
     internal_energy : float, optional
         Static internal energy of the unit cell in eV, e.g., the
         energy (sigma->0) of the calculation the eigenvalues come from.
+    spin_degeneracy : int, optional
+        Number of electrons one eigenvalue can hold. With None (default) it
+        is inferred from the length of the spin axis of eigenvalues. The
+        inference is wrong for non-collinear calculations, where the spin
+        axis has length 1 but each spinor state holds one electron, so 1
+        must be given explicitly. See ElectronFreeEnergy.
 
     """
 
@@ -44,6 +50,7 @@ class ElectronicStates:
     n_electrons: float
     volume: float | None = None
     internal_energy: float | None = None
+    spin_degeneracy: int | None = None
 
     def __post_init__(self) -> None:
         """Validate shapes."""
@@ -59,6 +66,10 @@ class ElectronicStates:
             )
         if self.weights.ndim != 1 or len(self.weights) != self.eigenvalues.shape[1]:
             raise ValueError("weights must have one value per k-point of eigenvalues.")
+        if self.spin_degeneracy not in (None, 1, 2):
+            raise ValueError(
+                f"spin_degeneracy must be 1 or 2, not {self.spin_degeneracy}."
+            )
 
 
 def compute_free_energy_and_entropy(
@@ -85,6 +96,7 @@ def compute_free_energy_and_entropy(
         electronic_states.eigenvalues,
         electronic_states.weights,
         electronic_states.n_electrons,
+        spin_degeneracy=electronic_states.spin_degeneracy,
     )
     free_energies = []
     entropies = []
@@ -112,8 +124,8 @@ def write_electronic_states_hdf5(
     contains one group "volume-XXX" per volume point with the datasets
     eigenvalues ((spin, kpoints, bands), eV), weights ((kpoints,)),
     n_electrons, volume (angstrom^3), and energy (eV, static internal
-    energy). The number of volume points is stored in the root attribute
-    "n_volumes".
+    energy). spin_degeneracy is written only when it is set. The number of
+    volume points is stored in the root attribute "n_volumes".
 
     """
     import h5py
@@ -143,6 +155,10 @@ def write_electronic_states_hdf5(
             group.create_dataset(
                 "energy", data=float(electronic_states.internal_energy)
             )
+            if electronic_states.spin_degeneracy is not None:
+                group.create_dataset(
+                    "spin_degeneracy", data=int(electronic_states.spin_degeneracy)
+                )
 
 
 def read_electronic_states_hdf5(
@@ -169,6 +185,11 @@ def read_electronic_states_hdf5(
                     n_electrons=float(group["n_electrons"][()]),
                     volume=float(group["volume"][()]),
                     internal_energy=float(group["energy"][()]),
+                    spin_degeneracy=(
+                        int(group["spin_degeneracy"][()])
+                        if "spin_degeneracy" in group
+                        else None
+                    ),
                 )
             )
     return electronic_structures
@@ -213,7 +234,7 @@ class ElectronFreeEnergy:
        f_i(V) = \left\{ 1 + \exp\left[\frac{\epsilon_i(V) - \mu(V)}{T}\right]
        \right\}^{-1}
 
-    where :math:`g` is 1 for non-spin polarized systems and 2 for spin
+    where :math:`g` is 2 for non-spin polarized systems and 1 for spin
     polarized systems.
 
     Energy
@@ -241,6 +262,7 @@ class ElectronFreeEnergy:
         eigenvalues: NDArray[np.double],
         weights: NDArray[np.int64] | NDArray[np.double],
         n_electrons: float,
+        spin_degeneracy: int | None = None,
     ) -> None:
         """Init method.
 
@@ -256,8 +278,13 @@ class ElectronFreeEnergy:
             shape=(irreducible_kpoints,)
         n_electrons: float
             Number of electrons in unit cell.
-        efermi: float
-            Initial Fermi energy
+        spin_degeneracy: int, optional
+            Number of electrons one eigenvalue can hold, i.e., g above. With
+            None (default) it is inferred from the length of the spin axis of
+            eigenvalues: 2 for length 1 and 1 for length 2. This inference is
+            wrong for non-collinear calculations, whose spin axis has length
+            1 while each spinor state holds one electron, so g = 1 must be
+            given explicitly there.
 
         """
         # shape=(kpoints, spin, bands)
@@ -267,12 +294,20 @@ class ElectronFreeEnergy:
         self._weights = weights
         self._n_electrons = n_electrons
 
-        if self._eigenvalues.shape[1] == 1:
-            self._g = 2
-        elif self._eigenvalues.shape[1] == 2:
-            self._g = 1
+        if spin_degeneracy is None:
+            if self._eigenvalues.shape[1] == 1:
+                self._g = 2
+            elif self._eigenvalues.shape[1] == 2:
+                self._g = 1
+            else:
+                raise RuntimeError(
+                    "The spin axis of eigenvalues must have length 1 or 2, not "
+                    f"{self._eigenvalues.shape[1]}."
+                )
+        elif spin_degeneracy in (1, 2):
+            self._g = spin_degeneracy
         else:
-            raise RuntimeError
+            raise ValueError(f"spin_degeneracy must be 1 or 2, not {spin_degeneracy}.")
 
         self._T: float
         self._f: NDArray[np.double]  # occupation numbers, shape=(kpoints, spin, bands)

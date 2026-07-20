@@ -108,15 +108,24 @@ def electronic_states_from_vaspout(path: str) -> ElectronicStates:
     Reads the eigenvalues, symmetry k-point weights, and electron count of the
     static single point. vaspout.h5 avoids the digit truncation of vasprun.xml.
 
+    A non-collinear calculation is detected from LNONCOLLINEAR so that its
+    spinor eigenvalues are not mistaken for the doubly occupied states of a
+    non-spin-polarized calculation, which the spin axis alone cannot tell
+    apart. vaspout.h5 echoes only the tags the INCAR set, so an absent key
+    means collinear.
+
     """
     import h5py  # type: ignore[import-untyped]
 
     with h5py.File(path, "r") as f:
         g = f["results/electron_eigenvalues"]
+        incar = f.get("input/incar", {})
+        noncollinear = "LNONCOLLINEAR" in incar and bool(incar["LNONCOLLINEAR"][()])
         return ElectronicStates(
             eigenvalues=g["eigenvalues"][:],  # (spin, kpoints, bands)
             weights=g["kpoints_symmetry_weight"][:],
             n_electrons=float(g["nelectrons"][()]),
+            spin_degeneracy=1 if noncollinear else None,
         )
 
 
