@@ -35,7 +35,7 @@ def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) 
     """Rebuild the fitted F surface at the nearest temperature and evaluate it.
 
     Returns the sample cells, the dense n x n evaluation mesh, and F offset by
-    its own minimum (F - F_min) so that only the surface shape remains.
+    its own minimum (F - F_min) in meV, so that only the surface shape remains.
 
     """
     fi = result.free_lattice_indices
@@ -50,7 +50,7 @@ def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) 
     grid0, grid1 = np.meshgrid(np.linspace(lo0, hi0, n), np.linspace(lo1, hi1, n))
     mesh = np.column_stack([grid0.ravel(), grid1.ravel()])
     fe = fit.evaluate(mesh).reshape(grid0.shape)
-    fe = fe - fe.min()
+    fe = (fe - fe.min()) * 1000
     return {
         "i": i,
         "t": float(result.temperatures[i]),
@@ -99,7 +99,7 @@ def plot_F_contours(
             colors="k",
             linewidths=0.4,
         )
-        fig.colorbar(filled, label="F - F_min (eV)")
+        fig.colorbar(filled, label="F - F_min (meV)")
 
         ax.plot(
             d["free_points"][:, 0],
@@ -138,8 +138,9 @@ def _fit_and_grid(
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Fit a total-degree polynomial to values and evaluate it on a mesh.
 
-    Returns (grid0, grid1, fe) with fe offset by its own minimum, so only the
-    surface shape and tilt remain (any additive constant drops out).
+    Returns (grid0, grid1, fe) with fe offset by its own minimum and converted
+    to meV, so only the surface shape and tilt remain (any additive constant
+    drops out).
 
     """
     fit = FreeEnergySurfaceFit(free_points, values, degree=degree)
@@ -148,7 +149,7 @@ def _fit_and_grid(
     grid0, grid1 = np.meshgrid(np.linspace(lo0, hi0, n), np.linspace(lo1, hi1, n))
     mesh = np.column_stack([grid0.ravel(), grid1.ravel()])
     fe = fit.evaluate(mesh).reshape(grid0.shape)
-    return grid0, grid1, fe - fe.min()
+    return grid0, grid1, (fe - fe.min()) * 1000
 
 
 def plot_component_contours(
@@ -222,7 +223,7 @@ def plot_component_contours(
         ):
             filled = ax.contourf(g0, g1, fe, levels=levels, extend="max")
             ax.contour(g0, g1, fe, levels=levels[::2], colors="k", linewidths=0.3)
-            fig.colorbar(filled, ax=ax, label=f"{name} - min (eV)")
+            fig.colorbar(filled, ax=ax, label=f"{name} - min (meV)")
             ax.plot(free_points[:, 0], free_points[:, 1], "wo", ms=2)
             ax.plot(eq[fi[0]], eq[fi[1]], "r*", ms=12)
             ax.set_xlabel(f"{axis[fi[0]]} (A)")
