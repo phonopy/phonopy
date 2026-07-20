@@ -43,6 +43,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy import Phonopy
+from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.physical_units import get_physical_units
 
@@ -128,7 +129,10 @@ class MLPSSCHA:
             if log_level:
                 print("Use provided force constants.")
                 print("")
-            self._ph.force_constants = ph.force_constants
+            fc = ph.force_constants
+            if fc.shape[0] != fc.shape[1]:  # compact form
+                fc = compact_fc_to_full_fc(self._ph.primitive, fc)
+            self._ph.force_constants = fc
             self._iter_counter = 1
 
     @property
@@ -181,6 +185,45 @@ class MLPSSCHA:
     def _potential_energies(self) -> NDArray[np.double]:
         """Return potential energies of individual supercells."""
         return self._ph.supercell_energies - self._supercell_energy
+
+    def sample_supercells(self) -> None:
+        """Sample supercells with random displacements and evaluate the MLPs.
+
+        The displacements are sampled from the canonical ensemble of the
+        harmonic phonons of the current force constants at the temperature,
+        and the forces and energies of the supercells are evaluated by the
+        MLPs.
+
+        This is the sampling step of one SSCHA iteration. It is also usable on
+        its own, followed by ``calculate_free_energy``, to obtain the free
+        energy of the force constants currently set.
+
+        """
+        # Mutating the dataset clears the force constants, which are needed to
+        # evaluate the free energy of this sampling. They are restored below.
+        fc = self._ph.force_constants
+        self._ph.generate_displacements(
+            number_of_snapshots=self._number_of_snapshots,
+            temperature=self._temperature,
+            random_seed=self._random_seed,
+        )
+
+        if self._log_level:
+            displacements = self._ph.displacements
+            assert isinstance(displacements, np.ndarray)
+            hist, bin_edges = np.histogram(
+                np.linalg.norm(displacements, axis=2), bins=10
+            )
+            size = np.prod(displacements.shape[0:2])
+            for i, h in enumerate(hist):
+                length = round(h / size * 100)
+                print(
+                    f"  [{bin_edges[i]:4.3f}, {bin_edges[i + 1]:4.3f}] " + "*" * length
+                )
+            print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
+
+        self._ph.evaluate_mlp()
+        self._ph.force_constants = fc
 
     def calculate_free_energy(self, mesh: float = 100.0) -> None:
         """Calculate SSCHA free energy and its statistical error.
@@ -270,31 +313,11 @@ class MLPSSCHA:
                 number_of_snapshots=self._number_of_snapshots,
                 random_seed=self._random_seed,
             )
-        else:
-            self._ph.generate_displacements(
-                number_of_snapshots=self._number_of_snapshots,
-                temperature=self._temperature,
-                random_seed=self._random_seed,
-            )
-            displacements = self._ph.displacements
-            assert isinstance(displacements, np.ndarray)
-            hist, bin_edges = np.histogram(
-                np.linalg.norm(displacements, axis=2), bins=10
-            )
-
             if self._log_level:
-                size = np.prod(displacements.shape[0:2])
-                for i, h in enumerate(hist):
-                    length = round(h / size * 100)
-                    print(
-                        f"  [{bin_edges[i]:4.3f}, {bin_edges[i + 1]:4.3f}] "
-                        + "*" * length
-                    )
-
-        if self._log_level:
-            print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
-
-        self._ph.evaluate_mlp()
+                print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
+            self._ph.evaluate_mlp()
+        else:
+            self.sample_supercells()
 
         if self._log_level:
             print("Calculate force constants using symfc", flush=True)

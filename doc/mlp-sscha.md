@@ -441,6 +441,40 @@ to the iteration step. By performing a sufficient number of SSCHA iterations and
 utilizing a sufficiently large set of supercells with random displacements at a
 given temperature, the SSCHA force constants can be reliably determined.
 
+#### SSCHA free energy
+
+The SSCHA free energy printed at each iteration is defined for the force
+constants {math}`\Phi` by
+
+```{math}
+\mathcal{F}_\Phi = \tilde{F}_\Phi - \langle \tilde{V}_\Phi
+\rangle_{\tilde{\rho}_\Phi} + \langle V \rangle_{\tilde{\rho}_\Phi},
+```
+
+where {math}`\tilde{F}_\Phi` and {math}`\langle \tilde{V}_\Phi
+\rangle_{\tilde{\rho}_\Phi}` are the harmonic Helmholtz free energy and
+potential energy of {math}`\Phi`, respectively, and {math}`\langle V
+\rangle_{\tilde{\rho}_\Phi}` is the potential energy. The averages are taken
+over the harmonic density matrix {math}`\tilde{\rho}_\Phi` at the temperature,
+which is sampled by the supercells with random displacements. {math}`\langle V
+\rangle_{\tilde{\rho}_\Phi}` is obtained from the supercell energies evaluated
+by the MLPs relative to the energy of the supercell without displacements, and
+the harmonic potential energy is evaluated from the displacements as
+
+```{math}
+\langle \tilde{V}_\Phi \rangle_{\tilde{\rho}_\Phi} = \frac{1}{2}
+\sum_{l\kappa j, l'\kappa' j'} \Phi_{l\kappa j, l'\kappa' j'} \langle u_{l\kappa
+j} u_{l'\kappa' j'} \rangle_{\tilde{\rho}_\Phi}.
+```
+
+These terms are given per primitive cell. The notation and the description used
+here are those of equations (B1) and (B3) in appendix B of <u>A. Togo *et al.*,
+J. Phys.: Condens. Matter **34**, 365401 (2022)</u>
+[[doi](https://doi.org/10.1088/1361-648X/ac7b01)], where it is also shown that
+evaluating {math}`\langle \tilde{V}_\Phi \rangle_{\tilde{\rho}_\Phi}` from the
+displacements gives a more stable measure of the convergence than evaluating it
+from the phonon frequencies and eigenvectors.
+
 The convergence of these force constants is monitored through the SSCHA free
 energy printed at each iteration. The value after `+/-` is its statistical
 error, which originates from the random sampling of the supercells and is
@@ -468,6 +502,37 @@ constants at the iteration steps can be overlaid:
 SSCHA iterations. The SSCHA band structures lie on top of each other, whereas
 the harmonic one deviates from them, which shows that the SSCHA force constants
 are converged and are distinct from the harmonic force constants.
+
+#### SSCHA free energy of saved force constants
+
+The SSCHA free energy is printed at every iteration, but it can also be
+evaluated afterwards from a saved `phonopy_sscha_fc_NUM.yaml.xz` file. Since
+this file contains force constants only, the anharmonic part is re-evaluated by
+sampling displacements from the canonical ensemble of these force constants and
+by evaluating the supercell energies using the MLPs in `polymlp.yaml`.
+
+```python
+import phonopy
+from phonopy.sscha.core import MLPSSCHA
+
+ph = phonopy.load("phonopy_sscha_fc_10.yaml.xz", log_level=0)
+ph.load_mlp("polymlp.yaml")
+
+sscha = MLPSSCHA(ph, ph.mlp, temperature=300.0, number_of_snapshots=1000)
+sscha.sample_supercells()
+sscha.calculate_free_energy()
+
+print(
+    f"SSCHA free energy: {sscha.free_energy * 1000:.3f} "
+    f"+/- {sscha.free_energy_error * 1000:.3f} meV"
+)
+```
+
+This does not reproduce the value printed at the corresponding iteration
+exactly. In the iteration, the displacements are sampled from the force
+constants of the previous iteration, whereas here they are sampled from the
+force constants stored in the file. The two values therefore agree only within
+the statistical error.
 
 ## Parameters for developing MLPs
 
