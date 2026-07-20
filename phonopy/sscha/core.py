@@ -149,29 +149,85 @@ class MLPSSCHA:
         return fc
 
     @property
+    def free_energy_error(self) -> float:
+        """Return statistical error of free energy in eV.
+
+        This is the standard error of the mean of the anharmonic correction
+        over the supercells with random displacements. The harmonic free
+        energy is determined by the force constants and does not contribute
+        to it.
+
+        """
+        return self._free_energy_error
+
+    @property
     def harmonic_potential_energy(self) -> float:
         """Return supercell energies."""
-        d = self._ph.displacements
-        assert isinstance(d, np.ndarray)
-        pe = np.einsum("ijkl,mik,mjl", self.force_constants, d, d) / len(d) / 2
-        return float(pe)
+        return float(np.average(self._harmonic_potential_energies))
 
     @property
     def potential_energy(self) -> float:
         """Return potential energy."""
-        return float(np.average(self._ph.supercell_energies - self._supercell_energy))
+        return float(np.average(self._potential_energies))
+
+    @property
+    def _harmonic_potential_energies(self) -> NDArray[np.double]:
+        """Return harmonic potential energies of individual supercells."""
+        d = self._ph.displacements
+        assert isinstance(d, np.ndarray)
+        return np.einsum("ijkl,mik,mjl->m", self.force_constants, d, d) / 2
+
+    @property
+    def _potential_energies(self) -> NDArray[np.double]:
+        """Return potential energies of individual supercells."""
+        return self._ph.supercell_energies - self._supercell_energy
 
     def calculate_free_energy(self, mesh: float = 100.0) -> None:
-        """Calculate SSCHA free energy."""
+        """Calculate SSCHA free energy and its statistical error.
+
+        Given the force constants Phi, the free energy per primitive cell is
+
+            F = F_harm + (1/N) sum_i a_i,
+
+        where F_harm is the harmonic free energy of the current force
+        constants and
+
+            a_i = (E_i - E_0 - (1/2) sum_ab Phi_ab u_ia u_ib) / n_cell
+
+        is the anharmonic correction obtained from the i-th of the N
+        supercells with random displacements. E_i is the supercell energy,
+        E_0 the energy of the supercell without displacements, Phi the force
+        constants, u_i the displacements, and n_cell the number of primitive
+        cells in the supercell. The indices a and b run over the atoms in
+        the supercell and the Cartesian directions.
+
+        F_harm is determined by the force constants and carries no sampling
+        noise. Therefore the statistical error of F is the standard error of
+        the mean of a_i,
+
+            error = std(a, ddof=1) / sqrt(N),
+
+        which is returned by the ``free_energy_error`` property. This error is
+        conditional on Phi. The uncertainty of Phi itself, which is determined
+        from a stochastic sampling, is not included.
+
+        """
         self._ph.run_mesh(mesh=mesh)
         self._ph.run_thermal_properties(temperatures=[self._temperature])
         hfe = (
             self._ph.thermal_properties.free_energy[0] / get_physical_units().EvTokJmol
         )
         n_cell = len(self._ph.supercell) / len(self._ph.primitive)
-        pe = self.potential_energy / n_cell
-        hpe = self.harmonic_potential_energy / n_cell
-        self._free_energy = hfe + pe - hpe
+        anharmonic = (
+            self._potential_energies - self._harmonic_potential_energies
+        ) / n_cell
+        self._free_energy = hfe + float(np.average(anharmonic))
+        if len(anharmonic) > 1:
+            self._free_energy_error = float(
+                np.std(anharmonic, ddof=1) / np.sqrt(len(anharmonic))
+            )
+        else:
+            self._free_energy_error = float("nan")
 
     def run(self) -> MLPSSCHA:
         """Run through all iterations."""

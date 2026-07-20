@@ -417,19 +417,13 @@ def _load_pypolymlp(
     """Load MLPs from polymlp.yaml or phonopy.pmlp."""
     _mlp_filename = None
     if mlp_filename is None:
+        suffixes = (".yaml", ".pmlp", ".xz", ".gz", ".bz2", ".lzma")
         for default_mlp_filename in ["polymlp.yaml", "phonopy.pmlp", "phono3py.pmlp"]:
-            _mlp_filename_list = list(pathlib.Path().glob(f"{default_mlp_filename}*"))
-            if _mlp_filename_list:
-                _mlp_filename = _mlp_filename_list[0]
-                if _mlp_filename.suffix not in [
-                    ".yaml",
-                    ".pmlp",
-                    ".xz",
-                    ".gz",
-                    ".bz2",
-                    "lzma",
-                ]:
-                    continue
+            for path in sorted(pathlib.Path().glob(f"{default_mlp_filename}*")):
+                if path.suffix in suffixes:
+                    _mlp_filename = path
+                    break
+            if _mlp_filename is not None:
                 if log_level and "pmlp" in default_mlp_filename:
                     print(f'Loading MLPs from "{_mlp_filename}" is obsolete.')
                 break
