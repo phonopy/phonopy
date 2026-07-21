@@ -596,3 +596,26 @@ def test_compute_free_energy_and_entropy_uses_spin_degeneracy():
     )
 
     assert fe_inferred[0] != pytest.approx(fe_spinor[0])
+
+
+def test_fermi_energy_survives_hdf5_round_trip(tmp_path):
+    """The Fermi energy is stored and read back, and stays optional."""
+    common = {
+        "eigenvalues": _al_eigenvalues(),
+        "weights": WEIGHTS_AL,
+        "n_electrons": 3.0,
+        "volume": 16.0,
+        "internal_energy": -1.0,
+    }
+    filename = tmp_path / "electronic_states.hdf5"
+    write_electronic_states_hdf5(
+        [
+            ElectronicStates(**common, fermi_energy=7.5),
+            ElectronicStates(**common),
+        ],
+        filename,
+    )
+    read_back = read_electronic_states_hdf5(filename)
+
+    assert read_back[0].fermi_energy == pytest.approx(7.5)
+    assert read_back[1].fermi_energy is None

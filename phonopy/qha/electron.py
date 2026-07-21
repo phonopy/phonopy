@@ -42,6 +42,10 @@ class ElectronicStates:
         inference is wrong for non-collinear calculations, where the spin
         axis has length 1 but each spinor state holds one electron, so 1
         must be given explicitly. See ElectronFreeEnergy.
+    fermi_energy : float, optional
+        Fermi energy in eV as reported by the calculation the eigenvalues
+        come from. Recorded for reference only; the chemical potential used
+        in the free energy is solved from the states themselves.
 
     """
 
@@ -51,6 +55,7 @@ class ElectronicStates:
     volume: float | None = None
     internal_energy: float | None = None
     spin_degeneracy: int | None = None
+    fermi_energy: float | None = None
 
     def __post_init__(self) -> None:
         """Validate shapes."""
@@ -124,8 +129,9 @@ def write_electronic_states_hdf5(
     contains one group "volume-XXX" per volume point with the datasets
     eigenvalues ((spin, kpoints, bands), eV), weights ((kpoints,)),
     n_electrons, volume (angstrom^3), and energy (eV, static internal
-    energy). spin_degeneracy is written only when it is set. The number of
-    volume points is stored in the root attribute "n_volumes".
+    energy). spin_degeneracy and fermi_energy are written only when they are
+    set. The number of volume points is stored in the root attribute
+    "n_volumes".
 
     """
     import h5py
@@ -159,6 +165,10 @@ def write_electronic_states_hdf5(
                 group.create_dataset(
                     "spin_degeneracy", data=int(electronic_states.spin_degeneracy)
                 )
+            if electronic_states.fermi_energy is not None:
+                group.create_dataset(
+                    "fermi_energy", data=float(electronic_states.fermi_energy)
+                )
 
 
 def read_electronic_states_hdf5(
@@ -188,6 +198,11 @@ def read_electronic_states_hdf5(
                     spin_degeneracy=(
                         int(group["spin_degeneracy"][()])
                         if "spin_degeneracy" in group
+                        else None
+                    ),
+                    fermi_energy=(
+                        float(group["fermi_energy"][()])
+                        if "fermi_energy" in group
                         else None
                     ),
                 )
@@ -243,6 +258,32 @@ class ElectronFreeEnergy:
     .. math::
 
        E_\text{el}(V) = g\sum_i f_i(V) \epsilon_i(V)
+
+    Checking mu
+    -----------
+
+    :math:`\mu` is the root of the electron-count equation, solved by
+    _chemical_potential():
+
+    .. math::
+
+       N = \frac{g}{\sum_k w_k} \sum_k w_k \sum_i f_{ki}(V)
+
+    where :math:`N` is the number of electrons in the unit cell and
+    :math:`w_k` the k-point weights. Only the eigenvalues, the weights,
+    :math:`N` and :math:`g` enter, so comparing mu against the Fermi energy
+    reported by the electronic structure code that produced them checks all
+    four.
+
+    The comparison is meaningful only between quantities at the same
+    temperature, so pair them by how that code broadened the occupations:
+
+    - Schemes that reproduce the zero-broadening answer -- tetrahedron methods,
+      Methfessel-Paxton, Gaussian -- against mu at 0 K. Their width is a
+      numerical device rather than a temperature; treating it as one makes the
+      agreement worse, not better.
+    - Fermi-Dirac (thermal) smearing of width sigma against mu at
+      T = sigma / k_B.
 
     Attributes
     ----------

@@ -40,8 +40,12 @@ from __future__ import annotations
 import glob
 import os
 from argparse import ArgumentParser, Namespace
+from typing import TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    import h5py  # type: ignore[import-untyped]
 
 import phonopy
 from phonopy import Phonopy
@@ -102,30 +106,64 @@ def as_calc_file(path: str) -> str:
     return calc_file(path) if os.path.isdir(path) else path
 
 
+def _is_noncollinear_vaspout(f: h5py.File) -> bool:
+    """Return whether an open vaspout.h5 holds a non-collinear calculation.
+
+    Only non-collinear needs detecting: the spin axis of the eigenvalues tells
+    the two collinear cases apart on its own, and is ambiguous only here, where
+    it has length 1 as for a non-spin-polarized run while each spinor state
+    holds one electron.
+
+    NCDIJ, the number of spin components of the density, is the primary
+    indicator: 1 non-spin-polarized, 2 collinear spin-polarized, 4
+    non-collinear. VASP resolves it from the input, so it reports what the run
+    actually did rather than what was asked for.
+
+    input/incar is the fallback for files written without a DOS group. It
+    echoes only the tags the INCAR set, not the values VASP resolved, so both
+    LNONCOLLINEAR and LSORBIT must be inspected: setting LSORBIT alone, the
+    usual way to ask for spin-orbit coupling, turns on non-collinear internally
+    while leaving LNONCOLLINEAR absent from the echo. Reaching non-collinear
+    requires setting at least one of the two, so their union covers every case.
+
+    """
+    ncdij = f.get("results/electron_dos/ncdij")
+    if ncdij is not None:
+        return int(ncdij[()]) == 4
+
+    incar = f.get("input/incar", {})
+    return any(
+        tag in incar and bool(incar[tag][()]) for tag in ("LNONCOLLINEAR", "LSORBIT")
+    )
+
+
 def electronic_states_from_vaspout(path: str) -> ElectronicStates:
     """Build ElectronicStates from a VASP vaspout.h5 (numerically exact).
 
     Reads the eigenvalues, symmetry k-point weights, and electron count of the
     static single point. vaspout.h5 avoids the digit truncation of vasprun.xml.
 
-    A non-collinear calculation is detected from LNONCOLLINEAR so that its
-    spinor eigenvalues are not mistaken for the doubly occupied states of a
-    non-spin-polarized calculation, which the spin axis alone cannot tell
-    apart. vaspout.h5 echoes only the tags the INCAR set, so an absent key
-    means collinear.
+    A non-collinear calculation is detected so that its spinor eigenvalues are
+    not mistaken for the doubly occupied states of a non-spin-polarized
+    calculation; see _is_noncollinear_vaspout. (vasprun.xml needs no such care:
+    its <parameters> block always reports the resolved LNONCOLLINEAR.)
+
+    The Fermi energy VASP reported is carried along when the file has it, so
+    the dataset records it alongside the states it belongs to.
 
     """
     import h5py  # type: ignore[import-untyped]
 
     with h5py.File(path, "r") as f:
         g = f["results/electron_eigenvalues"]
-        incar = f.get("input/incar", {})
-        noncollinear = "LNONCOLLINEAR" in incar and bool(incar["LNONCOLLINEAR"][()])
+        noncollinear = _is_noncollinear_vaspout(f)
+        efermi = f.get("results/electron_dos/efermi")
         return ElectronicStates(
             eigenvalues=g["eigenvalues"][:],  # (spin, kpoints, bands)
             weights=g["kpoints_symmetry_weight"][:],
             n_electrons=float(g["nelectrons"][()]),
             spin_degeneracy=1 if noncollinear else None,
+            fermi_energy=None if efermi is None else float(efermi[()]),
         )
 
 
