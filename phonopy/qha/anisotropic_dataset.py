@@ -263,6 +263,8 @@ def _write_electronic_states(
         eg.create_dataset(
             "spin_degeneracy", data=int(electronic_states.spin_degeneracy)
         )
+    if electronic_states.fermi_energy is not None:
+        eg.create_dataset("fermi_energy", data=float(electronic_states.fermi_energy))
 
 
 def read_aniso_qha_dataset(
@@ -366,4 +368,5 @@ def _read_electronic_states(eg: h5py.Group) -> ElectronicStates:
         spin_degeneracy=(
             int(eg["spin_degeneracy"][()]) if "spin_degeneracy" in eg else None
         ),
+        fermi_energy=(float(eg["fermi_energy"][()]) if "fermi_energy" in eg else None),
     )

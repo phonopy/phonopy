@@ -304,11 +304,18 @@ def test_builder_run_rejects_length_mismatch(tmp_path, monkeypatch):
         run()
 
 
-def _write_minimal_vaspout(path, lnoncollinear: int | None) -> None:
+def _write_minimal_vaspout(
+    path,
+    lnoncollinear: int | None = None,
+    lsorbit: int | None = None,
+    ncdij: int | None = None,
+) -> None:
     """Write the smallest vaspout.h5 electronic_states_from_vaspout can read.
 
-    ``lnoncollinear`` of None omits the tag, which is what VASP does when the
-    INCAR did not set it.
+    A tag of None is omitted, which is what input/incar does when the INCAR did
+    not set it. An ncdij of None omits the DOS group altogether, which is how
+    the input/incar fallback is reached.
+
     """
     import h5py
 
@@ -318,21 +325,77 @@ def _write_minimal_vaspout(path, lnoncollinear: int | None) -> None:
         g.create_dataset("kpoints_symmetry_weight", data=np.ones(2, dtype="double"))
         g.create_dataset("nelectrons", data=4.0)
         incar = w.create_group("input/incar")
-        if lnoncollinear is not None:
-            incar.create_dataset("LNONCOLLINEAR", data=np.int32(lnoncollinear))
+        for tag, value in (("LNONCOLLINEAR", lnoncollinear), ("LSORBIT", lsorbit)):
+            if value is not None:
+                incar.create_dataset(tag, data=np.int32(value))
+        if ncdij is not None:
+            w.create_group("results/electron_dos").create_dataset(
+                "ncdij", data=np.int32(ncdij)
+            )
 
 
-@pytest.mark.parametrize("lnoncollinear,expected", [(1, 1), (0, None), (None, None)])
-def test_electronic_states_from_vaspout_spin_degeneracy(
-    tmp_path, lnoncollinear, expected
+@pytest.mark.parametrize(
+    "ncdij,expected",
+    [(1, None), (2, None), (4, 1)],
+)
+def test_electronic_states_from_vaspout_spin_degeneracy_from_ncdij(
+    tmp_path, ncdij, expected
 ):
-    """LNONCOLLINEAR in vaspout.h5 sets the spin degeneracy of the states.
+    """NCDIJ decides the spin degeneracy without consulting input/incar.
 
-    vaspout.h5 echoes only the tags the INCAR set, so an absent key means a
-    collinear calculation and leaves the degeneracy to the spin axis.
+    NCDIJ counts the spin components of the density -- 1 non-spin-polarized, 2
+    collinear spin-polarized, 4 non-collinear -- and VASP resolves it from the
+    input, so it holds even when no INCAR tag was echoed. The collinear cases
+    report None, leaving the unambiguous spin axis to speak for itself.
+
     """
     path = tmp_path / "vaspout.h5"
-    _write_minimal_vaspout(path, lnoncollinear)
+    _write_minimal_vaspout(path, ncdij=ncdij)
+
+    states = electronic_states_from_vaspout(str(path))
+
+    assert states.spin_degeneracy == expected
+    assert states.n_electrons == pytest.approx(4.0)
+
+
+def test_electronic_states_from_vaspout_ncdij_outranks_incar(tmp_path):
+    """NCDIJ is believed over an input/incar echo that never saw the tag.
+
+    This is the real spin-orbit case: LSORBIT alone leaves LNONCOLLINEAR out of
+    the echo, and NCDIJ reports the non-collinear run regardless.
+
+    """
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path, lsorbit=1, ncdij=4)
+
+    assert electronic_states_from_vaspout(str(path)).spin_degeneracy == 1
+
+
+@pytest.mark.parametrize(
+    "lnoncollinear,lsorbit,expected",
+    [
+        (None, None, None),  # plain collinear
+        (0, None, None),
+        (None, 0, None),
+        (1, None, 1),  # non-collinear asked for explicitly
+        (None, 1, 1),  # spin-orbit only: LNONCOLLINEAR never reaches the echo
+        (0, 1, 1),  # LSORBIT wins; VASP forces non-collinear regardless
+        (1, 1, 1),
+    ],
+)
+def test_electronic_states_from_vaspout_spin_degeneracy_from_incar(
+    tmp_path, lnoncollinear, lsorbit, expected
+):
+    """Without a DOS group the INCAR echo decides, and needs both tags.
+
+    input/incar echoes only the tags the INCAR set, not the values VASP
+    resolved, so LSORBIT alone leaves LNONCOLLINEAR absent while the run is
+    non-collinear. Missing that case makes the spinor states look like the
+    doubly occupied states of a non-spin-polarized run.
+
+    """
+    path = tmp_path / "vaspout.h5"
+    _write_minimal_vaspout(path, lnoncollinear, lsorbit)
 
     states = electronic_states_from_vaspout(str(path))
 
