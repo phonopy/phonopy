@@ -2,8 +2,13 @@
 
 # Change Log
 
-## Unreleased
+## Unreleased (v4.5.0)
 
+- Supercell file names are now zero-padded to a uniform number of digits. The
+  padding grows when the largest displacement number needs more digits than the
+  minimum of three, so 1000 supercells give `POSCAR-0001`, ..., `POSCAR-1000`
+  instead of `POSCAR-001`, ..., `POSCAR-1000`. Fewer than 1000 supercells are
+  named as before.
 - Behavior change: with `--pypolymlp`, displacement generation no longer forces
   plus-minus pairs, but follows `--pm` (the `PM` tag) as every other path does,
   whose default is `auto`. Fewer supercells are therefore generated: `--rd N`

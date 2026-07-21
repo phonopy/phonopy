@@ -42,8 +42,10 @@ class SupercellWriterConfig:
         Integer 1d array with the length of cells_with_disps, containing
         numbers to be assigned to the supercells with displacements.
     zfill_width : int
-        Supercell numbers are filled by zeros from the left with the digits
-        as given, which results in 001, 002, ..., when zfill_width=3.
+        Exact number of digits of the supercell numbers, which are filled by
+        zeros from the left, e.g. 001, 002, ..., when zfill_width=3. This is
+        the resolved width, i.e. already widened to fit the largest
+        displacement ID.
     additional_info : dict | None
         Any information expected to be given to writers of calculators.
 
@@ -742,9 +744,11 @@ def write_supercells_with_displacements(
         numbers to be assigned to the supercells with displacements.
         Default is None, which gives [1, 2, 3, ...].
     zfill_width : int, optional
-        Supercell numbers are filled by zeros from the left with the digits
-        as given, which results in 001, 002, ..., when zfill_width=3.
-        Default is 3.
+        Minimum number of digits of the supercell numbers, which are filled
+        by zeros from the left, e.g. 001, 002, ..., when zfill_width=3.
+        Default is 3. When the largest displacement ID needs more digits,
+        the width is increased accordingly so that all file names have the
+        same number of digits, e.g. 0001, ..., 1000 for 1000 supercells.
     additional_info : dict | None, optional
         Interface-specific configuration such as "supercell_matrix" or
         "template_file". Default is None.
@@ -764,12 +768,20 @@ def write_supercells_with_displacements(
     else:
         ids = np.asarray(displacement_ids)
 
+    # zfill_width is the minimum width. Widen it when the largest displacement
+    # ID needs more digits, so that all file names have the same number of
+    # digits.
+    if len(ids) > 0:
+        width = max(zfill_width, len(str(int(max(ids)))))
+    else:
+        width = zfill_width
+
     # Create configuration object (type-safe, immutable)
     config = SupercellWriterConfig(
         supercell=supercell,
         cells_with_disps=cells_with_disps,
         displacement_ids=ids,
-        zfill_width=zfill_width,
+        zfill_width=width,
         additional_info=additional_info,
     )
 
