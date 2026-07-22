@@ -9,11 +9,18 @@ displacement and supercell approach.
 ## How the interface works
 
 The Octopus interface differs from the other calculator interfaces in the way
-the crystal structure is provided:
+the crystal structure is exchanged with phonopy:
 
-- The **unit cell** is read from a VASP-style `POSCAR` file (the default cell
-  file name for `--octopus`). Lattice vectors in `POSCAR` are given in
-  Angstrom, as usual; phonopy converts them internally to atomic units.
+- Octopus users normally describe the crystal structure in an Octopus **input
+  file** (`inp`), using `%LatticeParameters`, `%LatticeVectors` and
+  `%ReducedCoordinates` blocks. phonopy, however, reads the **unit cell** from a
+  VASP-style `POSCAR` file (the default cell file name for `--octopus`). Octopus
+  can write exactly this file, so the workflow starts by exporting the unit cell
+  from Octopus as a `POSCAR` (see {ref}`below <octopus_export_poscar>`). Lattice
+  vectors in `POSCAR` are given in Angstrom, as usual; phonopy converts them
+  internally to atomic units. As an alternative, phonopy also accepts the unit
+  cell directly as an Octopus geometry include file (auto-detected, lattice in
+  bohr), for users who prefer to keep the structure in Octopus form.
 - The **supercells** are written by phonopy as Octopus *geometry include
   files* named `geometry-000`, `geometry-001`, `geometry-002`, ... These
   contain `%LatticeParameters`, `%LatticeVectors` and `%ReducedCoordinates`
@@ -33,7 +40,74 @@ reported in THz, as for the other interfaces.
 
 ## Pre-process
 
-The `POSCAR` of a bulk silicon primitive cell is used as an example here:
+A bulk silicon primitive cell is used as the example throughout this page.
+
+(octopus_export_poscar)=
+### Exporting the unit cell from Octopus
+
+An Octopus calculation normally starts from an input file `inp` that already
+contains the crystal structure, for instance the cell obtained from a geometry
+optimization with Octopus. phonopy needs this unit cell as a VASP-style `POSCAR`
+file, which Octopus can write directly: add the `geometry` output in `POSCAR`
+format to the input file and run a ground-state calculation
+(`CalculationMode = gs`) on the (relaxed) structure.
+
+A complete `inp` for the silicon primitive cell, using the parameters from the
+standard Octopus bulk-silicon tutorial, is:
+
+```
+# Bulk silicon in the diamond structure (2-atom primitive cell).
+# Lengths given without a unit are in atomic units (bohr), the Octopus default.
+CalculationMode = gs
+PeriodicDimensions = 3
+
+# a is the conventional cubic lattice constant of silicon.
+a = 5.43*angstrom
+%LatticeParameters
+ a | a | a
+%
+%LatticeVectors
+ 0.0 | 0.5 | 0.5
+ 0.5 | 0.0 | 0.5
+ 0.5 | 0.5 | 0.0
+%
+%ReducedCoordinates
+ "Si" | 0.0 | 0.0 | 0.0
+ "Si" | 0.25 | 0.25 | 0.25
+%
+
+Spacing = 0.5
+%KPointsGrid
+ 4 | 4 | 4
+%
+
+# Write the structure as a VASP-style POSCAR for phonopy.
+%Output
+ geometry
+%
+OutputFormat = poscar
+```
+
+This uses Octopus' default pseudopotential set and LDA exchange-correlation
+functional, so no further settings are required to run it. The `Spacing` and
+`%KPointsGrid` values are the tutorial defaults; for a production calculation
+they (and the pseudopotentials/functional) should be converged for your system.
+
+Run Octopus:
+
+```bash
+% octopus | tee out.log
+```
+
+Octopus writes the cell to `static/POSCAR`, with lattice vectors in Angstrom and
+fractional atomic positions. Copy it to the working directory as `POSCAR` and
+use it as the phonopy unit cell:
+
+```bash
+% cp static/POSCAR POSCAR
+```
+
+For the silicon input above, the exported `POSCAR` is:
 
 ```
 Si
@@ -46,29 +120,6 @@ Si
 Direct
   0.0000000000   0.0000000000   0.0000000000
   0.2500000000   0.2500000000   0.2500000000
-```
-
-### Obtaining the `POSCAR` from an Octopus calculation
-
-Often the unit cell is not available as a `POSCAR` but as an Octopus input
-file, for instance after a geometry optimization with Octopus. In that case
-Octopus can write the structure in `POSCAR` format directly: add the `geometry`
-output in `POSCAR` format to the Octopus input file,
-
-```
-%Output
- geometry
-%
-OutputFormat = poscar
-```
-
-and run a ground-state calculation (`CalculationMode = gs`) on the (relaxed)
-structure. Octopus writes the cell to `static/POSCAR`, with lattice vectors in
-Angstrom and fractional atomic positions. Copy it to the working directory as
-`POSCAR` and use it as the phonopy unit cell:
-
-```bash
-% cp static/POSCAR POSCAR
 ```
 
 ### Creating supercells with displacements
@@ -145,8 +196,6 @@ include ../geometry-001
 %KPointsGrid
  2 | 2 | 2
 %
-
-ExtraStates = 4
 ```
 
 Then run Octopus:
@@ -175,7 +224,7 @@ no geometry optimization).
 ```
 
 Since the calculation is a supercell calculation, the convergence parameters
-(grid `Spacing`, `%KPointsGrid`, `ExtraStates`, exchange-correlation
+(grid `Spacing`, `%KPointsGrid`, exchange-correlation
 functional, pseudopotentials, ...) have to be chosen for your system. The
 settings above are only a minimal, fast example.
 
@@ -265,12 +314,12 @@ effective charges of the atoms in the primitive cell. Both quantities can be
 obtained from Octopus by a linear-response (Sternheimer) calculation of the
 electromagnetic response.
 
-Unlike VASP (which has the `phonopy-vasp-born` helper), there is no automatic
-`BORN`-file generator for Octopus, so the `BORN` file has to be assembled by
-hand following the {ref}`BORN format <born_file>`. The Octopus output already
-uses the units expected by phonopy (Born charges in units of the elementary
-charge, dielectric tensor dimensionless), so the values can be transcribed
-directly.
+The `BORN` file can be generated automatically from the Octopus response
+calculation with the `phonopy-octopus-born` helper (analogous to
+`phonopy-vasp-born`, `phonopy-qe-born` and `phonopy-crystal-born`); it can also
+be assembled by hand, as described below. The Octopus output already uses the
+units expected by phonopy (Born charges in units of the elementary charge,
+dielectric tensor dimensionless), so the values are used as-is.
 
 ```{note}
 The non-analytical term correction is only relevant for polar (ionic) crystals;
@@ -283,56 +332,59 @@ force-calculation workflow above.
 ### Computing Born charges and the dielectric tensor with Octopus
 
 The Born charges and the dielectric tensor are properties of the **unit cell**
-(not the supercell), so this calculation is run on the unit-cell `POSCAR`. Here
-we use the rock-salt NaCl primitive cell:
+(not the supercell), and this calculation is run entirely with Octopus, so the
+structure is provided in the usual Octopus form. Here we use the rock-salt NaCl
+primitive cell, written as a geometry include file `geometry-unitcell`:
 
 ```
-NaCl
-1.0
-  0.0000000000   2.8200000000   2.8200000000
-  2.8200000000   0.0000000000   2.8200000000
-  2.8200000000   2.8200000000   0.0000000000
-Na Cl
-1 1
-Direct
-  0.0000000000   0.0000000000   0.0000000000
-  0.5000000000   0.5000000000   0.5000000000
+a = 5.64*angstrom
+%LatticeParameters
+ a | a | a
+%
+%LatticeVectors
+ 0.0 | 0.5 | 0.5
+ 0.5 | 0.0 | 0.5
+ 0.5 | 0.5 | 0.0
+%
+%ReducedCoordinates
+ "Na" | 0.0 | 0.0 | 0.0
+ "Cl" | 0.5 | 0.5 | 0.5
+%
 ```
+
+(If you only have the unit cell as a `POSCAR`, the same include file can be
+produced with `phonopy-calc-convert -i POSCAR -o geometry-unitcell --calcin vasp
+--calcout octopus`.)
 
 For a periodic system the electric response is computed with the
 {math}`\vec{k}\cdot\vec{p}` perturbation, so **three runs are performed in the
 same directory**: a ground state, a `kdotp` calculation, and finally the
 electromagnetic response. Each run restarts from the previous one.
 
-The interface only writes *supercell* geometry files, so first convert the
-`POSCAR` unit cell to an Octopus geometry include file with
-`phonopy-calc-convert`:
-
-```bash
-% phonopy-calc-convert -i POSCAR -o geometry-unitcell --calcin vasp --calcout octopus
-```
-
-The three runs share a common structure/settings block, which we put in a file
-`common.inp`:
+The three runs share the same computational settings, which we collect in a file
+`common.inp`. The geometry is not included here; instead each run's `inp`
+includes `geometry-unitcell` directly, alongside `common.inp`. This keeps the
+structure `include` at the top level — the same pattern as the force calculation
+above, where each `disp-*/inp` includes its own `geometry-{number}` — rather than
+nesting it inside `common.inp`:
 
 ```
 PeriodicDimensions = 3
 Spacing = 0.3*angstrom
 BoxShape = parallelepiped
 PseudopotentialSet = hgh_lda
-include geometry-unitcell
 %KPointsGrid
  4 | 4 | 4
 %
 KPointsUseSymmetries = no
 ExperimentalFeatures = yes
-ExtraStates = 8
 ```
 
 1. Ground state:
 
    ```
    CalculationMode = gs
+   include geometry-unitcell
    include common.inp
    ```
 
@@ -342,6 +394,7 @@ ExtraStates = 8
    ```
    CalculationMode = kdotp
    KdotPCalcSecondOrder = yes
+   include geometry-unitcell
    include common.inp
    ```
 
@@ -350,6 +403,7 @@ ExtraStates = 8
    ```
    CalculationMode = em_resp
    RestartFixedOccupations = no
+   include geometry-unitcell
    include common.inp
    # Static (zero-frequency) response
    %EMFreqs
@@ -433,7 +487,24 @@ example; check convergence for production use.
 
 ### Assembling the `BORN` file
 
-Following the {ref}`BORN format <born_file>`, write:
+The simplest route is the `phonopy-octopus-born` helper, which reads the
+dielectric tensor and Born charges from the `em_resp` output, symmetrizes them,
+keeps the symmetry-independent atoms, and writes the `BORN` file. Give it the
+unit cell and the `em_resp` results directory:
+
+```bash
+% phonopy-octopus-born geometry-unitcell em_resp/freq_0.0000 > BORN
+```
+
+The unit cell may be a `POSCAR` or an Octopus geometry file, but the geometry
+file must be in numeric form: the `geometry-unitcell` produced by
+`phonopy-calc-convert` above qualifies, whereas an input written with variables
+such as `a = 5.64*angstrom` does not (pass a `POSCAR` in that case). Passing the
+geometry file that was `include`d in the `em_resp` run keeps the atom order
+aligned with `born_charges`.
+
+Alternatively, the `BORN` file can be written by hand. Following the
+{ref}`BORN format <born_file>`, write:
 
 1. the unit conversion factor on the first line (use the default by giving a
    non-numeric placeholder such as `default`, or the Octopus factor from
@@ -456,9 +527,35 @@ default
 -1.141794 0.0 0.0 0.0 -1.141794 0.0 0.0 0.0 -1.141794
 ```
 
-Once a `BORN` file is present in the current directory, the non-analytical term
-correction is activated automatically in the post-process (e.g., with the
-`--nac` option).
+### Post-process with the non-analytical term correction
+
+With a `BORN` file in the working directory, phonopy activates the correction
+through the `--nac` option. This also requires the NaCl force constants:
+generate `phonopy_disp.yaml` and `FORCE_SETS` for NaCl with the same
+finite-displacement procedure used for silicon above (create the displaced
+supercells with `phonopy-init --octopus -d`, run the Octopus `gs` force
+calculations, and collect the forces with `-f`). With `phonopy_disp.yaml`,
+`FORCE_SETS` and `BORN` all present in the directory, add `--nac` to any
+post-process command.
+
+The correction is most visible in the band structure, where it produces the
+LO–TO splitting of the optical branches at {math}`\Gamma`:
+
+```bash
+% phonopy --nac --band "0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0" -p
+```
+
+The DOS, thermal properties, and projected DOS (onto the Na and Cl atoms) are
+obtained exactly as before, with `--nac` added:
+
+```bash
+% phonopy --nac --mesh 20 20 20 -p
+% phonopy --nac --mesh 20 20 20 -t
+% phonopy --nac --mesh 20 20 20 --pdos "1, 2" -p
+```
+
+Without `--nac` the longitudinal- and transverse-optical modes stay degenerate
+at {math}`\Gamma`; the correction lifts that degeneracy.
 
 ```{note}
 Octopus can alternatively compute Born effective charges and infrared

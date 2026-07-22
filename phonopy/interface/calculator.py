@@ -991,13 +991,21 @@ def read_crystal_structure(
             unitcell_filename=cell_filename, qlm_ctx=qlm_ctx
         )
     elif interface_mode == "octopus":
-        # Octopus uses atomic units for lattice vectors. We reuse POSCAR parsing
-        # and convert only the lattice from Angstrom to Bohr units.
-        from phonopy.interface.vasp import read_vasp
+        # The unit cell may be given either as a VASP-style POSCAR (the default,
+        # lattice in Angstrom) or as an Octopus geometry include file (lattice in
+        # atomic units). Octopus uses atomic units internally, so the POSCAR
+        # lattice is converted from Angstrom to Bohr, while an Octopus geometry
+        # file is already in Bohr.
+        from phonopy.interface.octopus import is_octopus_geometry, read_octopus
 
-        bohr_angstrom = 1.0 / get_physical_units().Bohr
-        unitcell = read_vasp(cell_filename)
-        unitcell.cell *= bohr_angstrom
+        if is_octopus_geometry(cell_filename):
+            unitcell = read_octopus(cell_filename)
+        else:
+            from phonopy.interface.vasp import read_vasp
+
+            bohr_angstrom = 1.0 / get_physical_units().Bohr
+            unitcell = read_vasp(cell_filename)
+            unitcell.cell *= bohr_angstrom
         return unitcell, OctopusStructureInfo(unitcell_filename=cell_filename)
 
     else:

@@ -57,6 +57,7 @@ phonopy-vasp-born = "phonopy.scripts.phonopy_vasp_born:run"
 phonopy-vasp-efe = "phonopy.scripts.phonopy_vasp_efe:run"
 phonopy-qe-born = "phonopy.scripts.phonopy_qe_born:run"
 phonopy-octopus-eigenmodes = "phonopy.scripts.phonopy_octopus_eigenmodes:run"
+phonopy-octopus-born = "phonopy.scripts.phonopy_octopus_born:run"
 
 [tool.scikit-build]
 build.verbose = true
