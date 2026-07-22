@@ -71,12 +71,14 @@ def get_octopus_structure_lines(cell: PhonopyAtoms) -> list[str]:
     lines.append("%\n")
 
     lines.append("%LatticeVectors")
+    # Octopus reconstructs lattice vector i as LatticeParameters[i] * row i,
+    # so each row must be normalized by its own length.
     for i in range(3):
         lines.append(
             "  "
-            f"{lattice_vectors[i, 0] / lattice_params[0]:.9f} | "
-            f"{lattice_vectors[i, 1] / lattice_params[1]:.9f} | "
-            f"{lattice_vectors[i, 2] / lattice_params[2]:.9f}"
+            f"{lattice_vectors[i, 0] / lattice_params[i]:.9f} | "
+            f"{lattice_vectors[i, 1] / lattice_params[i]:.9f} | "
+            f"{lattice_vectors[i, 2] / lattice_params[i]:.9f}"
         )
     lines.append("%\n")
 
@@ -102,6 +104,20 @@ def read_octopus(filename: str | os.PathLike) -> PhonopyAtoms:
     with open(filename) as f:
         lines = f.read().splitlines()
     return get_cell_from_octopus_lines(lines)
+
+
+def read_octopus_or_poscar(filename: str | os.PathLike) -> PhonopyAtoms:
+    """Read a unit cell from an Octopus geometry file or a VASP-style POSCAR.
+
+    The format is auto-detected (see :func:`is_octopus_geometry`). Octopus uses
+    atomic units internally, so a POSCAR (lattice in Angstrom) is converted to
+    Bohr, while an Octopus geometry include file is already in Bohr.
+    """
+    if is_octopus_geometry(filename):
+        return read_octopus(filename)
+    cell = read_vasp(filename)
+    cell.cell = np.array(cell.cell) / get_physical_units().Bohr
+    return cell
 
 
 def is_octopus_geometry(filename: str | os.PathLike) -> bool:
@@ -305,6 +321,15 @@ def parse_octopus_born_charges(
                 tail = lines[i].split("Label:", 1)[1].split()
                 if tail:
                     label = tail[0]
+            if i + 1 < len(lines) and lines[i + 1].strip().startswith("Real:"):
+                # Complex Born charges (finite-frequency em_resp or complex
+                # wavefunctions) are printed as "Real:"/"Imaginary:" blocks.
+                raise ValueError(
+                    f"Born charges in '{filename}' are complex "
+                    "(frequency-dependent em_resp output or complex "
+                    "wavefunctions); only static (omega=0, real) Born charges "
+                    "are supported."
+                )
             try:
                 rows = [[float(x) for x in lines[i + 1 + j].split()] for j in range(3)]
             except (IndexError, ValueError) as e:
@@ -351,10 +376,7 @@ def get_born_octopus(
     if supercell_matrix is None:
         supercell_matrix = np.eye(3, dtype="int64")
 
-    if is_octopus_geometry(cell_filename):
-        ucell = read_octopus(cell_filename)
-    else:
-        ucell = read_vasp(cell_filename)
+    ucell = read_octopus_or_poscar(cell_filename)
     epsilon = parse_octopus_epsilon(epsilon_filename)
     borns, labels = parse_octopus_born_charges(born_filename)
 

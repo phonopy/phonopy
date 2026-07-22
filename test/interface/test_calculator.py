@@ -7,8 +7,16 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.interface.calculator import write_supercells_with_displacements
+from phonopy.interface.calculator import (
+    get_default_displacement_distance,
+    write_supercells_with_displacements,
+)
 from phonopy.interface.octopus import parse_set_of_forces
+
+
+def test_get_default_displacement_distance_octopus():
+    """Octopus works in atomic units, so the default distance is 0.02 Bohr."""
+    assert get_default_displacement_distance("octopus") == pytest.approx(0.02)
 
 
 def test_write_supercells_without_structure_info(

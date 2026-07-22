@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import warnings
 
 import numpy as np
 
@@ -104,15 +105,19 @@ def run() -> None:
     born_filename = os.path.join(args.em_resp_dir, "born_charges")
 
     try:
-        borns, epsilon, atom_indices = get_born_octopus(
-            args.cell_filename,
-            epsilon_filename,
-            born_filename,
-            primitive_matrix=primitive_axes,
-            supercell_matrix=supercell_matrix,
-            symmetrize_tensors=args.symmetrize_tensors,
-            symprec=args.symprec,
-        )
+        with warnings.catch_warnings():
+            # symmetrize_borns_and_epsilon reports broken symmetry via
+            # warnings.warn; raise it so it can be caught below.
+            warnings.simplefilter("error", UserWarning)
+            borns, epsilon, atom_indices = get_born_octopus(
+                args.cell_filename,
+                epsilon_filename,
+                born_filename,
+                primitive_matrix=primitive_axes,
+                supercell_matrix=supercell_matrix,
+                symmetrize_tensors=args.symmetrize_tensors,
+                symprec=args.symprec,
+            )
     except UserWarning:
         print("# Symmetry broken")
         sys.exit(0)

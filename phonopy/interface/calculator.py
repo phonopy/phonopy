@@ -140,13 +140,6 @@ class QlmStructureInfo(StructureInfo):
     qlm_ctx: Any
 
 
-@dataclass(frozen=True)
-class OctopusStructureInfo(StructureInfo):
-    """Octopus structure information."""
-
-    pass
-
-
 calculator_info = {
     "abacus": {"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
@@ -992,21 +985,12 @@ def read_crystal_structure(
         )
     elif interface_mode == "octopus":
         # The unit cell may be given either as a VASP-style POSCAR (the default,
-        # lattice in Angstrom) or as an Octopus geometry include file (lattice in
-        # atomic units). Octopus uses atomic units internally, so the POSCAR
-        # lattice is converted from Angstrom to Bohr, while an Octopus geometry
-        # file is already in Bohr.
-        from phonopy.interface.octopus import is_octopus_geometry, read_octopus
+        # lattice in Angstrom, converted to Bohr) or as an Octopus geometry
+        # include file (already in atomic units); auto-detected.
+        from phonopy.interface.octopus import read_octopus_or_poscar
 
-        if is_octopus_geometry(cell_filename):
-            unitcell = read_octopus(cell_filename)
-        else:
-            from phonopy.interface.vasp import read_vasp
-
-            bohr_angstrom = 1.0 / get_physical_units().Bohr
-            unitcell = read_vasp(cell_filename)
-            unitcell.cell *= bohr_angstrom
-        return unitcell, OctopusStructureInfo(unitcell_filename=cell_filename)
+        unitcell = read_octopus_or_poscar(cell_filename)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
 
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -1106,6 +1090,7 @@ def get_default_displacement_distance(interface_mode: str | None) -> float:
         "fleur",
         "abacus",
         "qlm",
+        "octopus",
     ):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k, pwmat

@@ -35,7 +35,7 @@ Octopus uses atomic units, so within this interface the physical units are:
 Octopus   | au (bohr)  AMU           hartree/au    hartree/au^2
 ```
 
-The default displacement distance is `0.01` bohr. Phonon frequencies are
+The default displacement distance is `0.02` bohr. Phonon frequencies are
 reported in THz, as for the other interfaces.
 
 ## Pre-process
@@ -305,6 +305,11 @@ commensurate *q*-points of the supercell into a file that Octopus can read:
 
 This reads `phonopy_disp.yaml` and `FORCE_SETS` from the current directory and
 writes the frequencies (in Hartree) and eigenvectors to `phonon_modes.txt`.
+
+Note that Octopus filters out modes below `PhononModesZeroThreshold`, whose
+default (`1e-3` Hartree, about 6.6 THz) exceeds typical phonon frequencies.
+Set it to a small value (e.g. `1e-4` or less) in the Octopus input so that
+only the acoustic (zero-frequency) modes are discarded.
 
 ## Non-analytical term correction (Optional)
 

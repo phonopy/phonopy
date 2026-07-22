@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Tests of Octopus calculator interface."""
 
+import math
+import sys
+
 import numpy as np
 import pytest
 
@@ -17,6 +20,7 @@ from phonopy.interface.octopus import (
 )
 from phonopy.interface.vasp import write_vasp
 from phonopy.physical_units import get_physical_units
+from phonopy.scripts.phonopy_octopus_eigenmodes import OctopusPhononModes
 from phonopy.structure.atoms import PhonopyAtoms
 
 # Real Octopus em_resp output for rock-salt NaCl (static response).
@@ -71,6 +75,25 @@ def test_octopus_structure_lines_roundtrip():
     result = get_cell_from_octopus_lines(get_octopus_structure_lines(cell))
 
     assert list(result.symbols) == list(cell.symbols)
+    np.testing.assert_allclose(result.cell, cell.cell, atol=1e-6)
+    np.testing.assert_allclose(
+        result.scaled_positions, cell.scaled_positions, atol=1e-8
+    )
+
+
+def test_octopus_structure_lines_roundtrip_triclinic():
+    """The writer must be exact for cells with unequal, non-orthogonal vectors.
+
+    Octopus reconstructs lattice vector i as LatticeParameters[i] * row i of
+    %LatticeVectors, so each row must be normalized by its own length.
+    """
+    cell = PhonopyAtoms(
+        symbols=["Na", "Cl"],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+        cell=np.array([[3.0, 0.0, 0.0], [1.0, 4.0, 0.0], [1.0, 2.0, 5.0]]),
+    )
+    result = get_cell_from_octopus_lines(get_octopus_structure_lines(cell))
+
     np.testing.assert_allclose(result.cell, cell.cell, atol=1e-6)
     np.testing.assert_allclose(
         result.scaled_positions, cell.scaled_positions, atol=1e-8
@@ -239,3 +262,169 @@ def test_get_born_octopus_accepts_poscar(tmp_path):
     np.testing.assert_allclose(epsilon, 2.588021 * np.eye(3), atol=1e-6)
     np.testing.assert_allclose(borns[0], 1.141799 * np.eye(3), atol=1e-5)
     np.testing.assert_allclose(borns[1], -1.141799 * np.eye(3), atol=1e-5)
+
+
+# Complex (frequency-dependent) Born charges as printed by Octopus when
+# write_real is false: "Real:"/"Imaginary:" sub-blocks after each "Index:".
+_BORN_FILE_COMPLEX = """\
+# (Frequency-dependent) Born effective charge tensors
+Index:     1   Label:    Na   Ionic charge:     1.0000
+Real:
+            1.141799            0.000000           -0.000000
+            0.000000            1.141799            0.000000
+            0.000000            0.000000            1.141799
+Imaginary:
+            0.010000            0.000000            0.000000
+            0.000000            0.010000            0.000000
+            0.000000            0.000000            0.010000
+"""
+
+# Born charges violating the cubic site symmetry of rock-salt NaCl by far
+# more than the 0.1 threshold of symmetrize_borns_and_epsilon.
+_BORN_FILE_BROKEN_SYMMETRY = _BORN_FILE.replace(
+    "            1.141799            0.000000           -0.000000",
+    "            2.141799            0.000000           -0.000000",
+    1,
+)
+
+
+def test_parse_octopus_born_charges_complex_rejected(tmp_path):
+    """Frequency-dependent (complex) Born charges give a clear error."""
+    filename = tmp_path / "born_charges"
+    filename.write_text(_BORN_FILE_COMPLEX)
+    with pytest.raises(ValueError, match="complex"):
+        parse_octopus_born_charges(filename)
+
+
+def test_get_born_octopus_warns_on_broken_symmetry(tmp_path):
+    """Symmetry-broken Born charges emit a UserWarning."""
+    write_octopus(tmp_path / "geometry-unitcell", _nacl_cell())
+    (tmp_path / "epsilon").write_text(_EPSILON_FILE)
+    (tmp_path / "born_charges").write_text(_BORN_FILE_BROKEN_SYMMETRY)
+
+    with pytest.warns(UserWarning):
+        get_born_octopus(
+            tmp_path / "geometry-unitcell",
+            tmp_path / "epsilon",
+            tmp_path / "born_charges",
+        )
+
+
+def test_phonopy_octopus_born_script_symmetry_broken(tmp_path, monkeypatch, capsys):
+    """The CLI reports '# Symmetry broken' instead of printing a BORN file."""
+    from phonopy.scripts.phonopy_octopus_born import run
+
+    geom = tmp_path / "geometry-unitcell"
+    write_octopus(geom, _nacl_cell())
+    (tmp_path / "epsilon").write_text(_EPSILON_FILE)
+    (tmp_path / "born_charges").write_text(_BORN_FILE_BROKEN_SYMMETRY)
+
+    monkeypatch.setattr(
+        sys, "argv", ["phonopy-octopus-born", str(geom), str(tmp_path)]
+    )
+    with pytest.raises(SystemExit):
+        run()
+    assert "# Symmetry broken" in capsys.readouterr().out
+
+
+def _parse_phonon_modes_file(filename):
+    """Parse a phonon modes file following the Octopus phonon_modes.F90 reads.
+
+    Mimics the Fortran parser: header of ``Version:``/``Nmodes:``/``Np:``
+    lines, then per mode a comment line, a ``frequency:`` line, one line of
+    3 floats per supercell atom, and an ``alpha:`` line.
+    """
+    with open(filename) as f:
+        lines = [line.rstrip("\n") for line in f]
+    assert lines[0].split()[0] == "Version:"
+    assert lines[1].split()[0] == "Nmodes:"
+    num_modes = int(lines[1].split()[1])
+    assert lines[2].split()[0] == "Np:"
+    num_super = int(lines[2].split()[1])
+
+    modes = []
+    i = 3
+    while i < len(lines):
+        assert lines[i].startswith("#"), f"expected comment line at {i + 1}"
+        i += 1
+        assert lines[i].split()[0] == "frequency:", f"line {i + 1}"
+        freq = float(lines[i].split()[1])
+        i += 1
+        vec = []
+        while not lines[i].startswith("alpha:"):
+            vals = [float(x) for x in lines[i].split()]
+            assert len(vals) == 3
+            vec.append(vals)
+            i += 1
+        alpha = float(lines[i].split()[1])
+        i += 1
+        modes.append({"frequency": freq, "vec": np.array(vec), "alpha": alpha})
+
+    return num_modes, num_super, modes
+
+
+def test_octopus_phonon_modes_file(ph_nacl_nonac, tmp_path):
+    """The phonon modes file encodes correct, complete supercell eigenmodes.
+
+    NaCl 2x2x2 with an F-centered primitive matrix: 64 supercell atoms,
+    2-atom primitive cell, Np = 32 (exercises primitive != unit cell).
+    """
+    phonon = ph_nacl_nonac
+    modes_obj = OctopusPhononModes(phonon)
+    filename = tmp_path / "phonon_modes.txt"
+    modes_obj.write_phonon_file(str(filename))
+
+    num_modes, np_header, modes = _parse_phonon_modes_file(filename)
+    n_super = len(phonon.supercell)
+    n_prim = len(phonon.primitive)
+    Np = n_super // n_prim
+
+    assert np_header == Np
+    assert num_modes == 3 * n_super  # complete supercell mode set
+    assert len(modes) == num_modes
+    assert all(m["vec"].shape == (n_super, 3) for m in modes)
+
+    # alpha convention: 1 for region-A modes, sqrt(2) for region-B modes.
+    alphas = sorted({round(m["alpha"], 8) for m in modes})
+    assert alphas == [1.0, round(math.sqrt(2.0), 8)]
+
+    # Norms: |E|^2 = Np for region-A modes, Np/2 for region-B cos/sin modes.
+    vecs = np.array([m["vec"].ravel() for m in modes])
+    norms2 = (vecs**2).sum(axis=1)
+    for mode, n2 in zip(modes, norms2):
+        expected = Np if abs(mode["alpha"] - 1.0) < 1e-6 else Np / 2
+        assert abs(n2 - expected) < 0.01
+
+    # All real supercell modes are mutually orthogonal.
+    gram = vecs @ vecs.T
+    off_diagonal = gram - np.diag(np.diag(gram))
+    assert np.abs(off_diagonal).max() < 1e-2
+
+    # Region-A Bloch factors are exactly +-1: per-atom displacement norms
+    # are constant within each set of primitive-cell images.
+    s2p = np.array(modes_obj.s2p_index)
+    for mode in modes:
+        if abs(mode["alpha"] - 1.0) > 1e-6:
+            continue
+        row_norms = np.linalg.norm(mode["vec"], axis=1)
+        for p in range(n_prim):
+            group = row_norms[s2p == p]
+            assert group.max() - group.min() < 1e-4
+
+    # Gamma is the first commensurate q-point (region A), so the first six
+    # modes are the Gamma modes, sorted by frequency: 3 acoustic + 3 optical.
+    masses = phonon.primitive.masses
+    sqrt_m = np.sqrt(masses)  # [Na, Cl]
+    for mode in modes[:3]:  # acoustic: u_Na = u_Cl, e_kappa ~ sqrt(m_kappa)
+        assert abs(mode["frequency"]) < 1e-6
+        u = mode["vec"] / sqrt_m[s2p][:, None]  # displacements
+        assert np.abs(u - u[0]).max() < 1e-4
+    for mode in modes[3:6]:  # optical: sum_kappa sqrt(m_kappa) u_kappa = 0
+        assert mode["frequency"] > 1e-5
+        com = (mode["vec"] * sqrt_m[s2p][:, None]).sum(axis=0)
+        assert np.abs(com).max() < 1e-2
+
+    # Frequency unit: atomic units (Hartree).
+    phonon.run_qpoints([[0, 0, 0]])
+    freqs_thz = phonon.qpoints.frequencies[0]
+    assert abs(modes[5]["frequency"] - freqs_thz[5] * modes_obj.THz_to_Ha) < 1e-7

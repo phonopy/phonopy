@@ -414,6 +414,9 @@ def get_calculator_physical_units(
         )
         units = CalculatorPhysicalUnits(
             factor=OctopusToTHz,
+            # e^2/(4*pi*eps0) expressed in the Octopus force-constants unit
+            # times Bohr^3 (the cell volume unit), i.e. hartree*bohr = 1 in
+            # atomic units. Cf. qe (2 Ry*bohr) and wien2k (2000 mRy*bohr).
             nac_factor=1.0,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
