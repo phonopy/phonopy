@@ -122,7 +122,7 @@ CASTEP    | 0.01 Angstrom
 ABACUS    | 0.02 au (bohr)
 LAMMPS    | 0.01 Angstrom
 QLM       | 0.02 au (bohr)
-Octopus   | 0.01 au (bohr)
+Octopus   | 0.02 au (bohr)
 ```
 
 (frequency_default_value_interfaces)=

@@ -304,12 +304,23 @@ commensurate *q*-points of the supercell into a file that Octopus can read:
 ```
 
 This reads `phonopy_disp.yaml` and `FORCE_SETS` from the current directory and
-writes the frequencies (in Hartree) and eigenvectors to `phonon_modes.txt`.
+writes the angular frequencies (in atomic units), the real supercell
+eigenvectors and the per-mode amplitude factors to `phonon_modes.txt`
+(format version 1.0). The three acoustic Γ modes are excluded from the file,
+and the generation aborts on imaginary frequencies (dynamical instability).
+The file also carries the atomic masses; Octopus verifies them against its
+own species masses and aborts on a mismatch, so the phonon calculation and
+the multi-trajectory run must use consistent masses.
 
-Note that Octopus filters out modes below `PhononModesZeroThreshold`, whose
-default (`1e-3` Hartree, about 6.6 THz) exceeds typical phonon frequencies.
-Set it to a small value (e.g. `1e-4` or less) in the Octopus input so that
-only the acoustic (zero-frequency) modes are discarded.
+If a `BORN` file is present, the non-analytical term correction is applied
+at the commensurate *q*-points. Following the phonopy convention, no
+*q*-direction is imposed at Γ by default, so the Γ frequencies are the
+analytic *q* = 0 values without LO/TO splitting; a specific direction of
+approach can be selected with `--nac-q-direction` (three reduced
+coordinates, like phonopy's `Q_DIRECTION` tag). Near-degenerate modes are
+grouped with phonopy's standard tolerance before their real basis is
+constructed; if the generation stops with a "could not construct a real
+basis" error, adjust `--degeneracy-tolerance` (in THz).
 
 ## Non-analytical term correction (Optional)
 

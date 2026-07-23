@@ -330,24 +330,34 @@ def test_phonopy_octopus_born_script_symmetry_broken(tmp_path, monkeypatch, caps
 def _parse_phonon_modes_file(filename):
     """Parse a phonon modes file following the Octopus phonon_modes.F90 reads.
 
-    Mimics the Fortran parser: header of ``Version:``/``Nmodes:``/``Np:``
-    lines, then per mode a comment line, a ``frequency:`` line, one line of
-    3 floats per supercell atom, and an ``alpha:`` line.
+    Mimics the Fortran parser (format 1.0): header of ``Version:``,
+    ``Nmodes:``, ``Natoms:``, ``Np:`` and a ``Masses:`` block, then per mode
+    a ``frequency:`` line, one line of 3 floats per supercell atom, and an
+    ``alpha:`` line. ``#`` comment lines between blocks are skipped.
     """
     with open(filename) as f:
-        lines = [line.rstrip("\n") for line in f]
-    assert lines[0].split()[0] == "Version:"
+        lines = [
+            line.rstrip("\n") for line in f
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+    assert lines[0].split() == ["Version:", "1.0"]
     assert lines[1].split()[0] == "Nmodes:"
     num_modes = int(lines[1].split()[1])
-    assert lines[2].split()[0] == "Np:"
-    num_super = int(lines[2].split()[1])
+    assert lines[2].split()[0] == "Natoms:"
+    num_atoms = int(lines[2].split()[1])
+    assert lines[3].split()[0] == "Np:"
+    num_super = int(lines[3].split()[1])
+    assert lines[4].split() == ["Masses:"]
+    i = 5
+    masses = []
+    while len(masses) < num_atoms:
+        masses.extend(float(x) for x in lines[i].split())
+        i += 1
+    assert len(masses) == num_atoms
 
     modes = []
-    i = 3
     while i < len(lines):
-        assert lines[i].startswith("#"), f"expected comment line at {i + 1}"
-        i += 1
-        assert lines[i].split()[0] == "frequency:", f"line {i + 1}"
+        assert lines[i].split()[0] == "frequency:", f"line: {lines[i]!r}"
         freq = float(lines[i].split()[1])
         i += 1
         vec = []
@@ -356,11 +366,12 @@ def _parse_phonon_modes_file(filename):
             assert len(vals) == 3
             vec.append(vals)
             i += 1
+        assert len(vec) == num_atoms
         alpha = float(lines[i].split()[1])
         i += 1
         modes.append({"frequency": freq, "vec": np.array(vec), "alpha": alpha})
 
-    return num_modes, num_super, modes
+    return num_modes, num_atoms, num_super, np.array(masses), modes
 
 
 def test_octopus_phonon_modes_file(ph_nacl_nonac, tmp_path):
@@ -374,57 +385,250 @@ def test_octopus_phonon_modes_file(ph_nacl_nonac, tmp_path):
     filename = tmp_path / "phonon_modes.txt"
     modes_obj.write_phonon_file(str(filename))
 
-    num_modes, np_header, modes = _parse_phonon_modes_file(filename)
+    num_modes, natoms_header, np_header, file_masses, modes = (
+        _parse_phonon_modes_file(filename)
+    )
     n_super = len(phonon.supercell)
     n_prim = len(phonon.primitive)
     Np = n_super // n_prim
 
+    assert natoms_header == n_super
     assert np_header == Np
-    assert num_modes == 3 * n_super  # complete supercell mode set
+    np.testing.assert_allclose(file_masses, phonon.supercell.masses, atol=1e-6)
+    # Complete supercell mode set minus the 3 excluded acoustic Gamma modes.
+    assert num_modes == 3 * n_super - 3
     assert len(modes) == num_modes
     assert all(m["vec"].shape == (n_super, 3) for m in modes)
+    assert all(m["frequency"] > 0 for m in modes)  # acoustic Gamma excluded
 
-    # alpha convention: 1 for region-A modes, sqrt(2) for region-B modes.
+    # alpha convention: 1/sqrt(2) for region A, 1/2 for region B.
     alphas = sorted({round(m["alpha"], 8) for m in modes})
-    assert alphas == [1.0, round(math.sqrt(2.0), 8)]
+    assert alphas == [0.5, round(1 / math.sqrt(2.0), 8)]
 
-    # Norms: |E|^2 = Np for region-A modes, Np/2 for region-B cos/sin modes.
+    # Norms: |W|^2 = g*Np with g = 1 (region A) and g = 2 (region B),
+    # i.e. alpha = (2*g)^{-1/2} pairs with |W|^2 = Np/(2*alpha^2).
     vecs = np.array([m["vec"].ravel() for m in modes])
     norms2 = (vecs**2).sum(axis=1)
     for mode, n2 in zip(modes, norms2):
-        expected = Np if abs(mode["alpha"] - 1.0) < 1e-6 else Np / 2
-        assert abs(n2 - expected) < 0.01
+        expected = Np / (2 * mode["alpha"] ** 2)
+        assert abs(n2 - expected) < 0.05
 
     # All real supercell modes are mutually orthogonal.
     gram = vecs @ vecs.T
     off_diagonal = gram - np.diag(np.diag(gram))
-    assert np.abs(off_diagonal).max() < 1e-2
+    assert np.abs(off_diagonal).max() < 2e-2
 
     # Region-A Bloch factors are exactly +-1: per-atom displacement norms
     # are constant within each set of primitive-cell images.
     s2p = np.array(modes_obj.s2p_index)
-    for mode in modes:
-        if abs(mode["alpha"] - 1.0) > 1e-6:
+    is_region_A = [abs(m["alpha"] - 1 / math.sqrt(2.0)) < 1e-6 for m in modes]
+    for mode, in_A in zip(modes, is_region_A):
+        if not in_A:
             continue
         row_norms = np.linalg.norm(mode["vec"], axis=1)
         for p in range(n_prim):
             group = row_norms[s2p == p]
             assert group.max() - group.min() < 1e-4
 
-    # Gamma is the first commensurate q-point (region A), so the first six
-    # modes are the Gamma modes, sorted by frequency: 3 acoustic + 3 optical.
-    masses = phonon.primitive.masses
-    sqrt_m = np.sqrt(masses)  # [Na, Cl]
-    for mode in modes[:3]:  # acoustic: u_Na = u_Cl, e_kappa ~ sqrt(m_kappa)
-        assert abs(mode["frequency"]) < 1e-6
-        u = mode["vec"] / sqrt_m[s2p][:, None]  # displacements
-        assert np.abs(u - u[0]).max() < 1e-4
-    for mode in modes[3:6]:  # optical: sum_kappa sqrt(m_kappa) u_kappa = 0
-        assert mode["frequency"] > 1e-5
+    # Gamma is the first commensurate q-point (region A) and its acoustic
+    # modes are excluded, so the first three modes are the Gamma optical
+    # modes: sum_kappa sqrt(m_kappa) u_kappa = 0, identical in every cell.
+    sqrt_m = np.sqrt(phonon.primitive.masses)  # [Na, Cl]
+    for mode in modes[:3]:
         com = (mode["vec"] * sqrt_m[s2p][:, None]).sum(axis=0)
         assert np.abs(com).max() < 1e-2
+        for p in range(n_prim):
+            rows = mode["vec"][s2p == p]
+            assert np.abs(rows - rows[0]).max() < 1e-4
 
-    # Frequency unit: atomic units (Hartree).
+    # Frequency unit: angular frequency in atomic units (the 2*pi is
+    # supplied by h = 2*pi*hbar in the THz -> Hartree conversion).
     phonon.run_qpoints([[0, 0, 0]])
     freqs_thz = phonon.qpoints.frequencies[0]
-    assert abs(modes[5]["frequency"] - freqs_thz[5] * modes_obj.THz_to_Ha) < 1e-7
+    assert abs(modes[2]["frequency"] - freqs_thz[5] * modes_obj.THz_to_Ha) < 1e-7
+
+
+def test_octopus_phonon_modes_variance_sum(ph_nacl_nonac, tmp_path):
+    """T=0 variance consistency (interface notes, consistency check 1).
+
+    The mode-sum of the sampled displacement variance computed from the file
+    contents, sum_m alpha_m^2 * W_{l kappa alpha; m}^2 / omega_m (with
+    sigma~^2 = 1/2 and l~^2 = 2/omega), must equal the analytic harmonic
+    result sum_{q nu} |W_kappa_alpha(q nu)|^2 / (2 omega_{q nu}) summed over
+    all commensurate q-points, per atom and Cartesian component (acoustic
+    Gamma modes excluded on both sides).
+    """
+    phonon = ph_nacl_nonac
+    modes_obj = OctopusPhononModes(phonon)
+    filename = tmp_path / "phonon_modes.txt"
+    modes_obj.write_phonon_file(str(filename))
+    _, _, _, _, modes = _parse_phonon_modes_file(filename)
+
+    # File side: sum over effective real modes.
+    file_var = np.zeros((modes_obj.num_atoms_super, 3))
+    for m in modes:
+        file_var += m["alpha"] ** 2 * m["vec"] ** 2 / m["frequency"]
+
+    # Analytic side: sum over all commensurate (q, nu), same units (Ha).
+    s2p = np.array(modes_obj.s2p_index)
+    analytic = np.zeros((modes_obj.num_atoms_super, 3))
+    for iq in range(modes_obj.nq):
+        for nu in range(modes_obj.num_eigenvectors):
+            freq = modes_obj.frequencies[iq, nu] * modes_obj.THz_to_Ha
+            if abs(freq) < 1e-8:  # excluded acoustic Gamma modes
+                continue
+            w2 = np.abs(
+                modes_obj.eigenvectors[iq][:, nu].reshape(-1, 3)
+            ) ** 2
+            analytic += w2[s2p] / (2 * freq)
+
+    np.testing.assert_allclose(file_var, analytic, rtol=1e-3, atol=1e-6)
+
+
+def test_octopus_phonon_modes_gauge_invariance(ph_nacl_nonac, tmp_path):
+    """Gauge invariance (interface notes, consistency check 4).
+
+    Multiplying the phonopy eigenvectors by random phases and mixing
+    degenerate subspaces by random unitaries must leave every physical
+    content of the file unchanged: alpha factors, frequencies, mode norms,
+    the T=0 variance mode-sum, and the subspace spanned by the modes of each
+    degenerate frequency group.
+    """
+    phonon = ph_nacl_nonac
+
+    ref_obj = OctopusPhononModes(phonon)
+    ref_obj.write_phonon_file(str(tmp_path / "ref.txt"))
+
+    gauge_obj = OctopusPhononModes(phonon)
+    gauge_obj._run()
+    # detach from the shared phonon.qpoints arrays before perturbing
+    gauge_obj.eigenvectors = np.array(gauge_obj.eigenvectors)
+    gauge_obj.frequencies = np.array(gauge_obj.frequencies)
+    rng = np.random.default_rng(42)
+    for iq in range(gauge_obj.nq):
+        for group in gauge_obj._degenerate_groups(iq):
+            d = len(group)
+            # random unitary (a random phase for d = 1)
+            mat = rng.standard_normal((d, d)) + 1j * rng.standard_normal((d, d))
+            unitary, _ = np.linalg.qr(mat)
+            gauge_obj.eigenvectors[iq][:, group] = (
+                gauge_obj.eigenvectors[iq][:, group] @ unitary
+            )
+    gauge_obj.write_phonon_file(str(tmp_path / "gauge.txt"))
+
+    _, _, _, _, ref_modes = _parse_phonon_modes_file(tmp_path / "ref.txt")
+    _, _, _, _, gauge_modes = _parse_phonon_modes_file(tmp_path / "gauge.txt")
+
+    assert len(ref_modes) == len(gauge_modes)
+    for r, g in zip(ref_modes, gauge_modes):
+        assert r["frequency"] == pytest.approx(g["frequency"], abs=1e-10)
+        assert r["alpha"] == pytest.approx(g["alpha"], abs=1e-12)
+        assert np.linalg.norm(r["vec"]) == pytest.approx(
+            np.linalg.norm(g["vec"]), abs=1e-3
+        )
+
+    # T=0 variance mode-sum is basis-invariant within degenerate subspaces.
+    def variance_sum(modes):
+        var = np.zeros_like(modes[0]["vec"])
+        for m in modes:
+            var += m["alpha"] ** 2 * m["vec"] ** 2 / m["frequency"]
+        return var
+
+    np.testing.assert_allclose(
+        variance_sum(ref_modes), variance_sum(gauge_modes), rtol=1e-3, atol=1e-6
+    )
+
+    # The span of the modes of each degenerate frequency group is invariant:
+    # compare the orthogonal projectors built from the normalized modes.
+    def projectors(modes):
+        groups = {}
+        for m in modes:
+            groups.setdefault(round(m["frequency"], 6), []).append(
+                m["vec"].ravel() / np.linalg.norm(m["vec"])
+            )
+        return {
+            f: sum(np.outer(v, v) for v in vecs) for f, vecs in groups.items()
+        }
+
+    p_ref = projectors(ref_modes)
+    p_gauge = projectors(gauge_modes)
+    assert p_ref.keys() == p_gauge.keys()
+    for f in p_ref:
+        np.testing.assert_allclose(p_ref[f], p_gauge[f], atol=1e-4)
+
+
+def test_octopus_phonon_modes_vs_phonopy_sampler(ph_nacl_nonac, tmp_path):
+    """Cross-check vs phonopy's sampler (interface notes, consistency check 3).
+
+    phonopy's RandomDisplacements implements the displacement half of the
+    same sampling scheme independently (phonopy paper eqs. (118)-(122)). The
+    per-atom displacement variances predicted from the phonon file contents
+    (as sampled by Octopus, sigma~^2 = coth(omega/2kT)/2) must agree with the
+    empirical variances of RandomDisplacements snapshots for the same force
+    constants and temperature.
+    """
+    from phonopy.phonon.random_displacements import RandomDisplacements
+
+    phonon = ph_nacl_nonac
+    temperature = 300.0
+    nsnapshots = 20000
+
+    modes_obj = OctopusPhononModes(phonon)
+    filename = tmp_path / "phonon_modes.txt"
+    modes_obj.write_phonon_file(str(filename))
+    _, _, np_header, file_masses, modes = _parse_phonon_modes_file(filename)
+
+    # File-side prediction of <u^2> per atom and component, in Angstrom^2:
+    # u = xi * alpha * sqrt(2/(amu_au*omega)) * W / sqrt(m_amu * Np), with
+    # <xi^2> = coth(omega/(2 kB T))/2 and everything in atomic units.
+    units = get_physical_units()
+    kbt_ha = units.KB * temperature / units.Hartree  # kB T in Hartree
+    amu_au = 1.0 / 5.485799110e-4
+    var_au = np.zeros((len(file_masses), 3))
+    for m in modes:
+        sigma2 = 0.5 / np.tanh(m["frequency"] / (2.0 * kbt_ha))
+        var_au += (
+            sigma2 * 2.0 * m["alpha"] ** 2 * m["vec"] ** 2
+            / (amu_au * m["frequency"] * file_masses[:, None] * np_header)
+        )
+    var_file = var_au * units.Bohr ** 2  # -> Angstrom^2
+
+    # Independent sampler: phonopy's RandomDisplacements (u in Angstrom).
+    # The frequency conversion factor must match the one the file writer
+    # inherited from the phonon object (the NaCl fixture carries VASP-unit
+    # force constants; an octopus-calculator dataset carries its own factor).
+    rd = RandomDisplacements(
+        phonon.supercell,
+        phonon.primitive,
+        phonon.force_constants,
+        factor=phonon.unit_conversion_factor,
+    )
+    rd.run(temperature, number_of_snapshots=nsnapshots, random_seed=12345)
+    var_rd = (rd.u ** 2).mean(axis=0)
+
+    # 5-sigma statistical tolerance on each variance estimate, plus a tight
+    # check on the global mean.
+    se = np.sqrt(2.0 / nsnapshots)
+    np.testing.assert_allclose(var_rd, var_file, rtol=5 * se)
+    assert var_rd.mean() == pytest.approx(var_file.mean(), rel=0.01)
+
+
+def test_octopus_phonon_modes_nac_q_direction(ph_nacl, tmp_path):
+    """NAC q-direction follows the phonopy convention.
+
+    Default (None): no direction-dependent non-analytic term at Gamma, so the
+    optical modes of NaCl stay threefold degenerate (analytic q = 0 limit).
+    An explicit direction imposes the LO/TO splitting along that approach.
+    """
+    modes_obj = OctopusPhononModes(ph_nacl)
+    modes_obj.write_phonon_file(str(tmp_path / "none.txt"))
+    _, _, _, _, modes_none = _parse_phonon_modes_file(tmp_path / "none.txt")
+    f_none = [m["frequency"] for m in modes_none[:3]]  # Gamma optical triplet
+    assert max(f_none) - min(f_none) < 1e-6
+
+    modes_obj = OctopusPhononModes(ph_nacl, nac_q_direction=[1, 0, 0])
+    modes_obj.write_phonon_file(str(tmp_path / "split.txt"))
+    _, _, _, _, modes_split = _parse_phonon_modes_file(tmp_path / "split.txt")
+    f_split = sorted(m["frequency"] for m in modes_split[:3])
+    assert f_split[2] > 1.2 * f_split[0]  # LO pushed above the TO doublet
+    assert f_split[0] == pytest.approx(f_none[0], abs=1e-6)  # TO unchanged
