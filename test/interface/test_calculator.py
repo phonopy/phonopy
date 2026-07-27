@@ -67,7 +67,9 @@ def test_write_supercells_octopus_creates_geometry_files(
     assert (tmp_path / "geometry-001").exists()
 
 
-def test_parse_set_of_forces_octopus_records_are_converted_and_drift_removed(tmp_path: pathlib.Path):
+def test_parse_set_of_forces_octopus_records_are_converted_and_drift_removed(
+    tmp_path: pathlib.Path,
+):
     """Octopus force parsing should convert units and remove drift."""
     info = tmp_path / "static_info.txt"
     info.write_text(

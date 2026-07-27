@@ -319,9 +319,7 @@ def test_phonopy_octopus_born_script_symmetry_broken(tmp_path, monkeypatch, caps
     (tmp_path / "epsilon").write_text(_EPSILON_FILE)
     (tmp_path / "born_charges").write_text(_BORN_FILE_BROKEN_SYMMETRY)
 
-    monkeypatch.setattr(
-        sys, "argv", ["phonopy-octopus-born", str(geom), str(tmp_path)]
-    )
+    monkeypatch.setattr(sys, "argv", ["phonopy-octopus-born", str(geom), str(tmp_path)])
     with pytest.raises(SystemExit):
         run()
     assert "# Symmetry broken" in capsys.readouterr().out
@@ -337,7 +335,8 @@ def _parse_phonon_modes_file(filename):
     """
     with open(filename) as f:
         lines = [
-            line.rstrip("\n") for line in f
+            line.rstrip("\n")
+            for line in f
             if line.strip() and not line.lstrip().startswith("#")
         ]
     assert lines[0].split() == ["Version:", "1.0"]
@@ -385,8 +384,8 @@ def test_octopus_phonon_modes_file(ph_nacl_nonac, tmp_path):
     filename = tmp_path / "phonon_modes.txt"
     modes_obj.write_phonon_file(str(filename))
 
-    num_modes, natoms_header, np_header, file_masses, modes = (
-        _parse_phonon_modes_file(filename)
+    num_modes, natoms_header, np_header, file_masses, modes = _parse_phonon_modes_file(
+        filename
     )
     n_super = len(phonon.supercell)
     n_prim = len(phonon.primitive)
@@ -477,9 +476,7 @@ def test_octopus_phonon_modes_variance_sum(ph_nacl_nonac, tmp_path):
             freq = modes_obj.frequencies[iq, nu] * modes_obj.THz_to_Ha
             if abs(freq) < 1e-8:  # excluded acoustic Gamma modes
                 continue
-            w2 = np.abs(
-                modes_obj.eigenvectors[iq][:, nu].reshape(-1, 3)
-            ) ** 2
+            w2 = np.abs(modes_obj.eigenvectors[iq][:, nu].reshape(-1, 3)) ** 2
             analytic += w2[s2p] / (2 * freq)
 
     np.testing.assert_allclose(file_var, analytic, rtol=1e-3, atol=1e-6)
@@ -546,9 +543,7 @@ def test_octopus_phonon_modes_gauge_invariance(ph_nacl_nonac, tmp_path):
             groups.setdefault(round(m["frequency"], 6), []).append(
                 m["vec"].ravel() / np.linalg.norm(m["vec"])
             )
-        return {
-            f: sum(np.outer(v, v) for v in vecs) for f, vecs in groups.items()
-        }
+        return {f: sum(np.outer(v, v) for v in vecs) for f, vecs in groups.items()}
 
     p_ref = projectors(ref_modes)
     p_gauge = projectors(gauge_modes)
@@ -588,10 +583,13 @@ def test_octopus_phonon_modes_vs_phonopy_sampler(ph_nacl_nonac, tmp_path):
     for m in modes:
         sigma2 = 0.5 / np.tanh(m["frequency"] / (2.0 * kbt_ha))
         var_au += (
-            sigma2 * 2.0 * m["alpha"] ** 2 * m["vec"] ** 2
+            sigma2
+            * 2.0
+            * m["alpha"] ** 2
+            * m["vec"] ** 2
             / (amu_au * m["frequency"] * file_masses[:, None] * np_header)
         )
-    var_file = var_au * units.Bohr ** 2  # -> Angstrom^2
+    var_file = var_au * units.Bohr**2  # -> Angstrom^2
 
     # Independent sampler: phonopy's RandomDisplacements (u in Angstrom).
     # The frequency conversion factor must match the one the file writer
@@ -604,7 +602,7 @@ def test_octopus_phonon_modes_vs_phonopy_sampler(ph_nacl_nonac, tmp_path):
         factor=phonon.unit_conversion_factor,
     )
     rd.run(temperature, number_of_snapshots=nsnapshots, random_seed=12345)
-    var_rd = (rd.u ** 2).mean(axis=0)
+    var_rd = (rd.u**2).mean(axis=0)
 
     # 5-sigma statistical tolerance on each variance estimate, plus a tight
     # check on the global mean.

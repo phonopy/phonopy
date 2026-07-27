@@ -25,7 +25,8 @@ import math
 
 import numpy as np
 
-from phonopy import Phonopy, load as phonopy_load
+from phonopy import Phonopy
+from phonopy import load as phonopy_load
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.phonon.degeneracy import DEFAULT_CUTOFF, degenerate_sets
 from phonopy.physical_units import PhysicalUnits, get_physical_units
@@ -162,13 +163,11 @@ class OctopusPhononModes:
                 + "; ".join(" ".join(str(x) for x in row) for row in self.smat)
                 + "\n"
             )
-            f.write(
-                "# Commensurate q-points (reduced coords of the primitive "
-                "cell):\n"
-            )
+            f.write("# Commensurate q-points (reduced coords of the primitive cell):\n")
             for iq in range(self.nq):
                 region = (
-                    "A" if iq in self.region_A
+                    "A"
+                    if iq in self.region_A
                     else ("B" if iq in self.region_B else "C")
                 )
                 f.write(
@@ -189,17 +188,12 @@ class OctopusPhononModes:
                         # Acoustic Gamma modes are excluded from the file.
                         continue
                     ext = np.array(
-                        [
-                            self._extended_eigenvector(iq, nu).ravel()
-                            for nu in group
-                        ]
+                        [self._extended_eigenvector(iq, nu).ravel() for nu in group]
                     )
                     stacked = np.concatenate([ext.real, ext.imag], axis=0)
                     _, s, vt = np.linalg.svd(stacked, full_matrices=False)
                     d = len(group)
-                    if s[d - 1] < 1e-6 * s[0] or (
-                        len(s) > d and s[d] > 1e-6 * s[0]
-                    ):
+                    if s[d - 1] < 1e-6 * s[0] or (len(s) > d and s[d] > 1e-6 * s[0]):
                         raise RuntimeError(
                             f"Could not construct a real basis for modes "
                             f"{list(group)} at q = {self.qpoints[iq]}; try "
@@ -226,9 +220,7 @@ class OctopusPhononModes:
         Uses phonopy's shared transitive grouping (a band joins a group if it
         is within the cutoff of any member), cf. group_velocity and irreps.
         """
-        return degenerate_sets(
-            self.frequencies[iq], cutoff=self.degeneracy_tolerance
-        )
+        return degenerate_sets(self.frequencies[iq], cutoff=self.degeneracy_tolerance)
 
     def _write_mode(self, f, iq: int, nu: int, ext_eig: np.ndarray, alpha: float):
         """Write a single real mode block."""
@@ -272,7 +264,9 @@ def classify_qpoints(
         test_q = -np.array(q) + search_space
         test = False
         for j in region_B:
-            test = test or any(np.linalg.norm(np.array(q_list[j]) - test_q, axis=1) < 0.01)
+            test = test or any(
+                np.linalg.norm(np.array(q_list[j]) - test_q, axis=1) < 0.01
+            )
         if not test:
             region_B.append(i)
 
@@ -281,9 +275,7 @@ def classify_qpoints(
 
 def run() -> None:
     """Run the command-line entrypoint."""
-    parser = argparse.ArgumentParser(
-        description="Print PhononModes file for Octopus."
-    )
+    parser = argparse.ArgumentParser(description="Print PhononModes file for Octopus.")
     parser.add_argument(
         "--filename",
         type=str,
