@@ -6,6 +6,7 @@ import sys
 
 import numpy as np
 import pytest
+from phonopy.scripts.phonopy_octopus_eigenmodes import OctopusPhononModes
 
 from phonopy.interface.calculator import read_crystal_structure
 from phonopy.interface.octopus import (
@@ -20,7 +21,6 @@ from phonopy.interface.octopus import (
 )
 from phonopy.interface.vasp import write_vasp
 from phonopy.physical_units import get_physical_units
-from phonopy.scripts.phonopy_octopus_eigenmodes import OctopusPhononModes
 from phonopy.structure.atoms import PhonopyAtoms
 
 # Real Octopus em_resp output for rock-salt NaCl (static response).

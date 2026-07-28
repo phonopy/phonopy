@@ -3,7 +3,6 @@
 
 # Copyright (C) 2026 Martin Lueders
 
-
 from __future__ import annotations
 
 import os
