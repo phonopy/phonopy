@@ -408,7 +408,7 @@ def test_octopus_phonon_modes_file(ph_nacl_nonac, tmp_path):
     # i.e. alpha = (2*g)^{-1/2} pairs with |W|^2 = Np/(2*alpha^2).
     vecs = np.array([m["vec"].ravel() for m in modes])
     norms2 = (vecs**2).sum(axis=1)
-    for mode, n2 in zip(modes, norms2):
+    for mode, n2 in zip(modes, norms2, strict=True):
         expected = Np / (2 * mode["alpha"] ** 2)
         assert abs(n2 - expected) < 0.05
 
@@ -421,7 +421,7 @@ def test_octopus_phonon_modes_file(ph_nacl_nonac, tmp_path):
     # are constant within each set of primitive-cell images.
     s2p = np.array(modes_obj.s2p_index)
     is_region_A = [abs(m["alpha"] - 1 / math.sqrt(2.0)) < 1e-6 for m in modes]
-    for mode, in_A in zip(modes, is_region_A):
+    for mode, in_A in zip(modes, is_region_A, strict=True):
         if not in_A:
             continue
         row_norms = np.linalg.norm(mode["vec"], axis=1)
@@ -517,7 +517,7 @@ def test_octopus_phonon_modes_gauge_invariance(ph_nacl_nonac, tmp_path):
     _, _, _, _, gauge_modes = _parse_phonon_modes_file(tmp_path / "gauge.txt")
 
     assert len(ref_modes) == len(gauge_modes)
-    for r, g in zip(ref_modes, gauge_modes):
+    for r, g in zip(ref_modes, gauge_modes, strict=True):
         assert r["frequency"] == pytest.approx(g["frequency"], abs=1e-10)
         assert r["alpha"] == pytest.approx(g["alpha"], abs=1e-12)
         assert np.linalg.norm(r["vec"]) == pytest.approx(

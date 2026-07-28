@@ -53,7 +53,8 @@ def test_write_supercells_wien2k_requires_structure_info(ph_nacl: Phonopy):
 def test_write_supercells_octopus_creates_geometry_files(
     ph_nacl: Phonopy, tmp_path: pathlib.Path
 ):
-    """Octopus writer should create geometry files for the supercell and displacements."""
+    """Octopus writer should create geometry files for the supercell and displacements.
+    """
     cells = ph_nacl.supercells_with_displacements
     assert cells is not None
     pre = str(tmp_path / "geometry")
