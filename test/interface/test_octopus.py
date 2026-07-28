@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Tests of Octopus calculator interface."""
 
-import math
 import sys
 
 import numpy as np
