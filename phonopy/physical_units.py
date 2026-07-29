@@ -305,6 +305,7 @@ def get_calculator_physical_units(
     lammps        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
     qlm           : Ry,      au,        AMU,         Ry/au,        Ry/au^2
     pwmat         : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    octopus       : hartree, au,        AMU,         hartree/au,   hartree/au^2
 
     units['force_constants_unit'] is used in
     the 'get_force_constant_conversion_factor' method.
@@ -396,6 +397,27 @@ def get_calculator_physical_units(
         units = CalculatorPhysicalUnits(
             factor=ElkToTHz,
             nac_factor=physical_units.Hartree * physical_units.Bohr,
+            distance_to_A=physical_units.Bohr,
+            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
+            energy_to_eV=physical_units.Hartree,
+            force_constants_unit="hartree/au^2",
+            length_unit="au",
+            force_unit="hartree/au",
+            energy_unit="hartree",
+        )
+    elif interface_mode == "octopus":
+        OctopusToTHz = (
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )
+        units = CalculatorPhysicalUnits(
+            factor=OctopusToTHz,
+            # e^2/(4*pi*eps0) expressed in the Octopus force-constants unit
+            # times Bohr^3 (the cell volume unit), i.e. hartree*bohr = 1 in
+            # atomic units. Cf. qe (2 Ry*bohr) and wien2k (2000 mRy*bohr).
+            nac_factor=1.0,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
             energy_to_eV=physical_units.Hartree,

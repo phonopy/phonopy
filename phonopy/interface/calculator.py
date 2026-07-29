@@ -159,6 +159,7 @@ calculator_info = {
     "wien2k": {"option": {"name": "--wien2k", "help": "Invoke Wien2k mode"}},
     "pwmat": {"option": {"name": "--pwmat", "help": "Invoke PWmat mode"}},
     "exciting": {"option": {"name": "--exciting", "help": "Invoke exciting mode"}},
+    "octopus": {"option": {"name": "--octopus", "help": "Invoke Octopus mode"}},
 }
 
 
@@ -360,6 +361,10 @@ def write_crystal_structure(
         import phonopy.interface.pwmat as pwmat
 
         pwmat.write_atom_config(filename, cell)
+    elif interface_mode == "octopus":
+        import phonopy.interface.octopus as octopus
+
+        octopus.write_octopus(filename, cell)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -624,6 +629,10 @@ def _write_supercells_generic(
         import phonopy.interface.exciting as exciting
 
         writer = exciting.write_supercells_with_displacements
+    elif interface_mode == "octopus":
+        import phonopy.interface.octopus as octopus
+
+        writer = octopus.write_supercells_with_displacements
     else:
         msg = f"No handler found for calculator interface: {interface_mode}"
         raise RuntimeError(msg)
@@ -974,6 +983,14 @@ def read_crystal_structure(
         return unitcell, QlmStructureInfo(
             unitcell_filename=cell_filename, qlm_ctx=qlm_ctx
         )
+    elif interface_mode == "octopus":
+        # The unit cell may be given either as a VASP-style POSCAR (the default,
+        # lattice in Angstrom, converted to Bohr) or as an Octopus geometry
+        # include file (already in atomic units); auto-detected.
+        from phonopy.interface.octopus import read_octopus_or_poscar
+
+        unitcell = read_octopus_or_poscar(cell_filename)
+        return unitcell, StructureInfo(unitcell_filename=cell_filename)
 
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -1015,6 +1032,8 @@ def get_default_cell_filename(interface_mode: str | None) -> str:
         return "site"
     elif interface_mode == "pwmat":
         return "atom.config"
+    elif interface_mode == "octopus":
+        return "POSCAR"
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -1071,6 +1090,7 @@ def get_default_displacement_distance(interface_mode: str | None) -> float:
         "fleur",
         "abacus",
         "qlm",
+        "octopus",
     ):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k, pwmat
@@ -1148,6 +1168,8 @@ def get_calc_dataset(
         from phonopy.interface.qlm import parse_set_of_forces
     elif interface_mode == "pwmat":
         from phonopy.interface.pwmat import parse_set_of_forces
+    elif interface_mode == "octopus":
+        from phonopy.interface.octopus import parse_set_of_forces
     else:
         msg = f"No calculator interface was found: {interface_mode}"
         raise RuntimeError(msg)
