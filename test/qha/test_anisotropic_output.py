@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from pathlib import Path
 
 import numpy as np
@@ -95,6 +96,43 @@ def test_write_volume_and_free_energy(
     aniso_output.write_free_energy_temperature(result, filename=fn_f)
     assert len(_data_lines(fn_v)) == len(result.temperatures)
     assert len(_data_lines(fn_f)) == len(result.temperatures)
+
+
+def test_provenance_header(result: AnisotropicQHAResult, tmp_path: Path) -> None:
+    """The header records the settings that produced the numbers."""
+    tagged = dataclasses.replace(result, mesh=200.0, with_electronic=True, pressure=1.5)
+    fn = tmp_path / "ax.dat"
+    aniso_output.write_axial_thermal_expansion(
+        tagged, filename=fn, provenance=["dataset=d.hdf5"]
+    )
+    lines = fn.read_text().splitlines()
+    for item in (
+        "mesh=200",
+        "surface_degree=2",
+        "F_el=on",
+        "pressure=1.5 GPa",
+        "grid_points=9",
+        "temperatures=0-500 K step 100",
+        "dataset=d.hdf5",
+    ):
+        assert item in lines[0]
+    assert lines[1].startswith("# temperature (K), alpha_a")
+
+
+def test_provenance_omits_unset_settings(result: AnisotropicQHAResult) -> None:
+    """An unrecorded mesh and no pressure are left out; F_el reads off."""
+    line = aniso_output.format_provenance(result)
+    assert "mesh=" not in line
+    assert "pressure" not in line
+    assert "F_el=off" in line
+
+
+def test_provenance_explicit_mesh(result: AnisotropicQHAResult) -> None:
+    """An explicit mesh triple is rendered as given rather than as a length."""
+    line = aniso_output.format_provenance(
+        dataclasses.replace(result, mesh=[20, 20, 14])
+    )
+    assert "mesh=20 20 14" in line
 
 
 def test_plot_functions(result: AnisotropicQHAResult) -> None:

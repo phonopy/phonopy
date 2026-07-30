@@ -550,7 +550,9 @@ result = run_anisotropic_qha(
     temperatures,
     internal_energies=internal_energies,
     electronic_structures=electronic_structures if has_electronic else None,
-    mesh=100.0,
+    # The axial split needs a denser mesh than the volumetric expansion; 100
+    # can leave alpha_c off by ~20% where beta is already converged.
+    mesh=200.0,
 )
 
 anisotropic_output.write_lattice_parameters_temperature(result)

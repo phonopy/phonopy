@@ -386,6 +386,18 @@ class AnisotropicQHAResult:
         Per-temperature boolean flag, True when the located free-energy
         minimum lies outside the sampled lattice box, i.e. the equilibrium
         lattice parameters are extrapolated. shape=(N,)
+    mesh : float or array_like, optional
+        Mesh numbers used for the phonon sampling, recorded as they were
+        given. The axial thermal expansions are sensitive to this setting,
+        so it is carried with the result and written into the output
+        headers. None when the result was built without recording it.
+    with_electronic : bool
+        Whether the electronic free energy F_el was included. Recorded for
+        the same reason as mesh: it shifts the axial split substantially
+        while leaving the volumetric expansion nearly unchanged.
+    pressure : float, optional
+        Pressure in GPa added as the pV term, or None when the minimized
+        free energy is the Helmholtz free energy.
 
     """
 
@@ -403,6 +415,9 @@ class AnisotropicQHAResult:
     surface_fit_rank: int
     surface_n_terms: int
     minimum_extrapolated: NDArray[np.bool_]
+    mesh: float | Sequence[int] | NDArray[np.int64] | None = None
+    with_electronic: bool = False
+    pressure: float | None = None
 
     def __post_init__(self) -> None:
         """Make ndarray fields read-only."""
@@ -589,6 +604,9 @@ def run_anisotropic_qha(
         surface_fit_rank=surface_fit_rank,
         surface_n_terms=n_terms,
         minimum_extrapolated=minimum_extrapolated[:n],
+        mesh=mesh,
+        with_electronic=electronic_structures is not None,
+        pressure=pressure,
     )
 
 

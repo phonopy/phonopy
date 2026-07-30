@@ -383,8 +383,10 @@ def compare_thermal_expansion_vinet(
     aniso = (beta_a, alpha_a_a, alpha_c_a)
     vinet = (beta_v, alpha_a_v, alpha_c_v)
 
+    # savetxt comments every header line, so the second needs no marker here.
     header = (
-        "T(K)  beta_aniso  beta_vinet  alpha_a_aniso  alpha_a_vinet  "
+        anisotropic_output.format_provenance(result)
+        + "\nT(K)  beta_aniso  beta_vinet  alpha_a_aniso  alpha_a_vinet  "
         "alpha_c_aniso  alpha_c_vinet  (all 1/K)"
     )
     table = np.column_stack(
@@ -426,7 +428,14 @@ def get_options() -> Namespace:
     )
     parser.add_argument("--tmax", type=float, default=1000.0)
     parser.add_argument("--dt", type=float, default=10.0)
-    parser.add_argument("--mesh", type=float, default=100.0)
+    parser.add_argument(
+        "--mesh",
+        type=float,
+        default=200.0,
+        help="phonon sampling mesh (default: 200). The axial split needs a "
+        "denser mesh than the volumetric expansion: 100 leaves alpha_c off by "
+        "~20% while beta is already converged",
+    )
     parser.add_argument(
         "--fc-calculator",
         default="symfc",
@@ -506,9 +515,15 @@ def run() -> None:
         verbose=True,
     )
 
-    anisotropic_output.write_lattice_parameters_temperature(result)
-    anisotropic_output.write_axial_thermal_expansion(result)
-    anisotropic_output.write_volume_temperature(result)
+    provenance = [
+        f"dataset={args.filename}",
+        f"fc_calculator={args.fc_calculator}",
+    ]
+    anisotropic_output.write_lattice_parameters_temperature(
+        result, provenance=provenance
+    )
+    anisotropic_output.write_axial_thermal_expansion(result, provenance=provenance)
+    anisotropic_output.write_volume_temperature(result, provenance=provenance)
     fig = plot_anisotropic_qha_dualscale(result)
     fig.savefig("anisotropic_qha.png")
     plt.close(fig)
