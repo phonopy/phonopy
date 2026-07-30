@@ -772,6 +772,31 @@ def _get_fc_calculator_and_options_from_settings(
     return fc_calculator, fc_calculator_options
 
 
+def _prepare_pypolymlp(phonon: Phonopy, settings: PhonopySettings, log_level: int):
+    """Load an existing polynomial MLP or develop one from the dataset.
+
+    A dataset carrying forces is moved to mlp_dataset for training; a
+    displacement-only dataset, or none at all, leaves an existing polymlp.yaml
+    as the only source, which develop_or_load_pypolymlp tries first.
+
+    """
+    move_force_dataset_to_mlp_dataset(phonon)
+
+    try:
+        develop_or_load_pypolymlp(
+            phonon, mlp_params=settings.mlp_params, log_level=log_level
+        )
+    except (
+        PypolymlpDevelopmentError,
+        PypolymlpFileNotFoundError,
+        PypolymlpTrainingDatasetNotFoundError,
+    ) as e:
+        print_error_message(str(e))
+        if log_level:
+            print_error()
+        sys.exit(1)
+
+
 def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
     if log_level:
         print(
@@ -786,6 +811,7 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
         temperature=settings.random_displacement_temperature,
         number_of_snapshots=settings.random_displacements,
         max_iterations=settings.sscha_iterations,
+        random_seed=settings.random_seed,
         log_level=log_level,
     )
     for iter_num in sscha:
@@ -2244,21 +2270,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         # Prepare polynomial MLPs #
         ###########################
         if settings.use_pypolymlp:
-            move_force_dataset_to_mlp_dataset(phonon)
-
-            try:
-                develop_or_load_pypolymlp(
-                    phonon, mlp_params=settings.mlp_params, log_level=log_level
-                )
-            except (
-                PypolymlpDevelopmentError,
-                PypolymlpFileNotFoundError,
-                PypolymlpTrainingDatasetNotFoundError,
-            ) as e:
-                print_error_message(str(e))
-                if log_level:
-                    print_error()
-                sys.exit(1)
+            _prepare_pypolymlp(phonon, settings, log_level)
 
         ################################################
         # Relax atomic positions using polynomial MLPs #
@@ -2314,6 +2326,13 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     # MLPSSCHA (pypolymlp-sscha) #
     ##############################
     if settings.use_pypolymlp and settings.sscha_iterations:
+        # Reading force constants (--readfc) skips the block above, and with it
+        # the MLP preparation, so the MLP is prepared here instead. This is the
+        # cheap way to run SSCHA: the harmonic force constants come from a
+        # file, no random displacements are spent on them, and --rd sets the
+        # SSCHA snapshot count alone.
+        if phonon.mlp is None:
+            _prepare_pypolymlp(phonon, settings, log_level)
         _run_MLPSSCHA(phonon, settings, log_level)
 
     ###################################################################

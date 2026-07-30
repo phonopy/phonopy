@@ -441,6 +441,38 @@ to the iteration step. By performing a sufficient number of SSCHA iterations and
 utilizing a sufficiently large set of supercells with random displacements at a
 given temperature, the SSCHA force constants can be reliably determined.
 
+#### Reusing harmonic force constants
+
+In the command above, `--rd 1000` serves two different purposes: building the
+harmonic force constants, and sampling the supercells of the SSCHA iterations.
+The two need different numbers of supercells. The harmonic force constants are
+already determined by relatively few supercells, whereas the SSCHA sampling
+needs many of them to bring its statistical error down, so one number for both
+spends supercells on the harmonic step that it does not need.
+
+Force constants are read from the input when they are available, which
+separates the two. Writing them once,
+
+```
+% phonopy phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --rd 20 --writefc
+```
+
+and running SSCHA afterwards in the same directory, where the `FORCE_CONSTANTS`
+and `polymlp.yaml` files written by that command are found,
+
+```
+% phonopy phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd-temperature 300 --rd 1000
+```
+
+spends no supercells on the harmonic step, and `--rd` then sets the number of
+SSCHA supercells alone. Reading force constants means that no training dataset
+is loaded, so an MLP file such as the `polymlp.yaml` written by the first
+command has to be available.
+
+When harmonic force constants are not at hand, `--rd auto` estimates the number
+of supercells needed to determine them, which is a cheaper starting point than
+a number chosen for the SSCHA sampling.
+
 #### SSCHA free energy
 
 The SSCHA free energy printed at each iteration is defined for the force
