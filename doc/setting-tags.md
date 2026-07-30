@@ -1189,9 +1189,15 @@ FORCE_CONSTANTS = READ
 ```
 
 There are three values to be set, which are `READ` and `WRITE`, and `.FALSE.`.
-The default is `.FALSE.`. When `FORCE_CONSTANTS = READ`, force constants are
-read from `FORCE_CONSTANTS` file. With `FORCE_CONSTANTS = WRITE`, force
-constants calculated from `FORCE_SETS` are written to `FORCE_CONSTANTS` file.
+When `FORCE_CONSTANTS = READ`, force constants are read from `FORCE_CONSTANTS`
+file. With `FORCE_CONSTANTS = WRITE`, force constants calculated from
+`FORCE_SETS` are written to `FORCE_CONSTANTS` file.
+
+The default is `.FALSE.`, meaning that this tag requests nothing. It does not
+mean that force constants are not read: reading them is the default behaviour,
+so `FORCE_CONSTANTS = READ` is not needed to enable it. Reading is switched off
+by `READ_FORCE_CONSTANTS = .FALSE.` (`--noreadfc`) rather than by
+`FORCE_CONSTANTS = .FALSE.`, which has no effect.
 
 The file format of `FORCE_CONSTANTS` is shown
 {ref}`here <file_force_constants>`.
@@ -1528,8 +1534,9 @@ HDF5 = .TRUE.
 #### `force_constants.hdf5`
 
 With `--hdf5` option and `FORCE_CONSTANTS = WRITE` (`--writefc`),
-`force_constants.hdf5` is written. With `--hdf5` option and
-`FORCE_CONSTANTS = READ` (`--readfc`), `force_constants.hdf5` is read.
+`force_constants.hdf5` is written. With `--hdf5` option,
+`force_constants.hdf5` is read, which is the default unless
+`READ_FORCE_CONSTANTS = .FALSE.` (`--noreadfc`) is given.
 
 #### `mesh.hdf5`
 
