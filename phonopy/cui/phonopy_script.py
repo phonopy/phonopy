@@ -711,7 +711,6 @@ def _produce_force_constants(
     phonon: Phonopy,
     settings: PhonopySettings,
     confs: dict,
-    load_phonopy_yaml: bool,
     log_level: int,
 ):
     """Calculate or read force constants.
@@ -745,11 +744,8 @@ def _produce_force_constants(
         fc_calculator, fc_calculator_options = (
             _get_fc_calculator_and_options_from_settings(settings, log_level=log_level)
         )
-        # Set "symfc" for type-II dataset when phonopy-load is called without
-        # specifying fc-calculator.
-        if load_phonopy_yaml and settings.fc_symmetry and fc_calculator is None:
-            fc_calculator = "symfc"
-
+        # A type-II dataset without an explicit fc-calculator is handled by
+        # produce_force_constants, which falls back to symfc.
         produce_force_constants(
             phonon,
             fc_calculator=fc_calculator,
@@ -2301,7 +2297,6 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             phonon,
             settings,
             confs,
-            load_phonopy_yaml,
             log_level,
         )
 
