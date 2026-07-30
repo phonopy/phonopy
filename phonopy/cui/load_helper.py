@@ -290,25 +290,50 @@ def produce_force_constants(
     use_symfc_projector: bool = False,
     log_level: int = 0,
 ) -> None:
-    """Produce force constants."""
+    """Produce force constants.
+
+    The traditional (finite-difference) force constants calculator cannot
+    process a type-II dataset, i.e., one where all atoms are displaced
+    simultaneously in each supercell. When no calculator is specified and the
+    dataset is type-II, symfc is used instead of raising an exception.
+
+    """
+    _fc_calculator = _resolve_fc_calculator(
+        fc_calculator, phonon.dataset, log_level=log_level
+    )
     try:
         phonon.produce_force_constants(
             calculate_full_force_constants=(not is_compact_fc),
-            fc_calculator=fc_calculator,
+            fc_calculator=_fc_calculator,
             fc_calculator_options=fc_calculator_options,
         )
         if symmetrize_fc:
-            if fc_calculator is None:
+            if _fc_calculator is None:
                 phonon.symmetrize_force_constants(
                     show_drift=True, use_symfc_projector=use_symfc_projector
                 )
-            elif fc_calculator == "traditional":
+            elif _fc_calculator == "traditional":
                 phonon.symmetrize_force_constants(
                     show_drift=True, use_symfc_projector=False
                 )
     except ForcesetsNotFoundError:
         if log_level:
             print("Displacement-force dataset was not found. ")
+
+
+def _resolve_fc_calculator(
+    fc_calculator: Literal["traditional", "symfc", "alm"] | None,
+    dataset: DisplacementDataset | None,
+    log_level: int = 0,
+) -> Literal["traditional", "symfc", "alm"] | None:
+    """Choose symfc for a type-II dataset when no calculator is specified."""
+    if fc_calculator is not None or dataset is None:
+        return fc_calculator
+    if "displacements" not in dataset:
+        return fc_calculator
+    if log_level:
+        print("Type-II dataset was found. Symfc is used as force constants calculator.")
+    return "symfc"
 
 
 def check_nac_params(

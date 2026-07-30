@@ -16,6 +16,16 @@
   that symmetry does not require. Add `--pm` to recover the previous
   displacements. The forces of a machine-learning potential are smooth enough
   that the error cancellation of plus-minus pairs is not needed.
+- `phonopy.load` now falls back to symfc for a type-II dataset (random
+  displacements, where all atoms are displaced simultaneously) when
+  `fc_calculator` is unspecified, instead of raising an exception. This matches
+  the command line behavior.
+- Behavior change: the command line no longer selects symfc for a type-I
+  dataset (one displaced atom per supercell). The traditional
+  finite-difference calculator is used again, followed by symmetrization with
+  the symfc projector. Add `--fc-calculator symfc` to recover the previous
+  force constants. The choice of the force constants calculator now depends on
+  the dataset type alone and is shared by the command line and `phonopy.load`.
 
 ## Jul-17-2026: Version 4.4.0
 
