@@ -136,13 +136,12 @@ def test_provenance_explicit_mesh(result: AnisotropicQHAResult) -> None:
 
 
 def test_plot_functions(result: AnisotropicQHAResult) -> None:
-    """All plot functions build a figure without error."""
+    """The single-quantity plots build a figure and return the pyplot module."""
     import matplotlib
 
     matplotlib.use("Agg")
 
     for func in (
-        aniso_plot.plot_anisotropic_qha,
         aniso_plot.plot_lattice_parameters,
         aniso_plot.plot_volume_temperature,
         aniso_plot.plot_axial_thermal_expansion,
@@ -150,6 +149,72 @@ def test_plot_functions(result: AnisotropicQHAResult) -> None:
     ):
         plt = func(result)
         plt.close("all")
+
+
+def test_plot_anisotropic_qha_returns_figure(result: AnisotropicQHAResult) -> None:
+    """The summary plot returns a Figure and puts a and c on separate axes.
+
+    The two lattice parameters differ by more than their temperature variation,
+    so a single y axis shows two flat parallel lines. The left panel therefore
+    carries a twin axis, and both must be populated.
+
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig = aniso_plot.plot_anisotropic_qha(result)
+    assert isinstance(fig, plt.Figure)
+    lattice_panel = fig.axes[0]
+    twin = [
+        ax
+        for ax in fig.axes
+        if ax is not lattice_panel and ax.bbox.bounds == lattice_panel.bbox.bounds
+    ]
+    assert twin, "the lattice-parameter panel has no twin axis"
+    assert lattice_panel.lines and twin[0].lines
+    plt.close(fig)
+
+
+def test_contour_plots_write_one_file_per_temperature(
+    result: AnisotropicQHAResult, tmp_path, monkeypatch
+) -> None:
+    """The contour plots are part of the plotting module, not of the script.
+
+    They are the diagnostics that show where the free-energy valley sits and
+    what each term contributes to it, so an API caller has to be able to reach
+    them without importing the command-line script.
+
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    monkeypatch.chdir(tmp_path)
+
+    # The shared fixture puts every cell at the same lattice, which the output
+    # writers do not mind but a surface refit does. Give it a real 3 x 3 grid.
+    a, c = np.meshgrid([2.90, 2.95, 3.00], [4.90, 5.00, 5.10], indexing="ij")
+    a, c = a.ravel(), c.ravel()
+    lattice_lengths = np.stack([a, a, c], axis=1)
+    bowl = 3.0 * (a - 2.96) ** 2 + 2.0 * (c - 4.98) ** 2
+    result = dataclasses.replace(
+        result,
+        lattice_lengths=lattice_lengths,
+        helmholtz_lattice=np.tile(bowl, (len(result.temperatures), 1)),
+    )
+
+    temperatures = [0.0, 300.0]
+    written = aniso_plot.plot_F_contours(result, temperatures)
+    assert len(written) == len(temperatures)
+    assert all((tmp_path / name).exists() for name in written)
+
+    internal_energies = bowl * 0.5
+    written = aniso_plot.plot_component_contours(
+        result, internal_energies, None, temperatures
+    )
+    assert len(written) == len(temperatures)
+    assert all((tmp_path / name).exists() for name in written)
 
 
 def test_public_api_exports() -> None:
