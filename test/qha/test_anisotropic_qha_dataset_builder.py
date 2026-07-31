@@ -16,7 +16,6 @@ from phonopy.interface.vasp import read_vasprun_calculation
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.scripts.phonopy_anisotropic_qha_dataset import (
     build_calculator_grid_point,
-    discover_grid_dirs,
     electronic_states_from_vaspout,
     load_phonon,
     load_phonon_from_disp_dirs,
@@ -43,11 +42,13 @@ def _make_grid_point_dirs(base: Path, idx: int) -> None:
     """
     tag = f"grid-{idx:03d}"
 
-    # vasprun-00000 is the perfect (undisplaced) supercell; reuse it as the
-    # static single point. vasprun-00001..00003 are the 3 displaced supercells.
+    # The static single point is run on the unit cell, which is what makes its
+    # energy the internal energy per unit cell that the analysis expects; the
+    # builder checks the paired cells agree. vasprun-00001..00003 are the 3
+    # displaced supercells.
     sdir = base / "static-grid" / tag
     sdir.mkdir(parents=True)
-    _decompress(FIXTURE / VASPRUNS[0], sdir / "vasprun.xml")
+    _decompress(FIXTURE / "unitcell-static.xml.xz", sdir / "vasprun.xml")
 
     pdir = base / "phonon-grid" / tag
     pdir.mkdir(parents=True)
@@ -75,39 +76,6 @@ def test_read_electronic_states_missing_vaspout(tmp_path, capsys):
     assert read_electronic_states(str(sdir)) is None
     assert read_electronic_states(str(sdir / "vasprun.xml")) is None
     assert "no vaspout.h5" in capsys.readouterr().out
-
-
-def test_discover_grid_dirs(tmp_path):
-    """Grid dirs are the index-sorted grid-NNN directories, paths as found."""
-    root = tmp_path / "static-grid"
-    for name in ("grid-002", "grid-000", "grid-001"):
-        (root / name).mkdir(parents=True)
-    (root / "not-a-grid").mkdir()
-    (root / "grid-xyz").mkdir()
-    (root / "grid-003.txt").write_text("x")
-    assert discover_grid_dirs(str(root)) == [
-        (0, str(root / "grid-000")),
-        (1, str(root / "grid-001")),
-        (2, str(root / "grid-002")),
-    ]
-
-
-def test_discover_grid_dirs_unpadded(tmp_path):
-    """Directory names need no zero padding; the path is not rebuilt from the index."""
-    root = tmp_path / "static-grid"
-    for name in ("grid-10", "grid-2"):
-        (root / name).mkdir(parents=True)
-    assert discover_grid_dirs(str(root)) == [
-        (2, str(root / "grid-2")),
-        (10, str(root / "grid-10")),
-    ]
-
-
-def test_discover_grid_dirs_empty(tmp_path):
-    """An empty grid directory raises rather than returning nothing."""
-    (tmp_path / "static-grid").mkdir()
-    with pytest.raises(FileNotFoundError):
-        discover_grid_dirs(str(tmp_path / "static-grid"))
 
 
 def test_build_calculator_grid_point(tmp_path):
@@ -202,10 +170,12 @@ def test_builder_run_and_analysis(tmp_path, monkeypatch):
         [
             "phonopy-anisotropic-qha-dataset",
             str(reference),
-            "--static-grid",
-            str(tmp_path / "static-grid"),
-            "--phonon-grid",
-            str(tmp_path / "phonon-grid"),
+            "--static",
+            str(tmp_path / "static-grid" / "grid-000" / "vasprun.xml"),
+            str(tmp_path / "static-grid" / "grid-001" / "vasprun.xml"),
+            "--phonon",
+            str(tmp_path / "phonon-grid" / "grid-000"),
+            str(tmp_path / "phonon-grid" / "grid-001"),
             "-o",
             str(out),
         ],
@@ -260,26 +230,6 @@ def test_builder_run_with_explicit_paths(tmp_path, monkeypatch):
     assert len(dataset.grid_points) == 2
     assert [p.index for p in dataset.grid_points] == [0, 1]
     assert all(p.n_displacements == 3 for p in dataset.grid_points)
-
-
-def test_builder_run_rejects_mixed_static_options(tmp_path, monkeypatch):
-    """--static and --static-grid are mutually exclusive."""
-    _make_grid_point_dirs(tmp_path, 0)
-    reference = tmp_path / "phonon-grid" / "grid-000" / "phonopy_disp.yaml"
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "phonopy-anisotropic-qha-dataset",
-            str(reference),
-            "--static",
-            str(tmp_path / "static-grid" / "grid-000" / "vasprun.xml"),
-            "--static-grid",
-            str(tmp_path / "static-grid"),
-        ],
-    )
-    with pytest.raises(SystemExit, match="not both"):
-        run()
 
 
 def test_builder_run_rejects_length_mismatch(tmp_path, monkeypatch):
@@ -401,3 +351,115 @@ def test_electronic_states_from_vaspout_spin_degeneracy_from_incar(
 
     assert states.spin_degeneracy == expected
     assert states.n_electrons == pytest.approx(4.0)
+
+
+def test_builder_run_rejects_mispaired_cells(tmp_path, monkeypatch):
+    """A static point paired with a different cell is caught, not averaged in.
+
+    --static and --phonon are paired by position, so a point missing from each
+    list would silently combine the U of one lattice with the forces of
+    another: the list lengths still match and no naming convention says
+    otherwise. Comparing the paired cells is what catches it.
+
+    """
+    for idx in (0, 1):
+        _make_grid_point_dirs(tmp_path, idx)
+    # Give grid-001 a visibly different lattice, then pair it with grid-000.
+    other = tmp_path / "static-grid" / "grid-001" / "vasprun.xml"
+    other.write_text(other.read_text().replace("5.60328748", "5.90328748"))
+
+    reference = tmp_path / "phonon-grid" / "grid-000" / "phonopy_disp.yaml"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "phonopy-anisotropic-qha-dataset",
+            str(reference),
+            "--static",
+            str(other),
+            "--phonon",
+            str(tmp_path / "phonon-grid" / "grid-000"),
+        ],
+    )
+    with pytest.raises(SystemExit, match="mis-paired"):
+        run()
+
+
+def test_builder_run_static_only(tmp_path, monkeypatch):
+    """Without --phonon the builder writes cells, U and F_el and no forces.
+
+    That dataset is for a method whose force constants depend on temperature:
+    its free energies go to run_anisotropic_qha through phonon_free_energies.
+    The analysis command refuses it with an explanation rather than a
+    traceback, which is what makes omitting --phonon safe to detect late.
+
+    """
+    for idx in (0, 1):
+        _make_grid_point_dirs(tmp_path, idx)
+
+    reference = tmp_path / "phonon-grid" / "grid-000" / "phonopy_disp.yaml"
+    out = tmp_path / "static_only.hdf5"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "phonopy-anisotropic-qha-dataset",
+            str(reference),
+            "--static",
+            str(tmp_path / "static-grid" / "grid-000" / "vasprun.xml"),
+            str(tmp_path / "static-grid" / "grid-001" / "vasprun.xml"),
+            "-o",
+            str(out),
+        ],
+    )
+    run()
+
+    dataset = read_aniso_qha_dataset(out)
+    assert len(dataset.grid_points) == 2
+    for point in dataset.grid_points:
+        assert point.dataset is None
+        assert point.n_displacements == 0
+        assert np.isfinite(point.internal_energy)
+        with pytest.raises(ValueError, match="carries no displacement dataset"):
+            point.to_phonopy()
+
+    # The analysis command explains the situation instead of raising through.
+    from phonopy.scripts.phonopy_anisotropic_qha import run as run_analysis
+
+    monkeypatch.setattr(sys, "argv", ["phonopy-anisotropic-qha", str(out)])
+    with pytest.raises(SystemExit, match="carries no displacements or forces"):
+        run_analysis()
+
+
+def test_load_phonon_detects_reordered_disp_dirs(tmp_path):
+    """Force sets in the wrong order are caught by the structures themselves.
+
+    The disp-* directories are taken in sorted order, which is only a guess at
+    the displacement order and is wrong for unpadded names. Each calculator
+    output carries the structure it was run on, so the guess is verified rather
+    than trusted; without that, a swap keeping the count would silently build
+    force constants from mismatched forces.
+
+    """
+    _make_grid_point_dirs(tmp_path, 0)
+    gdir = tmp_path / "phonon-grid" / "grid-000"
+
+    # Swap the outputs of the first two displacements, keeping the count.
+    a = gdir / "disp-001" / "vasprun.xml"
+    b = gdir / "disp-002" / "vasprun.xml"
+    a_text, b_text = a.read_text(), b.read_text()
+    a.write_text(b_text)
+    b.write_text(a_text)
+
+    with pytest.raises(ValueError, match="not the displaced supercell"):
+        load_phonon_from_disp_dirs(str(gdir))
+
+
+def test_load_phonon_reports_disp_dir_count(tmp_path):
+    """A missing disp-* is reported against the displacement count."""
+    _make_grid_point_dirs(tmp_path, 0)
+    gdir = tmp_path / "phonon-grid" / "grid-000"
+    shutil.rmtree(gdir / "disp-003")
+
+    with pytest.raises(ValueError, match="do not match 3 displacement"):
+        load_phonon_from_disp_dirs(str(gdir))
