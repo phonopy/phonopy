@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Symmetry-aware sampling of lattice parameters.
 
-Supports the anisotropic QHA / machine-learning-potential workflow by
+Supports the anisotropic QHA workflow by
 generating cells whose free lattice-vector lengths are sampled within
 user-given ranges, either randomly (:func:`sample_strained_cells`) or on a
 regular tensor grid (:func:`grid_strained_cells`). The independent free
@@ -20,7 +20,7 @@ import dataclasses
 import itertools
 import os
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 import spglib
@@ -334,98 +334,6 @@ def grid_strained_cells(
     return cells
 
 
-def build_random_displacement_supercells(
-    unitcells: Sequence[PhonopyAtoms],
-    supercell_matrix: NDArray[np.int64] | Sequence[Sequence[int]],
-    distance: float | None = None,
-    max_distance: float | None = None,
-    distance_sampling: Literal["supercell", "atom"] = "supercell",
-    count: int = 1,
-    seed: int | None = None,
-) -> tuple[list[PhonopyAtoms], NDArray[np.double]]:
-    """Return random-displacement supercells and their displacements.
-
-    Each unit cell is expanded by supercell_matrix and all its atoms are
-    displaced in random directions, producing structures ready for
-    machine-learning-potential training without any prior internal-coordinate
-    relaxation. ``count`` supercells are generated per unit cell; the returned
-    list is flat, cell 0's supercells first.
-
-    Without max_distance every atom is displaced by exactly ``distance``, which
-    suits training for harmonic force constants. Giving max_distance instead
-    draws a random distance, spanning the large-amplitude region a
-    temperature-dependent (SSCHA) calculation visits; see `max_distance`.
-
-    With max_distance, distance_sampling decides how the amplitude axis is
-    sampled against the strain axis. Drawn per supercell (the default), a
-    strained cell gets only ``count`` amplitudes, so with a small count the
-    amplitude and the strain can end up correlated by chance -- large
-    amplitudes landing mostly on large-volume cells, which an MLP cannot then
-    separate. Drawn per atom, every supercell covers the whole amplitude range
-    internally, so the coverage is complete at every strain even for
-    ``count = 1``, at the cost of a supercell no longer having one amplitude
-    that labels it. It also samples [distance, max_distance) directly instead
-    of flooring at ``distance``: the reserved weight at the floor buys a share
-    of wholly near-equilibrium supercells only when the distance is drawn per
-    supercell.
-
-    Parameters
-    ----------
-    unitcells : sequence of PhonopyAtoms
-        Unit cells, e.g. from sample_strained_cells.
-    supercell_matrix : array_like
-        Supercell matrix, e.g. from the phonopy_disp.yaml.
-    distance : float, optional
-        Displacement distance in the native length unit of the cells. With
-        max_distance it is the floor of the random distance rather than the
-        distance itself; see `max_distance`. None uses phonopy's default
-        distance.
-    max_distance : float, optional
-        Upper bound of the random displacement distance. One distance is drawn
-        per supercell from the uniform distribution over [0, max_distance) and
-        then raised to ``distance`` when smaller. When None, the distance is
-        fixed to ``distance``.
-    distance_sampling : "supercell" or "atom", optional
-        Unit the random distance is drawn for. Requires ``max_distance``.
-        With "atom" the distance is drawn per atom rather than per supercell,
-        uniformly over [distance, max_distance). Default is "supercell"; see
-        the note below on which to use when the lattice is strained.
-    count : int, optional
-        Number of random-displacement supercells per unit cell (default 1).
-    seed : int, optional
-        Base seed; cell i uses seed + i so the set is reproducible while
-        each supercell gets distinct displacements.
-
-    Returns
-    -------
-    list of PhonopyAtoms
-        Displaced supercells, flat, cell 0's supercells first.
-    NDArray[np.double]
-        Cartesian displacements aligned with the supercells.
-        shape=(len(unitcells) * count, natom_of_supercell, 3)
-
-    """
-    from phonopy import Phonopy
-
-    supercells = []
-    displacements = []
-    for i, unitcell in enumerate(unitcells):
-        phonon = Phonopy(unitcell, supercell_matrix=supercell_matrix, log_level=0)
-        phonon.generate_displacements(
-            distance=distance,
-            max_distance=max_distance,
-            distance_sampling=distance_sampling,
-            number_of_snapshots=count,
-            random_seed=None if seed is None else seed + i,
-        )
-        displaced = phonon.supercells_with_displacements
-        if displaced is None or any(d is None for d in displaced):
-            raise RuntimeError("Failed to generate a displacement supercell.")
-        supercells.extend(displaced)
-        displacements.append(np.array(phonon.displacements, dtype="double"))
-    return supercells, np.concatenate(displacements)
-
-
 def build_strain_cells_manifest(
     *,
     phonopy_version: str,
@@ -437,10 +345,6 @@ def build_strain_cells_manifest(
     ranges: dict[str, tuple[float, float]],
     num: int | None,
     grid_shape: list[int] | None,
-    displacement_distance: float | None,
-    displacement_distance_max: float | None,
-    displacement_distance_sampling: Literal["supercell", "atom"],
-    random_displacements: int | None,
     symprec: float,
     seed: int | None,
     sampling: str,
@@ -456,9 +360,8 @@ def build_strain_cells_manifest(
     lattice lengths of every generated cell, so the (a[, b], c) grid can be
     matched against the files later consumed by run_anisotropic_qha.
 
-    The recorded per-cell lengths are the unit-cell free-DOF lengths (the
-    physically meaningful strained grid), even when the written files are
-    random-displacement supercells.
+    The recorded per-cell lengths are the free-DOF lengths of the unit cells,
+    which are the physically meaningful strained grid.
 
     Parameters
     ----------
@@ -480,27 +383,15 @@ def build_strain_cells_manifest(
         Number of random cells requested; None for grid sampling.
     grid_shape : list of int or None
         Grid points per free DOF for grid sampling; None for random sampling.
-    displacement_distance : float or None
-        Random-displacement distance (the minimum distance when
-        displacement_distance_max is given), or None for plain unit cells (or
-        the phonopy default distance).
-    displacement_distance_max : float or None
-        Maximum random-displacement distance, or None when the distance is
-        fixed rather than sampled from a range.
-    displacement_distance_sampling : "supercell" or "atom"
-        Unit the random distance was drawn for.
-    random_displacements : int or None
-        Number of random-displacement supercells per cell, or None for plain
-        unit cells.
     symprec : float
         Symmetry tolerance used for DOF detection.
     seed : int or None
         Resolved random seed, or None when the run is fully deterministic
-        (grid sampling without random displacements).
+        (grid sampling).
     sampling : str
         Sampling mode of the free lattice lengths ("random" or "grid").
     prefix : str
-        Filename prefix of the written cells ("unitcell" or "supercell").
+        Filename prefix of the written cells.
     kind : str
         Human-readable description of the written cell kind.
     unitcells : sequence of PhonopyAtoms
@@ -538,18 +429,6 @@ def build_strain_cells_manifest(
             },
             "num": None if num is None else int(num),
             "grid_shape": None if grid_shape is None else [int(n) for n in grid_shape],
-            "displacement_distance": (
-                None if displacement_distance is None else float(displacement_distance)
-            ),
-            "displacement_distance_max": (
-                None
-                if displacement_distance_max is None
-                else float(displacement_distance_max)
-            ),
-            "displacement_distance_sampling": str(displacement_distance_sampling),
-            "random_displacements": (
-                None if random_displacements is None else int(random_displacements)
-            ),
             "symprec": float(symprec),
             "seed": None if seed is None else int(seed),
         },
@@ -579,212 +458,3 @@ def write_strain_cells_manifest(
 
     with open(filename, "w") as w:
         yaml.dump(manifest, w, sort_keys=False, default_flow_style=False)
-
-
-@dataclasses.dataclass(frozen=True)
-class StrainCells:
-    """Structures and displacements of random-displacement supercells.
-
-    The ideal (undisplaced) fractional coordinates are shared by every cell,
-    because straining only scales the lattice vectors. The displaced structure
-    of cell i is therefore ``ideal_scaled_positions @ lattices[i] +
-    displacements[i]`` in Cartesian coordinates.
-
-    """
-
-    ideal_scaled_positions: NDArray[np.double]
-    """Ideal fractional coordinates shared by all cells. shape=(natom, 3)"""
-
-    lattices: NDArray[np.double]
-    """Lattice of each cell, row vectors. shape=(ncell, 3, 3)"""
-
-    displacements: NDArray[np.double]
-    """Cartesian displacements of each cell. shape=(ncell, natom, 3)"""
-
-    numbers: NDArray[np.int64]
-    """Atomic numbers. shape=(natom,)"""
-
-    masses: NDArray[np.double]
-    """Atomic masses. shape=(natom,)"""
-
-    supercell_matrix: NDArray[np.int64]
-    """Supercell matrix the cells were expanded by. shape=(3, 3)"""
-
-    calculator: str
-    """Calculator (interface) name the cells were written for."""
-
-    length_unit: str
-    """Native length unit of the cells."""
-
-    phonopy_version: str | None = None
-    """Version of phonopy that produced the cells."""
-
-    displacement_distance: float | None = None
-    """Displacement distance, or its floor when displacement_distance_max is set."""
-
-    displacement_distance_max: float | None = None
-    """Upper bound of the random displacement distance."""
-
-    displacement_distance_sampling: Literal["supercell", "atom"] = "supercell"
-    """Unit the random distance was drawn for."""
-
-
-def write_strain_cells(
-    filename: str | os.PathLike,
-    *,
-    unitcells: Sequence[PhonopyAtoms],
-    supercells: Sequence[PhonopyAtoms],
-    displacements: NDArray[np.double],
-    supercell_matrix: NDArray[np.int64] | Sequence[Sequence[int]],
-    phonopy_version: str | None = None,
-    calculator: str = "vasp",
-    length_unit: str = "angstrom",
-    displacement_distance: float | None = None,
-    displacement_distance_max: float | None = None,
-    displacement_distance_sampling: Literal["supercell", "atom"] = "supercell",
-) -> None:
-    """Write structures and displacements of a phonopy-strain-cells run.
-
-    Stores the displacements themselves rather than only the displaced
-    structures, so a consumer never has to rebuild the ideal reference to
-    recover them. The written file reproduces the displaced supercells
-    exactly.
-
-    One ideal-position array is stored for all cells, which requires every
-    unit cell to share its fractional coordinates. That holds while straining
-    only scales lattice vectors; it is checked here so that a future
-    internal-coordinate relaxation cannot break it silently.
-
-    Parameters
-    ----------
-    filename : str or os.PathLike
-        Output path.
-    unitcells : sequence of PhonopyAtoms
-        Strained unit cells the supercells were built from.
-    supercells : sequence of PhonopyAtoms
-        Displaced supercells from build_random_displacement_supercells.
-    displacements : NDArray[np.double]
-        Cartesian displacements aligned with supercells.
-        shape=(ncell, natom, 3)
-    supercell_matrix : array_like
-        Supercell matrix the unit cells were expanded by. shape=(3, 3)
-    phonopy_version : str or None, optional
-        Version string of phonopy that produced the cells. Default is None.
-    calculator : str, optional
-        Calculator (interface) name. Default is "vasp".
-    length_unit : str, optional
-        Native length unit of the cells. Default is "angstrom".
-    displacement_distance : float or None, optional
-        Displacement distance, or its floor when displacement_distance_max is
-        given. Default is None.
-    displacement_distance_max : float or None, optional
-        Upper bound of the random displacement distance. Default is None.
-    displacement_distance_sampling : "supercell" or "atom", optional
-        Unit the random distance was drawn for. Default is "supercell".
-
-    """
-    try:
-        import h5py  # type: ignore[import-untyped]
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError("You need to install python-h5py.") from exc
-
-    from phonopy.structure.cells import get_supercell
-
-    if not unitcells or not supercells:
-        raise ValueError("No cells to write.")
-
-    reference = np.array(unitcells[0].scaled_positions)
-    for i, unitcell in enumerate(unitcells[1:], start=1):
-        if not np.allclose(unitcell.scaled_positions, reference):
-            raise ValueError(
-                f"Unit cell {i} does not share the fractional coordinates of "
-                "unit cell 0, so one ideal-position array cannot describe "
-                "every cell."
-            )
-
-    ideal = get_supercell(unitcells[0], np.array(supercell_matrix, dtype="int64"))
-    lattices = np.array([supercell.cell for supercell in supercells], dtype="double")
-    disps = np.array(displacements, dtype="double")
-    if disps.shape != (len(supercells), len(ideal), 3):
-        raise ValueError(
-            f"displacements has shape {disps.shape}, expected "
-            f"{(len(supercells), len(ideal), 3)}."
-        )
-
-    with h5py.File(filename, "w") as w:
-        w.attrs["creator"] = "phonopy"
-        if phonopy_version is not None:
-            w.attrs["phonopy_version"] = phonopy_version
-        w.attrs["calculator"] = calculator
-        w.attrs["length_unit"] = length_unit
-        w.attrs["n_cells"] = len(supercells)
-        if displacement_distance is not None:
-            w.attrs["displacement_distance"] = float(displacement_distance)
-        if displacement_distance_max is not None:
-            w.attrs["displacement_distance_max"] = float(displacement_distance_max)
-            w.attrs["displacement_distance_sampling"] = str(
-                displacement_distance_sampling
-            )
-        w.create_dataset(
-            "supercell_matrix", data=np.array(supercell_matrix, dtype="int64")
-        )
-        w.create_dataset("numbers", data=np.array(ideal.numbers, dtype="int64"))
-        w.create_dataset("masses", data=np.array(ideal.masses, dtype="double"))
-        w.create_dataset(
-            "ideal_scaled_positions",
-            data=np.array(ideal.scaled_positions, dtype="double"),
-        )
-        w.create_dataset("lattices", data=lattices, compression="gzip")
-        w.create_dataset("displacements", data=disps, compression="gzip")
-
-
-def read_strain_cells(filename: str | os.PathLike) -> StrainCells:
-    """Read structures and displacements written by write_strain_cells.
-
-    Parameters
-    ----------
-    filename : str or os.PathLike
-        Input path.
-
-    Returns
-    -------
-    StrainCells
-
-    """
-    try:
-        import h5py  # type: ignore[import-untyped]
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError("You need to install python-h5py.") from exc
-
-    with h5py.File(filename, "r") as r:
-        phonopy_version = r.attrs.get("phonopy_version")
-        distance = r.attrs.get("displacement_distance")
-        distance_max = r.attrs.get("displacement_distance_max")
-        if "displacement_distance_per_atom" in r.attrs:
-            raise ValueError(
-                f'"{filename}" records the displacement distance sampling as '
-                '"displacement_distance_per_atom", which phonopy wrote only '
-                "between the introduction of the per-atom draw and its "
-                'replacement by "displacement_distance_sampling". Regenerate '
-                "the file with phonopy-strain-cells."
-            )
-        # Absent in files written before the per-atom draw existed.
-        sampling = r.attrs.get("displacement_distance_sampling", "supercell")
-        return StrainCells(
-            ideal_scaled_positions=r["ideal_scaled_positions"][:],
-            lattices=r["lattices"][:],
-            displacements=r["displacements"][:],
-            numbers=r["numbers"][:],
-            masses=r["masses"][:],
-            supercell_matrix=r["supercell_matrix"][:],
-            calculator=str(r.attrs["calculator"]),
-            length_unit=str(r.attrs["length_unit"]),
-            phonopy_version=None if phonopy_version is None else str(phonopy_version),
-            displacement_distance=None if distance is None else float(distance),
-            displacement_distance_max=(
-                None if distance_max is None else float(distance_max)
-            ),
-            displacement_distance_sampling=(
-                "atom" if str(sampling) == "atom" else "supercell"
-            ),
-        )
