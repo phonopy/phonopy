@@ -429,6 +429,7 @@ def run_anisotropic_qha(
     temperatures: Sequence[float] | NDArray[np.double],
     internal_energies: Sequence[float] | NDArray[np.double] | None = None,
     electronic_structures: Sequence[ElectronicStates] | None = None,
+    phonon_free_energies: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
     mesh: float | Sequence[int] | NDArray[np.int64] = 100.0,
     pressure: float | None = None,
     surface_degree: int = 3,
@@ -469,8 +470,21 @@ def run_anisotropic_qha(
         Electronic states at each lattice grid point; when given the
         electronic free energies and entropies are added to the phonon
         contributions, as in run_qha.
+    phonon_free_energies : array_like, optional
+        Vibrational free energies in eV per primitive cell, already computed
+        outside, with shape (temperatures, n_points). Given these, the mesh
+        sampling is skipped and ``mesh`` is unused; the Phonopy instances then
+        supply only the cells and volumes, and their force constants are
+        neither required nor read.
+
+        This is the way in for methods whose force constants depend on
+        temperature, such as SSCHA or TDEP: one force-constant set per grid
+        point cannot represent them, so their free energy has to be computed
+        per temperature and handed over. The values must be normalized per
+        primitive cell, consistently with internal_energies.
     mesh : float or array_like, optional
-        Mesh numbers passed to Phonopy.run_mesh.
+        Mesh numbers passed to Phonopy.run_mesh. Unused when
+        phonon_free_energies is given.
     pressure : float, optional
         Pressure in GPa added to the free energy as a pV term, turning the
         minimized free energy into a Gibbs free energy.
@@ -486,7 +500,11 @@ def run_anisotropic_qha(
 
     """
     temps_in, el = _validate_anisotropic_inputs(
-        phonopys, internal_energies, temperatures, electronic_structures
+        phonopys,
+        internal_energies,
+        temperatures,
+        electronic_structures,
+        phonon_free_energies,
     )
     lattice_lengths = np.array(
         [np.linalg.norm(ph.unitcell.cell, axis=1) for ph in phonopys], dtype="double"
@@ -506,11 +524,14 @@ def run_anisotropic_qha(
         )
     free_points = lattice_lengths[:, free_indices]
 
-    fe_phonon, _, _ = compute_thermal_properties(phonopys, temps_in, mesh, verbose)
-    units = get_physical_units()
+    if phonon_free_energies is None:
+        fe_phonon, _, _ = compute_thermal_properties(phonopys, temps_in, mesh, verbose)
+        fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+    else:
+        fe_phonon_ev = np.array(phonon_free_energies, dtype="double")
     el = _add_static_contributions(
         el,
-        fe_phonon / units.EvTokJmol,
+        fe_phonon_ev,
         electronic_structures,
         temps_in,
         volumes,
@@ -615,6 +636,7 @@ def _validate_anisotropic_inputs(
     internal_energies: Sequence[float] | NDArray[np.double] | None,
     temperatures: Sequence[float] | NDArray[np.double],
     electronic_structures: Sequence[ElectronicStates] | None,
+    phonon_free_energies: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Validate run_anisotropic_qha inputs and return them as arrays.
 
@@ -658,9 +680,20 @@ def _validate_anisotropic_inputs(
         raise ValueError(
             "electronic_structures must have one entry per Phonopy instance."
         )
-    for i, ph in enumerate(phonopys):
-        if ph.force_constants is None:
-            raise RuntimeError(f"Force constants are not set in phonopys[{i}].")
+    if phonon_free_energies is None:
+        for i, ph in enumerate(phonopys):
+            if ph.force_constants is None:
+                raise RuntimeError(f"Force constants are not set in phonopys[{i}].")
+    else:
+        # The free energies replace the mesh sampling entirely, so the force
+        # constants are not consulted and need not be set.
+        fe = np.array(phonon_free_energies, dtype="double")
+        if fe.shape != (len(temps_in), n_points):
+            raise ValueError(
+                f"phonon_free_energies must have shape "
+                f"{(len(temps_in), n_points)} (temperatures, Phonopy "
+                f"instances), but has {fe.shape}."
+            )
     return temps_in, el
 
 
