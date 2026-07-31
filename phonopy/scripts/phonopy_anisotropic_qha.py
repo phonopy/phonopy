@@ -173,9 +173,12 @@ def get_options() -> Namespace:
         "--mesh",
         type=float,
         default=200.0,
+        # A literal percent has to be escaped: argparse expands help strings
+        # with the % operator, and Python 3.14 validates that at parser
+        # construction rather than only when --help is formatted.
         help="phonon sampling mesh (default: 200). The axial split needs a "
         "denser mesh than the volumetric expansion: 100 leaves alpha_c off by "
-        "~20% while beta is already converged",
+        "~20%% while beta is already converged",
     )
     parser.add_argument(
         "--fc-calculator",
