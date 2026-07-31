@@ -12,6 +12,12 @@ displaced atom per supercell, the ``phonopy -d`` default) or type-2
 (dense/random) -- so the FC solver is chosen from the dataset type, never
 guessed from the data.
 
+A grid point may also carry no displacement dataset at all. Such a file is
+built from the static grid alone and holds the cells, U and the electronic
+states; the vibrational free energy is then computed outside and passed to
+run_anisotropic_qha through phonon_free_energies, which is how methods with
+temperature-dependent force constants (SSCHA, TDEP) enter the workflow.
+
 """
 
 from __future__ import annotations
@@ -52,9 +58,12 @@ class AnisoQHAGridPoint:
         Supercell matrix, shape (3, 3), dtype int64.
     primitive_matrix : ndarray
         Primitive matrix, shape (3, 3), dtype double.
-    dataset : DisplacementDataset
+    dataset : DisplacementDataset, optional
         Phonopy displacement-force dataset with forces embedded, in either the
-        type-1 or type-2 format (see :attr:`phonopy.Phonopy.dataset`).
+        type-1 or type-2 format (see :attr:`phonopy.Phonopy.dataset`). None
+        when the grid point carries no phonon calculation, which is the case
+        when the free energies are computed outside and handed to
+        run_anisotropic_qha through phonon_free_energies.
     internal_energy : float
         Static internal energy U of the unit cell (eV).
     electronic_states : ElectronicStates, optional
@@ -67,13 +76,15 @@ class AnisoQHAGridPoint:
     cell: PhonopyAtoms
     supercell_matrix: NDArray[np.int64]
     primitive_matrix: NDArray[np.double]
-    dataset: DisplacementDataset
+    dataset: DisplacementDataset | None
     internal_energy: float
     electronic_states: ElectronicStates | None = None
 
     @property
     def n_displacements(self) -> int:
-        """Return the number of displaced supercells."""
+        """Return the number of displaced supercells, 0 without a dataset."""
+        if self.dataset is None:
+            return 0
         if "first_atoms" in self.dataset:
             return len(cast(Type1DisplacementDataset, self.dataset)["first_atoms"])
         return len(cast(Type2DisplacementDataset, self.dataset)["displacements"])
@@ -87,8 +98,21 @@ class AnisoQHAGridPoint:
         (dense/random) dataset the given ``fc_calculator`` (symfc by default)
         is used. The origin of the forces (DFT or MLP) does not matter here.
 
+        Raises
+        ------
+        ValueError
+            When the grid point carries no displacement dataset.
+
         """
         from phonopy import Phonopy
+
+        if self.dataset is None:
+            raise ValueError(
+                f"Grid point {self.index} carries no displacement dataset, so "
+                "force constants cannot be produced. Such a dataset is built "
+                "from the static grid alone, for use with the "
+                "phonon_free_energies argument of run_anisotropic_qha."
+            )
 
         phonon = Phonopy(
             self.cell,
@@ -197,7 +221,8 @@ def _write_grid_point(grid: h5py.Group, point: AnisoQHAGridPoint) -> None:
     g.create_dataset(
         "primitive_matrix", data=np.array(point.primitive_matrix, dtype="double")
     )
-    _write_dataset(g, point.dataset)
+    if point.dataset is not None:
+        _write_dataset(g, point.dataset)
     if point.electronic_states is not None:
         _write_electronic_states(g, point.electronic_states)
 
@@ -332,7 +357,7 @@ def _read_grid_point(g: h5py.Group) -> AnisoQHAGridPoint:
         cell=cell,
         supercell_matrix=np.array(g["supercell_matrix"][:], dtype="int64"),
         primitive_matrix=np.array(g["primitive_matrix"][:], dtype="double"),
-        dataset=_read_dataset(g),
+        dataset=_read_dataset(g) if "displacement_type" in g.attrs else None,
         internal_energy=float(g.attrs["internal_energy"]),
         electronic_states=electronic_states,
     )

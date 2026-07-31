@@ -344,3 +344,92 @@ def test_run_anisotropic_requires_force_constants(ph_nacl: Phonopy) -> None:
             mesh=MESH,
             surface_degree=2,
         )
+
+
+def test_run_anisotropic_precomputed_free_energies(ph_nacl: Phonopy) -> None:
+    """Supplying the phonon free energies reproduces the mesh-sampled run.
+
+    This is the entry point for temperature-dependent force constants (SSCHA,
+    TDEP), where one force-constant set per grid point cannot represent the
+    phonons. Feeding back exactly what the internal sampling would have
+    produced must therefore change nothing.
+
+    """
+    from phonopy.physical_units import get_physical_units
+    from phonopy.qha.thermal import compute_thermal_properties
+
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    reference = run_anisotropic_qha(
+        phonopys, TEMPERATURES, internal_energies=energies, mesh=MESH, surface_degree=2
+    )
+
+    fe_phonon, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, MESH)
+    fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+    result = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        phonon_free_energies=fe_phonon_ev,
+        surface_degree=2,
+    )
+
+    for name in (
+        "equilibrium_lattice_parameters",
+        "equilibrium_volumes",
+        "axial_thermal_expansions",
+        "thermal_expansion",
+        "helmholtz_lattice",
+        "surface_fit_rms",
+    ):
+        np.testing.assert_allclose(
+            getattr(result, name), getattr(reference, name), rtol=1e-12, atol=0.0
+        )
+
+
+def test_run_anisotropic_precomputed_needs_no_force_constants(
+    ph_nacl: Phonopy,
+) -> None:
+    """Without mesh sampling the Phonopy instances only supply cells."""
+    from phonopy.physical_units import get_physical_units
+    from phonopy.qha.thermal import compute_thermal_properties
+
+    with_fc = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(with_fc)
+    fe_phonon, _, _ = compute_thermal_properties(with_fc, TEMPERATURES, MESH)
+    fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+
+    bare = [
+        Phonopy(
+            ph.unitcell,
+            supercell_matrix=ph.supercell_matrix,
+            primitive_matrix=ph.primitive_matrix,
+            log_level=0,
+        )
+        for ph in with_fc
+    ]
+    assert all(ph.force_constants is None for ph in bare)
+
+    result = run_anisotropic_qha(
+        bare,
+        TEMPERATURES,
+        internal_energies=energies,
+        phonon_free_energies=fe_phonon_ev,
+        surface_degree=2,
+    )
+    assert result.equilibrium_lattice_parameters.shape == (len(TEMPERATURES) - 1, 3)
+
+
+def test_run_anisotropic_precomputed_shape_checked(ph_nacl: Phonopy) -> None:
+    """A free-energy array of the wrong shape is rejected, not broadcast."""
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    wrong = np.zeros((len(TEMPERATURES), len(phonopys) - 1))
+    with pytest.raises(ValueError, match="phonon_free_energies must have shape"):
+        run_anisotropic_qha(
+            phonopys,
+            TEMPERATURES,
+            internal_energies=energies,
+            phonon_free_energies=wrong,
+            surface_degree=2,
+        )

@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import numpy as np
 
 from phonopy import Phonopy
@@ -209,3 +211,52 @@ def test_type2_to_phonopy_fc(tmp_path):
     assert "first_atoms" not in out.dataset
     fc_roundtrip = np.array(out.to_phonopy(fc_calculator="symfc").force_constants)
     np.testing.assert_allclose(fc_direct, fc_roundtrip, atol=1e-12)
+
+
+def test_dataset_without_displacements_roundtrip(tmp_path):
+    """A grid point may carry no phonon calculation at all.
+
+    Such a dataset is built from the static grid alone: it holds the cells, U
+    and the electronic states, and the vibrational free energy is computed
+    outside and passed to run_anisotropic_qha through phonon_free_energies.
+    That is how a method with temperature-dependent force constants, whose
+    force constants differ at every temperature, enters the workflow.
+
+    """
+    import pytest
+
+    point = _grid_point(1, with_electronic=True)
+    static_only = dataclasses.replace(point, dataset=None)
+    assert static_only.n_displacements == 0
+
+    path = tmp_path / "static_only.hdf5"
+    write_aniso_qha_dataset(
+        AnisoQHADataset(grid_points=(static_only,), free_dof=("a", "c")), path
+    )
+    loaded = read_aniso_qha_dataset(path)
+
+    (read_point,) = loaded.grid_points
+    assert read_point.dataset is None
+    assert read_point.n_displacements == 0
+    assert read_point.internal_energy == point.internal_energy
+    np.testing.assert_allclose(read_point.cell.cell, point.cell.cell)
+    np.testing.assert_array_equal(read_point.supercell_matrix, point.supercell_matrix)
+    assert read_point.electronic_states is not None
+
+    with pytest.raises(ValueError, match="carries no displacement dataset"):
+        read_point.to_phonopy()
+
+
+def test_dataset_mixed_points_roundtrip(tmp_path):
+    """Points with and without displacements coexist in one file."""
+    with_disp = _grid_point(1, with_electronic=False)
+    without = dataclasses.replace(_grid_point(2, with_electronic=False), dataset=None)
+    path = tmp_path / "mixed.hdf5"
+    write_aniso_qha_dataset(
+        AnisoQHADataset(grid_points=(with_disp, without), free_dof=("a", "c")), path
+    )
+    loaded = read_aniso_qha_dataset(path)
+
+    assert [p.n_displacements for p in loaded.grid_points] == [3, 0]
+    assert loaded.grid_points[0].dataset is not None
+    assert loaded.grid_points[1].dataset is None

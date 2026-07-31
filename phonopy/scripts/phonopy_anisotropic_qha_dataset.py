@@ -2,21 +2,21 @@
 """Build the anisotropic QHA intermediate dataset from calculator outputs.
 
 Gathers the scattered per-grid-point outputs into one self-contained
-aniso_qha_dataset.hdf5 that the anisotropic QHA analysis reads. Two modes
-produce the same dataset:
+aniso_qha_dataset.hdf5 that the anisotropic QHA analysis reads. The force sets
+come from the pre-computed displaced supercells of the phonon grid, the static
+U(a, c) from the static single points of the static grid.
 
-- default: force sets come from the pre-computed displaced supercells of the
-  phonon grid, the static U(a, c) from the static single points of the static
-  grid.
-- --from-mlp POLYMLP: force sets are evaluated on the fly from a
-  machine-learning potential for each grid point; U(a, c) still comes from
-  the static single points of the static grid.
+Omitting --phonon builds from the static grid alone: the grid points then
+carry the cells, U and the electronic states but no displacements or forces,
+which is the dataset a method with temperature-dependent force constants needs,
+its free energies going to run_anisotropic_qha through phonon_free_energies.
 
-The grid points are located in either of two ways. Without path options the
-conventional layout is assumed: grid-NNN subdirectories under static-grid and
-phonon-grid, paired by the index NNN. With --static / --phonon the paths are
-given explicitly, typically expanded by the shell, and the two lists are
-paired by position; then no naming convention applies at all.
+The grid points are given as explicit path lists with --static and --phonon,
+typically expanded by the shell, and the two lists are paired by position, so
+no naming convention applies at all. Rather than trusting that pairing, the
+builder checks it: the lattice of each static single point must match the cell
+of the phonon grid point it is paired with, which catches a mis-pairing however
+the directories happen to be named.
 
 A phonon grid point is either a directory holding phonopy_disp.yaml and the
 per-displacement disp-* subdirectories, or a single phonopy_params.yaml-like
@@ -24,7 +24,7 @@ file that already carries the forces (as written by ``phonopy-init -f``). The
 latter keeps the force collection in phonopy's own tools, so this command
 need not know how the displaced supercells were laid out.
 
-In both modes the grid-point cell is the relaxed cell of the static single
+In either case the grid-point cell is the relaxed cell of the static single
 point, so internal-coordinate relaxation is honored. The displacements and
 forces are stored raw; the analysis recomputes the force constants.
 
@@ -59,29 +59,7 @@ from phonopy.qha.anisotropic_dataset import (
 )
 from phonopy.qha.electron import ElectronicStates
 from phonopy.qha.lattice_sampling import get_free_lattice_dof
-
-DEFAULT_STATIC_GRID = "static-grid"
-DEFAULT_PHONON_GRID = "phonon-grid"
-
-
-def discover_grid_dirs(directory: str) -> list[tuple[int, str]]:
-    """Return the (index, path) of the grid-NNN subdirectories, index-sorted.
-
-    The grid points are the "grid-NNN" directories of the given grid; the
-    integer NNN is the index. The path is returned as found rather than
-    rebuilt from the index, so any zero padding is accepted. The lattice
-    lengths are read from each cell later, so no separate index file is
-    needed.
-
-    """
-    found = []
-    for path in glob.glob(os.path.join(directory, "grid-*")):
-        suffix = os.path.basename(path)[len("grid-") :]
-        if os.path.isdir(path) and suffix.isdigit():
-            found.append((int(suffix), path))
-    if not found:
-        raise FileNotFoundError(f"No grid-NNN directories found in {directory}.")
-    return sorted(found)
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def calc_file(dirpath: str) -> str:
@@ -213,12 +191,18 @@ def load_phonon_from_disp_dirs(gdir: str) -> Phonopy:
 
     The cell, supercell / primitive matrices and displacements come from
     gdir/phonopy_disp.yaml (the relaxed cell that was displaced); the forces
-    from its disp-* subdirectories in sorted order, which must be the
-    displacement order. phonopy_disp.yaml may hold either a type-1
-    (site-symmetry-reduced, one displaced atom per supercell -- the
-    ``phonopy -d`` default) or a type-2 (dense/random) dataset; the forces are
-    set on the phonopy object, which embeds them into the dataset in its
-    native form.
+    from its disp-* subdirectories, taken in sorted order. phonopy_disp.yaml
+    may hold either a type-1 (site-symmetry-reduced, one displaced atom per
+    supercell -- the ``phonopy -d`` default) or a type-2 (dense/random)
+    dataset; the forces are set on the phonopy object, which embeds them into
+    the dataset in its native form.
+
+    Sorting by name is only a guess at the displacement order: it is wrong for
+    unpadded names such as disp-1, disp-10, disp-2. Rather than trusting it,
+    each calculator output is checked against the displaced supercell it is
+    supposed to belong to, which the same file already provides. A wrong order
+    that happens to keep the count would otherwise pass silently and produce
+    force constants built from mismatched forces.
 
     """
     ph = phonopy.load(
@@ -228,18 +212,59 @@ def load_phonon_from_disp_dirs(gdir: str) -> Phonopy:
         log_level=0,
     )
 
-    force_sets = []
-    for disp_dir in sorted(glob.glob(os.path.join(gdir, "disp-*"))):
-        _, _, force, _ = read_vasprun_calculation(calc_file(disp_dir))
-        force_sets.append(force)
-    forces = np.array(force_sets, dtype="double")
+    disp_dirs = sorted(glob.glob(os.path.join(gdir, "disp-*")))
     n_disp = len(ph.displacements)
-    if len(forces) != n_disp:
+    if len(disp_dirs) != n_disp:
         raise ValueError(
-            f"{gdir}: {len(forces)} force set(s) do not match {n_disp} displacement(s)."
+            f"{gdir}: {len(disp_dirs)} disp-* directory(ies) do not match "
+            f"{n_disp} displacement(s)."
         )
-    ph.forces = forces
+
+    expected = ph.supercells_with_displacements
+    force_sets = []
+    for i, disp_dir in enumerate(disp_dirs):
+        cell, _, force, _ = read_vasprun_calculation(calc_file(disp_dir))
+        _check_displaced_supercell(disp_dir, cell, expected[i], i)
+        force_sets.append(force)
+    ph.forces = np.array(force_sets, dtype="double")
     return ph
+
+
+def _check_displaced_supercell(
+    disp_dir: str,
+    found: PhonopyAtoms,
+    expected: PhonopyAtoms,
+    position: int,
+    tolerance: float = 1e-3,
+) -> None:
+    """Raise unless a disp-* holds the displaced supercell of its position.
+
+    The calculator output carries the structure it was run on, so the sorted
+    position of a disp-* directory can be verified instead of assumed. The
+    comparison is of the atomic positions under the minimum image convention,
+    since an atom displaced across a cell boundary comes back wrapped.
+
+    The tolerance is absolute and in the length unit of the cell. It has to
+    separate two different displacements, which differ by at least the
+    displacement distance (0.01 Angstrom in the smallest practical case), while
+    tolerating the digits a calculator writes, which cost far less than that.
+
+    """
+    diff = np.array(found.scaled_positions) - np.array(expected.scaled_positions)
+    diff -= np.rint(diff)
+    distances = np.linalg.norm(diff @ np.array(expected.cell), axis=1)
+    worst = float(distances.max())
+    if worst <= tolerance:
+        return
+    raise ValueError(
+        f"{disp_dir}: the structure is not the displaced supercell of "
+        f"displacement {position + 1}; atoms differ by up to {worst:.4f} "
+        f"(largest at atom {int(np.argmax(distances)) + 1}).\n"
+        f"The disp-* directories are taken in sorted order, so unpadded names "
+        f"such as disp-1, disp-10, disp-2 put the force sets in the wrong "
+        f"order. Zero-pad them, or pass a phonopy_params.yaml whose forces "
+        f"phonopy-init has already collected."
+    )
 
 
 def load_phonon(path: str) -> Phonopy:
@@ -275,6 +300,38 @@ def load_phonon(path: str) -> Phonopy:
     return ph
 
 
+def _check_paired_cells(
+    index: int,
+    static_path: str,
+    static_cell: PhonopyAtoms,
+    phonon_path: str,
+    phonon_cell: PhonopyAtoms,
+    rtol: float = 1e-5,
+) -> None:
+    """Raise unless the paired static and phonon entries are the same cell.
+
+    --static and --phonon are paired by position, so a point missing from each
+    list would pair the U of one lattice with the forces of another and go
+    unnoticed: the lengths still match and nothing in the names says otherwise.
+    Comparing the lattice-vector lengths catches that regardless of how the
+    directories are named. Only the lattice is compared, because a relaxation
+    moves the internal coordinates while the lattice is what the grid samples.
+
+    """
+    static_lengths = np.linalg.norm(np.array(static_cell.cell), axis=1)
+    phonon_lengths = np.linalg.norm(np.array(phonon_cell.cell), axis=1)
+    if np.allclose(static_lengths, phonon_lengths, rtol=rtol, atol=0.0):
+        return
+    raise SystemExit(
+        f"Grid point {index}: the static and phonon entries are different "
+        f"cells, so they are mis-paired.\n"
+        f"  {static_path}: a, b, c = {np.round(static_lengths, 6).tolist()}\n"
+        f"  {phonon_path}: a, b, c = {np.round(phonon_lengths, 6).tolist()}\n"
+        f"--static and --phonon are paired by position; check that the two "
+        f"lists enumerate the grid points in the same order."
+    )
+
+
 def build_calculator_grid_point(
     index: int, static_path: str, phonon_path: str, with_electronic: bool
 ) -> AnisoQHAGridPoint:
@@ -289,7 +346,8 @@ def build_calculator_grid_point(
     dataset = ph.dataset
     assert dataset is not None
 
-    _, energy, _, _ = read_vasprun_calculation(static_path)
+    static_cell, energy, _, _ = read_vasprun_calculation(static_path)
+    _check_paired_cells(index, static_path, static_cell, phonon_path, ph.unitcell)
     electronic = read_electronic_states(static_path) if with_electronic else None
 
     return AnisoQHAGridPoint(
@@ -303,48 +361,29 @@ def build_calculator_grid_point(
     )
 
 
-def build_mlp_grid_point(
-    index: int,
-    static_path: str,
-    reference: Phonopy,
-    mlp_file: str,
-    distance: float,
-    snapshots: int,
-    seed: int | None,
-    with_electronic: bool,
+def build_static_grid_point(
+    index: int, static_path: str, reference: Phonopy, with_electronic: bool
 ) -> AnisoQHAGridPoint:
-    """Assemble one grid point with MLP forces and a static U.
+    """Assemble one grid point from the static single point alone.
 
-    The relaxed cell and U come from the static single point; the supercell /
-    primitive matrices from the reference cell. Random displacements are
-    generated and the forces evaluated by the MLP, then stored raw so the
-    analysis is blind to their MLP origin.
+    No phonon calculation is read, so the grid point carries no displacement
+    dataset: the cell, U and the optional electronic states come from the
+    static single point, and the supercell / primitive matrices from the
+    reference. This is the dataset for a workflow whose vibrational free
+    energy is computed outside and handed to run_anisotropic_qha through
+    phonon_free_energies, as methods with temperature-dependent force
+    constants must.
 
     """
     cell, energy, _, _ = read_vasprun_calculation(static_path)
-
-    ph = Phonopy(
-        cell,
-        supercell_matrix=reference.supercell_matrix,
-        primitive_matrix=reference.primitive_matrix,
-        log_level=0,
-    )
-    ph.load_mlp(mlp_file)
-    ph.generate_displacements(
-        distance=distance, number_of_snapshots=snapshots, random_seed=seed
-    )
-    ph.evaluate_mlp()
-    dataset = ph.dataset
-    assert dataset is not None
-
     electronic = read_electronic_states(static_path) if with_electronic else None
 
     return AnisoQHAGridPoint(
         index=index,
         cell=cell,
-        supercell_matrix=np.array(ph.supercell_matrix, dtype="int64"),
-        primitive_matrix=np.array(ph.primitive_matrix, dtype="double"),
-        dataset=dataset,
+        supercell_matrix=np.array(reference.supercell_matrix, dtype="int64"),
+        primitive_matrix=np.array(reference.primitive_matrix, dtype="double"),
+        dataset=None,
         internal_energy=energy,
         electronic_states=electronic,
     )
@@ -353,46 +392,30 @@ def build_mlp_grid_point(
 def resolve_static_paths(args: Namespace) -> list[tuple[int, str]]:
     """Return the (index, path) of the static single points.
 
-    With --static the paths are taken as given and indexed by position; a
-    directory entry is resolved to the VASP output it holds. Otherwise the
-    conventional grid-NNN layout of --static-grid is discovered and the index
-    is the one in the directory name.
+    The paths are taken as given and indexed by position; a directory entry is
+    resolved to the VASP output it holds. The index is a label only: the
+    analysis reads the lattice parameters from each stored cell.
 
     """
-    if args.static:
-        if args.static_grid is not None:
-            raise SystemExit("Give either --static or --static-grid, not both.")
-        return list(enumerate(as_calc_file(p) for p in args.static))
-    directory = args.static_grid or DEFAULT_STATIC_GRID
-    return [(idx, calc_file(d)) for idx, d in discover_grid_dirs(directory)]
+    if not args.static:
+        raise SystemExit("Error: --static is required.")
+    return list(enumerate(as_calc_file(p) for p in args.static))
 
 
 def resolve_phonon_paths(args: Namespace, indices: list[int]) -> list[str]:
     """Return the phonon grid-point paths, aligned with the static points.
 
-    With --phonon the paths are paired with the static points by position, so
-    the two lists must have equal length. Otherwise the conventional grid-NNN
-    layout of --phonon-grid is discovered and paired by index, and every
-    static index must have a match.
+    The paths are paired with the static points by position, so the two lists
+    must have equal length. An empty list is the static-only mode and is not
+    reached from here.
 
     """
-    if args.phonon:
-        if args.phonon_grid is not None:
-            raise SystemExit("Give either --phonon or --phonon-grid, not both.")
-        if len(args.phonon) != len(indices):
-            raise SystemExit(
-                f"{len(args.phonon)} --phonon path(s) do not match "
-                f"{len(indices)} static grid point(s)."
-            )
-        return list(args.phonon)
-
-    directory = args.phonon_grid or DEFAULT_PHONON_GRID
-    dirs = dict(discover_grid_dirs(directory))
-    missing = [idx for idx in indices if idx not in dirs]
-    if missing:
-        listed = ", ".join(f"grid-{idx:03d}" for idx in missing)
-        raise SystemExit(f"No phonon grid point in {directory} for: {listed}.")
-    return [dirs[idx] for idx in indices]
+    if len(args.phonon) != len(indices):
+        raise SystemExit(
+            f"{len(args.phonon)} --phonon path(s) do not match "
+            f"{len(indices)} static grid point(s)."
+        )
+    return list(args.phonon)
 
 
 def get_options() -> Namespace:
@@ -407,14 +430,7 @@ def get_options() -> Namespace:
         "filename",
         nargs="?",
         default="phonopy_disp.yaml",
-        help="reference phonopy_disp.yaml (supercell / primitive matrices, "
-        "free lattice DOF)",
-    )
-    parser.add_argument(
-        "--from-mlp",
-        metavar="POLYMLP",
-        help="evaluate forces on the fly from this machine-learning potential "
-        "file, instead of reading pre-computed forces from the phonon grid",
+        help="reference phonopy_disp.yaml (calculator, free lattice DOF)",
     )
     parser.add_argument(
         "--static",
@@ -422,7 +438,7 @@ def get_options() -> Namespace:
         metavar="PATH",
         help="static single-point outputs, one per grid point (shell-expanded, "
         "e.g. 'runs/*/vaspout.h5'); a directory is resolved to the VASP output "
-        "it holds. Replaces --static-grid and imposes no naming convention",
+        "it holds",
     )
     parser.add_argument(
         "--phonon",
@@ -430,35 +446,9 @@ def get_options() -> Namespace:
         metavar="PATH",
         help="phonon grid points, one per static point and paired by position: "
         "either a phonopy_params.yaml carrying forces, or a directory holding "
-        "phonopy_disp.yaml and disp-* subdirectories. Replaces --phonon-grid",
-    )
-    parser.add_argument(
-        "--static-grid",
-        default=None,
-        help="directory of static single points in the conventional grid-NNN "
-        f"layout (default: {DEFAULT_STATIC_GRID})",
-    )
-    parser.add_argument(
-        "--phonon-grid",
-        default=None,
-        help="directory of pre-computed displaced supercells in the "
-        "conventional grid-NNN layout, used when --from-mlp is not given "
-        f"(default: {DEFAULT_PHONON_GRID})",
-    )
-    parser.add_argument(
-        "--distance",
-        type=float,
-        default=0.03,
-        help="MLP displacement distance (default: 0.03)",
-    )
-    parser.add_argument(
-        "--snapshots",
-        type=int,
-        default=20,
-        help="number of MLP random-displacement snapshots (default: 20)",
-    )
-    parser.add_argument(
-        "--seed", type=int, default=None, help="random seed for MLP displacements"
+        "phonopy_disp.yaml and disp-* subdirectories. Omit it to build from "
+        "the static grid alone, for use with the phonon_free_energies "
+        "argument of run_anisotropic_qha",
     )
     parser.add_argument(
         "--no-electronic",
@@ -497,34 +487,33 @@ def run() -> None:
     static_paths = resolve_static_paths(args)
     indices = [idx for idx, _ in static_paths]
 
-    if args.from_mlp:
-        phonon_paths: list[str | None] = [None] * len(static_paths)
-        print(f"Evaluating forces from MLP {args.from_mlp}")
-    else:
-        phonon_paths = list(resolve_phonon_paths(args, indices))
-        print(f"Reading pre-computed forces for {len(phonon_paths)} grid point(s)")
-
     points = []
-    for (idx, static_path), phonon_path in zip(static_paths, phonon_paths, strict=True):
-        if args.from_mlp:
-            point = build_mlp_grid_point(
-                idx,
-                static_path,
-                reference,
-                args.from_mlp,
-                args.distance,
-                args.snapshots,
-                args.seed,
-                args.electronic,
-            )
-        else:
-            assert phonon_path is not None
-            point = build_calculator_grid_point(
-                idx, static_path, phonon_path, args.electronic
-            )
-        points.append(point)
+    if not args.phonon:
         print(
-            f"  grid {idx:03d} U={point.internal_energy:.6f} eV "
+            f"No --phonon given: building from the static grid alone, "
+            f"{len(static_paths)} grid point(s), with no displacements or "
+            f"forces. Such a dataset is for use with the phonon_free_energies "
+            f"argument of run_anisotropic_qha."
+        )
+        for idx, static_path in static_paths:
+            points.append(
+                build_static_grid_point(idx, static_path, reference, args.electronic)
+            )
+    else:
+        phonon_paths = resolve_phonon_paths(args, indices)
+        print(f"Reading pre-computed forces for {len(phonon_paths)} grid point(s)")
+        for (idx, static_path), phonon_path in zip(
+            static_paths, phonon_paths, strict=True
+        ):
+            points.append(
+                build_calculator_grid_point(
+                    idx, static_path, phonon_path, args.electronic
+                )
+            )
+
+    for point in points:
+        print(
+            f"  grid {point.index:03d} U={point.internal_energy:.6f} eV "
             f"n_disp={point.n_displacements}"
         )
 
