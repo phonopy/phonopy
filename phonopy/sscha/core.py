@@ -74,8 +74,10 @@ class MLPSSCHA:
             Sampling mesh used to compute the harmonic part of the free energy,
             by default 100.0.
         random_seed : int or None, optional
-            Seed for random number generator passed to generate_displacements.
-            The default is None.
+            Seed of the whole run. Each iteration derives its own seed from it,
+            so that the run is reproducible while the iterations stay
+            independent of each other. The default is None, which leaves the
+            sampling unseeded.
         log_level : int, optional
             Log level, by default 0.
 
@@ -278,6 +280,23 @@ class MLPSSCHA:
         """Return potential energies of individual supercells."""
         return self._ph.supercell_energies - self._supercell_energy
 
+    def _sampling_seed(self) -> int | None:
+        """Return the random seed of the current iteration.
+
+        Reusing one seed for every iteration would make them all draw the same
+        random numbers, so their free energies would no longer be independent
+        samples of the same quantity and averaging them would gain less than
+        1/sqrt(K). A seed is therefore derived per iteration from the seed
+        given at instantiation. The derivation is a pure function of that seed
+        and the iteration number, so the run stays reproducible and does not
+        depend on the order in which the sampling methods are called.
+
+        """
+        if self._random_seed is None:
+            return None
+        seed_sequence = np.random.SeedSequence([self._random_seed, self._iter_counter])
+        return int(seed_sequence.generate_state(1, dtype=np.uint32)[0])
+
     def sample_supercells(self) -> None:
         """Sample supercells with random displacements and evaluate the MLPs.
 
@@ -297,7 +316,7 @@ class MLPSSCHA:
         self._ph.generate_displacements(
             number_of_snapshots=self._number_of_snapshots,
             temperature=self._temperature,
-            random_seed=self._random_seed,
+            random_seed=self._sampling_seed(),
         )
 
         if self._log_level:
@@ -413,7 +432,7 @@ class MLPSSCHA:
             self._ph.generate_displacements(
                 distance=self._distance,
                 number_of_snapshots=self._number_of_snapshots,
-                random_seed=self._random_seed,
+                random_seed=self._sampling_seed(),
             )
             if self._log_level:
                 print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
