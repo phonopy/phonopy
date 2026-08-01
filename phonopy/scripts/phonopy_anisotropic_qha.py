@@ -32,24 +32,57 @@ from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 _EV_TO_MEV = 1000.0
 
 
-def main_diagonal_positions(result: AnisotropicQHAResult) -> NDArray[np.int64]:
-    """Return positions of the main-diagonal cells of a tensor lattice grid.
+def main_diagonal_positions(grid_shape: Sequence[int]) -> NDArray[np.int64]:
+    """Return the positions of the main-diagonal cells of a tensor grid.
 
-    On a regular N x ... x N grid the main diagonal is the set of cells with the
-    same rank along every free axis. These span the volume range monotonically
-    with one shape per volume, so they form a clean 1D volume path a Vinet EOS
-    can fit stably. Ordered by increasing volume proxy.
+    The main diagonal is the set of cells with the same index along every free
+    axis. These span the volume range monotonically with one shape per volume,
+    so they form a clean 1D volume path a Vinet EOS can fit stably.
+
+    The grid points are stored in row-major order over the free DOF, so the
+    position of the cell (k, k, ...) is k times the sum of the axis strides.
+    A grid whose axes have unequal counts has as many diagonal cells as its
+    shortest axis.
 
     """
-    free = result.lattice_lengths[:, result.free_lattice_indices]
-    ranks = np.empty(free.shape, dtype=int)
-    for j in range(free.shape[1]):
-        unique = np.unique(np.round(free[:, j], 6))
-        ranks[:, j] = np.searchsorted(unique, np.round(free[:, j], 6))
-    on_diagonal = np.all(ranks == ranks[:, :1], axis=1)
-    positions = np.where(on_diagonal)[0]
-    order = np.argsort(free[positions].prod(axis=1))
-    return positions[order]
+    strides = [int(np.prod(grid_shape[j + 1 :])) for j in range(len(grid_shape))]
+    return np.arange(min(grid_shape), dtype="int64") * sum(strides)
+
+
+def suggest_vinet_cells(result: AnisotropicQHAResult, indices: Sequence[int]) -> None:
+    """Print the cells of the grid, and a volume path to compare along.
+
+    Called when the dataset records no grid shape and the user named no cells,
+    so that --vinet-index can be filled in from what is actually there. The
+    cells are listed by volume, and cells that share a c/a are pointed out:
+    those have one shape, which is what a volume-path EOS fit assumes. A grid
+    sampled over equal fractional ranges has its main diagonal among them.
+
+    """
+    lengths = result.lattice_lengths
+    order = np.argsort(lengths.prod(axis=1))
+    ratios = np.round(lengths[:, 2] / lengths[:, 0], 4)
+
+    print("# Cells by volume. --vinet-index takes the indices of this column.")
+    print(f"  {'index':>6} {'a':>9} {'c':>9} {'c/a':>8}")
+    for k in order:
+        a, _, c = lengths[k]
+        print(f"  {indices[k]:6d} {a:9.4f} {c:9.4f} {ratios[k]:8.4f}")
+
+    # The largest set of one shape, in volume order. Ties keep the first.
+    values, counts = np.unique(ratios[order], return_counts=True)
+    best = values[np.argmax(counts)]
+    same_shape = [indices[k] for k in order if ratios[k] == best]
+    if len(same_shape) >= 5:
+        print(
+            f"# {len(same_shape)} cells share c/a = {best:.4f}, "
+            f"a constant-shape volume path:"
+        )
+        print("#   --vinet-index " + " ".join(str(i) for i in same_shape))
+    else:
+        print("# No five cells share a c/a, so no constant-shape path is")
+        print("# available. Naming cells of varying shape still runs, but the")
+        print("# comparison is then between two different paths.")
 
 
 def compare_thermal_expansion_vinet(
@@ -59,22 +92,21 @@ def compare_thermal_expansion_vinet(
     internal_energies: Sequence[float],
     electronic_structures: Sequence | None,
     mesh: float,
-    positions: Sequence[int] | None = None,
+    positions: Sequence[int],
     verbose: bool = False,
 ) -> None:
     """Compare thermal expansion: anisotropic 2D fit vs Vinet volume-path QHA.
 
-    The Vinet path is run on a 1D subset (default the main diagonal). The
+    The Vinet path is run on the 1D subset of cells given by ``positions``,
+    which the caller picks: the main diagonal of the grid, or a set named by
+    hand with --vinet-index. The
     difference in alpha_a vs alpha_c between the two methods is the anisotropy
     the fixed-shape volume path cannot capture. Writes
     thermal_expansion_compare.dat and .png and prints the max and mean absolute
     differences.
 
     """
-    if positions is None:
-        selected = list(main_diagonal_positions(result))
-    else:
-        selected = list(positions)
+    selected = list(positions)
     if len(selected) < 5:
         print(
             f"Only {len(selected)} cells selected for the Vinet path; "
@@ -111,14 +143,16 @@ def compare_thermal_expansion_vinet(
     alpha_c_a = result.axial_thermal_expansions[:, 2]
 
     beta_v = np.interp(t, qha.temperatures, qha.thermal_expansion)
-    if qha.lattice is not None:
-        axial_v = qha.lattice.axial_thermal_expansions
-        alpha_a_v = np.interp(t, qha.temperatures, axial_v[:, 0])
-        alpha_c_v = np.interp(t, qha.temperatures, axial_v[:, 2])
-    else:
-        print("Vinet QHA returned no lattice data; axial comparison skipped.")
-        alpha_a_v = np.full_like(t, np.nan)
-        alpha_c_v = np.full_like(t, np.nan)
+    # run_qha withholds lattice data for triclinic and monoclinic crystals,
+    # whose cell angles may depend on volume. The dataset this script reads is
+    # built by phonopy-anisotropic-qha-dataset, which rejects those crystal
+    # systems outright, so the comparison never meets one. When angle degrees
+    # of freedom are supported, this is where to decide what the axial
+    # comparison against a volume path should mean for them.
+    assert qha.lattice is not None
+    axial_v = qha.lattice.axial_thermal_expansions
+    alpha_a_v = np.interp(t, qha.temperatures, axial_v[:, 0])
+    alpha_c_v = np.interp(t, qha.temperatures, axial_v[:, 2])
 
     labels = ("beta (volumetric)", "alpha_a", "alpha_c")
     aniso = (beta_a, alpha_a_a, alpha_c_a)
@@ -300,19 +334,28 @@ def run() -> None:
             print("Wrote " + ", ".join(written))
 
     if args.compare_vinet:
-        positions = None
+        positions: list[int] | None = None
         if args.vinet_index:
             positions = [indices.index(i) for i in args.vinet_index]
-        compare_thermal_expansion_vinet(
-            result,
-            phonopys,
-            temperatures,
-            internal_energies,
-            electronic_structures,
-            args.mesh,
-            positions=positions,
-            verbose=True,
-        )
+        elif dataset.grid_shape is not None:
+            positions = list(main_diagonal_positions(dataset.grid_shape))
+        else:
+            print("The dataset records no grid shape, so it has no main")
+            print("diagonal to take: its cells were either sampled randomly,")
+            print("or gathered in an order the builder could not read as a")
+            print("grid. Name the cells of a volume path with --vinet-index.")
+            suggest_vinet_cells(result, indices)
+        if positions is not None:
+            compare_thermal_expansion_vinet(
+                result,
+                phonopys,
+                temperatures,
+                internal_energies,
+                electronic_structures,
+                args.mesh,
+                positions,
+                verbose=True,
+            )
 
 
 if __name__ == "__main__":

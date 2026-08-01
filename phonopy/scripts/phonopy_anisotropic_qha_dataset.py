@@ -43,6 +43,7 @@ from argparse import ArgumentParser, Namespace
 from typing import TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import NDArray
 
 if TYPE_CHECKING:
     import h5py  # type: ignore[import-untyped]
@@ -467,6 +468,48 @@ def get_options() -> Namespace:
     return parser.parse_args()
 
 
+def _detect_grid_shape(
+    free_lengths: NDArray[np.double],
+) -> tuple[int, ...] | None:
+    """Return the shape of the tensor grid the cells form, or None.
+
+    The analysis takes the main-diagonal volume path from this shape, so it is
+    recorded only when the cells really are a tensor grid laid out in
+    row-major order with ascending values along every axis. Anything else --
+    randomly sampled cells, or grid cells gathered in another order -- gives
+    None, and the analysis then declines to guess a diagonal.
+
+    Parameters
+    ----------
+    free_lengths : ndarray
+        Lattice-vector lengths of the free DOF of every grid point, in the
+        order the points are stored. shape=(n_points, n_free_dof).
+
+    """
+    n_points, ndof = free_lengths.shape
+    rounded = np.round(free_lengths, 6)
+
+    # A tensor grid samples n_j distinct values along axis j and visits every
+    # combination of them exactly once.
+    counts = [len(np.unique(rounded[:, j])) for j in range(ndof)]
+    if int(np.prod(counts)) != n_points:
+        return None
+
+    grid = rounded.reshape(*counts, ndof)
+    for j in range(ndof):
+        # Row-major order means the j-th length depends on the j-th index
+        # alone, so every slice taken at a fixed j-th index is one value.
+        slices = np.moveaxis(grid[..., j], j, 0).reshape(counts[j], -1)
+        if not np.allclose(slices, slices[:, :1]):
+            return None
+        # Ascending, so that the diagonal runs from the smallest cell to the
+        # largest and the volume path it forms is monotonic.
+        if not (np.diff(slices[:, 0]) > 0).all():
+            return None
+
+    return tuple(counts)
+
+
 def run() -> None:
     """Run the phonopy-anisotropic-qha-dataset command."""
     args = get_options()
@@ -517,6 +560,11 @@ def run() -> None:
             f"n_disp={point.n_displacements}"
         )
 
+    free_rows = [dof.rows[label][0] for label in dof.labels]
+    free_lengths = np.array(
+        [np.linalg.norm(point.cell.cell, axis=1)[free_rows] for point in points]
+    )
+    grid_shape = _detect_grid_shape(free_lengths)
     dataset = AnisoQHADataset(
         grid_points=tuple(points),
         calculator=calculator,
@@ -524,8 +572,13 @@ def run() -> None:
         free_dof=tuple(dof.labels),
         crystal_system=dof.crystal_system,
         tie_description=dof.tie_description,
+        grid_shape=grid_shape,
         phonopy_version=phonopy.__version__,
     )
+    if grid_shape is None:
+        print("The cells do not form an ordered tensor grid; no grid shape is stored.")
+    else:
+        print(f"Grid shape {list(grid_shape)} recorded for the main-diagonal path.")
     write_aniso_qha_dataset(dataset, args.output)
     print(f"Wrote {len(points)} grid point(s) to {args.output}")
 

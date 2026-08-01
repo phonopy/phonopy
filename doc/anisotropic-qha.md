@@ -184,6 +184,9 @@ For each `unitcell-*`:
    containing `vaspout.h5` or `vasprun.xml`). Any layout works -- the builder
    is given the paths explicitly -- but a name that sorts in the sampling order
    keeps the two grids easy to pass together, and no index file is needed.
+   Sorting in that order also matters for `--compare-vinet`: the builder
+   recognises a tensor grid only when the cells reach it in the order they
+   were generated, and records its shape for the main-diagonal volume path.
 
 To scaffold the static-grid input POSCARs from the `unitcell-*` of step 1, edit
 the paths at the top and run (distribute the VASP inputs separately):
@@ -382,8 +385,13 @@ displacements and forces), runs `run_anisotropic_qha`, and writes
 `volume-temperature.dat` and `anisotropic_qha.png`. With exactly two free
 lattice DOF it also writes the `F(a, c)` contour maps; `--decompose-contours`
 adds the U / F_ph / F_el / total panels and `--compare-vinet` adds a
-volume-path cross-check (it needs the grid main diagonal from a `--grid` run in
-step 1, and is skipped when no such diagonal is found). The electronic free
+volume-path cross-check along the grid main diagonal. That diagonal comes
+from the grid shape the builder recorded, so the cross-check needs a `--grid`
+run in step 1 whose cells were gathered in order. Without a recorded shape the
+cross-check is skipped, and the cells are listed by volume with their c/a so
+that `--vinet-index` can name a path by hand; cells sharing a c/a have one
+shape, which is what a volume-path EOS fit assumes, and five or more of them
+are offered as a ready-made `--vinet-index` line. The electronic free
 energy {math}`F_\mathrm{el}` is added only with `--electronic` (and only when
 the dataset carries the electronic states); by default it is ignored.
 

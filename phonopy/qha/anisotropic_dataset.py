@@ -147,6 +147,12 @@ class AnisoQHADataset:
         Crystal system of the reference cell.
     tie_description : str
         Human-readable tie relation of the free DOF (e.g. "b = a"), or "".
+    grid_shape : tuple of int, optional
+        Number of sampled values along each free DOF, when the grid points
+        form a tensor grid stored in row-major order. None when the sampling
+        was not a tensor grid, or when the shape was not recorded. Only
+        analyses that need the grid structure, such as the main-diagonal
+        volume path, read it.
     phonopy_version : str, optional
         Phonopy version that wrote the dataset.
 
@@ -158,6 +164,7 @@ class AnisoQHADataset:
     free_dof: tuple[str, ...] = ()
     crystal_system: str = ""
     tie_description: str = ""
+    grid_shape: tuple[int, ...] | None = None
     phonopy_version: str | None = None
 
 
@@ -194,6 +201,8 @@ def write_aniso_qha_dataset(
         w.attrs["free_dof"] = " ".join(dataset.free_dof)
         w.attrs["crystal_system"] = dataset.crystal_system
         w.attrs["tie_description"] = dataset.tie_description
+        if dataset.grid_shape is not None:
+            w.attrs["grid_shape"] = np.array(dataset.grid_shape, dtype="int64")
         w.attrs["n_grid_points"] = len(dataset.grid_points)
         grid = w.create_group("grid")
         for point in dataset.grid_points:
@@ -321,6 +330,8 @@ def read_aniso_qha_dataset(
         free_dof = tuple(free_dof_attr.split())
         crystal_system = str(f.attrs.get("crystal_system", ""))
         tie_description = str(f.attrs.get("tie_description", ""))
+        shape_attr = f.attrs.get("grid_shape")
+        grid_shape = None if shape_attr is None else tuple(int(n) for n in shape_attr)
         version = f.attrs.get("phonopy_version")
         phonopy_version = None if version is None else str(version)
         grid = f["grid"]
@@ -335,6 +346,7 @@ def read_aniso_qha_dataset(
         free_dof=free_dof,
         crystal_system=crystal_system,
         tie_description=tie_description,
+        grid_shape=grid_shape,
         phonopy_version=phonopy_version,
     )
 
