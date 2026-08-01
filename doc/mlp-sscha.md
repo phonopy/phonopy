@@ -4,7 +4,7 @@
 
 ```{warning}
 **This is an experimental feature.** The command-line options, the layout of
-`phonopy_sscha.yaml`, and the `phonopy.sscha` API may change in a
+`sscha_free_energies.yaml`, and the `phonopy.sscha` API may change in a
 backward-incompatible way between releases, without a deprecation period.
 ```
 
@@ -429,7 +429,7 @@ Calculate force constants using symfc
 SSCHA free energy: -98.297 +/- 0.073 meV
 SSCHA force constants are written into "phonopy_sscha_fc_10.yaml.xz".
 
-SSCHA free energies are written into "phonopy_sscha.yaml".
+SSCHA free energies are written into "sscha_free_energies.yaml".
 -------------------------------- SSCHA end ---------------------------------
 ----------------------------------------------------------------------------
  No run mode was specified, so no phonon calculation was performed.
@@ -525,7 +525,7 @@ from the phonon frequencies and eigenvectors.
 
 #### Free energies of the iterations
 
-The free energies are collected in `phonopy_sscha.yaml`, which is rewritten
+The free energies are collected in `sscha_free_energies.yaml`, which is rewritten
 after every iteration and is written whether or not the log is enabled:
 
 ```yaml
@@ -628,7 +628,7 @@ at 500 K per primitive cell. Within one iteration it falls as
 sampling offers.
 
 The iterations themselves provide further samples of the same quantity. Each
-value in `phonopy_sscha.yaml` is the SSCHA free energy of the force constants
+value in `sscha_free_energies.yaml` is the SSCHA free energy of the force constants
 that iteration sampled, so once the iterations reach the fixed point they are
 estimates of the same free energy, differing only by their sampling noise. The
 file holds one entry per iteration, as many as the number given by `--sscha`,
@@ -660,6 +660,21 @@ leading iterations are a transient that has to be dropped before averaging.
 The initialization step, which draws its displacements at a fixed distance
 rather than from a canonical ensemble, is already left out of the file for that
 reason.
+
+`example/KCl-SSCHA/sscha_average.py` does this arithmetic for one or more
+`sscha_free_energies.yaml`:
+
+```
+% python sscha_average.py sscha_free_energies.yaml
+# free energies in meV per primitive cell
+    T(K)    K         mean   reported    scatter   ratio  file
+   300.0   10     -98.3180     0.0233     0.0257    1.10  sscha_free_energies.yaml
+```
+
+`--skip` drops leading iterations. Dropping the first one here lowers the ratio
+from 1.10 to 0.81, which is that iteration showing in the scatter: it sampled
+the harmonic force constants the run started from, not the SSCHA ones the rest
+of the iterations converged to.
 
 One consequence is worth stating, because it inverts a natural choice. At equal
 cost, more iterations with fewer supercells beat fewer iterations with more,
@@ -750,7 +765,7 @@ force constants. Therefore, it is recommended to check the convergence of the
 target property with respect to the number of supercells in the training
 dataset. The SSCHA free energy is convenient to monitor, since it is a single
 number at each temperature and is recorded for every SSCHA iteration in
-`phonopy_sscha.yaml`.
+`sscha_free_energies.yaml`.
 
 For example, by preparing an initial set with 100 supercell data, calculations
 can then be performed by varying the size of the training dataset while keeping
@@ -764,7 +779,7 @@ the test dataset unchanged as follows:
             --sscha 10 --rd-temperature 300 --rd 1000
     cd ..
   done
-% grep "  free_energy:" ntrain-*/phonopy_sscha.yaml
+% grep "  free_energy:" ntrain-*/sscha_free_energies.yaml
 ```
 
 Each calculation is performed in a separate directory. This is necessary because

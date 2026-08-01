@@ -163,7 +163,7 @@ def test_run_MLPSSCHA_writes_yaml_without_log(
     phonon.mlp = cast(PhonopyMLP, object())
     phonopy_script._run_MLPSSCHA(phonon, settings, 0)
 
-    with open(tmp_path / "phonopy_sscha.yaml") as f:
+    with open(tmp_path / "sscha_free_energies.yaml") as f:
         data = yaml.safe_load(f)
     assert data["sscha"]["max_iterations"] == 1
     assert data["iterations"] == []
