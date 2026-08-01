@@ -413,6 +413,7 @@ Calculate force constants using symfc
 SSCHA free energy: -98.153 +/- 0.070 meV
 SSCHA force constants are written into "phonopy_sscha_fc_10.yaml.xz".
 
+SSCHA free energies are written into "phonopy_sscha.yaml".
 -------------------------------- SSCHA end ---------------------------------
 ----------------------------------------------------------------------------
  No run mode was specified, so no phonon calculation was performed.
@@ -440,6 +441,40 @@ The final force constants are stored in files named
 to the iteration step. By performing a sufficient number of SSCHA iterations and
 utilizing a sufficiently large set of supercells with random displacements at a
 given temperature, the SSCHA force constants can be reliably determined.
+
+#### Free energies of the iterations
+
+The free energies are collected in `phonopy_sscha.yaml`, which is rewritten
+after every iteration and is written whether or not the log is enabled:
+
+```yaml
+free_energy_unit: meV
+iterations:
+- iteration: 1
+  sampled_force_constants: null
+  produced_force_constants: "phonopy_sscha_fc_1.yaml.xz"
+  free_energy: -98.107234
+  free_energy_error: 0.089012
+  harmonic: -98.446789
+  anharmonic: 0.339555
+```
+
+Energies are per primitive cell. `free_energy` is the sum of `harmonic` and
+`anharmonic`, and `free_energy_error` is the standard error of the mean of the
+anharmonic part over the sampled supercells, the harmonic part carrying no
+sampling noise. The file also records the settings the values depend on: the
+temperature, the number of snapshots, the sampling mesh used for the harmonic
+part (`--mesh`, 100 by default), the random seed, and whether the iterations
+started from given force constants.
+
+The free energy of an iteration is that of the force constants the iteration
+sampled, not of the ones it produced from that sample. Only then do the
+harmonic part and the ensemble averaged for the anharmonic part belong to the
+same force constants, which is what makes the value the SSCHA free energy of
+those force constants. Each entry names both sets of force constants. The
+initialization step (iteration 0), run only when no force constants are given,
+has no free energy: its displacements are drawn at a fixed distance rather than
+from a canonical ensemble.
 
 #### Reusing harmonic force constants
 
@@ -550,7 +585,9 @@ from phonopy.sscha.core import MLPSSCHA
 ph = phonopy.load("phonopy_sscha_fc_10.yaml.xz", log_level=0)
 ph.load_mlp("polymlp.yaml")
 
-sscha = MLPSSCHA(ph, ph.mlp, temperature=300.0, number_of_snapshots=1000)
+sscha = MLPSSCHA(
+    ph, ph.mlp, temperature=300.0, number_of_snapshots=1000, mesh=100.0
+)
 sscha.sample_supercells()
 sscha.calculate_free_energy()
 
@@ -560,11 +597,16 @@ print(
 )
 ```
 
-This does not reproduce the value printed at the corresponding iteration
-exactly. In the iteration, the displacements are sampled from the force
-constants of the previous iteration, whereas here they are sampled from the
-force constants stored in the file. The two values therefore agree only within
-the statistical error.
+`mesh` has to match the one of the run being compared with, the harmonic part
+being sampled on it.
+
+Since the value reported for an iteration is that of the force constants the
+iteration sampled, the file to read here is the one written by the *previous*
+iteration: this recipe applied to `phonopy_sscha_fc_9.yaml.xz` reproduces the
+value reported for iteration 10. The two agree only within the statistical
+error, being computed from different random samples. The force constants of the
+last iteration are the one set with no reported value, and this is how their
+free energy is obtained.
 
 ## Parameters for developing MLPs
 
