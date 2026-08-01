@@ -79,6 +79,7 @@ from phonopy.physical_units import (
     get_physical_units,
 )
 from phonopy.sscha.core import MLPSSCHA
+from phonopy.sscha.output import write_sscha_yaml
 from phonopy.structure.atomic_data import (
     get_atomic_data,
     set_ASE_atomic_masses_iupac2016,
@@ -811,9 +812,12 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
         temperature=settings.random_displacement_temperature,
         number_of_snapshots=settings.random_displacements,
         max_iterations=settings.sscha_iterations,
+        mesh=settings.mesh_numbers,
         random_seed=settings.random_seed,
         log_level=log_level,
     )
+    fc_filenames: dict[int, str] = {}
+    yaml_filename = ""
     for iter_num in sscha:
         ph = sscha.phonopy
         out_filename = ph.save(
@@ -825,12 +829,18 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
             },
             compression=True,
         )
+        fc_filenames[iter_num] = out_filename
+        # Rewritten after every iteration, so that a run stopped part way
+        # leaves the free energies it did reach.
+        yaml_filename = write_sscha_yaml(sscha, fc_filenames)
         if log_level:
-            sscha.calculate_free_energy()
-            print(
-                f"SSCHA free energy: {sscha.free_energy * 1000:.3f} "
-                f"+/- {sscha.free_energy_error * 1000:.3f} meV"
-            )
+            # The initialization step has no free energy; see MLPSSCHA.history.
+            if sscha.history and sscha.history[-1].iteration == iter_num:
+                result = sscha.history[-1]
+                print(
+                    f"SSCHA free energy: {result.free_energy * 1000:.3f} "
+                    f"+/- {result.free_energy_error * 1000:.3f} meV"
+                )
             if iter_num == 0:
                 print("Initial ", end="")
             else:
@@ -841,6 +851,7 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
     phonon.force_constants = ph.force_constants
 
     if log_level:
+        print(f'SSCHA free energies are written into "{yaml_filename}".')
         print(
             "-------------------------------- SSCHA end "
             "---------------------------------"
