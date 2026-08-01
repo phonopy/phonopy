@@ -430,7 +430,7 @@ def run_anisotropic_qha(
     internal_energies: Sequence[float] | NDArray[np.double] | None = None,
     electronic_structures: Sequence[ElectronicStates] | None = None,
     phonon_free_energies: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
-    mesh: float | Sequence[int] | NDArray[np.int64] = 100.0,
+    mesh: float | Sequence[int] | NDArray[np.int64] = 200.0,
     pressure: float | None = None,
     surface_degree: int = 3,
     verbose: bool = False,
@@ -483,8 +483,11 @@ def run_anisotropic_qha(
         per temperature and handed over. The values must be normalized per
         primitive cell, consistently with internal_energies.
     mesh : float or array_like, optional
-        Mesh numbers passed to Phonopy.run_mesh. Unused when
-        phonon_free_energies is given.
+        Mesh numbers passed to Phonopy.run_mesh, 200 by default. This is
+        denser than the 100 of run_qha, deliberately: the axial split is a
+        difference of large Grueneisen components and needs the denser mesh,
+        while the volumetric expansion, being their average, is converged at
+        100. Unused when phonon_free_energies is given.
     pressure : float, optional
         Pressure in GPa added to the free energy as a pV term, turning the
         minimized free energy into a Gibbs free energy.
