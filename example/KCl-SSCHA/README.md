@@ -37,7 +37,7 @@ MLPs. This file under current directory is read when running phonopy with the
 
 The calculated SSCHA force constants are stored in
 `phonopy_sscha_fc_10.yaml.xz`, where `10` indicates the final iteration number.
-The free energies of the iterations are collected in `phonopy_sscha.yaml`.
+The free energies of the iterations are collected in `sscha_free_energies.yaml`.
 These SSCHA force constants can be compared with
 `phonopy_sscha_fc_JPCM2022.yaml.xz`, which is explained in the next section. The
 phonon band structures corresponding to these force constants can be plotted and
@@ -52,7 +52,7 @@ compared using the following command:
 
 ## SSCHA free energy of saved force constants
 
-`phonopy_sscha.yaml` reports the free energy of each iteration, and that value
+`sscha_free_energies.yaml` reports the free energy of each iteration, and that value
 belongs to the force constants the iteration sampled, i.e. the ones written by
 the previous iteration. The force constants of the last iteration therefore have
 no reported value. `sscha_free_energy.py` evaluates it, by sampling
@@ -66,6 +66,20 @@ supercell energies with the MLPs, so `polymlp.yaml` has to be present:
 Applied to `phonopy_sscha_fc_9.yaml.xz`, the same command reproduces the value
 reported for iteration 10, to within the statistical uncertainty of the two
 samples.
+
+`sscha_average.py` averages the free energies of the iterations recorded in
+`sscha_free_energies.yaml` and reports the two estimates of the error of that
+average, whose agreement is the condition for averaging to be legitimate:
+
+```
+% python sscha_average.py sscha_free_energies.yaml
+# free energies in meV per primitive cell
+    T(K)    K         mean   reported    scatter   ratio  file
+   300.0   10     -98.3180     0.0233     0.0257    1.10  sscha_free_energies.yaml
+```
+
+`--skip` drops leading iterations, which is how a transient is excluded from
+the average.
 
 ## Comparison with the reported result
 

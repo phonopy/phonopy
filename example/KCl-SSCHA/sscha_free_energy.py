@@ -9,7 +9,7 @@ constants in the file itself, so the value obtained is the SSCHA free energy of
 those force constants.
 
 ``phonopy --sscha`` records the free energy of every iteration in
-phonopy_sscha.yaml, and the value of an iteration belongs to the force
+sscha_free_energies.yaml, and the value of an iteration belongs to the force
 constants that iteration sampled, that is, the ones the previous iteration
 wrote. Running this script on phonopy_sscha_fc_{n-1}.yaml.xz therefore
 reproduces the value recorded for iteration n, to within the statistical

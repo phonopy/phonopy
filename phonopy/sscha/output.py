@@ -37,7 +37,7 @@ _EV_TO_UNIT = 1000.0
 def write_sscha_yaml(
     sscha: MLPSSCHA,
     force_constants_filenames: Mapping[int, str] | None = None,
-    filename: str | os.PathLike = "phonopy_sscha.yaml",
+    filename: str | os.PathLike = "sscha_free_energies.yaml",
 ) -> str:
     """Write SSCHA settings and per-iteration free energies into a yaml file.
 
@@ -51,7 +51,7 @@ def write_sscha_yaml(
         by iteration i + 1, and the two file names are reported accordingly.
         The default is None, which writes no file names.
     filename : str or os.PathLike, optional
-        Output file name, by default "phonopy_sscha.yaml".
+        Output file name, by default "sscha_free_energies.yaml".
 
     Returns
     -------

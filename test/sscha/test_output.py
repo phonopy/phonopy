@@ -61,7 +61,7 @@ def _write(
     sscha: _StubSSCHA,
     filenames: Mapping[int, str] | None = None,
 ) -> dict[str, Any]:
-    filename = tmp_path / "phonopy_sscha.yaml"
+    filename = tmp_path / "sscha_free_energies.yaml"
     # The writer reads settings and history only, so the stub stands in for an
     # MLPSSCHA instance here.
     written = write_sscha_yaml(cast(MLPSSCHA, sscha), filenames, filename=filename)
