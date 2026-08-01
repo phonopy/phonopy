@@ -78,6 +78,62 @@ def test_read_electronic_states_missing_vaspout(tmp_path, capsys):
     assert "no vaspout.h5" in capsys.readouterr().out
 
 
+def _tensor_grid(a_values, c_values):
+    """Return the free lengths of an (a, c) tensor grid in row-major order."""
+    return np.array([[a, c] for a in a_values for c in c_values])
+
+
+def test_detect_grid_shape_of_a_tensor_grid():
+    """A tensor grid is recognised, with one count per free DOF."""
+    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+
+    assert _detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.0, 5.1])) == (3, 2)
+    assert _detect_grid_shape(np.array([[3.0], [3.1], [3.2]])) == (3,)
+
+
+def test_detect_grid_shape_of_scattered_cells():
+    """Randomly sampled cells are not a grid and get no shape.
+
+    Every length is then distinct, so the counts multiply to far more than
+    the number of cells.
+
+    """
+    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+
+    rng = np.random.default_rng(0)
+    assert _detect_grid_shape(rng.uniform(3.0, 3.5, size=(12, 2))) is None
+
+
+def test_detect_grid_shape_rejects_a_reordered_grid():
+    """The cells have to be stored in row-major order.
+
+    The counts alone cannot tell: the same cells in another order still
+    multiply to the number of cells, while the main diagonal computed from
+    the shape would pick the wrong ones.
+
+    """
+    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+
+    grid = _tensor_grid([3.0, 3.1, 3.2], [5.0, 5.1, 5.2])
+    assert _detect_grid_shape(grid) == (3, 3)
+
+    shuffled = grid[np.random.default_rng(1).permutation(len(grid))]
+    assert _detect_grid_shape(shuffled) is None
+    # Column-major, the plausible mistake, is rejected too.
+    assert (
+        _detect_grid_shape(grid.reshape(3, 3, 2).transpose(1, 0, 2).reshape(9, 2))
+        is None
+    )
+
+
+def test_detect_grid_shape_requires_ascending_axes():
+    """Axes have to ascend so that the diagonal is a monotonic volume path."""
+    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+
+    assert _detect_grid_shape(_tensor_grid([3.2, 3.1, 3.0], [5.0, 5.1, 5.2])) is None
+    assert _detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.2, 5.1, 5.0])) is None
+
+
 def test_build_calculator_grid_point(tmp_path):
     """build_calculator_grid_point gathers forces, displacements, and U correctly."""
     _make_grid_point_dirs(tmp_path, 0)

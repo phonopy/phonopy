@@ -88,6 +88,25 @@ def test_dataset_roundtrip(tmp_path):
         assert p_out.internal_energy == p_in.internal_energy
 
 
+def test_dataset_grid_shape_roundtrip(tmp_path):
+    """The grid shape survives the round trip, and is absent when not given.
+
+    The analysis takes the main-diagonal volume path from it, so a dataset
+    written without it has to read back as None rather than as a guess.
+
+    """
+    points = (_grid_point(0, True), _grid_point(1, False))
+    with_shape = AnisoQHADataset(grid_points=points, grid_shape=(5, 5))
+    path = tmp_path / "with_shape.hdf5"
+    write_aniso_qha_dataset(with_shape, path)
+    assert read_aniso_qha_dataset(path).grid_shape == (5, 5)
+
+    without_shape = AnisoQHADataset(grid_points=points)
+    path = tmp_path / "without_shape.hdf5"
+    write_aniso_qha_dataset(without_shape, path)
+    assert read_aniso_qha_dataset(path).grid_shape is None
+
+
 def test_dataset_electronic_states_optional(tmp_path):
     """The electronic states are preserved when present and absent."""
     dataset = AnisoQHADataset(
