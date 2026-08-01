@@ -45,6 +45,10 @@ indeed helps the phonopy project to continue:
   }
   ```
 
+Some features rely on other codes, whose papers should be cited as well when
+those features are used. For the `--pypolymlp` option, which brings in
+pypolymlp and symfc, see {ref}`mlp-sscha`.
+
 ## Some papers where phonopy was used
 
 ### `phonopy-qha`: Thermal properties, quasi-harmonic approximation used for thermal expansion
