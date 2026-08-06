@@ -433,3 +433,71 @@ def test_run_anisotropic_precomputed_shape_checked(ph_nacl: Phonopy) -> None:
             phonon_free_energies=wrong,
             surface_degree=2,
         )
+
+
+def test_thermal_properties_gamma_center_matches_length(ph_nacl: Phonopy) -> None:
+    """Divisions given as numbers need is_gamma_center to match a length.
+
+    phonopy enforces a Gamma-centred mesh for a mesh given as a length but
+    not for explicit numbers of divisions, which fall back to Monkhorst-Pack
+    and sit half a division away. An anisotropic QHA that pins the divisions
+    so that every lattice grid point is sampled identically has to ask for
+    the Gamma-centred grid as well, or it changes the sampling while trying
+    to hold it fixed.
+
+    """
+    from phonopy.phonon.grid import length2mesh
+    from phonopy.qha.thermal import compute_thermal_properties
+
+    phonopys = [scaled_phonopy(ph_nacl, np.array([1.0, 1.0, 1.0]))]
+    length = 20.0
+    divisions = length2mesh(length, phonopys[0].primitive.cell)
+    # Monkhorst-Pack shifts only along axes with an even number of
+    # divisions, so an odd mesh would make the inequality below vacuous.
+    assert all(int(n) % 2 == 0 for n in divisions)
+
+    by_length, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, length)
+    centred, _, _ = compute_thermal_properties(
+        phonopys, TEMPERATURES, divisions, is_gamma_center=True
+    )
+    shifted, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, divisions)
+
+    np.testing.assert_allclose(centred, by_length, rtol=1e-12, atol=0.0)
+    # The default is phonopy's own, and it samples a different set of q.
+    assert not np.allclose(shifted, by_length, rtol=1e-8, atol=0.0)
+
+
+def test_run_anisotropic_qha_passes_gamma_center(ph_nacl: Phonopy) -> None:
+    """The flag reaches the sampling inside run_anisotropic_qha."""
+    from phonopy.physical_units import get_physical_units
+    from phonopy.qha.thermal import compute_thermal_properties
+
+    # An even mesh, so that the Monkhorst-Pack shift exists to be avoided.
+    even_mesh = [10, 10, 10]
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    result = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        mesh=even_mesh,
+        surface_degree=2,
+        is_gamma_center=True,
+    )
+
+    fe_phonon, _, _ = compute_thermal_properties(
+        phonopys, TEMPERATURES, even_mesh, is_gamma_center=True
+    )
+    reference = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        phonon_free_energies=fe_phonon / get_physical_units().EvTokJmol,
+        surface_degree=2,
+    )
+    np.testing.assert_allclose(
+        result.helmholtz_lattice, reference.helmholtz_lattice, rtol=1e-12, atol=0.0
+    )
+    # And it is not simply the default path under another name.
+    shifted, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, even_mesh)
+    assert not np.allclose(fe_phonon, shifted, rtol=1e-8, atol=0.0)
