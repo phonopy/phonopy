@@ -225,6 +225,27 @@ atom_energies = {
 }
 
 
+def test_pypolymlp_data_index_sequence(ph_nacl_rd: Phonopy):
+    """Snapshots are selected by a sequence of integers, not only by a slice."""
+    data = PypolymlpData(
+        displacements=ph_nacl_rd.displacements,
+        forces=ph_nacl_rd.forces,
+        supercell_energies=ph_nacl_rd.supercell_energies,
+        supercell=ph_nacl_rd.supercell,
+    )
+    positions = [3, 0, 7]
+    picked = data[positions]
+
+    assert len(picked) == len(positions)
+    np.testing.assert_allclose(picked.displacements, data.displacements[positions])
+    np.testing.assert_allclose(picked.forces, data.forces[positions])
+    np.testing.assert_allclose(
+        picked.supercell_energies, data.supercell_energies[positions]
+    )
+    # The reference supercell is shared, as it is for a slice.
+    assert picked.supercell is data.supercell
+
+
 def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     """Test of pypolymlp-develop using NaCl 2x2x2 with RD results."""
     pytest.importorskip("pypolymlp", minversion="0.10.0")

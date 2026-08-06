@@ -434,6 +434,7 @@ def run_anisotropic_qha(
     pressure: float | None = None,
     surface_degree: int = 3,
     verbose: bool = False,
+    is_gamma_center: bool = False,
 ) -> AnisotropicQHAResult:
     """Run an anisotropic quasi-harmonic approximation calculation.
 
@@ -483,11 +484,27 @@ def run_anisotropic_qha(
         per temperature and handed over. The values must be normalized per
         primitive cell, consistently with internal_energies.
     mesh : float or array_like, optional
-        Mesh numbers passed to Phonopy.run_mesh, 200 by default. This is
-        denser than the 100 of run_qha, deliberately: the axial split is a
+        Mesh passed to Phonopy.run_mesh, 200 by default. This is denser
+        than the 100 of run_qha, deliberately: the axial split is a
         difference of large Grueneisen components and needs the denser mesh,
         while the volumetric expansion, being their average, is converged at
         100. Unused when phonon_free_energies is given.
+
+        A length measure is resolved against each grid point's own
+        reciprocal lattice, so cells that differ enough in a lattice length
+        receive different numbers of divisions. That is a step in F_phonon
+        across the lattice grid, i.e. in the very quantity this function
+        differentiates, and it falls on whichever pair of neighbouring grid
+        points happens to straddle the rounding. Explicit numbers of
+        divisions avoid it by sampling every grid point identically; pass
+        is_gamma_center=True with them to keep the Gamma-centred grid a
+        length would have given.
+    is_gamma_center : bool, optional
+        Generate a Gamma-centred mesh instead of the Monkhorst-Pack one.
+        Ignored when mesh is a length, for which phonopy enforces a
+        Gamma-centred mesh, so this only takes effect together with
+        explicit numbers of divisions. Default is False, phonopy's own
+        default, which shifts the grid by half a division.
     pressure : float, optional
         Pressure in GPa added to the free energy as a pV term, turning the
         minimized free energy into a Gibbs free energy.
@@ -528,7 +545,9 @@ def run_anisotropic_qha(
     free_points = lattice_lengths[:, free_indices]
 
     if phonon_free_energies is None:
-        fe_phonon, _, _ = compute_thermal_properties(phonopys, temps_in, mesh, verbose)
+        fe_phonon, _, _ = compute_thermal_properties(
+            phonopys, temps_in, mesh, verbose, is_gamma_center=is_gamma_center
+        )
         fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
     else:
         fe_phonon_ev = np.array(phonon_free_energies, dtype="double")

@@ -41,11 +41,37 @@ def compute_thermal_properties(
     temperatures: NDArray[np.double],
     mesh: float | Sequence[int] | NDArray[np.int64],
     verbose: bool = False,
+    is_gamma_center: bool = False,
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Compute phonon thermal properties at each volume point.
 
     Returns (free_energy (kJ/mol), entropy (J/K/mol), cv (J/K/mol)), each
     with shape (temperatures, volumes).
+
+    Parameters
+    ----------
+    phonopys : Sequence[Phonopy]
+        One instance per volume point, each with force constants.
+    temperatures : ndarray
+        Temperatures in K.
+    mesh : float or array_like
+        Sampling mesh, as a length measure or as explicit numbers of
+        divisions. A length is resolved against each instance's own
+        reciprocal lattice, so cells of different shape can receive
+        different numbers of divisions; explicit numbers sample every
+        instance identically. The latter matters when the results are
+        differentiated with respect to the lattice, as in an anisotropic
+        quasi-harmonic calculation, where a change of divisions between
+        neighbouring cells is a step in the quantity being differentiated.
+    verbose : bool, optional
+        Print progress. Default is False.
+    is_gamma_center : bool, optional
+        Generate a Gamma-centred mesh instead of the Monkhorst-Pack one.
+        Ignored when mesh is a length, for which phonopy enforces a
+        Gamma-centred mesh. Pass True alongside explicit numbers of
+        divisions to reproduce what the corresponding length would have
+        sampled; the default False keeps phonopy's own default and gives
+        a grid shifted by half a division. Default is False.
 
     """
     nvol = len(phonopys)
@@ -61,7 +87,7 @@ def compute_thermal_properties(
                 "Computing phonon thermal properties "
                 f"(volume {i + 1}/{nvol}, V = {ph.primitive.volume:.4f} A^3)"
             )
-        ph.run_mesh(mesh)
+        ph.run_mesh(mesh, is_gamma_center=is_gamma_center)
         tp = ph.run_thermal_properties(temperatures=temperatures)
         fe_phonon[:, i] = tp.free_energy
         entropy[:, i] = tp.entropy

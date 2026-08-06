@@ -24,6 +24,53 @@ except ImportError:
 
 _DatasetT = TypeVar("_DatasetT", "PypolymlpData", "PypolymlpStructureData")
 
+_IndexLike = slice | Sequence[int] | NDArray[np.integer] | NDArray[np.bool_]
+
+
+def _normalize_index(index: _IndexLike, n: int) -> slice | NDArray[np.intp]:
+    """Return the index as a slice or as positions into n entries.
+
+    A slice passes through unchanged. A sequence of integers or a boolean
+    mask of length n becomes an array of positions, which indexes both the
+    ndarray and the list attributes of a dataset. A bare integer is
+    rejected: these datasets have no single-entry type, and data[i : i + 1]
+    or data[[i]] gives the one-entry dataset instead.
+
+    """
+    if isinstance(index, slice):
+        return index
+    if isinstance(index, (int, np.integer)):
+        raise TypeError(
+            f"Indexing by a single integer is not supported; use "
+            f"[{index}:{index + 1}] or [[{index}]] for a dataset of one entry."
+        )
+
+    positions = np.asarray(index)
+    if positions.size == 0:
+        return np.zeros(0, dtype=np.intp)
+    if positions.ndim != 1:
+        raise TypeError("Only one-dimensional index sequences are supported.")
+    if positions.dtype == np.bool_:
+        if len(positions) != n:
+            raise IndexError(
+                f"Boolean mask of length {len(positions)} does not match {n} entries."
+            )
+        return np.flatnonzero(positions).astype(np.intp)
+    if not np.issubdtype(positions.dtype, np.integer):
+        raise TypeError(
+            "Only slices, sequences of integers and boolean masks are supported."
+        )
+    if np.any(positions < -n) or np.any(positions >= n):
+        raise IndexError(f"Index out of range for a dataset of {n} entries.")
+    return positions.astype(np.intp)
+
+
+def _take(items: list, index: slice | NDArray[np.intp]) -> list:
+    """Return the selected entries of a list attribute."""
+    if isinstance(index, slice):
+        return items[index]
+    return [items[i] for i in index]
+
 
 @dataclass
 class PypolymlpParams:
@@ -119,14 +166,19 @@ class PypolymlpData:
         """Return number of snapshots."""
         return len(self.displacements)
 
-    def __getitem__(self, index: slice) -> PypolymlpData:
-        """Return the sliced snapshots, sharing the reference supercell."""
-        if not isinstance(index, slice):
-            raise TypeError("Only slices are supported.")
+    def __getitem__(self, index: _IndexLike) -> PypolymlpData:
+        """Return the selected snapshots, sharing the reference supercell.
+
+        The index is a slice, a sequence of integers or a boolean mask, so
+        that scattered snapshots can be selected as well as a contiguous
+        block.
+
+        """
+        idx = _normalize_index(index, len(self))
         return PypolymlpData(
-            displacements=self.displacements[index],
-            forces=self.forces[index],
-            supercell_energies=self.supercell_energies[index],
+            displacements=self.displacements[idx],
+            forces=self.forces[idx],
+            supercell_energies=self.supercell_energies[idx],
             supercell=self.supercell,
         )
 
@@ -292,15 +344,21 @@ class PypolymlpStructureData:
         """Return number of structures."""
         return len(self.structures)
 
-    def __getitem__(self, index: slice) -> PypolymlpStructureData:
-        """Return the sliced structures and their properties."""
-        if not isinstance(index, slice):
-            raise TypeError("Only slices are supported.")
+    def __getitem__(self, index: _IndexLike) -> PypolymlpStructureData:
+        """Return the selected structures and their properties.
+
+        The index is a slice, a sequence of integers or a boolean mask. An
+        integer sequence is what an even draw across lattice points needs:
+        a contiguous block of a dataset built lattice point by lattice point
+        would omit most of them.
+
+        """
+        idx = _normalize_index(index, len(self))
         return PypolymlpStructureData(
-            structures=self.structures[index],
-            energies=self.energies[index],
-            forces=self.forces[index],
-            stresses=None if self.stresses is None else self.stresses[index],
+            structures=_take(self.structures, idx),
+            energies=self.energies[idx],
+            forces=_take(self.forces, idx),
+            stresses=None if self.stresses is None else self.stresses[idx],
         )
 
 
@@ -322,8 +380,9 @@ def split_pypolymlp_dataset(
 
     The dataset is not shuffled: the first `1 - test_size` fraction becomes
     the training dataset and the rest becomes the test dataset. Datasets
-    also slice directly, e.g. `data[:20]`, which is what a series over
-    training-set sizes needs.
+    also index directly, e.g. `data[:20]` for a series over training-set
+    sizes, or `data[indices]` with a sequence of integers or a boolean mask
+    to select scattered entries.
 
     Parameters
     ----------
