@@ -4,6 +4,12 @@
 
 ## Unreleased (v4.5.0)
 
+- Behavior change: random displacements at finite temperature are drawn
+  differently. A fixed random seed now gives the same displacements whatever
+  LAPACK implementation is installed. Their distribution is unchanged, but the
+  random stream moves: a seeded run gives different displacements than in
+  phonopy 4.4 and earlier. `sampling_matrix="eigenvector"` recovers the
+  previous behavior.
 - Supercell file names are now zero-padded to a uniform number of digits. The
   padding grows when the largest displacement number needs more digits than the
   minimum of three, so 1000 supercells give `POSCAR-0001`, ..., `POSCAR-1000`
