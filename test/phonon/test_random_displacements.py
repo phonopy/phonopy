@@ -1053,7 +1053,14 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3: Phonopy):
 
     sqrt_masses = np.repeat(np.sqrt(ph.supercell.masses), 3)
     uu_bare = _mass_sand(uu, sqrt_masses)
-    uu_inv_bare = np.linalg.pinv(uu_bare)
+    # uu is singular by the three translational modes, whose singular values
+    # sit at rounding level and so depend on the machine. numpy's default
+    # rcond of 1e-15 is not always below them, and a translational mode that
+    # survives the pseudo-inverse enters it as its reciprocal, i.e. as ~1e12.
+    # The smallest physical singular value is ~1.6e-2 against a largest of
+    # ~23, so a cut ten orders of magnitude above rounding separates them
+    # with room to spare.
+    uu_inv_bare = np.linalg.pinv(uu_bare, rcond=1e-6)
     _uu_inv = _mass_sand(uu_inv_bare, sqrt_masses)
 
     np.testing.assert_allclose(_uu_inv, uu_inv, atol=1e-5, rtol=1e-5)
