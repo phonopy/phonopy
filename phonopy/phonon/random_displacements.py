@@ -103,6 +103,7 @@ class RandomDisplacements:
         max_distance: float | None = None,
         factor: float | None = None,
         use_openmp: bool = False,
+        sampling_matrix: Literal["symmetric", "eigenvector"] | None = None,
     ):
         """Init method.
 
@@ -133,6 +134,19 @@ class RandomDisplacements:
             Phonon frequency unit conversion factor to THz
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix and its inverse.
+        sampling_matrix : str or None, optional
+            How the random normals are turned into displacements. Both
+            choices give the same distribution, but the same random numbers
+            give different displacements. Default is None, i.e. 'symmetric'.
+
+            'symmetric'
+                Use the Hermitian square root, E.diag(sigma).E^dagger, per
+                commensurate q. This depends on the force constants alone,
+                so a fixed random seed gives the same displacements whatever
+                eigenvectors the eigensolver returns, and nearby force
+                constants give nearby displacements.
+            'eigenvector'
+                Use E.diag(sigma), the behaviour of phonopy 4.4 and earlier.
 
         """
         if cutoff_frequency is None or cutoff_frequency < 0:
@@ -155,6 +169,13 @@ class RandomDisplacements:
             self._dist_func = "classical"
         else:
             raise RuntimeError("Either 'quantum' or 'classical' is required.")
+
+        if sampling_matrix is None:
+            self._sampling_matrix = "symmetric"
+        elif sampling_matrix in ("symmetric", "eigenvector"):
+            self._sampling_matrix = sampling_matrix
+        else:
+            raise RuntimeError("Either 'symmetric' or 'eigenvector' is required.")
 
         self._unit_conversion = (
             _physical_units.Hbar
@@ -506,6 +527,25 @@ class RandomDisplacements:
         self._comm_points = get_commensurate_points_in_integers(smat)
         self._ii, self._ij = categorize_commensurate_points(self._comm_points)
 
+    def _amplitudes(
+        self,
+        norm_dist: NDArray[np.double],
+        sigma: NDArray[np.double],
+        eigvecs: NDArray,
+    ) -> NDArray:
+        """Return the mode amplitudes of one commensurate q point.
+
+        'symmetric' projects the normals onto the eigenvectors before scaling
+        them, so that the pair of contractions with eigvecs makes
+        E.diag(sigma).E^dagger. That product is unchanged by a rotation within
+        a degenerate subspace or a phase per band, which is what makes the
+        displacements independent of the eigenvectors the solver returned.
+
+        """
+        if self._sampling_matrix == "symmetric":
+            return np.dot(norm_dist, eigvecs.conj()) * sigma
+        return norm_dist * sigma
+
     def _solve_ii(self, T: float, number_of_snapshots: int, randn: NDArray[np.double]):
         """Solve ii terms.
 
@@ -519,9 +559,10 @@ class RandomDisplacements:
         for norm_dist, sigma, eigvecs, phase in zip(
             randn, sigmas, self._eigvecs_ii, self._phase_ii, strict=True
         ):
-            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
-                number_of_snapshots, -1, 3
-            )[:, self._s2pp, :]
+            amplitudes = self._amplitudes(norm_dist, sigma, eigvecs)
+            u_red = np.dot(amplitudes, eigvecs.T).reshape(number_of_snapshots, -1, 3)[
+                :, self._s2pp, :
+            ]
             # u_red.shape = (snapshots, satoms, 3)
             # phase.shape = (satoms,)
             u += u_red * phase
@@ -545,7 +586,14 @@ class RandomDisplacements:
         for norm_dist, sigma, eigvecs, phase in zip(
             randn, sigmas, self._eigvecs_ij, self._phase_ij, strict=True
         ):
-            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
+            # The two sets of normals are the real and imaginary parts of one
+            # complex normal. Projecting them separately and recombining below
+            # is the same as projecting the complex vector, because the
+            # projection is complex linear and Re[(a + ib) p] = Re[a p] -
+            # Im[b p]. E^dagger is unitary, so the projected amplitudes are
+            # again complex normal with the same second moments.
+            amplitudes = self._amplitudes(norm_dist, sigma, eigvecs)
+            u_red = np.dot(amplitudes, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3
             )[:, :, self._s2pp, :]
             # u_red.shape = (2, snapshots, satoms, 3)
