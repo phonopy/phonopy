@@ -1140,6 +1140,122 @@ def get_ir_grid_points(
     return ir_grid_points, ir_grid_weights, ir_grid_map
 
 
+def get_ir_kpoint_map(
+    kpoints: Sequence[Sequence[float]] | NDArray[np.double],
+    weights: Sequence[float] | NDArray[np.double] | NDArray[np.int64],
+    bz_grid: BZGrid,
+) -> NDArray[np.int64]:
+    """Return indices that reorder a calculator's ir-kpoints onto ``bz_grid``.
+
+    An electronic-structure calculation reports its eigenvalues on its own
+    irreducible k-points, in its own order. Integrating them by the
+    tetrahedron method needs them in the order of ``get_ir_grid_points``.
+    Given ``id_map = get_ir_kpoint_map(kpoints, weights, bz_grid)``,
+    ``eigenvalues[id_map]`` is in that order and can be handed to
+    ``TetrahedronDOSAccumulator`` alongside ``ir_grid_points``,
+    ``ir_grid_weights`` and ``ir_grid_map``.
+
+    Both a diagonal mesh and a generalized regular grid work; see the
+    "Recovering reduced coordinates" section of the ``BZGrid`` docstring for
+    the relation this inverts.
+
+    The mapping is only defined for a Gamma-centred grid. A shifted
+    (Monkhorst-Pack) mesh, an explicit k-point list and a band path all fail
+    one of the checks below, and all of them raise: a wrong mapping silently
+    pairs eigenvalues with the wrong grid points.
+
+    Parameters
+    ----------
+    kpoints : array_like
+        Irreducible k-points in fractional coordinates of the reciprocal
+        basis vectors, as the calculator reports them.
+        shape=(num_kpoints, 3), dtype='double'
+    weights : array_like
+        Symmetry weight of each k-point, in the same order. Either counts or
+        weights normalized to sum to one; they are normalized here, so both
+        conventions work. shape=(num_kpoints,)
+    bz_grid : BZGrid
+        Grid to map onto, built from the mesh numbers or the grid generating
+        matrix the calculator used.
+
+    Returns
+    -------
+    ndarray
+        Indices into ``kpoints``, in ``ir_grid_points`` order.
+        shape=(num_ir_grid_points,), dtype='int64'
+
+    Raises
+    ------
+    ValueError
+        If the grid is shifted, if the k-points do not lie on the grid, if
+        they do not correspond one-to-one with the irreducible grid points,
+        or if their weights disagree with the grid's.
+
+    """
+    kpts = np.asarray(kpoints, dtype="double")
+    if kpts.ndim != 2 or kpts.shape[1] != 3:
+        raise ValueError(f"kpoints must have shape (n, 3), not {kpts.shape}.")
+    wts = np.asarray(weights, dtype="double")
+    if wts.ndim != 1 or len(wts) != len(kpts):
+        raise ValueError("weights must have one value per k-point.")
+
+    if np.any(bz_grid.PS != 0):
+        raise ValueError(
+            "The tetrahedron method needs a Gamma-centred mesh, but this "
+            f"BZGrid is shifted by PS={bz_grid.PS.tolist()}."
+        )
+    # Inverse of the q-point relation in the BZGrid docstring.
+    addresses = kpts @ np.linalg.inv(bz_grid.QDinv).T
+
+    # Check that the k-points lie on the grid. The tolerance is loose against
+    # the precision they are printed with and tight against a genuine miss,
+    # which is of order half a grid division.
+    rounded = np.rint(addresses)
+    off_grid = np.abs(addresses - rounded).max(axis=1)
+    worst = int(np.argmax(off_grid))
+    if off_grid[worst] > 1e-3:
+        raise ValueError(
+            f"k-point {worst} at {kpts[worst].tolist()} does not lie on the "
+            f"grid with D_diag={bz_grid.D_diag.tolist()}: it misses an "
+            f"address by {off_grid[worst]:.3e} in units of a grid division. "
+            "The k-points are not a Gamma-centred regular grid."
+        )
+
+    ir_grid_points, ir_grid_weights, ir_grid_map = get_ir_grid_points(bz_grid)
+    if len(kpts) != len(ir_grid_points):
+        raise ValueError(
+            f"The calculator reports {len(kpts)} irreducible k-points where "
+            f"the grid with D_diag={bz_grid.D_diag.tolist()} has "
+            f"{len(ir_grid_points)}. The two symmetry reductions disagree."
+        )
+
+    grid_points = get_grid_point_from_address(rounded.astype("int64"), bz_grid.D_diag)
+    ir_of_kpoint = ir_grid_map[grid_points]
+
+    id_map = np.argsort(ir_of_kpoint)
+    if not np.array_equal(ir_of_kpoint[id_map], ir_grid_points):
+        values, counts = np.unique(ir_of_kpoint, return_counts=True)
+        first, second = np.flatnonzero(ir_of_kpoint == values[counts.argmax()])[:2]
+        raise ValueError(
+            f"k-points {int(first)} and {int(second)} both map to "
+            f"irreducible grid point {int(ir_of_kpoint[first])}."
+        )
+
+    # Check weights.
+    n_grid_points = np.prod(bz_grid.D_diag)
+    mapped_weights = np.rint(wts[id_map] / wts.sum() * n_grid_points).astype("int64")
+    if not (mapped_weights == ir_grid_weights).all():
+        worst = int(np.argmax(np.abs(mapped_weights - ir_grid_weights)))
+        raise ValueError(
+            "The calculator's symmetry weights disagree with the grid's at "
+            f"irreducible grid point {int(ir_grid_points[worst])}: the "
+            f"calculator gives {int(mapped_weights[worst])} where the grid "
+            f"gives {int(ir_grid_weights[worst])}."
+        )
+
+    return id_map
+
+
 def get_grid_points_by_rotations(
     bz_gp: int,
     bz_grid: BZGrid,

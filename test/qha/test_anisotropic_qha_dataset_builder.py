@@ -12,11 +12,13 @@ import numpy as np
 import pytest
 
 from phonopy.file_IO import write_FORCE_SETS
-from phonopy.interface.vasp import read_vasprun_calculation
+from phonopy.interface.vasp import (
+    electronic_states_from_vaspout,
+    read_vasprun_calculation,
+)
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.scripts.phonopy_anisotropic_qha_dataset import (
     build_calculator_grid_point,
-    electronic_states_from_vaspout,
     load_phonon,
     load_phonon_from_disp_dirs,
     read_electronic_states,

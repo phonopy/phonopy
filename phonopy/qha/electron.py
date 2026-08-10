@@ -11,6 +11,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 @dataclasses.dataclass(frozen=True)
@@ -44,8 +45,22 @@ class ElectronicStates:
         must be given explicitly. See ElectronFreeEnergy.
     fermi_energy : float, optional
         Fermi energy in eV as reported by the calculation the eigenvalues
-        come from. Recorded for reference only; the chemical potential used
-        in the free energy is solved from the states themselves.
+        come from. Used to anchor the electron count when the free energy is
+        computed from a density of states; see free_energy_from_dos.
+    kpoints : ndarray, optional
+        The irreducible k-points the eigenvalues sit on, in fractional
+        coordinates of the reciprocal basis vectors.
+        shape=(kpoints, 3), dtype='double'
+    mesh : ndarray, optional
+        Numbers of mesh divisions, or the grid generating matrix of a
+        generalized regular grid. shape=(3,) or (3, 3), dtype='int64'
+    cell : PhonopyAtoms, optional
+        The cell the eigenvalues were computed for, needed for the symmetry
+        search behind the grid.
+
+    kpoints, mesh and cell are what the tetrahedron method needs and are
+    given together or not at all. Without them only the k-point sum is
+    available, which is what every caller before them did.
 
     """
 
@@ -56,6 +71,9 @@ class ElectronicStates:
     internal_energy: float | None = None
     spin_degeneracy: int | None = None
     fermi_energy: float | None = None
+    kpoints: NDArray[np.double] | None = None
+    mesh: NDArray[np.int64] | None = None
+    cell: PhonopyAtoms | None = None
 
     def __post_init__(self) -> None:
         """Validate shapes."""
@@ -75,6 +93,293 @@ class ElectronicStates:
             raise ValueError(
                 f"spin_degeneracy must be 1 or 2, not {self.spin_degeneracy}."
             )
+        grid = (self.kpoints, self.mesh, self.cell)
+        if any(item is not None for item in grid) and any(
+            item is None for item in grid
+        ):
+            raise ValueError(
+                "kpoints, mesh and cell describe the sampling grid together; "
+                "give all three or none."
+            )
+        if self.kpoints is not None:
+            if self.kpoints.shape != (self.eigenvalues.shape[1], 3):
+                raise ValueError(
+                    "kpoints must have shape (kpoints, 3) matching "
+                    f"eigenvalues, not {self.kpoints.shape}."
+                )
+            if np.asarray(self.mesh).shape not in ((3,), (3, 3)):
+                raise ValueError(
+                    "mesh must have shape (3,) or (3, 3), not "
+                    f"{np.asarray(self.mesh).shape}."
+                )
+
+
+def compute_tetrahedron_dos(
+    electronic_states: ElectronicStates,
+    energies: Sequence[float] | NDArray[np.double],
+    max_bytes: float = 2.0e8,
+) -> NDArray[np.double]:
+    """Return the electronic density of states by the linear tetrahedron method.
+
+    In states/eV per cell, summed over spin channels, on the given energies.
+
+    The k-point sum that ElectronFreeEnergy performs integrates a
+    delta-function density of states and converges far too slowly for the
+    electronic free energy: reaching the same answer needs of order twenty
+    times the irreducible k-points. Building the density of states by the
+    tetrahedron method instead converges at the mesh a static calculation
+    would use anyway.
+
+    Summing the spin channels here is what lets a spin-polarized calculation
+    be treated no differently afterwards. The occupation depends on the
+    energy and the chemical potential alone, so the electron count, the band
+    energy and the entropy are all integrals of the summed density of states
+    against one chemical potential.
+
+    The energies are processed in blocks. The tetrahedron integration weights
+    are built as one (ir points, sampling points, bands) array, which for a
+    dense mesh and the fine energy grid this needs is enormous: 7980
+    irreducible k-points, 8001 energies and 40 bands is 20 GB, and it is
+    allocated twice. Sampling points are independent of one another, so
+    splitting them changes nothing but the peak allocation.
+
+    Parameters
+    ----------
+    electronic_states : ElectronicStates
+        States carrying kpoints, mesh and cell.
+    energies : array_like
+        Energies to sample the density of states at, in eV.
+    max_bytes : float, optional
+        Rough ceiling on the integration-weight array of one block, in bytes.
+        Default is 2e8, i.e. 200 MB against the 400 MB that two of them take.
+        Raise it to trade memory for fewer passes over the eigenvalues.
+
+    Returns
+    -------
+    ndarray
+        shape=(len(energies),), dtype='double'
+
+    """
+    from phonopy.phonon.grid import BZGrid, get_ir_grid_points, get_ir_kpoint_map
+    from phonopy.phonon.spectrum import TetrahedronDOSAccumulator
+    from phonopy.structure.symmetry import Symmetry
+
+    states = electronic_states
+    if states.kpoints is None or states.mesh is None or states.cell is None:
+        raise ValueError(
+            "The tetrahedron method needs kpoints, mesh and cell on the "
+            "ElectronicStates; without them only the k-point sum is "
+            "available."
+        )
+
+    bz_grid = BZGrid(
+        states.mesh,
+        lattice=states.cell.cell,
+        symmetry_dataset=Symmetry(states.cell).dataset,
+    )
+    ir_grid_points, ir_grid_weights, ir_grid_map = get_ir_grid_points(bz_grid)
+    id_map = get_ir_kpoint_map(states.kpoints, states.weights, bz_grid)
+
+    sampling_points = np.asarray(energies, dtype="double")
+    n_ir, n_band = states.eigenvalues.shape[1:]
+    affordable = max_bytes / (8.0 * n_ir * n_band)
+    block = len(sampling_points)
+    if affordable < block:
+        block = max(1, int(affordable))
+
+    dos = np.zeros(len(sampling_points), dtype="double")
+    for eigenvalues in states.eigenvalues:
+        mapped = np.ascontiguousarray(eigenvalues[id_map])
+        for start in range(0, len(sampling_points), block):
+            chunk = sampling_points[start : start + block]
+            result = TetrahedronDOSAccumulator(
+                mapped,
+                bz_grid,
+                ir_grid_points=ir_grid_points,
+                ir_grid_weights=ir_grid_weights,
+                ir_grid_map=ir_grid_map,
+                sampling_points=chunk,
+            ).result
+            dos[start : start + len(chunk)] += result.density[0, :, 0]
+    return dos * _spin_degeneracy(states)
+
+
+def compute_free_energy_by_tetrahedron(
+    electronic_states: ElectronicStates,
+    temperatures: Sequence[float] | NDArray[np.double],
+    window: float = 2.0,
+    energy_spacing: float = 0.0005,
+) -> tuple[NDArray[np.double], NDArray[np.double]]:
+    """Return F(T) - F(0) and the entropy through the tetrahedron method.
+
+    The counterpart of compute_free_energy_and_entropy, which sums
+    Fermi-Dirac occupations over irreducible k-points. Which one runs is the
+    caller's choice rather than an inference from the data: this one needs
+    kpoints, mesh and cell on the states and raises without them.
+
+    Parameters
+    ----------
+    electronic_states : ElectronicStates
+        States carrying kpoints, mesh, cell and fermi_energy.
+    temperatures : array_like
+        Temperatures in K.
+    window : float, optional
+        Half-width of the energy window around the Fermi level in eV.
+        Default is 2.0.
+    energy_spacing : float, optional
+        Spacing of the energy grid inside the window in eV. Default is
+        0.0005, at which halving the grid moves the free energy by less than
+        a ueV; at 0.001 it still moves by about 1 ueV.
+
+    Returns
+    -------
+    tuple of ndarray
+        (F(T) - F(0) in eV, S(T) in eV/K), each of shape
+        (len(temperatures),).
+
+    """
+    if electronic_states.fermi_energy is None:
+        raise ValueError(
+            "The tetrahedron method anchors the electron count to the "
+            "calculation's Fermi energy, which these ElectronicStates do not "
+            "carry."
+        )
+    fermi = electronic_states.fermi_energy
+    n_points = int(round(2 * window / energy_spacing)) + 1
+    energies = np.linspace(fermi - window, fermi + window, n_points)
+    dos = compute_tetrahedron_dos(electronic_states, energies)
+    free_energy, entropy, _ = free_energy_from_dos(
+        energies,
+        dos,
+        electronic_states.n_electrons,
+        temperatures,
+        fermi,
+        window=window,
+    )
+    return free_energy, entropy
+
+
+def free_energy_from_dos(
+    energies: NDArray[np.double],
+    dos: NDArray[np.double],
+    n_electrons: float,
+    temperatures: Sequence[float] | NDArray[np.double],
+    fermi_energy: float,
+    window: float = 2.0,
+) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
+    """Return F(T) - F(0), the entropy and mu(T) from a density of states.
+
+        N(mu, T) = int g(E) f(E) dE = n_electrons
+        E(T)     = int g(E) E f(E) dE
+        T S(T)   = -k T int g(E) [f ln f + (1-f) ln(1-f)] dE
+        F(T)     = E(T) - T S(T)
+
+    **Every integral is restricted to a window around the Fermi level, and
+    that is a matter of correctness rather than speed.** The band energy over
+    all occupied states is of order -200 eV while the electronic free energy
+    is of order 10 ueV, so a difference of totals loses fourteen digits.
+    Outside the window nothing depends on temperature: states below are
+    occupied to better than 1e-17 at 40 k_B T and contribute a constant that
+    cancels in F(T) - F(0), states above are empty.
+
+    **The states below the window are never integrated.** They include deep
+    semicore states, which are near-delta peaks that no quadrature on a meV
+    grid integrates to better than a few hundredths of an electron. Whatever
+    absorbs that error is the chemical potential, and 0.03 electrons is a
+    16 meV shift in mu, which is k_B T. Instead the count below the window is
+    defined by anchoring to the Fermi level the calculation reports,
+
+        n_below := n_electrons - int_window g(E) theta(E_F - E) dE
+
+    so that mu(T = 0) = E_F by construction and every remaining integral runs
+    over a smooth stretch of the density of states.
+
+    Parameters
+    ----------
+    energies : ndarray
+        Energies the density of states is sampled at, in eV.
+    dos : ndarray
+        Density of states in states/eV per cell, as
+        compute_tetrahedron_dos returns it.
+    n_electrons : float
+        Number of electrons in the cell.
+    temperatures : array_like
+        Temperatures in K.
+    fermi_energy : float
+        Fermi energy in eV, used as the anchor described above.
+    window : float, optional
+        Half-width of the window around the Fermi level in eV. Default is
+        2.0, which is 58 k_B T at 400 K.
+
+    Returns
+    -------
+    tuple of ndarray
+        (F(T) - F(0) in eV, S(T) in eV/K, mu(T) in eV), each of shape
+        (len(temperatures),).
+
+    """
+    from scipy.optimize import brentq
+
+    kb = get_physical_units().KB
+    temps = np.asarray(temperatures, dtype="double")
+    low, high = fermi_energy - window, fermi_energy + window
+    inside = (energies >= low) & (energies <= high)
+    if not inside.any():
+        raise ValueError(
+            f"The window {low} to {high} eV contains no density-of-states samples."
+        )
+    e_win = energies[inside]
+    g_win = dos[inside]
+    n_below = n_electrons - float(
+        np.trapezoid(np.where(e_win <= fermi_energy, g_win, 0.0), e_win)
+    )
+
+    free_energies = np.zeros(len(temps), dtype="double")
+    entropies = np.zeros(len(temps), dtype="double")
+    mus = np.zeros(len(temps), dtype="double")
+    for i, temperature in enumerate(temps):
+        kt = kb * max(float(temperature), 1e-10)
+
+        def count(mu: float, kt: float = kt) -> float:
+            return n_below + float(
+                np.trapezoid(g_win * _occupation(e_win, mu, kt), e_win)
+            )
+
+        mu = brentq(lambda mu: count(mu) - n_electrons, low, high, xtol=1e-12)
+        occupation = _occupation(e_win, mu, kt)
+        band_energy = float(np.trapezoid(g_win * e_win * occupation, e_win))
+        # The integrand vanishes wherever the occupation saturates; masking
+        # keeps log(0) out of it rather than relying on cancellation.
+        mask = (occupation > 1e-12) & (occupation < 1.0 - 1e-12)
+        safe = np.where(mask, occupation, 0.5)
+        terms = np.where(
+            mask, safe * np.log(safe) + (1.0 - safe) * np.log1p(-safe), 0.0
+        )
+        entropies[i] = -kb * float(np.trapezoid(g_win * terms, e_win))
+        free_energies[i] = band_energy - float(temperature) * entropies[i]
+        mus[i] = mu
+
+    return free_energies - free_energies[0], entropies, mus
+
+
+def _occupation(
+    energies: NDArray[np.double], mu: float, kt: float
+) -> NDArray[np.double]:
+    """Return the Fermi-Dirac occupation, guarded against overflow."""
+    return 1.0 / (1.0 + np.exp(np.clip((energies - mu) / kt, -100.0, 100.0)))
+
+
+def _spin_degeneracy(electronic_states: ElectronicStates) -> int:
+    """Return the number of electrons one eigenvalue holds.
+
+    Inferred from the spin axis as ElectronFreeEnergy does, unless given
+    explicitly. The inference is wrong for a non-collinear calculation, whose
+    spin axis has length 1 while each spinor holds one electron.
+
+    """
+    if electronic_states.spin_degeneracy is not None:
+        return electronic_states.spin_degeneracy
+    return 2 if electronic_states.eigenvalues.shape[0] == 1 else 1
 
 
 def compute_free_energy_and_entropy(
