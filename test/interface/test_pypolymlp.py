@@ -12,6 +12,7 @@ from phonopy.interface.pypolymlp import (
     PypolymlpParams,
     develop_pypolymlp,
     evalulate_pypolymlp,
+    parse_mlp_params,
 )
 
 cwd_called = pathlib.Path.cwd()
@@ -244,6 +245,35 @@ def test_pypolymlp_data_index_sequence(ph_nacl_rd: Phonopy):
     )
     # The reference supercell is shared, as it is for a slice.
     assert picked.supercell is data.supercell
+
+
+def test_parse_mlp_params_reg_alpha():
+    """Test that the ridge penalties survive every way of giving them.
+
+    The default matches pypolymlp's own, alpha = 1e-3 to 1e1 in five steps,
+    so that not asking for anything keeps the previous behaviour. A count of
+    one pins alpha instead of selecting it, which is the reason the parameter
+    is exposed: pypolymlp picks the smallest test RMSE, and that is not the
+    right criterion when the potential is judged by something else.
+    """
+    assert PypolymlpParams().reg_alpha_params == (-3.0, 1.0, 5)
+    assert parse_mlp_params("cutoff = 6.0").reg_alpha_params == (-3.0, 1.0, 5)
+
+    pinned = parse_mlp_params("reg_alpha_params = -1.0 -1.0 1")
+    assert pinned.reg_alpha_params == (-1.0, -1.0, 1)
+    # The third value is a count and has to stay an int, as it does for the
+    # gaussian_params it shares a branch with.
+    assert isinstance(pinned.reg_alpha_params[2], int)
+
+    with_others = parse_mlp_params("cutoff = 6.0, reg_alpha_params = -2.0 0.0 3")
+    assert with_others.reg_alpha_params == (-2.0, 0.0, 3)
+    assert with_others.cutoff == 6.0
+
+    assert parse_mlp_params({"reg_alpha_params": (0.0, 0.0, 1)}).reg_alpha_params == (
+        0.0,
+        0.0,
+        1,
+    )
 
 
 def test_pypolymlp_develop(ph_nacl_rd: Phonopy):

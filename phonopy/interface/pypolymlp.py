@@ -102,6 +102,18 @@ class PypolymlpParams:
         Atomic energies specified by dictionary, e.g., {'Si': -0.35864636, 'O':
         -0.95743902}, where the order is irrelevant. Default is None, which
         gives zero energies for all atoms.
+    reg_alpha_params : Sequence[float, float, int], optional
+        Ridge penalties to try, as np.linspace(p[0], p[1], p[2]) of the
+        base-10 logarithm, so the default (-3.0, 1.0, 5) means alpha = 1e-3,
+        1e-2, 1e-1, 1e0, 1e1. pypolymlp fits all of them -- the cost is one
+        Cholesky solve each against building the design matrix once -- and
+        keeps the one with the smallest test RMSE.
+
+        Set the three values equal in count 1, e.g. (-1.0, -1.0, 1), to pin
+        alpha instead of selecting it. That is worth doing when the potential
+        is judged by something other than its own force error: selecting on
+        test RMSE picks the least regularized model, whose weakly determined
+        directions are free to differ between separately trained potentials.
 
     """
 
@@ -115,6 +127,7 @@ class PypolymlpParams:
     atom_energies: dict[str, float] | None = None
     ntrain: int | None = None
     ntest: int | None = None
+    reg_alpha_params: tuple[float, float, int] = (-3.0, 1.0, 5)
 
 
 @dataclass
@@ -273,6 +286,7 @@ def develop_pypolymlp(
         gtinv_order=_params.gtinv_order,
         gtinv_maxl=_params.gtinv_maxl,
         gaussian_params2=_params.gaussian_params2,
+        reg_alpha_params=_params.reg_alpha_params,
         atomic_energy=tuple(elements_energies.values()),
     )
     if isinstance(train_data, PypolymlpData):
@@ -617,6 +631,7 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
     atom_energies: Optional[dict[str, float]] = None
     ntrain: Optional[int] = None
     ntest: Optional[int] = None
+    reg_alpha_params: Sequence[float, float, int] = (-3.0, 1.0, 5)
 
     Parameters
     ----------
@@ -629,6 +644,7 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
 
         "cutoff = 10.0, gtinv_maxl = 8 8"
         "atom_energies = Si -0.35864636 O -0.95743902"
+        "reg_alpha_params = -1.0 -1.0 1"
 
 
     """
@@ -645,7 +661,11 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
             key, val = key_val
             if key == "gtinv_maxl":
                 params_dict[key] = tuple(map(int, val.split()))
-            elif key == "gaussian_params1" or key == "gaussian_params2":
+            elif key in (
+                "gaussian_params1",
+                "gaussian_params2",
+                "reg_alpha_params",
+            ):
                 vals = val.split()
                 params_dict[key] = (float(vals[0]), float(vals[1]), int(vals[2]))
             elif key == "atom_energies":
