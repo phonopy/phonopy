@@ -1269,6 +1269,147 @@ def test_random_displacements_persist_after_temperature_generation(
     assert ph.random_displacements.frequencies is not None
 
 
+def _seeded_snapshots(
+    ph: Phonopy, number_of_snapshots: int, first_snapshot: int = 0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return the normals and displacements of seeded snapshots.
+
+    The tests below compare the normals exactly and the displacements only to
+    roundoff. What phonopy fixes is which random numbers a snapshot gets; how
+    exactly they are summed into a displacement depends on the array shapes
+    and so on the BLAS and its threading, which is outside phonopy's control.
+    Asserting bit-equality of the displacements would make these tests fail on
+    someone else's machine for a reason that is not the feature under test.
+
+    """
+    ph.init_random_displacements()
+    d = ph.get_random_displacements_at_temperature(
+        300, number_of_snapshots, random_seed=1701, first_snapshot=first_snapshot
+    )
+    rd = ph.random_displacements
+    assert rd is not None and rd.random_normals is not None
+    randn_ii, randn_ij = (a.copy() for a in rd.random_normals)
+    return randn_ii, randn_ij, d
+
+
+def test_random_displacements_both_q_sets_are_exercised(ph_tipn3: Phonopy):
+    """Guard for the four tests below.
+
+    A snapshot is built from two sets of random numbers, one for the q with
+    q = -q + G and one for the rest. The first set is the whole commensurate
+    grid when every supercell division is 1 or 2, so on such a supercell those
+    tests would pass whatever the second set did. TiPN3 is 4x2x1, which has
+    both.
+
+    """
+    ph_tipn3.init_random_displacements()
+    rd = ph_tipn3.random_displacements
+    assert rd is not None
+    assert len(rd._ii) > 0
+    assert len(rd._ij) > 0
+
+
+def test_random_displacements_extending_leaves_earlier_snapshots(ph_tipn3: Phonopy):
+    """Asking for more snapshots must not change the ones already asked for.
+
+    An ensemble whose forces have been computed can then be extended instead
+    of being thrown away.
+
+    """
+    five_ii, five_ij, five_d = _seeded_snapshots(ph_tipn3, 5)
+    eight_ii, eight_ij, eight_d = _seeded_snapshots(ph_tipn3, 8)
+    np.testing.assert_array_equal(five_ii, eight_ii[:, :5, :])
+    np.testing.assert_array_equal(five_ij, eight_ij[:, :, :5, :])
+    np.testing.assert_allclose(five_d, eight_d[:5], rtol=1e-10, atol=1e-14)
+
+
+def test_random_displacements_blocks_match_one_call(ph_tipn3: Phonopy):
+    """Generating in blocks must give what one call gives.
+
+    The blocks exist to bound memory and must not be visible in the answer.
+
+    """
+    eight_ii, eight_ij, eight_d = _seeded_snapshots(ph_tipn3, 8)
+    head_ii, head_ij, head_d = _seeded_snapshots(ph_tipn3, 3, first_snapshot=0)
+    tail_ii, tail_ij, tail_d = _seeded_snapshots(ph_tipn3, 5, first_snapshot=3)
+    np.testing.assert_array_equal(np.concatenate([head_ii, tail_ii], axis=1), eight_ii)
+    np.testing.assert_array_equal(np.concatenate([head_ij, tail_ij], axis=2), eight_ij)
+    np.testing.assert_allclose(
+        np.concatenate([head_d, tail_d]), eight_d, rtol=1e-10, atol=1e-14
+    )
+
+
+def test_random_displacements_one_snapshot_alone(ph_tipn3: Phonopy):
+    """One snapshot can be regenerated without the ones before it."""
+    eight_ii, eight_ij, eight_d = _seeded_snapshots(ph_tipn3, 8)
+    one_ii, one_ij, one_d = _seeded_snapshots(ph_tipn3, 1, first_snapshot=3)
+    np.testing.assert_array_equal(one_ii[:, 0, :], eight_ii[:, 3, :])
+    np.testing.assert_array_equal(one_ij[:, :, 0, :], eight_ij[:, :, 3, :])
+    np.testing.assert_allclose(one_d[0], eight_d[3], rtol=1e-10, atol=1e-14)
+
+
+def test_random_displacements_normals_are_shared(ph_tipn3: Phonopy):
+    """The random numbers of a snapshot are its own, whatever else is drawn.
+
+    This is the guarantee; the displacements follow from it only up to
+    roundoff, since the arithmetic downstream is blocked differently for
+    different array shapes.
+
+    """
+    ph_tipn3.init_random_displacements()
+    rd = ph_tipn3.random_displacements
+    assert rd is not None
+
+    rd.run(300, number_of_snapshots=8, random_seed=1701)
+    assert rd.random_normals is not None
+    eight_ii, eight_ij = (a.copy() for a in rd.random_normals)
+
+    rd.run(300, number_of_snapshots=1, random_seed=1701, first_snapshot=3)
+    assert rd.random_normals is not None
+    one_ii, one_ij = rd.random_normals
+
+    np.testing.assert_array_equal(one_ii[:, 0, :], eight_ii[:, 3, :])
+    np.testing.assert_array_equal(one_ij[:, :, 0, :], eight_ij[:, :, 3, :])
+
+
+def test_random_displacements_normals_can_be_given(ph_tipn3: Phonopy):
+    """Given normals must be used, and must be refused when they do not fit.
+
+    Handing one structure's normals to another is how a realization is shared
+    between structures that differ slightly, so normals of the wrong shape
+    have to raise rather than broadcast into displacements that look
+    plausible.
+
+    """
+    ph_tipn3.init_random_displacements()
+    rd = ph_tipn3.random_displacements
+    assert rd is not None
+
+    rd.run(300, number_of_snapshots=4, random_seed=1701)
+    assert rd.random_normals is not None
+    normals = tuple(a.copy() for a in rd.random_normals)
+    expected = rd.u.copy()
+
+    rd.run(300, number_of_snapshots=99, random_seed=9999, random_normals=normals)
+    # number_of_snapshots and the seed are overridden by the arrays.
+    np.testing.assert_array_equal(rd.u, expected)
+
+    with pytest.raises(ValueError):
+        rd.run(300, random_normals=(normals[0][:-1], normals[1]))
+
+
+def test_random_displacements_snapshots_differ(ph_tipn3: Phonopy):
+    """Snapshots must be different from each other.
+
+    Without this the three tests above would also pass if every snapshot were
+    the same displacement.
+
+    """
+    _, _, eight = _seeded_snapshots(ph_tipn3, 8)
+    for i in range(1, len(eight)):
+        assert not np.allclose(eight[0], eight[i])
+
+
 def test_treat_imaginary_modes(ph_srtio3: Phonopy):
     """Test imaginary mode treatment of force constants.
 

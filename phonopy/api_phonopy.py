@@ -3380,6 +3380,7 @@ class Phonopy:
         number_of_snapshots: int,
         is_plusminus: bool = False,
         random_seed: int | None = None,
+        first_snapshot: int = 0,
     ) -> np.ndarray:
         """Generate random displacements from phonon structure.
 
@@ -3397,6 +3398,11 @@ class Phonopy:
             False.
         random_seed : 32-bit unsigned int or None, optional
             Random seed. Default is None.
+        first_snapshot : int, optional
+            Index of the first snapshot. With a seed, snapshot *i* depends on
+            the seed and on *i* alone, so an ensemble can be extended or
+            generated in blocks without changing the snapshots already in it.
+            See :meth:`RandomDisplacements.run`. Default is 0.
 
         """
         if self._random_displacements is None:
@@ -3408,6 +3414,7 @@ class Phonopy:
             temperature,
             number_of_snapshots=number_of_snapshots,
             random_seed=random_seed,
+            first_snapshot=first_snapshot,
         )
         units = get_calculator_physical_units(self._calculator)
         assert self._random_displacements.u is not None
