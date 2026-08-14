@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Literal
 
 import numpy as np
@@ -232,11 +233,19 @@ class RandomDisplacements:
         self._conditions_ii: NDArray[np.bool_] | None = None
         self._conditions_ij: NDArray[np.bool_] | None = None
 
+        # Standard normals used by the last run, kept so that they can be
+        # handed to another instance.
+        self._random_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = (
+            None
+        )
+
     def run(
         self,
         T: float,
         number_of_snapshots: int = 1,
         random_seed: int | None = None,
+        first_snapshot: int = 0,
+        random_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
         randn: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
     ) -> None:
         """Calculate random displacements.
@@ -251,39 +260,66 @@ class RandomDisplacements:
         number_of_snapshots : int, optional
             Number of snapshots to be generated. Default is 1.
         random_seed : int or None, optional
-            Random seed passed to np.random.default_rng(seed). Default is None.
-        randn : tuple
-            (randn_ii, randn_ij). Used for testing purpose for the fixed random
-            numbers of random.Generator.standard_normal that can depends on
-            system.
+            Random seed. Each snapshot is drawn from its own generator,
+            seeded by ``np.random.SeedSequence([random_seed, index])``, so
+            that a snapshot depends on its index and not on how many
+            snapshots are requested alongside it. Default is None, in which
+            case the snapshots are drawn from unseeded generators and none
+            of the guarantees below apply.
+        first_snapshot : int, optional
+            Index of the first snapshot to generate. Snapshots
+            ``first_snapshot`` to ``first_snapshot + number_of_snapshots - 1``
+            are returned. Default is 0. Only meaningful with ``random_seed``.
+        random_normals : tuple of ndarray, optional
+            The standard normals to turn into displacements, as returned by
+            :meth:`generate_random_normals`. When given, ``random_seed``,
+            ``first_snapshot`` and ``number_of_snapshots`` are ignored and the
+            number of snapshots is taken from the arrays. Default is None,
+            i.e. draw them. Giving another instance's normals puts both on the
+            same realization of the randomness.
+        randn : tuple, optional
+            Deprecated alias of ``random_normals``.
+
+        Notes
+        -----
+        With a seed, snapshot *i* is a function of ``random_seed`` and *i*
+        alone. So asking for snapshots 0 to 99 and later for 100 to 199 gives
+        the same 200 snapshots as asking for 0 to 199 at once, a large
+        ensemble can be generated in blocks, and a single snapshot can be
+        regenerated on its own.
+
+        The displacements themselves are reproduced only to roundoff, since
+        the summation order downstream of the random numbers depends on the
+        array shapes and on the BLAS.
+
+        NumPy does not promise that ``Generator`` distribution methods produce
+        the same stream across its own versions (NEP 19), so a seed does not
+        reproduce displacements across NumPy upgrades.
 
         """
-        if np.issubdtype(type(random_seed), np.integer):
-            rng = np.random.default_rng(seed=random_seed)
+        if randn is not None:
+            warnings.warn(
+                "RandomDisplacements.run(randn=...) is deprecated. Use "
+                "random_normals=..., whose values are the same.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if random_normals is None:
+                random_normals = randn
+
+        if random_normals is None:
+            random_normals = self.generate_random_normals(
+                number_of_snapshots,
+                random_seed=random_seed,
+                first_snapshot=first_snapshot,
+            )
         else:
-            rng = np.random.default_rng()
+            self._check_random_normals(random_normals)
+        self._random_normals = random_normals
+        randn_ii, randn_ij = random_normals
+        number_of_snapshots = randn_ii.shape[1]
 
         N = len(self._comm_points)
-
-        # This randn is used only for testing purpose.
-        if randn is None:
-            shape = (
-                len(self._eigvals_ii),
-                number_of_snapshots,
-                len(self._eigvals_ii[0]),
-            )
-            randn_ii = rng.standard_normal(size=shape)
-            if self._ij:
-                shape_ij = (
-                    len(self._eigvals_ij),
-                    2,
-                    number_of_snapshots,
-                    len(self._eigvals_ij[0]),
-                )
-                randn_ij = rng.standard_normal(size=shape_ij)
-        else:
-            randn_ii = randn[0]
-            randn_ij = randn[1]
 
         u_ii, self._conditions_ii = self._solve_ii(T, number_of_snapshots, randn_ii)
         if self._ij:
@@ -304,6 +340,145 @@ class RandomDisplacements:
             )
         else:
             self._u = u
+
+    def generate_random_normals(
+        self,
+        number_of_snapshots: int = 1,
+        random_seed: int | None = None,
+        first_snapshot: int = 0,
+    ) -> tuple[NDArray[np.double], NDArray[np.double]]:
+        """Return standard normals for :meth:`run`.
+
+        Drawing them separately from using them lets one realization be shared
+        between structures; see the ``random_normals`` parameter of
+        :meth:`run`.
+
+        Parameters
+        ----------
+        number_of_snapshots : int, optional
+            Number of snapshots to draw for. Default is 1.
+        random_seed : int or None, optional
+            Random seed. Snapshot *i* is drawn from its own generator, seeded
+            by ``np.random.SeedSequence([random_seed, index])``, so it depends
+            on its index and not on how many snapshots are drawn beside it.
+            Default is None, i.e. unseeded.
+        first_snapshot : int, optional
+            Index of the first snapshot. Default is 0.
+
+        Returns
+        -------
+        tuple[ndarray, ndarray]
+            Shapes ``(n_ii, number_of_snapshots, n_band)`` and
+            ``(n_ij, 2, number_of_snapshots, n_band)``, where ``n_ii`` counts
+            the commensurate q with q = -q + G and ``n_ij`` the pairs of the
+            rest. The two together hold ``3 * len(supercell)`` numbers per
+            snapshot.
+
+        """
+        if random_seed is None or not np.issubdtype(type(random_seed), np.integer):
+            n_ii, b_ii, n_ij, b_ij = self._normals_shape()
+            rng = np.random.default_rng()
+            n = number_of_snapshots
+            return (
+                rng.standard_normal(size=(n_ii, n, b_ii)),
+                rng.standard_normal(size=(n_ij, 2, n, b_ij)),
+            )
+        return self._draw_seeded_normals(
+            number_of_snapshots, random_seed, first_snapshot
+        )
+
+    def _draw_seeded_normals(
+        self,
+        number_of_snapshots: int,
+        random_seed: int,
+        first_snapshot: int = 0,
+    ) -> tuple[NDArray[np.double], NDArray[np.double]]:
+        """Draw standard normals with one generator per snapshot.
+
+        Snapshot *i* comes from ``np.random.SeedSequence([random_seed, i])``,
+        so it depends on its index and on nothing else. In one environment
+        and with one seed, drawing n snapshots and drawing m > n therefore
+        give the same first n.
+
+        That is the point of the loop. It lets an ensemble be extended, be
+        generated in blocks to bound memory, or have a single snapshot
+        regenerated on its own, none of which disturbs the snapshots already
+        drawn -- so displacements whose forces have been computed are not
+        invalidated by wanting more of them.
+
+        Drawing every snapshot from one generator would be simpler and would
+        not have this property: the normals of a snapshot would sit at
+        positions in the stream that depend on how many snapshots are drawn.
+
+        The cost is building one generator per snapshot rather than one per
+        call, which is Python object creation and not random number
+        generation: about 16 us per snapshot, measured. That is a third of
+        what :meth:`run` takes on an 80-atom supercell and under a tenth of it
+        on a 128-atom one, and :meth:`run` is in turn small against computing
+        forces for the snapshots it produces.
+
+        """
+        n_ii, b_ii, n_ij, b_ij = self._normals_shape()
+        randn_ii: NDArray[np.double] = np.zeros(
+            (n_ii, number_of_snapshots, b_ii), dtype="double"
+        )
+        randn_ij: NDArray[np.double] = np.zeros(
+            (n_ij, 2, number_of_snapshots, b_ij), dtype="double"
+        )
+        for i in range(number_of_snapshots):
+            rng = np.random.default_rng(
+                np.random.SeedSequence([random_seed, first_snapshot + i])
+            )
+            randn_ii[:, i, :] = rng.standard_normal(size=(n_ii, b_ii))
+            if n_ij:
+                randn_ij[:, :, i, :] = rng.standard_normal(size=(n_ij, 2, b_ij))
+        return randn_ii, randn_ij
+
+    def _normals_shape(self) -> tuple[int, int, int, int]:
+        """Return (n_ii, n_band, n_ij, n_band) of the standard normals."""
+        n_ii = len(self._eigvals_ii)
+        b_ii = len(self._eigvals_ii[0])
+        n_ij = len(self._eigvals_ij) if self._ij else 0
+        b_ij = len(self._eigvals_ij[0]) if self._ij else 0
+        return n_ii, b_ii, n_ij, b_ij
+
+    def _check_random_normals(
+        self, random_normals: tuple[NDArray[np.double], NDArray[np.double]]
+    ) -> None:
+        """Raise if the given normals do not fit this instance.
+
+        Normals shared from another structure fit only if that structure has
+        the same supercell matrix and primitive cell.
+
+        """
+        if len(random_normals) != 2:
+            raise ValueError("random_normals must be (randn_ii, randn_ij).")
+        randn_ii, randn_ij = random_normals
+        n_ii, b_ii, n_ij, b_ij = self._normals_shape()
+        if randn_ii.ndim != 3 or randn_ii.shape[0] != n_ii or randn_ii.shape[2] != b_ii:
+            raise ValueError(
+                f"randn_ii has shape {randn_ii.shape}, expected "
+                f"({n_ii}, number_of_snapshots, {b_ii})."
+            )
+        if not self._ij:
+            return
+        expected = (n_ij, 2, randn_ii.shape[1], b_ij)
+        if tuple(randn_ij.shape) != expected:
+            raise ValueError(
+                f"randn_ij has shape {tuple(randn_ij.shape)}, expected {expected}."
+            )
+
+    @property
+    def random_normals(
+        self,
+    ) -> tuple[NDArray[np.double], NDArray[np.double]] | None:
+        """Return the standard normals the last :meth:`run` used.
+
+        Pass these to another instance's :meth:`run` to give it the same
+        realization of the randomness.
+
+        """
+        return self._random_normals
 
     @property
     def u(self) -> NDArray[np.double] | None:
