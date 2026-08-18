@@ -50,6 +50,7 @@ class MLPSSCHA:
         max_iterations: int | None = None,
         distance: float | None = None,
         fc_calculator: str | None = None,
+        fc_calculator_options: str | None = None,
         mesh: float | Sequence[int] | NDArray[np.int64] | None = None,
         random_seed: int | None = None,
         log_level: int = 0,
@@ -70,6 +71,10 @@ class MLPSSCHA:
             Distance of displacements, by default is None, which gives 0.01.
         fc_calculator : str, optional
             Force constants calculator. The default is None, which means "symfc".
+        fc_calculator_options : str, optional
+            Options passed to the force constants calculator. symfc takes
+            ``"use_mkl = True"``, which needs ``sparse_dot_mkl`` installed.
+            The default is None.
         mesh : float, array_like, or None, optional
             Sampling mesh used to compute the harmonic part of the free energy,
             by default 100.0.
@@ -106,6 +111,7 @@ class MLPSSCHA:
             self._fc_calculator = "symfc"
         else:
             self._fc_calculator = fc_calculator
+        self._fc_calculator_options = fc_calculator_options
         self._mesh: float | Sequence[int] | NDArray[np.int64]
         if mesh is None:
             self._mesh = 100.0
@@ -209,6 +215,11 @@ class MLPSSCHA:
     def fc_calculator(self) -> str:
         """Return force constants calculator."""
         return self._fc_calculator
+
+    @property
+    def fc_calculator_options(self) -> str | None:
+        """Return options passed to the force constants calculator."""
+        return self._fc_calculator_options
 
     @property
     def mesh(self) -> float | Sequence[int] | NDArray[np.int64]:
@@ -473,9 +484,10 @@ class MLPSSCHA:
             )
 
         if self._log_level:
-            print("Calculate force constants using symfc", flush=True)
+            print(f"Calculate force constants using {self._fc_calculator}", flush=True)
         self._ph.produce_force_constants(
-            fc_calculator="symfc",
+            fc_calculator=self._fc_calculator,
+            fc_calculator_options=self._fc_calculator_options,
             fc_calculator_log_level=self._log_level if self._log_level > 1 else 0,
             calculate_full_force_constants=True,
             show_drift=False,

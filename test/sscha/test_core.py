@@ -284,6 +284,46 @@ def test_MLPSSCHA_harmonic_potential_energies_match_the_direct_contraction(
     )
 
 
+def test_MLPSSCHA_passes_the_fc_calculator_and_its_options(
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both must reach produce_force_constants on every iteration.
+
+    The calculator was accepted, stored and exposed as a property while the
+    iteration called symfc by name regardless. The options are what carry
+    ``use_mkl = True`` to symfc, whose sparse products are otherwise scipy's
+    and single-threaded.
+
+    """
+    ph = ph_kcl.replicate()
+    sscha = MLPSSCHA(
+        ph,
+        mlp_kcl,
+        number_of_snapshots=2,
+        max_iterations=2,
+        temperature=300,
+        fc_calculator="symfc",
+        fc_calculator_options="use_mkl = False",
+    )
+    assert sscha.fc_calculator == "symfc"
+    assert sscha.fc_calculator_options == "use_mkl = False"
+
+    seen = []
+    original = type(sscha.phonopy).produce_force_constants
+
+    def record(self, *args, **kwargs):
+        seen.append((kwargs.get("fc_calculator"), kwargs.get("fc_calculator_options")))
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(type(sscha.phonopy), "produce_force_constants", record)
+    sscha.run()
+
+    assert seen, "produce_force_constants was never called"
+    for calculator, options in seen:
+        assert calculator == "symfc"
+        assert options == "use_mkl = False"
+
+
 def test_MLPSSCHA_compact_force_constants(
     ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, sscha_result: MLPSSCHA
 ) -> None:
