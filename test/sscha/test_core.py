@@ -259,6 +259,31 @@ def test_MLPSSCHA_sample_supercells(
     assert np.isfinite(sscha.free_energy)
 
 
+def test_MLPSSCHA_harmonic_potential_energies_match_the_direct_contraction(
+    sscha_result: MLPSSCHA,
+) -> None:
+    """The matrix product must reproduce the sum it replaces.
+
+    The harmonic potential energy of supercell m is
+
+        (1/2) sum_{i j k l} Phi[i, j, k, l] u[m, i, k] u[m, j, l],
+
+    which reads directly as a three-operand einsum. It is evaluated as a
+    matrix product over a flattened (atom, Cartesian) index instead, because
+    einsum without ``optimize`` contracts three operands in a serial loop of
+    its own: on a 128-atom supercell with 2,500 snapshots that was 1.21 s on
+    one core against 0.002 s threaded, once per SSCHA iteration. This pins the
+    two against each other so the rewrite cannot drift from its definition.
+
+    """
+    d = sscha_result.phonopy.displacements
+    assert isinstance(d, np.ndarray)
+    direct = np.einsum("ijkl,mik,mjl->m", sscha_result.force_constants, d, d) / 2
+    np.testing.assert_allclose(
+        sscha_result._harmonic_potential_energies, direct, rtol=1e-12, atol=1e-12
+    )
+
+
 def test_MLPSSCHA_compact_force_constants(
     ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, sscha_result: MLPSSCHA
 ) -> None:
