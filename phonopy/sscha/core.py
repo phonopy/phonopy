@@ -270,10 +270,24 @@ class MLPSSCHA:
 
     @property
     def _harmonic_potential_energies(self) -> NDArray[np.double]:
-        """Return harmonic potential energies of individual supercells."""
+        """Return harmonic potential energies of individual supercells.
+
+        For supercell m,
+
+            E_m = (1/2) sum_{i j a b} Phi[i, j, a, b] u[m, i, a] u[m, j, b],
+
+        a matrix product once (atom, Cartesian) is flattened into one index on
+        both. It is the diagonal of u.Phi.u^T, and only the diagonal, so the
+        rows are contracted one by one rather than forming the whole of it.
+
+        """
         d = self._ph.displacements
         assert isinstance(d, np.ndarray)
-        return np.einsum("ijkl,mik,mjl->m", self.force_constants, d, d) / 2
+        fc = self.force_constants
+        n = 3 * fc.shape[0]
+        phi = fc.transpose(0, 2, 1, 3).reshape(n, n)
+        u = d.reshape(-1, n)
+        return (np.dot(u, phi) * u).sum(axis=1) / 2
 
     @property
     def _potential_energies(self) -> NDArray[np.double]:
