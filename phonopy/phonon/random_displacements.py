@@ -204,14 +204,16 @@ class RandomDisplacements:
         self._ij: list[int]
         self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
-        s2p = primitive.s2p_map
+        self._n_patom = len(primitive)
+        self._n_lattice = len(supercell) // self._n_patom
+        # Positions and phases are ordered (primitive atom, lattice point) so
+        # that _solve_ii and _solve_ij accumulate efficiently; _to_supercell
+        # returns the displacements they generate to the supercell order.
         p2p = primitive.p2p_map
-        self._s2pp = [p2p[i] for i in s2p]
-        # Transformation matrix of scaled supercell positions to primitive
-        tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell))
-        self._spos = np.dot(self._dynmat.supercell.scaled_positions, tmat)
-        self._ppos = self._dynmat.primitive.scaled_positions
-        self._lpos = self._spos - self._ppos[self._s2pp]
+        self._ppl2s = np.argsort([p2p[i] for i in primitive.s2p_map], kind="stable")
+        self._s2ppl = np.empty(len(supercell), dtype=int)
+        self._s2ppl[self._ppl2s] = np.arange(len(supercell))
+        self._ppos = primitive.scaled_positions
 
         self._eigvals_ii: NDArray[np.double]
         self._eigvecs_ii: NDArray[np.double]
@@ -646,6 +648,17 @@ class RandomDisplacements:
         However C-type dynamical matrix is used for B in this implementation.
 
         """
+        supercell = self._dynmat.supercell
+        primitive = self._dynmat.primitive
+        # Scaled positions in the primitive basis, ordered (primitive atom,
+        # lattice point); lpos drops the basis position and leaves the lattice
+        # vector.
+        tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell))
+        spos = np.dot(supercell.scaled_positions, tmat)[self._ppl2s].reshape(
+            self._n_patom, self._n_lattice, 3
+        )
+        lpos = spos - primitive.scaled_positions[:, None, :]
+
         N = len(self._comm_points)
         eigvals_ii = []
         eigvecs_ii = []
@@ -660,7 +673,7 @@ class RandomDisplacements:
             eigvals, eigvecs = np.linalg.eigh(dm)  # dm is real.
             eigvals_ii.append(eigvals)
             eigvecs_ii.append(eigvecs)
-            phase_ii.append(np.cos(2 * np.pi * np.dot(self._lpos, q)).reshape(-1, 1))
+            phase_ii.append(np.cos(2 * np.pi * np.dot(lpos, q)))
         self._eigvals_ii = np.array(eigvals_ii, dtype="double", order="C")
         self._eigvecs_ii = np.array(eigvecs_ii, dtype="double", order="C")
         self._phase_ii = np.array(phase_ii, dtype="double", order="C")
@@ -677,9 +690,7 @@ class RandomDisplacements:
                 eigvals, eigvecs = np.linalg.eigh(dm_complex)
                 eigvals_ij.append(eigvals.real)  # type: ignore
                 eigvecs_ij.append(eigvecs)
-                phase_ij.append(
-                    np.exp(2j * np.pi * np.dot(self._spos, q)).reshape(-1, 1)
-                )
+                phase_ij.append(np.exp(2j * np.pi * np.dot(spos, q)))
             self._eigvals_ij = np.array(eigvals_ij, dtype="double", order="C")
             self._eigvecs_ij = np.array(eigvecs_ij, dtype="cdouble", order="C")
             self._phase_ij = np.array(phase_ij, dtype="cdouble", order="C")
@@ -727,22 +738,24 @@ class RandomDisplacements:
         randn parameter is used for the test.
 
         """
-        natom = len(self._dynmat.supercell)
-        u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
+        u = np.zeros(
+            (number_of_snapshots, self._n_patom, 3, self._n_lattice),
+            dtype="double",
+        )
 
         sigmas, conditions = self._get_sigma(self._eigvals_ii, T)
         for norm_dist, sigma, eigvecs, phase in zip(
             randn, sigmas, self._eigvecs_ii, self._phase_ii, strict=True
         ):
             amplitudes = self._amplitudes(norm_dist, sigma, eigvecs)
-            u_red = np.dot(amplitudes, eigvecs.T).reshape(number_of_snapshots, -1, 3)[
-                :, self._s2pp, :
-            ]
-            # u_red.shape = (snapshots, satoms, 3)
-            # phase.shape = (satoms,)
-            u += u_red * phase
+            u_red = np.dot(amplitudes, eigvecs.T).reshape(
+                number_of_snapshots, self._n_patom, 3
+            )
+            # u_red.shape = (snapshots, patoms, 3)
+            # phase.shape = (patoms, lattice points)
+            u += u_red[:, :, :, None] * phase[None, :, None, :]
 
-        return u, conditions
+        return self._to_supercell(u), conditions
 
     def _solve_ij(
         self,
@@ -755,8 +768,10 @@ class RandomDisplacements:
         randn parameter is used for the test.
 
         """
-        natom = len(self._dynmat.supercell)
-        u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
+        u = np.zeros(
+            (number_of_snapshots, self._n_patom, 3, self._n_lattice),
+            dtype="double",
+        )
         sigmas, conditions = self._get_sigma(self._eigvals_ij, T)
         for norm_dist, sigma, eigvecs, phase in zip(
             randn, sigmas, self._eigvecs_ij, self._phase_ij, strict=True
@@ -769,14 +784,26 @@ class RandomDisplacements:
             # again complex normal with the same second moments.
             amplitudes = self._amplitudes(norm_dist, sigma, eigvecs)
             u_red = np.dot(amplitudes, eigvecs.T).reshape(
-                2, number_of_snapshots, -1, 3
-            )[:, :, self._s2pp, :]
-            # u_red.shape = (2, snapshots, satoms, 3)
-            # phase.shape = (satoms,)
-            u += (u_red[0] * phase).real
-            u -= (u_red[1] * phase).imag
+                2, number_of_snapshots, self._n_patom, 3
+            )
+            # u_red.shape = (2, snapshots, patoms, 3)
+            # phase.shape = (patoms, lattice points)
+            ph = phase[None, :, None, :]
+            u += (u_red[0][:, :, :, None] * ph).real
+            u -= (u_red[1][:, :, :, None] * ph).imag
 
-        return u * np.sqrt(2), conditions
+        return self._to_supercell(u) * np.sqrt(2), conditions
+
+    def _to_supercell(self, u: NDArray[np.double]) -> NDArray[np.double]:
+        """Return (snapshots, patoms, 3, lattice) as (snapshots, satoms, 3).
+
+        The lattice point is the innermost axis while the contributions are
+        accumulated, because that is the axis the phase runs along.
+
+        """
+        n = u.shape[0]
+        flat = u.transpose(0, 1, 3, 2).reshape(n, self._n_patom * self._n_lattice, 3)
+        return np.array(flat[:, self._s2ppl, :], dtype="double", order="C")
 
     def _get_sigma(
         self, eigvals: NDArray[np.double], T: float
