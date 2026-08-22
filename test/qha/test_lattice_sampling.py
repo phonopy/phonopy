@@ -13,7 +13,6 @@ from phonopy.qha.lattice_sampling import (
     build_strain_cells_manifest,
     get_free_lattice_dof,
     grid_strained_cells,
-    sample_strained_cells,
     write_strain_cells_manifest,
 )
 from phonopy.structure.atoms import PhonopyAtoms
@@ -170,47 +169,6 @@ def test_dof_rhombohedral_setting_rejected() -> None:
         get_free_lattice_dof(cell)
 
 
-def test_sample_hexagonal() -> None:
-    """Sampling preserves b = a and fractional positions and honors ranges."""
-    cell = _hexagonal()
-    dof = get_free_lattice_dof(cell)
-    ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    cells = sample_strained_cells(cell, dof, ranges, num=8, seed=0)
-
-    assert len(cells) == 8
-    for c in cells:
-        lengths = np.linalg.norm(c.cell, axis=1)
-        # b = a preserved.
-        np.testing.assert_allclose(lengths[0], lengths[1], rtol=1e-12)
-        assert 3.9 <= lengths[0] <= 4.1
-        assert 5.8 <= lengths[2] <= 6.2
-        # Fractional positions unchanged.
-        np.testing.assert_allclose(c.scaled_positions, cell.scaled_positions)
-
-
-def test_sample_reproducible() -> None:
-    """The same seed reproduces the same cells."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    a = sample_strained_cells(cell, dof, ranges, num=5, seed=42)
-    b = sample_strained_cells(cell, dof, ranges, num=5, seed=42)
-    for ca, cb in zip(a, b, strict=True):
-        np.testing.assert_allclose(ca.cell, cb.cell, rtol=1e-15)
-
-
-def test_sample_invalid_ranges() -> None:
-    """Wrong range keys or inverted ranges raise ValueError."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    with pytest.raises(ValueError):
-        sample_strained_cells(cell, dof, {"a": (3.9, 4.1)}, num=3)  # missing c
-    with pytest.raises(ValueError):
-        sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "b": (1, 2)}, num=3)
-    with pytest.raises(ValueError):
-        sample_strained_cells(cell, dof, {"a": (4.1, 3.9), "c": (5.8, 6.2)}, num=3)
-
-
 def test_grid_hexagonal_tensor_product() -> None:
     """A hexagonal grid is the tensor product of the per-axis linspaces."""
     cell = _hexagonal()  # a = b = 4, c = 6
@@ -295,12 +253,12 @@ def test_grid_invalid() -> None:
 
 
 def test_build_strain_cells_manifest() -> None:
-    """The manifest records the seed, ranges and per-cell free lengths."""
+    """The manifest records the ranges, grid shape and per-cell lengths."""
     cell = _hexagonal()
     dof = get_free_lattice_dof(cell)
     ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    unitcells = sample_strained_cells(cell, dof, ranges, num=3, seed=7)
-    filenames = [f"unitcell-{i + 1:05d}" for i in range(len(unitcells))]
+    unitcells = grid_strained_cells(cell, dof, ranges, num=3)
+    filenames = [f"unitcell-{i + 1:03d}" for i in range(len(unitcells))]
 
     manifest = build_strain_cells_manifest(
         phonopy_version="0.0.0",
@@ -310,11 +268,8 @@ def test_build_strain_cells_manifest() -> None:
         dof=dof,
         command_line="phonopy-strain-cells phonopy_disp.yaml",
         ranges=ranges,
-        num=3,
-        grid_shape=None,
+        grid_shape=[3, 3],
         symprec=1e-5,
-        seed=7,
-        sampling="random",
         prefix="unitcell",
         kind="strained unit cell",
         unitcells=unitcells,
@@ -322,13 +277,11 @@ def test_build_strain_cells_manifest() -> None:
     )
 
     assert manifest["free_dof"] == ["a", "c"]
-    assert manifest["parameters"]["sampling"] == "random"
-    assert manifest["parameters"]["seed"] == 7
     assert manifest["parameters"]["ranges"] == {"a": [3.9, 4.1], "c": [5.8, 6.2]}
-    assert manifest["parameters"]["grid_shape"] is None
+    assert manifest["parameters"]["grid_shape"] == [3, 3]
     cells = manifest["output"]["cells"]
-    assert manifest["output"]["num_cells"] == 3
-    assert len(cells) == 3
+    assert manifest["output"]["num_cells"] == 9
+    assert len(cells) == 9
     for entry, uc in zip(cells, unitcells, strict=True):
         lengths = np.linalg.norm(uc.cell, axis=1)
         assert entry["a"] == pytest.approx(lengths[0], abs=1e-6)
@@ -341,8 +294,8 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
     cell = _tetragonal()
     dof = get_free_lattice_dof(cell)
     ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    unitcells = sample_strained_cells(cell, dof, ranges, num=2, seed=1)
-    filenames = [f"unitcell-{i + 1:05d}" for i in range(len(unitcells))]
+    unitcells = grid_strained_cells(cell, dof, ranges, num=2)
+    filenames = [f"unitcell-{i + 1:03d}" for i in range(len(unitcells))]
     manifest = build_strain_cells_manifest(
         phonopy_version="0.0.0",
         calculator="vasp",
@@ -351,11 +304,8 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
         dof=dof,
         command_line="phonopy-strain-cells phonopy_disp.yaml",
         ranges=ranges,
-        num=2,
-        grid_shape=None,
+        grid_shape=[2, 2],
         symprec=1e-5,
-        seed=1,
-        sampling="random",
         prefix="unitcell",
         kind="strained unit cell",
         unitcells=unitcells,

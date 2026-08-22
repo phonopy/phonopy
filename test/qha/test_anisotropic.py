@@ -420,6 +420,102 @@ def test_run_anisotropic_precomputed_needs_no_force_constants(
     assert result.equilibrium_lattice_parameters.shape == (len(TEMPERATURES) - 1, 3)
 
 
+def _electronic_free_energies(n_temperatures: int, n_points: int) -> NDArray[np.double]:
+    """Return a smooth F_el(T) - F_el(0) per grid point, anchored at T = 0."""
+    ramp = np.linspace(0.0, 1.0, n_temperatures)[:, None] ** 2
+    per_point = np.linspace(1.0, 1.4, n_points)[None, :]
+    return -0.01 * ramp * per_point
+
+
+def test_run_anisotropic_electronic_free_energies(ph_nacl: Phonopy) -> None:
+    """Test that a given F_el enters exactly as an additive free energy.
+
+    The electronic term has no effect of its own beyond adding to F, so
+    supplying it must equal folding it into the phonon free energies.
+
+    """
+    from phonopy.physical_units import get_physical_units
+    from phonopy.qha.thermal import compute_thermal_properties
+
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    fe_el = _electronic_free_energies(len(TEMPERATURES), len(phonopys))
+
+    fe_phonon, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, MESH)
+    fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+    reference = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        phonon_free_energies=fe_phonon_ev + fe_el,
+        surface_degree=2,
+    )
+    result = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        electronic_free_energies=fe_el,
+        phonon_free_energies=fe_phonon_ev,
+        surface_degree=2,
+    )
+
+    assert result.with_electronic
+    assert not reference.with_electronic
+    # The two differ only in the order the three terms are summed, so they
+    # agree to roundoff rather than exactly.
+    for name in (
+        "equilibrium_lattice_parameters",
+        "axial_thermal_expansions",
+        "helmholtz_lattice",
+    ):
+        np.testing.assert_allclose(
+            getattr(result, name), getattr(reference, name), rtol=1e-9, atol=1e-16
+        )
+
+
+def test_run_anisotropic_electronic_free_energies_shape_checked(
+    ph_nacl: Phonopy,
+) -> None:
+    """A F_el array of the wrong shape is rejected, not broadcast."""
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    wrong = np.zeros((len(TEMPERATURES), len(phonopys) - 1))
+    with pytest.raises(ValueError, match="electronic_free_energies must have shape"):
+        run_anisotropic_qha(
+            phonopys,
+            TEMPERATURES,
+            internal_energies=energies,
+            electronic_free_energies=wrong,
+            mesh=MESH,
+            surface_degree=2,
+        )
+
+
+def test_run_anisotropic_electronic_term_given_twice(ph_nacl: Phonopy) -> None:
+    """Test that the two ways of giving the electronic term are exclusive."""
+    from phonopy.qha.electron import ElectronicStates
+
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    states = [
+        ElectronicStates(
+            eigenvalues=np.zeros((1, 1, 1)), weights=np.ones(1), n_electrons=1.0
+        )
+    ] * len(phonopys)
+    with pytest.raises(ValueError, match="give one or the other"):
+        run_anisotropic_qha(
+            phonopys,
+            TEMPERATURES,
+            internal_energies=energies,
+            electronic_structures=states,
+            electronic_free_energies=_electronic_free_energies(
+                len(TEMPERATURES), len(phonopys)
+            ),
+            mesh=MESH,
+            surface_degree=2,
+        )
+
+
 def test_run_anisotropic_precomputed_shape_checked(ph_nacl: Phonopy) -> None:
     """A free-energy array of the wrong shape is rejected, not broadcast."""
     phonopys = _tetragonal_phonopys(ph_nacl)
@@ -501,3 +597,83 @@ def test_run_anisotropic_qha_passes_gamma_center(ph_nacl: Phonopy) -> None:
     # And it is not simply the default path under another name.
     shifted, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, even_mesh)
     assert not np.allclose(fe_phonon, shifted, rtol=1e-8, atol=0.0)
+
+
+def _noisy_lattice(temperatures: NDArray[np.double]) -> NDArray[np.double]:
+    """Return a lattice parameter that contracts, then expands, plus noise.
+
+    The Einstein fit is meant for exactly this shape, and the noise is what a
+    sampled free energy leaves in a per-temperature minimization.
+
+    """
+    from phonopy.qha.lattice_smoothing import _einstein_term
+
+    clean = (
+        3.2
+        - 0.004 * _einstein_term(temperatures, 90.0) / 90.0
+        + 0.010 * _einstein_term(temperatures, 320.0) / 320.0
+    )
+    rng = np.random.default_rng(1)
+    noisy = clean + rng.normal(scale=2e-5, size=len(temperatures))
+    return np.column_stack([clean, clean, noisy])
+
+
+def test_smoothing_removes_the_scatter_of_a_sampled_free_energy() -> None:
+    """Test that smoothing turns a noisy lattice parameter into a smooth one."""
+    from phonopy.qha.lattice_smoothing import smooth_lattice_parameters
+
+    temperatures = np.arange(0.0, 401.0, 10.0)
+    lattice = _noisy_lattice(temperatures)
+    smoothed, slopes = smooth_lattice_parameters(
+        temperatures, lattice, method="einstein"
+    )
+
+    # The noisy column comes back close to the clean one it was made from.
+    assert np.abs(smoothed[:, 2] - lattice[:, 0]).max() < 1e-4
+    # The expansion vanishes at 0 K, which is what the Einstein form imposes.
+    assert slopes[0, 2] == pytest.approx(0.0, abs=1e-12)
+    # The unvaried columns are returned untouched.
+    np.testing.assert_allclose(smoothed[:, 0], lattice[:, 0])
+
+
+def test_smoothing_rejects_an_unknown_method() -> None:
+    """Test that a method that is not offered is refused, not ignored."""
+    from phonopy.qha.lattice_smoothing import smooth_lattice_parameters
+
+    temperatures = np.arange(0.0, 101.0, 10.0)
+    lattice = np.tile(np.array([3.0, 3.0, 5.0]), (len(temperatures), 1))
+    with pytest.raises(ValueError, match="method must be one of"):
+        smooth_lattice_parameters(temperatures, lattice, method="spline")
+
+
+def test_run_anisotropic_smoothing_uses_the_analytic_slope(ph_nacl: Phonopy) -> None:
+    """Test that smoothing changes the expansions and keeps beta consistent.
+
+    With a smoothed lattice the expansions are the analytic slope of the
+    fitted model rather than central differences of it, and beta is their
+    sum, since the volume is the product of the three lengths.
+
+    """
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    kwargs = dict(
+        internal_energies=energies, mesh=MESH, surface_degree=2, temperatures=None
+    )
+    del kwargs["temperatures"]
+
+    raw = run_anisotropic_qha(phonopys, TEMPERATURES, **kwargs)
+    smoothed = run_anisotropic_qha(
+        phonopys, TEMPERATURES, lattice_smoothing="einstein", **kwargs
+    )
+
+    assert raw.lattice_smoothing == "none"
+    assert smoothed.lattice_smoothing == "einstein"
+    np.testing.assert_allclose(
+        smoothed.thermal_expansion,
+        smoothed.axial_thermal_expansions.sum(axis=1),
+        rtol=1e-12,
+    )
+    # The raw expansions carry the leading zero of the central differences;
+    # the smoothed ones come from a model whose slope vanishes at 0 K.
+    assert raw.axial_thermal_expansions[0].max() == 0.0
+    assert smoothed.axial_thermal_expansions[0] == pytest.approx(0.0, abs=1e-12)

@@ -43,35 +43,6 @@ def test_cli_dof_display(tmp_path, monkeypatch, capsys) -> None:
     assert "--a 3.9200 4.0800" in out
 
 
-def test_cli_sample_unitcells(tmp_path, monkeypatch) -> None:
-    """Ranges produce the requested number of strained unit cells."""
-    _write_disp_yaml(tmp_path)
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "phonopy-strain-cells",
-            "phonopy_disp.yaml",
-            "--a",
-            "3.9",
-            "4.1",
-            "--c",
-            "5.8",
-            "6.2",
-            "-n",
-            "4",
-            "--random-seed",
-            "0",
-        ],
-    )
-
-    run()
-
-    files = sorted(tmp_path.glob("unitcell-*"))
-    assert len(files) == 4
-
-
 def test_cli_grid_sampling(tmp_path, monkeypatch, capsys) -> None:
     """--grid writes a tensor grid and records a deterministic (seedless) run."""
     yaml = pytest.importorskip("yaml")
@@ -103,13 +74,9 @@ def test_cli_grid_sampling(tmp_path, monkeypatch, capsys) -> None:
     # The selected volume path is shown, with the c/a shape column.
     assert "Main diagonal (5 cells)" in out
     assert "c/a" in out
-    assert "Random seed:" not in out  # a grid run is deterministic
 
     manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
-    assert manifest["parameters"]["sampling"] == "grid"
-    assert manifest["parameters"]["seed"] is None
     assert manifest["parameters"]["grid_shape"] == [5, 5]
-    assert manifest["parameters"]["num"] is None
     assert manifest["output"]["num_cells"] == 25
 
 
@@ -145,6 +112,14 @@ def test_cli_grid_rectangular(tmp_path, monkeypatch, capsys) -> None:
     assert "Main diagonal (5 cells)" in out
     manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
     assert manifest["parameters"]["grid_shape"] == [5, 6]
+    assert manifest["free_dof"] == ["a", "c"]
+    assert manifest["parameters"]["ranges"] == {"a": [3.92, 4.08], "c": [5.88, 6.12]}
+    assert manifest["output"]["num_cells"] == 30
+
+
+def test_cli_requires_a_grid(tmp_path, monkeypatch) -> None:
+    """Ranges without --grid stop the command rather than sampling somehow."""
+    _write_disp_yaml(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
         sys,
@@ -158,62 +133,10 @@ def test_cli_grid_rectangular(tmp_path, monkeypatch, capsys) -> None:
             "--c",
             "5.8",
             "6.2",
-            "-n",
-            "5",
         ],
     )
-
-    run()
-
-    out = capsys.readouterr().out
-    assert "Random seed:" in out
-    manifest = yaml.safe_load((tmp_path / "strain_cells.yaml").read_text())
-    # No --random-seed was given, so a concrete integer seed must have been recorded.
-    assert isinstance(manifest["parameters"]["seed"], int)
-    assert manifest["free_dof"] == ["a", "c"]
-    assert manifest["parameters"]["ranges"] == {"a": [3.9, 4.1], "c": [5.8, 6.2]}
-    assert manifest["parameters"]["num"] == 5
-    cells = manifest["output"]["cells"]
-    assert manifest["output"]["num_cells"] == 5
-    assert len(cells) == 5
-    assert all("a" in entry and "c" in entry for entry in cells)
-
-
-def test_cli_manifest_seed_is_reproducible(tmp_path, monkeypatch) -> None:
-    """Replaying the recorded seed reproduces the sampled cells."""
-    yaml = pytest.importorskip("yaml")
-    argv = [
-        "phonopy-strain-cells",
-        "phonopy_disp.yaml",
-        "--a",
-        "3.9",
-        "4.1",
-        "--c",
-        "5.8",
-        "6.2",
-        "-n",
-        "4",
-    ]
-
-    run1 = tmp_path / "run1"
-    run2 = tmp_path / "run2"
-    for directory in (run1, run2):
-        directory.mkdir()
-        _write_disp_yaml(directory)
-
-    monkeypatch.chdir(run1)
-    monkeypatch.setattr(sys, "argv", argv)
-    run()
-    manifest1 = yaml.safe_load((run1 / "strain_cells.yaml").read_text())
-    seed = manifest1["parameters"]["seed"]
-
-    monkeypatch.chdir(run2)
-    monkeypatch.setattr(sys, "argv", argv + ["--random-seed", str(seed)])
-    run()
-    manifest2 = yaml.safe_load((run2 / "strain_cells.yaml").read_text())
-
-    assert manifest2["parameters"]["seed"] == seed
-    assert manifest1["output"]["cells"] == manifest2["output"]["cells"]
+    with pytest.raises(SystemExit):
+        run()
 
 
 def test_cli_rejects_non_free_parameter(tmp_path, monkeypatch) -> None:

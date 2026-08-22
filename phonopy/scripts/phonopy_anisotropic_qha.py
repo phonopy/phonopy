@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Run the anisotropic QHA from an intermediate dataset.
 
-Reads aniso_qha_dataset.hdf5 (built by phonopy-anisotropic-qha-dataset), rebuilds one
-Phonopy per grid point from the stored displacements and forces, runs
-run_anisotropic_qha and writes the lattice parameters, axial thermal expansion
-and volume versus temperature, plus optional free-energy surface diagnostics.
-The dataset is read the same way whether the forces came from DFT or an MLP.
+Reads aniso_qha_dataset.hdf5 (built by phonopy-anisotropic-qha-dataset),
+rebuilds one Phonopy per grid point from the stored displacements and forces,
+runs run_anisotropic_qha and writes the lattice parameters, axial thermal
+expansion and volume versus temperature, plus optional free-energy surface
+diagnostics. The dataset is read the same way whether the forces came from DFT
+or an MLP.
 
 Usage::
 
     phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --tmax 1000 --dt 10 \
-        --contour-temp 0 500 1000 --compare-vinet
+        --contour-temp 0 500 1000 --compare-eos
 
 """
 
@@ -23,13 +24,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy import run_anisotropic_qha, run_qha
+from phonopy import Phonopy, run_anisotropic_qha, run_qha
 from phonopy.qha import anisotropic_output, anisotropic_plot
 from phonopy.qha.anisotropic import AnisotropicQHAResult
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
-
-# Free energies are handled in eV throughout and converted only for plotting.
-_EV_TO_MEV = 1000.0
+from phonopy.qha.free_energy_io import (
+    FreeEnergyKind,
+    check_free_energies,
+    read_free_energies_hdf5,
+)
 
 
 def main_diagonal_positions(grid_shape: Sequence[int]) -> NDArray[np.int64]:
@@ -49,11 +52,11 @@ def main_diagonal_positions(grid_shape: Sequence[int]) -> NDArray[np.int64]:
     return np.arange(min(grid_shape), dtype="int64") * sum(strides)
 
 
-def suggest_vinet_cells(result: AnisotropicQHAResult, indices: Sequence[int]) -> None:
+def suggest_eos_cells(result: AnisotropicQHAResult, indices: Sequence[int]) -> None:
     """Print the cells of the grid, and a volume path to compare along.
 
     Called when the dataset records no grid shape and the user named no cells,
-    so that --vinet-index can be filled in from what is actually there. The
+    so that --eos-index can be filled in from what is actually there. The
     cells are listed by volume, and cells that share a c/a are pointed out:
     those have one shape, which is what a volume-path EOS fit assumes. A grid
     sampled over equal fractional ranges has its main diagonal among them.
@@ -63,7 +66,7 @@ def suggest_vinet_cells(result: AnisotropicQHAResult, indices: Sequence[int]) ->
     order = np.argsort(lengths.prod(axis=1))
     ratios = np.round(lengths[:, 2] / lengths[:, 0], 4)
 
-    print("# Cells by volume. --vinet-index takes the indices of this column.")
+    print("# Cells by volume. --eos-index takes the indices of this column.")
     print(f"  {'index':>6} {'a':>9} {'c':>9} {'c/a':>8}")
     for k in order:
         a, _, c = lengths[k]
@@ -78,14 +81,41 @@ def suggest_vinet_cells(result: AnisotropicQHAResult, indices: Sequence[int]) ->
             f"# {len(same_shape)} cells share c/a = {best:.4f}, "
             f"a constant-shape volume path:"
         )
-        print("#   --vinet-index " + " ".join(str(i) for i in same_shape))
+        print("#   --eos-index " + " ".join(str(i) for i in same_shape))
     else:
         print("# No five cells share a c/a, so no constant-shape path is")
         print("# available. Naming cells of varying shape still runs, but the")
         print("# comparison is then between two different paths.")
 
 
-def compare_thermal_expansion_vinet(
+def _read_free_energies(
+    filename: str | None,
+    kind: FreeEnergyKind,
+    temperatures: NDArray[np.double],
+    lattice_lengths: NDArray[np.double],
+) -> NDArray[np.double] | None:
+    """Read a ready-made free energy and check it against this run.
+
+    The file is typically computed on another machine, so nothing ties it to
+    the dataset read here: check_free_energies compares its kind, temperature
+    grid and grid points before the values are used.
+
+    """
+    if filename is None:
+        return None
+
+    values = check_free_energies(
+        read_free_energies_hdf5(filename),
+        kind,
+        temperatures,
+        lattice_lengths,
+        filename=filename,
+    )
+    print(f"{kind.capitalize()} free energy read from {filename}")
+    return values
+
+
+def compare_thermal_expansion_eos(
     result: AnisotropicQHAResult,
     phonopys: Sequence,
     temperatures: NDArray[np.double],
@@ -99,7 +129,7 @@ def compare_thermal_expansion_vinet(
 
     The Vinet path is run on the 1D subset of cells given by ``positions``,
     which the caller picks: the main diagonal of the grid, or a set named by
-    hand with --vinet-index. The
+    hand with --eos-index. The
     difference in alpha_a vs alpha_c between the two methods is the anisotropy
     the fixed-shape volume path cannot capture. Writes
     thermal_expansion_compare.dat and .png and prints the max and mean absolute
@@ -232,6 +262,35 @@ def get_options() -> Namespace:
         "stored in the dataset (default: ignore them)",
     )
     parser.add_argument(
+        "--electronic-free-energies",
+        metavar="FILE",
+        help="add F_el(T) - F_el(0) read from an hdf5 written by "
+        "write_free_energies_hdf5, instead of integrating the stored "
+        "electronic states here",
+    )
+    parser.add_argument(
+        "--smooth-lattice",
+        default="none",
+        choices=("none", "einstein"),
+        help="smooth a(T), b(T), c(T) along temperature before differentiating "
+        "them (default: none). Use it when the free energies come from a "
+        "sampled method, whose scatter the differences amplify",
+    )
+    parser.add_argument(
+        "--smooth-terms",
+        type=int,
+        default=2,
+        metavar="N",
+        help="number of Einstein terms --smooth-lattice fits, at least 2 (default: 2)",
+    )
+    parser.add_argument(
+        "--phonon-free-energies",
+        metavar="FILE",
+        help="take F_ph(T) from an hdf5 written by write_free_energies_hdf5 "
+        "instead of computing it from the stored force constants; this is "
+        "the way in for a method whose force constants depend on temperature",
+    )
+    parser.add_argument(
         "--contour-temp",
         type=float,
         nargs="*",
@@ -243,13 +302,13 @@ def get_options() -> Namespace:
         help="also write U / F_ph / F_el / total contour panels",
     )
     parser.add_argument(
-        "--compare-vinet",
+        "--compare-eos",
         action="store_true",
         help="also run a Vinet volume-path QHA on the main diagonal and "
         "compare the thermal expansion",
     )
     parser.add_argument(
-        "--vinet-index",
+        "--eos-index",
         type=int,
         nargs="*",
         help="grid indices for the Vinet volume path; default: main diagonal",
@@ -262,24 +321,58 @@ def run() -> None:
     args = get_options()
 
     dataset = read_aniso_qha_dataset(args.filename)
-    if any(point.dataset is None for point in dataset.grid_points):
+    if (
+        any(point.dataset is None for point in dataset.grid_points)
+        and not args.phonon_free_energies
+    ):
         raise SystemExit(
             f"{args.filename} carries no displacements or forces, so the "
             f"phonon free energy cannot be computed from it.\n"
             f"Such a dataset is built from the static grid alone (no --phonon "
             f"given to phonopy-anisotropic-qha-dataset) and is meant for a "
             f"method whose force constants depend on temperature. Compute the "
-            f"free energies with that method and pass them to "
-            f"run_anisotropic_qha through its phonon_free_energies argument; "
-            f"see the anisotropic QHA documentation."
+            f"free energies with that method and give them with "
+            f"--phonon-free-energies; see the anisotropic QHA documentation."
         )
     indices = [point.index for point in dataset.grid_points]
+
+    if args.electronic and args.electronic_free_energies:
+        raise SystemExit(
+            "--electronic and --electronic-free-energies are two ways of "
+            "giving the same term; use one or the other."
+        )
+
+    # Read before the force constants are built, so a mismatched file is
+    # reported in a second rather than after the solver has run.
+    temperatures = np.arange(0.0, args.tmax + args.dt, args.dt)
+    lattice_lengths = np.array(
+        [np.linalg.norm(point.cell.cell, axis=1) for point in dataset.grid_points],
+        dtype="double",
+    )
+    electronic_free_energies = _read_free_energies(
+        args.electronic_free_energies, "electronic", temperatures, lattice_lengths
+    )
+    phonon_free_energies = _read_free_energies(
+        args.phonon_free_energies, "phonon", temperatures, lattice_lengths
+    )
 
     phonopys = []
     internal_energies = []
     electronic_structures: list | None = [] if args.electronic else None
     for point in dataset.grid_points:
-        phonopys.append(point.to_phonopy(fc_calculator=args.fc_calculator))
+        if phonon_free_energies is None:
+            phonopys.append(point.to_phonopy(fc_calculator=args.fc_calculator))
+        else:
+            # The free energies replace the mesh sampling, so the force
+            # constants are never read and need not be built.
+            phonopys.append(
+                Phonopy(
+                    point.cell,
+                    supercell_matrix=point.supercell_matrix,
+                    primitive_matrix=point.primitive_matrix,
+                    log_level=0,
+                )
+            )
         internal_energies.append(point.internal_energy)
         if electronic_structures is not None:
             if point.electronic_states is None:
@@ -288,19 +381,25 @@ def run() -> None:
                 electronic_structures.append(point.electronic_states)
     if args.electronic and electronic_structures is None:
         print("  requested --electronic but the dataset has no electronic states")
+    with_electronic = (
+        electronic_structures is not None or args.electronic_free_energies is not None
+    )
     print(
         f"Loaded {len(phonopys)} grid point(s) from {args.filename} "
-        f"(electronic F_el: {'on' if electronic_structures is not None else 'off'})"
+        f"(electronic F_el: {'on' if with_electronic else 'off'})"
     )
 
-    temperatures = np.arange(0.0, args.tmax + args.dt, args.dt)
     result = run_anisotropic_qha(
         phonopys,
         temperatures,
         internal_energies=internal_energies,
         electronic_structures=electronic_structures,
+        electronic_free_energies=electronic_free_energies,
+        phonon_free_energies=phonon_free_energies,
         mesh=args.mesh,
         surface_degree=args.surface_degree,
+        lattice_smoothing=args.smooth_lattice,
+        smoothing_terms=args.smooth_terms,
         verbose=True,
     )
 
@@ -328,25 +427,41 @@ def run() -> None:
 
     if args.decompose_contours:
         written = anisotropic_plot.plot_component_contours(
-            result, internal_energies, electronic_structures, contour_temps
+            result,
+            internal_energies,
+            electronic_structures,
+            contour_temps,
+            electronic_free_energies=(
+                None
+                if electronic_free_energies is None
+                else electronic_free_energies[: len(result.temperatures)]
+            ),
         )
         if written:
             print("Wrote " + ", ".join(written))
 
-    if args.compare_vinet:
+    if args.compare_eos and phonon_free_energies is not None:
+        print("Skip the EOS cross-check: the volume-path driver computes")
+        print("F_ph from force constants, which this run does not have.")
+    elif args.compare_eos and electronic_free_energies is not None:
+        print("Skip the EOS cross-check: the volume-path driver takes the")
+        print("electronic term as states, and F_el was given ready-made, so")
+        print("the two paths would not carry the same physics. Run with")
+        print("--electronic instead to compare them.")
+    elif args.compare_eos:
         positions: list[int] | None = None
-        if args.vinet_index:
-            positions = [indices.index(i) for i in args.vinet_index]
+        if args.eos_index:
+            positions = [indices.index(i) for i in args.eos_index]
         elif dataset.grid_shape is not None:
             positions = list(main_diagonal_positions(dataset.grid_shape))
         else:
             print("The dataset records no grid shape, so it has no main")
             print("diagonal to take: its cells were either sampled randomly,")
             print("or gathered in an order the builder could not read as a")
-            print("grid. Name the cells of a volume path with --vinet-index.")
-            suggest_vinet_cells(result, indices)
+            print("grid. Name the cells of a volume path with --eos-index.")
+            suggest_eos_cells(result, indices)
         if positions is not None:
-            compare_thermal_expansion_vinet(
+            compare_thermal_expansion_eos(
                 result,
                 phonopys,
                 temperatures,

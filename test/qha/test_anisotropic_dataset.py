@@ -130,6 +130,62 @@ def test_dataset_electronic_states_optional(tmp_path):
     assert out.grid_points[1].electronic_states is None
 
 
+def test_dataset_electronic_states_grid_roundtrip(tmp_path):
+    """The k points and mesh survive, and the cell comes from the grid point."""
+    base = _grid_point(0, with_electronic=True)
+    states = base.electronic_states
+    assert states is not None
+    kpoints = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [0.5, 0.0, 0.0],
+            [0.0, 0.5, 0.0],
+            [0.5, 0.5, 0.0],
+            [0.0, 0.0, 0.5],
+        ],
+        dtype="double",
+    )
+    point = dataclasses.replace(
+        base,
+        electronic_states=ElectronicStates(
+            eigenvalues=states.eigenvalues,
+            weights=states.weights,
+            n_electrons=states.n_electrons,
+            kpoints=kpoints,
+            mesh=np.array([2, 2, 2], dtype="int64"),
+            cell=base.cell,
+        ),
+    )
+    dataset = AnisoQHADataset(grid_points=[point])
+    filename = tmp_path / "aniso.hdf5"
+    write_aniso_qha_dataset(dataset, filename)
+    out = read_aniso_qha_dataset(filename).grid_points[0].electronic_states
+
+    assert out is not None
+    np.testing.assert_allclose(out.kpoints, kpoints)
+    np.testing.assert_array_equal(out.mesh, [2, 2, 2])
+    # Not stored, restored: the grid point's own cell.
+    assert out.cell is not None
+    np.testing.assert_allclose(out.cell.cell, point.cell.cell)
+
+
+def test_dataset_electronic_states_without_grid_stay_a_kpoint_sum(tmp_path):
+    """Without kpoints and mesh the three tetrahedron inputs are all absent.
+
+    A file written before they were stored has to read back as what it was,
+    rather than as a grid with a cell and no k points.
+    """
+    dataset = AnisoQHADataset(grid_points=[_grid_point(0, with_electronic=True)])
+    filename = tmp_path / "aniso.hdf5"
+    write_aniso_qha_dataset(dataset, filename)
+    out = read_aniso_qha_dataset(filename).grid_points[0].electronic_states
+
+    assert out is not None
+    assert out.kpoints is None
+    assert out.mesh is None
+    assert out.cell is None
+
+
 def test_dataset_index_order_preserved(tmp_path):
     """Grid points are read back in ascending index order."""
     dataset = AnisoQHADataset(

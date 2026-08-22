@@ -17,13 +17,12 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, TextIO
+from typing import TextIO
 
 import numpy as np
 from numpy.typing import NDArray
 
-if TYPE_CHECKING:
-    from phonopy.qha.anisotropic import AnisotropicQHAResult
+from phonopy.qha.anisotropic import AnisotropicQHAResult
 
 
 def _format_mesh(mesh: float | Sequence[int] | NDArray[np.int64]) -> str:
@@ -52,9 +51,29 @@ def format_provenance(
     """Return the one-line record of the settings that produced the result.
 
     The settings come from the result itself, so a caller cannot omit them.
-    Information the result does not carry -- the input dataset, the
-    force-constant calculator -- is appended through ``provenance``. The
-    returned line carries no comment marker; the caller adds one.
+    The returned line carries no comment marker; the caller adds one.
+
+    Parameters
+    ----------
+    result : AnisotropicQHAResult
+        The result whose settings are recorded: the sampling mesh, the
+        surface degree, whether F_el was included, the lattice smoothing,
+        the pressure, the number of grid points and the temperature range.
+    provenance : sequence of str, optional
+        Further items, for what the result does not carry. Each is written
+        as given and joined to the rest by ", ", so use the same
+        ``key=value`` shape:
+
+            ["dataset=aniso_qha_dataset.hdf5", "fc_calculator=symfc"]
+
+        which is what phonopy-anisotropic-qha passes. Paths, file names and
+        version strings belong here; anything the result already carries
+        does not, since it would then be written twice.
+
+    Returns
+    -------
+    str
+        One line, without a leading comment marker.
 
     """
     items = []
@@ -62,6 +81,9 @@ def format_provenance(
         items.append(f"mesh={_format_mesh(result.mesh)}")
     items.append(f"surface_degree={result.surface_degree}")
     items.append(f"F_el={'on' if result.with_electronic else 'off'}")
+    if result.lattice_smoothing != "none":
+        items.append(f"smooth_lattice={result.lattice_smoothing}")
+        items.append(f"smooth_terms={result.smoothing_terms}")
     if result.pressure is not None:
         items.append(f"pressure={result.pressure:g} GPa")
     items.append(f"grid_points={result.lattice_lengths.shape[0]}")

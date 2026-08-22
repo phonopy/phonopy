@@ -68,7 +68,10 @@ class AnisoQHAGridPoint:
         Static internal energy U of the unit cell (eV).
     electronic_states : ElectronicStates, optional
         Electronic states of the static single point, for F_el. None when the
-        electronic free energy is not used.
+        electronic free energy is not used. Its ``kpoints`` and ``mesh`` are
+        stored when both are present, which is what lets a reader integrate
+        F_el by the linear tetrahedron rather than by the k-point sum; its
+        ``cell`` is not, being this grid point's own, and is restored on read.
 
     """
 
@@ -299,6 +302,17 @@ def _write_electronic_states(
         )
     if electronic_states.fermi_energy is not None:
         eg.create_dataset("fermi_energy", data=float(electronic_states.fermi_energy))
+    # The k points and the mesh they sit on are what the tetrahedron method
+    # needs; without them a reader of this file can only sum over k points.
+    # ElectronicStates.cell is not written: it is the cell of the grid point
+    # this subgroup belongs to, and _read_grid_point supplies it on read.
+    if electronic_states.kpoints is not None and electronic_states.mesh is not None:
+        eg.create_dataset(
+            "kpoints",
+            data=np.array(electronic_states.kpoints, dtype="double"),
+            compression="gzip",
+        )
+        eg.create_dataset("mesh", data=np.array(electronic_states.mesh, dtype="int64"))
 
 
 def read_aniso_qha_dataset(
@@ -360,7 +374,7 @@ def _read_grid_point(g: h5py.Group) -> AnisoQHAGridPoint:
         masses=g["masses"][:],
     )
     electronic_states = (
-        _read_electronic_states(g["electronic_states"])
+        _read_electronic_states(g["electronic_states"], cell)
         if "electronic_states" in g
         else None
     )
@@ -396,8 +410,19 @@ def _read_dataset(g: h5py.Group) -> DisplacementDataset:
     }
 
 
-def _read_electronic_states(eg: h5py.Group) -> ElectronicStates:
-    """Read electronic states from an "electronic_states" subgroup."""
+def _read_electronic_states(
+    eg: h5py.Group, cell: PhonopyAtoms | None = None
+) -> ElectronicStates:
+    """Read electronic states from an "electronic_states" subgroup.
+
+    `kpoints`, `mesh` and `cell` are what the tetrahedron method needs and
+    ElectronicStates takes them together or not at all, so the cell of the
+    grid point is passed in and attached only when the file carries the other
+    two. A file written before they were stored reads back as a k-point sum,
+    which is what it was.
+
+    """
+    has_grid = "kpoints" in eg and "mesh" in eg
     return ElectronicStates(
         eigenvalues=eg["eigenvalues"][:],
         weights=eg["weights"][:],
@@ -406,4 +431,7 @@ def _read_electronic_states(eg: h5py.Group) -> ElectronicStates:
             int(eg["spin_degeneracy"][()]) if "spin_degeneracy" in eg else None
         ),
         fermi_energy=(float(eg["fermi_energy"][()]) if "fermi_energy" in eg else None),
+        kpoints=eg["kpoints"][:] if has_grid else None,
+        mesh=eg["mesh"][:] if has_grid else None,
+        cell=cell if has_grid else None,
     )
