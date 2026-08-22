@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Symmetry-aware sampling of lattice parameters.
 
-Supports the anisotropic QHA workflow by
-generating cells whose free lattice-vector lengths are sampled within
-user-given ranges, either randomly (:func:`sample_strained_cells`) or on a
-regular tensor grid (:func:`grid_strained_cells`). The independent free
+Supports the anisotropic QHA workflow by generating cells whose free
+lattice-vector lengths are sampled within user-given ranges on a regular
+tensor grid (:func:`grid_strained_cells`). The independent free
 lattice degrees of freedom (1 for cubic, 2 for tetragonal / hexagonal /
 trigonal in the hexagonal setting, 3 for orthorhombic) are determined from
 the crystal symmetry. Cell angles are held fixed, so monoclinic and
@@ -192,70 +191,6 @@ def get_free_lattice_dof(cell: PhonopyAtoms, symprec: float = 1e-5) -> LatticeDO
     )
 
 
-def sample_strained_cells(
-    cell: PhonopyAtoms,
-    dof: LatticeDOF,
-    ranges: dict[str, tuple[float, float]],
-    num: int,
-    seed: int | None = None,
-) -> list[PhonopyAtoms]:
-    """Return cells with free lattice lengths uniformly sampled in ranges.
-
-    Each free DOF is drawn independently from a uniform distribution over
-    its (min, max) range and applied by scaling the lattice vectors it
-    controls, so cell angles and fractional atomic positions are preserved.
-
-    Parameters
-    ----------
-    cell : PhonopyAtoms
-        Base crystal structure.
-    dof : LatticeDOF
-        Free lattice DOF from get_free_lattice_dof.
-    ranges : dict
-        Maps each free-DOF label to its (min, max) length range, in the
-        native length unit of the cell. Must cover exactly dof.labels.
-    num : int
-        Number of cells to generate.
-    seed : int, optional
-        Seed for the random number generator.
-
-    Returns
-    -------
-    list of PhonopyAtoms
-
-    """
-    if set(ranges) != set(dof.labels):
-        raise ValueError(
-            f"ranges must be given for exactly the free DOF {dof.labels}, "
-            f"but got {tuple(ranges)}."
-        )
-    for label, (lo, hi) in ranges.items():
-        if not lo < hi:
-            raise ValueError(f"range for {label} must have min < max, got {(lo, hi)}.")
-    if num < 1:
-        raise ValueError("num must be a positive integer.")
-
-    rng = np.random.default_rng(seed)
-    cells = []
-    for _ in range(num):
-        lattice = cell.cell.copy()
-        for label in dof.labels:
-            lo, hi = ranges[label]
-            target = rng.uniform(lo, hi)
-            scale = target / dof.current_lengths[label]
-            for row in dof.rows[label]:
-                lattice[row] *= scale
-        cells.append(
-            PhonopyAtoms(
-                symbols=cell.symbols,
-                cell=lattice,
-                scaled_positions=cell.scaled_positions,
-                masses=cell.masses,
-            )
-        )
-    return cells
-
-
 def grid_strained_cells(
     cell: PhonopyAtoms,
     dof: LatticeDOF,
@@ -343,11 +278,8 @@ def build_strain_cells_manifest(
     dof: LatticeDOF,
     command_line: str,
     ranges: dict[str, tuple[float, float]],
-    num: int | None,
-    grid_shape: list[int] | None,
+    grid_shape: list[int],
     symprec: float,
-    seed: int | None,
-    sampling: str,
     prefix: str,
     kind: str,
     unitcells: Sequence[PhonopyAtoms],
@@ -355,10 +287,10 @@ def build_strain_cells_manifest(
 ) -> dict[str, Any]:
     """Build a provenance manifest for a phonopy-strain-cells run.
 
-    The manifest records everything needed to reproduce the run -- most
-    importantly the resolved random seed -- together with the sampled free
-    lattice lengths of every generated cell, so the (a[, b], c) grid can be
-    matched against the files later consumed by run_anisotropic_qha.
+    The manifest records everything needed to reproduce the run, together
+    with the free lattice lengths of every generated cell, so the (a[, b], c)
+    grid can be matched against the files later consumed by
+    run_anisotropic_qha.
 
     The recorded per-cell lengths are the free-DOF lengths of the unit cells,
     which are the physically meaningful strained grid.
@@ -379,17 +311,10 @@ def build_strain_cells_manifest(
         Human-readable reconstruction of the invoked command.
     ranges : dict
         Sampled (min, max) length range per free-DOF label.
-    num : int or None
-        Number of random cells requested; None for grid sampling.
-    grid_shape : list of int or None
-        Grid points per free DOF for grid sampling; None for random sampling.
+    grid_shape : list of int
+        Number of grid points per free DOF.
     symprec : float
         Symmetry tolerance used for DOF detection.
-    seed : int or None
-        Resolved random seed, or None when the run is fully deterministic
-        (grid sampling).
-    sampling : str
-        Sampling mode of the free lattice lengths ("random" or "grid").
     prefix : str
         Filename prefix of the written cells.
     kind : str
@@ -423,14 +348,11 @@ def build_strain_cells_manifest(
         "tie": dof.tie_description,
         "command_line": command_line,
         "parameters": {
-            "sampling": sampling,
             "ranges": {
                 label: [float(lo), float(hi)] for label, (lo, hi) in ranges.items()
             },
-            "num": None if num is None else int(num),
-            "grid_shape": None if grid_shape is None else [int(n) for n in grid_shape],
+            "grid_shape": [int(n) for n in grid_shape],
             "symprec": float(symprec),
-            "seed": None if seed is None else int(seed),
         },
         "output": {
             "prefix": prefix,

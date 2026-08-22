@@ -4,9 +4,9 @@
 The free lattice-length degrees of freedom are determined from the
 symmetry of the cell in the input phonopy(_disp).yaml. Run without ranges
 to inspect the free DOF, then give a range per free parameter to sample
-cells: randomly by default, or on a regular tensor grid with --grid (whose
-main diagonal is the isotropic volume path for the Vinet cross-check). All
-lengths are in the native length unit of the input cell.
+cells on a regular tensor grid with --grid, whose main diagonal is the
+isotropic volume path of the EOS cross-check. All lengths are in the native
+length unit of the input cell.
 
 """
 
@@ -26,7 +26,6 @@ from phonopy.qha.lattice_sampling import (
     build_strain_cells_manifest,
     get_free_lattice_dof,
     grid_strained_cells,
-    sample_strained_cells,
     write_strain_cells_manifest,
 )
 
@@ -56,29 +55,16 @@ def get_options() -> Namespace:
             help=f"range of lattice parameter {label}",
         )
     parser.add_argument(
-        "-n",
-        "--num",
-        type=int,
-        default=10,
-        help="number of randomly sampled cells (ignored with --grid) (default: 10)",
-    )
-    parser.add_argument(
         "--grid",
         type=int,
         nargs="+",
+        required=False,
         default=None,
         metavar="N",
-        help="sample the free lattice lengths on a regular tensor grid instead "
-        "of randomly: one N (same count on every free axis) or one N per free "
-        "DOF; the main diagonal is the isotropic volume path for "
-        "phonopy-anisotropic-qha --compare-vinet when ranges are symmetric",
-    )
-    parser.add_argument(
-        "--random-seed",
-        dest="random_seed",
-        type=int,
-        default=None,
-        help="random seed",
+        help="number of points per free lattice DOF: one N (the same count on "
+        "every free axis) or one N per free DOF. The cells are the tensor "
+        "product, and the main diagonal is the isotropic volume path for "
+        "phonopy-anisotropic-qha --compare-eos when the ranges are symmetric",
     )
     parser.add_argument(
         "--symprec", type=float, default=1e-5, help="symmetry tolerance (default: 1e-5)"
@@ -141,7 +127,7 @@ def _resolve_grid_counts(values: list[int], dof: LatticeDOF) -> dict[str, int]:
 def _print_diagonal_path(
     dof: LatticeDOF, ranges: dict[str, tuple[float, float]], counts: dict[str, int]
 ) -> None:
-    """Print the grid main diagonal -- the volume path --compare-vinet uses.
+    """Print the grid main diagonal -- the volume path --compare-eos uses.
 
     The diagonal is the cell taken at the same rank on every free axis, so it
     has ``min(counts)`` cells ordered by increasing volume. The free lengths and
@@ -155,14 +141,14 @@ def _print_diagonal_path(
     n_diag = min(counts[label] for label in dof.labels)
     ref, others = dof.labels[0], dof.labels[1:]
     ratio_header = "  ".join(f"{label}/{ref}" for label in others)
-    print(f"  Main diagonal ({n_diag} cells), the --compare-vinet volume path:")
+    print(f"  Main diagonal ({n_diag} cells), the --compare-eos volume path:")
     print(f"    {'  '.join(dof.labels)}   {ratio_header}".rstrip())
     for i in range(n_diag):
         lengths = "  ".join(f"{axes[label][i]:.4f}" for label in dof.labels)
         ratios = "  ".join(f"{axes[label][i] / axes[ref][i]:.4f}" for label in others)
         print(f"    {lengths}   {ratios}".rstrip())
     if n_diag < 5:
-        print("    (fewer than 5 cells; --compare-vinet needs at least 5.)")
+        print("    (fewer than 5 cells; --compare-eos needs at least 5.)")
 
 
 def run() -> None:
@@ -201,37 +187,23 @@ def run() -> None:
 
     ranges = {label: provided[label] for label in dof.labels}
 
-    # A concrete seed is resolved only when randomness is actually used, so a
-    # deterministic grid run records no seed and can be replayed from the
-    # manifest verbatim.
-    if args.random_seed is not None:
-        seed = args.random_seed
-    elif args.grid is None:
-        seed = int(np.random.default_rng().integers(2**32))
-    else:
-        seed = None
-
-    grid_counts: dict[str, int] | None = None
-    if args.grid is not None:
-        grid_counts = _resolve_grid_counts(args.grid, dof)
-        unitcells = grid_strained_cells(cell, dof, ranges, num=grid_counts)
-        sampling = "grid"
-    else:
-        unitcells = sample_strained_cells(cell, dof, ranges, num=args.num, seed=seed)
-        sampling = "random"
+    if args.grid is None:
+        sys.exit("Error: --grid is required to sample cells.")
+    grid_counts = _resolve_grid_counts(args.grid, dof)
+    unitcells = grid_strained_cells(cell, dof, ranges, num=grid_counts)
 
     cells = unitcells
     prefix = "unitcell"
     kind = "strained unit cell"
 
-    filenames = [f"{prefix}-{i + 1:05d}" for i in range(len(cells))]
+    # Same rule as the displaced supercells: three digits, widened to fit the
+    # largest number.
+    width = max(3, len(str(len(cells))))
+    filenames = [f"{prefix}-{i + 1:0{width}d}" for i in range(len(cells))]
     for filename, structure in zip(filenames, cells, strict=True):
         write_crystal_structure(filename, structure, interface_mode=calculator)
 
-    if grid_counts is None:
-        grid_shape = None
-    else:
-        grid_shape = [grid_counts[label] for label in dof.labels]
+    grid_shape = [grid_counts[label] for label in dof.labels]
 
     manifest = build_strain_cells_manifest(
         phonopy_version=phonopy.__version__,
@@ -241,11 +213,8 @@ def run() -> None:
         dof=dof,
         command_line=" ".join([os.path.basename(sys.argv[0]), *sys.argv[1:]]),
         ranges=ranges,
-        num=None if grid_counts is not None else args.num,
         grid_shape=grid_shape,
         symprec=args.symprec,
-        seed=seed,
-        sampling=sampling,
         prefix=prefix,
         kind=kind,
         unitcells=list(unitcells),
@@ -255,14 +224,11 @@ def run() -> None:
 
     print(
         f"Wrote {len(cells)} {kind}(s) as "
-        f"{prefix}-00001 .. {prefix}-{len(cells):05d} in {calculator} format."
+        f"{filenames[0]} .. {filenames[-1]} in {calculator} format."
     )
-    if grid_counts is not None:
-        shape = " x ".join(str(grid_counts[label]) for label in dof.labels)
-        print(f"Grid sampling: {shape} over ({', '.join(dof.labels)}).")
-        _print_diagonal_path(dof, ranges, grid_counts)
-    if seed is not None:
-        print(f"Random seed: {seed}")
+    shape = " x ".join(str(grid_counts[label]) for label in dof.labels)
+    print(f"Grid sampling: {shape} over ({', '.join(dof.labels)}).")
+    _print_diagonal_path(dof, ranges, grid_counts)
     print(f"Provenance written to {MANIFEST_FILENAME}")
 
 
