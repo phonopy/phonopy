@@ -12,17 +12,14 @@ global rcParams are modified.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.qha.anisotropic import FreeEnergySurfaceFit
+from phonopy.qha.anisotropic import AnisotropicQHAResult, FreeEnergySurfaceFit
 from phonopy.qha.thermal import compute_electronic_contributions_from_states
-
-if TYPE_CHECKING:
-    from phonopy.qha.anisotropic import AnisotropicQHAResult
 
 # Free energies are handled in eV throughout and converted only for plotting.
 _EV_TO_MEV = 1000.0
@@ -226,6 +223,9 @@ def plot_component_contours(
     electronic_structures: Sequence | None,
     temperatures: Sequence[float],
     n: int = 200,
+    electronic_free_energies: (
+        Sequence[Sequence[float]] | NDArray[np.double] | None
+    ) = None,
 ) -> list[str]:
     """Split the F(a, c) contour into its static, phonon and electronic parts.
 
@@ -236,6 +236,10 @@ def plot_component_contours(
     requested temperatures. One figure per temperature. Returns the written
     filenames, empty unless exactly 2 free lattice DOF.
 
+    The electronic term comes either from electronic_structures, which are
+    integrated here, or ready-made as electronic_free_energies with one row
+    per temperature of the result; without either, the F_el panel is left out.
+
     """
     fi = result.free_lattice_indices
     if len(fi) != 2:
@@ -244,7 +248,9 @@ def plot_component_contours(
 
     free_points = result.lattice_lengths[:, fi]
     u_static = np.asarray(internal_energies, dtype="double")
-    if electronic_structures is not None:
+    if electronic_free_energies is not None:
+        fe_el_rel = np.asarray(electronic_free_energies, dtype="double")
+    elif electronic_structures is not None:
         fe_el_rel, _ = compute_electronic_contributions_from_states(
             electronic_structures, result.temperatures
         )

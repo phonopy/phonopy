@@ -13,9 +13,10 @@ from qha_utils import MESH, TEMPERATURES, internal_energies, scaled_phonopy
 from phonopy import Phonopy, run_anisotropic_qha
 from phonopy.qha.anisotropic import AnisotropicQHAResult
 from phonopy.scripts.phonopy_anisotropic_qha import (
-    compare_thermal_expansion_vinet,
+    _read_free_energies,
+    compare_thermal_expansion_eos,
     main_diagonal_positions,
-    suggest_vinet_cells,
+    suggest_eos_cells,
 )
 
 
@@ -77,7 +78,7 @@ def test_main_diagonal_one_dof() -> None:
     np.testing.assert_array_equal(main_diagonal_positions([4]), [0, 1, 2, 3])
 
 
-def test_compare_vinet_skips_a_short_path(
+def test_compare_eos_skips_a_short_path(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture,
@@ -91,7 +92,7 @@ def test_compare_vinet_skips_a_short_path(
     monkeypatch.chdir(tmp_path)
     result = _result_with_lattice(_grid([3.0, 3.1, 3.2], [5.0, 5.1, 5.2]), [0, 2])
 
-    compare_thermal_expansion_vinet(
+    compare_thermal_expansion_eos(
         result, [], np.zeros(0), [], None, MESH, positions=[0, 4, 8]
     )
 
@@ -99,10 +100,10 @@ def test_compare_vinet_skips_a_short_path(
     assert not list(tmp_path.iterdir())
 
 
-def test_suggest_vinet_cells_names_a_constant_shape_path(
+def test_suggest_eos_cells_names_a_constant_shape_path(
     capsys: pytest.CaptureFixture,
 ) -> None:
-    """Cells of one shape are named as a ready-made --vinet-index argument.
+    """Cells of one shape are named as a ready-made --eos-index argument.
 
     The grid here samples c in proportion to a, as a grid over equal
     fractional ranges does, so its main diagonal is the set of one c/a. Every
@@ -114,11 +115,11 @@ def test_suggest_vinet_cells_names_a_constant_shape_path(
     lengths = np.array([[a, a, c] for a in a_values for c in c_values])
     result = _result_with_lattice(lengths, [0, 2])
 
-    suggest_vinet_cells(result, indices=list(range(len(lengths))))
+    suggest_eos_cells(result, indices=list(range(len(lengths))))
 
     out = capsys.readouterr().out
     # The diagonal of a 5 x 5 grid, every sixth cell.
-    assert "--vinet-index 0 6 12 18 24" in out
+    assert "--eos-index 0 6 12 18 24" in out
 
     # Listed by volume, smallest first.
     listed = [
@@ -130,21 +131,21 @@ def test_suggest_vinet_cells_names_a_constant_shape_path(
     assert (np.diff(volumes) > 0).all()
 
 
-def test_suggest_vinet_cells_without_a_constant_shape_path(
+def test_suggest_eos_cells_without_a_constant_shape_path(
     capsys: pytest.CaptureFixture,
 ) -> None:
     """When no five cells share a shape, that is said rather than guessed."""
     rng = np.random.default_rng(0)
     result = _result_with_lattice(rng.uniform(3.0, 3.5, size=(6, 3)), [0, 2])
 
-    suggest_vinet_cells(result, indices=list(range(6)))
+    suggest_eos_cells(result, indices=list(range(6)))
 
     out = capsys.readouterr().out
     assert "No five cells share a c/a" in out
     assert "constant-shape volume path" not in out
 
 
-def test_compare_vinet_writes_the_comparison(
+def test_compare_eos_writes_the_comparison(
     ph_nacl: Phonopy, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The comparison writes both files, and its table holds what it plots.
@@ -168,7 +169,7 @@ def test_compare_vinet_writes_the_comparison(
         surface_degree=2,
     )
 
-    compare_thermal_expansion_vinet(
+    compare_thermal_expansion_eos(
         result, phonopys, TEMPERATURES, energies, None, MESH, positions=range(6)
     )
 
@@ -209,3 +210,90 @@ def test_compare_vinet_writes_the_comparison(
     for aniso, vinet in ((1, 2), (3, 4), (5, 6)):
         ratio = table[warm, aniso] / table[warm, vinet]
         assert ((ratio > 0.5) & (ratio < 2.0)).all()
+
+
+def test_free_energies_round_trip(tmp_path: pathlib.Path) -> None:
+    """A written file is read back and accepted on a matching grid."""
+    from phonopy.qha.free_energy_io import (
+        read_free_energies_hdf5,
+        write_free_energies_hdf5,
+    )
+
+    temperatures = np.arange(0.0, 101.0, 10.0)
+    values = -0.01 * (temperatures[:, None] / 100.0) ** 2 * np.arange(1, 4)[None, :]
+    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
+    path = tmp_path / "fe.hdf5"
+    write_free_energies_hdf5(
+        temperatures, values, path, kind="phonon", lattice_lengths=lengths
+    )
+
+    read = _read_free_energies(str(path), "phonon", temperatures, lengths)
+    np.testing.assert_allclose(read, values)
+
+    back = read_free_energies_hdf5(path)
+    assert back.kind == "phonon"
+    assert back.n_grid_points == 3
+    np.testing.assert_allclose(back.temperatures, temperatures)
+    np.testing.assert_allclose(back.lattice_lengths, lengths)
+
+
+def test_free_energies_checked_against_the_run(tmp_path: pathlib.Path) -> None:
+    """The kind, the temperatures and the grid points are all checked.
+
+    The file is written on another machine, so nothing but these checks ties
+    it to the dataset it is used with.
+
+    """
+    from phonopy.qha.free_energy_io import write_free_energies_hdf5
+
+    temperatures = np.arange(0.0, 101.0, 10.0)
+    values = np.zeros((len(temperatures), 3))
+    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
+    path = tmp_path / "fe.hdf5"
+    write_free_energies_hdf5(
+        temperatures, values, path, kind="phonon", lattice_lengths=lengths
+    )
+
+    with pytest.raises(ValueError, match="hold phonon free energies"):
+        _read_free_energies(str(path), "electronic", temperatures, lengths)
+    with pytest.raises(ValueError, match="different temperature grid"):
+        _read_free_energies(str(path), "phonon", np.arange(0.0, 51.0, 10.0), lengths)
+    with pytest.raises(ValueError, match="grid points against"):
+        _read_free_energies(str(path), "phonon", temperatures, lengths[:2])
+    with pytest.raises(ValueError, match="different grid points"):
+        _read_free_energies(str(path), "phonon", temperatures, lengths + 0.5)
+
+
+def test_phonon_free_energies_round_trip(
+    ph_nacl: Phonopy, tmp_path: pathlib.Path
+) -> None:
+    """Phonon free energies survive a write and read, and pass the checks.
+
+    This is the route of a temperature-dependent method: the free energies are
+    computed elsewhere, written to a file, and read back for the analysis.
+
+    """
+    from phonopy.physical_units import get_physical_units
+    from phonopy.qha.free_energy_io import (
+        read_free_energies_hdf5,
+        write_free_energies_hdf5,
+    )
+    from phonopy.qha.thermal import compute_thermal_properties
+
+    phonopys = [scaled_phonopy(ph_nacl, np.array([s, s, s])) for s in (0.99, 1.0, 1.01)]
+    lengths = np.array([np.linalg.norm(ph.unitcell.cell, axis=1) for ph in phonopys])
+    fe_phonon, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, MESH)
+    fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+
+    path = tmp_path / "fph.hdf5"
+    write_free_energies_hdf5(
+        TEMPERATURES, fe_phonon_ev, path, kind="phonon", lattice_lengths=lengths
+    )
+
+    back = read_free_energies_hdf5(path)
+    assert back.kind == "phonon"
+    np.testing.assert_allclose(back.free_energies, fe_phonon_ev)
+    np.testing.assert_allclose(
+        _read_free_energies(str(path), "phonon", TEMPERATURES, lengths),
+        fe_phonon_ev,
+    )
