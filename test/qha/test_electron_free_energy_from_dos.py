@@ -17,6 +17,7 @@ from phonopy.qha.electron import (
     compute_free_energy_by_tetrahedron,
     free_energy_from_dos,
 )
+from phonopy.qha.thermal import compute_electronic_contributions_from_states
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -208,6 +209,59 @@ def test_tetrahedron_converges_faster_than_the_kpoint_sum():
     reference = converged[-1]
     assert abs(coarse[-1] - reference) < 0.06 * abs(reference)
     assert abs((coarse_k_sum[-1] - coarse_k_sum[0]) - reference) > 0.15 * abs(reference)
+
+
+def test_qha_integrates_by_tetrahedron_when_the_states_carry_the_grid():
+    """Test that the QHA drivers use the grid when the states carry it.
+
+    The two integrators are far apart on a coarse mesh, so which one ran is
+    visible in the result rather than inferred.
+
+    """
+    temperatures = np.array([300.0])
+    states = _half_filled_band([8, 8, 8])
+
+    fe_el_rel, _ = compute_electronic_contributions_from_states([states], temperatures)
+    tetrahedron, _ = compute_free_energy_by_tetrahedron(states, np.array([0.0, 300.0]))
+
+    assert fe_el_rel[0, 0] == pytest.approx(tetrahedron[-1])
+
+
+def test_qha_falls_back_to_the_kpoint_sum_without_the_grid():
+    """Test that states without the grid are summed over k points."""
+    temperatures = np.array([300.0])
+    states = dataclasses.replace(
+        _half_filled_band([8, 8, 8]), kpoints=None, mesh=None, cell=None
+    )
+
+    fe_el_rel, _ = compute_electronic_contributions_from_states([states], temperatures)
+    k_sum, _ = compute_free_energy_and_entropy(states, np.array([0.0, 300.0]))
+
+    assert fe_el_rel[0, 0] == pytest.approx(k_sum[-1] - k_sum[0])
+
+
+def test_the_integration_method_is_reported(capsys):
+    """Test that every run says how the electronic free energy was integrated.
+
+    The states decide the method and nothing in the command line shows it, so
+    a silent fall-back to the k-point sum would be invisible.
+
+    """
+    temperatures = np.array([300.0])
+    with_grid = _half_filled_band([8, 8, 8])
+    without_grid = dataclasses.replace(with_grid, kpoints=None, mesh=None, cell=None)
+
+    compute_electronic_contributions_from_states([with_grid], temperatures)
+    assert "linear tetrahedron method (1 point)" in capsys.readouterr().out
+
+    compute_electronic_contributions_from_states([without_grid], temperatures)
+    assert "k-point sum (1 point)" in capsys.readouterr().out
+
+    compute_electronic_contributions_from_states(
+        [with_grid, without_grid], temperatures
+    )
+    out = capsys.readouterr().out
+    assert "tetrahedron method (1 point) and by the k-point sum (1 point)" in out
 
 
 def test_window_must_contain_samples():
