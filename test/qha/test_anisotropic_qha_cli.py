@@ -118,12 +118,12 @@ def test_suggest_eos_cells_names_a_constant_shape_path(
     suggest_eos_cells(result, indices=list(range(len(lengths))))
 
     out = capsys.readouterr().out
-    # The diagonal of a 5 x 5 grid, every sixth cell.
-    assert "--eos-index 0 6 12 18 24" in out
+    # The diagonal of a 5 x 5 grid, every sixth cell, numbered from 1.
+    assert "--eos-index 1 7 13 19 25" in out
 
     # Listed by volume, smallest first.
     listed = [
-        int(line.split()[0])
+        int(line.split()[0]) - 1
         for line in out.splitlines()
         if line.startswith("  ") and "index" not in line
     ]

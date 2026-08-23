@@ -372,6 +372,9 @@ def test_run_anisotropic_precomputed_free_energies(ph_nacl: Phonopy) -> None:
         internal_energies=energies,
         phonon_free_energies=fe_phonon_ev,
         surface_degree=2,
+        # phonon_free_energies switches the smoothing on by default, and the
+        # reference above is unsmoothed.
+        lattice_smoothing="none",
     )
 
     for name in (
@@ -443,12 +446,15 @@ def test_run_anisotropic_electronic_free_energies(ph_nacl: Phonopy) -> None:
 
     fe_phonon, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, MESH)
     fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+    # Without lattice_smoothing="none" the Einstein fit would sit between the
+    # two runs, and it turns their roundoff difference into a larger one.
     reference = run_anisotropic_qha(
         phonopys,
         TEMPERATURES,
         internal_energies=energies,
         phonon_free_energies=fe_phonon_ev + fe_el,
         surface_degree=2,
+        lattice_smoothing="none",
     )
     result = run_anisotropic_qha(
         phonopys,
@@ -457,6 +463,7 @@ def test_run_anisotropic_electronic_free_energies(ph_nacl: Phonopy) -> None:
         electronic_free_energies=fe_el,
         phonon_free_energies=fe_phonon_ev,
         surface_degree=2,
+        lattice_smoothing="none",
     )
 
     assert result.with_electronic
