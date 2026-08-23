@@ -494,7 +494,7 @@ def run() -> None:
 
     for point in points:
         print(
-            f"  grid {point.index:03d} U={point.internal_energy:.6f} eV "
+            f"  grid {point.index + 1} U={point.internal_energy:.6f} eV "
             f"n_disp={point.n_displacements}"
         )
 

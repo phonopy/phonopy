@@ -70,12 +70,14 @@ def suggest_eos_cells(result: AnisotropicQHAResult, indices: Sequence[int]) -> N
     print(f"  {'index':>6} {'a':>9} {'c':>9} {'c/a':>8}")
     for k in order:
         a, _, c = lengths[k]
-        print(f"  {indices[k]:6d} {a:9.4f} {c:9.4f} {ratios[k]:8.4f}")
+        # Grid points are numbered from 1 here and on the command line; the
+        # stored index is 0-origin.
+        print(f"  {indices[k] + 1:6d} {a:9.4f} {c:9.4f} {ratios[k]:8.4f}")
 
     # The largest set of one shape, in volume order. Ties keep the first.
     values, counts = np.unique(ratios[order], return_counts=True)
     best = values[np.argmax(counts)]
-    same_shape = [indices[k] for k in order if ratios[k] == best]
+    same_shape = [indices[k] + 1 for k in order if ratios[k] == best]
     if len(same_shape) >= 5:
         print(
             f"# {len(same_shape)} cells share c/a = {best:.4f}, "
@@ -231,8 +233,20 @@ def get_options() -> Namespace:
         default="aniso_qha_dataset.hdf5",
         help="intermediate dataset (default: aniso_qha_dataset.hdf5)",
     )
-    parser.add_argument("--tmax", type=float, default=1000.0)
-    parser.add_argument("--dt", type=float, default=10.0)
+    parser.add_argument(
+        "--tmax",
+        type=float,
+        default=None,
+        help="highest temperature in K (default: 1000, or the grid of "
+        "--phonon-free-energies when neither --tmax nor --dt is given)",
+    )
+    parser.add_argument(
+        "--dt",
+        type=float,
+        default=None,
+        help="temperature step in K (default: 10, or the grid of "
+        "--phonon-free-energies when neither --tmax nor --dt is given)",
+    )
     parser.add_argument(
         "--mesh",
         type=float,
@@ -270,11 +284,11 @@ def get_options() -> Namespace:
     )
     parser.add_argument(
         "--smooth-lattice",
-        default="none",
+        default=None,
         choices=("none", "einstein"),
         help="smooth a(T), b(T), c(T) along temperature before differentiating "
-        "them (default: none). Use it when the free energies come from a "
-        "sampled method, whose scatter the differences amplify",
+        "them. Default: einstein with --phonon-free-energies, whose scatter "
+        "the differences amplify, and none otherwise",
     )
     parser.add_argument(
         "--smooth-terms",
@@ -311,7 +325,8 @@ def get_options() -> Namespace:
         "--eos-index",
         type=int,
         nargs="*",
-        help="grid indices for the Vinet volume path; default: main diagonal",
+        help="grid points for the Vinet volume path, numbered from 1; "
+        "default: main diagonal",
     )
     return parser.parse_args()
 
@@ -344,7 +359,19 @@ def run() -> None:
 
     # Read before the force constants are built, so a mismatched file is
     # reported in a second rather than after the solver has run.
-    temperatures = np.arange(0.0, args.tmax + args.dt, args.dt)
+    if args.tmax is None and args.dt is None and args.phonon_free_energies:
+        # The file carries the grid it was computed on, so asking for it again
+        # on the command line would only be a way of getting it wrong.
+        temperatures = read_free_energies_hdf5(args.phonon_free_energies).temperatures
+        print(
+            f"Temperature grid taken from {args.phonon_free_energies}: "
+            f"{len(temperatures)} points, {temperatures[0]} to "
+            f"{temperatures[-1]} K"
+        )
+    else:
+        tmax = 1000.0 if args.tmax is None else args.tmax
+        dt = 10.0 if args.dt is None else args.dt
+        temperatures = np.arange(0.0, tmax + dt, dt)
     lattice_lengths = np.array(
         [np.linalg.norm(point.cell.cell, axis=1) for point in dataset.grid_points],
         dtype="double",
@@ -355,7 +382,6 @@ def run() -> None:
     phonon_free_energies = _read_free_energies(
         args.phonon_free_energies, "phonon", temperatures, lattice_lengths
     )
-
     phonopys = []
     internal_energies = []
     electronic_structures: list | None = [] if args.electronic else None
@@ -402,6 +428,11 @@ def run() -> None:
         smoothing_terms=args.smooth_terms,
         verbose=True,
     )
+    if args.smooth_lattice is None and result.lattice_smoothing != "none":
+        print(
+            f"Lattice parameters smoothed along temperature "
+            f"(--smooth-lattice {result.lattice_smoothing})."
+        )
 
     provenance = [
         f"dataset={args.filename}",
@@ -451,7 +482,7 @@ def run() -> None:
     elif args.compare_eos:
         positions: list[int] | None = None
         if args.eos_index:
-            positions = [indices.index(i) for i in args.eos_index]
+            positions = [indices.index(i - 1) for i in args.eos_index]
         elif dataset.grid_shape is not None:
             positions = list(main_diagonal_positions(dataset.grid_shape))
         else:

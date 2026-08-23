@@ -445,7 +445,7 @@ def run_anisotropic_qha(
     mesh: float | Sequence[int] | NDArray[np.int64] = 200.0,
     pressure: float | None = None,
     surface_degree: int = 3,
-    lattice_smoothing: SmoothingMethod = "none",
+    lattice_smoothing: SmoothingMethod | None = None,
     smoothing_terms: int = 2,
     verbose: bool = False,
     is_gamma_center: bool = False,
@@ -537,10 +537,12 @@ def run_anisotropic_qha(
     surface_degree : int, optional
         Total degree of the polynomial fitted to F over the free lattice
         DOF.
-    lattice_smoothing : Literal["none", "einstein"], optional
+    lattice_smoothing : Literal["none", "einstein"] or None, optional
         Smooth the equilibrium lattice parameters along temperature before
-        differentiating them: "none" (default) or "einstein". See
-        phonopy.qha.lattice_smoothing.smooth_lattice_parameters.
+        differentiating them. See
+        phonopy.qha.lattice_smoothing.smooth_lattice_parameters. None, the
+        default, takes "einstein" when phonon_free_energies is given and
+        "none" otherwise.
 
         The thermal expansions are central differences of a(T), b(T),
         c(T), so a scatter in those reaches them amplified. Free
@@ -591,6 +593,10 @@ def run_anisotropic_qha(
         fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
     else:
         fe_phonon_ev = np.array(phonon_free_energies, dtype="double")
+    if lattice_smoothing is None:
+        # phonon_free_energies usually comes from a sampled method, and the
+        # thermal expansions amplify the scatter it leaves.
+        lattice_smoothing = "einstein" if phonon_free_energies is not None else "none"
     el = _add_static_contributions(
         el,
         fe_phonon_ev,

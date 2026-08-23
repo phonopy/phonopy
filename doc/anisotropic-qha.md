@@ -157,8 +157,8 @@ static single point for each with the calculator. The static grid supplies
 # Inspect the free lattice DOF first (no ranges -> DOF report):
 % phonopy-strain-cells phonopy_disp.yaml
 
-# --grid N is the number of points per free axis (5 -> 5 x 5 = 25 cells); one
-# N per free DOF gives a rectangular grid, e.g. --grid 5 6 -> 30 cells.
+# --grid N is the number of grid points per free axis (5 -> 5 x 5 = 25 cells);
+# one N per free DOF gives a rectangular grid, e.g. --grid 5 6 -> 30 cells.
 % phonopy-strain-cells phonopy_disp.yaml --a 3.168 3.232 --c 5.148 5.252 --grid 5
 Wrote 25 strained unit cell(s) as unitcell-001 .. unitcell-025 in vasp format.
 Grid sampling: 5 x 5 over (a, c).
@@ -304,8 +304,12 @@ rather than producing a dataset with a missing {math}`U(a_i, c_i)`.
     --static static-grid/grid-{001..025}/ \
     --phonon phonon-grid/grid-{001..025}/ \
     -o aniso_qha_dataset.hdf5
-# F_el is stored automatically when the static vaspout.h5 carries the electron
-#   eigenvalues; pass --no-electronic to skip it
+Reading pre-computed forces for 25 grid point(s)
+  grid 1 U=... eV n_disp=...
+  ...
+  grid 25 U=... eV n_disp=...
+Grid shape [5, 5] recorded for the main-diagonal path.
+Wrote 25 grid point(s) to aniso_qha_dataset.hdf5
 ```
 
 The entries may be files rather than directories. Use that form when the
@@ -320,6 +324,9 @@ calculations were laid out by something other than Scripts 1 and 2:
 
 Any names work, and one list can mix directories and files. The `--static` and
 `--phonon` lists must have the same number of entries.
+
+(anisotropic-qha-builder-reads)=
+### What the builder reads
 
 For each grid point the builder reads:
 
@@ -346,15 +353,15 @@ For each grid point the builder reads:
   `FORCE_SETS` sits beside it ({ref}`--sp <save_params_option>` merges the two
   into one file). A file with no forces and no neighboring `FORCE_SETS` is
   rejected rather than silently producing an empty grid point. Either form
-  supplies the per-point supercell / primitive matrices.
+  supplies the per-grid-point supercell / primitive matrices.
 
 The positional `phonopy_disp.yaml` is the equilibrium reference; it supplies
 the free lattice DOF metadata and the calculator. The grid-point index recorded
 in the dataset is the position in the list, a label only, since the analysis
 reads the lattice parameters from each stored cell.
 
-```{admonition} How the ordering is checked
-:class: note
+(anisotropic-qha-ordering)=
+### How the ordering is checked
 
 The builder pairs `--static` and `--phonon` by position after shell expansion,
 and takes the `disp-*` subdirectories of one grid point in sorted order. It
@@ -386,8 +393,8 @@ The count is then visible in the command, and a missing grid point stops the
 builder on a path that does not exist instead of quietly passing a shorter
 list. `grid-*` also works, and is the shorter thing to type once the grid is
 known to be complete.
-```
 
+(anisotropic-qha-file-contents)=
 ### What the file holds
 
 `aniso_qha_dataset.hdf5` is self-contained. Per grid point it stores the
@@ -576,7 +583,8 @@ and the raw {math}`a(T)`, {math}`c(T)` are differenced. With the
 calculator's harmonic free energies that is what is wanted, since they
 carry no sampling scatter. `--smooth-lattice` fits the lattice parameters
 along temperature first and differentiates the fit instead, which step 5
-needs; the default is `none`.
+needs. It defaults to `none` here, and to `einstein` when
+`--phonon-free-energies` is given.
 
 The internal energies are expected in eV per primitive cell, which they are when
 the static-grid single point is the primitive (unit) cell.
@@ -720,7 +728,7 @@ differs comes after it: the MLPs and the free energies,
 ```{mermaid}
 flowchart TD
     DS(["aniso_qha_dataset.hdf5<br/>cells, U, F_el,<br/>harmonic force constants"])
-    DS --> DISP["thermal displacements<br/>shared normals"]
+    DS --> DISP["thermal displacements<br/>one shared draw of<br/>standard normals"]
     DISP --> CALCT{{"calculator forces"}}
     CALCT --> DEV["train one MLP<br/>per grid point"]
     DEV --> MLP(["polymlp.yaml<br/>per grid point"])
@@ -756,25 +764,27 @@ shape of {math}`U` reaches them amplified: an error that is small on the
 scale of {math}`F` can be a large fraction of a small axial expansion, and
 can change whether it comes out positive or negative.
 
-Train one MLP per grid point, on that grid point's own training set, and
-evaluate it only at that grid point. Each MLP then has to reproduce the
-forces and energies of displaced supercells at one fixed cell: the forces
-give the temperature-dependent force constants, and the energies enter the
-SSCHA free energy as differences from the undisplaced supercell of that
-same cell. No single MLP has to interpolate in the lattice parameters: the
-lattice dependence of {math}`F_\mathrm{ph}` is carried by the grid, one MLP
-per point, and made continuous by the surface fit the analysis performs.
+One MLP is trained per grid point, on that grid point's own training set, and
+evaluated only there. Each MLP then has to reproduce the forces
+and energies of displaced supercells at one grid point. The forces give the
+temperature-dependent force constants, and the energies enter the SSCHA free
+energy as differences from the undisplaced supercell of that grid point. The
+grid as a whole carries the lattice dependence of {math}`F_\mathrm{ph}`, so
+the MLPs never interpolate in the lattice parameters.
+
+The MLPs are fitted independently, so their errors can jump from one grid
+point to the next. Drawing the displacements from one set of
+standard normals smooths them; see {ref}`anisotropic-qha-normals`.
 
 ### The training displacements
 
 Four steps, once the phonon grid of step 2 exists.
 
 1. Pick the temperatures. Cover the production range and add one point above
-   it; an MLP used outside its training range is much the worse for it.
-2. Generate the displacements with the script below. It draws the
-   {math}`\xi` once and uses those same values at every grid point, which
-   is what makes the errors of the MLPs vary smoothly across the grid
-   rather than independently.
+   it, since an MLP is poor outside the range it was trained on.
+2. Generate the displacements with the script below. It uses one draw of
+   standard normals at every grid point; see
+   {ref}`anisotropic-qha-normals`.
 3. Run the calculator on every supercell, and collect the forces of each set
    with {ref}`phonopy-init -f <f_force_sets_option>`.
 4. Merge each grid point's temperatures into one training set, and train its
@@ -813,7 +823,8 @@ for temperature in TEMPERATURES:
         rd.run(temperature, standard_normals=normals)
         phonon.dataset = {"displacements": rd.u.copy()}
 
-        set_dir = Path(TRAIN) / f"grid-{point.index:03d}-{int(temperature)}K"
+        # The stored index is 0-origin; the directories are numbered from 001.
+        set_dir = Path(TRAIN) / f"grid-{point.index + 1:03d}-{int(temperature)}K"
         set_dir.mkdir(parents=True, exist_ok=True)
         # The displacements have to be saved beside the supercells: it is what
         # phonopy-init -f attaches the forces to below.
@@ -885,13 +896,26 @@ Then train one MLP per grid point on its merged set:
 
 ```bash
 % phonopy grid-NNN-merged.yaml --pypolymlp --mlp-params="ntrain=..., ntest=..." -v
-# -> polymlp.yaml, beside that grid point's cell
+# -> polymlp.yaml, beside that grid point's training set
 ```
+
+The structures behind that fit are the ones Script 5 drew: `SNAPSHOTS` per grid
+point and temperature, a finite sample of the harmonic crystal's canonical
+distribution rather than the distribution itself. A grid point's MLP therefore
+depends on which structures its own draw happened to produce, and so does
+everything computed from it. To see by how much, draw a second set of the same
+size at one grid point, train a second MLP on it, and compare the frequencies
+the two give there.
 
 ### The descriptor and the ridge penalty
 
-`--mlp-params` also sets the descriptor. Feature counts for one element,
-measured with pypolymlp 0.20.5:
+Three choices interact here: how many features the descriptor has, how many
+structures the training set holds, and how hard the ridge penalty damps the
+fit. The penalty absorbs a mismatch between the first two, so it also tells
+whether they are matched.
+
+`--mlp-params` also sets the descriptor. Example feature counts for a
+one-element system, with pypolymlp 0.20.5:
 
 | features | added to `--mlp-params` |
 |---|---|
@@ -909,6 +933,15 @@ A heavier descriptor costs more to fit and more to evaluate, and the SSCHA of
 this step evaluates it once per snapshot per iteration, so the choice sets the
 cost of the whole step.
 
+A heavier descriptor also needs more training data to converge, and where the
+ridge penalty lands -- the alpha that `reg_alpha_params` scans -- is a cheap
+way to watch that. Fit the default range and see which penalty pypolymlp keeps: with
+too few structures the smallest test RMSE sits at the large-penalty end, and
+the optimum moves towards smaller penalties as structures are added, settling
+once there are enough of them. A descriptor whose optimum has not moved off
+the large end is held up by the training set rather than by the descriptor,
+and adding features will not help until adding structures does.
+
 **Pin the ridge penalty across the grid.** pypolymlp fits every penalty in
 `reg_alpha_params` and keeps the one with the smallest test RMSE, chosen
 separately at every grid point. The analysis differentiates across the grid,
@@ -924,81 +957,61 @@ The three numbers are `linspace(p0, p1, p2)` of the base-10 logarithm, so
 `-3.0 -3.0 1` is alpha = 1e-3 alone, against the default `-3.0 1.0 5` of 1e-3
 to 1e1 in five steps.
 
-The snapshots are a sample of the harmonic crystal's canonical
-distribution, not the distribution itself. Drawing a second set of the
-same size gives different structures, so an MLP trained on one set, and
-everything computed from that MLP, carries a scatter that falls
-as `SNAPSHOTS` grows.
-
-Each structure comes from its own seeded generator, so the run can be stopped
-at any snapshot with every grid point and temperature equally represented, and
-`draw_standard_normals(..., first_snapshot=N)` continues it later without
-disturbing what was already computed.
-
-```{note}
-Two choices here reach {math}`\alpha_c`, not only the force error.
-Displacements drawn uniformly at a fixed maximum amplitude under-sample the
-soft modes that set the low-temperature {math}`\alpha_c`, which is why the
-draw is thermal. Drawn independently at each grid point, the errors are white
-across the lattice grid and the surface fit cannot absorb them, which is why
-the normals are shared.
-```
-
-Judge the MLPs by their phonons rather than by the force RMSE. The RMSE
+The MLPs are judged by their phonons rather than by the force RMSE. The RMSE
 includes large-amplitude structures that the harmonic and quasi-harmonic
 quantities never visit, while the frequencies are what enter
 {math}`F_\mathrm{ph}`.
 
 ### What the draw leaves at its defaults
 
-`init_random_displacements` takes settings the script above does not pass,
-and two of them are worth knowing.
+`init_random_displacements` takes settings the script above does not pass.
+Three of them decide what the ensemble looks like.
 
-`cutoff_frequency`, 0.01 THz by default, drops modes below it from the draw.
-That is how an imaginary mode is handled: the grid point is displaced without
-that mode's contribution rather than failing. A quasi-harmonic grid can reach
-cells that are dynamically unstable, so look at the frequencies of the grid
-points before training on them -- a set built from a cell with an imaginary
-mode carries no information about the direction that mode would have moved.
+`cutoff_frequency` is 0.01 THz by default. A mode's amplitude grows without
+bound as its {math}`|\omega|` goes to zero, so the draw leaves out every mode
+below the cutoff. The acoustic modes at {math}`\Gamma` fall below it in any
+calculation, and a grid point close to an instability can have others that do.
 
-`dist_func` chooses the quantum occupation, the default, or the classical
-one; `max_distance` shortens any displacement longer than the length given,
-which caps the tail of the distribution.
+The draw takes {math}`|\omega|`, so an imaginary mode is drawn as a real mode
+of the same magnitude. A quasi-harmonic grid can reach grid points that are
+dynamically unstable, so look at their frequencies before training on them. `RandomDisplacements.treat_imaginary_modes` is the explicit
+treatment. It takes {math}`|\omega|` at the commensurate points, shifts the
+modes between `freq_from` and `freq_to` up by `freq_shift`, and rebuilds the
+force constants from that.
 
-### The shared normals
+`dist_func` chooses the occupation the draw uses, quantum by default or
+classical. `max_distance` shortens any displacement longer than the length
+given, which caps the tail of the distribution.
 
-Every grid point draws {math}`\xi` from the same distribution in any case, so
-sharing the distribution would change nothing. What is shared here is one set
-of **drawn values**: the same numbers are used at every grid point, which is
-what correlates the grid points instead of leaving them independent.
+(anisotropic-qha-normals)=
+### Sharing one draw of standard normals
 
-`draw_standard_normals` returns those values on their own, before any
-frequency or eigenvector is applied. There are `3 * len(supercell)` of them
-per snapshot, in two arrays: one for the {math}`\mathbf{q}` with
-{math}`\mathbf{q} = -\mathbf{q} + \mathbf{G}`, one for the pairs of the rest,
-whose real and imaginary parts each take their own.
+Drawing the {math}`\xi` once and using the same values at every grid point
+gives one realization of the randomness over the whole grid. The surface fit
+then carries it as a smooth function of the lattice parameters. The analysis
+differentiates that surface, so smoothness matters.
 
-Two grid points given the same values still get different displacements, since
-each scales them by its own frequencies and eigenvectors, which is what makes
-the draw thermal at that cell. Neighbouring cells then get displacement fields
-that resemble one another rather than being drawn afresh.
+`draw_standard_normals` returns the drawn {math}`\xi`, not displacements, and
+`run(standard_normals=...)` takes a set back. The script above does exactly
+this.
+
+The same {math}`\xi` still gives different displacements at each grid point.
+Each grid point scales them by its own frequencies and eigenvectors, which
+makes the draw thermal there. The displacement fields of neighbouring grid
+points then resemble one another.
 
 Snapshot *i* is drawn from `SeedSequence([random_seed, i])`, so it depends on
 its index and on nothing else. Asking for snapshots 0 to 99 and later for 100
-to 199 gives the same 200 as asking for 0 to 199 at once, which is what lets
-an ensemble be extended or generated in blocks.
+to 199 gives the same 200 as asking for 0 to 199 at once. An ensemble can
+therefore be extended, or generated in blocks, with
+`draw_standard_normals(..., first_snapshot=N)`.
 
-Two caveats, both about reproducing an ensemble later:
+A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
+not promise that `Generator` distribution methods give the same stream across
+its own versions (NEP 19).
 
-- The displacements come back only to roundoff, because the summation order
-  downstream of the random numbers depends on the array shapes and on the
-  BLAS. Compare a regenerated structure by displacement, not byte for byte.
-- NumPy does not promise that `Generator` distribution methods give the same
-  stream across its own versions (NEP 19), so a seed alone does not reproduce
-  an ensemble across a NumPy upgrade.
-
-Keep the normals themselves beside the training sets if the ensemble has to be
-reproducible:
+The {math}`\xi` themselves can be kept beside the training sets when the
+ensemble has to be reproducible:
 
 ```python
 import numpy as np
@@ -1006,87 +1019,42 @@ import numpy as np
 np.savez_compressed("normals.npz", ii=normals[0], ij=normals[1])
 ```
 
-```{note}
-The errors of the per-grid-point MLPs are independent of one another, which
-is a different failure mode from a single MLP's. Shared normals
-make that error smooth in (a, c) rather than white, but not small.
-{math}`\alpha_c` is a derivative of the surface, so it is what exposes the
-rest. Validate as below before using a number.
-```
-
 (anisotropic-qha-validate)=
 ### Validate the MLP
 
-An MLP that gives smooth phonons can still give wrong ones. Compare it
-with the calculator at a few grid points before using its result.
+The thermal supercells of this step already carry calculator forces. The same
+supercells evaluated with the MLP give a second set of forces to compare them
+with, and nothing new has to be run with the calculator. It is recommended to
+use the structures held out as the test set, because the MLP was fitted to the
+rest.
 
-**Swap the force evaluator on the same displacements.** The phonon grid of
-step 2 already holds displaced supercells and their calculator forces.
-Evaluating those same supercells with the MLP, and building the force
-constants the same way, leaves the force evaluator as the only difference
-between the two: the displacements, the solver and the q-points are identical,
-so any difference in the frequencies, or in the anisotropic Gruneisen
-parameters, belongs to the MLP.
+The comparison is made one temperature at a time. Each temperature has its own
+amplitudes,
+and one MLP is trained on all the temperatures together. Its accuracy can
+differ from one temperature to the next.
 
-**Compare stresses, and optionally elastic constants.** The stress is the
-gradient of the free energy the analysis minimizes and the elastic constants
-are its curvature, so both reach {math}`\alpha_c` through the surface fit.
+The phonon grid of step 2 can be compared in the same way, and there the force
+constants and the frequencies can be compared as well. Its displacements are
+one fixed distance, 0.03 Angstrom in the script there, which is usually
+smaller than the amplitudes of the 0 K draw. An MLP trained across a
+temperature range is empirically hard to make accurate at displacements that
+small, so a difference there need not mean the temperature-dependent run is
+wrong.
 
-**Validate at the amplitude the production run uses.** An MLP's relative
-force error is largest where the displacements are smallest, because the
-forces are smallest there. A comparison at the 0.03 Angstrom of the harmonic
-phonon grid therefore measures the MLP at its worst, while the
-temperature-dependent run it is used for samples the amplitudes the atoms
-visit, where the training data is dense. The same MLP can look poor in
-the first test and be accurate in the second, so match the test to the use.
+### Computing the free energies with SSCHA
 
-Read the relative force error, not the absolute one. Near equilibrium the
-forces themselves are small, and it is the relative error that maps to the
-frequencies, and through them to {math}`F_\mathrm{ph}` and its lattice
-derivatives.
-
-### Computing and supplying the free energies
-
-Use the MLPs for the temperature-dependent route ({ref}`mlp-sscha`)
-rather than for a harmonic force-constant set. A harmonic set is built from
-small fixed displacements, where an MLP's *relative* force error is
-largest, while a temperature-dependent calculation samples the amplitudes the
-atoms visit, where the training data is dense. For harmonic accuracy, steps 2
-to 4 and the calculator give it directly.
+The MLPs are for the temperature-dependent route ({ref}`mlp-sscha`), not for a
+harmonic force-constant set. They are trained on thermal displacements, and a
+harmonic set would ask them for the small fixed displacements of step 2
+instead. Steps 2 to 4 give the harmonic answer from the calculator directly.
 
 {math}`F_\mathrm{ph}` is then no longer the harmonic expression of "The free
-energy" above. The force constants change with temperature, and the free
-energy that goes with them is the one the method itself defines -- for
-SSCHA, the free energy of {ref}`mlp-sscha`.
+energy" above. With SSCHA it is the SSCHA free energy of {ref}`mlp-sscha`,
+computed from force constants that change with temperature.
 
-One force-constant set per grid point cannot represent force constants that
-differ at every temperature, so `phonopy-anisotropic-qha` and the default
-form of `run_anisotropic_qha` do not apply here: both compute
-{math}`F_\mathrm{ph}` themselves from the force constants they are given.
-
-Build the intermediate dataset with `--phonon`, as in step 3: its harmonic
-force constants are what the thermal displacements were drawn from, and
-`run_anisotropic_qha` reads no force constants at all once
-`phonon_free_energies` is given.
-
-A dataset built from the static grid alone -- no `--phonon` -- also serves
-here, and is what a method that never computed calculator phonons produces:
-
-```bash
-% phonopy-anisotropic-qha-dataset phonopy_disp.yaml \
-    --static static-grid/grid-{001..025}/ -o aniso_qha_dataset.hdf5
-```
-
-Its grid points carry the cells, {math}`U` and the electronic states, and no
-displacements or forces. The builder reports this as it writes, a grid point
-reports `n_displacements == 0`, and `to_phonopy()` on it raises instead of
-returning force constants. `phonopy-anisotropic-qha` refuses such a dataset
-with an explanation: the phonon free energy is the one thing it cannot compute
-from it.
-
-Compute the free energies outside instead, one value per grid point and
-temperature in eV per primitive cell, and write them to a file where they are
-computed. With SSCHA that is one run per grid point and temperature:
+The `aniso_qha_dataset.hdf5` of step 3 is used as it is. Script 7 below makes
+one SSCHA run at every grid point and every temperature. Each run starts from
+the harmonic force constants the dataset carries:
 
 ```{code-block} python
 :caption: Script 7 -- SSCHA at every grid point and temperature
@@ -1104,32 +1072,44 @@ ITERATIONS = 16
 MESH = 200.0
 SEED = 1000
 
+def sscha_free_energy(ph, mlp, temperature, force_constants=None):
+    """Return the SSCHA free energy and its error in eV per primitive cell.
+
+    ``force_constants`` starts the iteration from a set of one's own. Without
+    it, it starts from the set ``ph`` carries.
+    """
+    if force_constants is not None:
+        ph = ph.replicate()
+        ph.force_constants = force_constants
+    sscha = MLPSSCHA(
+        ph,
+        mlp,
+        temperature=temperature,
+        number_of_snapshots=SNAPSHOTS,
+        max_iterations=ITERATIONS,
+        mesh=MESH,
+        random_seed=SEED,
+    ).run()
+    history = sscha.history[1:]
+    return (
+        np.mean([h.free_energy for h in history]),
+        np.mean([h.free_energy_error for h in history]),
+    )
+
+
 dataset = read_aniso_qha_dataset("aniso_qha_dataset.hdf5")
 points = dataset.grid_points
 
 free_energies = np.zeros((len(TEMPERATURES), len(points)))
 errors = np.zeros_like(free_energies)
 
-# The grid points come back in the order they were given to the builder,
-# which is the order the training sets were made in.
 for column, point in enumerate(points):
-    mlp = PhonopyMLP().load(f"train/grid-{column + 1:03d}/polymlp.yaml")
+    mlp = PhonopyMLP().load(f"train/grid-{point.index + 1:03d}/polymlp.yaml")
+    ph = point.to_phonopy()
     for row, temperature in enumerate(TEMPERATURES):
-        sscha = MLPSSCHA(
-            point.to_phonopy(),
-            mlp,
-            temperature=float(temperature),
-            number_of_snapshots=SNAPSHOTS,
-            max_iterations=ITERATIONS,
-            mesh=MESH,
-            random_seed=SEED,
-        ).run()
-        # The first entry is the ensemble of the harmonic force constants the
-        # dataset carries, which is where the iteration starts rather than a
-        # SSCHA solution. The rest are independent samples of the same one.
-        history = sscha.history[1:]
-        free_energies[row, column] = np.mean([h.free_energy for h in history])
-        errors[row, column] = np.mean([h.free_energy_error for h in history])
+        free_energies[row, column], errors[row, column] = sscha_free_energy(
+            ph, mlp, float(temperature)
+        )
 
 write_free_energies_hdf5(
     TEMPERATURES,
@@ -1145,78 +1125,147 @@ write_free_energies_hdf5(
 
 `MESH` is the mesh the harmonic part of the SSCHA free energy is sampled on,
 and matching it to the `--mesh` of the analysis keeps one sampling through
-the calculation. `SEED` fixes the whole run: each iteration derives its own
-seed from it, so the run is reproducible while the iterations stay
+the calculation. `SEED` fixes the whole run: iteration *i* draws from
+`SeedSequence([SEED, i])`, so the run is reproducible while the iterations stay
 independent.
 
-**One run per grid point and temperature is the cost of this step**, and at
-production settings it is hours to days. The runs are independent, so slice
-either loop and give each slice its own process, node or job. A slice over
-grid points writes the columns it was given:
+### Splitting the runs across jobs
+
+One SSCHA run is minutes with the lightest descriptor and longer with a heavy
+one. Multiplied by the grid points and the temperatures, the step comes to
+hours or days. Spreading the runs over processes, nodes or jobs is therefore
+worth the trouble. A run's randomness comes from `SEED` and the iteration
+number alone, since iteration *i* draws from `SeedSequence([SEED, i])`. It
+depends on neither its position in the two loops nor the order the runs are
+made in. Either loop can be sliced, or both.
+
+A slice holds a block of grid points and a block of temperatures. It writes the
+rows and the columns it was given:
 
 ```python
-columns = range(0, 5)          # this job's grid points
+columns = range(0, 5)                          # this job's grid points
+rows = np.arange(0, 10)                        # and its temperatures
 points = [dataset.grid_points[j] for j in columns]
 ...
-write_free_energies_hdf5(TEMPERATURES, free_energies, "fph-000-004.hdf5", ...)
+write_free_energies_hdf5(
+    TEMPERATURES[rows], free_energies, "fph-g000-004-t000-009.hdf5", ...
+)
 ```
 
-and the pieces are concatenated once they are all in:
+The pieces are merged in two passes once they are all in. The temperature
+blocks of one grid point stack by rows, and the grid points then stack by
+columns:
 
 ```python
-import glob
-
 import numpy as np
 
-from phonopy.qha.free_energy_io import (
-    read_free_energies_hdf5,
-    write_free_energies_hdf5,
-)
+from phonopy.qha.free_energy_io import write_free_energies_hdf5
 
-parts = [read_free_energies_hdf5(f) for f in sorted(glob.glob("fph-*.hdf5"))]
-temperatures = parts[0].temperatures
-assert all(np.allclose(p.temperatures, temperatures) for p in parts)
+# parts[(grid block, temperature block)] = read_free_energies_hdf5(filename)
+free_energies, errors, lattice_lengths = [], [], []
+for g in sorted({g for g, _ in parts}):
+    blocks = [parts[(g, t)] for t in sorted(t for gg, t in parts if gg == g)]
+    temperatures = np.concatenate([b.temperatures for b in blocks])
+    free_energies.append(np.vstack([b.free_energies for b in blocks]))
+    errors.append(np.vstack([b.errors for b in blocks]))
+    lattice_lengths.append(blocks[0].lattice_lengths)
+
 write_free_energies_hdf5(
     temperatures,
-    np.column_stack([p.free_energies for p in parts]),
+    np.column_stack(free_energies),
     "fph.hdf5",
     kind="phonon",
-    errors=np.column_stack([p.errors for p in parts]),
-    lattice_lengths=np.vstack([p.lattice_lengths for p in parts]),
+    errors=np.column_stack(errors),
+    lattice_lengths=np.vstack(lattice_lengths),
 )
 ```
 
-Then read the file in the analysis:
+### Supplying the free energies to the analysis
 
-```bash
-% phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --tmax 400 --dt 10 \
-    --phonon-free-energies fph.hdf5 --smooth-lattice einstein
+In steps 0 to 4 each `Phonopy` instance of `phonopys` carries one
+force-constant array, and it serves every temperature. The analysis computes
+{math}`F_\mathrm{ph}` from them:
+
+```python
+run_anisotropic_qha(phonopys, temperatures, internal_energies=internal_energies)
 ```
 
-The file carries the temperatures it was computed on and, when written, the
-lattice lengths of the grid points. The command checks both against the
-dataset and stops on a mismatch, which is what keeps a file computed on
-another machine from being paired with the wrong grid. `--phonon-free-energies`
-also accepts a dataset built without `--phonon`, since no force constants are
-read.
+Here they are computed elsewhere and passed to `run_anisotropic_qha` instead:
 
-**Smooth the lattice parameters along temperature.** A free energy from a
-sampled method carries the scatter of its sampling, the minimum at each
-temperature moves with it independently of its neighbours, and the axial
-expansions are derivatives of those minima, so the scatter reaches them
-amplified. `--smooth-lattice einstein` fits each of {math}`a(T)`,
-{math}`b(T)`, {math}`c(T)` to a sum of Einstein terms of opposite sign
-before differentiating, and differentiates the fit rather than the points.
-`--smooth-terms` sets how many terms, 2 by default; more terms follow a
-curve more closely, at the cost of more freedom to follow its scatter. The
-default is `none`, which is right for the force-constant route of steps 0
-to 4, where the free energies carry no sampling scatter.
+```python
+run_anisotropic_qha(
+    phonopys,
+    temperatures,
+    internal_energies=internal_energies,
+    phonon_free_energies=free_energies,  # shape (temperatures, grid points)
+)
+```
+
+The `Phonopy` instances then supply only the cells and volumes. They can be
+built without force constants, which are never read. Without
+`phonon_free_energies`, `run_anisotropic_qha` computes the phonon free energy
+itself, and the force constants have to be there.
+
+The values are per primitive cell. They are normalized the same way as
+`internal_energies`, and they do not include the static energy, which
+`internal_energies` already carries.
+
+Since no force constants are read, the analysis also runs on a dataset built
+from the static grid alone, which is what a method that never computed
+calculator phonons has to work with:
+
+```bash
+% phonopy-anisotropic-qha-dataset phonopy_disp.yaml \
+    --static static-grid/grid-{001..025}/ -o aniso_qha_dataset.hdf5
+No --phonon given: building from the static grid alone, 25 grid point(s), with
+no displacements or forces. Such a dataset is for use with the
+phonon_free_energies argument of run_anisotropic_qha.
+  grid 1 U=... eV n_disp=0
+  ...
+  grid 25 U=... eV n_disp=0
+```
+
+Its grid points carry the cells, {math}`U` and the electronic states. Script 7
+cannot use it, since it has no harmonic force constants to start the SSCHA runs
+from.
+
+### Running the analysis
+
+The file is given to the analysis with `--phonon-free-energies`:
+
+```bash
+% phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --phonon-free-energies fph.hdf5
+```
+
+The file carries the temperatures it was computed on, and the command takes its
+temperature grid from them unless `--tmax` or `--dt` says otherwise. It also
+carries the lattice lengths of the grid points, when they were written, and
+those are checked against the dataset. A file computed on another machine
+cannot then be paired with the wrong grid.
+
+A free energy from a sampled method carries the scatter of its sampling. The
+minimum of the surface at one temperature moves with that scatter, and it moves
+independently of the minimum at the next temperature. The axial expansions are
+differences along temperature, so they amplify it. The command above therefore
+smooths the lattice parameters before differentiating them, and says so as it
+runs.
+
+The smoothing is `--smooth-lattice einstein`, the default whenever
+`--phonon-free-energies` is given. It fits each of {math}`a(T)`, {math}`b(T)`
+and {math}`c(T)` to a sum of Einstein terms of opposite sign, and
+differentiates the fit instead of the points. `--smooth-terms` sets how many
+terms, 2 by default. More terms follow a curve more closely, and follow its
+scatter more closely too. `--smooth-lattice none` turns the smoothing off.
 
 Each Einstein term is zero at {math}`T = 0` with zero slope, so the fitted
 expansion vanishes at 0 K as the third law requires. The fit runs every
-starting guess and keeps the best of those that pass its checks; when none
-passes it raises rather than falling back on something else, so a
-qualitatively wrong curve is not returned silently.
+starting guess and keeps the best of those that pass its checks. When none
+passes it raises, rather than returning a qualitatively wrong curve silently.
+
+Steps 0 to 4 default to `none`, since their free energies carry no sampling
+scatter. `--smooth-lattice einstein` can be given there too, and it changes how
+the expansions are computed: with a fit to differentiate, the axial slopes come
+from the closed form of the fit rather than from differences of the minima.
 
 The same result comes from the API, with `phonon_free_energies` and
 `lattice_smoothing`:
@@ -1232,8 +1281,4 @@ result = run_anisotropic_qha(
 ```
 
 With `phonon_free_energies` given, `run_anisotropic_qha` skips the mesh
-sampling and ignores `mesh`. The `Phonopy` instances supply only the cells and
-volumes, and their force constants are never read, so they can be built
-without any, as above. Normalize the values per primitive cell, consistently
-with `internal_energies`, and exclude the static energy from them:
-`internal_energies` already carries it.
+sampling and ignores `mesh`.
