@@ -771,16 +771,17 @@ Four steps, once the phonon grid of step 2 exists.
 
 1. Pick the temperatures. Cover the production range and add one point above
    it; an MLP used outside its training range is much the worse for it.
-2. Draw one set of standard normals with `generate_random_normals` and reuse
-   it at every grid point; see "The shared normals" below.
-3. Run each grid point's `RandomDisplacements` at each temperature with those
-   normals, and write the supercells.
-4. Run the calculator, collect each set with
-   {ref}`phonopy-init -f <f_force_sets_option>`, and train one MLP per
-   grid point on that point's sets.
+2. Generate the displacements with the script below. It draws the
+   {math}`\xi` once and uses those same values at every grid point, which
+   is what makes the errors of the MLPs vary smoothly across the grid
+   rather than independently.
+3. Run the calculator on every supercell, and collect the forces of each set
+   with {ref}`phonopy-init -f <f_force_sets_option>`.
+4. Merge each grid point's temperatures into one training set, and train its
+   MLP.
 
-Steps 1 to 3 are the script below, which reads the harmonic force constants
-from the dataset of step 3:
+Step 2 is the script below, which reads the harmonic force constants from
+the dataset of step 3:
 
 ```{code-block} python
 :caption: Script 5 -- the thermal training displacements
@@ -801,15 +802,15 @@ for temperature in TEMPERATURES:
     normals = None
     for point in dataset.grid_points:
         phonon = point.to_phonopy()
-        phonon.init_random_displacements(sampling_matrix="symmetric")
+        phonon.init_random_displacements()
         rd = phonon.random_displacements
         if normals is None:
             # Drawn once and reused at every grid point; the shapes are set by
             # the supercell matrix and the primitive cell, which they share.
-            normals = rd.generate_random_normals(
+            normals = rd.draw_standard_normals(
                 SNAPSHOTS, random_seed=SEED + int(temperature)
             )
-        rd.run(temperature, random_normals=normals)
+        rd.run(temperature, standard_normals=normals)
         phonon.dataset = {"displacements": rd.u.copy()}
 
         set_dir = Path(TRAIN) / f"grid-{point.index:03d}-{int(temperature)}K"
@@ -828,13 +829,100 @@ for temperature in TEMPERATURES:
 
 Each set directory then holds `phonopy_disp.yaml` and
 `disp-001/POSCAR .. disp-050/POSCAR`, the same layout as the phonon grid of
-step 2. Run the calculator in every `disp-*`, then, in each set directory:
+step 2. Run the calculator in every `disp-*`, then collect the forces of each
+set:
 
 ```bash
 % phonopy-init -f disp-*/vaspout.h5 --save-params
-% phonopy phonopy_params.yaml --pypolymlp --mlp-params="ntrain=..., ntest=..." -v
+# -> phonopy_params.yaml, with the displacements, forces and supercell energies
+```
+
+A grid point has one such set per temperature, and its MLP is trained on all
+of them at once. Concatenating them in temperature order would put one
+temperature at the front of the list and another at the back, and pypolymlp
+takes its training structures from the front and its test structures from the
+back, so the sets are interleaved instead:
+
+```{code-block} python
+:caption: Script 6 -- one training set per grid point, from its temperatures
+
+from pathlib import Path
+
+import numpy as np
+
+import phonopy
+
+TRAIN = Path("train")
+TEMPERATURES = (0, 100, 250, 400)
+N_GRID = 25
+
+for index in range(1, N_GRID + 1):
+    sets = [
+        phonopy.load(
+            TRAIN / f"grid-{index:03d}-{t}K" / "phonopy_params.yaml",
+            produce_fc=False,
+            log_level=0,
+        )
+        for t in TEMPERATURES
+    ]
+
+    # Interleave the temperatures, so that any prefix and any suffix of the
+    # merged set holds them in equal parts.
+    merged = {}
+    for key in ("displacements", "forces", "supercell_energies"):
+        stacked = np.array([s.dataset[key] for s in sets])
+        merged[key] = stacked.swapaxes(0, 1).reshape(-1, *stacked.shape[2:])
+
+    phonon = sets[0]
+    phonon.dataset = merged
+    phonon.save(
+        TRAIN / f"grid-{index:03d}-merged.yaml",
+        settings={"force_sets": True, "displacements": True},
+    )
+```
+
+Then train one MLP per grid point on its merged set:
+
+```bash
+% phonopy grid-NNN-merged.yaml --pypolymlp --mlp-params="ntrain=..., ntest=..." -v
 # -> polymlp.yaml, beside that grid point's cell
 ```
+
+### The descriptor and the ridge penalty
+
+`--mlp-params` also sets the descriptor. Feature counts for one element,
+measured with pypolymlp 0.20.5:
+
+| features | added to `--mlp-params` |
+|---|---|
+| 781 | nothing; the default |
+| 1,176 | `gaussian_params2 = 0 7 15` |
+| 2,600 | `gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` |
+| 3,848 | `gaussian_params2 = 0 7 15, gtinv_order = 4, gtinv_maxl = 16 12 4` |
+| 6,820 | `model_type = 4` |
+| 13,920 | `model_type = 4, gaussian_params2 = 0 7 15` |
+| 22,495 | `model_type = 4, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` |
+| 27,664 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` |
+| 45,680 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` |
+
+A heavier descriptor costs more to fit and more to evaluate, and the SSCHA of
+this step evaluates it once per snapshot per iteration, so the choice sets the
+cost of the whole step.
+
+**Pin the ridge penalty across the grid.** pypolymlp fits every penalty in
+`reg_alpha_params` and keeps the one with the smallest test RMSE, chosen
+separately at every grid point. The analysis differentiates across the grid,
+so a penalty that changes from one grid point to the next puts a step into the
+quantity being differentiated. Collapse the range to one point to pin it:
+
+```bash
+% phonopy grid-NNN-merged.yaml --pypolymlp \
+    --mlp-params="ntrain=..., ntest=..., reg_alpha_params = -3.0 -3.0 1" -v
+```
+
+The three numbers are `linspace(p0, p1, p2)` of the base-10 logarithm, so
+`-3.0 -3.0 1` is alpha = 1e-3 alone, against the default `-3.0 1.0 5` of 1e-3
+to 1e1 in five steps.
 
 The snapshots are a sample of the harmonic crystal's canonical
 distribution, not the distribution itself. Drawing a second set of the
@@ -844,7 +932,7 @@ as `SNAPSHOTS` grows.
 
 Each structure comes from its own seeded generator, so the run can be stopped
 at any snapshot with every grid point and temperature equally represented, and
-`generate_random_normals(..., first_snapshot=N)` continues it later without
+`draw_standard_normals(..., first_snapshot=N)` continues it later without
 disturbing what was already computed.
 
 ```{note}
@@ -861,19 +949,39 @@ includes large-amplitude structures that the harmonic and quasi-harmonic
 quantities never visit, while the frequencies are what enter
 {math}`F_\mathrm{ph}`.
 
+### What the draw leaves at its defaults
+
+`init_random_displacements` takes settings the script above does not pass,
+and two of them are worth knowing.
+
+`cutoff_frequency`, 0.01 THz by default, drops modes below it from the draw.
+That is how an imaginary mode is handled: the grid point is displaced without
+that mode's contribution rather than failing. A quasi-harmonic grid can reach
+cells that are dynamically unstable, so look at the frequencies of the grid
+points before training on them -- a set built from a cell with an imaginary
+mode carries no information about the direction that mode would have moved.
+
+`dist_func` chooses the quantum occupation, the default, or the classical
+one; `max_distance` shortens any displacement longer than the length given,
+which caps the tail of the distribution.
+
 ### The shared normals
 
-`generate_random_normals` returns the {math}`\xi` on their own, before any
+Every grid point draws {math}`\xi` from the same distribution in any case, so
+sharing the distribution would change nothing. What is shared here is one set
+of **drawn values**: the same numbers are used at every grid point, which is
+what correlates the grid points instead of leaving them independent.
+
+`draw_standard_normals` returns those values on their own, before any
 frequency or eigenvector is applied. There are `3 * len(supercell)` of them
 per snapshot, in two arrays: one for the {math}`\mathbf{q}` with
 {math}`\mathbf{q} = -\mathbf{q} + \mathbf{G}`, one for the pairs of the rest,
 whose real and imaginary parts each take their own.
 
-Two grid points given the same normals still get different displacements, since
+Two grid points given the same values still get different displacements, since
 each scales them by its own frequencies and eigenvectors, which is what makes
-the draw thermal at that cell. What they share is one realization of the
-randomness, so neighbouring cells get displacement fields that resemble one
-another.
+the draw thermal at that cell. Neighbouring cells then get displacement fields
+that resemble one another rather than being drawn afresh.
 
 Snapshot *i* is drawn from `SeedSequence([random_seed, i])`, so it depends on
 its index and on nothing else. Asking for snapshots 0 to 99 and later for 100
@@ -977,35 +1085,108 @@ with an explanation: the phonon free energy is the one thing it cannot compute
 from it.
 
 Compute the free energies outside instead, one value per grid point and
-temperature in eV per primitive cell. Write them to a file where they are
-computed, and read that file in the analysis:
+temperature in eV per primitive cell, and write them to a file where they are
+computed. With SSCHA that is one run per grid point and temperature:
 
 ```{code-block} python
-:caption: Script 6 -- writing the free energies where they are computed
+:caption: Script 7 -- SSCHA at every grid point and temperature
 
 import numpy as np
 
+from phonopy.interface.mlp import PhonopyMLP
+from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.qha.free_energy_io import write_free_energies_hdf5
+from phonopy.sscha.core import MLPSSCHA
 
-temperatures = np.arange(0, 410, 10.0)  # one extra point for finite diff
+TEMPERATURES = np.arange(0, 410, 10.0)  # one extra point for finite diff
+SNAPSHOTS = 2000
+ITERATIONS = 16
+MESH = 200.0
+SEED = 1000
 
-# free_energies[i, j]: temperature i, grid point j, eV per primitive cell.
-# errors[i, j]: their uncertainties, as a sampled method reports them.
-free_energies = ...  # from SSCHA or another method
-errors = ...
-# lattice_lengths[j]: (a, b, c) of grid point j, from the dataset it was run
-# for. Written so that the analysis can refuse a file from another grid.
-lattice_lengths = ...
+dataset = read_aniso_qha_dataset("aniso_qha_dataset.hdf5")
+points = dataset.grid_points
+
+free_energies = np.zeros((len(TEMPERATURES), len(points)))
+errors = np.zeros_like(free_energies)
+
+# The grid points come back in the order they were given to the builder,
+# which is the order the training sets were made in.
+for column, point in enumerate(points):
+    mlp = PhonopyMLP().load(f"train/grid-{column + 1:03d}/polymlp.yaml")
+    for row, temperature in enumerate(TEMPERATURES):
+        sscha = MLPSSCHA(
+            point.to_phonopy(),
+            mlp,
+            temperature=float(temperature),
+            number_of_snapshots=SNAPSHOTS,
+            max_iterations=ITERATIONS,
+            mesh=MESH,
+            random_seed=SEED,
+        ).run()
+        # The first entry is the ensemble of the harmonic force constants the
+        # dataset carries, which is where the iteration starts rather than a
+        # SSCHA solution. The rest are independent samples of the same one.
+        history = sscha.history[1:]
+        free_energies[row, column] = np.mean([h.free_energy for h in history])
+        errors[row, column] = np.mean([h.free_energy_error for h in history])
 
 write_free_energies_hdf5(
-    temperatures,
+    TEMPERATURES,
     free_energies,
     "fph.hdf5",
     kind="phonon",
     errors=errors,
-    lattice_lengths=lattice_lengths,
+    lattice_lengths=np.array(
+        [np.linalg.norm(p.cell.cell, axis=1) for p in points]
+    ),
 )
 ```
+
+`MESH` is the mesh the harmonic part of the SSCHA free energy is sampled on,
+and matching it to the `--mesh` of the analysis keeps one sampling through
+the calculation. `SEED` fixes the whole run: each iteration derives its own
+seed from it, so the run is reproducible while the iterations stay
+independent.
+
+**One run per grid point and temperature is the cost of this step**, and at
+production settings it is hours to days. The runs are independent, so slice
+either loop and give each slice its own process, node or job. A slice over
+grid points writes the columns it was given:
+
+```python
+columns = range(0, 5)          # this job's grid points
+points = [dataset.grid_points[j] for j in columns]
+...
+write_free_energies_hdf5(TEMPERATURES, free_energies, "fph-000-004.hdf5", ...)
+```
+
+and the pieces are concatenated once they are all in:
+
+```python
+import glob
+
+import numpy as np
+
+from phonopy.qha.free_energy_io import (
+    read_free_energies_hdf5,
+    write_free_energies_hdf5,
+)
+
+parts = [read_free_energies_hdf5(f) for f in sorted(glob.glob("fph-*.hdf5"))]
+temperatures = parts[0].temperatures
+assert all(np.allclose(p.temperatures, temperatures) for p in parts)
+write_free_energies_hdf5(
+    temperatures,
+    np.column_stack([p.free_energies for p in parts]),
+    "fph.hdf5",
+    kind="phonon",
+    errors=np.column_stack([p.errors for p in parts]),
+    lattice_lengths=np.vstack([p.lattice_lengths for p in parts]),
+)
+```
+
+Then read the file in the analysis:
 
 ```bash
 % phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --tmax 400 --dt 10 \

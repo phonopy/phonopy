@@ -12,7 +12,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-randn_ii_TiPN3 = [
+normals_ii_TiPN3 = [
     -0.75205998,
     0.27277617,
     0.83138473,
@@ -74,7 +74,7 @@ randn_ii_TiPN3 = [
     -0.42092361,
     -0.30136512,
 ]
-randn_ij_TiPN3 = [
+normals_ij_TiPN3 = [
     -0.06170102,
     -0.61992360,
     -0.15385570,
@@ -1019,11 +1019,11 @@ def _generate_random_displacements(ph, d_max, nbins):
 def test_random_displacements_all_atoms_TiPN3(ph_tipn3: Phonopy):
     """Test by fixed random numbers of np.random.normal.
 
-    randn_ii and randn_ij were created by
+    normals_ii and normals_ij were created by
 
         np.random.seed(seed=100)
-        randn_ii = np.random.normal(size=(N_ii, 1, num_band))
-        randn_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
+        normals_ii = np.random.normal(size=(N_ii, 1, num_band))
+        normals_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
 
     The eigenvectors are computed on the fly. Under the default
     sampling_matrix="symmetric" they enter only through
@@ -1184,8 +1184,8 @@ def _get_random_displacements_all_atoms_TiPN3(
     N_ii = N - N_ij * 2
     shape_ii = (N_ii, 1, num_band)
     shape_ij = (N_ij, 2, 1, num_band)
-    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
-    randn_ij = np.reshape(randn_ij_TiPN3, shape_ij)
+    normals_ii = np.reshape(normals_ii_TiPN3, shape_ii)
+    normals_ij = np.reshape(normals_ij_TiPN3, shape_ij)
 
     if pin_eigvecs:
         rd._eigvecs_ii = np.reshape(
@@ -1200,7 +1200,7 @@ def _get_random_displacements_all_atoms_TiPN3(
         )
     if regauge is not None:
         regauge(rd)
-    rd.run(500, randn=(randn_ii, randn_ij))
+    rd.run(500, standard_normals=(normals_ii, normals_ij))
     return rd
 
 
@@ -1287,9 +1287,9 @@ def _seeded_snapshots(
         300, number_of_snapshots, random_seed=1701, first_snapshot=first_snapshot
     )
     rd = ph.random_displacements
-    assert rd is not None and rd.random_normals is not None
-    randn_ii, randn_ij = (a.copy() for a in rd.random_normals)
-    return randn_ii, randn_ij, d
+    assert rd is not None and rd.standard_normals is not None
+    normals_ii, normals_ij = (a.copy() for a in rd.standard_normals)
+    return normals_ii, normals_ij, d
 
 
 def test_random_displacements_both_q_sets_are_exercised(ph_tipn3: Phonopy):
@@ -1361,12 +1361,12 @@ def test_random_displacements_normals_are_shared(ph_tipn3: Phonopy):
     assert rd is not None
 
     rd.run(300, number_of_snapshots=8, random_seed=1701)
-    assert rd.random_normals is not None
-    eight_ii, eight_ij = (a.copy() for a in rd.random_normals)
+    assert rd.standard_normals is not None
+    eight_ii, eight_ij = (a.copy() for a in rd.standard_normals)
 
     rd.run(300, number_of_snapshots=1, random_seed=1701, first_snapshot=3)
-    assert rd.random_normals is not None
-    one_ii, one_ij = rd.random_normals
+    assert rd.standard_normals is not None
+    one_ii, one_ij = rd.standard_normals
 
     np.testing.assert_array_equal(one_ii[:, 0, :], eight_ii[:, 3, :])
     np.testing.assert_array_equal(one_ij[:, :, 0, :], eight_ij[:, :, 3, :])
@@ -1386,16 +1386,16 @@ def test_random_displacements_normals_can_be_given(ph_tipn3: Phonopy):
     assert rd is not None
 
     rd.run(300, number_of_snapshots=4, random_seed=1701)
-    assert rd.random_normals is not None
-    normals = tuple(a.copy() for a in rd.random_normals)
+    assert rd.standard_normals is not None
+    normals = tuple(a.copy() for a in rd.standard_normals)
     expected = rd.u.copy()
 
-    rd.run(300, number_of_snapshots=99, random_seed=9999, random_normals=normals)
+    rd.run(300, number_of_snapshots=99, random_seed=9999, standard_normals=normals)
     # number_of_snapshots and the seed are overridden by the arrays.
     np.testing.assert_array_equal(rd.u, expected)
 
     with pytest.raises(ValueError):
-        rd.run(300, random_normals=(normals[0][:-1], normals[1]))
+        rd.run(300, standard_normals=(normals[0][:-1], normals[1]))
 
 
 def test_random_displacements_snapshots_differ(ph_tipn3: Phonopy):
@@ -1614,7 +1614,7 @@ def _phase_per_atom(rd: RandomDisplacements, phase: np.ndarray) -> np.ndarray:
 
 
 def _reference_displacements(
-    rd: RandomDisplacements, temperature: float, randn_ii, randn_ij
+    rd: RandomDisplacements, temperature: float, normals_ii, normals_ij
 ) -> np.ndarray:
     """Return the displacements as they were assembled before 2026-08-17.
 
@@ -1632,7 +1632,7 @@ def _reference_displacements(
     old layout and is exactly the blocked ordering the rewrite relies on.
 
     """
-    n = randn_ii.shape[1]
+    n = normals_ii.shape[1]
     primitive = rd._dynmat.primitive
     natom = len(rd._dynmat.supercell)
     s2pp = [primitive.p2p_map[i] for i in primitive.s2p_map]
@@ -1640,7 +1640,7 @@ def _reference_displacements(
     u_ii = np.zeros((n, natom, 3))
     sigmas, _ = rd._get_sigma(rd._eigvals_ii, temperature)
     for norm_dist, sigma, eigvecs, phase in zip(
-        randn_ii, sigmas, rd._eigvecs_ii, rd._phase_ii, strict=True
+        normals_ii, sigmas, rd._eigvecs_ii, rd._phase_ii, strict=True
     ):
         amplitudes = rd._amplitudes(norm_dist, sigma, eigvecs)
         u_red = np.dot(amplitudes, eigvecs.T).reshape(n, -1, 3)[:, s2pp, :]
@@ -1650,7 +1650,7 @@ def _reference_displacements(
     if rd._ij:
         sigmas, _ = rd._get_sigma(rd._eigvals_ij, temperature)
         for norm_dist, sigma, eigvecs, phase in zip(
-            randn_ij, sigmas, rd._eigvecs_ij, rd._phase_ij, strict=True
+            normals_ij, sigmas, rd._eigvecs_ij, rd._phase_ij, strict=True
         ):
             amplitudes = rd._amplitudes(norm_dist, sigma, eigvecs)
             u_red = np.dot(amplitudes, eigvecs.T).reshape(2, n, -1, 3)[:, :, s2pp, :]
@@ -1683,8 +1683,8 @@ def test_random_displacements_match_the_per_q_expansion(
         sampling_matrix=sampling_matrix,
     )
     assert rd._ii and rd._ij
-    normals = rd.generate_random_normals(4, random_seed=7)
-    rd.run(300.0, random_normals=normals)
+    normals = rd.draw_standard_normals(4, random_seed=7)
+    rd.run(300.0, standard_normals=normals)
     reference = _reference_displacements(rd, 300.0, *normals)
     np.testing.assert_allclose(rd.u, reference, rtol=1e-10, atol=1e-14)
 
