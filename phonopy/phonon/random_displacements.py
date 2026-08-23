@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import warnings
 from typing import Literal
 
 import numpy as np
@@ -237,7 +236,7 @@ class RandomDisplacements:
 
         # Standard normals used by the last run, kept so that they can be
         # handed to another instance.
-        self._random_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = (
+        self._standard_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = (
             None
         )
 
@@ -247,8 +246,7 @@ class RandomDisplacements:
         number_of_snapshots: int = 1,
         random_seed: int | None = None,
         first_snapshot: int = 0,
-        random_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
-        randn: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        standard_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
     ) -> None:
         """Calculate random displacements.
 
@@ -272,15 +270,13 @@ class RandomDisplacements:
             Index of the first snapshot to generate. Snapshots
             ``first_snapshot`` to ``first_snapshot + number_of_snapshots - 1``
             are returned. Default is 0. Only meaningful with ``random_seed``.
-        random_normals : tuple of ndarray, optional
+        standard_normals : tuple of ndarray, optional
             The standard normals to turn into displacements, as returned by
-            :meth:`generate_random_normals`. When given, ``random_seed``,
+            :meth:`draw_standard_normals`. When given, ``random_seed``,
             ``first_snapshot`` and ``number_of_snapshots`` are ignored and the
             number of snapshots is taken from the arrays. Default is None,
             i.e. draw them. Giving another instance's normals puts both on the
             same realization of the randomness.
-        randn : tuple, optional
-            Deprecated alias of ``random_normals``.
 
         Notes
         -----
@@ -299,33 +295,25 @@ class RandomDisplacements:
         reproduce displacements across NumPy upgrades.
 
         """
-        if randn is not None:
-            warnings.warn(
-                "RandomDisplacements.run(randn=...) is deprecated. Use "
-                "random_normals=..., whose values are the same.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            if random_normals is None:
-                random_normals = randn
-
-        if random_normals is None:
-            random_normals = self.generate_random_normals(
+        if standard_normals is None:
+            standard_normals = self.draw_standard_normals(
                 number_of_snapshots,
                 random_seed=random_seed,
                 first_snapshot=first_snapshot,
             )
         else:
-            self._check_random_normals(random_normals)
-        self._random_normals = random_normals
-        randn_ii, randn_ij = random_normals
-        number_of_snapshots = randn_ii.shape[1]
+            self._check_standard_normals(standard_normals)
+        self._standard_normals = standard_normals
+        normals_ii, normals_ij = standard_normals
+        number_of_snapshots = normals_ii.shape[1]
 
         N = len(self._comm_points)
 
-        u_ii, self._conditions_ii = self._solve_ii(T, number_of_snapshots, randn_ii)
+        u_ii, self._conditions_ii = self._solve_ii(T, number_of_snapshots, normals_ii)
         if self._ij:
-            u_ij, self._conditions_ij = self._solve_ij(T, number_of_snapshots, randn_ij)
+            u_ij, self._conditions_ij = self._solve_ij(
+                T, number_of_snapshots, normals_ij
+            )
         else:
             u_ij = 0
             self._conditions_ij = None
@@ -343,7 +331,7 @@ class RandomDisplacements:
         else:
             self._u = u
 
-    def generate_random_normals(
+    def draw_standard_normals(
         self,
         number_of_snapshots: int = 1,
         random_seed: int | None = None,
@@ -352,7 +340,7 @@ class RandomDisplacements:
         """Return standard normals for :meth:`run`.
 
         Drawing them separately from using them lets one realization be shared
-        between structures; see the ``random_normals`` parameter of
+        between structures; see the ``standard_normals`` parameter of
         :meth:`run`.
 
         Parameters
@@ -421,20 +409,20 @@ class RandomDisplacements:
 
         """
         n_ii, b_ii, n_ij, b_ij = self._normals_shape()
-        randn_ii: NDArray[np.double] = np.zeros(
+        normals_ii: NDArray[np.double] = np.zeros(
             (n_ii, number_of_snapshots, b_ii), dtype="double"
         )
-        randn_ij: NDArray[np.double] = np.zeros(
+        normals_ij: NDArray[np.double] = np.zeros(
             (n_ij, 2, number_of_snapshots, b_ij), dtype="double"
         )
         for i in range(number_of_snapshots):
             rng = np.random.default_rng(
                 np.random.SeedSequence([random_seed, first_snapshot + i])
             )
-            randn_ii[:, i, :] = rng.standard_normal(size=(n_ii, b_ii))
+            normals_ii[:, i, :] = rng.standard_normal(size=(n_ii, b_ii))
             if n_ij:
-                randn_ij[:, :, i, :] = rng.standard_normal(size=(n_ij, 2, b_ij))
-        return randn_ii, randn_ij
+                normals_ij[:, :, i, :] = rng.standard_normal(size=(n_ij, 2, b_ij))
+        return normals_ii, normals_ij
 
     def _normals_shape(self) -> tuple[int, int, int, int]:
         """Return (n_ii, n_band, n_ij, n_band) of the standard normals."""
@@ -444,8 +432,8 @@ class RandomDisplacements:
         b_ij = len(self._eigvals_ij[0]) if self._ij else 0
         return n_ii, b_ii, n_ij, b_ij
 
-    def _check_random_normals(
-        self, random_normals: tuple[NDArray[np.double], NDArray[np.double]]
+    def _check_standard_normals(
+        self, standard_normals: tuple[NDArray[np.double], NDArray[np.double]]
     ) -> None:
         """Raise if the given normals do not fit this instance.
 
@@ -453,25 +441,29 @@ class RandomDisplacements:
         the same supercell matrix and primitive cell.
 
         """
-        if len(random_normals) != 2:
-            raise ValueError("random_normals must be (randn_ii, randn_ij).")
-        randn_ii, randn_ij = random_normals
+        if len(standard_normals) != 2:
+            raise ValueError("standard_normals must be (normals_ii, normals_ij).")
+        normals_ii, normals_ij = standard_normals
         n_ii, b_ii, n_ij, b_ij = self._normals_shape()
-        if randn_ii.ndim != 3 or randn_ii.shape[0] != n_ii or randn_ii.shape[2] != b_ii:
+        if (
+            normals_ii.ndim != 3
+            or normals_ii.shape[0] != n_ii
+            or normals_ii.shape[2] != b_ii
+        ):
             raise ValueError(
-                f"randn_ii has shape {randn_ii.shape}, expected "
+                f"normals_ii has shape {normals_ii.shape}, expected "
                 f"({n_ii}, number_of_snapshots, {b_ii})."
             )
         if not self._ij:
             return
-        expected = (n_ij, 2, randn_ii.shape[1], b_ij)
-        if tuple(randn_ij.shape) != expected:
+        expected = (n_ij, 2, normals_ii.shape[1], b_ij)
+        if tuple(normals_ij.shape) != expected:
             raise ValueError(
-                f"randn_ij has shape {tuple(randn_ij.shape)}, expected {expected}."
+                f"normals_ij has shape {tuple(normals_ij.shape)}, expected {expected}."
             )
 
     @property
-    def random_normals(
+    def standard_normals(
         self,
     ) -> tuple[NDArray[np.double], NDArray[np.double]] | None:
         """Return the standard normals the last :meth:`run` used.
@@ -480,7 +472,7 @@ class RandomDisplacements:
         realization of the randomness.
 
         """
-        return self._random_normals
+        return self._standard_normals
 
     @property
     def u(self) -> NDArray[np.double] | None:
@@ -732,10 +724,12 @@ class RandomDisplacements:
             return np.dot(norm_dist, eigvecs.conj()) * sigma
         return norm_dist * sigma
 
-    def _solve_ii(self, T: float, number_of_snapshots: int, randn: NDArray[np.double]):
+    def _solve_ii(
+        self, T: float, number_of_snapshots: int, normals: NDArray[np.double]
+    ):
         """Solve ii terms.
 
-        randn parameter is used for the test.
+        The normals parameter is used for the test.
 
         """
         u = np.zeros(
@@ -745,7 +739,7 @@ class RandomDisplacements:
 
         sigmas, conditions = self._get_sigma(self._eigvals_ii, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            randn, sigmas, self._eigvecs_ii, self._phase_ii, strict=True
+            normals, sigmas, self._eigvecs_ii, self._phase_ii, strict=True
         ):
             amplitudes = self._amplitudes(norm_dist, sigma, eigvecs)
             u_red = np.dot(amplitudes, eigvecs.T).reshape(
@@ -761,11 +755,11 @@ class RandomDisplacements:
         self,
         T: float,
         number_of_snapshots: int,
-        randn: NDArray[np.double],
+        normals: NDArray[np.double],
     ):
         """Solve ij terms.
 
-        randn parameter is used for the test.
+        normals parameter is used for the test.
 
         """
         u = np.zeros(
@@ -774,7 +768,7 @@ class RandomDisplacements:
         )
         sigmas, conditions = self._get_sigma(self._eigvals_ij, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            randn, sigmas, self._eigvecs_ij, self._phase_ij, strict=True
+            normals, sigmas, self._eigvecs_ij, self._phase_ij, strict=True
         ):
             # The two sets of normals are the real and imaginary parts of one
             # complex normal. Projecting them separately and recombining below
