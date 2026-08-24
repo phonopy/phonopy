@@ -26,17 +26,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="../../../_static/documentation_options.js?v=e4428b72"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -573,6 +573,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l2"><a class="reference internal" href="../../../abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -655,11 +656,18 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -692,7 +700,7 @@ window.runMermaid = runMermaid;</script>
                   
   <h1>Source code for phonopy.structure.atoms</h1><div class="highlight"><pre>
 <span></span><span class="c1"># SPDX-License-Identifier: BSD-3-Clause</span>
-<span class="sd">&quot;&quot;&quot;PhonopyAtoms class and routines related to atoms.&quot;&quot;&quot;</span>
+<span class="sd">"""PhonopyAtoms class and routines related to atoms."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -720,43 +728,43 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_CellDictBase</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class holding the required field of CellDict.</span>
+<span class="w">    </span><span class="sd">"""Base class holding the required field of CellDict.</span>
 
 <span class="sd">    Separated from CellDict because TypedDict does not support mixing required</span>
 <span class="sd">    and optional fields in a single class (Python &lt; 3.11). Required fields are</span>
 <span class="sd">    defined here with the default total=True, while optional fields are added</span>
 <span class="sd">    in the subclass with total=False.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">lattice</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">CellDict</span><span class="p">(</span><span class="n">_CellDictBase</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dict representation of a crystal cell as parsed from phonopy YAML.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Dict representation of a crystal cell as parsed from phonopy YAML."""</span>
 
     <span class="n">points</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_PointEntry</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">Atoms</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PhonopyAtoms&quot;</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Atoms class that is same as PhonopyAtoms class.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">Atoms</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"PhonopyAtoms"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Atoms class that is same as PhonopyAtoms class.</span>
 
 <span class="sd">    This exists backward compatibility.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-        <span class="s2">&quot;phonopy.atoms.Atoms is deprecated. Please use PhonopyAtoms instead of Atoms.&quot;</span><span class="p">,</span>
+        <span class="s2">"phonopy.atoms.Atoms is deprecated. Please use PhonopyAtoms instead of Atoms."</span><span class="p">,</span>
         <span class="ne">DeprecationWarning</span><span class="p">,</span>
         <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">PhonopyAtoms</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-<span class="n">_SYMBOL_INDEX_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^([A-Z][a-z]{0,2})([0-9]*)$&quot;</span><span class="p">)</span>
+<span class="n">_SYMBOL_INDEX_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^([A-Z][a-z]{0,2})([0-9]*)$"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">split_symbol_and_index</span><span class="p">(</span><span class="n">symnum</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split a single-element symbol with an optional natural-number suffix.</span>
+<span class="w">    </span><span class="sd">"""Split a single-element symbol with an optional natural-number suffix.</span>
 
 <span class="sd">    Accepted: a single chemical symbol (1 uppercase letter, optionally followed</span>
 <span class="sd">    by up to 2 lowercase letters — Uuo etc.), optionally followed by digits</span>
@@ -767,19 +775,19 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Cl1 --&gt; Cl, 1</span>
 <span class="sd">    Uuo --&gt; Uuo, 0</span>
 
-<span class="sd">    Composite symbols like &quot;GeSn&quot; or invalid forms like &quot;Cl_1&quot; raise</span>
+<span class="sd">    Composite symbols like "GeSn" or invalid forms like "Cl_1" raise</span>
 <span class="sd">    RuntimeError.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">m</span> <span class="o">=</span> <span class="n">_SYMBOL_INDEX_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">symnum</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
     <span class="n">symbol</span><span class="p">,</span> <span class="n">index_str</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">index_str</span><span class="p">:</span>
         <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">index_str</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid symbol. Index has to be greater than 0: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Invalid symbol. Index has to be greater than 0: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
@@ -788,15 +796,15 @@ window.runMermaid = runMermaid;</script>
 
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Species</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Identity of a chemical species used inside PhonopyAtoms.</span>
+<span class="w">    </span><span class="sd">"""Identity of a chemical species used inside PhonopyAtoms.</span>
 
 <span class="sd">    Two atoms share a species iff all fields are equal.</span>
 
 <span class="sd">    Three forms exist:</span>
 
 <span class="sd">    1. Normal (single-element) species: ``atomic_number`` is set, ``mixture``</span>
-<span class="sd">       and ``weight`` are None. ``symbol`` carries the suffix (&quot;Cl1&quot;) so that</span>
-<span class="sd">       &quot;Cl&quot; and &quot;Cl1&quot; are distinct species that share the same atomic number.</span>
+<span class="sd">       and ``weight`` are None. ``symbol`` carries the suffix ("Cl1") so that</span>
+<span class="sd">       "Cl" and "Cl1" are distinct species that share the same atomic number.</span>
 <span class="sd">       The suffix is a calculator-facing label (e.g. QE ATOMIC_SPECIES names</span>
 <span class="sd">       for isotopes or distinct pseudopotentials) carried through cell I/O</span>
 <span class="sd">       and per-atom masses; it deliberately does not affect symmetry search,</span>
@@ -804,8 +812,8 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    2. Merged mixed-species site (merge-style mixture): ``atomic_number`` is None</span>
 <span class="sd">       and ``mixture`` holds the constituent (symbol, weight) pairs with weights</span>
-<span class="sd">       summing to 1.0. ``symbol`` is the composite label (e.g. &quot;GeSn&quot;, or</span>
-<span class="sd">       &quot;GeSn1&quot;/&quot;GeSn2&quot; if the cell has multiple distinct GeSn mixtures).</span>
+<span class="sd">       summing to 1.0. ``symbol`` is the composite label (e.g. "GeSn", or</span>
+<span class="sd">       "GeSn1"/"GeSn2" if the cell has multiple distinct GeSn mixtures).</span>
 <span class="sd">       Overlapping atoms are collapsed into one site per group (see</span>
 <span class="sd">       ``build_mixture_cell``).</span>
 
@@ -822,7 +830,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Forms 2 and 3 model the same physics in different layouts and must not</span>
 <span class="sd">    coexist within one cell (checked by ``PhonopyAtoms._check``).</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">atomic_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
@@ -831,32 +839,32 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Exactly one of atomic_number or mixture must be set.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Exactly one of atomic_number or mixture must be set."</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;weight must be in (0, 1), got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="si">}</span><span class="s2">: weight 0 &quot;</span>
-                    <span class="s2">&quot;would cause division by zero when recovering &quot;</span>
-                    <span class="s2">&quot;species-resolved forces, and an atom without a &quot;</span>
-                    <span class="s2">&quot;fractional concentration must use weight=None.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"weight must be in (0, 1), got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="si">}</span><span class="s2">: weight 0 "</span>
+                    <span class="s2">"would cause division by zero when recovering "</span>
+                    <span class="s2">"species-resolved forces, and an atom without a "</span>
+                    <span class="s2">"fractional concentration must use weight=None."</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;weight is the per-species concentration of the non-merge &quot;</span>
-                    <span class="s2">&quot;non-merge scheme and cannot be combined with a merged mixture &quot;</span>
-                    <span class="s2">&quot;species.&quot;</span>
+                    <span class="s2">"weight is the per-species concentration of the non-merge "</span>
+                    <span class="s2">"non-merge scheme and cannot be combined with a merged mixture "</span>
+                    <span class="s2">"species."</span>
                 <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_dedup_species</span><span class="p">(</span>
     <span class="n">per_atom_species</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deduplicate per-atom species into a (species_table, species_ids) pair.</span>
+<span class="w">    </span><span class="sd">"""Deduplicate per-atom species into a (species_table, species_ids) pair.</span>
 
 <span class="sd">    The table keeps the first-appearance order of distinct species; each</span>
-<span class="sd">    atom&#39;s id points at its species entry.</span>
+<span class="sd">    atom's id points at its species entry.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Species</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">table</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -867,23 +875,23 @@ window.runMermaid = runMermaid;</script>
             <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
             <span class="n">seen</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">sid</span>
         <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"int64"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">build_species_table_from_mixtures</span><span class="p">(</span>
     <span class="n">mixtures</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]],</span>
     <span class="n">sort_constituents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert per-atom species mixtures into a (species_table, species_ids) pair.</span>
+<span class="w">    </span><span class="sd">"""Convert per-atom species mixtures into a (species_table, species_ids) pair.</span>
 
 <span class="sd">    Each entry of ``mixtures`` is a list of ``(symbol, weight)`` pairs</span>
 <span class="sd">    describing the constituents of one atomic site. Weights must sum to 1.0.</span>
 <span class="sd">    A single-component entry of weight 1.0 is canonicalized to a normal</span>
 <span class="sd">    (single-element) species. The composite symbol of a true mixture is</span>
-<span class="sd">    derived as the concatenation of constituent symbols (e.g. &quot;GeSn&quot;); when</span>
+<span class="sd">    derived as the concatenation of constituent symbols (e.g. "GeSn"); when</span>
 <span class="sd">    several distinct mixtures within the same cell would collide on the same</span>
 <span class="sd">    composite label, every colliding mixed species receives a 1-based suffix</span>
-<span class="sd">    (``&quot;GeSn1&quot;``, ``&quot;GeSn2&quot;``, ...) in table order while unique composites</span>
+<span class="sd">    (``"GeSn1"``, ``"GeSn2"``, ...) in table order while unique composites</span>
 <span class="sd">    stay unsuffixed.</span>
 
 <span class="sd">    Parameters</span>
@@ -894,21 +902,21 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        If True (default), each per-site mixture is reordered into a canonical</span>
 <span class="sd">        constituent order before deriving species identity and the composite</span>
 <span class="sd">        label. This treats two physically equivalent sites that differ only in</span>
-<span class="sd">        the order constituents were listed (e.g. ``[(&quot;Ge&quot;, 0.5), (&quot;Sn&quot;, 0.5)]``</span>
-<span class="sd">        and ``[(&quot;Sn&quot;, 0.5), (&quot;Ge&quot;, 0.5)]``) as the same species. The canonical</span>
+<span class="sd">        the order constituents were listed (e.g. ``[("Ge", 0.5), ("Sn", 0.5)]``</span>
+<span class="sd">        and ``[("Sn", 0.5), ("Ge", 0.5)]``) as the same species. The canonical</span>
 <span class="sd">        order is the order in which symbols first appear while scanning</span>
 <span class="sd">        ``mixtures`` in atom order, so the constituent order supplied by the</span>
 <span class="sd">        caller is preserved instead of being reordered alphabetically. The</span>
 <span class="sd">        rule is idempotent, so re-canonicalizing an already canonical set of</span>
 <span class="sd">        mixtures (e.g. on reload from yaml) is a no-op. Pass False to preserve</span>
-<span class="sd">        the caller&#39;s per-site order verbatim without deriving a common order.</span>
+<span class="sd">        the caller's per-site order verbatim without deriving a common order.</span>
 
 <span class="sd">    The returned pair can be passed to ``PhonopyAtoms(species_table=...,</span>
 <span class="sd">    species_ids=...)``. Use cases include site mixtures</span>
 <span class="sd">    (see ``build_mixture_cell``) and any other site-disorder model</span>
 <span class="sd">    expressible as weighted constituent symbols.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
     <span class="n">rank</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">sort_constituents</span><span class="p">:</span>
@@ -919,24 +927,24 @@ window.runMermaid = runMermaid;</script>
     <span class="k">for</span> <span class="n">atom_mixture</span> <span class="ow">in</span> <span class="n">mixtures</span><span class="p">:</span>
         <span class="n">mix</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">atom_mixture</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">mix</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mixture entry must be non-empty.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"mixture entry must be non-empty."</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">sort_constituents</span><span class="p">:</span>
             <span class="n">mix</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">mix</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sw</span><span class="p">:</span> <span class="n">rank</span><span class="p">[</span><span class="n">sw</span><span class="p">[</span><span class="mi">0</span><span class="p">]]))</span>
         <span class="n">wsum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">wsum</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mixture weights must sum to 1.0, got </span><span class="si">{</span><span class="n">wsum</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">mix</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-        <span class="c1"># Each component symbol may carry a suffix like &quot;Cl1&quot;; validate the</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mixture weights must sum to 1.0, got </span><span class="si">{</span><span class="n">wsum</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">mix</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="c1"># Each component symbol may carry a suffix like "Cl1"; validate the</span>
         <span class="c1"># base part exists in the periodic table.</span>
         <span class="k">for</span> <span class="n">sym</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">:</span>
             <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">sym</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid symbol: </span><span class="si">{</span><span class="n">sym</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mix</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">sym</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mix</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
             <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">sym</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">composite</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">)</span>
+            <span class="n">composite</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">mix</span><span class="p">)</span>
             <span class="n">sp</span> <span class="o">=</span> <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">composite</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mixture</span><span class="o">=</span><span class="n">mix</span><span class="p">)</span>
         <span class="n">per_atom_species</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
     <span class="n">species_list</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
@@ -948,10 +956,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">symbols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">order</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert per-atom chemical symbols into a (species_table, species_ids) pair.</span>
+<span class="w">    </span><span class="sd">"""Convert per-atom chemical symbols into a (species_table, species_ids) pair.</span>
 
 <span class="sd">    Each entry of ``symbols`` is a chemical symbol with an optional</span>
-<span class="sd">    natural-number suffix (e.g. ``&quot;Cl&quot;``, ``&quot;Cl1&quot;``); atoms sharing the same</span>
+<span class="sd">    natural-number suffix (e.g. ``"Cl"``, ``"Cl1"``); atoms sharing the same</span>
 <span class="sd">    symbol string share one species entry. This is the single-element</span>
 <span class="sd">    counterpart of ``build_species_table_from_mixtures``.</span>
 
@@ -966,17 +974,17 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        given, entries follow this order; symbols listed in ``order`` but</span>
 <span class="sd">        absent from ``symbols`` are dropped, and every symbol appearing in</span>
 <span class="sd">        ``symbols`` must be present in ``order``. This lets calculator readers</span>
-<span class="sd">        that carry an explicit type ordering (e.g. LAMMPS &quot;Atom Type Labels&quot;)</span>
+<span class="sd">        that carry an explicit type ordering (e.g. LAMMPS "Atom Type Labels")</span>
 <span class="sd">        preserve it through to ``PhonopyAtoms(species_table=...,</span>
 <span class="sd">        species_ids=...)``.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
     <span class="n">per_atom_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">symnum</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
         <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_symbol_and_index</span><span class="p">(</span><span class="n">symnum</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_map</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid symbol: </span><span class="si">{</span><span class="n">symnum</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">per_atom_species</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symnum</span><span class="p">,</span> <span class="n">atomic_number</span><span class="o">=</span><span class="n">symbol_map</span><span class="p">[</span><span class="n">base</span><span class="p">]))</span>
     <span class="n">table</span><span class="p">,</span> <span class="n">ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -986,28 +994,28 @@ window.runMermaid = runMermaid;</script>
     <span class="n">missing</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sym_to_old</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;order is missing symbols present in symbols: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"order is missing symbols present in symbols: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="n">ordered</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">order</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sym_to_old</span><span class="p">]</span>
     <span class="n">new_table</span> <span class="o">=</span> <span class="p">[</span><span class="n">table</span><span class="p">[</span><span class="n">sym_to_old</span><span class="p">[</span><span class="n">s</span><span class="p">]]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">]</span>
     <span class="n">old_to_new</span> <span class="o">=</span> <span class="p">{</span><span class="n">sym_to_old</span><span class="p">[</span><span class="n">s</span><span class="p">]:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ordered</span><span class="p">)}</span>
-    <span class="n">new_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">old_to_new</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="n">new_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">old_to_new</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"int64"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">new_table</span><span class="p">,</span> <span class="n">new_ids</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_disambiguate_composite_labels</span><span class="p">(</span>
     <span class="n">species_table</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append 1-based suffixes to mixed-species symbols that collide.</span>
+<span class="w">    </span><span class="sd">"""Append 1-based suffixes to mixed-species symbols that collide.</span>
 
 <span class="sd">    Distinct mixtures may produce the same composite label</span>
-<span class="sd">    (e.g. two GeSn mixtures with different ratios both yield ``&quot;GeSn&quot;``).</span>
+<span class="sd">    (e.g. two GeSn mixtures with different ratios both yield ``"GeSn"``).</span>
 <span class="sd">    When that happens within a single species table, every colliding mixed</span>
-<span class="sd">    species is renamed to ``&quot;GeSn1&quot;`` / ``&quot;GeSn2&quot;`` / ... in table order,</span>
+<span class="sd">    species is renamed to ``"GeSn1"`` / ``"GeSn2"`` / ... in table order,</span>
 <span class="sd">    while unique composites stay unsuffixed. Non-mixture species are</span>
 <span class="sd">    untouched.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">label_counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">species_table</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1021,7 +1029,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">species_table</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="n">duplicates</span><span class="p">:</span>
             <span class="n">counters</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span> <span class="o">=</span> <span class="n">counters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-            <span class="n">new_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}{</span><span class="n">counters</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">new_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}{</span><span class="n">counters</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
             <span class="n">new_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">new_label</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">new_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
@@ -1031,7 +1039,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="PhonopyAtoms">
 <a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PhonopyAtoms</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to represent crystal structure.</span>
+<span class="w">    </span><span class="sd">"""Class to represent crystal structure.</span>
 
 <span class="sd">    Originally this class aimed to be compatible with the ASE ``Atoms``</span>
 <span class="sd">    class, but the APIs have since diverged.</span>
@@ -1046,18 +1054,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    :ref:`phonopy_Atoms` for the tutorial-style overview and per-attribute</span>
 <span class="sd">    documentation below for details.</span>
 
-<span class="sd">    A chemical symbol may carry a natural-number suffix (&quot;Cl1&quot;). The</span>
+<span class="sd">    A chemical symbol may carry a natural-number suffix ("Cl1"). The</span>
 <span class="sd">    suffix is a calculator-facing label (e.g. distinct pseudopotentials or</span>
-<span class="sd">    isotopes in a Quantum ESPRESSO ``ATOMIC_SPECIES`` block); &quot;Cl&quot; and</span>
-<span class="sd">    &quot;Cl1&quot; are distinct species that share the same atomic number. The</span>
+<span class="sd">    isotopes in a Quantum ESPRESSO ``ATOMIC_SPECIES`` block); "Cl" and</span>
+<span class="sd">    "Cl1" are distinct species that share the same atomic number. The</span>
 <span class="sd">    three species views treat the suffix differently: ``symbols`` and</span>
-<span class="sd">    ``species_ids`` distinguish &quot;Cl&quot; from &quot;Cl1&quot;, while ``numbers`` does</span>
+<span class="sd">    ``species_ids`` distinguish "Cl" from "Cl1", while ``numbers`` does</span>
 <span class="sd">    not (both are 17). Whether symmetry analysis distinguishes them is</span>
 <span class="sd">    controlled by ``distinguish_symbol_index`` (see :meth:`totuple`),</span>
 <span class="sd">    which selects ``species_ids`` (distinguish) or ``numbers`` (do not,</span>
 <span class="sd">    the default); force constants do not depend on the suffix.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1074,7 +1082,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">species_table</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">species_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pbc is dummy argument, and never used.</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set crystal structure parameters.</span>
+<span class="w">        </span><span class="sd">"""Set crystal structure parameters.</span>
 
 <span class="sd">        Exactly one of the species inputs (``symbols``, ``numbers``, or</span>
 <span class="sd">        the ``species_table`` / ``species_ids`` pair) must be supplied.</span>
@@ -1084,7 +1092,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        symbols : sequence of str, optional</span>
-<span class="sd">            Per-atom chemical symbols (``&quot;Si&quot;``, ``&quot;Cl1&quot;``, ...).</span>
+<span class="sd">            Per-atom chemical symbols (``"Si"``, ``"Cl1"``, ...).</span>
 <span class="sd">            Shorthand for ordinary cells. Atomic numbers and default</span>
 <span class="sd">            masses are derived from these.</span>
 <span class="sd">        numbers : sequence of int, optional</span>
@@ -1117,7 +1125,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            coordinates. ``shape=(natom, 3)``. Mutually exclusive with</span>
 <span class="sd">            ``positions``.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]</span>
@@ -1131,27 +1139,27 @@ window.runMermaid = runMermaid;</script>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">species_table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">species_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;species_table and species_ids must be specified together.&quot;</span>
+                <span class="s2">"species_table and species_ids must be specified together."</span>
             <span class="p">)</span>
         <span class="n">n_specified</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">species_table</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">n_specified</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;One of symbols, numbers, or (species_table, species_ids) &quot;</span>
-                <span class="s2">&quot;has to be specified.&quot;</span>
+                <span class="s2">"One of symbols, numbers, or (species_table, species_ids) "</span>
+                <span class="s2">"has to be specified."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">n_specified</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;symbols, numbers, and species_table are mutually exclusive.&quot;</span>
+                <span class="s2">"symbols, numbers, and species_table are mutually exclusive."</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">symbols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_build_species_from_symbols</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">symbols</span><span class="p">))</span>
         <span class="k">elif</span> <span class="n">numbers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_build_species_from_numbers</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_species_from_numbers</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"int64"</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">species_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">species_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_species</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">species_table</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">species_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">species_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"int64"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">masses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_masses</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
@@ -1163,18 +1171,18 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of atoms in the cell.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the number of atoms in the cell."""</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cell</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of basis vectors.</span>
+<span class="w">        </span><span class="sd">"""Setter and getter of basis vectors.</span>
 
 <span class="sd">        Basis vectors (a, b, c) given as row vectors.</span>
-<span class="sd">        ``shape=(3, 3)``, ``dtype=&#39;double&#39;``, ``order=&#39;C&#39;``.</span>
+<span class="sd">        ``shape=(3, 3)``, ``dtype='double'``, ``order='C'``.</span>
 <span class="sd">        For getter, a copy is returned.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="nd">@cell</span><span class="o">.</span><span class="n">setter</span>
@@ -1184,13 +1192,13 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">positions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of positions in Cartesian coordinates.</span>
+<span class="w">        </span><span class="sd">"""Setter and getter of positions in Cartesian coordinates.</span>
 
-<span class="sd">        ``shape=(natom, 3)``, ``dtype=&#39;double&#39;``, ``order=&#39;C&#39;``.</span>
+<span class="sd">        ``shape=(natom, 3)``, ``dtype='double'``, ``order='C'``.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"C"</span>
         <span class="p">)</span>
 
     <span class="nd">@positions</span><span class="o">.</span><span class="n">setter</span>
@@ -1200,13 +1208,13 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">scaled_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of scaled positions.</span>
+<span class="w">        </span><span class="sd">"""Setter and getter of scaled positions.</span>
 
 <span class="sd">        Positions of atoms in fractional (crystallographic) coordinates.</span>
-<span class="sd">        ``shape=(natom, 3)``, ``dtype=&#39;double&#39;``, ``order=&#39;C&#39;``.</span>
+<span class="sd">        ``shape=(natom, 3)``, ``dtype='double'``, ``order='C'``.</span>
 <span class="sd">        For getter, a copy is returned.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="nd">@scaled_positions</span><span class="o">.</span><span class="n">setter</span>
@@ -1218,34 +1226,34 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Chemical symbols per atom.</span>
+<span class="w">        </span><span class="sd">"""Chemical symbols per atom.</span>
 
 <span class="sd">        Chemical symbol with an appended natural number is allowed, e.g.,</span>
-<span class="sd">        ``&quot;Cl1&quot;``. Mixed-species sites carry a composite label formed by</span>
-<span class="sd">        concatenating constituent symbols (e.g., ``&quot;GeSn&quot;``).</span>
+<span class="sd">        ``"Cl1"``. Mixed-species sites carry a composite label formed by</span>
+<span class="sd">        concatenating constituent symbols (e.g., ``"GeSn"``).</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">species_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Per-atom index into ``species_table``.</span>
+<span class="w">        </span><span class="sd">"""Per-atom index into ``species_table``.</span>
 
 <span class="sd">        Atoms that reference the same ``species_table`` entry share the</span>
-<span class="sd">        same id; ordinary ``&quot;Cl&quot;`` and labeled ``&quot;Cl1&quot;`` get different</span>
+<span class="sd">        same id; ordinary ``"Cl"`` and labeled ``"Cl1"`` get different</span>
 <span class="sd">        ids, and two atoms differing only in mixture composition or</span>
 <span class="sd">        weights also get different ids. Suitable as the ``types``</span>
 <span class="sd">        argument for spglib when atoms with the same atomic number but</span>
 <span class="sd">        different symbol suffix must be distinguished.</span>
-<span class="sd">        ``shape=(natom,)``, ``dtype=&#39;int64&#39;``.</span>
+<span class="sd">        ``shape=(natom,)``, ``dtype='int64'``.</span>
 <span class="sd">        For getter, a copy is returned.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">species_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">_Species</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deduplicated species table indexed by ``species_ids``.</span>
+<span class="w">        </span><span class="sd">"""Deduplicated species table indexed by ``species_ids``.</span>
 
 <span class="sd">        Each entry is either an ordinary single-element species (with</span>
 <span class="sd">        ``atomic_number`` set) or a weighted mixture (``mixture`` set to</span>
@@ -1255,14 +1263,14 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        are frozen dataclasses so the list elements are themselves</span>
 <span class="sd">        immutable.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Atomic numbers per atom in 1..118.</span>
+<span class="w">        </span><span class="sd">"""Atomic numbers per atom in 1..118.</span>
 
-<span class="sd">        ``shape=(natom,)``, ``dtype=&#39;int64&#39;``.</span>
+<span class="sd">        ``shape=(natom,)``, ``dtype='int64'``.</span>
 <span class="sd">        For getter, a new array is returned.</span>
 
 <span class="sd">        Raises ``RuntimeError`` if the cell contains any mixed-species</span>
@@ -1270,41 +1278,41 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        ``species_ids`` instead when an opaque per-atom species</span>
 <span class="sd">        discriminator is needed.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">nums</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">:</span>
             <span class="n">sp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;cell.numbers is undefined for cells containing mixed-species &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;sites (species &#39;</span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">&#39;). Use cell.species_ids instead.&quot;</span>
+                    <span class="s2">"cell.numbers is undefined for cells containing mixed-species "</span>
+                    <span class="sa">f</span><span class="s2">"sites (species '</span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">'). Use cell.species_ids instead."</span>
                 <span class="p">)</span>
             <span class="n">nums</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"int64"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_mixtures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the cell contains any mixed-species site.</span>
+<span class="w">        </span><span class="sd">"""Return True if the cell contains any mixed-species site.</span>
 
 <span class="sd">        ``True`` when any species in the cell is a weighted mixture of</span>
 <span class="sd">        constituents (a merged site mixture).</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_weighted_species</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the cell contains any weighted real species.</span>
+<span class="w">        </span><span class="sd">"""Return True if the cell contains any weighted real species.</span>
 
 <span class="sd">        ``True`` when any species carries a non-merge concentration</span>
 <span class="sd">        weight (see ``apply_site_mixture``).</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_site_mixture</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the cell carries any site-mixture information.</span>
+<span class="w">        </span><span class="sd">"""Return True if the cell carries any site-mixture information.</span>
 
 <span class="sd">        True when the cell has merged mixed-species sites</span>
 <span class="sd">        (``has_mixtures``) or weighted real species</span>
@@ -1314,28 +1322,28 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        numbers) to spglib, so the species table must be used to rebuild</span>
 <span class="sd">        a cell from a spglib result.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_mixtures</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_weighted_species</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mixture_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Per-atom concentration weights for the non-merge scheme.</span>
+<span class="w">        </span><span class="sd">"""Per-atom concentration weights for the non-merge scheme.</span>
 
 <span class="sd">        Derived from the species table: ``species.weight`` per atom, with</span>
 <span class="sd">        1.0 for atoms whose species carries no weight. ``None`` when no</span>
 <span class="sd">        species carries a weight (ordinary cells and merge-style mixture</span>
-<span class="sd">        cells). Otherwise ``shape=(natom,)``, ``dtype=&#39;double&#39;``, all</span>
+<span class="sd">        cells). Otherwise ``shape=(natom,)``, ``dtype='double'``, all</span>
 <span class="sd">        values in ``(0, 1]``. Set via :func:`apply_site_mixture`.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span><span class="o">.</span><span class="n">weight</span> <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">permutation_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Per-atom type labels for symmetry-permutation matching, or None.</span>
+<span class="w">        </span><span class="sd">"""Per-atom type labels for symmetry-permutation matching, or None.</span>
 
 <span class="sd">        Returns ``species_ids`` when the cell has co-located atoms (site</span>
 <span class="sd">        mixtures / weighted species), so that permutation matching does not</span>
@@ -1346,21 +1354,21 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        :func:`phonopy.structure.cells.compute_all_sg_permutations` and</span>
 <span class="sd">        :func:`phonopy.structure.cells.compute_permutation_for_rotation`.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_site_mixture</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_ids</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">masses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of atomic masses.</span>
+<span class="w">        </span><span class="sd">"""Setter and getter of atomic masses.</span>
 
 <span class="sd">        For a mixed-species site, the mass is the weight-averaged sum</span>
 <span class="sd">        over its constituents.</span>
-<span class="sd">        ``shape=(natom,)``, ``dtype=&#39;double&#39;``.</span>
+<span class="sd">        ``shape=(natom,)``, ``dtype='double'``.</span>
 <span class="sd">        For getter, a copy is returned.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="nd">@masses</span><span class="o">.</span><span class="n">setter</span>
@@ -1370,17 +1378,17 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">magnetic_moments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setter and getter of magnetic moments.</span>
+<span class="w">        </span><span class="sd">"""Setter and getter of magnetic moments.</span>
 
-<span class="sd">        ``shape=(natom,)`` or ``(natom, 3)``, ``dtype=&#39;double&#39;``,</span>
-<span class="sd">        ``order=&#39;C&#39;``.</span>
+<span class="sd">        ``shape=(natom,)`` or ``(natom, 3)``, ``dtype='double'``,</span>
+<span class="sd">        ``order='C'``.</span>
 
 <span class="sd">        For the setter, the former can also be specified as</span>
 <span class="sd">        ``(natom, 1)`` (recognized as ``(natom,)``) and the latter as</span>
 <span class="sd">        ``(natom * 3,)`` (converted to ``(natom, 3)``).</span>
 <span class="sd">        For getter, a copy is returned.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1390,7 +1398,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;_magnetic_moments has to have shape=(natom,) or (natom*3).&quot;</span>
+                    <span class="s2">"_magnetic_moments has to have shape=(natom,) or (natom*3)."</span>
                 <span class="p">)</span>
 
     <span class="nd">@magnetic_moments</span><span class="o">.</span><span class="n">setter</span>
@@ -1406,23 +1414,23 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the cell volume.</span>
+<span class="w">        </span><span class="sd">"""Return the cell volume.</span>
 
 <span class="sd">        Computed as the determinant of the basis-vector matrix. The unit</span>
 <span class="sd">        follows that of the input ``cell`` (e.g., Angstrom^3 for an</span>
 <span class="sd">        Angstrom-valued ``cell``).</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">Z</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of formula units in this cell.</span>
+<span class="w">        </span><span class="sd">"""Return the number of formula units in this cell.</span>
 
 <span class="sd">        Computed as the GCD of the per-species atom counts. For example,</span>
 <span class="sd">        a cell with 4 Fe and 8 O atoms returns 4.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">count</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">:</span>
             <span class="n">count</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
@@ -1433,26 +1441,26 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">x</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cell</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">_cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="n">_cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_cell</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span> <span class="o">=</span> <span class="n">_cell</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Array shape of cell is not 3x3.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Array shape of cell is not 3x3."</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_positions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">cart_positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cart_positions</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cart_positions</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"C"</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_scaled_positions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">scaled_positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_masses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masses</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_magnetic_moments</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1461,15 +1469,15 @@ window.runMermaid = runMermaid;</script>
         <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
         <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set magnetic moments in 1D array of shape=(natom,) or (natom*3).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Set magnetic moments in 1D array of shape=(natom,) or (natom*3)."""</span>
         <span class="k">if</span> <span class="n">magmoms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">magmoms</span><span class="p">))</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;magnetic_moments has to have shape=(natom,) or (natom*3).&quot;</span>
+                    <span class="s2">"magnetic_moments has to have shape=(natom,) or (natom*3)."</span>
                 <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">magmoms</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">magmoms</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_cell_and_positions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1485,13 +1493,13 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_scaled_positions</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse symbol strings and populate _species and _species_ids.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Parse symbol strings and populate _species and _species_ids."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">build_species_table_from_symbols</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_species_from_numbers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numbers</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate _species and _species_ids from atomic numbers (1..118).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Populate _species and _species_ids from atomic numbers (1..118)."""</span>
         <span class="k">if</span> <span class="n">numbers</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="p">((</span><span class="n">numbers</span> <span class="o">&gt;</span> <span class="mi">118</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">numbers</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Atomic numbers must be in 1..118.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Atomic numbers must be in 1..118."</span><span class="p">)</span>
         <span class="n">atom_data</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
         <span class="n">per_atom_species</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">_Species</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">atom_data</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">atomic_number</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">numbers</span>
@@ -1499,12 +1507,12 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="o">=</span> <span class="n">_dedup_species</span><span class="p">(</span><span class="n">per_atom_species</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_default_masses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set _masses from the periodic table using each atom&#39;s species.</span>
+<span class="w">        </span><span class="sd">"""Set _masses from the periodic table using each atom's species.</span>
 
 <span class="sd">        For a mixed-species site the mass is the weight-averaged sum of</span>
 <span class="sd">        constituent atomic masses (sum_j w_j * m_j).</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">atom_data</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
         <span class="n">symbol_map</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
         <span class="n">masses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1533,60 +1541,60 @@ window.runMermaid = runMermaid;</script>
                     <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">undefined</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Masses of </span><span class="si">{</span><span class="n">undefined</span><span class="si">}</span><span class="s2"> are undefined. &quot;</span>
-                <span class="s2">&quot;These have to be specified by masses parameter.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Masses of </span><span class="si">{</span><span class="n">undefined</span><span class="si">}</span><span class="s2"> are undefined. "</span>
+                <span class="s2">"These have to be specified by masses parameter."</span>
             <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check number of elements in arrays.</span>
+<span class="w">        </span><span class="sd">"""Check number of elements in arrays.</span>
 
 <span class="sd">        Do not modify the arrays.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;cell is not set.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"cell is not set."</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;scaled_positions (positions) is not set.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"scaled_positions (positions) is not set."</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;species_ids is not set.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"species_ids is not set."</span><span class="p">)</span>
         <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="n">natom</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;len(species_ids) != len(scaled_positions).&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"len(species_ids) != len(scaled_positions)."</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_masses</span><span class="p">)</span> <span class="o">!=</span> <span class="n">natom</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;len(masses) != len(scaled_positions).&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"len(masses) != len(scaled_positions)."</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span>
         <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;species_ids out of range of species table.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"species_ids out of range of species table."</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;species_table contains duplicate species; entries must be &quot;</span>
-                <span class="s2">&quot;unique so that species_ids identify a species unambiguously. &quot;</span>
-                <span class="s2">&quot;Build it via _dedup_species or &quot;</span>
-                <span class="s2">&quot;build_species_table_from_mixtures.&quot;</span>
+                <span class="s2">"species_table contains duplicate species; entries must be "</span>
+                <span class="s2">"unique so that species_ids identify a species unambiguously. "</span>
+                <span class="s2">"Build it via _dedup_species or "</span>
+                <span class="s2">"build_species_table_from_mixtures."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species_ids</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;species_table contains unused entries; every entry must be &quot;</span>
-                <span class="s2">&quot;referenced by some atom. Build it via _dedup_species or &quot;</span>
-                <span class="s2">&quot;prune unused entries before construction.&quot;</span>
+                <span class="s2">"species_table contains unused entries; every entry must be "</span>
+                <span class="s2">"referenced by some atom. Build it via _dedup_species or "</span>
+                <span class="s2">"prune unused entries before construction."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_magnetic_moments</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;_magnetic_moments has to have shape=(natom,) or (natom*3).&quot;</span>
+                    <span class="s2">"_magnetic_moments has to have shape=(natom,) or (natom*3)."</span>
                 <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_mixtures</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Merged mixed-species sites (merge-style mixture) and weighted &quot;</span>
-                <span class="s2">&quot;real species (non-merge, species-resolved) cannot coexist in one cell.&quot;</span>
+                <span class="s2">"Merged mixed-species sites (merge-style mixture) and weighted "</span>
+                <span class="s2">"real species (non-merge, species-resolved) cannot coexist in one cell."</span>
             <span class="p">)</span>
 
 <div class="viewcode-block" id="PhonopyAtoms.copy">
 <a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms.copy">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhonopyAtoms</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an independent copy of this cell.</span>
+<span class="w">        </span><span class="sd">"""Return an independent copy of this cell.</span>
 
 <span class="sd">        Internal arrays (cell, scaled positions, masses, magnetic</span>
 <span class="sd">        moments, species ids) are re-allocated by the constructor so</span>
@@ -1594,7 +1602,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        table entries themselves are frozen dataclasses and are safe to</span>
 <span class="sd">        share.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
             <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">,</span>
             <span class="n">scaled_positions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scaled_positions</span><span class="p">,</span>
@@ -1618,7 +1626,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">]</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``(cell, scaled_positions, numbers)``.</span>
+<span class="w">        </span><span class="sd">"""Return ``(cell, scaled_positions, numbers)``.</span>
 
 <span class="sd">        If ``magnetic_moments`` is set,</span>
 <span class="sd">        ``(cell, scaled_positions, numbers, magnetic_moments)`` is</span>
@@ -1632,7 +1640,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            suitable as the ``types`` argument for spglib when</span>
 <span class="sd">            symbol-suffix groupings must be preserved. If False</span>
 <span class="sd">            (default), the per-atom integer is the atomic number, so</span>
-<span class="sd">            suffixed symbols (&quot;Cl1&quot;) are deliberately NOT distinguished:</span>
+<span class="sd">            suffixed symbols ("Cl1") are deliberately NOT distinguished:</span>
 <span class="sd">            a suffix is a calculator-facing label (e.g. QE</span>
 <span class="sd">            ATOMIC_SPECIES for isotopes) and force constants do not</span>
 <span class="sd">            depend on it, so symmetry search treats such atoms as</span>
@@ -1648,7 +1656,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            ``(cell, scaled_positions, numbers)`` or</span>
 <span class="sd">            ``(cell, scaled_positions, numbers, magnetic_moments)``.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">distinguish_symbol_index</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_site_mixture</span><span class="p">:</span>
             <span class="n">numbers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">species_ids</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1668,14 +1676,14 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="PhonopyAtoms.get_yaml_lines">
 <a class="viewcode-back" href="../../../api-reference.html#phonopy.structure.atoms.PhonopyAtoms.get_yaml_lines">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_yaml_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the crystal structure as a list of yaml text lines.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the crystal structure as a list of yaml text lines."""</span>
         <span class="n">_atom_data</span> <span class="o">=</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;lattice:&quot;</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"lattice:"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cell</span><span class="p">,</span> <span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;- [ </span><span class="si">%21.15f</span><span class="s2">, </span><span class="si">%21.15f</span><span class="s2">, </span><span class="si">%21.15f</span><span class="s2"> ] # </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">a</span><span class="p">)</span>
+                <span class="s2">"- [ </span><span class="si">%21.15f</span><span class="s2">, </span><span class="si">%21.15f</span><span class="s2">, </span><span class="si">%21.15f</span><span class="s2"> ] # </span><span class="si">%s</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">a</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;points:&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"points:"</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">magnetic_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">magmoms</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1691,49 +1699,49 @@ window.runMermaid = runMermaid;</script>
         <span class="p">):</span>
             <span class="n">sp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_species</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">mix_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">]&quot;</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span><span class="p">)</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  mixture: [ </span><span class="si">{</span><span class="n">mix_str</span><span class="si">}</span><span class="s2"> ]&quot;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">mix_str</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">]"</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">mixture</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  mixture: [ </span><span class="si">{</span><span class="n">mix_str</span><span class="si">}</span><span class="s2"> ]"</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">assert</span> <span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="n">formal_s</span> <span class="o">=</span> <span class="n">_atom_data</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">atomic_number</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">formal_s</span><span class="p">:</span>
-                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- symbol: </span><span class="si">{</span><span class="n">formal_s</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  extended_symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  coordinates: [ </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2"> ]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"- symbol: </span><span class="si">{</span><span class="n">formal_s</span><span class="si">}</span><span class="s2"> # </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  extended_symbol: </span><span class="si">{</span><span class="n">sp</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  coordinates: [ </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2">, </span><span class="si">%18.15f</span><span class="s2"> ]"</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  mass: </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mass</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  mass: </span><span class="si">%f</span><span class="s2">"</span> <span class="o">%</span> <span class="n">mass</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
                 <span class="c1"># In a non-merge site-mixture cell every atom carries an</span>
                 <span class="c1"># explicit weight so the yaml is self-describing; a pure</span>
                 <span class="c1"># site (weight=None in the model) is shown as 1.0.</span>
                 <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">weight</span> <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">1.0</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  weight: </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  weight: </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">mag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">mag</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">mag_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mag</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">mag_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mag</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">"</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">mag_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">]&quot;</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  magnetic_moment: </span><span class="si">{</span><span class="n">mag_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">mag_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">mag</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2">]"</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  magnetic_moment: </span><span class="si">{</span><span class="n">mag_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">lines</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the crystal structure as yaml text.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_yaml_lines</span><span class="p">())</span>
+<span class="w">        </span><span class="sd">"""Return the crystal structure as yaml text."""</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_yaml_lines</span><span class="p">())</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_element_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dict of element counts, with indices stripped from symbols.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return dict of element counts, with indices stripped from symbols."""</span>
         <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">:</span>
-            <span class="n">base_symbol</span> <span class="o">=</span> <span class="n">symbol</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;0123456789&quot;</span><span class="p">)</span>
+            <span class="n">base_symbol</span> <span class="o">=</span> <span class="n">symbol</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"0123456789"</span><span class="p">)</span>
             <span class="n">counts</span><span class="p">[</span><span class="n">base_symbol</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base_symbol</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">counts</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_formula</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">divisor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build formula string from element counts and optional divisor.</span>
+<span class="w">        </span><span class="sd">"""Build formula string from element counts and optional divisor.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1747,9 +1755,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        str</span>
 <span class="sd">            Formula string with elements in alphabetical order</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">counts</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="s2">""</span>
 
         <span class="n">formula_parts</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
@@ -1757,33 +1765,33 @@ window.runMermaid = runMermaid;</script>
             <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">element</span><span class="si">}{</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">element</span><span class="si">}{</span><span class="n">count</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formula_parts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formula_parts</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">formula</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return chemical formula as a string.</span>
+<span class="w">        </span><span class="sd">"""Return chemical formula as a string.</span>
 
 <span class="sd">        The formula is constructed by sorting elements alphabetically and</span>
 <span class="sd">        appending numbers for elements that appear more than once.</span>
-<span class="sd">        E.g., &quot;Si2O4&quot; for two Si and four O atoms.</span>
+<span class="sd">        E.g., "Si2O4" for two Si and four O atoms.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_element_counts</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_formula</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">reduced_formula</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return reduced chemical formula as a string.</span>
+<span class="w">        </span><span class="sd">"""Return reduced chemical formula as a string.</span>
 
 <span class="sd">        The reduced formula divides all element counts by their GCD.</span>
-<span class="sd">        E.g., &quot;Fe4O8&quot; becomes &quot;Fe2O4&quot;.</span>
+<span class="sd">        E.g., "Fe4O8" becomes "Fe2O4".</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_element_counts</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">counts</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="s2">""</span>
 
         <span class="c1"># Find GCD of all counts</span>
         <span class="n">numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
@@ -1795,15 +1803,15 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">normalized_formula</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return normalized formula as a string.</span>
+<span class="w">        </span><span class="sd">"""Return normalized formula as a string.</span>
 
 <span class="sd">        The normalized formula scales all element counts so they sum to 1.</span>
-<span class="sd">        E.g., &quot;Fe2O3&quot; becomes &quot;Fe0.4O0.6&quot;.</span>
+<span class="sd">        E.g., "Fe2O3" becomes "Fe0.4O0.6".</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_element_counts</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">counts</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">return</span> <span class="s2">""</span>
 
         <span class="c1"># Get total count</span>
         <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
@@ -1813,17 +1821,17 @@ window.runMermaid = runMermaid;</script>
         <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
             <span class="n">count</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">/</span> <span class="n">total</span>
             <span class="c1"># Always show decimal for normalized formula</span>
-            <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">element</span><span class="si">}{</span><span class="n">count</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">formula_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">element</span><span class="si">}{</span><span class="n">count</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formula_parts</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formula_parts</span><span class="p">)</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_cell_dict</span><span class="p">(</span><span class="n">cell_dict</span><span class="p">:</span> <span class="n">CellDict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse cell dict.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Parse cell dict."""</span>
     <span class="n">lattice</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="s2">&quot;lattice&quot;</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">:</span>
-        <span class="n">lattice</span> <span class="o">=</span> <span class="n">cell_dict</span><span class="p">[</span><span class="s2">&quot;lattice&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"lattice"</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">:</span>
+        <span class="n">lattice</span> <span class="o">=</span> <span class="n">cell_dict</span><span class="p">[</span><span class="s2">"lattice"</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">points</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1834,34 +1842,34 @@ window.runMermaid = runMermaid;</script>
     <span class="n">weight_per_atom</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">has_any_mixture</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">has_any_weight</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="s2">&quot;points&quot;</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="s2">&quot;coordinates&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;coordinates&quot;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="s2">&quot;extended_symbol&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>  <span class="c1"># like Fe1</span>
-                <span class="n">symbols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;extended_symbol&quot;</span><span class="p">])</span>
-            <span class="k">elif</span> <span class="s2">&quot;symbol&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>  <span class="c1"># like Fe</span>
-                <span class="n">symbols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;symbol&quot;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="s2">&quot;mixture&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-                <span class="n">mix</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;mixture&quot;</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="s2">"points"</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cell_dict</span><span class="p">[</span><span class="s2">"points"</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="s2">"coordinates"</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">"coordinates"</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">"extended_symbol"</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>  <span class="c1"># like Fe1</span>
+                <span class="n">symbols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">"extended_symbol"</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="s2">"symbol"</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>  <span class="c1"># like Fe</span>
+                <span class="n">symbols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">"symbol"</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">"mixture"</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">mix</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="s2">"mixture"</span><span class="p">]]</span>
                 <span class="n">mixture_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mix</span><span class="p">)</span>
                 <span class="n">has_any_mixture</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">mixture_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;weight&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"weight"</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
                 <span class="c1"># A pure site in a non-merge mixture cell is written as</span>
                 <span class="c1"># weight 1.0 for a self-describing yaml; normalize it back</span>
                 <span class="c1"># to None (the model form 1). The presence of the key marks</span>
-                <span class="c1"># a weighted-species cell, matching the writer&#39;s condition.</span>
+                <span class="c1"># a weighted-species cell, matching the writer's condition.</span>
                 <span class="n">has_any_weight</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="n">w</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">])</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">"weight"</span><span class="p">])</span>
                 <span class="n">weight_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">w</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="n">w</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">weight_per_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s2">&quot;mass&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-                <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;mass&quot;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="s2">&quot;magnetic_moment&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-                <span class="n">magnetic_moments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;magnetic_moment&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">"mass"</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">"mass"</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">"magnetic_moment"</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">magnetic_moments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">"magnetic_moment"</span><span class="p">])</span>
 
     <span class="n">masses_arg</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">masses</span> <span class="k">if</span> <span class="n">masses</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="n">magmoms_arg</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">magnetic_moments</span> <span class="k">if</span> <span class="n">magnetic_moments</span> <span class="k">else</span> <span class="kc">None</span>
@@ -1896,7 +1904,7 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># single-component entries of weight 1.0 (canonicalized back to a</span>
         <span class="c1"># normal species inside the factory). Composite symbols of true</span>
         <span class="c1"># mixtures are re-derived, so suffix-numbered labels (e.g.</span>
-        <span class="c1"># &quot;GeSn1&quot;/&quot;GeSn2&quot;) from the YAML are not preserved -- the species</span>
+        <span class="c1"># "GeSn1"/"GeSn2") from the YAML are not preserved -- the species</span>
         <span class="c1"># table still distinguishes them by mixture content.</span>
         <span class="n">mixtures</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mixture_per_atom</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1920,18 +1928,18 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;symbol_map&quot;</span><span class="p">,</span> <span class="s2">&quot;atom_data&quot;</span><span class="p">,</span> <span class="s2">&quot;isotope_data&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"symbol_map"</span><span class="p">,</span> <span class="s2">"atom_data"</span><span class="p">,</span> <span class="s2">"isotope_data"</span><span class="p">):</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;symbol_map, atom_data, and isotope_data are deprecated. &quot;</span>
-            <span class="s2">&quot;Use phonopy.atomic_data.get_atomic_data() dataclass instead.&quot;</span><span class="p">,</span>
+            <span class="s2">"symbol_map, atom_data, and isotope_data are deprecated. "</span>
+            <span class="s2">"Use phonopy.atomic_data.get_atomic_data() dataclass instead."</span><span class="p">,</span>
             <span class="ne">DeprecationWarning</span><span class="p">,</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;atom_data&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"atom_data"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">atom_data</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;isotope_data&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"isotope_data"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">isotope_data</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;symbol_map&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"symbol_map"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">get_atomic_data</span><span class="p">()</span><span class="o">.</span><span class="n">symbol_map</span>
 </pre></div>
 
@@ -1995,8 +2003,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

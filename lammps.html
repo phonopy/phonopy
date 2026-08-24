@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -222,6 +222,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -352,11 +353,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -556,11 +564,11 @@ silicon primitive cell:</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.phonopy_yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cell_yaml</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_supercells_with_displacements</span>
 
-<span class="n">cell</span> <span class="o">=</span> <span class="n">read_cell_yaml</span><span class="p">(</span><span class="s2">&quot;phonopy_unitcell.yaml&quot;</span><span class="p">)</span>
-<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s1">&#39;lammps&#39;</span><span class="p">)</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">read_cell_yaml</span><span class="p">(</span><span class="s2">"phonopy_unitcell.yaml"</span><span class="p">)</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s1">'lammps'</span><span class="p">)</span>
 <span class="n">ph</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">()</span>
-<span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
-<span class="n">write_supercells_with_displacements</span><span class="p">(</span><span class="s2">&quot;lammps&quot;</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span>
+<span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
+<span class="n">write_supercells_with_displacements</span><span class="p">(</span><span class="s2">"lammps"</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>With route (b), <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> stores the cell in the original (unrotated)
@@ -581,7 +589,7 @@ uses route (b); <code class="docutils literal notranslate"><span class="pre">Ti-
 <span class="n">pair_coeff</span>  <span class="o">&lt;...&gt;</span>
 
 <span class="n">dump</span> <span class="n">phonopy</span> <span class="nb">all</span> <span class="n">custom</span> <span class="mi">1</span> <span class="n">force</span><span class="o">.*</span> <span class="nb">id</span> <span class="nb">type</span> <span class="n">x</span> <span class="n">y</span> <span class="n">z</span> <span class="n">fx</span> <span class="n">fy</span> <span class="n">fz</span>
-<span class="n">dump_modify</span> <span class="n">phonopy</span> <span class="nb">format</span> <span class="n">line</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2">&quot;</span>
+<span class="n">dump_modify</span> <span class="n">phonopy</span> <span class="nb">format</span> <span class="n">line</span> <span class="s2">"</span><span class="si">%d</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2"> </span><span class="si">%15.10f</span><span class="s2">"</span>
 <span class="n">run</span> <span class="mi">0</span>
 </pre></div>
 </div>
@@ -794,8 +802,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

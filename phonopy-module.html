@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -224,6 +224,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -354,11 +355,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -532,12 +540,12 @@ module is imported by:</p>
 <p>The instance of <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> can be made by reading a crystal structure in a
 variety of calculator formats found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span>
-<span class="n">unitcell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">&quot;POSCAR-unitcell&quot;</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;vasp&#39;</span><span class="p">)</span>
+<span class="n">unitcell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"POSCAR-unitcell"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">'vasp'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For VASP format, the keyword argument of <code class="docutils literal notranslate"><span class="pre">interface_mode</span></code> can be omitted. For
 QE,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">&quot;NaCl.in&quot;</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;qe&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"NaCl.in"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">'qe'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">read_crystal_structure</span></code> returns a tuple and the first element is the
@@ -562,7 +570,7 @@ objects.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
 
 <span class="n">a</span> <span class="o">=</span> <span class="mf">5.404</span>
-<span class="n">unitcell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+<span class="n">unitcell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'Si'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
                         <span class="n">cell</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span><span class="p">),</span>
                         <span class="n">scaled_positions</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
                                           <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
@@ -607,8 +615,8 @@ information on physical unit conversion is found at
     <span class="n">write_crystal_structure</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">calc</span> <span class="o">=</span> <span class="s2">&quot;qe&quot;</span>  <span class="c1"># Quantum Espresso</span>
-<span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">&quot;pw.in&quot;</span><span class="p">,</span>
+<span class="n">calc</span> <span class="o">=</span> <span class="s2">"qe"</span>  <span class="c1"># Quantum Espresso</span>
+<span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"pw.in"</span><span class="p">,</span>
     <span class="n">interface_mode</span><span class="o">=</span><span class="n">calc</span><span class="p">)</span>
 
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
@@ -619,13 +627,13 @@ information on physical unit conversion is found at
 
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">supercell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">supercells</span><span class="p">):</span>
     <span class="n">write_crystal_structure</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;supercell-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.in&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"supercell-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.in"</span><span class="p">,</span>
         <span class="n">supercell</span><span class="p">,</span>
         <span class="n">interface_mode</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
         <span class="n">optional_structure_info</span><span class="o">=</span><span class="n">optional_structure_info</span><span class="p">,</span>
     <span class="p">)</span>
 
-<span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -653,11 +661,11 @@ if you want to input the forces together with the corresponding custom set of
 displacements, <code class="docutils literal notranslate"><span class="pre">displacement_dataset</span></code> has to be prepared as a python dictionary
 as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">displacement_dataset</span> <span class="o">=</span>
-   <span class="p">{</span><span class="s1">&#39;natom&#39;</span><span class="p">:</span> <span class="n">number_of_atoms_in_supercell</span><span class="p">,</span>
-    <span class="s1">&#39;first_atoms&#39;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="p">{</span><span class="s1">&#39;number&#39;</span><span class="p">:</span> <span class="n">atom</span> <span class="n">index</span> <span class="n">of</span> <span class="n">displaced</span> <span class="n">atom</span> <span class="p">(</span><span class="n">starting</span> <span class="k">with</span> <span class="mi">0</span><span class="p">),</span>
-       <span class="s1">&#39;displacement&#39;</span><span class="p">:</span> <span class="n">displacement</span> <span class="ow">in</span> <span class="n">Cartesian</span> <span class="n">coordinates</span><span class="p">,</span>
-       <span class="s1">&#39;forces&#39;</span><span class="p">:</span> <span class="n">forces</span> <span class="n">on</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">},</span>
+   <span class="p">{</span><span class="s1">'natom'</span><span class="p">:</span> <span class="n">number_of_atoms_in_supercell</span><span class="p">,</span>
+    <span class="s1">'first_atoms'</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span><span class="s1">'number'</span><span class="p">:</span> <span class="n">atom</span> <span class="n">index</span> <span class="n">of</span> <span class="n">displaced</span> <span class="n">atom</span> <span class="p">(</span><span class="n">starting</span> <span class="k">with</span> <span class="mi">0</span><span class="p">),</span>
+       <span class="s1">'displacement'</span><span class="p">:</span> <span class="n">displacement</span> <span class="ow">in</span> <span class="n">Cartesian</span> <span class="n">coordinates</span><span class="p">,</span>
+       <span class="s1">'forces'</span><span class="p">:</span> <span class="n">forces</span> <span class="n">on</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">},</span>
       <span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="o">...</span><span class="p">]}</span>
 </pre></div>
 </div>
@@ -795,7 +803,7 @@ are written in the default behaviour.</p>
 <code class="docutils literal notranslate"><span class="pre">filename</span></code> keword argument, which may be necessary if using certain CUI commands
 that expect a particular filename</p>
 <p>The force constants can be written as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;force_constants&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s1">'force_constants'</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
 </section>
@@ -820,9 +828,9 @@ Imaginary frequencies are encoded as negative real numbers.</p>
 
 <span class="n">path</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.625</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">]],</span>
         <span class="p">[[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">]]]</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;$</span><span class="se">\\</span><span class="s2">Gamma$&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;U&quot;</span><span class="p">,</span> <span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="s2">&quot;$</span><span class="se">\\</span><span class="s2">Gamma$&quot;</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;W&quot;</span><span class="p">]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"$</span><span class="se">\\</span><span class="s2">Gamma$"</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">,</span> <span class="s2">"U"</span><span class="p">,</span> <span class="s2">"K"</span><span class="p">,</span> <span class="s2">"$</span><span class="se">\\</span><span class="s2">Gamma$"</span><span class="p">,</span> <span class="s2">"L"</span><span class="p">,</span> <span class="s2">"W"</span><span class="p">]</span>
 <span class="n">qpoints</span><span class="p">,</span> <span class="n">connections</span> <span class="o">=</span> <span class="n">get_band_qpoints_and_path_connections</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="mi">51</span><span class="p">)</span>
-<span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
+<span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
 <span class="n">phonon</span><span class="o">.</span><span class="n">run_band_structure</span><span class="p">(</span><span class="n">qpoints</span><span class="p">,</span> <span class="n">path_connections</span><span class="o">=</span><span class="n">connections</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
 <span class="n">phonon</span><span class="o">.</span><span class="n">plot_band_structure</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
@@ -938,7 +946,7 @@ accessible via the <code class="docutils literal notranslate"><span class="pre">
 <span class="n">heat_capacity</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">heat_capacity</span>
 
 <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">cv</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">temperatures</span><span class="p">,</span> <span class="n">free_energy</span><span class="p">,</span> <span class="n">entropy</span><span class="p">,</span> <span class="n">heat_capacity</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%12.3f</span><span class="s2"> &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%15.7f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span> <span class="n">t</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">cv</span> <span class="p">))</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s2">"</span><span class="si">%12.3f</span><span class="s2"> "</span> <span class="o">+</span> <span class="s2">"</span><span class="si">%15.7f</span><span class="s2">"</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span> <span class="n">t</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">cv</span> <span class="p">))</span>
 
 <span class="n">phonon</span><span class="o">.</span><span class="n">plot_thermal_properties</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -997,9 +1005,9 @@ following keys:</p>
            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.56544559</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">2.56544559</span><span class="p">]]</span>
 <span class="n">factors</span> <span class="o">=</span> <span class="mf">14.400</span>
-<span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">born</span><span class="p">,</span>
-                     <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span>
-                     <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">epsilon</span><span class="p">}</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'born'</span><span class="p">:</span> <span class="n">born</span><span class="p">,</span>
+                     <span class="s1">'factor'</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span>
+                     <span class="s1">'dielectric'</span><span class="p">:</span> <span class="n">epsilon</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
@@ -1207,7 +1215,7 @@ arising from the Virtual Crystal Approximation; see <a class="reference internal
 <section id="symbols">
 <h4><code class="docutils literal notranslate"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Link to this heading">#</a></h4>
 <p>Chemical symbols, e.g.,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">'Zn'</span><span class="p">,</span> <span class="s1">'Zn'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>for the ZnO unit cell.</p>
@@ -1308,8 +1316,8 @@ masses are the weight-averaged sum of constituent atomic masses.</p>
 
 <span class="n">species_table</span><span class="p">,</span> <span class="n">species_ids</span> <span class="o">=</span> <span class="n">build_species_table_from_mixtures</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="p">[(</span><span class="s2">&quot;Si&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>                  <span class="c1"># ordinary Si</span>
-        <span class="p">[(</span><span class="s2">&quot;Ge&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Sn&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span>     <span class="c1"># GeSn mixed-species site</span>
+        <span class="p">[(</span><span class="s2">"Si"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>                  <span class="c1"># ordinary Si</span>
+        <span class="p">[(</span><span class="s2">"Ge"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="s2">"Sn"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span>     <span class="c1"># GeSn mixed-species site</span>
     <span class="p">]</span>
 <span class="p">)</span>
 <span class="n">cell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
@@ -1352,7 +1360,7 @@ how <code class="docutils literal notranslate"><span class="pre">phonopy</span><
 <section id="cli-site-mixture">
 <h4>CLI: <code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code><a class="headerlink" href="#cli-site-mixture" title="Link to this heading">#</a></h4>
 <p>The same merge can be requested at the command line:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-init<span class="w"> </span>--dim<span class="w"> </span><span class="s2">&quot;2 2 2&quot;</span><span class="w"> </span>--site-mixture<span class="w"> </span><span class="s2">&quot;0.5 0.5 0.5 0.5&quot;</span><span class="w"> </span>-d
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy-init<span class="w"> </span>--dim<span class="w"> </span><span class="s2">"2 2 2"</span><span class="w"> </span>--site-mixture<span class="w"> </span><span class="s2">"0.5 0.5 0.5 0.5"</span><span class="w"> </span>-d
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">--site-mixture</span></code> takes a space-separated list of per-atom weights in the
@@ -1487,17 +1495,17 @@ follows that of input crystal structure.</p>
 loading data from a <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> file, which may include all the necessary
 information to run phonopy. A typical usage is:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
-<span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">)</span>
+<span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_params.yaml"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> contains a displacement-force dataset and you want to
 avoid producing force constants, set <code class="docutils literal notranslate"><span class="pre">produce_fc=False</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_params.yaml"</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Alternatively, if you have either <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> (or <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>) along
 with a <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file, you can create a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy.yaml&quot;</span><span class="p">,</span> <span class="n">force_sets_filename</span><span class="o">=</span><span class="s2">&quot;FORCE_SETS&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy.yaml"</span><span class="p">,</span> <span class="n">force_sets_filename</span><span class="o">=</span><span class="s2">"FORCE_SETS"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this case, the command reads the structure information from <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>
@@ -1509,7 +1517,7 @@ BORN<span class="w">  </span>FORCE_SETS<span class="w">  </span>phonopy.yaml
 </pre></div>
 </div>
 <p>then both the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> and <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> files will be read automatically by</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy.yaml&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy.yaml"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For more details, see the function’s docstring:</p>
@@ -1526,12 +1534,12 @@ a partner of <code class="docutils literal notranslate"><span class="pre">read_c
 use these functions is shown below.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span><span class="p">,</span> <span class="n">write_crystal_structure</span>
 
-<span class="gp">In [2]: </span><span class="o">!</span>cat<span class="w"> </span><span class="s2">&quot;NaCl.in&quot;</span>
+<span class="gp">In [2]: </span><span class="o">!</span>cat<span class="w"> </span><span class="s2">"NaCl.in"</span>
 <span class="go"> &amp;control</span>
-<span class="go">    calculation = &#39;scf&#39;</span>
+<span class="go">    calculation = 'scf'</span>
 <span class="go">    tprnfor = .true.</span>
 <span class="go">    tstress = .true.</span>
-<span class="go">    pseudo_dir = &#39;/home/togo/espresso/pseudo/&#39;</span>
+<span class="go">    pseudo_dir = '/home/togo/espresso/pseudo/'</span>
 <span class="go"> /</span>
 <span class="go"> &amp;system</span>
 <span class="go">    ibrav = 0</span>
@@ -1540,7 +1548,7 @@ use these functions is shown below.</p>
 <span class="go">    ecutwfc = 70.0</span>
 <span class="go"> /</span>
 <span class="go"> &amp;electrons</span>
-<span class="go">    diagonalization = &#39;david&#39;</span>
+<span class="go">    diagonalization = 'david'</span>
 <span class="go">    conv_thr = 1.0d-9</span>
 <span class="go"> /</span>
 <span class="go">ATOMIC_SPECIES</span>
@@ -1562,16 +1570,16 @@ use these functions is shown below.</p>
 <span class="go">K_POINTS automatic</span>
 <span class="go"> 8 8 8 1 1 1</span>
 
-<span class="gp">In [3]: </span><span class="n">cell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">&quot;NaCl.in&quot;</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;qe&#39;</span><span class="p">)</span>
+<span class="gp">In [3]: </span><span class="n">cell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"NaCl.in"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">'qe'</span><span class="p">)</span>
 
 <span class="gp">In [4]: </span><span class="n">optional_structure_info</span>
 <span class="gh">Out[4]:</span>
-<span class="go">(&#39;NaCl.in&#39;,</span>
-<span class="go"> {&#39;Na&#39;: &#39;Na.pbe-spn-kjpaw_psl.0.2.UPF&#39;, &#39;Cl&#39;: &#39;Cl.pbe-n-kjpaw_psl.0.1.UPF&#39;})</span>
+<span class="go">('NaCl.in',</span>
+<span class="go"> {'Na': 'Na.pbe-spn-kjpaw_psl.0.2.UPF', 'Cl': 'Cl.pbe-n-kjpaw_psl.0.1.UPF'})</span>
 
-<span class="gp">In [5]: </span><span class="n">write_crystal_structure</span><span class="p">(</span><span class="s2">&quot;NaCl-out.in&quot;</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;qe&#39;</span><span class="p">,</span> <span class="n">optional_structure_info</span><span class="o">=</span><span class="n">optional_structure_info</span><span class="p">)</span>
+<span class="gp">In [5]: </span><span class="n">write_crystal_structure</span><span class="p">(</span><span class="s2">"NaCl-out.in"</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">'qe'</span><span class="p">,</span> <span class="n">optional_structure_info</span><span class="o">=</span><span class="n">optional_structure_info</span><span class="p">)</span>
 
-<span class="gp">In [6]: </span><span class="o">!</span>cat<span class="w"> </span><span class="s2">&quot;NaCl-out.in&quot;</span>
+<span class="gp">In [6]: </span><span class="o">!</span>cat<span class="w"> </span><span class="s2">"NaCl-out.in"</span>
 <span class="go">!    ibrav = 0, nat = 8, ntyp = 2</span>
 <span class="go">CELL_PARAMETERS bohr</span>
 <span class="go">   10.7531114272216008    0.0000000000000000    0.0000000000000000</span>
@@ -1608,7 +1616,7 @@ VASP code by the unit cell.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.symmetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">symmetrize_borns_and_epsilon</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">VasprunxmlExpat</span>
 
-<span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;vasprun.xml&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"vasprun.xml"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">vasprun</span> <span class="o">=</span> <span class="n">VasprunxmlExpat</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="n">vasprun</span><span class="o">.</span><span class="n">parse</span><span class="p">():</span>
     <span class="n">epsilon</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">epsilon</span>
@@ -1626,9 +1634,9 @@ VASP code by the unit cell.</p>
     <span class="n">symprec</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
 
 <span class="n">units</span> <span class="o">=</span> <span class="n">get_physical_units</span><span class="p">()</span>
-<span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">borns_</span><span class="p">,</span>
-              <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
-              <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">epsilon_</span><span class="p">}</span>
+<span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'born'</span><span class="p">:</span> <span class="n">borns_</span><span class="p">,</span>
+              <span class="s1">'factor'</span><span class="p">:</span> <span class="n">units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
+              <span class="s1">'dielectric'</span><span class="p">:</span> <span class="n">epsilon_</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
@@ -1800,8 +1808,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

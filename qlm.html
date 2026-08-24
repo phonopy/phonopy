@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -47,7 +47,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="VASP-DFPT &amp; phonopy calculation" href="vasp-dfpt.html" />
+    <link rel="next" title="Octopus &amp; phonopy calculation" href="octopus.html" />
     <link rel="prev" title="LAMMPS &amp; phonopy calculation" href="lammps.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -222,6 +222,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -352,11 +353,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -412,7 +420,7 @@ ctrl files is planned.</p>
 section in the ctrl file. Both relative and cartesian coordinates are
 supported. Remember to set <code class="docutils literal notranslate"><span class="pre">forces=1</span></code> in section <code class="docutils literal notranslate"><span class="pre">ham</span></code> of the ctrl file.</p></li>
 <li><p>Read the LM site file and create supercells with a command of the form,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy-init<span class="w"> </span>--qlm<span class="w"> </span>-d<span class="w"> </span>--dim<span class="o">=</span><span class="s1">&#39;2 2 2&#39;</span><span class="w"> </span>-c<span class="w"> </span>site.lm
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>phonopy-init<span class="w"> </span>--qlm<span class="w"> </span>-d<span class="w"> </span>--dim<span class="o">=</span><span class="s1">'2 2 2'</span><span class="w"> </span>-c<span class="w"> </span>site.lm
 </pre></div>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">supercell.lm</span></code> and
@@ -468,11 +476,11 @@ are read from <code class="docutils literal notranslate"><span class="pre">phono
       </div>
     </a>
     <a class="right-next"
-       href="vasp-dfpt.html"
+       href="octopus.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">VASP-DFPT &amp; phonopy calculation</p>
+        <p class="prev-next-title">Octopus &amp; phonopy calculation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -543,8 +551,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

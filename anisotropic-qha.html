@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -580,6 +580,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -710,11 +711,18 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -743,19 +751,34 @@ window.runMermaid = runMermaid;</script>
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only">Design principle: U is always from the calculator, the MLP is phonons-only</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-free-energy">The free energy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u-both-routes">1. Build the static grid (internal energy U, both routes)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-calculator-phonons-phonon-grid">2A. Route A – calculator phonons (phonon grid)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grid-points-in-any-layout">Grid points in any layout</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-collected-force-sets">Pre-collected force sets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u">1. Build the static grid (internal energy U)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-the-phonons-phonon-grid">2. Compute the phonons (phonon grid)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-intermediate-dataset">3. Build the intermediate dataset</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-builder-reads">What the builder reads</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-ordering-is-checked">How the ordering is checked</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-file-holds">What the file holds</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#b-route-b-mlp-phonons-train-once-then-evaluate">2B. Route B – MLP phonons (train once, then evaluate)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-intermediate-dataset">3. The intermediate dataset</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp-equilibrium-shape-mlp-route-recommended">5. Validate the MLP equilibrium shape (MLP route, recommended)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-f-mathrm-el-ready-made">Supplying <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> ready-made</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-mlp-per-grid-point">One MLP per grid point</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-displacements">The training displacements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-ridge-penalty">The descriptor and the ridge penalty</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-one-draw-of-standard-normals">Sharing one draw of standard normals</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#computing-the-free-energies-with-sscha">Computing the free energies with SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#splitting-the-runs-across-jobs">Splitting the runs across jobs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-the-free-energies-to-the-analysis">Supplying the free energies to the analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -769,30 +792,45 @@ window.runMermaid = runMermaid;</script>
                   
   <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-qha">
 <h1>Anisotropic QHA<a class="headerlink" href="#anisotropic-qha" title="Link to this heading">#</a></h1>
-<p>This recipe computes the anisotropic (axis-resolved) quasi-harmonic thermal
-expansion of a crystal by directly optimizing the lattice parameters on a grid,
-rather than the 1D volume-path QHA. It covers two interchangeable phonon
-sources that share the same downstream pipeline:</p>
-<ul class="simple">
-<li><p><strong>calculator phonons</strong>: force sets from displaced supercells (a
-machine-learning potential is not required); and</p></li>
-<li><p><strong>MLP phonons</strong>: force sets from a pypolymlp trained on calculator
-energies, forces and stresses (cheap dense sampling).</p></li>
-</ul>
-<p>The free lattice degrees of freedom are detected from the symmetry: one for
-cubic (<code class="docutils literal notranslate"><span class="pre">a</span></code>), two for hexagonal, tetragonal and rhombohedral (<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">c</span></code>), and three
-for orthorhombic (<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c</span></code>). Cell angles are held fixed, so monoclinic and
-triclinic crystals are out of scope. This page uses <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">c)</span></code> throughout as a
-concrete example; substitute the free DOF of your system. The lattice parameters
-and axial thermal expansions are produced for any of the supported systems, but
-the <code class="docutils literal notranslate"><span class="pre">F</span></code> contour maps are drawn only when there are exactly two free DOF.</p>
-<p>Status: working recipe. All tools referenced here are implemented –
-<code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-mlp-dataset</span></code>, the dataset builder
-<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> and the analysis command <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>.
-Step 4 gives the one-command analysis; the API script beneath it is an
-equivalent alternative for finer control.</p>
+<p>This recipe computes the anisotropic (axis-resolved) thermal expansion of a
+crystal in the quasi-harmonic approximation (QHA), by directly optimizing the
+lattice parameters on a grid rather than along the 1D volume path. Steps 0 to
+4 are the recipe: the phonons come from displaced supercells computed with the
+calculator, and no machine-learning potential (MLP) is involved.</p>
+<p>Step 5 is a variant for the case where the harmonic approximation is what
+limits the answer. An MLP is trained at each grid point and used for
+temperature-dependent force constants, whose free energies enter the analysis
+directly instead of as force sets. It is the exception; most calculations do
+not need it.</p>
+<p>The free lattice degrees of freedom (DOF) are detected from the symmetry: one
+for cubic (<span class="math notranslate nohighlight">\(a\)</span>), two for hexagonal, tetragonal and rhombohedral
+(<span class="math notranslate nohighlight">\(a, c\)</span>), and three for orthorhombic (<span class="math notranslate nohighlight">\(a, b, c\)</span>). Cell angles are held fixed, so monoclinic
+and triclinic crystals are out of scope. This page uses <span class="math notranslate nohighlight">\((a, c)\)</span> throughout as a
+concrete example; substitute the free DOF of your system. The lattice
+parameters and axial thermal expansions are produced for any of the supported
+systems. Contour maps of the free energy <span class="math notranslate nohighlight">\(F(a, c)\)</span> at a fixed
+temperature – the surface whose minimum gives those lattice parameters – are
+drawn only when there are exactly two free DOF.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>This workflow is experimental.</strong> Everything on this page works and is
+tested, but the interfaces are not settled. The command-line options, the
+<code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> layout, and the <code class="docutils literal notranslate"><span class="pre">phonopy.qha.anisotropic</span></code> and
+<code class="docutils literal notranslate"><span class="pre">phonopy.qha.anisotropic_dataset</span></code> APIs may change in a backward-incompatible
+way between releases, without a deprecation period; options have already been
+added and removed as the recipe was used on real systems.</p>
+<p>So rebuild the dataset from the calculator outputs rather than relying on an
+old file being readable, keep the commands that produced a result alongside
+it, and pin the phonopy version if a campaign has to stay reproducible across
+it. The page is not yet part of the documentation navigation for the same
+reason.</p>
+</div>
+<p>The commands are <code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>, the dataset builder
+<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> and the analysis command
+<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>. Step 4 runs the analysis in one command; the API
+script beneath it does the same thing with more control.</p>
 <p>Prerequisites: <code class="docutils literal notranslate"><span class="pre">h5py</span></code>, <code class="docutils literal notranslate"><span class="pre">symfc</span></code>, a VASP setup (VASP is the supported
-calculator), and, for the MLP route, <code class="docutils literal notranslate"><span class="pre">pypolymlp</span></code>.</p>
+calculator), and, for the variant of step 5, <code class="docutils literal notranslate"><span class="pre">pypolymlp</span></code>.</p>
 <p>All lengths are in the native length unit of the input cell (Angstrom for
 VASP); no unit conversion is applied by the tools.</p>
 <div class="admonition note">
@@ -802,54 +840,58 @@ workflow has been exercised with. The commands and helper scripts assume VASP
 inputs and outputs (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>, <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code>); other calculators are
 not tested here.</p>
 </div>
-<section id="design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only">
-<h2>Design principle: U is always from the calculator, the MLP is phonons-only<a class="headerlink" href="#design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only" title="Link to this heading">#</a></h2>
-<p>The free energy minimized per temperature is</p>
+<section id="the-free-energy">
+<h2>The free energy<a class="headerlink" href="#the-free-energy" title="Link to this heading">#</a></h2>
+<p>The free energy minimized at each temperature is</p>
 <div class="math notranslate nohighlight">
 \[F(a, c; T) = U(a, c) + F_\mathrm{ph}(a, c; T) + F_\mathrm{el}(a, c; T),\]</div>
-<p>where the electronic term <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> is optional. The static internal
-energy <span class="math notranslate nohighlight">\(U(a, c)\)</span> (and any elastic response) sets the valley <em>shape</em> and is
-sensitive; it is <strong>always taken from the calculator</strong> on the static grid. The
-machine-learning potential, when used, supplies <strong>only the phonon force
-constants</strong> <span class="math notranslate nohighlight">\(F_\mathrm{ph}(a, c; T)\)</span>, where the quantity is smooth and
-cheap. Never take <span class="math notranslate nohighlight">\(U\)</span> from the MLP. This keeps everything single-functional
-and avoids the static-surface error that can flip <span class="math notranslate nohighlight">\(\alpha_c\)</span> negative.</p>
+<p>where the electronic term <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> is optional.
+<span class="math notranslate nohighlight">\(U(a, c)\)</span> is the static internal energy, computed by the calculator on
+the static grid of step 1. <span class="math notranslate nohighlight">\(F_\mathrm{ph}(a, c; T)\)</span> is the phonon free
+energy of the harmonic crystal,</p>
+<div class="math notranslate nohighlight">
+\[F_\mathrm{ph}(a, c; T) = \sum_{\mathbf{q}\nu} \left[
+\frac{\hbar \omega_{\mathbf{q}\nu}}{2}
++ k_\mathrm{B} T \ln \left(
+1 - e^{-\hbar \omega_{\mathbf{q}\nu} / k_\mathrm{B} T} \right) \right],\]</div>
+<p>where the frequencies <span class="math notranslate nohighlight">\(\omega_{\mathbf{q}\nu}\)</span> come from that grid
+point’s force constants of step 2, and the sum runs over the modes at the
+q points of the sampling mesh. Step 5 replaces this term; the rest of the
+page up to it uses it as written.</p>
+<p><span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(c\)</span> are continuous above: <span class="math notranslate nohighlight">\(F\)</span> is written for any
+lattice. The calculator returns values only at the sampled cells
+<span class="math notranslate nohighlight">\((a_i, c_i)\)</span> of step 1, and step 4 fits a surface through those values
+before minimizing it, which is what makes <span class="math notranslate nohighlight">\(a(T)\)</span> and <span class="math notranslate nohighlight">\(c(T)\)</span>
+continuous functions of temperature.</p>
 </section>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
 <p>The boxes are jobs run by phonopy tools or the API, the hexagons are calculator
-runs, and the rounded nodes are input and intermediate data. Both phonon
-routes converge on the same intermediate dataset and analysis.</p>
+runs, and the rounded nodes are input and intermediate data. This is the
+recipe of steps 0 to 4, with the phonons from the calculator:</p>
 <pre  class="mermaid">
         flowchart TD
     EQ([&quot;Equilibrium cell&lt;br/&gt;(phonopy_disp.yaml)&quot;])
-
     EQ --&gt; SC[&quot;phonopy-strain-cells&lt;br/&gt;(a, c grid)&quot;]
     SC --&gt; RELAX{{&quot;calculator relax + static&quot;}}
     RELAX --&gt; SGRID([&quot;static-grid/grid-NNN&lt;br/&gt;U, F_el&quot;])
 
-    SGRID --&gt;|&quot;route A&quot;| PD[&quot;generate displacements&lt;br/&gt;per relaxed cell&quot;]
+    SGRID --&gt; PD[&quot;generate displacements&lt;br/&gt;per relaxed cell&quot;]
     PD --&gt; CALCF{{&quot;calculator forces&quot;}}
     CALCF --&gt; PGRID([&quot;phonon-grid/grid-NNN&lt;br/&gt;disp-*&quot;])
 
-    EQ --&gt;|&quot;route B&quot;| SCT[&quot;phonopy-strain-cells --rd&quot;]
-    SCT --&gt; CALCT{{&quot;calculator E / F / stress&quot;}}
-    CALCT --&gt; MLPDS[&quot;phonopy-vasp-mlp-dataset&quot;]
-    MLPDS --&gt; DEV[&quot;develop_pypolymlp&quot;]
-    DEV --&gt; MLP([&quot;polymlp.yaml&quot;])
-
-    SGRID --&gt; BUILD[&quot;phonopy-anisotropic-qha-dataset&quot;]
-    PGRID --&gt;|&quot;default&quot;| BUILD
-    MLP --&gt;|&quot;--from-mlp&quot;| BUILD
-    BUILD --&gt; DS([&quot;aniso_qha_dataset.hdf5&quot;])
+    SGRID --&gt; BUILD[&quot;phonopy-anisotropic-qha-dataset&lt;br/&gt;--static ... --phonon ...&quot;]
+    PGRID --&gt; BUILD
+    BUILD --&gt; DS([&quot;aniso_qha_dataset.hdf5&lt;br/&gt;cells, U, F_el,&lt;br/&gt;displacements, forces&quot;])
 
     DS --&gt; ANA[&quot;phonopy-anisotropic-qha&quot;]
     ANA --&gt; RES([&quot;a(T), c(T),&lt;br/&gt;alpha_a, alpha_c,&lt;br/&gt;F(a,c) maps&quot;])
     </pre></section>
 <section id="the-equilibrium-reference-phonopy-disp-yaml">
 <h2>0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)<a class="headerlink" href="#the-equilibrium-reference-phonopy-disp-yaml" title="Link to this heading">#</a></h2>
-<p>The recipe starts from one relaxed equilibrium cell. Turn it into the reference
-<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> once with <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>; every later step reads this file:</p>
+<p>Step 0 is done once, before the grid exists; steps 1 to 4 are the calculation
+itself. Start from one relaxed equilibrium cell and turn it into the reference
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> with <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>. Every later step reads this file:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-c<span class="w"> </span>REFERENCE_UNITCELL<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="m">4</span>
 </pre></div>
 </div>
@@ -858,7 +900,7 @@ vectors are the crystal axes a, b and c in that row order. The free lattice DOF
 are taken per row, so a primitive cell of a centred lattice cannot be used: its
 rows are centring vectors rather than crystal axes. For body-centred tetragonal,
 for example, all three primitive rows have the same length, and scaling them
-would only change the volume, never c/a. A rhombohedral cell must likewise be
+would only change the volume, never <span class="math notranslate nohighlight">\(c/a\)</span>. A rhombohedral cell must likewise be
 given in the hexagonal setting. <code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code> rejects such a cell; if
 in doubt, take the <code class="docutils literal notranslate"><span class="pre">BPOSCAR</span></code> written by
 <a class="reference internal" href="command-options.html#symmetry-option"><span class="std std-ref">phonopy-init –symmetry</span></a>,
@@ -866,33 +908,28 @@ which is the conventional cell. A conventional cell that is merely rotated in
 Cartesian space is fine.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--dim</span></code> fixes the supercell matrix, which <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> records together with
 the unit cell, the primitive matrix and the calculator. <code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>
-reads the equilibrium cell and calculator from it (plus the supercell matrix when
-<code class="docutils literal notranslate"><span class="pre">--rd</span></code> builds MLP training supercells); <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> reads the
+reads the equilibrium cell and calculator from it;
+<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> reads the
 calculator and the free lattice DOF it implies (which lengths are independent –
-<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">c</span></code> with <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">a</span></code> for hexagonal), and, on the MLP route, the supercell and
-primitive matrices. Keep <code class="docutils literal notranslate"><span class="pre">--dim</span></code> consistent with the phonon-grid supercell in
-step 2A.</p>
+<span class="math notranslate nohighlight">\(a, c\)</span> with <span class="math notranslate nohighlight">\(b = a\)</span> for hexagonal). Keep <code class="docutils literal notranslate"><span class="pre">--dim</span></code> consistent with
+the phonon-grid
+supercell in step 2.</p>
 </section>
-<section id="build-the-static-grid-internal-energy-u-both-routes">
-<h2>1. Build the static grid (internal energy U, both routes)<a class="headerlink" href="#build-the-static-grid-internal-energy-u-both-routes" title="Link to this heading">#</a></h2>
+<section id="build-the-static-grid-internal-energy-u">
+<h2>1. Build the static grid (internal energy U)<a class="headerlink" href="#build-the-static-grid-internal-energy-u" title="Link to this heading">#</a></h2>
 <p>Sample strained unit cells over the free lattice DOF, then relax and run a
 static single point for each with the calculator. The static grid supplies
-<span class="math notranslate nohighlight">\(U(a, c)\)</span> and, optionally, the electronic states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.</p>
+<span class="math notranslate nohighlight">\(U(a_i, c_i)\)</span> and, optionally, the electronic states for
+<span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inspect the free lattice DOF first (no ranges -&gt; DOF report):</span>
 %<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml
 
-<span class="c1"># Random sampling: -n N cells over the (a, c) box (--grid is not used here):</span>
-%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.168<span class="w"> </span><span class="m">3</span>.232<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.148<span class="w"> </span><span class="m">5</span>.252<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-n<span class="w"> </span><span class="m">25</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">2</span>
-<span class="c1"># -&gt; unitcell-00001 .. unitcell-00025</span>
-
-<span class="c1"># Regular grid instead (--grid replaces -n): --grid N is the number of points</span>
-<span class="c1"># per free axis (5 -&gt; 5 x 5 = 25 cells); one N per free DOF gives a rectangular</span>
-<span class="c1"># grid, e.g. --grid 5 6 -&gt; 30 cells.</span>
+<span class="c1"># --grid N is the number of grid points per free axis (5 -&gt; 5 x 5 = 25 cells);</span>
+<span class="c1"># one N per free DOF gives a rectangular grid, e.g. --grid 5 6 -&gt; 30 cells.</span>
 %<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.168<span class="w"> </span><span class="m">3</span>.232<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.148<span class="w"> </span><span class="m">5</span>.252<span class="w"> </span>--grid<span class="w"> </span><span class="m">5</span>
-Wrote<span class="w"> </span><span class="m">25</span><span class="w"> </span>strained<span class="w"> </span>unit<span class="w"> </span>cell<span class="o">(</span>s<span class="o">)</span><span class="w"> </span>as<span class="w"> </span>unitcell-00001<span class="w"> </span>..<span class="w"> </span>unitcell-00025<span class="w"> </span><span class="k">in</span><span class="w"> </span>vasp<span class="w"> </span>format.
+Wrote<span class="w"> </span><span class="m">25</span><span class="w"> </span>strained<span class="w"> </span>unit<span class="w"> </span>cell<span class="o">(</span>s<span class="o">)</span><span class="w"> </span>as<span class="w"> </span>unitcell-001<span class="w"> </span>..<span class="w"> </span>unitcell-025<span class="w"> </span><span class="k">in</span><span class="w"> </span>vasp<span class="w"> </span>format.
 Grid<span class="w"> </span>sampling:<span class="w"> </span><span class="m">5</span><span class="w"> </span>x<span class="w"> </span><span class="m">5</span><span class="w"> </span>over<span class="w"> </span><span class="o">(</span>a,<span class="w"> </span>c<span class="o">)</span>.
-<span class="w">  </span>Main<span class="w"> </span>diagonal<span class="w"> </span><span class="o">(</span><span class="m">5</span><span class="w"> </span>cells<span class="o">)</span>,<span class="w"> </span>the<span class="w"> </span>--compare-vinet<span class="w"> </span>volume<span class="w"> </span>path:
+<span class="w">  </span>Main<span class="w"> </span>diagonal<span class="w"> </span><span class="o">(</span><span class="m">5</span><span class="w"> </span>cells<span class="o">)</span>,<span class="w"> </span>the<span class="w"> </span>--compare-eos<span class="w"> </span>volume<span class="w"> </span>path:
 <span class="w">    </span>a<span class="w">  </span>c<span class="w">   </span>c/a
 <span class="w">    </span><span class="m">3</span>.1680<span class="w">  </span><span class="m">5</span>.1480<span class="w">   </span><span class="m">1</span>.6250
 <span class="w">    </span><span class="m">3</span>.1840<span class="w">  </span><span class="m">5</span>.1740<span class="w">   </span><span class="m">1</span>.6250
@@ -902,347 +939,306 @@ Grid<span class="w"> </span>sampling:<span class="w"> </span><span class="m">5</
 Provenance<span class="w"> </span>written<span class="w"> </span>to<span class="w"> </span>strain_cells.yaml
 </pre></div>
 </div>
-<p>Prefer a grid when you want the Vinet cross-check: its main diagonal (printed
-above, with each cell’s c/a) is the volume path <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span> <span class="pre">--compare-vinet</span></code> fits, which random sampling does not provide. With equal
-fractional ranges and equal counts the c/a is constant (isotropic scaling) –
-the cleanest input to the cross-check; unequal ranges or counts still yield a
-path, but a varying-shape one.</p>
-<p>What each option writes: <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">N</span></code> and <code class="docutils literal notranslate"><span class="pre">--grid</span> <span class="pre">N</span> <span class="pre">[N</span> <span class="pre">...]</span></code> set how many strained
-cells are made and, without <code class="docutils literal notranslate"><span class="pre">--rd</span></code>, write them as strained <strong>unit cells</strong>
-<code class="docutils literal notranslate"><span class="pre">unitcell-NNNNN</span></code> – what this step (the static grid) needs. Adding <code class="docutils literal notranslate"><span class="pre">--rd</span> <span class="pre">M</span></code>
-instead writes M random-displacement <strong>supercells</strong> per strained cell,
-<code class="docutils literal notranslate"><span class="pre">supercell-NNNNN</span></code> (that is the route-B, step 2B use, not this step);
-<code class="docutils literal notranslate"><span class="pre">--amplitude</span></code> sets their displacement distance, or <code class="docutils literal notranslate"><span class="pre">--amin</span></code> / <code class="docutils literal notranslate"><span class="pre">--amax</span></code> draw it
-from a range (see step 2B). Either way a <code class="docutils literal notranslate"><span class="pre">strain_cells.yaml</span></code> provenance
-manifest is written.</p>
+<p>The main diagonal of the grid, printed above with each cell’s <span class="math notranslate nohighlight">\(c/a\)</span>, is
+the volume path that <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span> <span class="pre">--compare-eos</span></code> fits. Equal
+fractional ranges and equal counts keep <span class="math notranslate nohighlight">\(c/a\)</span> constant along it, which is
+the cleanest input to the cross-check; unequal ranges or counts still give a
+path, but its shape varies along it.</p>
+<p>The cells are written as strained <strong>unit cells</strong> <code class="docutils literal notranslate"><span class="pre">unitcell-NNN</span></code>, which is what
+the static grid needs. Each run also writes <code class="docutils literal notranslate"><span class="pre">strain_cells.yaml</span></code>, recording the
+ranges, the grid shape and the free-DOF lengths of every cell. Nothing in the
+run is random, so the same command reproduces the same cells.</p>
 <p>For each <code class="docutils literal notranslate"><span class="pre">unitcell-*</span></code>:</p>
 <ol class="arabic simple">
 <li><p>Relax the internal coordinates if the structure has free internal parameters
 (e.g. the wurtzite <code class="docutils literal notranslate"><span class="pre">u</span></code>). A crystal with no internal DOF (e.g. HCP) skips this
 – the strained cell is already the relaxed cell.</p></li>
 <li><p>Run a static single point. Use <code class="docutils literal notranslate"><span class="pre">ISIF</span> <span class="pre">&gt;=</span> <span class="pre">2</span></code> if you also want stress; write
-<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> if you want the electronic states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> if you want the electronic states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.
+Sample the Brillouin zone on a Gamma-centred regular mesh: the k points and
+the mesh are then stored with the states, and <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> is
+integrated by the linear tetrahedron method rather than summed over k
+points. The mesh a static single point already needs is dense enough for
+the tetrahedron method; a KPOINTS_OPT block, which is read in preference to
+the SCF mesh, gives the electronic states a denser one where that is wanted.</p></li>
 <li><p>Place the output in <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/</span></code> (one directory per grid point,
-containing <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>). The builder discovers grid points
-from these <code class="docutils literal notranslate"><span class="pre">grid-NNN</span></code> directories; no index file is needed.</p></li>
+containing <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>). Any layout works – the builder
+is given the paths explicitly – but a name that sorts in the sampling order
+keeps the two grids easy to pass together, and no index file is needed.
+Sorting in that order also matters for <code class="docutils literal notranslate"><span class="pre">--compare-eos</span></code>: the builder
+recognises a tensor grid only when the cells reach it in the order they
+were generated, and records its shape for the main-diagonal volume path.</p></li>
 </ol>
-<p>To scaffold the static-grid input POSCARs from the <code class="docutils literal notranslate"><span class="pre">unitcell-*</span></code> of step 1, edit
-the paths at the top and run (distribute the VASP inputs separately):</p>
+<p>Edit the paths at the top and run it; distribute the VASP inputs separately.</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Script 1 – the static-grid input POSCARs, from the <code class="docutils literal notranslate"><span class="pre">unitcell-*</span></code> above</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span><span class="p">,</span> <span class="n">write_crystal_structure</span>
 
-<span class="n">UNITCELLS</span> <span class="o">=</span> <span class="s2">&quot;unitcell-*&quot;</span>  <span class="c1"># strained cells from phonopy-strain-cells</span>
-<span class="n">STATIC_GRID</span> <span class="o">=</span> <span class="s2">&quot;static-grid&quot;</span>
+<span class="n">UNITCELLS</span> <span class="o">=</span> <span class="s2">"unitcell-*"</span>  <span class="c1"># strained cells from phonopy-strain-cells</span>
+<span class="n">STATIC_GRID</span> <span class="o">=</span> <span class="s2">"static-grid"</span>
 
 <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">UNITCELLS</span><span class="p">)):</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
-    <span class="n">static_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">STATIC_GRID</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">"vasp"</span><span class="p">)</span>
+    <span class="n">static_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">STATIC_GRID</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span>
     <span class="n">static_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">write_crystal_structure</span><span class="p">(</span><span class="n">static_dir</span> <span class="o">/</span> <span class="s2">&quot;POSCAR&quot;</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: static POSCAR&quot;</span><span class="p">)</span>
+    <span class="n">write_crystal_structure</span><span class="p">(</span><span class="n">static_dir</span> <span class="o">/</span> <span class="s2">"POSCAR"</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">"vasp"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: static POSCAR"</span><span class="p">)</span>
 </pre></div>
+</div>
 </div>
 <p>Then relax (if the crystal has internal DOF) and run the static single point in
 each <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/</span></code>.</p>
 </section>
-<section id="a-route-a-calculator-phonons-phonon-grid">
-<h2>2A. Route A – calculator phonons (phonon grid)<a class="headerlink" href="#a-route-a-calculator-phonons-phonon-grid" title="Link to this heading">#</a></h2>
+<section id="compute-the-phonons-phonon-grid">
+<h2>2. Compute the phonons (phonon grid)<a class="headerlink" href="#compute-the-phonons-phonon-grid" title="Link to this heading">#</a></h2>
 <p>For each relaxed static-grid cell, generate displaced supercells and compute
 their forces with the calculator.</p>
 <p>Place the results as <code class="docutils literal notranslate"><span class="pre">phonon-grid/grid-NNN/</span></code> each containing the
 <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the per-displacement subdirectories <code class="docutils literal notranslate"><span class="pre">disp-001/</span></code>,
-<code class="docutils literal notranslate"><span class="pre">disp-002/</span></code>, … (each with <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>). The grid indices
-must match those under <code class="docutils literal notranslate"><span class="pre">static-grid/</span></code>.</p>
-<p>To scaffold the whole phonon grid from the relaxed static-grid cells, edit the
-paths at the top and run. It reads each <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/CONTCAR</span></code> (the
-relaxed structure; equal to the input POSCAR when there is no internal DOF), so
-run it only after the static grid is done. Distribute the VASP inputs
-separately.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<code class="docutils literal notranslate"><span class="pre">disp-002/</span></code>, … (each with <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>). The names need not
+match those under <code class="docutils literal notranslate"><span class="pre">static-grid/</span></code>, since the two grids are paired by the order
+they are passed in, but matching names make that order easy to get right.</p>
+<p>The script below reads each <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/CONTCAR</span></code> (the relaxed
+structure, equal to the input POSCAR when there is no internal DOF), so run
+it only after the static grid is done. Edit the paths at the top and run it;
+distribute the VASP inputs separately.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SUPERCELL_MATRIX</span></code> must be the <code class="docutils literal notranslate"><span class="pre">--dim</span></code> of step 0, since the dataset builder
+takes the free lattice DOF and the calculator from the same
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>. <code class="docutils literal notranslate"><span class="pre">DISTANCE</span></code> is the displacement distance in Angstrom
+(phonopy’s own default is 0.01); the same value has to be used at every grid
+point, because the force constants of the grid points are differentiated
+against one another.</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Script 2 – the phonon grid, from the relaxed static-grid cells</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span><span class="p">,</span> <span class="n">write_crystal_structure</span>
 
-<span class="n">STATIC_GRID</span> <span class="o">=</span> <span class="s2">&quot;static-grid&quot;</span>  <span class="c1"># relaxed cells at static-grid/grid-NNN/CONTCAR</span>
-<span class="n">PHONON_GRID</span> <span class="o">=</span> <span class="s2">&quot;phonon-grid&quot;</span>
+<span class="n">STATIC_GRID</span> <span class="o">=</span> <span class="s2">"static-grid"</span>  <span class="c1"># relaxed cells at static-grid/grid-NNN/CONTCAR</span>
+<span class="n">PHONON_GRID</span> <span class="o">=</span> <span class="s2">"phonon-grid"</span>
+<span class="n">N_GRID</span> <span class="o">=</span> <span class="mi">25</span>  <span class="c1"># cells written by phonopy-strain-cells in step 1</span>
 <span class="n">SUPERCELL_MATRIX</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
 <span class="n">DISTANCE</span> <span class="o">=</span> <span class="mf">0.03</span>
 
-<span class="k">for</span> <span class="n">contcar</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">STATIC_GRID</span><span class="si">}</span><span class="s2">/grid-*/CONTCAR&quot;</span><span class="p">)):</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">contcar</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">contcar</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
-    <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">Phonopy</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">SUPERCELL_MATRIX</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N_GRID</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">contcar</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">STATIC_GRID</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span> <span class="o">/</span> <span class="s2">"CONTCAR"</span>
+    <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">contcar</span><span class="p">),</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">"vasp"</span><span class="p">)</span>
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">Phonopy</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">SUPERCELL_MATRIX</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="s2">"vasp"</span><span class="p">)</span>
     <span class="n">ph</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="n">DISTANCE</span><span class="p">)</span>
-    <span class="n">phonon_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">PHONON_GRID</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">phonon_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">PHONON_GRID</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span>
     <span class="n">phonon_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">phonon_dir</span> <span class="o">/</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
+    <span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">phonon_dir</span> <span class="o">/</span> <span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">sc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">disp_dir</span> <span class="o">=</span> <span class="n">phonon_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;disp-</span><span class="si">{</span><span class="n">k</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">disp_dir</span> <span class="o">=</span> <span class="n">phonon_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"disp-</span><span class="si">{</span><span class="n">k</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">disp_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">write_crystal_structure</span><span class="p">(</span><span class="n">disp_dir</span> <span class="o">/</span> <span class="s2">&quot;POSCAR&quot;</span><span class="p">,</span> <span class="n">sc</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">&quot;vasp&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span><span class="si">}</span><span class="s2"> disp&quot;</span><span class="p">)</span>
+        <span class="n">write_crystal_structure</span><span class="p">(</span><span class="n">disp_dir</span> <span class="o">/</span> <span class="s2">"POSCAR"</span><span class="p">,</span> <span class="n">sc</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">"vasp"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">idx</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span><span class="si">}</span><span class="s2"> disp"</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<p>Then build the intermediate dataset, which is step 3.</p>
+</section>
+<section id="build-the-intermediate-dataset">
+<span id="anisotropic-qha-build"></span><h2>3. Build the intermediate dataset<a class="headerlink" href="#build-the-intermediate-dataset" title="Link to this heading">#</a></h2>
+<p>The analysis of step 4 reads <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code>, and so does step 5. The
+grid points are given as two path lists, <code class="docutils literal notranslate"><span class="pre">--static</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon</span></code>, and paired
+<strong>by position</strong> after shell expansion:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> works with VASP only for now, simply because
 the readers for the other calculators are not implemented yet. The binding
-constraint is the static grid: the internal energy <span class="math notranslate nohighlight">\(U(a, c)\)</span> and the
+constraint is the static grid: the internal energy <span class="math notranslate nohighlight">\(U(a_i, c_i)\)</span> and the
 electronic states are read from VASP outputs (<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> / <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>), and
 phonopy has no interface yet to read the static single-point energy of the other
 calculators. A reference naming one of them therefore stops the command early,
-rather than producing a dataset with a missing <span class="math notranslate nohighlight">\(U(a, c)\)</span>.</p>
-</div>
-<p>Then build the intermediate dataset. Without path options the builder assumes
-the conventional layout below, pairing the two grids by the index in the
-<code class="docutils literal notranslate"><span class="pre">grid-NNN</span></code> directory names (any zero padding is accepted). This is a
-convenience, not a requirement – see
-<a class="reference internal" href="#grid-points-in-any-layout">Grid points in any layout</a> to place the points
-freely:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>static-grid/                 # --static-grid (default: static-grid)
-  grid-000/
-    vaspout.h5               # or vasprun.xml; static single point -&gt; U(a, c)
-  grid-001/
-    vaspout.h5
-  ...
-phonon-grid/                 # --phonon-grid (default: phonon-grid)
-  grid-000/
-    phonopy_disp.yaml        # relaxed displaced cell + supercell/primitive
-    disp-001/
-      vaspout.h5             # or vasprun.xml; forces for displacement 1
-    disp-002/
-      vaspout.h5
-    ...
-  grid-001/
-    ...
-</pre></div>
+rather than producing a dataset with a missing <span class="math notranslate nohighlight">\(U(a_i, c_i)\)</span>.</p>
 </div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--static-grid<span class="w"> </span>static-grid<span class="w"> </span>--phonon-grid<span class="w"> </span>phonon-grid<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--static<span class="w"> </span>static-grid/grid-<span class="o">{</span><span class="m">001</span>..025<span class="o">}</span>/<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--phonon<span class="w"> </span>phonon-grid/grid-<span class="o">{</span><span class="m">001</span>..025<span class="o">}</span>/<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
-<span class="c1"># F_el is stored automatically when static-grid/grid-NNN/vaspout.h5 carries the</span>
-<span class="c1">#   electron eigenvalues; pass --no-electronic to skip it</span>
+Reading<span class="w"> </span>pre-computed<span class="w"> </span>forces<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="m">25</span><span class="w"> </span>grid<span class="w"> </span>point<span class="o">(</span>s<span class="o">)</span>
+<span class="w">  </span>grid<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="nv">U</span><span class="o">=</span>...<span class="w"> </span>eV<span class="w"> </span><span class="nv">n_disp</span><span class="o">=</span>...
+<span class="w">  </span>...
+<span class="w">  </span>grid<span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="nv">U</span><span class="o">=</span>...<span class="w"> </span>eV<span class="w"> </span><span class="nv">n_disp</span><span class="o">=</span>...
+Grid<span class="w"> </span>shape<span class="w"> </span><span class="o">[</span><span class="m">5</span>,<span class="w"> </span><span class="m">5</span><span class="o">]</span><span class="w"> </span>recorded<span class="w"> </span><span class="k">for</span><span class="w"> </span>the<span class="w"> </span>main-diagonal<span class="w"> </span>path.
+Wrote<span class="w"> </span><span class="m">25</span><span class="w"> </span>grid<span class="w"> </span>point<span class="o">(</span>s<span class="o">)</span><span class="w"> </span>to<span class="w"> </span>aniso_qha_dataset.hdf5
 </pre></div>
 </div>
-<p>For each grid point the builder reads:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN/</span></code> – the static single point, giving the internal energy
-<span class="math notranslate nohighlight">\(U(a, c)\)</span>; its relaxed cell becomes the grid-point cell. The electronic
-states for <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> are read automatically from the same
-<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> when it carries the eigenvalues (a static grid written with only
-<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> is built without <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>; pass <code class="docutils literal notranslate"><span class="pre">--no-electronic</span></code> to
-skip them deliberately).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phonon-grid/grid-NNN/phonopy_disp.yaml</span></code> – the displaced cell with its
-supercell / primitive matrices and the displacement dataset (type-1 or
-type-2).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phonon-grid/grid-NNN/disp-*/</span></code> – the per-displacement forces, read in sorted
-<code class="docutils literal notranslate"><span class="pre">disp-*</span></code> order; their count must equal the number of displacements in
-<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>.</p></li>
-</ul>
-<p><code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> is used when present (full numerical precision), <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>
-otherwise. Grid points are discovered from the <code class="docutils literal notranslate"><span class="pre">static-grid/grid-NNN</span></code>
-directories, so a <code class="docutils literal notranslate"><span class="pre">grid-NNN</span></code> that exists only under <code class="docutils literal notranslate"><span class="pre">phonon-grid</span></code> is ignored. The
-positional <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is the equilibrium reference; it supplies the free
-lattice DOF metadata and the calculator (the per-point supercell / primitive
-matrices come from each point’s <code class="docutils literal notranslate"><span class="pre">phonon-grid</span></code> yaml).</p>
-<section id="grid-points-in-any-layout">
-<span id="id1"></span><h3>Grid points in any layout<a class="headerlink" href="#grid-points-in-any-layout" title="Link to this heading">#</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">--static</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> take the grid points as explicit path lists, usually
-expanded by the shell, and replace <code class="docutils literal notranslate"><span class="pre">--static-grid</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon-grid</span></code>
-respectively (giving both forms of one side is an error). No naming convention
-then applies at all:</p>
+<p>The entries may be files rather than directories. Use that form when the
+calculations were laid out by something other than Scripts 1 and 2:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--static<span class="w"> </span>runs/*/static/vaspout.h5<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--phonon<span class="w"> </span>runs/*/phonons/phonopy_params.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
 </pre></div>
 </div>
-<p>The two lists are paired <strong>by position</strong>, not by any index parsed from the
-names, and their lengths must match. The grid-point index recorded in the
-dataset is the position in the list; it is a label only, since the analysis
-reads the lattice parameters from each stored cell. Note that the shell expands
-a glob in lexicographic order, so <code class="docutils literal notranslate"><span class="pre">point-1,</span> <span class="pre">point-10,</span> <span class="pre">point-2,</span> <span class="pre">...</span></code> orders the
-points unintuitively – harmless for the pairing, which shifts identically on
-both sides, but worth avoiding if the recorded indices are to be read back
-against <code class="docutils literal notranslate"><span class="pre">strain_cells.yaml</span></code>.</p>
-<p>Each <code class="docutils literal notranslate"><span class="pre">--static</span></code> entry is the static single-point output, or the directory
-holding it (<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> is preferred over <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>, as in the
-conventional layout).</p>
-</section>
-<section id="pre-collected-force-sets">
-<h3>Pre-collected force sets<a class="headerlink" href="#pre-collected-force-sets" title="Link to this heading">#</a></h3>
-<p>Each <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> entry is either a directory holding <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the
-<code class="docutils literal notranslate"><span class="pre">disp-*</span></code> subdirectories, exactly as in the conventional layout, or a
-phonopy.yaml-like file whose forces <a class="reference internal" href="command-options.html#f-force-sets-option"><span class="std std-ref">phonopy-init -f</span></a> has already collected. Run in each grid point’s own
-directory, whatever its structure:</p>
+<p>Any names work, and one list can mix directories and files. The <code class="docutils literal notranslate"><span class="pre">--static</span></code> and
+<code class="docutils literal notranslate"><span class="pre">--phonon</span></code> lists must have the same number of entries.</p>
+<section id="what-the-builder-reads">
+<span id="anisotropic-qha-builder-reads"></span><h3>What the builder reads<a class="headerlink" href="#what-the-builder-reads" title="Link to this heading">#</a></h3>
+<p>For each grid point the builder reads:</p>
+<ul>
+<li><p>the static single point, giving the internal energy <span class="math notranslate nohighlight">\(U(a_i, c_i)\)</span>; its
+relaxed cell becomes the grid-point cell. The electronic states for
+<span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> are read automatically from the same <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> when
+it carries the eigenvalues (a static point written with only <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> is
+built without <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>; pass <code class="docutils literal notranslate"><span class="pre">--no-electronic</span></code> to skip them
+deliberately). A directory entry is resolved to the VASP output it holds, and
+<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> is used in preference to <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>.</p></li>
+<li><p>the phonon grid point, in one of two forms. A <strong>directory</strong> holding
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the per-displacement <code class="docutils literal notranslate"><span class="pre">disp-*</span></code> subdirectories: the
+builder reads each <code class="docutils literal notranslate"><span class="pre">disp-*</span></code> calculator output itself, so no <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> or
+<code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> is needed. Or a <strong>phonopy.yaml-like file</strong> whose forces
+<a class="reference internal" href="command-options.html#f-force-sets-option"><span class="std std-ref">phonopy-init -f</span></a> has already collected, which is
+the simpler route when the calculations were not laid out by Script 2:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--sp<span class="w"> </span>-f<span class="w"> </span>disp-*/vasprun.xml<span class="w">   </span><span class="c1"># -&gt; phonopy_params.yaml</span>
 %<span class="w"> </span>phonopy-init<span class="w"> </span>-f<span class="w"> </span>disp-*/vasprun.xml<span class="w">        </span><span class="c1"># -&gt; FORCE_SETS, beside phonopy_disp.yaml</span>
 </pre></div>
 </div>
 <p>Pass the resulting <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>, or the <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> whose
 <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> sits beside it (<a class="reference internal" href="command-options.html#save-params-option"><span class="std std-ref">–sp</span></a> merges the two
-into one file). This is usually the simpler route when the phonon calculations
-were not laid out by the scaffolding script above: collecting the forces stays
-a job for phonopy’s own tools, in whatever directory structure the calculations
-already have, and the builder only consumes the result. A file with no forces
-and no neighboring <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is rejected rather than silently producing an
-empty grid point. The forms may be mixed within one <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> list.</p>
+into one file). A file with no forces and no neighboring <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is
+rejected rather than silently producing an empty grid point. Either form
+supplies the per-grid-point supercell / primitive matrices.</p>
+</li>
+</ul>
+<p>The positional <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is the equilibrium reference; it supplies
+the free lattice DOF metadata and the calculator. The grid-point index recorded
+in the dataset is the position in the list, a label only, since the analysis
+reads the lattice parameters from each stored cell.</p>
 </section>
+<section id="how-the-ordering-is-checked">
+<span id="anisotropic-qha-ordering"></span><h3>How the ordering is checked<a class="headerlink" href="#how-the-ordering-is-checked" title="Link to this heading">#</a></h3>
+<p>The builder pairs <code class="docutils literal notranslate"><span class="pre">--static</span></code> and <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> by position after shell expansion,
+and takes the <code class="docutils literal notranslate"><span class="pre">disp-*</span></code> subdirectories of one grid point in sorted order. It
+checks both against the structures in the calculator outputs.</p>
+<p><strong>Across grid points</strong>, the lattice of each static single point must match the
+cell of the phonon grid point it is paired with. A mismatch stops the command
+and names both paths. This catches a grid point missing from each list, which
+would otherwise combine the <span class="math notranslate nohighlight">\(U\)</span> of one lattice with the forces of
+another while the list lengths still matched, and a static single point run on
+a supercell rather than the unit cell, which would put <span class="math notranslate nohighlight">\(U\)</span> on the wrong
+normalization.</p>
+<p><strong>Within one grid point</strong>, sorted order is only a guess at the displacement
+order: <code class="docutils literal notranslate"><span class="pre">disp-1,</span> <span class="pre">disp-10,</span> <span class="pre">disp-2</span></code> sorts differently from how it counts. Each
+calculator output carries the structure it was run on, so the builder compares
+it against the displaced supercell of its position and names the directory and
+the displacement on a mismatch.</p>
+<p>Zero-padded names (<code class="docutils literal notranslate"><span class="pre">grid-001</span></code>, <code class="docutils literal notranslate"><span class="pre">disp-001</span></code>) get both orderings right in the
+first place, whether the shell expands a glob lexicographically or a brace
+range in order. Scripts 1 and 2 write <code class="docutils literal notranslate"><span class="pre">grid-{idx:03d}</span></code> and <code class="docutils literal notranslate"><span class="pre">disp-{k:03d}</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">-d</span></code> does the same. Padding is a convenience
+rather than a requirement: a wrong order is reported, not turned into force
+constants from mismatched forces.</p>
+<p>The examples write the range out as <code class="docutils literal notranslate"><span class="pre">grid-{001..025}</span></code> rather than <code class="docutils literal notranslate"><span class="pre">grid-*</span></code>.
+The count is then visible in the command, and a missing grid point stops the
+builder on a path that does not exist instead of quietly passing a shorter
+list. <code class="docutils literal notranslate"><span class="pre">grid-*</span></code> also works, and is the shorter thing to type once the grid is
+known to be complete.</p>
 </section>
-<section id="b-route-b-mlp-phonons-train-once-then-evaluate">
-<h2>2B. Route B – MLP phonons (train once, then evaluate)<a class="headerlink" href="#b-route-b-mlp-phonons-train-once-then-evaluate" title="Link to this heading">#</a></h2>
-<p>Train a pypolymlp on strained random-displacement supercells (this is a
-<em>different</em> strain-cells use than step 1: random-displacement supercells over a
-box that must <strong>cover the static grid with margin</strong>, since an MLP extrapolates
-badly at its domain edges).</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Training structures: strained supercells with random displacements (--rd):</span>
-<span class="c1"># --rd N gives N displaced supercells per cell; --amplitude (= --amin) sets the</span>
-<span class="c1"># distance.</span>
-%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">1</span><span class="w"> </span>--amplitude<span class="w"> </span><span class="m">0</span>.03
-<span class="c1"># -&gt; supercell-00001 .. supercell-00100 ; run a single-point VASP (ISIF &gt;= 2)</span>
-<span class="c1">#    for each, then assemble the dataset (stress included):</span>
-%<span class="w"> </span>phonopy-vasp-mlp-dataset<span class="w"> </span>disp-*/vaspout.h5<span class="w"> </span>-o<span class="w"> </span>polymlp_dataset.hdf5
+<section id="what-the-file-holds">
+<span id="anisotropic-qha-file-contents"></span><h3>What the file holds<a class="headerlink" href="#what-the-file-holds" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> is self-contained. Per grid point it stores the
+relaxed cell, the supercell and primitive matrices, the raw displacements and
+forces, the static internal energy <span class="math notranslate nohighlight">\(U\)</span>, and optionally the electronic
+states. The displacements and forces are kept in phonopy’s native
+displacement-force dataset form – type-1 (one displaced atom per supercell)
+or type-2 (dense/random) – and tagged with which one, so the reader picks the
+force-constant solver from the type instead of inferring it. Storing them raw
+rather than as force constants keeps the file independent of the
+force-constant method, and makes it an archive that outlives the calculator
+scratch.</p>
+<p>The electronic states carry the eigenvalues, the k-point weights and the
+electron count, and, when the static calculation sampled a Gamma-centred
+regular mesh, the k points and the mesh themselves. That is what lets a reader
+of the file integrate <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> by the linear tetrahedron method;
+a file written without them is integrated by the k-point sum.</p>
+<p>The layout, as written by <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> and read back by
+<code class="docutils literal notranslate"><span class="pre">phonopy.qha.anisotropic_dataset.read_aniso_qha_dataset</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/                    attrs: creator, phonopy_version, calculator, length_unit,
+                            crystal_system, free_dof, tie_description,
+                            n_grid_points, grid_shape
+/grid/NNN            attrs: index, internal_energy, displacement_type
+    lattice                          (3, 3)       the relaxed grid-point cell
+    lattice_lengths                  (3,)         a, b, c
+    scaled_positions                 (natom, 3)
+    numbers                          (natom,)
+    masses                           (natom,)
+    supercell_matrix                 (3, 3)
+    primitive_matrix                 (3, 3)
+    displaced_atoms                  (ndisp,)     type-1 only
+    displacements                    (ndisp, 3)   type-1
+                                     (ndisp, natom_super, 3)   type-2
+    forces                           (ndisp, natom_super, 3)
+    electronic_states/eigenvalues    (nspin, nkpt, nband)   optional
+    electronic_states/weights        (nkpt,)
+    electronic_states/n_electrons    scalar
+    electronic_states/fermi_energy   scalar
+    electronic_states/spin_degeneracy  scalar     only when set
+    electronic_states/kpoints        (nkpt, 3)    only with a regular mesh
+    electronic_states/mesh           (3,)         only with a regular mesh
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-mlp-dataset</span></code> reads <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>. Prefer
-<code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code>: it carries the full precision of the calculation, whereas
-<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> is written with six digits.</p>
-<p>Adding <code class="docutils literal notranslate"><span class="pre">--amax</span></code> makes the displacement distance random instead of fixed (the
-distance is drawn per supercell; within one supercell every atom moves by that
-same distance). The draw is uniform over <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">--amax)</span></code> and is raised to
-<code class="docutils literal notranslate"><span class="pre">--amin</span></code> when smaller, so the distances are uniform over <code class="docutils literal notranslate"><span class="pre">[--amin,</span> <span class="pre">--amax)</span></code>
-except for the weight <code class="docutils literal notranslate"><span class="pre">--amin</span> <span class="pre">/</span> <span class="pre">--amax</span></code> piled up exactly at <code class="docutils literal notranslate"><span class="pre">--amin</span></code>. A fixed
-small distance is what harmonic force constants need and is the default here.
-The range form matters when the MLP is to be used beyond the harmonic regime,
-e.g. for the temperature-dependent force constants of <a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a>, whose
-supercells at temperature reach far larger displacements than 0.03 Angstrom;
-an MLP trained only near equilibrium would extrapolate there. Then train over
-both the lattice box and the amplitude range at once:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">1</span><span class="w"> </span>--amin<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span>--amax<span class="w"> </span><span class="m">1</span>.5
-</pre></div>
-</div>
-<p>With <code class="docutils literal notranslate"><span class="pre">--rd</span> <span class="pre">1</span></code> as above, each strained cell receives a single distance, so
-which amplitude lands on which lattice is left to chance and the two can end
-up correlated – large amplitudes falling mostly on large-volume cells, say,
-which the MLP then cannot separate from the volume dependence itself. Adding
-<code class="docutils literal notranslate"><span class="pre">--amax-per-atom</span></code> draws the distance per atom instead, so every supercell
-covers the whole <code class="docutils literal notranslate"><span class="pre">[--amin,</span> <span class="pre">--amax)</span></code> range internally and the amplitude
-coverage is complete at every lattice point:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-strain-cells<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--a<span class="w"> </span><span class="m">3</span>.15<span class="w"> </span><span class="m">3</span>.25<span class="w"> </span>--c<span class="w"> </span><span class="m">5</span>.10<span class="w"> </span><span class="m">5</span>.30<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>--rd<span class="w"> </span><span class="m">1</span><span class="w"> </span>--amin<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span>--amax<span class="w"> </span><span class="m">1</span>.5<span class="w"> </span>--amax-per-atom
-</pre></div>
-</div>
-<p>The per-atom draw is uniform over <code class="docutils literal notranslate"><span class="pre">[--amin,</span> <span class="pre">--amax)</span></code> directly, with no weight
-piled up at <code class="docutils literal notranslate"><span class="pre">--amin</span></code>. The pile-up the per-supercell draw produces is not an
-implementation detail to be carried over: it reserves a share of supercells
-whose atoms all sit near equilibrium, which is a useful population to have in
-the training set. Drawn per atom, the same rule would instead put a spike of
-identical displacement magnitudes inside every supercell, which has no such
-use, so <code class="docutils literal notranslate"><span class="pre">--amin</span></code> becomes a genuine lower bound there rather than a floor.</p>
-<p>The price of the per-atom draw is that a supercell no longer has one amplitude
-that labels it, which is why the per-supercell draw remains the default: it
-keeps each supercell a shell of one amplitude in configuration space,
-convenient when the structures are to be grouped by amplitude. For training an
-MLP over a lattice box, the per-atom draw is usually the better use of a given
-number of supercells.</p>
-<p>Train the MLP with energies, forces and stresses (structure-based training, so
-the varying lattices and the stress/virial are used):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">PypolymlpParams</span><span class="p">,</span>
-    <span class="n">develop_pypolymlp</span><span class="p">,</span>
-    <span class="n">read_pypolymlp_structure_dataset</span><span class="p">,</span>
-    <span class="n">save_pypolymlp</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">data</span> <span class="o">=</span> <span class="n">read_pypolymlp_structure_dataset</span><span class="p">(</span><span class="s2">&quot;polymlp_dataset.hdf5&quot;</span><span class="p">)</span>
-<span class="n">polymlp</span> <span class="o">=</span> <span class="n">develop_pypolymlp</span><span class="p">(</span>
-    <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">PypolymlpParams</span><span class="p">(),</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span>
-<span class="n">save_pypolymlp</span><span class="p">(</span><span class="n">polymlp</span><span class="p">,</span> <span class="s2">&quot;polymlp.yaml&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">develop_pypolymlp</span></code> picks the training mode from the dataset type: a
-<code class="docutils literal notranslate"><span class="pre">PypolymlpStructureData</span></code> like this one trains on independent structures, so the
-lattices may differ and the stress is used; a <code class="docutils literal notranslate"><span class="pre">PypolymlpData</span></code> trains on
-displacements of one supercell instead.</p>
-<p><code class="docutils literal notranslate"><span class="pre">test_size</span></code> splits the dataset without shuffling: the first 90 percent trains
-and the rest tests. Pass <code class="docutils literal notranslate"><span class="pre">test_data</span></code> explicitly when it must stay fixed while
-the training dataset varies, as when measuring how many structures the MLP
-needs. Datasets slice like sequences, so a training-set size series needs no
-helper:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_pypolymlp_dataset</span>
-
-<span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">split_pypolymlp_dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">train</span><span class="p">)):</span>
-    <span class="n">polymlp</span> <span class="o">=</span> <span class="n">develop_pypolymlp</span><span class="p">(</span><span class="n">train</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">test</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">PypolymlpParams</span><span class="p">())</span>
-</pre></div>
-</div>
-<p>Then build the intermediate dataset. <code class="docutils literal notranslate"><span class="pre">--from-mlp</span></code> needs only the <code class="docutils literal notranslate"><span class="pre">static-grid</span></code>
-layout of step 1 (no <code class="docutils literal notranslate"><span class="pre">phonon-grid</span></code>): the displacements are generated and their
-forces evaluated on the fly from the MLP – <code class="docutils literal notranslate"><span class="pre">--distance</span></code> sets the displacement
-amplitude and <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> the number of random-displacement supercells per grid
-point (<code class="docutils literal notranslate"><span class="pre">--seed</span></code> for reproducibility). The MLP forces are stored raw, so the
-analysis is blind to their MLP origin; <span class="math notranslate nohighlight">\(U\)</span> still comes from the static
-grid, and the per-point supercell / primitive matrices come from the reference
-<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span>--from-mlp<span class="w"> </span>polymlp.yaml<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--static-grid<span class="w"> </span>static-grid<span class="w"> </span>--distance<span class="w"> </span><span class="m">0</span>.03<span class="w"> </span>--snapshots<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
-<span class="c1"># F_el is stored automatically when static-grid/grid-NNN/vaspout.h5 carries the</span>
-<span class="c1">#   electron eigenvalues; pass --no-electronic to skip it</span>
-</pre></div>
-</div>
+<p><code class="docutils literal notranslate"><span class="pre">grid_shape</span></code> is present only when the cells reached the builder as a tensor
+grid; <code class="docutils literal notranslate"><span class="pre">--compare-eos</span></code> needs it. <code class="docutils literal notranslate"><span class="pre">NNN</span></code> is the position in the <code class="docutils literal notranslate"><span class="pre">--static</span></code>
+list, and the analysis reads the lattice parameters from <code class="docutils literal notranslate"><span class="pre">lattice</span></code> rather than
+from that number.</p>
 </section>
-<section id="the-intermediate-dataset">
-<h2>3. The intermediate dataset<a class="headerlink" href="#the-intermediate-dataset" title="Link to this heading">#</a></h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The anisotropic QHA workflow is under active development. The
-<code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> layout and the <code class="docutils literal notranslate"><span class="pre">phonopy.qha.anisotropic_dataset</span></code> API
-are not yet stable and may change in a backward-incompatible way between
-releases. Rebuild the dataset from the calculator outputs rather than relying on
-an old file being readable.</p>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> is self-contained: per grid point it stores the relaxed
-cell, supercell / primitive matrices, the raw displacements and forces, the
-static internal energy <span class="math notranslate nohighlight">\(U\)</span>, and optionally the electronic states. The
-displacements and forces are kept in phonopy’s native displacement-force dataset
-form – type-1 (one displaced atom per supercell) or type-2 (dense/random) –
-tagged so the force-constant solver is chosen from the dataset type, not guessed.
-Because the displacements and forces are stored raw (not force constants), the
-file is independent of the force-constant method and can serve as an archive
-after the calculator scratch is discarded. The same file feeds the analysis
-whether the forces came from the calculator or the MLP.</p>
 </section>
 <section id="run-the-anisotropic-qha">
 <h2>4. Run the anisotropic QHA<a class="headerlink" href="#run-the-anisotropic-qha" title="Link to this heading">#</a></h2>
 <p>Run the analysis directly on the intermediate dataset:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--tmax<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--dt<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--contour-temp<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span>--compare-vinet<span class="w"> </span>--electronic
+<span class="w">    </span>--contour-temp<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span>--compare-eos<span class="w"> </span>--electronic
 </pre></div>
 </div>
-<p>This rebuilds one Phonopy per grid point (force constants from the stored
-displacements and forces), runs <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code>, and writes
+<p><code class="docutils literal notranslate"><span class="pre">--tmax</span></code> and <code class="docutils literal notranslate"><span class="pre">--dt</span></code> are in K and set the temperature grid, here 0 to 1000 K in
+steps of 10 K. The thermal expansions are central differences on that grid, so
+the last temperature point is consumed by them and the results stop one step
+below <code class="docutils literal notranslate"><span class="pre">--tmax</span></code>. <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> sets the phonon sampling mesh and defaults to 200,
+denser than <code class="docutils literal notranslate"><span class="pre">run_qha</span></code>’s 100: the axial split needs it, while the volumetric
+expansion is already converged at 100.</p>
+<p>The command rebuilds one Phonopy per grid point, with force constants from the
+stored displacements and forces, runs <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code>, and writes
 <code class="docutils literal notranslate"><span class="pre">lattice_parameters-temperature.dat</span></code>, <code class="docutils literal notranslate"><span class="pre">axial_thermal_expansion.dat</span></code>,
-<code class="docutils literal notranslate"><span class="pre">volume-temperature.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">anisotropic_qha.png</span></code>. With exactly two free
-lattice DOF it also writes the <code class="docutils literal notranslate"><span class="pre">F(a,</span> <span class="pre">c)</span></code> contour maps; <code class="docutils literal notranslate"><span class="pre">--decompose-contours</span></code>
-adds the U / F_ph / F_el / total panels and <code class="docutils literal notranslate"><span class="pre">--compare-vinet</span></code> adds a
-volume-path cross-check (it needs the grid main diagonal from a <code class="docutils literal notranslate"><span class="pre">--grid</span></code> run in
-step 1, and is skipped when no such diagonal is found). The electronic free
-energy <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> is added only with <code class="docutils literal notranslate"><span class="pre">--electronic</span></code> (and only when
-the dataset carries the electronic states); by default it is ignored.</p>
-<p>Equivalently, drive <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> from the API:</p>
+<code class="docutils literal notranslate"><span class="pre">volume-temperature.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">anisotropic_qha.png</span></code>.</p>
+<p>With exactly two free lattice DOF it also writes the <code class="docutils literal notranslate"><span class="pre">F(a,</span> <span class="pre">c)</span></code> contour maps.
+<code class="docutils literal notranslate"><span class="pre">--decompose-contours</span></code> adds the <span class="math notranslate nohighlight">\(U\)</span> / <span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> /
+<span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> / total panels.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--compare-eos</span></code> adds a volume-path cross-check along the main diagonal of
+the grid. The diagonal comes from the grid shape the builder recorded, so the
+cross-check needs a <code class="docutils literal notranslate"><span class="pre">--grid</span></code> run in step 1 whose cells were gathered in order.
+Without a recorded shape the command skips the cross-check and lists the cells
+by volume with their <span class="math notranslate nohighlight">\(c/a\)</span>, so that <code class="docutils literal notranslate"><span class="pre">--eos-index</span></code> can name a path by
+hand. Cells sharing a <span class="math notranslate nohighlight">\(c/a\)</span> have one shape, which is what a volume-path
+equation-of-state fit assumes; five or more of them are printed as a
+ready-made <code class="docutils literal notranslate"><span class="pre">--eos-index</span></code> line.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--electronic</span></code> adds the electronic free energy <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>, and only
+when the dataset carries the electronic states; by default it is ignored. The
+integration is the linear tetrahedron method when the states carry the k-point
+grid, and the k-point sum otherwise. The k-point sum integrates a
+delta-function density of states and converges slowly, so a mesh chosen for
+the total energy is not dense enough for it. The run prints which of the two
+it used, and at how many grid points.</p>
+<p>Check that convergence on the thermal expansion, not on <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.
+The two integrations can agree closely on <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> at a mesh
+where they differ severalfold in <span class="math notranslate nohighlight">\(\alpha_c\)</span>: the expansion is a
+derivative of the free-energy surface, and the k-point sum’s error varies
+across the lattice grid.</p>
+<p>The same analysis, driven from the API:</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">Script 3 – the analysis through <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code></span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha</span><span class="w"> </span><span class="kn">import</span> <span class="n">anisotropic_output</span><span class="p">,</span> <span class="n">anisotropic_plot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
 
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">&quot;aniso_qha_dataset.hdf5&quot;</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
 
 <span class="n">phonopys</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">internal_energies</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1261,39 +1257,709 @@ the dataset carries the electronic states); by default it is ignored.</p>
     <span class="n">temperatures</span><span class="p">,</span>
     <span class="n">internal_energies</span><span class="o">=</span><span class="n">internal_energies</span><span class="p">,</span>
     <span class="n">electronic_structures</span><span class="o">=</span><span class="n">electronic_structures</span> <span class="k">if</span> <span class="n">has_electronic</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">mesh</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+    <span class="c1"># mesh defaults to 200 here, denser than run_qha's 100: the axial split</span>
+    <span class="c1"># needs it, while the volumetric expansion is converged at 100.</span>
 <span class="p">)</span>
 
 <span class="n">anisotropic_output</span><span class="o">.</span><span class="n">write_lattice_parameters_temperature</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 <span class="n">anisotropic_output</span><span class="o">.</span><span class="n">write_axial_thermal_expansion</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 <span class="n">anisotropic_output</span><span class="o">.</span><span class="n">write_volume_temperature</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-<span class="n">plt</span> <span class="o">=</span> <span class="n">anisotropic_plot</span><span class="o">.</span><span class="n">plot_anisotropic_qha</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;anisotropic_qha.png&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">anisotropic_plot</span><span class="o">.</span><span class="n">plot_anisotropic_qha</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">"anisotropic_qha.png"</span><span class="p">)</span>
+
+<span class="c1"># The F(a, c) diagnostics, one file per temperature. plot_component_contours</span>
+<span class="c1"># splits the surface into its U / F_ph / F_el / total parts, which is what</span>
+<span class="c1"># shows where the valley comes from; both need exactly two free lattice DOF</span>
+<span class="c1"># and return the names they wrote.</span>
+<span class="n">contour_temperatures</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">300.0</span><span class="p">,</span> <span class="mf">600.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">]</span>
+<span class="n">anisotropic_plot</span><span class="o">.</span><span class="n">plot_F_contours</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">contour_temperatures</span><span class="p">)</span>
+<span class="n">anisotropic_plot</span><span class="o">.</span><span class="n">plot_component_contours</span><span class="p">(</span>
+    <span class="n">result</span><span class="p">,</span>
+    <span class="n">internal_energies</span><span class="p">,</span>
+    <span class="n">electronic_structures</span> <span class="k">if</span> <span class="n">has_electronic</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">contour_temperatures</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> detects the free lattice DOF from the input cells, fits the
-free energy surface <span class="math notranslate nohighlight">\(F(a, c; T)\)</span> and minimizes it per temperature, giving
-<span class="math notranslate nohighlight">\(a(T)\)</span>, <span class="math notranslate nohighlight">\(c(T)\)</span> and the axial thermal expansions</p>
+</div>
+<p>Both forms run the same analysis. <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> detects the free
+lattice DOF from the input cells, and then, at each temperature:</p>
+<ol class="arabic simple">
+<li><p>Add the terms at every sampled cell,
+<span class="math notranslate nohighlight">\(F_i(T) = U(a_i, c_i) + F_\mathrm{ph}(a_i, c_i; T)\)</span>, with
+<span class="math notranslate nohighlight">\(F_\mathrm{el}(a_i, c_i; T)\)</span> when it is included and a
+<span class="math notranslate nohighlight">\(pV_i\)</span> term when a pressure is given.</p></li>
+<li><p>Fit a polynomial of total degree <span class="math notranslate nohighlight">\(n\)</span> in the free lattice
+parameters to those <span class="math notranslate nohighlight">\(F_i(T)\)</span>, by least squares. <code class="docutils literal notranslate"><span class="pre">--surface-degree</span></code>
+sets <span class="math notranslate nohighlight">\(n\)</span>, 3 by default. For <span class="math notranslate nohighlight">\(d\)</span> free DOF the polynomial has
+<span class="math notranslate nohighlight">\(\binom{n + d}{n}\)</span> terms – 10 for two free DOF at degree 3 – and
+the grid needs at least that many cells, or the fit is rank deficient
+and says so.</p></li>
+<li><p>Minimize that polynomial, from the centroid of the sampled cells and
+using its analytic gradient. The minimizer is <span class="math notranslate nohighlight">\(a(T)\)</span>,
+<span class="math notranslate nohighlight">\(c(T)\)</span>. A minimum outside the sampled range is reported as an
+extrapolation.</p></li>
+</ol>
+<p>The axial thermal expansions then follow by central differences over the
+temperature grid,</p>
 <div class="math notranslate nohighlight">
 \[\alpha_a = \frac{1}{a}\frac{da}{dT}, \qquad
-\alpha_c = \frac{1}{c}\frac{dc}{dT}.\]</div>
+\alpha_c = \frac{1}{c}\frac{dc}{dT},\]</div>
+<p>which is what consumes one temperature point: with <code class="docutils literal notranslate"><span class="pre">--tmax</span> <span class="pre">1000</span> <span class="pre">--dt</span> <span class="pre">10</span></code>
+the results stop at 990 K.</p>
+<p>The fit is over the lattice only: each temperature is minimized on its own,
+and the raw <span class="math notranslate nohighlight">\(a(T)\)</span>, <span class="math notranslate nohighlight">\(c(T)\)</span> are differenced. With the
+calculator’s harmonic free energies that is what is wanted, since they
+carry no sampling scatter. <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span></code> fits the lattice parameters
+along temperature first and differentiates the fit instead, which step 5
+needs. It defaults to <code class="docutils literal notranslate"><span class="pre">none</span></code> here, and to <code class="docutils literal notranslate"><span class="pre">einstein</span></code> when
+<code class="docutils literal notranslate"><span class="pre">--phonon-free-energies</span></code> is given.</p>
 <p>The internal energies are expected in eV per primitive cell, which they are when
 the static-grid single point is the primitive (unit) cell.</p>
+<section id="supplying-f-mathrm-el-ready-made">
+<h3>Supplying <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> ready-made<a class="headerlink" href="#supplying-f-mathrm-el-ready-made" title="Link to this heading">#</a></h3>
+<p>The tetrahedron integration costs of order a minute per grid point on a dense
+mesh, and the analysis works through the grid points one after another.
+Computing <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> outside lets one result be reused across runs,
+and lets the grid points be spread over processes or jobs. Pass it as
+<code class="docutils literal notranslate"><span class="pre">electronic_free_energies</span></code>, the counterpart of <code class="docutils literal notranslate"><span class="pre">phonon_free_energies</span></code> for the
+electronic term.</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">Script 4 – <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> computed apart from the analysis</span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.electron</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_free_energy_by_tetrahedron</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
+<span class="n">temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1001</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># one extra point for finite diff</span>
+
+<span class="n">fe_el</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="c1"># F_el(T) - F_el(0) in eV per primitive cell, one grid point at a time.</span>
+        <span class="n">compute_free_energy_by_tetrahedron</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">electronic_states</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">run_anisotropic_qha</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">],</span>
+    <span class="n">temperatures</span><span class="p">,</span>
+    <span class="n">internal_energies</span><span class="o">=</span><span class="p">[</span><span class="n">point</span><span class="o">.</span><span class="n">internal_energy</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">],</span>
+    <span class="n">electronic_free_energies</span><span class="o">=</span><span class="n">fe_el</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The grid points are independent, so this loop splits across processes or jobs
+unchanged; each one writes its own column of <code class="docutils literal notranslate"><span class="pre">fe_el</span></code>. The integration itself
+is already threaded through BLAS, so cap the threads per process when several
+run on one node.</p>
+<p>The values are anchored at T = 0 and normalized per primitive cell,
+consistently with <code class="docutils literal notranslate"><span class="pre">internal_energies</span></code>. <code class="docutils literal notranslate"><span class="pre">electronic_structures</span></code> and
+<code class="docutils literal notranslate"><span class="pre">electronic_free_energies</span></code> are two ways of giving the same term, so pass one
+or the other.</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> takes the same thing from a file. Write it with the
+temperatures it was computed on:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.electron</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_electronic_free_energies_hdf5</span>
+
+<span class="n">write_electronic_free_energies_hdf5</span><span class="p">(</span><span class="n">temperatures</span><span class="p">,</span> <span class="n">fe_el</span><span class="p">,</span> <span class="s2">"fel.hdf5"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--tmax<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--dt<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--electronic-free-energies<span class="w"> </span>fel.hdf5
+</pre></div>
+</div>
+<p>The file carries the temperatures it was computed on. The command compares
+them with the grid <code class="docutils literal notranslate"><span class="pre">--tmax</span></code> and <code class="docutils literal notranslate"><span class="pre">--dt</span></code> ask for and stops if they differ,
+instead of pairing the rows as they come. <code class="docutils literal notranslate"><span class="pre">--electronic-free-energies</span></code>
+replaces <code class="docutils literal notranslate"><span class="pre">--electronic</span></code>; passing both stops the command. It also skips
+<code class="docutils literal notranslate"><span class="pre">--compare-eos</span></code>, since the volume-path driver takes the electronic term as
+states and the two paths would then carry different physics.</p>
 </section>
-<section id="validate-the-mlp-equilibrium-shape-mlp-route-recommended">
-<h2>5. Validate the MLP equilibrium shape (MLP route, recommended)<a class="headerlink" href="#validate-the-mlp-equilibrium-shape-mlp-route-recommended" title="Link to this heading">#</a></h2>
-<p>A smooth MLP is not automatically a correct one. Before trusting an MLP-phonon
-result, validate against the calculator at a few points:</p>
-<ul class="simple">
-<li><p>Compare the MLP vs calculator phonon anisotropy directly. With a calculator
-phonon grid available, a same-displacement force-swap comparison isolates any
-anisotropic Gruneisen error.</p></li>
-<li><p>Compare MLP and calculator stresses at a few cells (the stress is the
-free-energy gradient the QHA minimizes), and optionally elastic constants (the
-surface curvature).</p></li>
-</ul>
-<p>If the MLP phonons and equilibrium shape agree with the calculator within
-tolerance, the dense (a, c) grid can be trusted.</p>
+</section>
+<section id="variant-temperature-dependent-force-constants-from-per-grid-point-mlps">
+<span id="anisotropic-qha-temperature-dependent"></span><h2>5. Variant: temperature-dependent force constants from per-grid-point MLPs<a class="headerlink" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps" title="Link to this heading">#</a></h2>
+<p>Anharmonic effects appear only in structures that the small displacements of
+step 2 never reach. One way to get at them is to displace the atoms with
+the temperature folded in: every atom is moved at once, by an amount drawn
+from the canonical distribution of the harmonic crystal at that
+temperature, which the force constants of step 2 define. That distribution
+is Gaussian in the normal coordinates, with the width the equation below
+gives. The forces the calculator returns for such supercells are a
+first-principles sample of the potential energy surface in the region a
+crystal at that temperature actually visits.</p>
+<p>Training an MLP on that sample is what this page does with it, and the
+trained MLP then supplies the
+temperature-dependent force constants whose free energies the analysis
+takes directly. The displacements come first.</p>
+<p>The distribution is fixed once, from the harmonic force constants: a
+one-shot draw, not iterated to self-consistency with the anharmonic force
+constants as SSCHA does. For a training set that is enough, since it has
+to cover the region rather than reproduce the ensemble. Where
+anharmonicity softens the modes, the true distribution is the wider of the
+two, which is one reason to draw at a temperature above the production
+range.</p>
+<p>Each mode <span class="math notranslate nohighlight">\((\mathbf{q}, \nu)\)</span> of the supercell is a harmonic oscillator
+in equilibrium at <span class="math notranslate nohighlight">\(T\)</span>, so its normal coordinate is normally distributed
+about zero with variance</p>
+<div class="math notranslate nohighlight">
+\[\sigma_{\mathbf{q}\nu}^2 = \langle |Q_{\mathbf{q}\nu}|^2 \rangle
+= \frac{\hbar}{2\omega_{\mathbf{q}\nu}}
+  \coth \frac{\hbar \omega_{\mathbf{q}\nu}}{2 k_\mathrm{B} T}.\]</div>
+<p>A <strong>snapshot</strong> is one supercell with every atom displaced at once, unlike
+the displacements of step 2, which move one atom at a time. Each snapshot
+draws one <span class="math notranslate nohighlight">\(\xi_{\mathbf{q}\nu}\)</span> per mode from the <strong>standard normal
+distribution</strong> – mean 0, variance 1 – so that
+<span class="math notranslate nohighlight">\(Q_{\mathbf{q}\nu} = \sigma_{\mathbf{q}\nu} \xi_{\mathbf{q}\nu}\)</span>, and
+the displacements follow from the eigenvectors,</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{u}_{lj} = \frac{1}{\sqrt{N m_j}} \sum_{\mathbf{q}\nu}
+\sigma_{\mathbf{q}\nu}\, \xi_{\mathbf{q}\nu}\,
+\mathbf{e}^{j}_{\mathbf{q}\nu}\,
+e^{i \mathbf{q} \cdot \mathbf{r}_l},
+\qquad
+\xi_{\mathbf{q}\nu} \sim \mathcal{N}(0, 1).\]</div>
+<p>A grid point’s frequencies set the amplitudes <span class="math notranslate nohighlight">\(\sigma_{\mathbf{q}\nu}\)</span>,
+and its eigenvectors set the pattern of atomic motion each mode displaces
+along. Each <span class="math notranslate nohighlight">\(\xi_{\mathbf{q}\nu}\)</span> fixes how far its own mode is
+displaced in this snapshot, and the sum turns those into the displacement
+of every atom.</p>
+<p>Steps 0 to 4 need one or a few displaced supercells per grid point, and
+give the quasi-harmonic answer. Step 5 needs a training set at every grid
+point instead – 50 structures at each of four temperatures in the script
+below, so 200 calculator runs per grid point – and gives force constants
+that change with temperature. Use it when anharmonicity is large enough to
+matter for the property being computed.</p>
+<p>Steps 0 to 3 are as in the Overview, up to and including the dataset. What
+differs comes after it: the MLPs and the free energies,</p>
+<pre  class="mermaid">
+        flowchart TD
+    DS([&quot;aniso_qha_dataset.hdf5&lt;br/&gt;cells, U, F_el,&lt;br/&gt;harmonic force constants&quot;])
+    DS --&gt; DISP[&quot;thermal displacements&lt;br/&gt;one shared draw of&lt;br/&gt;standard normals&quot;]
+    DISP --&gt; CALCT{{&quot;calculator forces&quot;}}
+    CALCT --&gt; DEV[&quot;train one MLP&lt;br/&gt;per grid point&quot;]
+    DEV --&gt; MLP([&quot;polymlp.yaml&lt;br/&gt;per grid point&quot;])
+    MLP --&gt; SSCHA[&quot;SSCHA&lt;br/&gt;per grid point and temperature&quot;]
+    SSCHA --&gt; FE([&quot;F_ph(T) per&lt;br/&gt;grid point&quot;])
+    </pre><p>and the analysis they meet in:</p>
+<pre  class="mermaid">
+        flowchart TD
+    DS2([&quot;aniso_qha_dataset.hdf5&quot;])
+    FE2([&quot;F_ph(T) per&lt;br/&gt;grid point&quot;])
+    DS2 --&gt; AQ[&quot;run_anisotropic_qha&quot;]
+    FE2 --&gt;|&quot;phonon_free_energies&quot;| AQ
+    AQ --&gt; RES([&quot;a(T), c(T),&lt;br/&gt;alpha_a, alpha_c&quot;])
+    </pre><section id="one-mlp-per-grid-point">
+<h3>One MLP per grid point<a class="headerlink" href="#one-mlp-per-grid-point" title="Link to this heading">#</a></h3>
+<p>The MLP enters one term of <span class="math notranslate nohighlight">\(F(a, c; T)\)</span>: the anharmonic phonon free
+energy <span class="math notranslate nohighlight">\(F_\mathrm{ph}(a, c; T)\)</span>. The MLP gives the
+temperature-dependent force constants, and the free energy that goes with
+them is computed as “Computing and supplying the free energies” below
+describes.</p>
+<p><span class="math notranslate nohighlight">\(U(a, c)\)</span> comes from the calculator on the static grid of step 1, not
+from the MLP. The analysis finds <span class="math notranslate nohighlight">\(a(T)\)</span> and <span class="math notranslate nohighlight">\(c(T)\)</span> by
+minimizing <span class="math notranslate nohighlight">\(F\)</span> over the lattice, so the shape of <span class="math notranslate nohighlight">\(U\)</span> near that
+minimum decides where the minimum sits and how it moves with temperature.
+The axial expansions are derivatives of that motion, so an error in the
+shape of <span class="math notranslate nohighlight">\(U\)</span> reaches them amplified: an error that is small on the
+scale of <span class="math notranslate nohighlight">\(F\)</span> can be a large fraction of a small axial expansion, and
+can change whether it comes out positive or negative.</p>
+<p>One MLP is trained per grid point, on that grid point’s own training set, and
+evaluated only there. Each MLP then has to reproduce the forces
+and energies of displaced supercells at one grid point. The forces give the
+temperature-dependent force constants, and the energies enter the SSCHA free
+energy as differences from the undisplaced supercell of that grid point. The
+grid as a whole carries the lattice dependence of <span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span>, so
+the MLPs never interpolate in the lattice parameters.</p>
+<p>The MLPs are fitted independently, so their errors can jump from one grid
+point to the next. Drawing the displacements from one set of
+standard normals smooths them; see <a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">Sharing one draw of standard normals</span></a>.</p>
+</section>
+<section id="the-training-displacements">
+<h3>The training displacements<a class="headerlink" href="#the-training-displacements" title="Link to this heading">#</a></h3>
+<p>Four steps, once the phonon grid of step 2 exists.</p>
+<ol class="arabic simple">
+<li><p>Pick the temperatures. Cover the production range and add one point above
+it, since an MLP is poor outside the range it was trained on.</p></li>
+<li><p>Generate the displacements with the script below. It uses one draw of
+standard normals at every grid point; see
+<a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">Sharing one draw of standard normals</span></a>.</p></li>
+<li><p>Run the calculator on every supercell, and collect the forces of each set
+with <a class="reference internal" href="command-options.html#f-force-sets-option"><span class="std std-ref">phonopy-init -f</span></a>.</p></li>
+<li><p>Merge each grid point’s temperatures into one training set, and train its
+MLP.</p></li>
+</ol>
+<p>Step 2 is the script below, which reads the harmonic force constants from
+the dataset of step 3:</p>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">Script 5 – the thermal training displacements</span><a class="headerlink" href="#id5" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_vasp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
+
+<span class="n">TRAIN</span> <span class="o">=</span> <span class="s2">"train"</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">,</span> <span class="mf">400.0</span><span class="p">)</span>  <span class="c1"># K</span>
+<span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># structures per grid point and temperature</span>
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">20260815</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">TEMPERATURES</span><span class="p">:</span>
+    <span class="n">normals</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">:</span>
+        <span class="n">phonon</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">init_random_displacements</span><span class="p">()</span>
+        <span class="n">rd</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">random_displacements</span>
+        <span class="k">if</span> <span class="n">normals</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Drawn once and reused at every grid point; the shapes are set by</span>
+            <span class="c1"># the supercell matrix and the primitive cell, which they share.</span>
+            <span class="n">normals</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">draw_standard_normals</span><span class="p">(</span>
+                <span class="n">SNAPSHOTS</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">rd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">standard_normals</span><span class="o">=</span><span class="n">normals</span><span class="p">)</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"displacements"</span><span class="p">:</span> <span class="n">rd</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">copy</span><span class="p">()}</span>
+
+        <span class="c1"># The stored index is 0-origin; the directories are numbered from 001.</span>
+        <span class="n">set_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">TRAIN</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">K"</span>
+        <span class="n">set_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># The displacements have to be saved beside the supercells: it is what</span>
+        <span class="c1"># phonopy-init -f attaches the forces to below.</span>
+        <span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="n">set_dir</span> <span class="o">/</span> <span class="s2">"phonopy_disp.yaml"</span><span class="p">,</span>
+            <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"force_constants"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"displacements"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">disp_dir</span> <span class="o">=</span> <span class="n">set_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"disp-</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">disp_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">write_vasp</span><span class="p">(</span><span class="n">disp_dir</span> <span class="o">/</span> <span class="s2">"POSCAR"</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Each set directory then holds <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and
+<code class="docutils literal notranslate"><span class="pre">disp-001/POSCAR</span> <span class="pre">..</span> <span class="pre">disp-050/POSCAR</span></code>, the same layout as the phonon grid of
+step 2. Run the calculator in every <code class="docutils literal notranslate"><span class="pre">disp-*</span></code>, then collect the forces of each
+set:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-f<span class="w"> </span>disp-*/vaspout.h5<span class="w"> </span>--save-params
+<span class="c1"># -&gt; phonopy_params.yaml, with the displacements, forces and supercell energies</span>
+</pre></div>
+</div>
+<p>A grid point has one such set per temperature, and its MLP is trained on all
+of them at once. Concatenating them in temperature order would put one
+temperature at the front of the list and another at the back, and pypolymlp
+takes its training structures from the front and its test structures from the
+back, so the sets are interleaved instead:</p>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">Script 6 – one training set per grid point, from its temperatures</span><a class="headerlink" href="#id6" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+
+<span class="n">TRAIN</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"train"</span><span class="p">)</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+<span class="n">N_GRID</span> <span class="o">=</span> <span class="mi">25</span>
+
+<span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N_GRID</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">sets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+            <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">K"</span> <span class="o">/</span> <span class="s2">"phonopy_params.yaml"</span><span class="p">,</span>
+            <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">TEMPERATURES</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Interleave the temperatures, so that any prefix and any suffix of the</span>
+    <span class="c1"># merged set holds them in equal parts.</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"displacements"</span><span class="p">,</span> <span class="s2">"forces"</span><span class="p">,</span> <span class="s2">"supercell_energies"</span><span class="p">):</span>
+        <span class="n">stacked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">])</span>
+        <span class="n">merged</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">stacked</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">stacked</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">sets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">merged</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+        <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-merged.yaml"</span><span class="p">,</span>
+        <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"force_sets"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"displacements"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Then train one MLP per grid point on its merged set:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>grid-NNN-merged.yaml<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">"ntrain=..., ntest=..."</span><span class="w"> </span>-v
+<span class="c1"># -&gt; polymlp.yaml, beside that grid point's training set</span>
+</pre></div>
+</div>
+<p>The structures behind that fit are the ones Script 5 drew: <code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code> per grid
+point and temperature, a finite sample of the harmonic crystal’s canonical
+distribution rather than the distribution itself. A grid point’s MLP therefore
+depends on which structures its own draw happened to produce, and so does
+everything computed from it. To see by how much, draw a second set of the same
+size at one grid point, train a second MLP on it, and compare the frequencies
+the two give there.</p>
+</section>
+<section id="the-descriptor-and-the-ridge-penalty">
+<h3>The descriptor and the ridge penalty<a class="headerlink" href="#the-descriptor-and-the-ridge-penalty" title="Link to this heading">#</a></h3>
+<p>Three choices interact here: how many features the descriptor has, how many
+structures the training set holds, and how hard the ridge penalty damps the
+fit. The penalty absorbs a mismatch between the first two, so it also tells
+whether they are matched.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> also sets the descriptor. Example feature counts for a
+one-element system, with pypolymlp 0.20.5:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>features</p></th>
+<th class="head"><p>added to <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>781</p></td>
+<td><p>nothing; the default</p></td>
+</tr>
+<tr class="row-odd"><td><p>1,176</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>2,600</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>3,848</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>6,820</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>13,920</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>22,495</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>27,664</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>45,680</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A heavier descriptor costs more to fit and more to evaluate, and the SSCHA of
+this step evaluates it once per snapshot per iteration, so the choice sets the
+cost of the whole step.</p>
+<p>A heavier descriptor also needs more training data to converge, and where the
+ridge penalty lands – the alpha that <code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code> scans – is a cheap
+way to watch that. Fit the default range and see which penalty pypolymlp keeps: with
+too few structures the smallest test RMSE sits at the large-penalty end, and
+the optimum moves towards smaller penalties as structures are added, settling
+once there are enough of them. A descriptor whose optimum has not moved off
+the large end is held up by the training set rather than by the descriptor,
+and adding features will not help until adding structures does.</p>
+<p><strong>Pin the ridge penalty across the grid.</strong> pypolymlp fits every penalty in
+<code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code> and keeps the one with the smallest test RMSE, chosen
+separately at every grid point. The analysis differentiates across the grid,
+so a penalty that changes from one grid point to the next puts a step into the
+quantity being differentiated. Collapse the range to one point to pin it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>grid-NNN-merged.yaml<span class="w"> </span>--pypolymlp<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--mlp-params<span class="o">=</span><span class="s2">"ntrain=..., ntest=..., reg_alpha_params = -3.0 -3.0 1"</span><span class="w"> </span>-v
+</pre></div>
+</div>
+<p>The three numbers are <code class="docutils literal notranslate"><span class="pre">linspace(p0,</span> <span class="pre">p1,</span> <span class="pre">p2)</span></code> of the base-10 logarithm, so
+<code class="docutils literal notranslate"><span class="pre">-3.0</span> <span class="pre">-3.0</span> <span class="pre">1</span></code> is alpha = 1e-3 alone, against the default <code class="docutils literal notranslate"><span class="pre">-3.0</span> <span class="pre">1.0</span> <span class="pre">5</span></code> of 1e-3
+to 1e1 in five steps.</p>
+<p>The MLPs are judged by their phonons rather than by the force RMSE. The RMSE
+includes large-amplitude structures that the harmonic and quasi-harmonic
+quantities never visit, while the frequencies are what enter
+<span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span>.</p>
+</section>
+<section id="what-the-draw-leaves-at-its-defaults">
+<h3>What the draw leaves at its defaults<a class="headerlink" href="#what-the-draw-leaves-at-its-defaults" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">init_random_displacements</span></code> takes settings the script above does not pass.
+Three of them decide what the ensemble looks like.</p>
+<p><code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code> is 0.01 THz by default. A mode’s amplitude grows without
+bound as its <span class="math notranslate nohighlight">\(|\omega|\)</span> goes to zero, so the draw leaves out every mode
+below the cutoff. The acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> fall below it in any
+calculation, and a grid point close to an instability can have others that do.</p>
+<p>The draw takes <span class="math notranslate nohighlight">\(|\omega|\)</span>, so an imaginary mode is drawn as a real mode
+of the same magnitude. A quasi-harmonic grid can reach grid points that are
+dynamically unstable, so look at their frequencies before training on them. <code class="docutils literal notranslate"><span class="pre">RandomDisplacements.treat_imaginary_modes</span></code> is the explicit
+treatment. It takes <span class="math notranslate nohighlight">\(|\omega|\)</span> at the commensurate points, shifts the
+modes between <code class="docutils literal notranslate"><span class="pre">freq_from</span></code> and <code class="docutils literal notranslate"><span class="pre">freq_to</span></code> up by <code class="docutils literal notranslate"><span class="pre">freq_shift</span></code>, and rebuilds the
+force constants from that.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dist_func</span></code> chooses the occupation the draw uses, quantum by default or
+classical. <code class="docutils literal notranslate"><span class="pre">max_distance</span></code> shortens any displacement longer than the length
+given, which caps the tail of the distribution.</p>
+</section>
+<section id="sharing-one-draw-of-standard-normals">
+<span id="anisotropic-qha-normals"></span><h3>Sharing one draw of standard normals<a class="headerlink" href="#sharing-one-draw-of-standard-normals" title="Link to this heading">#</a></h3>
+<p>Drawing the <span class="math notranslate nohighlight">\(\xi\)</span> once and using the same values at every grid point
+gives one realization of the randomness over the whole grid. The surface fit
+then carries it as a smooth function of the lattice parameters. The analysis
+differentiates that surface, so smoothness matters.</p>
+<p><code class="docutils literal notranslate"><span class="pre">draw_standard_normals</span></code> returns the drawn <span class="math notranslate nohighlight">\(\xi\)</span>, not displacements, and
+<code class="docutils literal notranslate"><span class="pre">run(standard_normals=...)</span></code> takes a set back. The script above does exactly
+this.</p>
+<p>The same <span class="math notranslate nohighlight">\(\xi\)</span> still gives different displacements at each grid point.
+Each grid point scales them by its own frequencies and eigenvectors, which
+makes the draw thermal there. The displacement fields of neighbouring grid
+points then resemble one another.</p>
+<p>Snapshot <em>i</em> is drawn from <code class="docutils literal notranslate"><span class="pre">SeedSequence([random_seed,</span> <span class="pre">i])</span></code>, so it depends on
+its index and on nothing else. Asking for snapshots 0 to 99 and later for 100
+to 199 gives the same 200 as asking for 0 to 199 at once. An ensemble can
+therefore be extended, or generated in blocks, with
+<code class="docutils literal notranslate"><span class="pre">draw_standard_normals(...,</span> <span class="pre">first_snapshot=N)</span></code>.</p>
+<p>A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
+not promise that <code class="docutils literal notranslate"><span class="pre">Generator</span></code> distribution methods give the same stream across
+its own versions (NEP 19).</p>
+<p>The <span class="math notranslate nohighlight">\(\xi\)</span> themselves can be kept beside the training sets when the
+ensemble has to be reproducible:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="s2">"normals.npz"</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ij</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="validate-the-mlp">
+<span id="anisotropic-qha-validate"></span><h3>Validate the MLP<a class="headerlink" href="#validate-the-mlp" title="Link to this heading">#</a></h3>
+<p>The thermal supercells of this step already carry calculator forces. The same
+supercells evaluated with the MLP give a second set of forces to compare them
+with, and nothing new has to be run with the calculator. It is recommended to
+use the structures held out as the test set, because the MLP was fitted to the
+rest.</p>
+<p>The comparison is made one temperature at a time. Each temperature has its own
+amplitudes,
+and one MLP is trained on all the temperatures together. Its accuracy can
+differ from one temperature to the next.</p>
+<p>The phonon grid of step 2 can be compared in the same way, and there the force
+constants and the frequencies can be compared as well. Its displacements are
+one fixed distance, 0.03 Angstrom in the script there, which is usually
+smaller than the amplitudes of the 0 K draw. An MLP trained across a
+temperature range is empirically hard to make accurate at displacements that
+small, so a difference there need not mean the temperature-dependent run is
+wrong.</p>
+</section>
+<section id="computing-the-free-energies-with-sscha">
+<h3>Computing the free energies with SSCHA<a class="headerlink" href="#computing-the-free-energies-with-sscha" title="Link to this heading">#</a></h3>
+<p>The MLPs are for the temperature-dependent route (<a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a>), not for a
+harmonic force-constant set. They are trained on thermal displacements, and a
+harmonic set would ask them for the small fixed displacements of step 2
+instead. Steps 2 to 4 give the harmonic answer from the calculator directly.</p>
+<p><span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> is then no longer the harmonic expression of “The free
+energy” above. With SSCHA it is the SSCHA free energy of <a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a>,
+computed from force constants that change with temperature.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> of step 3 is used as it is. Script 7 below makes
+one SSCHA run at every grid point and every temperature. Each run starts from
+the harmonic force constants the dataset carries:</p>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">Script 7 – SSCHA at every grid point and temperature</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.mlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyMLP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.free_energy_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_free_energies_hdf5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPSSCHA</span>
+
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># one extra point for finite diff</span>
+<span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">2000</span>
+<span class="n">ITERATIONS</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">MESH</span> <span class="o">=</span> <span class="mf">200.0</span>
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sscha_free_energy</span><span class="p">(</span><span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">force_constants</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the SSCHA free energy and its error in eV per primitive cell.</span>
+
+<span class="sd">    ``force_constants`` starts the iteration from a set of one's own. Without</span>
+<span class="sd">    it, it starts from the set ``ph`` carries.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">force_constants</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">replicate</span><span class="p">()</span>
+        <span class="n">ph</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="n">force_constants</span>
+    <span class="n">sscha</span> <span class="o">=</span> <span class="n">MLPSSCHA</span><span class="p">(</span>
+        <span class="n">ph</span><span class="p">,</span>
+        <span class="n">mlp</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+        <span class="n">number_of_snapshots</span><span class="o">=</span><span class="n">SNAPSHOTS</span><span class="p">,</span>
+        <span class="n">max_iterations</span><span class="o">=</span><span class="n">ITERATIONS</span><span class="p">,</span>
+        <span class="n">mesh</span><span class="o">=</span><span class="n">MESH</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="n">sscha</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
+    <span class="p">)</span>
+
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
+
+<span class="n">free_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)))</span>
+<span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">free_energies</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+    <span class="n">mlp</span> <span class="o">=</span> <span class="n">PhonopyMLP</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">"train/grid-</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">/polymlp.yaml"</span><span class="p">)</span>
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">):</span>
+        <span class="n">free_energies</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span> <span class="n">errors</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">sscha_free_energy</span><span class="p">(</span>
+            <span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<span class="n">write_free_energies_hdf5</span><span class="p">(</span>
+    <span class="n">TEMPERATURES</span><span class="p">,</span>
+    <span class="n">free_energies</span><span class="p">,</span>
+    <span class="s2">"fph.hdf5"</span><span class="p">,</span>
+    <span class="n">kind</span><span class="o">=</span><span class="s2">"phonon"</span><span class="p">,</span>
+    <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span>
+    <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">MESH</span></code> is the mesh the harmonic part of the SSCHA free energy is sampled on,
+and matching it to the <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> of the analysis keeps one sampling through
+the calculation. <code class="docutils literal notranslate"><span class="pre">SEED</span></code> fixes the whole run: iteration <em>i</em> draws from
+<code class="docutils literal notranslate"><span class="pre">SeedSequence([SEED,</span> <span class="pre">i])</span></code>, so the run is reproducible while the iterations stay
+independent.</p>
+</section>
+<section id="splitting-the-runs-across-jobs">
+<h3>Splitting the runs across jobs<a class="headerlink" href="#splitting-the-runs-across-jobs" title="Link to this heading">#</a></h3>
+<p>One SSCHA run is minutes with the lightest descriptor and longer with a heavy
+one. Multiplied by the grid points and the temperatures, the step comes to
+hours or days. Spreading the runs over processes, nodes or jobs is therefore
+worth the trouble. A run’s randomness comes from <code class="docutils literal notranslate"><span class="pre">SEED</span></code> and the iteration
+number alone, since iteration <em>i</em> draws from <code class="docutils literal notranslate"><span class="pre">SeedSequence([SEED,</span> <span class="pre">i])</span></code>. It
+depends on neither its position in the two loops nor the order the runs are
+made in. Either loop can be sliced, or both.</p>
+<p>A slice holds a block of grid points and a block of temperatures. It writes the
+rows and the columns it was given:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">columns</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>                          <span class="c1"># this job's grid points</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>                        <span class="c1"># and its temperatures</span>
+<span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">]</span>
+<span class="o">...</span>
+<span class="n">write_free_energies_hdf5</span><span class="p">(</span>
+    <span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">rows</span><span class="p">],</span> <span class="n">free_energies</span><span class="p">,</span> <span class="s2">"fph-g000-004-t000-009.hdf5"</span><span class="p">,</span> <span class="o">...</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The pieces are merged in two passes once they are all in. The temperature
+blocks of one grid point stack by rows, and the grid points then stack by
+columns:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.free_energy_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_free_energies_hdf5</span>
+
+<span class="c1"># parts[(grid block, temperature block)] = read_free_energies_hdf5(filename)</span>
+<span class="n">free_energies</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">lattice_lengths</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">}):</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">parts</span><span class="p">[(</span><span class="n">g</span><span class="p">,</span> <span class="n">t</span><span class="p">)]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">gg</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">gg</span> <span class="o">==</span> <span class="n">g</span><span class="p">)]</span>
+    <span class="n">temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">temperatures</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">])</span>
+    <span class="n">free_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">free_energies</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]))</span>
+    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">errors</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]))</span>
+    <span class="n">lattice_lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lattice_lengths</span><span class="p">)</span>
+
+<span class="n">write_free_energies_hdf5</span><span class="p">(</span>
+    <span class="n">temperatures</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">free_energies</span><span class="p">),</span>
+    <span class="s2">"fph.hdf5"</span><span class="p">,</span>
+    <span class="n">kind</span><span class="o">=</span><span class="s2">"phonon"</span><span class="p">,</span>
+    <span class="n">errors</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">errors</span><span class="p">),</span>
+    <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">lattice_lengths</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="supplying-the-free-energies-to-the-analysis">
+<h3>Supplying the free energies to the analysis<a class="headerlink" href="#supplying-the-free-energies-to-the-analysis" title="Link to this heading">#</a></h3>
+<p>In steps 0 to 4 each <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance of <code class="docutils literal notranslate"><span class="pre">phonopys</span></code> carries one
+force-constant array, and it serves every temperature. The analysis computes
+<span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> from them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">run_anisotropic_qha</span><span class="p">(</span><span class="n">phonopys</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">,</span> <span class="n">internal_energies</span><span class="o">=</span><span class="n">internal_energies</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here they are computed elsewhere and passed to <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> instead:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">run_anisotropic_qha</span><span class="p">(</span>
+    <span class="n">phonopys</span><span class="p">,</span>
+    <span class="n">temperatures</span><span class="p">,</span>
+    <span class="n">internal_energies</span><span class="o">=</span><span class="n">internal_energies</span><span class="p">,</span>
+    <span class="n">phonon_free_energies</span><span class="o">=</span><span class="n">free_energies</span><span class="p">,</span>  <span class="c1"># shape (temperatures, grid points)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instances then supply only the cells and volumes. They can be
+built without force constants, which are never read. Without
+<code class="docutils literal notranslate"><span class="pre">phonon_free_energies</span></code>, <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> computes the phonon free energy
+itself, and the force constants have to be there.</p>
+<p>The values are per primitive cell. They are normalized the same way as
+<code class="docutils literal notranslate"><span class="pre">internal_energies</span></code>, and they do not include the static energy, which
+<code class="docutils literal notranslate"><span class="pre">internal_energies</span></code> already carries.</p>
+<p>Since no force constants are read, the analysis also runs on a dataset built
+from the static grid alone, which is what a method that never computed
+calculator phonons has to work with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha-dataset<span class="w"> </span>phonopy_disp.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--static<span class="w"> </span>static-grid/grid-<span class="o">{</span><span class="m">001</span>..025<span class="o">}</span>/<span class="w"> </span>-o<span class="w"> </span>aniso_qha_dataset.hdf5
+No<span class="w"> </span>--phonon<span class="w"> </span>given:<span class="w"> </span>building<span class="w"> </span>from<span class="w"> </span>the<span class="w"> </span>static<span class="w"> </span>grid<span class="w"> </span>alone,<span class="w"> </span><span class="m">25</span><span class="w"> </span>grid<span class="w"> </span>point<span class="o">(</span>s<span class="o">)</span>,<span class="w"> </span>with
+no<span class="w"> </span>displacements<span class="w"> </span>or<span class="w"> </span>forces.<span class="w"> </span>Such<span class="w"> </span>a<span class="w"> </span>dataset<span class="w"> </span>is<span class="w"> </span><span class="k">for</span><span class="w"> </span>use<span class="w"> </span>with<span class="w"> </span>the
+phonon_free_energies<span class="w"> </span>argument<span class="w"> </span>of<span class="w"> </span>run_anisotropic_qha.
+<span class="w">  </span>grid<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="nv">U</span><span class="o">=</span>...<span class="w"> </span>eV<span class="w"> </span><span class="nv">n_disp</span><span class="o">=</span><span class="m">0</span>
+<span class="w">  </span>...
+<span class="w">  </span>grid<span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="nv">U</span><span class="o">=</span>...<span class="w"> </span>eV<span class="w"> </span><span class="nv">n_disp</span><span class="o">=</span><span class="m">0</span>
+</pre></div>
+</div>
+<p>Its grid points carry the cells, <span class="math notranslate nohighlight">\(U\)</span> and the electronic states. Script 7
+cannot use it, since it has no harmonic force constants to start the SSCHA runs
+from.</p>
+</section>
+<section id="running-the-analysis">
+<h3>Running the analysis<a class="headerlink" href="#running-the-analysis" title="Link to this heading">#</a></h3>
+<p>The file is given to the analysis with <code class="docutils literal notranslate"><span class="pre">--phonon-free-energies</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--phonon-free-energies<span class="w"> </span>fph.hdf5
+</pre></div>
+</div>
+<p>The file carries the temperatures it was computed on, and the command takes its
+temperature grid from them unless <code class="docutils literal notranslate"><span class="pre">--tmax</span></code> or <code class="docutils literal notranslate"><span class="pre">--dt</span></code> says otherwise. It also
+carries the lattice lengths of the grid points, when they were written, and
+those are checked against the dataset. A file computed on another machine
+cannot then be paired with the wrong grid.</p>
+<p>A free energy from a sampled method carries the scatter of its sampling. The
+minimum of the surface at one temperature moves with that scatter, and it moves
+independently of the minimum at the next temperature. The axial expansions are
+differences along temperature, so they amplify it. The command above therefore
+smooths the lattice parameters before differentiating them, and says so as it
+runs.</p>
+<p>The smoothing is <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">einstein</span></code>, the default whenever
+<code class="docutils literal notranslate"><span class="pre">--phonon-free-energies</span></code> is given. It fits each of <span class="math notranslate nohighlight">\(a(T)\)</span>, <span class="math notranslate nohighlight">\(b(T)\)</span>
+and <span class="math notranslate nohighlight">\(c(T)\)</span> to a sum of Einstein terms of opposite sign, and
+differentiates the fit instead of the points. <code class="docutils literal notranslate"><span class="pre">--smooth-terms</span></code> sets how many
+terms, 2 by default. More terms follow a curve more closely, and follow its
+scatter more closely too. <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">none</span></code> turns the smoothing off.</p>
+<p>Each Einstein term is zero at <span class="math notranslate nohighlight">\(T = 0\)</span> with zero slope, so the fitted
+expansion vanishes at 0 K as the third law requires. The fit runs every
+starting guess and keeps the best of those that pass its checks. When none
+passes it raises, rather than returning a qualitatively wrong curve silently.</p>
+<p>Steps 0 to 4 default to <code class="docutils literal notranslate"><span class="pre">none</span></code>, since their free energies carry no sampling
+scatter. <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">einstein</span></code> can be given there too, and it changes how
+the expansions are computed: with a fit to differentiate, the axial slopes come
+from the closed form of the fit rather than from differences of the minima.</p>
+<p>The same result comes from the API, with <code class="docutils literal notranslate"><span class="pre">phonon_free_energies</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lattice_smoothing</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">run_anisotropic_qha</span><span class="p">(</span>
+    <span class="n">phonopys</span><span class="p">,</span>
+    <span class="n">temperatures</span><span class="p">,</span>
+    <span class="n">internal_energies</span><span class="o">=</span><span class="n">internal_energies</span><span class="p">,</span>
+    <span class="n">phonon_free_energies</span><span class="o">=</span><span class="n">free_energies</span><span class="p">,</span>
+    <span class="n">lattice_smoothing</span><span class="o">=</span><span class="s2">"einstein"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">phonon_free_energies</span></code> given, <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> skips the mesh
+sampling and ignores <code class="docutils literal notranslate"><span class="pre">mesh</span></code>.</p>
+</section>
 </section>
 </section>
 
@@ -1326,19 +1992,34 @@ tolerance, the dense (a, c) grid can be trusted.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principle-u-is-always-from-the-calculator-the-mlp-is-phonons-only">Design principle: U is always from the calculator, the MLP is phonons-only</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-free-energy">The free energy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-equilibrium-reference-phonopy-disp-yaml">0. The equilibrium reference (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u-both-routes">1. Build the static grid (internal energy U, both routes)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-route-a-calculator-phonons-phonon-grid">2A. Route A – calculator phonons (phonon grid)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grid-points-in-any-layout">Grid points in any layout</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-collected-force-sets">Pre-collected force sets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-static-grid-internal-energy-u">1. Build the static grid (internal energy U)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-the-phonons-phonon-grid">2. Compute the phonons (phonon grid)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-intermediate-dataset">3. Build the intermediate dataset</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-builder-reads">What the builder reads</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-ordering-is-checked">How the ordering is checked</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-file-holds">What the file holds</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#b-route-b-mlp-phonons-train-once-then-evaluate">2B. Route B – MLP phonons (train once, then evaluate)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-intermediate-dataset">3. The intermediate dataset</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp-equilibrium-shape-mlp-route-recommended">5. Validate the MLP equilibrium shape (MLP route, recommended)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-anisotropic-qha">4. Run the anisotropic QHA</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-f-mathrm-el-ready-made">Supplying <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> ready-made</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-mlp-per-grid-point">One MLP per grid point</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-displacements">The training displacements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-ridge-penalty">The descriptor and the ridge penalty</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-one-draw-of-standard-normals">Sharing one draw of standard normals</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#computing-the-free-energies-with-sscha">Computing the free energies with SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#splitting-the-runs-across-jobs">Splitting the runs across jobs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-the-free-energies-to-the-analysis">Supplying the free energies to the analysis</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 
@@ -1387,8 +2068,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

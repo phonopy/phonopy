@@ -54,6 +54,7 @@ Some of command-line options are equivalent to respective setting tags:
 - `--mp`, `--mesh` (`MP` or `MESH`) [{ref}`MESH <mesh_tag>`]
 - `--nac` (`NAC = .TRUE.`) [{ref}`nac_tag`]
 - `--nac-method` (`NAC_METHOD`) [{ref}`nac_method_tag`]
+- `--noreadfc` (`READ_FORCE_CONSTANTS = .FALSE.`) [{ref}`read_force_constants_tag`]
 - `--nosym` (`SYMMETRY = .FALSE.`) [{ref}`symmetry_tag`]
 - `--nomeshsym` (`MESH_SYMMETRY = .FALSE.`) [{ref}`nomeshsym_tag`]
 - `--nowritemesh` (`WRITE_MESH = .FALSE.`) [{ref}`write_mesh_tag`]
@@ -69,7 +70,6 @@ Some of command-line options are equivalent to respective setting tags:
 - `--rd-auto-factor` (`RD_NUMBER_ESTIMATION_FACTOR`) [{ref}`rd_number_estimation_factor_tag`]
 - `--rd-temperature` (`RANDOM_DISPLACEMENT_TEMPERATURE`)
   [{ref}`random_displacement_temperature_tag`]
-- `--readfc` (`READ_FORCE_CONSTANTS = .TRUE.`) [{ref}`read_force_constants_tag`]
 - `--readfc-format` (`READFC_FORMAT`) [{ref}`READFC_FORMAT <fc_format_tag>`]
 - `--read-qpoints` (`QPOINTS = .TRUE.`) [{ref}`qpoints_tag`]
 - `--show-irreps` (`SHOW_IRREPS`) [{ref}`show_irreps_tag`]

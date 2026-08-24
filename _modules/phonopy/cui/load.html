@@ -26,17 +26,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="../../../_static/documentation_options.js?v=e4428b72"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -573,6 +573,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l2"><a class="reference internal" href="../../../abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -655,11 +656,18 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -692,7 +700,7 @@ window.runMermaid = runMermaid;</script>
                   
   <h1>Source code for phonopy.cui.load</h1><div class="highlight"><pre>
 <span></span><span class="c1"># SPDX-License-Identifier: BSD-3-Clause</span>
-<span class="sd">&quot;&quot;&quot;Phonopy loader.&quot;&quot;&quot;</span>
+<span class="sd">"""Phonopy loader."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -725,9 +733,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">primitive_matrix</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
-    <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">]</span>
+    <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"P"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"I"</span><span class="p">,</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="s2">"R"</span><span class="p">,</span> <span class="s2">"auto"</span><span class="p">]</span>
     <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span>
-    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
     <span class="n">is_nac</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">calculator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">unitcell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -738,7 +746,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">born_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">force_sets_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">force_constants_filename</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">fc_calculator</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;traditional&quot;</span><span class="p">,</span> <span class="s2">&quot;symfc&quot;</span><span class="p">,</span> <span class="s2">&quot;alm&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fc_calculator</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"traditional"</span><span class="p">,</span> <span class="s2">"symfc"</span><span class="p">,</span> <span class="s2">"alm"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fc_calculator_options</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">produce_fc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">is_symmetry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -749,18 +757,18 @@ window.runMermaid = runMermaid;</script>
     <span class="n">use_SNF_supercell</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">symprec</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
     <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="n">lang</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;Rust&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Rust&quot;</span><span class="p">,</span>
+    <span class="n">lang</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"C"</span><span class="p">,</span> <span class="s2">"Rust"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Rust"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Phonopy</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a ``Phonopy`` instance from parameters and/or input files.</span>
+<span class="w">    </span><span class="sd">"""Create a ``Phonopy`` instance from parameters and/or input files.</span>
 
-<span class="sd">    A &quot;phonopy_yaml&quot;-like file is parsed unless crystal structure</span>
+<span class="sd">    A "phonopy_yaml"-like file is parsed unless crystal structure</span>
 <span class="sd">    information is given through ``unitcell_filename``,</span>
 <span class="sd">    ``supercell_filename``, ``unitcell`` (``PhonopyAtoms``-like), or</span>
-<span class="sd">    ``supercell`` (``PhonopyAtoms``-like). Even when a &quot;phonopy_yaml&quot;-like</span>
+<span class="sd">    ``supercell`` (``PhonopyAtoms``-like). Even when a "phonopy_yaml"-like</span>
 <span class="sd">    file is parsed, parameters other than crystal structure can be</span>
 <span class="sd">    overwritten.</span>
 
-<span class="sd">    Phonopy&#39;s default ``FORCE_SETS`` and ``BORN`` files are parsed when</span>
+<span class="sd">    Phonopy's default ``FORCE_SETS`` and ``BORN`` files are parsed when</span>
 <span class="sd">    they are found in the current directory and the corresponding data</span>
 <span class="sd">    are not yet provided by other means.</span>
 
@@ -803,7 +811,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    phonopy_yaml : str, os.PathLike, typing.IO, optional</span>
-<span class="sd">        Filename of a &quot;phonopy.yaml&quot;-like file (``str`` / ``bytes``) or</span>
+<span class="sd">        Filename of a "phonopy.yaml"-like file (``str`` / ``bytes``) or</span>
 <span class="sd">        a file-pointer-like object. If given, the data in the file are</span>
 <span class="sd">        parsed. Default is None.</span>
 <span class="sd">    supercell_matrix : array_like, optional</span>
@@ -812,41 +820,41 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        diagonal matrix. ``dtype=int``. Default is the identity matrix.</span>
 <span class="sd">    primitive_matrix : array_like or str, optional</span>
 <span class="sd">        Primitive matrix multiplied to the input cell basis vectors.</span>
-<span class="sd">        Default is ``&#39;auto&#39;``, which guesses the primitive matrix from</span>
-<span class="sd">        crystal symmetry. ``None`` is treated the same as ``&#39;auto&#39;``.</span>
+<span class="sd">        Default is ``'auto'``, which guesses the primitive matrix from</span>
+<span class="sd">        crystal symmetry. ``None`` is treated the same as ``'auto'``.</span>
 <span class="sd">        To use the unit cell as the primitive cell (identity</span>
-<span class="sd">        transformation), pass ``&#39;P&#39;``. For array_like input,</span>
-<span class="sd">        ``shape=(3, 3)``, ``dtype=float``. When ``&#39;F&#39;``, ``&#39;I&#39;``,</span>
-<span class="sd">        ``&#39;A&#39;``, ``&#39;C&#39;``, or ``&#39;R&#39;`` is given instead of a 3x3 matrix,</span>
+<span class="sd">        transformation), pass ``'P'``. For array_like input,</span>
+<span class="sd">        ``shape=(3, 3)``, ``dtype=float``. When ``'F'``, ``'I'``,</span>
+<span class="sd">        ``'A'``, ``'C'``, or ``'R'`` is given instead of a 3x3 matrix,</span>
 <span class="sd">        the primitive matrix for the character found at</span>
 <span class="sd">        https://spglib.github.io/spglib/definition.html is used. When a</span>
-<span class="sd">        &quot;phonopy.yaml&quot;-like file is loaded and it carries a</span>
+<span class="sd">        "phonopy.yaml"-like file is loaded and it carries a</span>
 <span class="sd">        ``primitive_matrix``, that value takes priority over the</span>
-<span class="sd">        default ``&#39;auto&#39;``.</span>
+<span class="sd">        default ``'auto'``.</span>
 <span class="sd">    is_nac : bool, optional</span>
 <span class="sd">        If True, look for a ``BORN`` file. If False, NAC is turned off.</span>
 <span class="sd">        Default is True.</span>
 <span class="sd">    calculator : str, optional</span>
 <span class="sd">        Calculator used for computing forces. This is used to switch</span>
 <span class="sd">        the set of physical units. Default is None, which is equivalent</span>
-<span class="sd">        to ``&quot;vasp&quot;``.</span>
+<span class="sd">        to ``"vasp"``.</span>
 <span class="sd">    unitcell : PhonopyAtoms, optional</span>
 <span class="sd">        Input unit cell. Default is None.</span>
 <span class="sd">    supercell : PhonopyAtoms, optional</span>
 <span class="sd">        Input supercell. When given, the default value of</span>
-<span class="sd">        ``primitive_matrix`` is set to ``&#39;auto&#39;`` (can be overwritten),</span>
+<span class="sd">        ``primitive_matrix`` is set to ``'auto'`` (can be overwritten),</span>
 <span class="sd">        and ``supercell_matrix`` is ignored. Default is None.</span>
 <span class="sd">    nac_params : NacParams, optional</span>
 <span class="sd">        Parameters required for non-analytical term correction. Default</span>
 <span class="sd">        is None. Expected structure::</span>
 
-<span class="sd">            {&#39;born&#39;: Born effective charges</span>
+<span class="sd">            {'born': Born effective charges</span>
 <span class="sd">                     (array_like, shape=(primitive cell atoms, 3, 3),</span>
 <span class="sd">                      dtype=float),</span>
-<span class="sd">             &#39;dielectric&#39;: Dielectric constant matrix</span>
+<span class="sd">             'dielectric': Dielectric constant matrix</span>
 <span class="sd">                           (array_like, shape=(3, 3), dtype=float),</span>
-<span class="sd">             &#39;factor&#39;: unit conversion factor (float, optional),</span>
-<span class="sd">             &#39;method&#39;: &#39;gonze&#39; (default) or &#39;wang&#39; (str, optional)}</span>
+<span class="sd">             'factor': unit conversion factor (float, optional),</span>
+<span class="sd">             'method': 'gonze' (default) or 'wang' (str, optional)}</span>
 
 <span class="sd">    unitcell_filename : str, optional</span>
 <span class="sd">        Input unit cell filename. Default is None.</span>
@@ -863,13 +871,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Filename of a file in ``FORCE_CONSTANTS`` or</span>
 <span class="sd">        ``force_constants.hdf5`` format containing force constants.</span>
 <span class="sd">        Default is None.</span>
-<span class="sd">    fc_calculator : {&quot;traditional&quot;, &quot;symfc&quot;, &quot;alm&quot;, None}, optional</span>
+<span class="sd">    fc_calculator : {"traditional", "symfc", "alm", None}, optional</span>
 <span class="sd">        Force constants calculator backend. Default is None.</span>
 <span class="sd">    fc_calculator_options : str, optional</span>
 <span class="sd">        Optional parameters passed to the external fc-calculator as a</span>
 <span class="sd">        single text string. Parsing rules depend on the calculator.</span>
-<span class="sd">        For ``alm``, each parameter is split by ``&#39;,&#39;`` and each</span>
-<span class="sd">        key-value pair is written as ``&#39;key = value&#39;``.</span>
+<span class="sd">        For ``alm``, each parameter is split by ``','`` and each</span>
+<span class="sd">        key-value pair is written as ``'key = value'``.</span>
 <span class="sd">    produce_fc : bool, optional</span>
 <span class="sd">        When False, force constants are not calculated from the dataset</span>
 <span class="sd">        of displacements and forces even if the dataset exists. Default</span>
@@ -900,15 +908,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Tolerance used to find crystal symmetry. Default is 1e-5.</span>
 <span class="sd">    log_level : int, optional</span>
 <span class="sd">        Verbosity control. Default is 0.</span>
-<span class="sd">    lang : Literal[&quot;C&quot;, &quot;Rust&quot;], optional</span>
-<span class="sd">        Backend implementation for compute-heavy kernels. ``&quot;C&quot;`` uses</span>
-<span class="sd">        the existing C extension; ``&quot;Rust&quot;`` selects the experimental</span>
-<span class="sd">        phonors backend. Default is ``&quot;Rust&quot;``.</span>
+<span class="sd">    lang : Literal["C", "Rust"], optional</span>
+<span class="sd">        Backend implementation for compute-heavy kernels. ``"C"`` uses</span>
+<span class="sd">        the existing C extension; ``"Rust"`` selects the experimental</span>
+<span class="sd">        phonors backend. Default is ``"Rust"``.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">lang</span> <span class="o">=</span> <span class="n">resolve_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">primitive_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">primitive_matrix</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
+        <span class="n">primitive_matrix</span> <span class="o">=</span> <span class="s2">"auto"</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="n">supercell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="ow">or</span> <span class="n">supercell_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -936,11 +944,11 @@ window.runMermaid = runMermaid;</script>
         <span class="n">cell</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">unitcell</span>
         <span class="n">smat</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">supercell_matrix</span>
         <span class="k">if</span> <span class="n">smat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">smat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
-        <span class="c1"># When the caller leaves primitive_matrix at the default &quot;auto&quot;,</span>
+            <span class="n">smat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"int64"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
+        <span class="c1"># When the caller leaves primitive_matrix at the default "auto",</span>
         <span class="c1"># a value stored in the yaml takes priority (preserves the cell</span>
         <span class="c1"># transformation that was used originally).</span>
-        <span class="k">if</span> <span class="n">primitive_matrix</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">and</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">primitive_matrix</span> <span class="o">==</span> <span class="s2">"auto"</span> <span class="ow">and</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">pmat</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive_matrix</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">pmat</span> <span class="o">=</span> <span class="n">primitive_matrix</span>
@@ -958,11 +966,11 @@ window.runMermaid = runMermaid;</script>
             <span class="n">_calculator</span> <span class="o">=</span> <span class="n">calculator</span>
 
     <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cell information could not found. Phonopy instance loading failed.&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Cell information could not found. Phonopy instance loading failed."</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">log_level</span> <span class="ow">and</span> <span class="n">_calculator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Set &quot;</span><span class="si">{</span><span class="n">_calculator</span><span class="si">}</span><span class="s1">&quot; mode.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Set "</span><span class="si">{</span><span class="n">_calculator</span><span class="si">}</span><span class="s1">" mode.'</span><span class="p">)</span>
 
     <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span>
         <span class="n">cell</span><span class="p">,</span>
@@ -1095,8 +1103,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

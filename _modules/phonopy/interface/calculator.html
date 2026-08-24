@@ -26,17 +26,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="../../../_static/documentation_options.js?v=e4428b72"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
@@ -573,6 +573,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l2"><a class="reference internal" href="../../../abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -655,11 +656,18 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -692,7 +700,7 @@ window.runMermaid = runMermaid;</script>
                   
   <h1>Source code for phonopy.interface.calculator</h1><div class="highlight"><pre>
 <span></span><span class="c1"># SPDX-License-Identifier: BSD-3-Clause</span>
-<span class="sd">&quot;&quot;&quot;Routines to handle various calculator interfaces.&quot;&quot;&quot;</span>
+<span class="sd">"""Routines to handle various calculator interfaces."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -723,7 +731,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SupercellWriterConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for writing supercells with displacements.</span>
+<span class="w">    </span><span class="sd">"""Configuration for writing supercells with displacements.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -735,12 +743,14 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Integer 1d array with the length of cells_with_disps, containing</span>
 <span class="sd">        numbers to be assigned to the supercells with displacements.</span>
 <span class="sd">    zfill_width : int</span>
-<span class="sd">        Supercell numbers are filled by zeros from the left with the digits</span>
-<span class="sd">        as given, which results in 001, 002, ..., when zfill_width=3.</span>
+<span class="sd">        Exact number of digits of the supercell numbers, which are filled by</span>
+<span class="sd">        zeros from the left, e.g. 001, 002, ..., when zfill_width=3. This is</span>
+<span class="sd">        the resolved width, i.e. already widened to fit the largest</span>
+<span class="sd">        displacement ID.</span>
 <span class="sd">    additional_info : dict | None</span>
 <span class="sd">        Any information expected to be given to writers of calculators.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span>
     <span class="n">cells_with_disps</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">PhonopyAtoms</span><span class="p">]</span>
@@ -751,35 +761,35 @@ window.runMermaid = runMermaid;</script>
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">StructureInfo</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for interface-specific structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Base class for interface-specific structure information."""</span>
 
     <span class="n">unitcell_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">PhonopyYamlStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;PhonopyYaml structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""PhonopyYaml structure information."""</span>
 
     <span class="n">phonopy_yaml</span><span class="p">:</span> <span class="n">PhonopyYaml</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">VaspStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;VASP structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""VASP structure information."""</span>
 
     <span class="k">pass</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">QeStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantum Espresso structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Quantum Espresso structure information."""</span>
 
     <span class="n">pp_filenames</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Wien2kStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wien2k structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Wien2k structure information."""</span>
 
     <span class="n">npts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
     <span class="n">r0s</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
@@ -788,28 +798,28 @@ window.runMermaid = runMermaid;</script>
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ElkStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Elk structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Elk structure information."""</span>
 
     <span class="n">sp_filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Cp2kStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;CP2K structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""CP2K structure information."""</span>
 
     <span class="n">config_tree</span><span class="p">:</span> <span class="nb">dict</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CrystalStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;CRYSTAL structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""CRYSTAL structure information."""</span>
 
     <span class="n">conv_numbers</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FleurStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fleur structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Fleur structure information."""</span>
 
     <span class="n">speci</span><span class="p">:</span> <span class="n">Any</span>
     <span class="n">restlines</span><span class="p">:</span> <span class="nb">list</span>
@@ -817,7 +827,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">AbacusStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;ABACUS structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""ABACUS structure information."""</span>
 
     <span class="n">pps</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="n">orbitals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
@@ -826,56 +836,57 @@ window.runMermaid = runMermaid;</script>
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">QlmStructureInfo</span><span class="p">(</span><span class="n">StructureInfo</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;QLM structure information.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""QLM structure information."""</span>
 
     <span class="n">qlm_ctx</span><span class="p">:</span> <span class="n">Any</span>
 
 
 <span class="n">calculator_info</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;abacus&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--abacus&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke ABACUS mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;abinit&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--abinit&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Abinit mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;aims&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--aims&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke FHI-aims mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;castep&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--castep&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke CASTEP mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--cp2k&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke CP2K mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;crystal&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--crystal&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke CRYSTAL mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--dftb+&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke dftb+ mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;elk&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--elk&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke elk mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;fleur&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--fleur&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Fleur mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;lammps&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--lammps&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Lammps mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;qlm&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--qlm&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Questaal/LMTO mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;qe&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--qe&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Quantum espresso (QE) mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;siesta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--siesta&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Siesta mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--turbomole&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke TURBOMOLE mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;vasp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--vasp&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Vasp mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--wien2k&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke Wien2k mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--pwmat&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke PWmat mode&quot;</span><span class="p">}},</span>
-    <span class="s2">&quot;exciting&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;option&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;--exciting&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoke exciting mode&quot;</span><span class="p">}},</span>
+    <span class="s2">"abacus"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--abacus"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke ABACUS mode"</span><span class="p">}},</span>
+    <span class="s2">"abinit"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--abinit"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Abinit mode"</span><span class="p">}},</span>
+    <span class="s2">"aims"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--aims"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke FHI-aims mode"</span><span class="p">}},</span>
+    <span class="s2">"castep"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--castep"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke CASTEP mode"</span><span class="p">}},</span>
+    <span class="s2">"cp2k"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--cp2k"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke CP2K mode"</span><span class="p">}},</span>
+    <span class="s2">"crystal"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--crystal"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke CRYSTAL mode"</span><span class="p">}},</span>
+    <span class="s2">"dftbp"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--dftb+"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke dftb+ mode"</span><span class="p">}},</span>
+    <span class="s2">"elk"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--elk"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke elk mode"</span><span class="p">}},</span>
+    <span class="s2">"fleur"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--fleur"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Fleur mode"</span><span class="p">}},</span>
+    <span class="s2">"lammps"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--lammps"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Lammps mode"</span><span class="p">}},</span>
+    <span class="s2">"qlm"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--qlm"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Questaal/LMTO mode"</span><span class="p">}},</span>
+    <span class="s2">"qe"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--qe"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Quantum espresso (QE) mode"</span><span class="p">}},</span>
+    <span class="s2">"siesta"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--siesta"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Siesta mode"</span><span class="p">}},</span>
+    <span class="s2">"turbomole"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--turbomole"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke TURBOMOLE mode"</span><span class="p">}},</span>
+    <span class="s2">"vasp"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--vasp"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Vasp mode"</span><span class="p">}},</span>
+    <span class="s2">"wien2k"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--wien2k"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Wien2k mode"</span><span class="p">}},</span>
+    <span class="s2">"pwmat"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--pwmat"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke PWmat mode"</span><span class="p">}},</span>
+    <span class="s2">"exciting"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--exciting"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke exciting mode"</span><span class="p">}},</span>
+    <span class="s2">"octopus"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"option"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"--octopus"</span><span class="p">,</span> <span class="s2">"help"</span><span class="p">:</span> <span class="s2">"Invoke Octopus mode"</span><span class="p">}},</span>
 <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">add_arguments_of_calculators</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">calculator_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add options of calculators to ArgumentParser class instance.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Add options of calculators to ArgumentParser class instance."""</span>
     <span class="k">for</span> <span class="n">calculator</span> <span class="ow">in</span> <span class="n">calculator_info</span><span class="p">:</span>
-        <span class="n">option</span> <span class="o">=</span> <span class="n">calculator_info</span><span class="p">[</span><span class="n">calculator</span><span class="p">][</span><span class="s2">&quot;option&quot;</span><span class="p">]</span>
+        <span class="n">option</span> <span class="o">=</span> <span class="n">calculator_info</span><span class="p">[</span><span class="n">calculator</span><span class="p">][</span><span class="s2">"option"</span><span class="p">]</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="n">option</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
-            <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_mode&quot;</span> <span class="o">%</span> <span class="n">calculator</span><span class="p">,</span>
-            <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="n">option</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s2">"</span><span class="si">%s</span><span class="s2">_mode"</span> <span class="o">%</span> <span class="n">calculator</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
             <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="n">option</span><span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">],</span>
+            <span class="n">help</span><span class="o">=</span><span class="n">option</span><span class="p">[</span><span class="s2">"help"</span><span class="p">],</span>
         <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_interface_mode</span><span class="p">(</span><span class="n">args_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return calculator name.</span>
+<span class="w">    </span><span class="sd">"""Return calculator name.</span>
 
 <span class="sd">    The calculator name is obtained from command option arguments where</span>
 <span class="sd">    argparse is used. The argument attribute name has to be</span>
-<span class="sd">    &quot;{calculator}_mode&quot;. Then this method returns &quot;{calculator}&quot;.</span>
+<span class="sd">    "{calculator}_mode". Then this method returns "{calculator}".</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">for</span> <span class="n">calculator</span> <span class="ow">in</span> <span class="n">calculator_info</span><span class="p">:</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_mode&quot;</span> <span class="o">%</span> <span class="n">calculator</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">"</span><span class="si">%s</span><span class="s2">_mode"</span> <span class="o">%</span> <span class="n">calculator</span>
         <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">args_dict</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="p">[</span><span class="n">mode</span><span class="p">]:</span>
             <span class="k">return</span> <span class="n">calculator</span>
     <span class="k">return</span> <span class="kc">None</span>
@@ -888,15 +899,15 @@ window.runMermaid = runMermaid;</script>
     <span class="n">interface_out</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">optional_structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert crystal structures between different calculator interfaces.</span>
+<span class="w">    </span><span class="sd">"""Convert crystal structures between different calculator interfaces.</span>
 
 <span class="sd">    optional_structure_info: Some interfaces may take additional information,</span>
-<span class="sd">    such as the pseudopotential files for Quantum Espresso (&quot;qe&quot;).</span>
+<span class="sd">    such as the pseudopotential files for Quantum Espresso ("qe").</span>
 <span class="sd">    Pass this info explicitly. The type of data depends on the calculator used.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename_in</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="n">interface_in</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to read the input file: </span><span class="si">{</span><span class="n">filename_in</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to read the input file: </span><span class="si">{</span><span class="n">filename_in</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="n">units_in</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_in</span><span class="p">)</span>
     <span class="n">units_out</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_out</span><span class="p">)</span>
     <span class="n">factor</span> <span class="o">=</span> <span class="n">units_in</span><span class="o">.</span><span class="n">distance_to_A</span> <span class="o">/</span> <span class="n">units_out</span><span class="o">.</span><span class="n">distance_to_A</span>
@@ -917,35 +928,35 @@ window.runMermaid = runMermaid;</script>
     <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">optional_structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write crystal structure to file in each calculator format.</span>
+<span class="w">    </span><span class="sd">"""Write crystal structure to file in each calculator format.</span>
 
 <span class="sd">    filename : str or os.PathLike</span>
 <span class="sd">        File name to be used to write out the crystal structure.</span>
 <span class="sd">    cell : PhonopyAtoms</span>
 <span class="sd">        Crystal structure</span>
 <span class="sd">    interface_mode : str, optional</span>
-<span class="sd">        Calculator interface such as &#39;vasp&#39;, &#39;qe&#39;, ... Default is None,</span>
-<span class="sd">        that is equivalent to &#39;vasp&#39;.</span>
+<span class="sd">        Calculator interface such as 'vasp', 'qe', ... Default is None,</span>
+<span class="sd">        that is equivalent to 'vasp'.</span>
 <span class="sd">    optional_structure_info : StructureInfo, optional</span>
 <span class="sd">        Information returned by the method `read_crystal_structure`.</span>
 <span class="sd">        See the docstring. Default is None.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"vasp"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">vasp</span>
 
         <span class="n">vasp</span><span class="o">.</span><span class="n">write_vasp</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abinit"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abinit</span>
 
         <span class="n">abinit</span><span class="o">.</span><span class="n">write_abinit</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;exciting&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"exciting"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.exciting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">exciting</span>
 
         <span class="n">exciting</span><span class="o">.</span><span class="n">write_exciting</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qe&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qe"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qe</span>
 
         <span class="n">pp_filenames</span> <span class="o">=</span> <span class="p">(</span>
@@ -955,12 +966,12 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="n">qe</span><span class="o">.</span><span class="n">write_pwscf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pp_filenames</span><span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"wien2k"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">wien2k</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">Wien2kStructureInfo</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Optional structure information (npts, r0s, rmts) is missing.&quot;</span>
+                <span class="s2">"Optional structure information (npts, r0s, rmts) is missing."</span>
             <span class="p">)</span>
         <span class="n">wien2k</span><span class="o">.</span><span class="n">write_wein2k</span><span class="p">(</span>
             <span class="n">filename</span><span class="p">,</span>
@@ -969,7 +980,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">r0s</span><span class="p">,</span>
             <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">rmts</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"elk"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">elk</span>
 
         <span class="n">sp_filenames</span> <span class="o">=</span> <span class="p">(</span>
@@ -978,19 +989,19 @@ window.runMermaid = runMermaid;</script>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="n">elk</span><span class="o">.</span><span class="n">write_elk</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">sp_filenames</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"siesta"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">siesta</span>
 
         <span class="n">siesta</span><span class="o">.</span><span class="n">write_siesta</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"cp2k"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp2k</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">Cp2kStructureInfo</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Optional structure information (config_tree) is missing.&quot;</span>
+                <span class="s2">"Optional structure information (config_tree) is missing."</span>
             <span class="p">)</span>
         <span class="n">cp2k</span><span class="o">.</span><span class="n">write_cp2k_by_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">config_tree</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"crystal"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crystal</span>
 
         <span class="n">conv_numbers</span> <span class="o">=</span> <span class="p">(</span>
@@ -999,28 +1010,28 @@ window.runMermaid = runMermaid;</script>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="n">crystal</span><span class="o">.</span><span class="n">write_crystal</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">conv_numbers</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"dftbp"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dftbp</span>
 
         <span class="n">dftbp</span><span class="o">.</span><span class="n">write_dftbp</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"turbomole"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">turbomole</span>
 
         <span class="n">turbomole</span><span class="o">.</span><span class="n">write_turbomole</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"aims"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">aims</span>
 
         <span class="n">aims</span><span class="o">.</span><span class="n">write_aims</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"castep"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">castep</span>
 
         <span class="n">castep</span><span class="o">.</span><span class="n">write_castep</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"fleur"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fleur</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">FleurStructureInfo</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Optional structure information (speci, restlines) is missing.&quot;</span>
+                <span class="s2">"Optional structure information (speci, restlines) is missing."</span>
             <span class="p">)</span>
         <span class="n">fleur</span><span class="o">.</span><span class="n">write_fleur</span><span class="p">(</span>
             <span class="n">filename</span><span class="p">,</span>
@@ -1028,7 +1039,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">speci</span><span class="p">,</span>
             <span class="n">optional_structure_info</span><span class="o">.</span><span class="n">restlines</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abacus"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abacus</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optional_structure_info</span><span class="p">,</span> <span class="n">AbacusStructureInfo</span><span class="p">):</span>
@@ -1040,21 +1051,25 @@ window.runMermaid = runMermaid;</script>
             <span class="n">orbitals</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">abfs</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">abacus</span><span class="o">.</span><span class="n">write_abacus</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pps</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">,</span> <span class="n">abfs</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"lammps"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lammps</span>
 
         <span class="n">lammps</span><span class="o">.</span><span class="n">write_lammps</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qlm"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_qlm</span>
 
         <span class="n">write_qlm</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"pwmat"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pwmat</span>
 
         <span class="n">pwmat</span><span class="o">.</span><span class="n">write_atom_config</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"octopus"</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.octopus</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">octopus</span>
+
+        <span class="n">octopus</span><span class="o">.</span><span class="n">write_octopus</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No calculator interface was found.&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No calculator interface was found."</span><span class="p">)</span></div>
 
 
 
@@ -1062,7 +1077,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for VASP interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for VASP interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">vasp</span>
 
     <span class="n">expand</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_mixtures</span>
@@ -1075,7 +1090,7 @@ window.runMermaid = runMermaid;</script>
     <span class="p">)</span>
     <span class="n">write_magnetic_moments</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">sort_by_elements</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">expand</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">vasp</span><span class="o">.</span><span class="n">get_vasp_vca_hint_lines</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 
@@ -1084,7 +1099,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Quantum Espresso interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for Quantum Espresso interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qe</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">QeStructureInfo</span><span class="p">):</span>
@@ -1105,18 +1120,18 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Wien2k interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for Wien2k interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">wien2k</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">Wien2kStructureInfo</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;wien2k requires structure information (npts, r0s, rmts). Pass &quot;</span>
-            <span class="s2">&quot;the optional_structure_info returned by read_crystal_structure.&quot;</span>
+            <span class="s2">"wien2k requires structure information (npts, r0s, rmts). Pass "</span>
+            <span class="s2">"the optional_structure_info returned by read_crystal_structure."</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for wien2k.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"additional_info should not be None for wien2k."</span><span class="p">)</span>
 
-    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;supercell_matrix&quot;</span><span class="p">]))</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">"supercell_matrix"</span><span class="p">]))</span>
     <span class="n">wien2k</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
@@ -1133,7 +1148,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Elk interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for Elk interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">elk</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">ElkStructureInfo</span><span class="p">):</span>
@@ -1153,14 +1168,14 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for CP2K interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for CP2K interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp2k</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">Cp2kStructureInfo</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;cp2k requires structure information (input file configuration). &quot;</span>
-            <span class="s2">&quot;Pass the optional_structure_info returned by &quot;</span>
-            <span class="s2">&quot;read_crystal_structure.&quot;</span>
+            <span class="s2">"cp2k requires structure information (input file configuration). "</span>
+            <span class="s2">"Pass the optional_structure_info returned by "</span>
+            <span class="s2">"read_crystal_structure."</span>
         <span class="p">)</span>
     <span class="n">cp2k</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
@@ -1175,20 +1190,20 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for CRYSTAL interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for CRYSTAL interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crystal</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">CrystalStructureInfo</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;crystal requires structure information (conventional cell atom &quot;</span>
-            <span class="s2">&quot;numbers). Pass the optional_structure_info returned by &quot;</span>
-            <span class="s2">&quot;read_crystal_structure.&quot;</span>
+            <span class="s2">"crystal requires structure information (conventional cell atom "</span>
+            <span class="s2">"numbers). Pass the optional_structure_info returned by "</span>
+            <span class="s2">"read_crystal_structure."</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for crystal.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"additional_info should not be None for crystal."</span><span class="p">)</span>
 
-    <span class="n">template_file</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;template_file&quot;</span><span class="p">,</span> <span class="s2">&quot;TEMPLATE&quot;</span><span class="p">)</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;supercell_matrix&quot;</span><span class="p">]))</span>
+    <span class="n">template_file</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"template_file"</span><span class="p">,</span> <span class="s2">"TEMPLATE"</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">"supercell_matrix"</span><span class="p">]))</span>
     <span class="n">crystal</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
@@ -1204,19 +1219,19 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for Fleur interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for Fleur interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">fleur</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">FleurStructureInfo</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;fleur requires structure information (species and input file &quot;</span>
-            <span class="s2">&quot;lines). Pass the optional_structure_info returned by &quot;</span>
-            <span class="s2">&quot;read_crystal_structure.&quot;</span>
+            <span class="s2">"fleur requires structure information (species and input file "</span>
+            <span class="s2">"lines). Pass the optional_structure_info returned by "</span>
+            <span class="s2">"read_crystal_structure."</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;additional_info should not be None for fleur.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"additional_info should not be None for fleur."</span><span class="p">)</span>
 
-    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;supercell_matrix&quot;</span><span class="p">]))</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">determinant</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">"supercell_matrix"</span><span class="p">]))</span>
     <span class="n">fleur</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
@@ -1232,7 +1247,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for ABACUS interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for ABACUS interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abacus</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">AbacusStructureInfo</span><span class="p">):</span>
@@ -1258,13 +1273,13 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">,</span>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for QLM interface.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for QLM interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qlm</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">structure_info</span><span class="p">,</span> <span class="n">QlmStructureInfo</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;qlm requires structure information (qlm context). Pass the &quot;</span>
-            <span class="s2">&quot;optional_structure_info returned by read_crystal_structure.&quot;</span>
+            <span class="s2">"qlm requires structure information (qlm context). Pass the "</span>
+            <span class="s2">"optional_structure_info returned by read_crystal_structure."</span>
         <span class="p">)</span>
     <span class="n">qlm</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
@@ -1280,46 +1295,50 @@ window.runMermaid = runMermaid;</script>
     <span class="n">structure_info</span><span class="p">:</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercells for generic interfaces (no special handling).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Write supercells for generic interfaces (no special handling)."""</span>
     <span class="n">writer</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"siesta"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">siesta</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">siesta</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"dftbp"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dftbp</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">dftbp</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"turbomole"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">turbomole</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">turbomole</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"aims"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">aims</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">aims</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"castep"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">castep</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">castep</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"lammps"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lammps</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">lammps</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"pwmat"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pwmat</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">pwmat</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abinit"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">abinit</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">abinit</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;exciting&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"exciting"</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.exciting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">exciting</span>
 
         <span class="n">writer</span> <span class="o">=</span> <span class="n">exciting</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"octopus"</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.octopus</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">octopus</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">octopus</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No handler found for calculator interface: </span><span class="si">{</span><span class="n">interface_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"No handler found for calculator interface: </span><span class="si">{</span><span class="n">interface_mode</span><span class="si">}</span><span class="s2">"</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">writer</span><span class="p">(</span>
@@ -1331,16 +1350,16 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">SupercellWriterConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-    <span class="n">writer_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">zfill_width</span><span class="p">}</span>
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">and</span> <span class="s2">&quot;pre_filename&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">:</span>
-        <span class="n">writer_kwargs</span><span class="p">[</span><span class="s2">&quot;pre_filename&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">&quot;pre_filename&quot;</span><span class="p">]</span>
+    <span class="n">writer_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"width"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">zfill_width</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span> <span class="ow">and</span> <span class="s2">"pre_filename"</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">:</span>
+        <span class="n">writer_kwargs</span><span class="p">[</span><span class="s2">"pre_filename"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">additional_info</span><span class="p">[</span><span class="s2">"pre_filename"</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">writer_kwargs</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_writer_handler</span><span class="p">(</span>
     <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">SupercellWriterConfig</span><span class="p">,</span> <span class="n">StructureInfo</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the appropriate handler function for the given interface mode.</span>
+<span class="w">    </span><span class="sd">"""Get the appropriate handler function for the given interface mode.</span>
 
 <span class="sd">    This function implements the Strategy pattern to dispatch handler functions</span>
 <span class="sd">    based on the calculator interface. Handlers are categorized into two types:</span>
@@ -1373,19 +1392,19 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    RuntimeError</span>
 <span class="sd">        If the interface_mode is not recognized and not handled by generic handler.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Type is Any because subtype handlers are compatible at runtime</span>
     <span class="n">handlers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="kc">None</span><span class="p">:</span> <span class="n">_write_supercells_vasp</span><span class="p">,</span>  <span class="c1"># VASP is default</span>
-        <span class="s2">&quot;vasp&quot;</span><span class="p">:</span> <span class="n">_write_supercells_vasp</span><span class="p">,</span>
-        <span class="s2">&quot;qe&quot;</span><span class="p">:</span> <span class="n">_write_supercells_qe</span><span class="p">,</span>
-        <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span> <span class="n">_write_supercells_wien2k</span><span class="p">,</span>
-        <span class="s2">&quot;elk&quot;</span><span class="p">:</span> <span class="n">_write_supercells_elk</span><span class="p">,</span>
-        <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span> <span class="n">_write_supercells_cp2k</span><span class="p">,</span>
-        <span class="s2">&quot;crystal&quot;</span><span class="p">:</span> <span class="n">_write_supercells_crystal</span><span class="p">,</span>
-        <span class="s2">&quot;fleur&quot;</span><span class="p">:</span> <span class="n">_write_supercells_fleur</span><span class="p">,</span>
-        <span class="s2">&quot;abacus&quot;</span><span class="p">:</span> <span class="n">_write_supercells_abacus</span><span class="p">,</span>
-        <span class="s2">&quot;qlm&quot;</span><span class="p">:</span> <span class="n">_write_supercells_qlm</span><span class="p">,</span>
+        <span class="s2">"vasp"</span><span class="p">:</span> <span class="n">_write_supercells_vasp</span><span class="p">,</span>
+        <span class="s2">"qe"</span><span class="p">:</span> <span class="n">_write_supercells_qe</span><span class="p">,</span>
+        <span class="s2">"wien2k"</span><span class="p">:</span> <span class="n">_write_supercells_wien2k</span><span class="p">,</span>
+        <span class="s2">"elk"</span><span class="p">:</span> <span class="n">_write_supercells_elk</span><span class="p">,</span>
+        <span class="s2">"cp2k"</span><span class="p">:</span> <span class="n">_write_supercells_cp2k</span><span class="p">,</span>
+        <span class="s2">"crystal"</span><span class="p">:</span> <span class="n">_write_supercells_crystal</span><span class="p">,</span>
+        <span class="s2">"fleur"</span><span class="p">:</span> <span class="n">_write_supercells_fleur</span><span class="p">,</span>
+        <span class="s2">"abacus"</span><span class="p">:</span> <span class="n">_write_supercells_abacus</span><span class="p">,</span>
+        <span class="s2">"qlm"</span><span class="p">:</span> <span class="n">_write_supercells_qlm</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="c1"># Return specialized handler if available</span>
@@ -1412,7 +1431,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">zfill_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
     <span class="n">additional_info</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write supercell with displacements to files in each calculator format.</span>
+<span class="w">    </span><span class="sd">"""Write supercell with displacements to files in each calculator format.</span>
 
 <span class="sd">    This function provides a unified interface for writing supercells with</span>
 <span class="sd">    displacements across different calculator backends. It uses a strategy</span>
@@ -1421,8 +1440,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    interface_mode : str | None</span>
-<span class="sd">        Calculator interface such as &#39;vasp&#39;, &#39;qe&#39;, etc. Default is None,</span>
-<span class="sd">        which is equivalent to &#39;vasp&#39;.</span>
+<span class="sd">        Calculator interface such as 'vasp', 'qe', etc. Default is None,</span>
+<span class="sd">        which is equivalent to 'vasp'.</span>
 <span class="sd">    supercell : PhonopyAtoms</span>
 <span class="sd">        Supercell to write.</span>
 <span class="sd">    cells_with_disps : Sequence[PhonopyAtoms]</span>
@@ -1438,12 +1457,14 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        numbers to be assigned to the supercells with displacements.</span>
 <span class="sd">        Default is None, which gives [1, 2, 3, ...].</span>
 <span class="sd">    zfill_width : int, optional</span>
-<span class="sd">        Supercell numbers are filled by zeros from the left with the digits</span>
-<span class="sd">        as given, which results in 001, 002, ..., when zfill_width=3.</span>
-<span class="sd">        Default is 3.</span>
+<span class="sd">        Minimum number of digits of the supercell numbers, which are filled</span>
+<span class="sd">        by zeros from the left, e.g. 001, 002, ..., when zfill_width=3.</span>
+<span class="sd">        Default is 3. When the largest displacement ID needs more digits,</span>
+<span class="sd">        the width is increased accordingly so that all file names have the</span>
+<span class="sd">        same number of digits, e.g. 0001, ..., 1000 for 1000 supercells.</span>
 <span class="sd">    additional_info : dict | None, optional</span>
-<span class="sd">        Interface-specific configuration such as &quot;supercell_matrix&quot; or</span>
-<span class="sd">        &quot;template_file&quot;. Default is None.</span>
+<span class="sd">        Interface-specific configuration such as "supercell_matrix" or</span>
+<span class="sd">        "template_file". Default is None.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1453,19 +1474,27 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        If required structure or additional information is missing for</span>
 <span class="sd">        certain interfaces.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Prepare displacement IDs</span>
     <span class="k">if</span> <span class="n">displacement_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cells_with_disps</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">displacement_ids</span><span class="p">)</span>
 
+    <span class="c1"># zfill_width is the minimum width. Widen it when the largest displacement</span>
+    <span class="c1"># ID needs more digits, so that all file names have the same number of</span>
+    <span class="c1"># digits.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">zfill_width</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">ids</span><span class="p">)))))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">zfill_width</span>
+
     <span class="c1"># Create configuration object (type-safe, immutable)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">SupercellWriterConfig</span><span class="p">(</span>
         <span class="n">supercell</span><span class="o">=</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">cells_with_disps</span><span class="o">=</span><span class="n">cells_with_disps</span><span class="p">,</span>
         <span class="n">displacement_ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span>
-        <span class="n">zfill_width</span><span class="o">=</span><span class="n">zfill_width</span><span class="p">,</span>
+        <span class="n">zfill_width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
         <span class="n">additional_info</span><span class="o">=</span><span class="n">additional_info</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -1475,7 +1504,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">write_magnetic_moments</span><span class="p">(</span><span class="n">cell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span> <span class="n">sort_by_elements</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write MAGMOM file.</span>
+<span class="w">    </span><span class="sd">"""Write MAGMOM file.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1484,7 +1513,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    sort_by_elements : bool, optional</span>
 <span class="sd">        Whether to sort magnetic moments by elements. Default is False.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">magmoms</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">magnetic_moments</span>
     <span class="k">if</span> <span class="n">magmoms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">sort_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
@@ -1493,11 +1522,11 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sort_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">)))</span>
 
-        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot; MAGMOM = &quot;</span>
-        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">magmoms</span><span class="p">[</span><span class="n">sort_list</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;MAGMOM&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">" MAGMOM = "</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">magmoms</span><span class="p">[</span><span class="n">sort_list</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"MAGMOM"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
             <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-            <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="read_crystal_structure">
@@ -1508,7 +1537,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">chemical_symbols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">phonopy_yaml_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">PhonopyYaml</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return crystal structure from file in each calculator format.</span>
+<span class="w">    </span><span class="sd">"""Return crystal structure from file in each calculator format.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1517,9 +1546,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        predetermined filename for each interface_mode is used.</span>
 <span class="sd">    interface_mode : str, optional</span>
 <span class="sd">        This is used to recognize the file format. Default is None, which is</span>
-<span class="sd">        equivalent to &#39;vasp&#39; mode.</span>
+<span class="sd">        equivalent to 'vasp' mode.</span>
 <span class="sd">    chemical_symbols : list of str, optional</span>
-<span class="sd">        This is only used for &#39;vasp&#39; mode. VASP POSCAR file format can be</span>
+<span class="sd">        This is only used for 'vasp' mode. VASP POSCAR file format can be</span>
 <span class="sd">        written without chemical symbol information. With this option, chemical</span>
 <span class="sd">        symbols can be given.</span>
 <span class="sd">    phonopy_yaml_cls : PhonopyYaml, optional</span>
@@ -1534,8 +1563,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        The StructureInfo contains unitcell_filename and, depending on the</span>
 <span class="sd">        interface, additional calculator-specific fields.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;phonopy_yaml&quot;</span><span class="p">:</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"phonopy_yaml"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_read_phonopy_yaml</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">phonopy_yaml_cls</span><span class="p">)</span>
 
     <span class="n">cell_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span>
@@ -1548,7 +1577,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"vasp"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_vasp</span>
 
         <span class="k">if</span> <span class="n">chemical_symbols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1556,208 +1585,219 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_vasp</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="n">chemical_symbols</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">VaspStructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abinit"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_abinit</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_abinit</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;exciting&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"exciting"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.exciting</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_exciting</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_exciting</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qe&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qe"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_pwscf</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="n">pp_filenames</span> <span class="o">=</span> <span class="n">read_pwscf</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">QeStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">pp_filenames</span><span class="o">=</span><span class="n">pp_filenames</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"pwmat"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_atom_config</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_atom_config</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"wien2k"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_wien2k_struct</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="n">npts</span><span class="p">,</span> <span class="n">r0s</span><span class="p">,</span> <span class="n">rmts</span> <span class="o">=</span> <span class="n">parse_wien2k_struct</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">Wien2kStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">npts</span><span class="o">=</span><span class="n">npts</span><span class="p">,</span> <span class="n">r0s</span><span class="o">=</span><span class="n">r0s</span><span class="p">,</span> <span class="n">rmts</span><span class="o">=</span><span class="n">rmts</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"elk"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_elk</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="n">sp_filenames</span> <span class="o">=</span> <span class="n">read_elk</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">ElkStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">sp_filenames</span><span class="o">=</span><span class="n">sp_filenames</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"siesta"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_siesta</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_siesta</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"cp2k"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cp2k</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="n">config_tree</span> <span class="o">=</span> <span class="n">read_cp2k</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">Cp2kStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">config_tree</span><span class="o">=</span><span class="n">config_tree</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"crystal"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="n">conv_numbers</span> <span class="o">=</span> <span class="n">read_crystal</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">CrystalStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">conv_numbers</span><span class="o">=</span><span class="n">conv_numbers</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"dftbp"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_dftbp</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_dftbp</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"turbomole"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_turbomole</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_turbomole</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"aims"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aims</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_aims</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"castep"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_castep</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_castep</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"fleur"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_fleur</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="n">speci</span><span class="p">,</span> <span class="n">restlines</span> <span class="o">=</span> <span class="n">read_fleur</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">FleurStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">speci</span><span class="o">=</span><span class="n">speci</span><span class="p">,</span> <span class="n">restlines</span><span class="o">=</span><span class="n">restlines</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abacus"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_abacus</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="n">pps</span><span class="p">,</span> <span class="n">orbitals</span><span class="p">,</span> <span class="n">abfs</span> <span class="o">=</span> <span class="n">read_abacus</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">AbacusStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">pps</span><span class="o">=</span><span class="n">pps</span><span class="p">,</span> <span class="n">orbitals</span><span class="o">=</span><span class="n">orbitals</span><span class="p">,</span> <span class="n">abfs</span><span class="o">=</span><span class="n">abfs</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"lammps"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_lammps</span>
 
         <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_lammps</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qlm"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_qlm</span>
 
         <span class="n">unitcell</span><span class="p">,</span> <span class="p">(</span><span class="n">qlm_ctx</span><span class="p">,)</span> <span class="o">=</span> <span class="n">read_qlm</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">QlmStructureInfo</span><span class="p">(</span>
             <span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">,</span> <span class="n">qlm_ctx</span><span class="o">=</span><span class="n">qlm_ctx</span>
         <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"octopus"</span><span class="p">:</span>
+        <span class="c1"># The unit cell may be given either as a VASP-style POSCAR (the default,</span>
+        <span class="c1"># lattice in Angstrom, converted to Bohr) or as an Octopus geometry</span>
+        <span class="c1"># include file (already in atomic units); auto-detected.</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.octopus</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_octopus_or_poscar</span>
+
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">read_octopus_or_poscar</span><span class="p">(</span><span class="n">cell_filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">unitcell</span><span class="p">,</span> <span class="n">StructureInfo</span><span class="p">(</span><span class="n">unitcell_filename</span><span class="o">=</span><span class="n">cell_filename</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No calculator interface was found.&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No calculator interface was found."</span><span class="p">)</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_default_cell_filename</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default filename of unit cell structure of each calculator.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;POSCAR&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;abinit&quot;</span><span class="p">,</span> <span class="s2">&quot;qe&quot;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;unitcell.in&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;exciting&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;input.xml&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;case.struct&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;elk.in&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;input.fdf&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;unitcell.inp&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;crystal.o&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;geo.gen&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;control&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;geometry.in&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;unitcell.cell&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;fleur.in&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;STRU&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;unitcell&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;site&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;atom.config&quot;</span>
+<span class="w">    </span><span class="sd">"""Return default filename of unit cell structure of each calculator."""</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"vasp"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"POSCAR"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"abinit"</span><span class="p">,</span> <span class="s2">"qe"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"unitcell.in"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"exciting"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"input.xml"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"wien2k"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"case.struct"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"elk"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"elk.in"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"siesta"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"input.fdf"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"cp2k"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"unitcell.inp"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"crystal"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"crystal.o"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"dftbp"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"geo.gen"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"turbomole"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"control"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"aims"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"geometry.in"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"castep"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"unitcell.cell"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"fleur"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"fleur.in"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abacus"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"STRU"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"lammps"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"unitcell"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qlm"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"site"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"pwmat"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"atom.config"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"octopus"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"POSCAR"</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No calculator interface was found.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No calculator interface was found."</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_default_supercell_filename</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default filename of supercell structure of each calculator.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;phonopy_yaml&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;SPOSCAR&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;abinit&quot;</span><span class="p">,</span> <span class="s2">&quot;elk&quot;</span><span class="p">,</span> <span class="s2">&quot;qe&quot;</span><span class="p">,</span> <span class="s2">&quot;fleur&quot;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;supercell.in&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;exciting&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;supercell.xml&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;wien2k&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;case.structS&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;supercell.fdf&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return default filename of supercell structure of each calculator."""</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"phonopy_yaml"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"phonopy_disp.yaml"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"vasp"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"SPOSCAR"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"abinit"</span><span class="p">,</span> <span class="s2">"elk"</span><span class="p">,</span> <span class="s2">"qe"</span><span class="p">,</span> <span class="s2">"fleur"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"supercell.in"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"exciting"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"supercell.xml"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"wien2k"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"case.structS"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"siesta"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"supercell.fdf"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"cp2k"</span><span class="p">:</span>
         <span class="c1"># CP2K interface generates filenames based on original project name</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"crystal"</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># supercell.ext can not be parsed by crystal interface.</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;geo.genS&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"dftbp"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"geo.genS"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"turbomole"</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># TURBOMOLE interface generates directories with inputs</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;geometry.in.supercell&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;supercell.cell&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;sSTRU&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;supercell&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;supercell&quot;</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;supercell.config&quot;</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"aims"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"geometry.in.supercell"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"castep"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"supercell.cell"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abacus"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"sSTRU"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"lammps"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"supercell"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qlm"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"supercell"</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"pwmat"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"supercell.config"</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_default_displacement_distance</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return default displacement distance of each calculator.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return default displacement distance of each calculator."""</span>
     <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">in</span> <span class="p">(</span>
-        <span class="s2">&quot;wien2k&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;abinit&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;exciting&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;elk&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;qe&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;siesta&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;turbomole&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;fleur&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;abacus&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;qlm&quot;</span><span class="p">,</span>
+        <span class="s2">"wien2k"</span><span class="p">,</span>
+        <span class="s2">"abinit"</span><span class="p">,</span>
+        <span class="s2">"exciting"</span><span class="p">,</span>
+        <span class="s2">"elk"</span><span class="p">,</span>
+        <span class="s2">"qe"</span><span class="p">,</span>
+        <span class="s2">"siesta"</span><span class="p">,</span>
+        <span class="s2">"turbomole"</span><span class="p">,</span>
+        <span class="s2">"fleur"</span><span class="p">,</span>
+        <span class="s2">"abacus"</span><span class="p">,</span>
+        <span class="s2">"qlm"</span><span class="p">,</span>
+        <span class="s2">"octopus"</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">displacement_distance</span> <span class="o">=</span> <span class="mf">0.02</span>
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># default or vasp, crystal, cp2k, pwmat</span>
@@ -1768,11 +1808,11 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_default_physical_units</span><span class="p">(</span>
     <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalculatorPhysicalUnits</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Replace get_calculator_get_physical_units().&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Replace get_calculator_get_physical_units()."""</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
         <span class="p">(</span>
-            <span class="s2">&quot;get_default_physical_units is deprecated. &quot;</span>
-            <span class="s2">&quot;Use get_calculator_physical_units instead.&quot;</span>
+            <span class="s2">"get_default_physical_units is deprecated. "</span>
+            <span class="s2">"Use get_calculator_physical_units instead."</span>
         <span class="p">),</span>
         <span class="ne">DeprecationWarning</span><span class="p">,</span>
         <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -1786,7 +1826,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">force_filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read calculator output files and parse force sets.</span>
+<span class="w">    </span><span class="sd">"""Read calculator output files and parse force sets.</span>
 
 <span class="sd">    Note</span>
 <span class="sd">    ----</span>
@@ -1795,55 +1835,57 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    dict:</span>
-<span class="sd">        &quot;forces&quot;: List of forces in supercells.</span>
-<span class="sd">        &quot;supercell_energies&quot;: List of supercell energies.</span>
-<span class="sd">        &quot;points&quot;: List of points in the supercells with displacements.</span>
+<span class="sd">        "forces": List of forces in supercells.</span>
+<span class="sd">        "supercell_energies": List of supercell energies.</span>
+<span class="sd">        "points": List of points in the supercells with displacements.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">parse_set_of_forces</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;vasp&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">interface_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"vasp"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abinit&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abinit"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abinit</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;exciting&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"exciting"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.exciting</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qe&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qe"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qe</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;elk&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"elk"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.elk</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;siesta&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"siesta"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.siesta</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;cp2k&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"cp2k"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.cp2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;crystal&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"crystal"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.crystal</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;dftbp&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"dftbp"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.dftbp</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;turbomole&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"turbomole"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.turbomole</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;aims&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"aims"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.aims</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;castep&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"castep"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.castep</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;fleur&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"fleur"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.fleur</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;abacus&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"abacus"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.abacus</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;lammps&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"lammps"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.lammps</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;qlm&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"qlm"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.qlm</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
-    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">&quot;pwmat&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"pwmat"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pwmat</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
+    <span class="k">elif</span> <span class="n">interface_mode</span> <span class="o">==</span> <span class="s2">"octopus"</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.octopus</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No calculator interface was found: </span><span class="si">{</span><span class="n">interface_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"No calculator interface was found: </span><span class="si">{</span><span class="n">interface_mode</span><span class="si">}</span><span class="s2">"</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">data_sets</span> <span class="o">=</span> <span class="n">parse_set_of_forces</span><span class="p">(</span><span class="n">num_atoms</span><span class="p">,</span> <span class="n">force_filenames</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data_sets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">data_sets</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;forces&quot;</span><span class="p">:</span> <span class="n">data_sets</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"forces"</span><span class="p">:</span> <span class="n">data_sets</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_calc_dataset_wien2k</span><span class="p">(</span>
@@ -1854,7 +1896,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">symmetry_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read Wien2k output files and parse force sets.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Read Wien2k output files and parse force sets."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.wien2k</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_set_of_forces</span>
 
     <span class="n">disps</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_displacements_and_forces</span><span class="p">(</span><span class="n">disp_dataset</span><span class="p">)</span>
@@ -1866,27 +1908,27 @@ window.runMermaid = runMermaid;</script>
         <span class="n">symmetry_tolerance</span><span class="o">=</span><span class="n">symmetry_tolerance</span><span class="p">,</span>
         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;forces&quot;</span><span class="p">:</span> <span class="n">force_sets</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"forces"</span><span class="p">:</span> <span class="n">force_sets</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_force_constant_conversion_factor</span><span class="p">(</span>
     <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">interface_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return unit conversion factor of force constants.&quot;&quot;&quot;</span>
-    <span class="n">_unit</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;Angstrom&quot;</span><span class="p">,</span> <span class="s2">&quot;angstrom&quot;</span><span class="p">)</span>  <span class="c1"># for backward compatibility</span>
+<span class="w">    </span><span class="sd">"""Return unit conversion factor of force constants."""</span>
+    <span class="n">_unit</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Angstrom"</span><span class="p">,</span> <span class="s2">"angstrom"</span><span class="p">)</span>  <span class="c1"># for backward compatibility</span>
     <span class="n">interface_default_units</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_mode</span><span class="p">)</span>
     <span class="n">default_unit</span> <span class="o">=</span> <span class="n">interface_default_units</span><span class="o">.</span><span class="n">force_constants_unit</span>
     <span class="n">physical_units</span> <span class="o">=</span> <span class="n">get_physical_units</span><span class="p">()</span>
     <span class="n">factor_to_eVperA2</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;eV/angstrom^2&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;eV/angstrom.au&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
-        <span class="s2">&quot;Ry/au^2&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Rydberg</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;mRy/au^2&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Rydberg</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="s2">&quot;hartree/au^2&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-        <span class="s2">&quot;hartree/angstrom.au&quot;</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
+        <span class="s2">"eV/angstrom^2"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">"eV/angstrom.au"</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
+        <span class="s2">"Ry/au^2"</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Rydberg</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+        <span class="s2">"mRy/au^2"</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Rydberg</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="s2">"hartree/au^2"</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+        <span class="s2">"hartree/angstrom.au"</span><span class="p">:</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">/</span> <span class="n">physical_units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">default_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">factor_to_eVperA2</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Force constant conversion for </span><span class="si">%s</span><span class="s2"> unit is not implemented.&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Force constant conversion for </span><span class="si">%s</span><span class="s2"> unit is not implemented."</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">default_unit</span> <span class="o">!=</span> <span class="n">_unit</span><span class="p">:</span>
         <span class="n">factor</span> <span class="o">=</span> <span class="n">factor_to_eVperA2</span><span class="p">[</span><span class="n">_unit</span><span class="p">]</span> <span class="o">/</span> <span class="n">factor_to_eVperA2</span><span class="p">[</span><span class="n">default_unit</span><span class="p">]</span>
@@ -1928,7 +1970,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">if</span> <span class="n">phonopy_yaml_cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">phonopy_yaml_cls</span><span class="o">.</span><span class="n">default_filenames</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">get_supported_file_extensions_for_compression</span><span class="p">():</span>
-                <span class="n">default_filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">default_filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">fname</span><span class="si">}{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename</span><span class="p">,</span> <span class="o">*</span><span class="n">default_filenames</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
@@ -2002,8 +2044,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

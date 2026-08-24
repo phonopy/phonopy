@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -222,6 +222,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -352,11 +353,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -438,7 +446,7 @@ NaCl example found in <code class="docutils literal notranslate"><span class="pr
 <ol class="arabic">
 <li><p>Read a QE-PW input file and create supercells with
 <a class="reference internal" href="command-options.html#qe-mode"><span class="std std-ref">--qe</span></a> option:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--qe<span class="w"> </span>-d<span class="w"> </span>--dim<span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span><span class="w"> </span>-c<span class="w"> </span>NaCl.in
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>--qe<span class="w"> </span>-d<span class="w"> </span>--dim<span class="o">=</span><span class="s2">"2 2 2"</span><span class="w"> </span>-c<span class="w"> </span>NaCl.in
 </pre></div>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">supercell.in</span></code> and
@@ -489,7 +497,7 @@ automatically read. Examples of post-process are shown below.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="o">--</span><span class="n">config</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
- <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="s1">'_ \| '</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">'_ \ / _ \ | '</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
  <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
@@ -501,9 +509,9 @@ automatically read. Examples of post-process are shown below.</p>
 <span class="n">Python</span> <span class="n">version</span> <span class="mf">3.13.3</span>
 <span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.7.0</span>
 
-<span class="s2">&quot;band.conf&quot;</span> <span class="n">was</span> <span class="n">read</span> <span class="k">as</span> <span class="n">phonopy</span> <span class="n">configuration</span> <span class="n">file</span><span class="o">.</span>
+<span class="s2">"band.conf"</span> <span class="n">was</span> <span class="n">read</span> <span class="k">as</span> <span class="n">phonopy</span> <span class="n">configuration</span> <span class="n">file</span><span class="o">.</span>
 <span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">qe</span>
-<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
+<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">"phonopy_disp.yaml"</span><span class="o">.</span>
 <span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">au</span>
 <span class="n">Band</span> <span class="n">structure</span> <span class="n">mode</span>
 <span class="n">Settings</span><span class="p">:</span>
@@ -516,8 +524,8 @@ automatically read. Examples of post-process are shown below.</p>
 <span class="n">Number</span> <span class="n">of</span> <span class="n">symmetry</span> <span class="n">operations</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">:</span> <span class="mi">1536</span>
 <span class="n">Use</span> <span class="o">-</span><span class="n">v</span> <span class="n">option</span> <span class="n">to</span> <span class="n">watch</span> <span class="n">primitive</span> <span class="n">cell</span><span class="p">,</span> <span class="n">unit</span> <span class="n">cell</span><span class="p">,</span> <span class="ow">and</span> <span class="n">supercell</span> <span class="n">structures</span><span class="o">.</span>
 
-<span class="n">NAC</span> <span class="n">params</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;BORN&quot;</span><span class="o">.</span>
-<span class="n">Displacement</span><span class="o">-</span><span class="n">force</span> <span class="n">dataset</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;FORCE_SETS&quot;</span><span class="o">.</span>
+<span class="n">NAC</span> <span class="n">params</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">"BORN"</span><span class="o">.</span>
+<span class="n">Displacement</span><span class="o">-</span><span class="n">force</span> <span class="n">dataset</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">"FORCE_SETS"</span><span class="o">.</span>
 <span class="o">--------------------------------</span> <span class="n">Symfc</span> <span class="n">start</span> <span class="o">-------------------------------</span>
 <span class="n">Symfc</span> <span class="n">version</span> <span class="mf">1.6.0</span> <span class="p">(</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">symfc</span><span class="o">/</span><span class="n">symfc</span><span class="p">)</span>
 <span class="n">Citation</span><span class="p">:</span> <span class="n">A</span><span class="o">.</span> <span class="n">Seko</span> <span class="ow">and</span> <span class="n">A</span><span class="o">.</span> <span class="n">Togo</span><span class="p">,</span> <span class="n">Phys</span><span class="o">.</span> <span class="n">Rev</span><span class="o">.</span> <span class="n">B</span><span class="p">,</span> <span class="mi">110</span><span class="p">,</span> <span class="mi">214302</span> <span class="p">(</span><span class="mi">2024</span><span class="p">)</span>
@@ -533,11 +541,11 @@ automatically read. Examples of post-process are shown below.</p>
 <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span>
 <span class="p">[</span> <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.500</span>  <span class="mf">0.500</span>  <span class="mf">0.500</span><span class="p">]</span>
 
-<span class="n">Summary</span> <span class="n">of</span> <span class="n">calculation</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">&quot;phonopy.yaml&quot;</span><span class="o">.</span>
+<span class="n">Summary</span> <span class="n">of</span> <span class="n">calculation</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">"phonopy.yaml"</span><span class="o">.</span>
 <span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2026</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">16</span> <span class="mi">08</span><span class="p">:</span><span class="mi">09</span><span class="p">:</span><span class="mi">27</span><span class="p">]</span><span class="o">-------------------------</span>
                  <span class="n">_</span>
    <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
-  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
+  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">'_ \ / _` |</span>
  <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
   \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
 </pre></div>
@@ -568,10 +576,10 @@ by and the second step is running its response function calculations
 under DFPT.</p>
 <p>For the SCF calculation, the input file <code class="docutils literal notranslate"><span class="pre">NaCl.in</span></code> looks like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="o">&amp;</span><span class="n">control</span>
-    <span class="n">calculation</span> <span class="o">=</span> <span class="s1">&#39;scf&#39;</span>
+    <span class="n">calculation</span> <span class="o">=</span> <span class="s1">'scf'</span>
     <span class="n">tprnfor</span> <span class="o">=</span> <span class="o">.</span><span class="n">true</span><span class="o">.</span>
     <span class="n">tstress</span> <span class="o">=</span> <span class="o">.</span><span class="n">true</span><span class="o">.</span>
-    <span class="n">pseudo_dir</span> <span class="o">=</span> <span class="s1">&#39;/home/togo/espresso/pseudo/&#39;</span>
+    <span class="n">pseudo_dir</span> <span class="o">=</span> <span class="s1">'/home/togo/espresso/pseudo/'</span>
  <span class="o">/</span>
  <span class="o">&amp;</span><span class="n">system</span>
     <span class="n">ibrav</span> <span class="o">=</span> <span class="mi">0</span>
@@ -580,7 +588,7 @@ under DFPT.</p>
     <span class="n">ecutwfc</span> <span class="o">=</span> <span class="mf">70.0</span>
  <span class="o">/</span>
  <span class="o">&amp;</span><span class="n">electrons</span>
-    <span class="n">diagonalization</span> <span class="o">=</span> <span class="s1">&#39;david&#39;</span>
+    <span class="n">diagonalization</span> <span class="o">=</span> <span class="s1">'david'</span>
     <span class="n">conv_thr</span> <span class="o">=</span> <span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">9</span>
  <span class="o">/</span>
 <span class="n">ATOMIC_SPECIES</span>
@@ -653,13 +661,13 @@ for phonopy. But we may need some treatment before running Q2R. See
 <a class="reference internal" href="#qe-nac"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">NaCl.in</span></code></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span> &amp;control
-    calculation = &#39;scf&#39;
-    restart_mode=&#39;from_scratch&#39;,
+    calculation = 'scf'
+    restart_mode='from_scratch',
     tprnfor = .true.
     tstress = .true.
-    prefix=&#39;NaCl&#39;,
-    pseudo_dir = &#39;/home/togo/code/q-e-qe-7.5/pseudo&#39;
-    outdir=&#39;.&#39;
+    prefix='NaCl',
+    pseudo_dir = '/home/togo/code/q-e-qe-7.5/pseudo'
+    outdir='.'
  /
  &amp;system
     ibrav = 0
@@ -668,7 +676,7 @@ for phonopy. But we may need some treatment before running Q2R. See
     ecutwfc = 70.0
  /
  &amp;electrons
-    diagonalization = &#39;david&#39;
+    diagonalization = 'david'
     !mixing_beta = 0.7
     conv_thr = 1.0d-12
  /
@@ -690,13 +698,13 @@ K_POINTS automatic
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonons</span> <span class="n">of</span> <span class="n">NaCl</span>
  <span class="o">&amp;</span><span class="n">inputph</span>
   <span class="n">tr2_ph</span><span class="o">=</span><span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
-  <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;NaCl&#39;</span><span class="p">,</span>
+  <span class="n">prefix</span><span class="o">=</span><span class="s1">'NaCl'</span><span class="p">,</span>
   <span class="n">ldisp</span><span class="o">=.</span><span class="n">true</span><span class="o">.</span><span class="p">,</span>
   <span class="n">nq1</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq2</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq3</span><span class="o">=</span><span class="mi">4</span>
   <span class="n">amass</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">=</span><span class="mf">22.98976928</span><span class="p">,</span>
   <span class="n">amass</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">=</span><span class="mf">35.453</span><span class="p">,</span>
-  <span class="n">outdir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
-  <span class="n">fildyn</span><span class="o">=</span><span class="s1">&#39;NaCl.dyn&#39;</span><span class="p">,</span>
+  <span class="n">outdir</span><span class="o">=</span><span class="s1">'.'</span><span class="p">,</span>
+  <span class="n">fildyn</span><span class="o">=</span><span class="s1">'NaCl.dyn'</span><span class="p">,</span>
  <span class="o">/</span>
 </pre></div>
 </div>
@@ -704,13 +712,13 @@ K_POINTS automatic
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonons</span> <span class="n">of</span> <span class="n">NaCl</span>
  <span class="o">&amp;</span><span class="n">inputph</span>
   <span class="n">tr2_ph</span><span class="o">=</span><span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
-  <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;NaCl&#39;</span><span class="p">,</span>
+  <span class="n">prefix</span><span class="o">=</span><span class="s1">'NaCl'</span><span class="p">,</span>
   <span class="n">ldisp</span><span class="o">=.</span><span class="n">true</span><span class="o">.</span><span class="p">,</span>
   <span class="n">nq1</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq2</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">nq3</span><span class="o">=</span><span class="mi">4</span>
   <span class="n">amass</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">=</span><span class="mf">22.98976928</span><span class="p">,</span>
   <span class="n">amass</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">=</span><span class="mf">35.453</span><span class="p">,</span>
-  <span class="n">outdir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
-  <span class="n">fildyn</span><span class="o">=</span><span class="s1">&#39;NaCl.dyn&#39;</span><span class="p">,</span>
+  <span class="n">outdir</span><span class="o">=</span><span class="s1">'.'</span><span class="p">,</span>
+  <span class="n">fildyn</span><span class="o">=</span><span class="s1">'NaCl.dyn'</span><span class="p">,</span>
   <span class="n">start_q</span><span class="o">=</span><span class="mi">1</span>
   <span class="n">last_q</span><span class="o">=</span><span class="mi">1</span>
  <span class="o">/</span>
@@ -723,10 +731,10 @@ with <code class="docutils literal notranslate"><span class="pre">NaCl.dyn</span
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonons</span> <span class="n">of</span> <span class="n">NaCl</span>
  <span class="o">&amp;</span><span class="n">inputph</span>
   <span class="n">tr2_ph</span><span class="o">=</span><span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span>
-  <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;NaCl&#39;</span><span class="p">,</span>
+  <span class="n">prefix</span><span class="o">=</span><span class="s1">'NaCl'</span><span class="p">,</span>
   <span class="n">epsil</span><span class="o">=.</span><span class="n">false</span><span class="o">.</span><span class="p">,</span>
-  <span class="n">outdir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
-  <span class="n">fildyn</span><span class="o">=</span><span class="s1">&#39;NaCl.dyn&#39;</span><span class="p">,</span>
+  <span class="n">outdir</span><span class="o">=</span><span class="s1">'.'</span><span class="p">,</span>
+  <span class="n">fildyn</span><span class="o">=</span><span class="s1">'NaCl.dyn'</span><span class="p">,</span>
  <span class="o">/</span>
 <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
 </pre></div>
@@ -813,7 +821,7 @@ Saving this script as `make_born_q2r.py`,
 <h4>NaCl example<a class="headerlink" href="#nacl-example" title="Link to this heading">#</a></h4>
 <p>NaCl example is found at
 <a class="github reference external" href="https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r">phonopy/phonopy</a>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>phonopy_params_q2r.yaml<span class="w"> </span>--band<span class="o">=</span><span class="s2">&quot;0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2&quot;</span><span class="w"> </span>-p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>phonopy_params_q2r.yaml<span class="w"> </span>--band<span class="o">=</span><span class="s2">"0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2"</span><span class="w"> </span>-p
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/NaCl-q2r-band-NAC.png"><img alt="_images/NaCl-q2r-band-NAC.png" src="_images/NaCl-q2r-band-NAC.png" style="width: 50%;" />
@@ -930,8 +938,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

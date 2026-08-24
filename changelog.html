@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -221,6 +221,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -351,11 +352,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -384,7 +392,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased">Unreleased</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased-v4-5-0">Unreleased (v4.5.0)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-01-2026-version-4-3-1">Jul-01-2026: Version 4.3.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-28-2026-version-4-3-0">Jun-28-2026: Version 4.3.0</a></li>
@@ -614,9 +622,20 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
-<section id="unreleased">
-<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">#</a></h2>
+<section id="unreleased-v4-5-0">
+<h2>Unreleased (v4.5.0)<a class="headerlink" href="#unreleased-v4-5-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
+<li><p>Behavior change: random displacements at finite temperature are drawn
+differently. A fixed random seed now gives the same displacements whatever
+LAPACK implementation is installed. Their distribution is unchanged, but the
+random stream moves: a seeded run gives different displacements than in
+phonopy 4.4 and earlier. <code class="docutils literal notranslate"><span class="pre">sampling_matrix=&quot;eigenvector&quot;</span></code> recovers the
+previous behavior.</p></li>
+<li><p>Supercell file names are now zero-padded to a uniform number of digits. The
+padding grows when the largest displacement number needs more digits than the
+minimum of three, so 1000 supercells give <code class="docutils literal notranslate"><span class="pre">POSCAR-0001</span></code>, …, <code class="docutils literal notranslate"><span class="pre">POSCAR-1000</span></code>
+instead of <code class="docutils literal notranslate"><span class="pre">POSCAR-001</span></code>, …, <code class="docutils literal notranslate"><span class="pre">POSCAR-1000</span></code>. Fewer than 1000 supercells are
+named as before.</p></li>
 <li><p>Behavior change: with <code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code>, displacement generation no longer forces
 plus-minus pairs, but follows <code class="docutils literal notranslate"><span class="pre">--pm</span></code> (the <code class="docutils literal notranslate"><span class="pre">PM</span></code> tag) as every other path does,
 whose default is <code class="docutils literal notranslate"><span class="pre">auto</span></code>. Fewer supercells are therefore generated: <code class="docutils literal notranslate"><span class="pre">--rd</span> <span class="pre">N</span></code>
@@ -624,6 +643,16 @@ gives N supercells instead of 2N, and <code class="docutils literal notranslate"
 that symmetry does not require. Add <code class="docutils literal notranslate"><span class="pre">--pm</span></code> to recover the previous
 displacements. The forces of a machine-learning potential are smooth enough
 that the error cancellation of plus-minus pairs is not needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> now falls back to symfc for a type-II dataset (random
+displacements, where all atoms are displaced simultaneously) when
+<code class="docutils literal notranslate"><span class="pre">fc_calculator</span></code> is unspecified, instead of raising an exception. This matches
+the command line behavior.</p></li>
+<li><p>Behavior change: the command line no longer selects symfc for a type-I
+dataset (one displaced atom per supercell). The traditional
+finite-difference calculator is used again, followed by symmetrization with
+the symfc projector. Add <code class="docutils literal notranslate"><span class="pre">--fc-calculator</span> <span class="pre">symfc</span></code> to recover the previous
+force constants. The choice of the force constants calculator now depends on
+the dataset type alone and is shared by the command line and <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>.</p></li>
 </ul>
 </section>
 <section id="jul-17-2026-version-4-4-0">
@@ -2623,7 +2652,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased">Unreleased</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased-v4-5-0">Unreleased (v4.5.0)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-01-2026-version-4-3-1">Jul-01-2026: Version 4.3.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-28-2026-version-4-3-0">Jun-28-2026: Version 4.3.0</a></li>
@@ -2888,8 +2917,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

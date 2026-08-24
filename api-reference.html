@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -222,6 +222,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -352,11 +353,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -642,13 +650,13 @@ to <code class="docutils literal notranslate"><span class="pre">&quot;vasp&quot;
 and <code class="docutils literal notranslate"><span class="pre">supercell_matrix</span></code> is ignored. Default is None.</p></li>
 <li><p><strong>nac_params</strong> (<em>NacParams</em><em>, </em><em>optional</em>) – <p>Parameters required for non-analytical term correction. Default
 is None. Expected structure:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">Born</span> <span class="n">effective</span> <span class="n">charges</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">'born'</span><span class="p">:</span> <span class="n">Born</span> <span class="n">effective</span> <span class="n">charges</span>
          <span class="p">(</span><span class="n">array_like</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">primitive</span> <span class="n">cell</span> <span class="n">atoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
           <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
- <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">Dielectric</span> <span class="n">constant</span> <span class="n">matrix</span>
+ <span class="s1">'dielectric'</span><span class="p">:</span> <span class="n">Dielectric</span> <span class="n">constant</span> <span class="n">matrix</span>
                <span class="p">(</span><span class="n">array_like</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
- <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">unit</span> <span class="n">conversion</span> <span class="n">factor</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">optional</span><span class="p">),</span>
- <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;gonze&#39;</span> <span class="p">(</span><span class="n">default</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;wang&#39;</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">optional</span><span class="p">)}</span>
+ <span class="s1">'factor'</span><span class="p">:</span> <span class="n">unit</span> <span class="n">conversion</span> <span class="n">factor</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">optional</span><span class="p">),</span>
+ <span class="s1">'method'</span><span class="p">:</span> <span class="s1">'gonze'</span> <span class="p">(</span><span class="n">default</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'wang'</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">optional</span><span class="p">)}</span>
 </pre></div>
 </div>
 </p></li>
@@ -722,7 +730,7 @@ overview of the typical workflow.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="mf">5.404</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">unitcell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Si&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s2">"Si"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">cell</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">scaled_positions</span><span class="o">=</span><span class="p">[</span>
 <span class="gp">... </span>        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
@@ -849,12 +857,12 @@ phonors backend.</p>
 This optionally contains energies and forces of respective
 supercells. The format is either one of two types.</p>
 <p><strong>Type 1. One atomic displacement in each supercell</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;natom&#39;</span><span class="p">:</span> <span class="n">number</span> <span class="n">of</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">,</span>
- <span class="s1">&#39;first_atoms&#39;</span><span class="p">:</span> <span class="p">[</span>
-   <span class="p">{</span><span class="s1">&#39;number&#39;</span><span class="p">:</span> <span class="n">atom</span> <span class="n">index</span> <span class="n">of</span> <span class="n">displaced</span> <span class="n">atom</span><span class="p">,</span>
-    <span class="s1">&#39;displacement&#39;</span><span class="p">:</span> <span class="n">displacement</span> <span class="ow">in</span> <span class="n">Cartesian</span> <span class="n">coordinates</span><span class="p">,</span>
-    <span class="s1">&#39;forces&#39;</span><span class="p">:</span> <span class="n">forces</span> <span class="n">on</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">,</span>
-    <span class="s1">&#39;supercell_energy&#39;</span><span class="p">:</span> <span class="n">energy</span> <span class="n">of</span> <span class="n">supercell</span><span class="p">},</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">'natom'</span><span class="p">:</span> <span class="n">number</span> <span class="n">of</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">,</span>
+ <span class="s1">'first_atoms'</span><span class="p">:</span> <span class="p">[</span>
+   <span class="p">{</span><span class="s1">'number'</span><span class="p">:</span> <span class="n">atom</span> <span class="n">index</span> <span class="n">of</span> <span class="n">displaced</span> <span class="n">atom</span><span class="p">,</span>
+    <span class="s1">'displacement'</span><span class="p">:</span> <span class="n">displacement</span> <span class="ow">in</span> <span class="n">Cartesian</span> <span class="n">coordinates</span><span class="p">,</span>
+    <span class="s1">'forces'</span><span class="p">:</span> <span class="n">forces</span> <span class="n">on</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">,</span>
+    <span class="s1">'supercell_energy'</span><span class="p">:</span> <span class="n">energy</span> <span class="n">of</span> <span class="n">supercell</span><span class="p">},</span>
    <span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="o">...</span><span class="p">]}</span>
 </pre></div>
 </div>
@@ -863,11 +871,11 @@ each displaced supercell. Each displaced supercell contains only
 one displacement. <code class="docutils literal notranslate"><span class="pre">dict['first_atoms']['forces']</span></code> gives atomic
 forces in each displaced supercell.</p>
 <p><strong>Type 2. All atomic displacements in each supercell</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;displacements&#39;</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">'displacements'</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'double'</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">'C'</span><span class="p">,</span>
                   <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">supercells</span><span class="p">,</span> <span class="n">natom</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
- <span class="s1">&#39;forces&#39;</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span>
+ <span class="s1">'forces'</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'double'</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">'C'</span><span class="p">,</span>
                   <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">supercells</span><span class="p">,</span> <span class="n">natom</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
- <span class="s1">&#39;supercell_energies&#39;</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">}</span>
+ <span class="s1">'supercell_energies'</span><span class="p">:</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'double'</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>To set in type 2, displacements and forces can be given by numpy
@@ -971,7 +979,7 @@ dataset.</p>
 <p>The getter returns an <code class="docutils literal notranslate"><span class="pre">ndarray</span></code> and the setter accepts any
 array-like with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span><span class="p">,</span> <span class="n">atoms</span> <span class="ow">in</span> <span class="n">supercell</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-<span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="o">.</span>
+<span class="n">dtype</span><span class="o">=</span><span class="s1">'double'</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">'C'</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>That is:</p>
@@ -1122,7 +1130,7 @@ calculator interface is used.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="phonopy.Phonopy.generate_displacements">
-<span class="sig-name descname"><span class="pre">generate_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_plusminus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_trigonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_snapshots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'supercell'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_estimation_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.generate_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.generate_displacements" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">generate_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_plusminus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_trigonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_snapshots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'supercell'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_estimation_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.generate_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.generate_displacements" title="Link to this definition">#</a></dt>
 <dd><p>Generate displacement dataset and store it in Phonopy.dataset.</p>
 <p>This method selects one of three generators and stores its result;
 the generators hold the details of each mode.</p>
@@ -1171,6 +1179,10 @@ supercell, uniformly over <code class="docutils literal notranslate"><span class
 the weight at <code class="docutils literal notranslate"><span class="pre">distance</span></code>. Default is “supercell”.</p></li>
 <li><p><strong>number_estimation_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>optional</em>) – Safety factor on the symfc estimate used by
 <code class="docutils literal notranslate"><span class="pre">number_of_snapshots=&quot;auto&quot;</span></code>. Default is None.</p></li>
+<li><p><strong>sampling_matrix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Used only when <code class="docutils literal notranslate"><span class="pre">temperature</span></code> is given. Either <code class="docutils literal notranslate"><span class="pre">'symmetric'</span></code>
+or <code class="docutils literal notranslate"><span class="pre">'eigenvector'</span></code>; see
+<code class="xref py py-class docutils literal notranslate"><span class="pre">RandomDisplacements</span></code>.
+Default is None, corresponding to <code class="docutils literal notranslate"><span class="pre">'symmetric'</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2630,10 +2642,10 @@ factor q-point by q-point (e.g. for progress reporting).</p>
 <li><p><strong>T</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Temperature in K.</p></li>
 <li><p><strong>atomic_form_factor_func</strong> (<em>callable</em>) – <p>Function that returns the atomic form factor (<code class="docutils literal notranslate"><span class="pre">func</span></code> below):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f_params</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.148690</span><span class="p">,</span> <span class="mf">2.594987</span><span class="p">,</span> <span class="mf">4.073989</span><span class="p">,</span> <span class="mf">6.046925</span><span class="p">,</span>
+    <span class="s1">'Na'</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.148690</span><span class="p">,</span> <span class="mf">2.594987</span><span class="p">,</span> <span class="mf">4.073989</span><span class="p">,</span> <span class="mf">6.046925</span><span class="p">,</span>
            <span class="mf">0.767888</span><span class="p">,</span> <span class="mf">0.070139</span><span class="p">,</span> <span class="mf">0.995612</span><span class="p">,</span> <span class="mf">14.1226457</span><span class="p">,</span>
            <span class="mf">0.968249</span><span class="p">,</span> <span class="mf">0.217037</span><span class="p">,</span> <span class="mf">0.045300</span><span class="p">],</span>
-    <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.061802</span><span class="p">,</span> <span class="mf">0.144727</span><span class="p">,</span> <span class="mf">7.139886</span><span class="p">,</span> <span class="mf">1.171795</span><span class="p">,</span>
+    <span class="s1">'Cl'</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.061802</span><span class="p">,</span> <span class="mf">0.144727</span><span class="p">,</span> <span class="mf">7.139886</span><span class="p">,</span> <span class="mf">1.171795</span><span class="p">,</span>
            <span class="mf">6.524271</span><span class="p">,</span> <span class="mf">19.467656</span><span class="p">,</span> <span class="mf">2.355626</span><span class="p">,</span> <span class="mf">60.320301</span><span class="p">,</span>
            <span class="mf">35.829404</span><span class="p">,</span> <span class="mf">0.000436</span><span class="p">,</span> <span class="o">-</span><span class="mf">34.916604</span><span class="p">],</span>
 <span class="p">}</span>
@@ -2711,7 +2723,7 @@ returned by <code class="docutils literal notranslate"><span class="pre">run_dyn
 
 <dl class="py method">
 <dt class="sig sig-object py" id="phonopy.Phonopy.init_random_displacements">
-<span class="sig-name descname"><span class="pre">init_random_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.init_random_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.init_random_displacements" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_random_displacements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dist_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.init_random_displacements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.init_random_displacements" title="Link to this definition">#</a></dt>
 <dd><p>Initialize random displacements at finite temperature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2726,6 +2738,9 @@ harmonic phonons, displacements larger than max distance are
 renormalized to the max distance, i.e., a displacement <code class="docutils literal notranslate"><span class="pre">d</span></code>
 is shortened by <code class="docutils literal notranslate"><span class="pre">d</span> <span class="pre">-&gt;</span> <span class="pre">d</span> <span class="pre">/</span> <span class="pre">norm(d)</span> <span class="pre">*</span> <span class="pre">max_distance</span></code> if
 <code class="docutils literal notranslate"><span class="pre">norm(d)</span> <span class="pre">&gt;</span> <span class="pre">max_distance</span></code>.</p></li>
+<li><p><strong>sampling_matrix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) – Either <code class="docutils literal notranslate"><span class="pre">'symmetric'</span></code> or <code class="docutils literal notranslate"><span class="pre">'eigenvector'</span></code>; see
+<code class="xref py py-class docutils literal notranslate"><span class="pre">RandomDisplacements</span></code>.
+Default is None, corresponding to <code class="docutils literal notranslate"><span class="pre">'symmetric'</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2736,7 +2751,7 @@ is shortened by <code class="docutils literal notranslate"><span class="pre">d</
 
 <dl class="py method">
 <dt class="sig sig-object py" id="phonopy.Phonopy.get_random_displacements_at_temperature">
-<span class="sig-name descname"><span class="pre">get_random_displacements_at_temperature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_snapshots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_plusminus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_random_displacements_at_temperature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_random_displacements_at_temperature" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_random_displacements_at_temperature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_snapshots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_plusminus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_snapshot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.get_random_displacements_at_temperature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.get_random_displacements_at_temperature" title="Link to this definition">#</a></dt>
 <dd><p>Generate random displacements from phonon structure.</p>
 <p>See <a class="reference internal" href="#phonopy.Phonopy.generate_displacements" title="phonopy.Phonopy.generate_displacements"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_displacements()</span></code></a> for related details.</p>
 <dl class="field-list simple">
@@ -2748,6 +2763,10 @@ is shortened by <code class="docutils literal notranslate"><span class="pre">d</
 opposites, doubling the number of snapshots. Default is
 False.</p></li>
 <li><p><strong>random_seed</strong> (<em>32-bit unsigned int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Random seed. Default is None.</p></li>
+<li><p><strong>first_snapshot</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Index of the first snapshot. With a seed, snapshot <em>i</em> depends on
+the seed and on <em>i</em> alone, so an ensemble can be extended or
+generated in blocks without changing the snapshots already in it.
+See <code class="xref py py-meth docutils literal notranslate"><span class="pre">RandomDisplacements.run()</span></code>. Default is 0.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2767,11 +2786,11 @@ False.</p></li>
 <li><p><strong>settings</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em>) – <p>Selects which parameters are written out. Only the entries
 to be changed from the defaults need to be set. The
 available parameters and their default settings are:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;force_sets&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;displacements&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;force_constants&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
- <span class="s1">&#39;born_effective_charge&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;dielectric_constant&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">'force_sets'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">'displacements'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">'force_constants'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+ <span class="s1">'born_effective_charge'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">'dielectric_constant'</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>The default settings are updated by <code class="docutils literal notranslate"><span class="pre">{'force_constants':</span> <span class="pre">True}</span></code>
@@ -2781,9 +2800,9 @@ unless <code class="docutils literal notranslate"><span class="pre">{'force_cons
 <li><p><strong>hdf5_settings</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em><em> (</em><em>to be implemented</em><em>)</em>) – <p>Force constants and force sets are stored in an HDF5 file when
 activated in the dict. The default filename is the filename of
 the yaml file with <code class="docutils literal notranslate"><span class="pre">.yaml</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">.hdf5</span></code>. Keys:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
- <span class="s1">&#39;force_constants&#39;</span><span class="p">:</span> <span class="nb">bool</span> <span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
- <span class="s1">&#39;force_sets&#39;</span><span class="p">:</span> <span class="nb">bool</span> <span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">'filename'</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+ <span class="s1">'force_constants'</span><span class="p">:</span> <span class="nb">bool</span> <span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+ <span class="s1">'force_sets'</span><span class="p">:</span> <span class="nb">bool</span> <span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)}</span>
 </pre></div>
 </div>
 </p></li>
@@ -3518,8 +3537,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

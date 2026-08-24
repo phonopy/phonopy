@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -222,6 +222,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -352,11 +353,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -410,8 +418,8 @@
   <section class="tex2jax_ignore mathjax_ignore" id="interfaces-to-calculators">
 <span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Link to this heading">#</a></h1>
 <p>The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk, SIESTA,
-CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, LAMMPS and Questaal(QLM)
-are built in to the usual phonopy command. See the command options
+CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, LAMMPS, Questaal(QLM) and
+Octopus are built in to the usual phonopy command. See the command options
 and how to invoke each of them at <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>. <a class="reference internal" href="external-tools.html#external-tools-phonolammps"><span class="std std-ref">LAMMPS interface</span></a> is provided as an external tool by Abel Carreras.</p>
 <section id="list-of-force-calculators">
 <span id="interfaces-to-force-calculators"></span><h2>List of force calculators<a class="headerlink" href="#list-of-force-calculators" title="Link to this heading">#</a></h2>
@@ -434,6 +442,7 @@ and how to invoke each of them at <a class="reference internal" href="command-op
 <li class="toctree-l1"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 </ul>
 </div>
 <p>The VASP DFPT interface reads <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> and creates <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> file.</p>
@@ -463,6 +472,7 @@ and how to invoke each of them at <a class="reference internal" href="command-op
 <span class="n">ABACUS</span>    <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">angstrom</span><span class="o">.</span><span class="n">au</span>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">Ry</span><span class="o">/</span><span class="n">au</span>         <span class="n">Ry</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">Octopus</span>   <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 </pre></div>
 </div>
 <p>For these sets of physical properties, phonon frequency is calculated in THz.</p>
@@ -490,6 +500,7 @@ the default supercell file names based on those shown below are used.</p>
 <span class="n">ABACUS</span>    <span class="o">|</span> <span class="n">STRU</span>          <span class="o">|</span> <span class="n">STRU</span><span class="o">.</span><span class="ow">in</span>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="n">unitcell</span>      <span class="o">|</span> <span class="n">supercell</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="n">site</span><span class="o">.</span><span class="n">lm</span>       <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="n">lm</span>
+<span class="n">Octopus</span>   <span class="o">|</span> <span class="n">POSCAR</span>        <span class="o">|</span> <span class="n">geometry</span><span class="o">-</span><span class="mi">000</span>
 </pre></div>
 </div>
 </section>
@@ -515,6 +526,7 @@ on calculator, and the list is shown below:</p>
 <span class="n">ABACUS</span>    <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">Octopus</span>   <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -536,6 +548,7 @@ on calculator, and the list is shown below:</p>
 <span class="n">ABACUS</span>    <span class="o">|</span> <span class="mf">21.49068</span>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">15.633302</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="mf">108.97077</span>
+<span class="n">Octopus</span>   <span class="o">|</span> <span class="mf">154.10794</span>
 </pre></div>
 </div>
 </section>
@@ -557,6 +570,7 @@ on calculator, and the list is shown below:</p>
 <span class="n">ABACUS</span>    <span class="o">|</span> <span class="mf">51.422090</span>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">14.399652</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="n">N</span><span class="o">/</span><span class="n">A</span>
+<span class="n">Octopus</span>   <span class="o">|</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
@@ -669,8 +683,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>

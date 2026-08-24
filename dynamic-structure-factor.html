@@ -27,17 +27,17 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -224,6 +224,7 @@
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -354,11 +355,18 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
 
 
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -478,30 +486,30 @@ the input files in <code class="docutils literal notranslate"><span class="pre">
     <span class="n">q_cartesian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dsf</span><span class="o">.</span><span class="n">qpoints</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">q_cartesian</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [1] Distance from Gamma point,&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [2-4] Q-points in cubic reciprocal space, &quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [5-8] 4 band frequencies in meV (becaues of degeneracy), &quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [9-12] 4 dynamic structure factors.&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# For degenerate bands, dynamic structure factors are summed.&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"# [1] Distance from Gamma point,"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"# [2-4] Q-points in cubic reciprocal space, "</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"# [5-8] 4 band frequencies in meV (becaues of degeneracy), "</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"# [9-12] 4 dynamic structure factors."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"# For degenerate bands, dynamic structure factors are summed."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
 
     <span class="c1"># Use as iterator</span>
     <span class="k">for</span> <span class="n">Q</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
         <span class="n">Qpoints</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">dsf</span><span class="o">.</span><span class="n">frequencies</span><span class="p">,</span> <span class="n">dsf</span><span class="o">.</span><span class="n">dynamic_structure_factors</span>
     <span class="p">):</span>
         <span class="n">bi_sets</span> <span class="o">=</span> <span class="n">degenerate_sets</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  <span class="c1"># to treat for band degeneracy</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="n">d</span>
-        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
-        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="n">get_physical_units</span><span class="p">()</span><span class="o">.</span><span class="n">THzToEv</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bi</span><span class="p">))</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">"</span><span class="si">%f</span><span class="s2">  "</span> <span class="o">%</span> <span class="n">d</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">"</span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  "</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"</span><span class="si">%f</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="n">get_physical_units</span><span class="p">()</span><span class="o">.</span><span class="n">THzToEv</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bi</span><span class="p">))</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">]</span>
         <span class="p">)</span>
-        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;  &quot;</span>
-        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">"  "</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">"</span><span class="si">%f</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
 
     <span class="c1"># Q-points in reduced coordinates wrt cubic reciprocal space</span>
     <span class="n">Qpoints</span> <span class="o">=</span> <span class="p">[</span>
@@ -532,11 +540,11 @@ the input files in <code class="docutils literal notranslate"><span class="pre">
         <span class="c1"># a parameter.</span>
         <span class="c1"># D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)</span>
         <span class="c1"># f(s) = \sum_i a_i \exp((-b_i s^2) + c</span>
-        <span class="c1"># s = |k&#39; - k|/2 = |Q|/2 is in angstron^-1, where k, k&#39;, Q are given</span>
+        <span class="c1"># s = |k' - k|/2 = |Q|/2 is in angstron^-1, where k, k', Q are given</span>
         <span class="c1"># without 2pi.</span>
         <span class="c1"># a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c</span>
         <span class="n">f_params</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;Na&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"Na"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="mf">3.148690</span><span class="p">,</span>
                 <span class="mf">2.594987</span><span class="p">,</span>
                 <span class="mf">4.073989</span><span class="p">,</span>
@@ -549,7 +557,7 @@ the input files in <code class="docutils literal notranslate"><span class="pre">
                 <span class="mf">0.217037</span><span class="p">,</span>
                 <span class="mf">0.045300</span><span class="p">,</span>
             <span class="p">],</span>  <span class="c1"># 1+</span>
-            <span class="s2">&quot;Cl&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"Cl"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="mf">1.061802</span><span class="p">,</span>
                 <span class="mf">0.144727</span><span class="p">,</span>
                 <span class="mf">7.139886</span><span class="p">,</span>
@@ -569,7 +577,7 @@ the input files in <code class="docutils literal notranslate"><span class="pre">
         <span class="c1"># For INS, scattering length has to be given.</span>
         <span class="c1"># The following values is obtained at (Coh b)</span>
         <span class="c1"># https://www.nist.gov/ncnr/neutron-scattering-lengths-list</span>
-        <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span> <span class="n">Qpoints</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">scattering_lengths</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Na&quot;</span><span class="p">:</span> <span class="mf">3.63</span><span class="p">,</span> <span class="s2">&quot;Cl&quot;</span><span class="p">:</span> <span class="mf">9.5770</span><span class="p">})</span>
+        <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span> <span class="n">Qpoints</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">scattering_lengths</span><span class="o">=</span><span class="p">{</span><span class="s2">"Na"</span><span class="p">:</span> <span class="mf">3.63</span><span class="p">,</span> <span class="s2">"Cl"</span><span class="p">:</span> <span class="mf">9.5770</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>The output of the script is like below.</p>
@@ -692,8 +700,8 @@ By Author name not set
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
 
   <footer class="bd-footer">
   </footer>
