@@ -3,17 +3,16 @@
 
 from __future__ import annotations
 
+import sys
+from unittest import mock
+
 import numpy as np
 import pytest
 
 from phonopy.qha.lattice_sampling import (
-    build_random_displacement_supercells,
     build_strain_cells_manifest,
     get_free_lattice_dof,
     grid_strained_cells,
-    read_strain_cells,
-    sample_strained_cells,
-    write_strain_cells,
     write_strain_cells_manifest,
 )
 from phonopy.structure.atoms import PhonopyAtoms
@@ -170,115 +169,6 @@ def test_dof_rhombohedral_setting_rejected() -> None:
         get_free_lattice_dof(cell)
 
 
-def test_sample_hexagonal() -> None:
-    """Sampling preserves b = a and fractional positions and honors ranges."""
-    cell = _hexagonal()
-    dof = get_free_lattice_dof(cell)
-    ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    cells = sample_strained_cells(cell, dof, ranges, num=8, seed=0)
-
-    assert len(cells) == 8
-    for c in cells:
-        lengths = np.linalg.norm(c.cell, axis=1)
-        # b = a preserved.
-        np.testing.assert_allclose(lengths[0], lengths[1], rtol=1e-12)
-        assert 3.9 <= lengths[0] <= 4.1
-        assert 5.8 <= lengths[2] <= 6.2
-        # Fractional positions unchanged.
-        np.testing.assert_allclose(c.scaled_positions, cell.scaled_positions)
-
-
-def test_sample_reproducible() -> None:
-    """The same seed reproduces the same cells."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    a = sample_strained_cells(cell, dof, ranges, num=5, seed=42)
-    b = sample_strained_cells(cell, dof, ranges, num=5, seed=42)
-    for ca, cb in zip(a, b, strict=True):
-        np.testing.assert_allclose(ca.cell, cb.cell, rtol=1e-15)
-
-
-def test_sample_invalid_ranges() -> None:
-    """Wrong range keys or inverted ranges raise ValueError."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    with pytest.raises(ValueError):
-        sample_strained_cells(cell, dof, {"a": (3.9, 4.1)}, num=3)  # missing c
-    with pytest.raises(ValueError):
-        sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "b": (1, 2)}, num=3)
-    with pytest.raises(ValueError):
-        sample_strained_cells(cell, dof, {"a": (4.1, 3.9), "c": (5.8, 6.2)}, num=3)
-
-
-def test_random_displacement_supercells() -> None:
-    """RD supercells have the expected size and distinct displacements."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    unitcells = sample_strained_cells(
-        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3, seed=0
-    )
-    supercell_matrix = np.diag([2, 2, 2])
-    supercells, _ = build_random_displacement_supercells(
-        unitcells, supercell_matrix, distance=0.1, seed=0
-    )
-
-    assert len(supercells) == 3
-    for sc, uc in zip(supercells, unitcells, strict=True):
-        assert len(sc) == 8 * len(uc)
-    # Different cells give different displaced structures.
-    assert not np.allclose(supercells[0].positions, supercells[1].positions)
-
-
-def _displacement_norms(supercell: PhonopyAtoms, reference: PhonopyAtoms) -> np.ndarray:
-    """Return the per-atom displacement lengths of supercell from reference.
-
-    The minimum image convention is applied, because an atom displaced across
-    a cell boundary comes back wrapped into the cell and a raw Cartesian
-    difference would then report the cell size instead of the displacement.
-
-    """
-    diff = supercell.scaled_positions - reference.scaled_positions
-    diff -= np.rint(diff)
-    return np.linalg.norm(diff @ reference.cell, axis=1)
-
-
-def test_random_displacement_supercells_distance_range() -> None:
-    """max_distance samples the distance from [distance, max_distance].
-
-    Without max_distance every atom moves by exactly distance, which suits
-    harmonic force constants. With it, the distances spread over the range,
-    covering the large-amplitude region an SSCHA calculation visits.
-
-    """
-    from phonopy import Phonopy
-
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    unitcells = sample_strained_cells(
-        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 1, seed=0
-    )
-    supercell_matrix = np.diag([2, 2, 2])
-    reference = Phonopy(
-        unitcells[0], supercell_matrix=supercell_matrix, log_level=0
-    ).supercell
-
-    fixed, _ = build_random_displacement_supercells(
-        unitcells, supercell_matrix, distance=0.1, count=20, seed=0
-    )
-    for supercell in fixed:
-        assert _displacement_norms(supercell, reference) == pytest.approx(0.1)
-
-    ranged, _ = build_random_displacement_supercells(
-        unitcells, supercell_matrix, distance=0.03, max_distance=1.5, count=20, seed=0
-    )
-    norms = np.concatenate([_displacement_norms(sc, reference) for sc in ranged])
-    assert norms.min() >= 0.03 - 1e-8
-    assert norms.max() <= 1.5 + 1e-8
-    # The distances are sampled over the range rather than staying fixed.
-    assert norms.max() - norms.min() > 0.5
-
-
 def test_grid_hexagonal_tensor_product() -> None:
     """A hexagonal grid is the tensor product of the per-axis linspaces."""
     cell = _hexagonal()  # a = b = 4, c = 6
@@ -362,24 +252,13 @@ def test_grid_invalid() -> None:
         grid_strained_cells(cell, dof, {"a": (4.1, 3.9), "c": (5.8, 6.2)}, num=3)
 
 
-def test_random_displacement_count_per_cell() -> None:
-    """A count of N yields N supercells per unit cell in a flat list."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    unitcells = sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3)
-    supercells, _ = build_random_displacement_supercells(
-        unitcells, np.diag([2, 2, 2]), distance=0.1, count=2, seed=0
-    )
-    assert len(supercells) == 6  # 3 cells x 2 each
-
-
 def test_build_strain_cells_manifest() -> None:
-    """The manifest records the seed, ranges and per-cell free lengths."""
+    """The manifest records the ranges, grid shape and per-cell lengths."""
     cell = _hexagonal()
     dof = get_free_lattice_dof(cell)
     ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    unitcells = sample_strained_cells(cell, dof, ranges, num=3, seed=7)
-    filenames = [f"unitcell-{i + 1:05d}" for i in range(len(unitcells))]
+    unitcells = grid_strained_cells(cell, dof, ranges, num=3)
+    filenames = [f"unitcell-{i + 1:03d}" for i in range(len(unitcells))]
 
     manifest = build_strain_cells_manifest(
         phonopy_version="0.0.0",
@@ -389,15 +268,8 @@ def test_build_strain_cells_manifest() -> None:
         dof=dof,
         command_line="phonopy-strain-cells phonopy_disp.yaml",
         ranges=ranges,
-        num=3,
-        grid_shape=None,
-        displacement_distance=None,
-        displacement_distance_max=None,
-        displacement_distance_sampling="supercell",
-        random_displacements=None,
+        grid_shape=[3, 3],
         symprec=1e-5,
-        seed=7,
-        sampling="random",
         prefix="unitcell",
         kind="strained unit cell",
         unitcells=unitcells,
@@ -405,16 +277,11 @@ def test_build_strain_cells_manifest() -> None:
     )
 
     assert manifest["free_dof"] == ["a", "c"]
-    assert manifest["parameters"]["sampling"] == "random"
-    assert manifest["parameters"]["seed"] == 7
     assert manifest["parameters"]["ranges"] == {"a": [3.9, 4.1], "c": [5.8, 6.2]}
-    assert manifest["parameters"]["grid_shape"] is None
-    assert manifest["parameters"]["displacement_distance"] is None
-    assert manifest["parameters"]["displacement_distance_max"] is None
-    assert manifest["parameters"]["random_displacements"] is None
+    assert manifest["parameters"]["grid_shape"] == [3, 3]
     cells = manifest["output"]["cells"]
-    assert manifest["output"]["num_cells"] == 3
-    assert len(cells) == 3
+    assert manifest["output"]["num_cells"] == 9
+    assert len(cells) == 9
     for entry, uc in zip(cells, unitcells, strict=True):
         lengths = np.linalg.norm(uc.cell, axis=1)
         assert entry["a"] == pytest.approx(lengths[0], abs=1e-6)
@@ -427,8 +294,8 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
     cell = _tetragonal()
     dof = get_free_lattice_dof(cell)
     ranges = {"a": (3.9, 4.1), "c": (5.8, 6.2)}
-    unitcells = sample_strained_cells(cell, dof, ranges, num=2, seed=1)
-    filenames = [f"unitcell-{i + 1:05d}" for i in range(len(unitcells))]
+    unitcells = grid_strained_cells(cell, dof, ranges, num=2)
+    filenames = [f"unitcell-{i + 1:03d}" for i in range(len(unitcells))]
     manifest = build_strain_cells_manifest(
         phonopy_version="0.0.0",
         calculator="vasp",
@@ -437,17 +304,10 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
         dof=dof,
         command_line="phonopy-strain-cells phonopy_disp.yaml",
         ranges=ranges,
-        num=2,
-        grid_shape=None,
-        displacement_distance=0.03,
-        displacement_distance_max=1.5,
-        displacement_distance_sampling="supercell",
-        random_displacements=1,
+        grid_shape=[2, 2],
         symprec=1e-5,
-        seed=1,
-        sampling="random",
-        prefix="supercell",
-        kind="random-displacement supercell",
+        prefix="unitcell",
+        kind="strained unit cell",
         unitcells=unitcells,
         filenames=filenames,
     )
@@ -458,117 +318,22 @@ def test_write_strain_cells_manifest_roundtrip(tmp_path) -> None:
     assert loaded == manifest
 
 
-def test_strain_cells_hdf5_round_trip(tmp_path):
-    """The written structures and displacements reproduce the supercells."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    unitcells = sample_strained_cells(
-        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 3, seed=0
-    )
-    supercell_matrix = np.diag([2, 2, 2])
-    supercells, displacements = build_random_displacement_supercells(
-        unitcells, supercell_matrix, distance=0.03, max_distance=0.6, count=2, seed=0
-    )
+@pytest.mark.parametrize(
+    "option", ["--rd", "--amplitude", "--amin", "--amax", "--amax-per-atom"]
+)
+def test_strain_cells_cli_rejects_displacement_options(option: str) -> None:
+    """The displacement options are gone, not silently ignored.
 
-    path = tmp_path / "strain_cells.hdf5"
-    write_strain_cells(
-        path,
-        unitcells=unitcells,
-        supercells=supercells,
-        displacements=displacements,
-        supercell_matrix=supercell_matrix,
-        phonopy_version="0.0.0",
-        calculator="vasp",
-        length_unit="angstrom",
-        displacement_distance=0.03,
-        displacement_distance_max=0.6,
-    )
-    loaded = read_strain_cells(path)
-
-    assert loaded.calculator == "vasp"
-    assert loaded.length_unit == "angstrom"
-    assert loaded.phonopy_version == "0.0.0"
-    assert loaded.displacement_distance == pytest.approx(0.03)
-    assert loaded.displacement_distance_max == pytest.approx(0.6)
-    np.testing.assert_array_equal(loaded.supercell_matrix, supercell_matrix)
-    assert loaded.displacements.shape == (6, 8 * len(cell), 3)
-    np.testing.assert_allclose(loaded.displacements, displacements)
-
-    # Ideal positions plus displacements reproduce every displaced supercell.
-    for i, supercell in enumerate(supercells):
-        np.testing.assert_allclose(loaded.lattices[i], supercell.cell, atol=1e-12)
-        positions = (
-            loaded.ideal_scaled_positions @ loaded.lattices[i] + loaded.displacements[i]
-        )
-        np.testing.assert_allclose(positions, supercell.positions, atol=1e-12)
-
-
-@pytest.mark.parametrize("per_atom", [True, False])
-def test_strain_cells_hdf5_rejects_superseded_per_atom_bool(tmp_path, per_atom: bool):
-    """Files carrying the bool this attribute replaced are rejected.
-
-    'displacement_distance_per_atom' was written by phonopy only between the
-    introduction of the per-atom draw and its replacement by
-    'displacement_distance_sampling'. Such files are not read: ignoring the
-    old attribute would report the per-supercell default for a file that may
-    have been made per atom.
+    Generating random-displacement supercells over a strained box existed to
+    train one machine-learning potential across the whole box. That strategy
+    was dropped in favour of one potential per grid point at a fixed lattice,
+    whose training structures are generated by the ordinary phonopy workflow,
+    so a command line still carrying these options must fail rather than
+    quietly produce plain unit cells.
 
     """
-    h5py = pytest.importorskip("h5py")
+    from phonopy.scripts.phonopy_strain_cells import get_options
 
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    unitcells = sample_strained_cells(cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 2)
-    supercell_matrix = np.diag([2, 2, 2])
-    supercells, displacements = build_random_displacement_supercells(
-        unitcells, supercell_matrix, distance=0.03, max_distance=0.6, seed=0
-    )
-
-    path = tmp_path / "strain_cells.hdf5"
-    write_strain_cells(
-        path,
-        unitcells=unitcells,
-        supercells=supercells,
-        displacements=displacements,
-        supercell_matrix=supercell_matrix,
-        calculator="vasp",
-        length_unit="angstrom",
-        displacement_distance=0.03,
-        displacement_distance_max=0.6,
-    )
-    # Rewrite the file the way the superseded phonopy version wrote it.
-    with h5py.File(path, "r+") as f:
-        del f.attrs["displacement_distance_sampling"]
-        f.attrs["displacement_distance_per_atom"] = per_atom
-
-    with pytest.raises(ValueError):
-        read_strain_cells(path)
-
-
-def test_strain_cells_hdf5_rejects_differing_fractional_coordinates(tmp_path):
-    """Storing one ideal-position array requires cells to share it."""
-    cell = _tetragonal()
-    dof = get_free_lattice_dof(cell)
-    unitcells = sample_strained_cells(
-        cell, dof, {"a": (3.9, 4.1), "c": (5.8, 6.2)}, 2, seed=0
-    )
-    supercell_matrix = np.diag([2, 2, 2])
-    supercells, displacements = build_random_displacement_supercells(
-        unitcells, supercell_matrix, distance=0.1, seed=0
-    )
-    shifted = unitcells[1].scaled_positions.copy()
-    shifted[0] += 0.01
-    unitcells[1] = PhonopyAtoms(
-        cell=unitcells[1].cell,
-        scaled_positions=shifted,
-        symbols=unitcells[1].symbols,
-    )
-
-    with pytest.raises(ValueError, match="fractional coordinates"):
-        write_strain_cells(
-            tmp_path / "strain_cells.hdf5",
-            unitcells=unitcells,
-            supercells=supercells,
-            displacements=displacements,
-            supercell_matrix=supercell_matrix,
-        )
+    argv = ["phonopy-strain-cells", "phonopy_disp.yaml", option]
+    with mock.patch.object(sys, "argv", argv), pytest.raises(SystemExit):
+        get_options()

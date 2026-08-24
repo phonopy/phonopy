@@ -1141,3 +1141,37 @@ def test_energy_sigma0_version_index():
     vasprun._version = None  # unknown version cannot pick a column
     with pytest.raises(RuntimeError):
         _ = vasprun.energy_sigma0
+
+
+def test_noncollinear_detected_from_vasprunxml():
+    """LNONCOLLINEAR is read and mapped to a spin degeneracy of 1.
+
+    The spin axis of a non-collinear calculation has length 1, exactly as for
+    a non-spin-polarized one, so the tag is the only way to tell that each
+    eigenvalue is a spinor state holding one electron.
+    """
+    with lzma.open(cwd / "vasprun_Si_noncollinear.xml.xz", "rb") as fp:
+        vasprun = VasprunxmlExpat(fp)
+        vasprun.parse()
+
+    assert vasprun.is_noncollinear is True
+    assert vasprun.spin_degeneracy == 1
+    assert vasprun.eigenvalues.shape[0] == 1  # indistinguishable on its own
+    assert vasprun.NELECT == pytest.approx(8.0)
+
+
+@pytest.mark.parametrize(
+    "filename", ["GeSn-vca-vasprun-001.xml.xz", "vasprun_kpoints_opt_spin.xml.xz"]
+)
+def test_collinear_leaves_spin_degeneracy_unset(filename):
+    """Collinear runs report no spin degeneracy, leaving it to the spin axis.
+
+    GeSn-vca is non-spin-polarized and so shares the spin axis length of the
+    non-collinear file above; kpoints_opt_spin is spin-polarized.
+    """
+    with lzma.open(cwd / filename, "rb") as fp:
+        vasprun = VasprunxmlExpat(fp)
+        vasprun.parse()
+
+    assert vasprun.is_noncollinear is False
+    assert vasprun.spin_degeneracy is None

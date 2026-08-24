@@ -2,8 +2,19 @@
 
 # Change Log
 
-## Unreleased
+## Unreleased (v4.5.0)
 
+- Behavior change: random displacements at finite temperature are drawn
+  differently. A fixed random seed now gives the same displacements whatever
+  LAPACK implementation is installed. Their distribution is unchanged, but the
+  random stream moves: a seeded run gives different displacements than in
+  phonopy 4.4 and earlier. `sampling_matrix="eigenvector"` recovers the
+  previous behavior.
+- Supercell file names are now zero-padded to a uniform number of digits. The
+  padding grows when the largest displacement number needs more digits than the
+  minimum of three, so 1000 supercells give `POSCAR-0001`, ..., `POSCAR-1000`
+  instead of `POSCAR-001`, ..., `POSCAR-1000`. Fewer than 1000 supercells are
+  named as before.
 - Behavior change: with `--pypolymlp`, displacement generation no longer forces
   plus-minus pairs, but follows `--pm` (the `PM` tag) as every other path does,
   whose default is `auto`. Fewer supercells are therefore generated: `--rd N`
@@ -11,6 +22,16 @@
   that symmetry does not require. Add `--pm` to recover the previous
   displacements. The forces of a machine-learning potential are smooth enough
   that the error cancellation of plus-minus pairs is not needed.
+- `phonopy.load` now falls back to symfc for a type-II dataset (random
+  displacements, where all atoms are displaced simultaneously) when
+  `fc_calculator` is unspecified, instead of raising an exception. This matches
+  the command line behavior.
+- Behavior change: the command line no longer selects symfc for a type-I
+  dataset (one displaced atom per supercell). The traditional
+  finite-difference calculator is used again, followed by symmetrization with
+  the symfc projector. Add `--fc-calculator symfc` to recover the previous
+  force constants. The choice of the force constants calculator now depends on
+  the dataset type alone and is shared by the command line and `phonopy.load`.
 
 ## Jul-17-2026: Version 4.4.0
 

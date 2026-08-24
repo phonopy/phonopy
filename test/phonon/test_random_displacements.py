@@ -12,7 +12,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-randn_ii_TiPN3 = [
+normals_ii_TiPN3 = [
     -0.75205998,
     0.27277617,
     0.83138473,
@@ -74,7 +74,7 @@ randn_ii_TiPN3 = [
     -0.42092361,
     -0.30136512,
 ]
-randn_ij_TiPN3 = [
+normals_ij_TiPN3 = [
     -0.06170102,
     -0.61992360,
     -0.15385570,
@@ -257,6 +257,251 @@ randn_ij_TiPN3 = [
     0.11404128,
 ]
 disp_ref_TiPN3 = [
+    -0.0139921,
+    -0.1467103,
+    0.0499177,
+    -0.0184652,
+    -0.0457580,
+    0.0311567,
+    -0.0093055,
+    -0.1038517,
+    0.0025469,
+    -0.0092331,
+    0.0181665,
+    0.0145632,
+    -0.0044955,
+    -0.1846546,
+    -0.0269976,
+    0.0024339,
+    -0.1514289,
+    -0.0735135,
+    0.0236752,
+    -0.1397663,
+    -0.0021655,
+    0.0191045,
+    -0.1234406,
+    0.0311259,
+    -0.0133368,
+    0.0703198,
+    0.0771007,
+    0.0024880,
+    0.2986681,
+    -0.0650089,
+    -0.0070736,
+    0.0826114,
+    -0.0178861,
+    -0.0481727,
+    -0.0353204,
+    -0.0300294,
+    -0.0143637,
+    0.1736886,
+    -0.1347469,
+    -0.0012858,
+    0.1810298,
+    0.0218296,
+    -0.0221461,
+    0.2600267,
+    0.0703658,
+    0.0366836,
+    -0.0289361,
+    0.0932440,
+    0.0146079,
+    0.0374171,
+    0.0321373,
+    -0.0629188,
+    0.1846235,
+    0.0955936,
+    0.0439165,
+    0.0893446,
+    0.1069014,
+    -0.0496009,
+    0.0136494,
+    -0.0928596,
+    -0.0561736,
+    0.1209682,
+    -0.0429780,
+    -0.0640210,
+    0.1804612,
+    -0.0984785,
+    0.0283641,
+    -0.0154683,
+    0.0020529,
+    -0.0975423,
+    0.0227738,
+    -0.0292111,
+    0.0320202,
+    -0.1137538,
+    0.0222184,
+    0.0690526,
+    -0.1187491,
+    -0.0167023,
+    0.0737557,
+    -0.0132887,
+    0.0235017,
+    0.0832655,
+    -0.1574012,
+    0.0370525,
+    0.0533234,
+    -0.1668163,
+    -0.0075261,
+    0.0372498,
+    -0.0733970,
+    -0.0512159,
+    0.0162566,
+    -0.1622803,
+    0.0138448,
+    0.0621854,
+    -0.0602974,
+    0.0401007,
+    0.0810000,
+    -0.0901605,
+    -0.0445714,
+    0.0574960,
+    -0.0487999,
+    0.0401881,
+    0.1112084,
+    -0.1593127,
+    -0.0181409,
+    0.0661456,
+    -0.1572080,
+    -0.0183305,
+    -0.2571804,
+    -0.1585012,
+    -0.1714262,
+    0.0174708,
+    -0.2248008,
+    -0.0946571,
+    -0.0312199,
+    -0.0175085,
+    0.1391121,
+    -0.0738157,
+    -0.2307013,
+    -0.1231036,
+    -0.0260191,
+    -0.0217891,
+    0.0071777,
+    -0.0149250,
+    -0.1100150,
+    0.0169939,
+    -0.1318810,
+    0.0022363,
+    0.1161809,
+    -0.0212155,
+    0.0759783,
+    -0.0128350,
+    -0.0406390,
+    0.0436901,
+    -0.0580798,
+    -0.0365576,
+    0.0760328,
+    -0.0837137,
+    0.0525299,
+    0.0915990,
+    -0.0268440,
+    -0.0035426,
+    0.0502476,
+    -0.0786706,
+    0.1089748,
+    -0.1040078,
+    0.0820544,
+    0.0008493,
+    -0.1051912,
+    -0.0401635,
+    0.1453380,
+    -0.1253290,
+    0.0380263,
+    0.0743620,
+    -0.1016348,
+    -0.0273094,
+    -0.1378251,
+    -0.1261827,
+    -0.0154314,
+    -0.1426802,
+    -0.0669976,
+    -0.0170440,
+    -0.1604904,
+    -0.1858899,
+    0.1594560,
+    -0.0662879,
+    -0.1829222,
+    0.1334110,
+    -0.0583901,
+    0.2756146,
+    0.3073976,
+    0.0150459,
+    0.2327394,
+    0.2643992,
+    0.0025823,
+    0.0880147,
+    0.0072265,
+    -0.0167039,
+    0.1695736,
+    0.1377619,
+    -0.0424297,
+    0.2198620,
+    0.2125829,
+    0.0638527,
+    0.2284500,
+    0.0274021,
+    0.0390822,
+    0.0831478,
+    0.0531077,
+    -0.0961539,
+    0.0289731,
+    -0.0319525,
+    0.0900563,
+    -0.0280840,
+    0.0171844,
+    0.0060835,
+    -0.1595669,
+    -0.0070878,
+    0.0491180,
+    -0.1390511,
+    0.0201374,
+    0.0879246,
+    0.0395648,
+    -0.0279471,
+    0.0249554,
+    -0.0753852,
+    0.0114907,
+    0.1018765,
+    -0.1199073,
+    -0.0265889,
+    0.0608649,
+    -0.1327127,
+    0.0210577,
+    -0.0375886,
+    -0.0450452,
+    0.0191296,
+    0.0425393,
+    0.3003195,
+    -0.2376978,
+    0.0071464,
+    0.3127125,
+    -0.1029075,
+    0.0289461,
+    0.0842798,
+    0.0955425,
+    0.1030041,
+    0.1486068,
+    -0.2807427,
+    -0.0238278,
+    0.1882260,
+    -0.2696367,
+    -0.1205425,
+    0.2373104,
+    -0.2575442,
+    -0.0374932,
+    -0.0249045,
+    -0.0460490,
+    -0.0025609,
+    0.0519746,
+    -0.0265196,
+]
+
+# The same draw under sampling_matrix="eigenvector", which needs the
+# precalculated eigenvectors to be reproducible across eigensolvers.
+disp_ref_TiPN3_eigenvector = [
     0.1618134,
     -0.0614143,
     0.0210274,
@@ -774,16 +1019,17 @@ def _generate_random_displacements(ph, d_max, nbins):
 def test_random_displacements_all_atoms_TiPN3(ph_tipn3: Phonopy):
     """Test by fixed random numbers of np.random.normal.
 
-    randn_ii and randn_ij were created by
+    normals_ii and normals_ij were created by
 
         np.random.seed(seed=100)
-        randn_ii = np.random.normal(size=(N_ii, 1, num_band))
-        randn_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
+        normals_ii = np.random.normal(size=(N_ii, 1, num_band))
+        normals_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
 
-    Precalculated eigenvectors are used because those depend on
-    eigensolvers such as openblas, mkl, blis, or netlib. Eigenvalues
-    are expected to be equivalent over the eigensolvers. So the
-    eigenvalues calculated on the fly are used.
+    The eigenvectors are computed on the fly. Under the default
+    sampling_matrix="symmetric" they enter only through
+    E.diag(sigma).E^dagger, so the displacements do not depend on which
+    eigenvectors the solver returned; see the eigenvector variant below,
+    which does and therefore has to pin them.
 
     """
     ph = ph_tipn3
@@ -807,29 +1053,128 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3: Phonopy):
 
     sqrt_masses = np.repeat(np.sqrt(ph.supercell.masses), 3)
     uu_bare = _mass_sand(uu, sqrt_masses)
-    uu_inv_bare = np.linalg.pinv(uu_bare)
+    # uu is singular by the three translational modes, whose singular values
+    # sit at rounding level and so depend on the machine. numpy's default
+    # rcond of 1e-15 is not always below them, and a translational mode that
+    # survives the pseudo-inverse enters it as its reciprocal, i.e. as ~1e12.
+    # The smallest physical singular value is ~1.6e-2 against a largest of
+    # ~23, so a cut ten orders of magnitude above rounding separates them
+    # with room to spare.
+    uu_inv_bare = np.linalg.pinv(uu_bare, rcond=1e-6)
     _uu_inv = _mass_sand(uu_inv_bare, sqrt_masses)
 
     np.testing.assert_allclose(_uu_inv, uu_inv, atol=1e-5, rtol=1e-5)
+
+
+def test_random_displacements_all_atoms_TiPN3_eigenvector(ph_tipn3: Phonopy):
+    """Test sampling_matrix="eigenvector", the behaviour up to phonopy 4.4.
+
+    Precalculated eigenvectors are used because this choice makes the
+    displacements depend on them, and they depend in turn on the eigensolver
+    (openblas, mkl, blis, netlib). Eigenvalues are equivalent over the
+    eigensolvers, so those are calculated on the fly.
+
+    """
+    ph = ph_tipn3
+    rd = _get_random_displacements_all_atoms_TiPN3(
+        ph, sampling_matrix="eigenvector", pin_eigvecs=True
+    )
+    np.testing.assert_allclose(
+        np.array(disp_ref_TiPN3_eigenvector), rd.u.ravel(), atol=1e-5
+    )
+
+    rd.run_d2f()
+    np.testing.assert_allclose(
+        rd.force_constants, ph.force_constants, atol=1e-5, rtol=1e-5
+    )
+
+
+def test_random_displacements_gauge_invariance_TiPN3(ph_tipn3: Phonopy):
+    """The displacements must not depend on the eigenvector convention.
+
+    Eigenvectors are fixed only up to a rotation inside a degenerate subspace
+    and, at q != -q, a phase per band. Neither has physical content.
+    sampling_matrix="symmetric" contracts them as E.diag(sigma).E^dagger and
+    is therefore unaffected; "eigenvector" is not, which is what makes this a
+    test rather than a tautology.
+
+    """
+    ph = ph_tipn3
+    rng = np.random.default_rng(0)
+
+    def _regauge(rd: RandomDisplacements) -> None:
+        """Rotate degenerate eigenvectors and rephase the complex ones."""
+        for eigvals, eigvecs in (
+            (rd._eigvals_ii, rd._eigvecs_ii),
+            (rd._eigvals_ij, rd._eigvecs_ij),
+        ):
+            for w, v in zip(eigvals, eigvecs, strict=True):
+                order = np.argsort(w)
+                start = 0
+                for k in range(1, len(order) + 1):
+                    if k == len(order) or abs(w[order[k]] - w[order[start]]) > 1e-8:
+                        group = order[start:k]
+                        if len(group) >= 2:
+                            c, s = np.cos(0.7), np.sin(0.7)
+                            a = v[:, group[0]].copy()
+                            b = v[:, group[1]].copy()
+                            v[:, group[0]] = c * a - s * b
+                            v[:, group[1]] = s * a + c * b
+                        start = k
+                if np.iscomplexobj(v):
+                    v *= np.exp(1j * rng.uniform(0, 2 * np.pi, v.shape[1]))
+
+    for sampling_matrix, invariant in (("symmetric", True), ("eigenvector", False)):
+        plain = _get_random_displacements_all_atoms_TiPN3(
+            ph, sampling_matrix=sampling_matrix
+        )
+        regauged = _get_random_displacements_all_atoms_TiPN3(
+            ph, sampling_matrix=sampling_matrix, regauge=_regauge
+        )
+        difference = np.abs(plain.u - regauged.u).max()
+        if invariant:
+            assert difference < 1e-10
+        else:
+            assert difference > 1e-3
 
 
 def test_random_displacements_all_atoms_TiPN3_max_distance(ph_tipn3):
     """Test max_distance."""
     rd = _get_random_displacements_all_atoms_TiPN3(ph_tipn3)
     n_gt_max = (np.linalg.norm(rd.u.reshape(-1, 3), axis=1) > 0.2).sum()
-    assert n_gt_max == 5
+    assert n_gt_max == 20
     rd = _get_random_displacements_all_atoms_TiPN3(ph_tipn3, max_distance=0.2)
     distances = np.linalg.norm(rd.u.reshape(-1, 3), axis=1)
     distances_gt_max = np.extract(distances > 0.2 - 1e-5, distances)
-    assert len(distances_gt_max) == 5
+    assert len(distances_gt_max) == 20
     np.testing.assert_almost_equal(distances_gt_max, 0.2)
 
 
 def _get_random_displacements_all_atoms_TiPN3(
-    ph: Phonopy, max_distance=None
+    ph: Phonopy,
+    max_distance=None,
+    sampling_matrix=None,
+    pin_eigvecs: bool = False,
+    regauge=None,
 ) -> RandomDisplacements:
+    """Return a RandomDisplacements driven by the fixed normals above.
+
+    pin_eigvecs replaces the eigenvectors by precalculated ones. That is
+    needed only for sampling_matrix="eigenvector", whose displacements depend
+    on which eigenvectors the solver returned and so on the LAPACK
+    implementation. The default "symmetric" does not, so it can use the
+    eigenvectors computed on the fly.
+
+    regauge, if given, is called on the instance to replace the eigenvectors
+    by an equally valid set before the displacements are drawn.
+
+    """
     rd = RandomDisplacements(
-        ph.supercell, ph.primitive, ph.force_constants, max_distance=max_distance
+        ph.supercell,
+        ph.primitive,
+        ph.force_constants,
+        max_distance=max_distance,
+        sampling_matrix=sampling_matrix,
     )
     num_band = len(ph.primitive) * 3
     N = len(ph.supercell) // len(ph.primitive)
@@ -839,20 +1184,23 @@ def _get_random_displacements_all_atoms_TiPN3(
     N_ii = N - N_ij * 2
     shape_ii = (N_ii, 1, num_band)
     shape_ij = (N_ij, 2, 1, num_band)
-    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
-    randn_ij = np.reshape(randn_ij_TiPN3, shape_ij)
+    normals_ii = np.reshape(normals_ii_TiPN3, shape_ii)
+    normals_ij = np.reshape(normals_ij_TiPN3, shape_ij)
 
-    eigvecs_ii = np.reshape(
-        np.loadtxt(os.path.join(current_dir, "eigvecs_ii_TiPN3.txt")),
-        (N_ii, num_band, num_band),
-    )
-    eigvecs_ij = np.reshape(
-        np.loadtxt(os.path.join(current_dir, "eigvecs_ij_TiPN3.txt"), dtype=complex),
-        (N_ij, num_band, num_band),
-    )
-    rd._eigvecs_ii = eigvecs_ii
-    rd._eigvecs_ij = eigvecs_ij
-    rd.run(500, randn=(randn_ii, randn_ij))
+    if pin_eigvecs:
+        rd._eigvecs_ii = np.reshape(
+            np.loadtxt(os.path.join(current_dir, "eigvecs_ii_TiPN3.txt")),
+            (N_ii, num_band, num_band),
+        )
+        rd._eigvecs_ij = np.reshape(
+            np.loadtxt(
+                os.path.join(current_dir, "eigvecs_ij_TiPN3.txt"), dtype=complex
+            ),
+            (N_ij, num_band, num_band),
+        )
+    if regauge is not None:
+        regauge(rd)
+    rd.run(500, standard_normals=(normals_ii, normals_ij))
     return rd
 
 
@@ -919,6 +1267,147 @@ def test_random_displacements_persist_after_temperature_generation(
     assert ph.random_displacements.qpoints is not None
     assert ph.random_displacements.integrated_modes is not None
     assert ph.random_displacements.frequencies is not None
+
+
+def _seeded_snapshots(
+    ph: Phonopy, number_of_snapshots: int, first_snapshot: int = 0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return the normals and displacements of seeded snapshots.
+
+    The tests below compare the normals exactly and the displacements only to
+    roundoff. What phonopy fixes is which random numbers a snapshot gets; how
+    exactly they are summed into a displacement depends on the array shapes
+    and so on the BLAS and its threading, which is outside phonopy's control.
+    Asserting bit-equality of the displacements would make these tests fail on
+    someone else's machine for a reason that is not the feature under test.
+
+    """
+    ph.init_random_displacements()
+    d = ph.get_random_displacements_at_temperature(
+        300, number_of_snapshots, random_seed=1701, first_snapshot=first_snapshot
+    )
+    rd = ph.random_displacements
+    assert rd is not None and rd.standard_normals is not None
+    normals_ii, normals_ij = (a.copy() for a in rd.standard_normals)
+    return normals_ii, normals_ij, d
+
+
+def test_random_displacements_both_q_sets_are_exercised(ph_tipn3: Phonopy):
+    """Guard for the four tests below.
+
+    A snapshot is built from two sets of random numbers, one for the q with
+    q = -q + G and one for the rest. The first set is the whole commensurate
+    grid when every supercell division is 1 or 2, so on such a supercell those
+    tests would pass whatever the second set did. TiPN3 is 4x2x1, which has
+    both.
+
+    """
+    ph_tipn3.init_random_displacements()
+    rd = ph_tipn3.random_displacements
+    assert rd is not None
+    assert len(rd._ii) > 0
+    assert len(rd._ij) > 0
+
+
+def test_random_displacements_extending_leaves_earlier_snapshots(ph_tipn3: Phonopy):
+    """Asking for more snapshots must not change the ones already asked for.
+
+    An ensemble whose forces have been computed can then be extended instead
+    of being thrown away.
+
+    """
+    five_ii, five_ij, five_d = _seeded_snapshots(ph_tipn3, 5)
+    eight_ii, eight_ij, eight_d = _seeded_snapshots(ph_tipn3, 8)
+    np.testing.assert_array_equal(five_ii, eight_ii[:, :5, :])
+    np.testing.assert_array_equal(five_ij, eight_ij[:, :, :5, :])
+    np.testing.assert_allclose(five_d, eight_d[:5], rtol=1e-10, atol=1e-14)
+
+
+def test_random_displacements_blocks_match_one_call(ph_tipn3: Phonopy):
+    """Generating in blocks must give what one call gives.
+
+    The blocks exist to bound memory and must not be visible in the answer.
+
+    """
+    eight_ii, eight_ij, eight_d = _seeded_snapshots(ph_tipn3, 8)
+    head_ii, head_ij, head_d = _seeded_snapshots(ph_tipn3, 3, first_snapshot=0)
+    tail_ii, tail_ij, tail_d = _seeded_snapshots(ph_tipn3, 5, first_snapshot=3)
+    np.testing.assert_array_equal(np.concatenate([head_ii, tail_ii], axis=1), eight_ii)
+    np.testing.assert_array_equal(np.concatenate([head_ij, tail_ij], axis=2), eight_ij)
+    np.testing.assert_allclose(
+        np.concatenate([head_d, tail_d]), eight_d, rtol=1e-10, atol=1e-14
+    )
+
+
+def test_random_displacements_one_snapshot_alone(ph_tipn3: Phonopy):
+    """One snapshot can be regenerated without the ones before it."""
+    eight_ii, eight_ij, eight_d = _seeded_snapshots(ph_tipn3, 8)
+    one_ii, one_ij, one_d = _seeded_snapshots(ph_tipn3, 1, first_snapshot=3)
+    np.testing.assert_array_equal(one_ii[:, 0, :], eight_ii[:, 3, :])
+    np.testing.assert_array_equal(one_ij[:, :, 0, :], eight_ij[:, :, 3, :])
+    np.testing.assert_allclose(one_d[0], eight_d[3], rtol=1e-10, atol=1e-14)
+
+
+def test_random_displacements_normals_are_shared(ph_tipn3: Phonopy):
+    """The random numbers of a snapshot are its own, whatever else is drawn.
+
+    This is the guarantee; the displacements follow from it only up to
+    roundoff, since the arithmetic downstream is blocked differently for
+    different array shapes.
+
+    """
+    ph_tipn3.init_random_displacements()
+    rd = ph_tipn3.random_displacements
+    assert rd is not None
+
+    rd.run(300, number_of_snapshots=8, random_seed=1701)
+    assert rd.standard_normals is not None
+    eight_ii, eight_ij = (a.copy() for a in rd.standard_normals)
+
+    rd.run(300, number_of_snapshots=1, random_seed=1701, first_snapshot=3)
+    assert rd.standard_normals is not None
+    one_ii, one_ij = rd.standard_normals
+
+    np.testing.assert_array_equal(one_ii[:, 0, :], eight_ii[:, 3, :])
+    np.testing.assert_array_equal(one_ij[:, :, 0, :], eight_ij[:, :, 3, :])
+
+
+def test_random_displacements_normals_can_be_given(ph_tipn3: Phonopy):
+    """Given normals must be used, and must be refused when they do not fit.
+
+    Handing one structure's normals to another is how a realization is shared
+    between structures that differ slightly, so normals of the wrong shape
+    have to raise rather than broadcast into displacements that look
+    plausible.
+
+    """
+    ph_tipn3.init_random_displacements()
+    rd = ph_tipn3.random_displacements
+    assert rd is not None
+
+    rd.run(300, number_of_snapshots=4, random_seed=1701)
+    assert rd.standard_normals is not None
+    normals = tuple(a.copy() for a in rd.standard_normals)
+    expected = rd.u.copy()
+
+    rd.run(300, number_of_snapshots=99, random_seed=9999, standard_normals=normals)
+    # number_of_snapshots and the seed are overridden by the arrays.
+    np.testing.assert_array_equal(rd.u, expected)
+
+    with pytest.raises(ValueError):
+        rd.run(300, standard_normals=(normals[0][:-1], normals[1]))
+
+
+def test_random_displacements_snapshots_differ(ph_tipn3: Phonopy):
+    """Snapshots must be different from each other.
+
+    Without this the three tests above would also pass if every snapshot were
+    the same displacement.
+
+    """
+    _, _, eight = _seeded_snapshots(ph_tipn3, 8)
+    for i in range(1, len(eight)):
+        assert not np.allclose(eight[0], eight[i])
 
 
 def test_treat_imaginary_modes(ph_srtio3: Phonopy):
@@ -1111,6 +1600,93 @@ def test_frequencies_setter_wrong_dimension():
     rd = _get_random_displacements_no_ij()
     with pytest.raises(RuntimeError):
         rd.frequencies = rd.frequencies.ravel()[:-1]
+
+
+def _phase_per_atom(rd: RandomDisplacements, phase: np.ndarray) -> np.ndarray:
+    """Return a phase stored per (primitive atom, lattice point) per atom.
+
+    The pairing of a supercell atom with a lattice point is a relabelling
+    chosen at construction, so this undoes it rather than assuming any
+    particular order.
+
+    """
+    return np.asarray(phase).reshape(-1)[rd._s2ppl].reshape(-1, 1)
+
+
+def _reference_displacements(
+    rd: RandomDisplacements, temperature: float, normals_ii, normals_ij
+) -> np.ndarray:
+    """Return the displacements as they were assembled before 2026-08-17.
+
+    `_solve_ii` and `_solve_ij` used to expand each commensurate point's
+    contribution to the whole supercell with ``[:, self._s2pp, :]`` and
+    accumulate there, so every one of the 36 groups of a 128-atom supercell
+    wrote a (snapshots, supercell atoms, 3) array. They now accumulate in
+    (snapshots, 3, primitive atoms, lattice points) and expand once at the
+    end, which is 3.2 times faster and a third of the peak memory.
+
+    This is the old form, written from the instance's own eigenvectors,
+    phases and sigmas, so that the rewrite cannot drift from what it replaced.
+    The phase is reshaped rather than taken as it comes, because it is now
+    stored per (primitive atom, lattice point); that reshape is a no-op on the
+    old layout and is exactly the blocked ordering the rewrite relies on.
+
+    """
+    n = normals_ii.shape[1]
+    primitive = rd._dynmat.primitive
+    natom = len(rd._dynmat.supercell)
+    s2pp = [primitive.p2p_map[i] for i in primitive.s2p_map]
+
+    u_ii = np.zeros((n, natom, 3))
+    sigmas, _ = rd._get_sigma(rd._eigvals_ii, temperature)
+    for norm_dist, sigma, eigvecs, phase in zip(
+        normals_ii, sigmas, rd._eigvecs_ii, rd._phase_ii, strict=True
+    ):
+        amplitudes = rd._amplitudes(norm_dist, sigma, eigvecs)
+        u_red = np.dot(amplitudes, eigvecs.T).reshape(n, -1, 3)[:, s2pp, :]
+        u_ii += u_red * _phase_per_atom(rd, phase)
+
+    u_ij = np.zeros((n, natom, 3))
+    if rd._ij:
+        sigmas, _ = rd._get_sigma(rd._eigvals_ij, temperature)
+        for norm_dist, sigma, eigvecs, phase in zip(
+            normals_ij, sigmas, rd._eigvecs_ij, rd._phase_ij, strict=True
+        ):
+            amplitudes = rd._amplitudes(norm_dist, sigma, eigvecs)
+            u_red = np.dot(amplitudes, eigvecs.T).reshape(2, n, -1, 3)[:, :, s2pp, :]
+            ph = _phase_per_atom(rd, phase)
+            u_ij += (u_red[0] * ph).real
+            u_ij -= (u_red[1] * ph).imag
+        u_ij = u_ij * np.sqrt(2)
+
+    n_comm = len(rd._comm_points)
+    mass = rd._dynmat.supercell.masses.reshape(-1, 1)
+    return np.array((u_ii + u_ij) / np.sqrt(mass * n_comm), dtype="double")
+
+
+@pytest.mark.parametrize("sampling_matrix", ["symmetric", "eigenvector"])
+def test_random_displacements_match_the_per_q_expansion(
+    ph_tipn3: Phonopy, sampling_matrix: str
+):
+    """The rewritten accumulation must reproduce the per-q expansion.
+
+    Both branches are exercised: TiPN3's supercell is 4x2x1, which has
+    self-conjugate commensurate points and conjugate pairs, and the pairs are
+    where the phase depends on the primitive atom as well as the lattice
+    point, because it carries the basis position.
+
+    """
+    rd = RandomDisplacements(
+        ph_tipn3.supercell,
+        ph_tipn3.primitive,
+        ph_tipn3.force_constants,
+        sampling_matrix=sampling_matrix,
+    )
+    assert rd._ii and rd._ij
+    normals = rd.draw_standard_normals(4, random_seed=7)
+    rd.run(300.0, standard_normals=normals)
+    reference = _reference_displacements(rd, 300.0, *normals)
+    np.testing.assert_allclose(rd.u, reference, rtol=1e-10, atol=1e-14)
 
 
 def _mass_sand(matrix, mass):

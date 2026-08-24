@@ -103,6 +103,7 @@ class RandomDisplacements:
         max_distance: float | None = None,
         factor: float | None = None,
         use_openmp: bool = False,
+        sampling_matrix: Literal["symmetric", "eigenvector"] | None = None,
     ):
         """Init method.
 
@@ -133,6 +134,19 @@ class RandomDisplacements:
             Phonon frequency unit conversion factor to THz
         use_openmp : bool, optional, default=False
             Use OpenMP in calculate dynamical matrix and its inverse.
+        sampling_matrix : str or None, optional
+            How the random normals are turned into displacements. Both
+            choices give the same distribution, but the same random numbers
+            give different displacements. Default is None, i.e. 'symmetric'.
+
+            'symmetric'
+                Use the Hermitian square root, E.diag(sigma).E^dagger, per
+                commensurate q. This depends on the force constants alone,
+                so a fixed random seed gives the same displacements whatever
+                eigenvectors the eigensolver returns, and nearby force
+                constants give nearby displacements.
+            'eigenvector'
+                Use E.diag(sigma), the behaviour of phonopy 4.4 and earlier.
 
         """
         if cutoff_frequency is None or cutoff_frequency < 0:
@@ -155,6 +169,13 @@ class RandomDisplacements:
             self._dist_func = "classical"
         else:
             raise RuntimeError("Either 'quantum' or 'classical' is required.")
+
+        if sampling_matrix is None:
+            self._sampling_matrix = "symmetric"
+        elif sampling_matrix in ("symmetric", "eigenvector"):
+            self._sampling_matrix = sampling_matrix
+        else:
+            raise RuntimeError("Either 'symmetric' or 'eigenvector' is required.")
 
         self._unit_conversion = (
             _physical_units.Hbar
@@ -182,14 +203,16 @@ class RandomDisplacements:
         self._ij: list[int]
         self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
-        s2p = primitive.s2p_map
+        self._n_patom = len(primitive)
+        self._n_lattice = len(supercell) // self._n_patom
+        # Positions and phases are ordered (primitive atom, lattice point) so
+        # that _solve_ii and _solve_ij accumulate efficiently; _to_supercell
+        # returns the displacements they generate to the supercell order.
         p2p = primitive.p2p_map
-        self._s2pp = [p2p[i] for i in s2p]
-        # Transformation matrix of scaled supercell positions to primitive
-        tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell))
-        self._spos = np.dot(self._dynmat.supercell.scaled_positions, tmat)
-        self._ppos = self._dynmat.primitive.scaled_positions
-        self._lpos = self._spos - self._ppos[self._s2pp]
+        self._ppl2s = np.argsort([p2p[i] for i in primitive.s2p_map], kind="stable")
+        self._s2ppl = np.empty(len(supercell), dtype=int)
+        self._s2ppl[self._ppl2s] = np.arange(len(supercell))
+        self._ppos = primitive.scaled_positions
 
         self._eigvals_ii: NDArray[np.double]
         self._eigvecs_ii: NDArray[np.double]
@@ -211,12 +234,19 @@ class RandomDisplacements:
         self._conditions_ii: NDArray[np.bool_] | None = None
         self._conditions_ij: NDArray[np.bool_] | None = None
 
+        # Standard normals used by the last run, kept so that they can be
+        # handed to another instance.
+        self._standard_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = (
+            None
+        )
+
     def run(
         self,
         T: float,
         number_of_snapshots: int = 1,
         random_seed: int | None = None,
-        randn: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
+        first_snapshot: int = 0,
+        standard_normals: tuple[NDArray[np.double], NDArray[np.double]] | None = None,
     ) -> None:
         """Calculate random displacements.
 
@@ -230,43 +260,60 @@ class RandomDisplacements:
         number_of_snapshots : int, optional
             Number of snapshots to be generated. Default is 1.
         random_seed : int or None, optional
-            Random seed passed to np.random.default_rng(seed). Default is None.
-        randn : tuple
-            (randn_ii, randn_ij). Used for testing purpose for the fixed random
-            numbers of random.Generator.standard_normal that can depends on
-            system.
+            Random seed. Each snapshot is drawn from its own generator,
+            seeded by ``np.random.SeedSequence([random_seed, index])``, so
+            that a snapshot depends on its index and not on how many
+            snapshots are requested alongside it. Default is None, in which
+            case the snapshots are drawn from unseeded generators and none
+            of the guarantees below apply.
+        first_snapshot : int, optional
+            Index of the first snapshot to generate. Snapshots
+            ``first_snapshot`` to ``first_snapshot + number_of_snapshots - 1``
+            are returned. Default is 0. Only meaningful with ``random_seed``.
+        standard_normals : tuple of ndarray, optional
+            The standard normals to turn into displacements, as returned by
+            :meth:`draw_standard_normals`. When given, ``random_seed``,
+            ``first_snapshot`` and ``number_of_snapshots`` are ignored and the
+            number of snapshots is taken from the arrays. Default is None,
+            i.e. draw them. Giving another instance's normals puts both on the
+            same realization of the randomness.
+
+        Notes
+        -----
+        With a seed, snapshot *i* is a function of ``random_seed`` and *i*
+        alone. So asking for snapshots 0 to 99 and later for 100 to 199 gives
+        the same 200 snapshots as asking for 0 to 199 at once, a large
+        ensemble can be generated in blocks, and a single snapshot can be
+        regenerated on its own.
+
+        The displacements themselves are reproduced only to roundoff, since
+        the summation order downstream of the random numbers depends on the
+        array shapes and on the BLAS.
+
+        NumPy does not promise that ``Generator`` distribution methods produce
+        the same stream across its own versions (NEP 19), so a seed does not
+        reproduce displacements across NumPy upgrades.
 
         """
-        if np.issubdtype(type(random_seed), np.integer):
-            rng = np.random.default_rng(seed=random_seed)
+        if standard_normals is None:
+            standard_normals = self.draw_standard_normals(
+                number_of_snapshots,
+                random_seed=random_seed,
+                first_snapshot=first_snapshot,
+            )
         else:
-            rng = np.random.default_rng()
+            self._check_standard_normals(standard_normals)
+        self._standard_normals = standard_normals
+        normals_ii, normals_ij = standard_normals
+        number_of_snapshots = normals_ii.shape[1]
 
         N = len(self._comm_points)
 
-        # This randn is used only for testing purpose.
-        if randn is None:
-            shape = (
-                len(self._eigvals_ii),
-                number_of_snapshots,
-                len(self._eigvals_ii[0]),
-            )
-            randn_ii = rng.standard_normal(size=shape)
-            if self._ij:
-                shape_ij = (
-                    len(self._eigvals_ij),
-                    2,
-                    number_of_snapshots,
-                    len(self._eigvals_ij[0]),
-                )
-                randn_ij = rng.standard_normal(size=shape_ij)
-        else:
-            randn_ii = randn[0]
-            randn_ij = randn[1]
-
-        u_ii, self._conditions_ii = self._solve_ii(T, number_of_snapshots, randn_ii)
+        u_ii, self._conditions_ii = self._solve_ii(T, number_of_snapshots, normals_ii)
         if self._ij:
-            u_ij, self._conditions_ij = self._solve_ij(T, number_of_snapshots, randn_ij)
+            u_ij, self._conditions_ij = self._solve_ij(
+                T, number_of_snapshots, normals_ij
+            )
         else:
             u_ij = 0
             self._conditions_ij = None
@@ -283,6 +330,149 @@ class RandomDisplacements:
             )
         else:
             self._u = u
+
+    def draw_standard_normals(
+        self,
+        number_of_snapshots: int = 1,
+        random_seed: int | None = None,
+        first_snapshot: int = 0,
+    ) -> tuple[NDArray[np.double], NDArray[np.double]]:
+        """Return standard normals for :meth:`run`.
+
+        Drawing them separately from using them lets one realization be shared
+        between structures; see the ``standard_normals`` parameter of
+        :meth:`run`.
+
+        Parameters
+        ----------
+        number_of_snapshots : int, optional
+            Number of snapshots to draw for. Default is 1.
+        random_seed : int or None, optional
+            Random seed. Snapshot *i* is drawn from its own generator, seeded
+            by ``np.random.SeedSequence([random_seed, index])``, so it depends
+            on its index and not on how many snapshots are drawn beside it.
+            Default is None, i.e. unseeded.
+        first_snapshot : int, optional
+            Index of the first snapshot. Default is 0.
+
+        Returns
+        -------
+        tuple[ndarray, ndarray]
+            Shapes ``(n_ii, number_of_snapshots, n_band)`` and
+            ``(n_ij, 2, number_of_snapshots, n_band)``, where ``n_ii`` counts
+            the commensurate q with q = -q + G and ``n_ij`` the pairs of the
+            rest. The two together hold ``3 * len(supercell)`` numbers per
+            snapshot.
+
+        """
+        if random_seed is None or not np.issubdtype(type(random_seed), np.integer):
+            n_ii, b_ii, n_ij, b_ij = self._normals_shape()
+            rng = np.random.default_rng()
+            n = number_of_snapshots
+            return (
+                rng.standard_normal(size=(n_ii, n, b_ii)),
+                rng.standard_normal(size=(n_ij, 2, n, b_ij)),
+            )
+        return self._draw_seeded_normals(
+            number_of_snapshots, random_seed, first_snapshot
+        )
+
+    def _draw_seeded_normals(
+        self,
+        number_of_snapshots: int,
+        random_seed: int,
+        first_snapshot: int = 0,
+    ) -> tuple[NDArray[np.double], NDArray[np.double]]:
+        """Draw standard normals with one generator per snapshot.
+
+        Snapshot *i* comes from ``np.random.SeedSequence([random_seed, i])``,
+        so it depends on its index and on nothing else. In one environment
+        and with one seed, drawing n snapshots and drawing m > n therefore
+        give the same first n.
+
+        That is the point of the loop. It lets an ensemble be extended, be
+        generated in blocks to bound memory, or have a single snapshot
+        regenerated on its own, none of which disturbs the snapshots already
+        drawn -- so displacements whose forces have been computed are not
+        invalidated by wanting more of them.
+
+        Drawing every snapshot from one generator would be simpler and would
+        not have this property: the normals of a snapshot would sit at
+        positions in the stream that depend on how many snapshots are drawn.
+
+        The cost is building one generator per snapshot rather than one per
+        call, which is Python object creation and not random number
+        generation: about 16 us per snapshot, measured. That is a third of
+        what :meth:`run` takes on an 80-atom supercell and under a tenth of it
+        on a 128-atom one, and :meth:`run` is in turn small against computing
+        forces for the snapshots it produces.
+
+        """
+        n_ii, b_ii, n_ij, b_ij = self._normals_shape()
+        normals_ii: NDArray[np.double] = np.zeros(
+            (n_ii, number_of_snapshots, b_ii), dtype="double"
+        )
+        normals_ij: NDArray[np.double] = np.zeros(
+            (n_ij, 2, number_of_snapshots, b_ij), dtype="double"
+        )
+        for i in range(number_of_snapshots):
+            rng = np.random.default_rng(
+                np.random.SeedSequence([random_seed, first_snapshot + i])
+            )
+            normals_ii[:, i, :] = rng.standard_normal(size=(n_ii, b_ii))
+            if n_ij:
+                normals_ij[:, :, i, :] = rng.standard_normal(size=(n_ij, 2, b_ij))
+        return normals_ii, normals_ij
+
+    def _normals_shape(self) -> tuple[int, int, int, int]:
+        """Return (n_ii, n_band, n_ij, n_band) of the standard normals."""
+        n_ii = len(self._eigvals_ii)
+        b_ii = len(self._eigvals_ii[0])
+        n_ij = len(self._eigvals_ij) if self._ij else 0
+        b_ij = len(self._eigvals_ij[0]) if self._ij else 0
+        return n_ii, b_ii, n_ij, b_ij
+
+    def _check_standard_normals(
+        self, standard_normals: tuple[NDArray[np.double], NDArray[np.double]]
+    ) -> None:
+        """Raise if the given normals do not fit this instance.
+
+        Normals shared from another structure fit only if that structure has
+        the same supercell matrix and primitive cell.
+
+        """
+        if len(standard_normals) != 2:
+            raise ValueError("standard_normals must be (normals_ii, normals_ij).")
+        normals_ii, normals_ij = standard_normals
+        n_ii, b_ii, n_ij, b_ij = self._normals_shape()
+        if (
+            normals_ii.ndim != 3
+            or normals_ii.shape[0] != n_ii
+            or normals_ii.shape[2] != b_ii
+        ):
+            raise ValueError(
+                f"normals_ii has shape {normals_ii.shape}, expected "
+                f"({n_ii}, number_of_snapshots, {b_ii})."
+            )
+        if not self._ij:
+            return
+        expected = (n_ij, 2, normals_ii.shape[1], b_ij)
+        if tuple(normals_ij.shape) != expected:
+            raise ValueError(
+                f"normals_ij has shape {tuple(normals_ij.shape)}, expected {expected}."
+            )
+
+    @property
+    def standard_normals(
+        self,
+    ) -> tuple[NDArray[np.double], NDArray[np.double]] | None:
+        """Return the standard normals the last :meth:`run` used.
+
+        Pass these to another instance's :meth:`run` to give it the same
+        realization of the randomness.
+
+        """
+        return self._standard_normals
 
     @property
     def u(self) -> NDArray[np.double] | None:
@@ -450,6 +640,17 @@ class RandomDisplacements:
         However C-type dynamical matrix is used for B in this implementation.
 
         """
+        supercell = self._dynmat.supercell
+        primitive = self._dynmat.primitive
+        # Scaled positions in the primitive basis, ordered (primitive atom,
+        # lattice point); lpos drops the basis position and leaves the lattice
+        # vector.
+        tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell))
+        spos = np.dot(supercell.scaled_positions, tmat)[self._ppl2s].reshape(
+            self._n_patom, self._n_lattice, 3
+        )
+        lpos = spos - primitive.scaled_positions[:, None, :]
+
         N = len(self._comm_points)
         eigvals_ii = []
         eigvecs_ii = []
@@ -464,7 +665,7 @@ class RandomDisplacements:
             eigvals, eigvecs = np.linalg.eigh(dm)  # dm is real.
             eigvals_ii.append(eigvals)
             eigvecs_ii.append(eigvecs)
-            phase_ii.append(np.cos(2 * np.pi * np.dot(self._lpos, q)).reshape(-1, 1))
+            phase_ii.append(np.cos(2 * np.pi * np.dot(lpos, q)))
         self._eigvals_ii = np.array(eigvals_ii, dtype="double", order="C")
         self._eigvecs_ii = np.array(eigvecs_ii, dtype="double", order="C")
         self._phase_ii = np.array(phase_ii, dtype="double", order="C")
@@ -481,9 +682,7 @@ class RandomDisplacements:
                 eigvals, eigvecs = np.linalg.eigh(dm_complex)
                 eigvals_ij.append(eigvals.real)  # type: ignore
                 eigvecs_ij.append(eigvecs)
-                phase_ij.append(
-                    np.exp(2j * np.pi * np.dot(self._spos, q)).reshape(-1, 1)
-                )
+                phase_ij.append(np.exp(2j * np.pi * np.dot(spos, q)))
             self._eigvals_ij = np.array(eigvals_ij, dtype="double", order="C")
             self._eigvecs_ij = np.array(eigvecs_ij, dtype="cdouble", order="C")
             self._phase_ij = np.array(phase_ij, dtype="cdouble", order="C")
@@ -506,54 +705,99 @@ class RandomDisplacements:
         self._comm_points = get_commensurate_points_in_integers(smat)
         self._ii, self._ij = categorize_commensurate_points(self._comm_points)
 
-    def _solve_ii(self, T: float, number_of_snapshots: int, randn: NDArray[np.double]):
-        """Solve ii terms.
+    def _amplitudes(
+        self,
+        norm_dist: NDArray[np.double],
+        sigma: NDArray[np.double],
+        eigvecs: NDArray,
+    ) -> NDArray:
+        """Return the mode amplitudes of one commensurate q point.
 
-        randn parameter is used for the test.
+        'symmetric' projects the normals onto the eigenvectors before scaling
+        them, so that the pair of contractions with eigvecs makes
+        E.diag(sigma).E^dagger. That product is unchanged by a rotation within
+        a degenerate subspace or a phase per band, which is what makes the
+        displacements independent of the eigenvectors the solver returned.
 
         """
-        natom = len(self._dynmat.supercell)
-        u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
+        if self._sampling_matrix == "symmetric":
+            return np.dot(norm_dist, eigvecs.conj()) * sigma
+        return norm_dist * sigma
+
+    def _solve_ii(
+        self, T: float, number_of_snapshots: int, normals: NDArray[np.double]
+    ):
+        """Solve ii terms.
+
+        The normals parameter is used for the test.
+
+        """
+        u = np.zeros(
+            (number_of_snapshots, self._n_patom, 3, self._n_lattice),
+            dtype="double",
+        )
 
         sigmas, conditions = self._get_sigma(self._eigvals_ii, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            randn, sigmas, self._eigvecs_ii, self._phase_ii, strict=True
+            normals, sigmas, self._eigvecs_ii, self._phase_ii, strict=True
         ):
-            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
-                number_of_snapshots, -1, 3
-            )[:, self._s2pp, :]
-            # u_red.shape = (snapshots, satoms, 3)
-            # phase.shape = (satoms,)
-            u += u_red * phase
+            amplitudes = self._amplitudes(norm_dist, sigma, eigvecs)
+            u_red = np.dot(amplitudes, eigvecs.T).reshape(
+                number_of_snapshots, self._n_patom, 3
+            )
+            # u_red.shape = (snapshots, patoms, 3)
+            # phase.shape = (patoms, lattice points)
+            u += u_red[:, :, :, None] * phase[None, :, None, :]
 
-        return u, conditions
+        return self._to_supercell(u), conditions
 
     def _solve_ij(
         self,
         T: float,
         number_of_snapshots: int,
-        randn: NDArray[np.double],
+        normals: NDArray[np.double],
     ):
         """Solve ij terms.
 
-        randn parameter is used for the test.
+        normals parameter is used for the test.
 
         """
-        natom = len(self._dynmat.supercell)
-        u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
+        u = np.zeros(
+            (number_of_snapshots, self._n_patom, 3, self._n_lattice),
+            dtype="double",
+        )
         sigmas, conditions = self._get_sigma(self._eigvals_ij, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            randn, sigmas, self._eigvecs_ij, self._phase_ij, strict=True
+            normals, sigmas, self._eigvecs_ij, self._phase_ij, strict=True
         ):
-            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
-                2, number_of_snapshots, -1, 3
-            )[:, :, self._s2pp, :]
-            # u_red.shape = (2, snapshots, satoms, 3)
-            # phase.shape = (satoms,)
-            u += (u_red[0] * phase).real
-            u -= (u_red[1] * phase).imag
+            # The two sets of normals are the real and imaginary parts of one
+            # complex normal. Projecting them separately and recombining below
+            # is the same as projecting the complex vector, because the
+            # projection is complex linear and Re[(a + ib) p] = Re[a p] -
+            # Im[b p]. E^dagger is unitary, so the projected amplitudes are
+            # again complex normal with the same second moments.
+            amplitudes = self._amplitudes(norm_dist, sigma, eigvecs)
+            u_red = np.dot(amplitudes, eigvecs.T).reshape(
+                2, number_of_snapshots, self._n_patom, 3
+            )
+            # u_red.shape = (2, snapshots, patoms, 3)
+            # phase.shape = (patoms, lattice points)
+            ph = phase[None, :, None, :]
+            u += (u_red[0][:, :, :, None] * ph).real
+            u -= (u_red[1][:, :, :, None] * ph).imag
 
-        return u * np.sqrt(2), conditions
+        return self._to_supercell(u) * np.sqrt(2), conditions
+
+    def _to_supercell(self, u: NDArray[np.double]) -> NDArray[np.double]:
+        """Return (snapshots, patoms, 3, lattice) as (snapshots, satoms, 3).
+
+        The lattice point is the innermost axis while the contributions are
+        accumulated, because that is the axis the phase runs along.
+
+        """
+        n = u.shape[0]
+        flat = u.transpose(0, 1, 3, 2).reshape(n, self._n_patom * self._n_lattice, 3)
+        return np.array(flat[:, self._s2ppl, :], dtype="double", order="C")
 
     def _get_sigma(
         self, eigvals: NDArray[np.double], T: float

@@ -8,20 +8,21 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy.interface.mlp import PhonopyMLP
+from phonopy.physical_units import get_physical_units
 from phonopy.sscha.core import MLPSSCHA
 
 cwd = pathlib.Path(__file__).parent
 
 
 @pytest.fixture(scope="module")
-def mlp_kcl():
+def mlp_kcl() -> PhonopyMLP:
     """Return PhonopyMLP instance for KCl."""
     pytest.importorskip("pypolymlp")
     return PhonopyMLP().load(cwd / ".." / "polymlp_KCL-120.yaml")
 
 
 @pytest.fixture(scope="module")
-def sscha_result(ph_kcl: Phonopy, mlp_kcl):
+def sscha_result(ph_kcl: Phonopy, mlp_kcl: PhonopyMLP) -> MLPSSCHA:
     """Return MLPSSCHA instance after 3 iterations with fixed random seed."""
     sscha = MLPSSCHA(
         ph_kcl,
@@ -36,7 +37,7 @@ def sscha_result(ph_kcl: Phonopy, mlp_kcl):
     return sscha
 
 
-def test_MLPSSCHA(ph_kcl: Phonopy, mlp_kcl):
+def test_MLPSSCHA(ph_kcl: Phonopy, mlp_kcl: PhonopyMLP) -> None:
     """Test MLPSSCHA class."""
     sscha = MLPSSCHA(
         ph_kcl,
@@ -62,20 +63,20 @@ def test_MLPSSCHA(ph_kcl: Phonopy, mlp_kcl):
     assert count == 2
 
 
-def test_MLPSSCHA_force_constants_shape(sscha_result: MLPSSCHA):
+def test_MLPSSCHA_force_constants_shape(sscha_result: MLPSSCHA) -> None:
     """Force constants shape should be (n_atoms, n_atoms, 3, 3)."""
     fc = sscha_result.force_constants
     n_atoms = len(sscha_result.phonopy.supercell)
     assert fc.shape == (n_atoms, n_atoms, 3, 3)
 
 
-def test_MLPSSCHA_force_constants_symmetry(sscha_result: MLPSSCHA):
+def test_MLPSSCHA_force_constants_symmetry(sscha_result: MLPSSCHA) -> None:
     """Force constants should satisfy fc[i,j,a,b] == fc[j,i,b,a]."""
     fc = sscha_result.force_constants
     np.testing.assert_allclose(fc, fc.transpose(1, 0, 3, 2), atol=1e-10)
 
 
-def test_MLPSSCHA_force_constants_diagonal_block(sscha_result: MLPSSCHA):
+def test_MLPSSCHA_force_constants_diagonal_block(sscha_result: MLPSSCHA) -> None:
     """Self-interaction block fc[i,i] should be isotropic and positive."""
     fc = sscha_result.force_constants
     # KCl has cubic symmetry: diagonal block is proportional to identity
@@ -86,17 +87,23 @@ def test_MLPSSCHA_force_constants_diagonal_block(sscha_result: MLPSSCHA):
     assert fc[0, 0, 0, 0] > 0
 
 
-def test_MLPSSCHA_force_constants_values(sscha_result: MLPSSCHA):
-    """Force constants should match values reproduced by random_seed=42."""
+def test_MLPSSCHA_force_constants_values(sscha_result: MLPSSCHA) -> None:
+    """Force constants should come out at the magnitude expected for KCl.
+
+    The tolerance covers the sampling noise of the 50 supercells per iteration
+    used here, which moves the value whenever the random stream changes, and
+    the differences between platforms that come from BLAS implementations and
+    floating-point ordering. Exact reproducibility from a given seed is
+    checked by test_MLPSSCHA_iterations_do_not_share_random_numbers.
+
+    """
     fc = sscha_result.force_constants
-    # Values differ slightly between platforms (Mac/Windows vs Linux) due to
-    # differences in BLAS implementations and floating-point ordering.
     fc00 = np.eye(3) * 2.1
-    assert np.allclose(fc[0, 0], fc00, atol=0.05)
+    assert np.allclose(fc[0, 0], fc00, atol=0.1)
     print(fc[0, 0])
 
 
-def test_MLPSSCHA_free_energy(sscha_result: MLPSSCHA):
+def test_MLPSSCHA_free_energy(sscha_result: MLPSSCHA) -> None:
     """free_energy should be finite and match value reproduced by random_seed=42."""
     sscha_result.calculate_free_energy()
     assert isinstance(sscha_result.free_energy, float)
@@ -111,7 +118,123 @@ def test_MLPSSCHA_free_energy(sscha_result: MLPSSCHA):
     assert sscha_result.free_energy_error > 0
 
 
-def test_MLPSSCHA_sample_supercells(ph_kcl: Phonopy, mlp_kcl, sscha_result: MLPSSCHA):
+def test_MLPSSCHA_history_skips_initialization(sscha_result: MLPSSCHA) -> None:
+    """Every iteration records a free energy, the initialization step none.
+
+    The displacements of the initialization step are drawn at a fixed distance
+    rather than from a canonical ensemble, so no free energy belongs to it.
+    The count is the same whether or not force constants were provided: with
+    them the iterations start at 1, without them iteration 0 runs first and
+    contributes nothing.
+
+    """
+    assert [result.iteration for result in sscha_result.history] == [1, 2, 3]
+    for result in sscha_result.history:
+        assert result.free_energy == pytest.approx(result.harmonic + result.anharmonic)
+        assert np.isfinite(result.free_energy_error)
+
+
+def test_MLPSSCHA_free_energy_of_sampled_force_constants(
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, sscha_result: MLPSSCHA
+) -> None:
+    """The free energy of an iteration belongs to the force constants sampled.
+
+    Its harmonic part must therefore be that of the force constants the
+    iteration started from, not of the ones it fits from the sample. Only then
+    do the two parts of the free energy come from the same force constants.
+
+    """
+    mesh = 20.0
+    fc = sscha_result.force_constants
+    ph = ph_kcl.replicate()
+    ph.force_constants = fc
+    sscha = MLPSSCHA(
+        ph,
+        mlp_kcl,
+        number_of_snapshots=10,
+        temperature=300,
+        random_seed=42,
+        mesh=mesh,
+    )
+    assert next(iter(sscha)) == 1
+    (result,) = sscha.history
+
+    ph_ref = ph_kcl.replicate()
+    ph_ref.force_constants = fc
+    ph_ref.run_mesh(mesh=mesh)
+    ph_ref.run_thermal_properties(temperatures=[300])
+    thermal_properties = ph_ref.thermal_properties
+    assert thermal_properties is not None
+    harmonic_free_energy = thermal_properties.free_energy
+    assert harmonic_free_energy is not None
+    harmonic = harmonic_free_energy[0] / get_physical_units().EvTokJmol
+    assert result.harmonic == pytest.approx(harmonic, rel=1e-10)
+
+    # The iteration did refit the force constants, so the check above is not
+    # satisfied trivially by the two sets being the same.
+    assert not np.allclose(sscha.force_constants, fc, atol=1e-6)
+
+
+def test_MLPSSCHA_mesh_is_used_for_the_harmonic_part(
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, sscha_result: MLPSSCHA
+) -> None:
+    """The mesh given at instantiation reaches the free energy calculation."""
+    ph = ph_kcl.replicate()
+    ph.force_constants = sscha_result.force_constants
+    sscha = MLPSSCHA(
+        ph, mlp_kcl, number_of_snapshots=2, temperature=300, mesh=[3, 3, 3]
+    )
+    assert sscha.mesh == [3, 3, 3]
+    sscha.sample_supercells()
+    sscha.calculate_free_energy()
+    assert sscha.phonopy.mesh_numbers is not None
+    np.testing.assert_array_equal(sscha.phonopy.mesh_numbers, [3, 3, 3])
+
+
+def test_MLPSSCHA_iterations_do_not_share_random_numbers(
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, sscha_result: MLPSSCHA
+) -> None:
+    """Every iteration must draw its own random numbers.
+
+    One seed reused by all of them would make the iterations draw the same
+    numbers, so their free energies would no longer be independent samples of
+    the same quantity and averaging them would gain less than 1/sqrt(K).
+
+    """
+    fc = sscha_result.force_constants
+
+    def sample(iteration: int) -> np.ndarray:
+        ph = ph_kcl.replicate()
+        ph.force_constants = fc
+        sscha = MLPSSCHA(
+            ph, mlp_kcl, number_of_snapshots=5, temperature=300, random_seed=42
+        )
+        # The iteration the sampling belongs to; set here because sampling the
+        # same force constants twice is what makes the comparison meaningful.
+        sscha._iter_counter = iteration
+        sscha.sample_supercells()
+        displacements = sscha.phonopy.displacements
+        assert isinstance(displacements, np.ndarray)
+        return displacements.copy()
+
+    first, second = sample(1), sample(2)
+    assert not np.allclose(first, second)
+    # The same seed and the same iteration still reproduce the same sampling.
+    np.testing.assert_allclose(first, sample(1), atol=1e-14)
+
+
+def test_MLPSSCHA_free_energy_before_sampling(
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP
+) -> None:
+    """Asking for a free energy that was never calculated is an error."""
+    sscha = MLPSSCHA(ph_kcl.replicate(), mlp_kcl, number_of_snapshots=2)
+    with pytest.raises(RuntimeError):
+        _ = sscha.free_energy
+
+
+def test_MLPSSCHA_sample_supercells(
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, sscha_result: MLPSSCHA
+) -> None:
     """Force constants must survive the sampling to give the free energy.
 
     Mutating the displacement dataset clears the force constants of the
@@ -136,9 +259,74 @@ def test_MLPSSCHA_sample_supercells(ph_kcl: Phonopy, mlp_kcl, sscha_result: MLPS
     assert np.isfinite(sscha.free_energy)
 
 
+def test_MLPSSCHA_harmonic_potential_energies_match_the_direct_contraction(
+    sscha_result: MLPSSCHA,
+) -> None:
+    """The matrix product must reproduce the sum it replaces.
+
+    The harmonic potential energy of supercell m is
+
+        (1/2) sum_{i j k l} Phi[i, j, k, l] u[m, i, k] u[m, j, l],
+
+    which reads directly as a three-operand einsum. It is evaluated as a
+    matrix product over a flattened (atom, Cartesian) index instead, because
+    einsum without ``optimize`` contracts three operands in a serial loop of
+    its own: on a 128-atom supercell with 2,500 snapshots that was 1.21 s on
+    one core against 0.002 s threaded, once per SSCHA iteration. This pins the
+    two against each other so the rewrite cannot drift from its definition.
+
+    """
+    d = sscha_result.phonopy.displacements
+    assert isinstance(d, np.ndarray)
+    direct = np.einsum("ijkl,mik,mjl->m", sscha_result.force_constants, d, d) / 2
+    np.testing.assert_allclose(
+        sscha_result._harmonic_potential_energies, direct, rtol=1e-12, atol=1e-12
+    )
+
+
+def test_MLPSSCHA_passes_the_fc_calculator_and_its_options(
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both must reach produce_force_constants on every iteration.
+
+    The calculator was accepted, stored and exposed as a property while the
+    iteration called symfc by name regardless. The options are what carry
+    ``use_mkl = True`` to symfc, whose sparse products are otherwise scipy's
+    and single-threaded.
+
+    """
+    ph = ph_kcl.replicate()
+    sscha = MLPSSCHA(
+        ph,
+        mlp_kcl,
+        number_of_snapshots=2,
+        max_iterations=2,
+        temperature=300,
+        fc_calculator="symfc",
+        fc_calculator_options="use_mkl = False",
+    )
+    assert sscha.fc_calculator == "symfc"
+    assert sscha.fc_calculator_options == "use_mkl = False"
+
+    seen = []
+    original = type(sscha.phonopy).produce_force_constants
+
+    def record(self, *args, **kwargs):
+        seen.append((kwargs.get("fc_calculator"), kwargs.get("fc_calculator_options")))
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(type(sscha.phonopy), "produce_force_constants", record)
+    sscha.run()
+
+    assert seen, "produce_force_constants was never called"
+    for calculator, options in seen:
+        assert calculator == "symfc"
+        assert options == "use_mkl = False"
+
+
 def test_MLPSSCHA_compact_force_constants(
-    ph_kcl: Phonopy, mlp_kcl, sscha_result: MLPSSCHA
-):
+    ph_kcl: Phonopy, mlp_kcl: PhonopyMLP, sscha_result: MLPSSCHA
+) -> None:
     """Compact force constants must be expanded to the full form.
 
     The harmonic potential energy is computed with the full force constants.
@@ -148,11 +336,13 @@ def test_MLPSSCHA_compact_force_constants(
     ph = ph_kcl.replicate()
     p2s_map = ph.primitive.p2s_map
     ph.force_constants = fc[p2s_map]
-    assert ph.force_constants.shape[0] != ph.force_constants.shape[1]
+    compact_fc = ph.force_constants
+    assert compact_fc is not None
+    assert compact_fc.shape[0] != compact_fc.shape[1]
 
     sscha = MLPSSCHA(ph, mlp_kcl, number_of_snapshots=2, temperature=300)
     n_atoms = len(sscha.phonopy.supercell)
-    assert sscha.phonopy.force_constants.shape == (n_atoms, n_atoms, 3, 3)
-    np.testing.assert_allclose(
-        sscha.phonopy.force_constants[p2s_map], fc[p2s_map], atol=1e-10
-    )
+    full_fc = sscha.phonopy.force_constants
+    assert full_fc is not None
+    assert full_fc.shape == (n_atoms, n_atoms, 3, 3)
+    np.testing.assert_allclose(full_fc[p2s_map], fc[p2s_map], atol=1e-10)

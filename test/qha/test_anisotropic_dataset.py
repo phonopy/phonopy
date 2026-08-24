@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import numpy as np
 
 from phonopy import Phonopy
@@ -86,6 +88,25 @@ def test_dataset_roundtrip(tmp_path):
         assert p_out.internal_energy == p_in.internal_energy
 
 
+def test_dataset_grid_shape_roundtrip(tmp_path):
+    """The grid shape survives the round trip, and is absent when not given.
+
+    The analysis takes the main-diagonal volume path from it, so a dataset
+    written without it has to read back as None rather than as a guess.
+
+    """
+    points = (_grid_point(0, True), _grid_point(1, False))
+    with_shape = AnisoQHADataset(grid_points=points, grid_shape=(5, 5))
+    path = tmp_path / "with_shape.hdf5"
+    write_aniso_qha_dataset(with_shape, path)
+    assert read_aniso_qha_dataset(path).grid_shape == (5, 5)
+
+    without_shape = AnisoQHADataset(grid_points=points)
+    path = tmp_path / "without_shape.hdf5"
+    write_aniso_qha_dataset(without_shape, path)
+    assert read_aniso_qha_dataset(path).grid_shape is None
+
+
 def test_dataset_electronic_states_optional(tmp_path):
     """The electronic states are preserved when present and absent."""
     dataset = AnisoQHADataset(
@@ -107,6 +128,62 @@ def test_dataset_electronic_states_optional(tmp_path):
     )
     assert out.grid_points[0].electronic_states.n_electrons == 8.0
     assert out.grid_points[1].electronic_states is None
+
+
+def test_dataset_electronic_states_grid_roundtrip(tmp_path):
+    """The k points and mesh survive, and the cell comes from the grid point."""
+    base = _grid_point(0, with_electronic=True)
+    states = base.electronic_states
+    assert states is not None
+    kpoints = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [0.5, 0.0, 0.0],
+            [0.0, 0.5, 0.0],
+            [0.5, 0.5, 0.0],
+            [0.0, 0.0, 0.5],
+        ],
+        dtype="double",
+    )
+    point = dataclasses.replace(
+        base,
+        electronic_states=ElectronicStates(
+            eigenvalues=states.eigenvalues,
+            weights=states.weights,
+            n_electrons=states.n_electrons,
+            kpoints=kpoints,
+            mesh=np.array([2, 2, 2], dtype="int64"),
+            cell=base.cell,
+        ),
+    )
+    dataset = AnisoQHADataset(grid_points=[point])
+    filename = tmp_path / "aniso.hdf5"
+    write_aniso_qha_dataset(dataset, filename)
+    out = read_aniso_qha_dataset(filename).grid_points[0].electronic_states
+
+    assert out is not None
+    np.testing.assert_allclose(out.kpoints, kpoints)
+    np.testing.assert_array_equal(out.mesh, [2, 2, 2])
+    # Not stored, restored: the grid point's own cell.
+    assert out.cell is not None
+    np.testing.assert_allclose(out.cell.cell, point.cell.cell)
+
+
+def test_dataset_electronic_states_without_grid_stay_a_kpoint_sum(tmp_path):
+    """Without kpoints and mesh the three tetrahedron inputs are all absent.
+
+    A file written before they were stored has to read back as what it was,
+    rather than as a grid with a cell and no k points.
+    """
+    dataset = AnisoQHADataset(grid_points=[_grid_point(0, with_electronic=True)])
+    filename = tmp_path / "aniso.hdf5"
+    write_aniso_qha_dataset(dataset, filename)
+    out = read_aniso_qha_dataset(filename).grid_points[0].electronic_states
+
+    assert out is not None
+    assert out.kpoints is None
+    assert out.mesh is None
+    assert out.cell is None
 
 
 def test_dataset_index_order_preserved(tmp_path):
@@ -209,3 +286,52 @@ def test_type2_to_phonopy_fc(tmp_path):
     assert "first_atoms" not in out.dataset
     fc_roundtrip = np.array(out.to_phonopy(fc_calculator="symfc").force_constants)
     np.testing.assert_allclose(fc_direct, fc_roundtrip, atol=1e-12)
+
+
+def test_dataset_without_displacements_roundtrip(tmp_path):
+    """A grid point may carry no phonon calculation at all.
+
+    Such a dataset is built from the static grid alone: it holds the cells, U
+    and the electronic states, and the vibrational free energy is computed
+    outside and passed to run_anisotropic_qha through phonon_free_energies.
+    That is how a method with temperature-dependent force constants, whose
+    force constants differ at every temperature, enters the workflow.
+
+    """
+    import pytest
+
+    point = _grid_point(1, with_electronic=True)
+    static_only = dataclasses.replace(point, dataset=None)
+    assert static_only.n_displacements == 0
+
+    path = tmp_path / "static_only.hdf5"
+    write_aniso_qha_dataset(
+        AnisoQHADataset(grid_points=(static_only,), free_dof=("a", "c")), path
+    )
+    loaded = read_aniso_qha_dataset(path)
+
+    (read_point,) = loaded.grid_points
+    assert read_point.dataset is None
+    assert read_point.n_displacements == 0
+    assert read_point.internal_energy == point.internal_energy
+    np.testing.assert_allclose(read_point.cell.cell, point.cell.cell)
+    np.testing.assert_array_equal(read_point.supercell_matrix, point.supercell_matrix)
+    assert read_point.electronic_states is not None
+
+    with pytest.raises(ValueError, match="carries no displacement dataset"):
+        read_point.to_phonopy()
+
+
+def test_dataset_mixed_points_roundtrip(tmp_path):
+    """Points with and without displacements coexist in one file."""
+    with_disp = _grid_point(1, with_electronic=False)
+    without = dataclasses.replace(_grid_point(2, with_electronic=False), dataset=None)
+    path = tmp_path / "mixed.hdf5"
+    write_aniso_qha_dataset(
+        AnisoQHADataset(grid_points=(with_disp, without), free_dof=("a", "c")), path
+    )
+    loaded = read_aniso_qha_dataset(path)
+
+    assert [p.n_displacements for p in loaded.grid_points] == [3, 0]
+    assert loaded.grid_points[0].dataset is not None
+    assert loaded.grid_points[1].dataset is None

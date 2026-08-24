@@ -810,6 +810,7 @@ class Phonopy:
         max_distance: float | None = None,
         distance_sampling: Literal["supercell", "atom"] = "supercell",
         number_estimation_factor: float | None = None,
+        sampling_matrix: Literal["symmetric", "eigenvector"] | None = None,
     ) -> None:
         """Generate displacement dataset and store it in Phonopy.dataset.
 
@@ -876,6 +877,11 @@ class Phonopy:
         number_estimation_factor : float, optional
             Safety factor on the symfc estimate used by
             ``number_of_snapshots="auto"``. Default is None.
+        sampling_matrix : str or None, optional
+            Used only when ``temperature`` is given. Either ``'symmetric'``
+            or ``'eigenvector'``; see
+            :class:`~phonopy.phonon.random_displacements.RandomDisplacements`.
+            Default is None, corresponding to ``'symmetric'``.
 
         """
         if distance_sampling == "atom" and max_distance is None:
@@ -921,6 +927,7 @@ class Phonopy:
                         random_seed=_random_seed,
                         cutoff_frequency=cutoff_frequency,
                         max_distance=max_distance,
+                        sampling_matrix=sampling_matrix,
                     )
                 )
                 self.dataset = displacement_dataset
@@ -948,6 +955,7 @@ class Phonopy:
         random_seed: int | None,
         cutoff_frequency: float | None,
         max_distance: float | None,
+        sampling_matrix: Literal["symmetric", "eigenvector"] | None = None,
     ) -> tuple[Type2DisplacementDataset, RandomDisplacements]:
         """Build a type-2 dataset of random displacements at finite temperature.
 
@@ -977,7 +985,9 @@ class Phonopy:
 
         """
         self.init_random_displacements(
-            cutoff_frequency=cutoff_frequency, max_distance=max_distance
+            cutoff_frequency=cutoff_frequency,
+            max_distance=max_distance,
+            sampling_matrix=sampling_matrix,
         )
         d = self.get_random_displacements_at_temperature(
             temperature,
@@ -3323,6 +3333,7 @@ class Phonopy:
         dist_func: Literal["quantum", "classical"] | None = None,
         cutoff_frequency: float | None = None,
         max_distance: float | None = None,
+        sampling_matrix: Literal["symmetric", "eigenvector"] | None = None,
     ) -> None:
         """Initialize random displacements at finite temperature.
 
@@ -3341,6 +3352,10 @@ class Phonopy:
             renormalized to the max distance, i.e., a displacement ``d``
             is shortened by ``d -> d / norm(d) * max_distance`` if
             ``norm(d) > max_distance``.
+        sampling_matrix : str or None, optional
+            Either ``'symmetric'`` or ``'eigenvector'``; see
+            :class:`~phonopy.phonon.random_displacements.RandomDisplacements`.
+            Default is None, corresponding to ``'symmetric'``.
 
         """
         if self._force_constants is None:
@@ -3356,6 +3371,7 @@ class Phonopy:
             max_distance=max_distance,
             factor=self._unit_conversion_factor,
             use_openmp=c_use_openmp(),
+            sampling_matrix=sampling_matrix,
         )
 
     def get_random_displacements_at_temperature(
@@ -3364,6 +3380,7 @@ class Phonopy:
         number_of_snapshots: int,
         is_plusminus: bool = False,
         random_seed: int | None = None,
+        first_snapshot: int = 0,
     ) -> np.ndarray:
         """Generate random displacements from phonon structure.
 
@@ -3381,6 +3398,11 @@ class Phonopy:
             False.
         random_seed : 32-bit unsigned int or None, optional
             Random seed. Default is None.
+        first_snapshot : int, optional
+            Index of the first snapshot. With a seed, snapshot *i* depends on
+            the seed and on *i* alone, so an ensemble can be extended or
+            generated in blocks without changing the snapshots already in it.
+            See :meth:`RandomDisplacements.run`. Default is 0.
 
         """
         if self._random_displacements is None:
@@ -3392,6 +3414,7 @@ class Phonopy:
             temperature,
             number_of_snapshots=number_of_snapshots,
             random_seed=random_seed,
+            first_snapshot=first_snapshot,
         )
         units = get_calculator_physical_units(self._calculator)
         assert self._random_displacements.u is not None

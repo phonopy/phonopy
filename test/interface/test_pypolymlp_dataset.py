@@ -126,6 +126,65 @@ def test_split_pypolymlp_dataset_without_stresses() -> None:
     assert test.stresses is None
 
 
+def test_index_by_sequence() -> None:
+    """A sequence of integers selects scattered structures, in its own order."""
+    data = read_vasprun_dataset(vasprun_files)
+    picked = data[[3, 0, len(data) - 1]]
+
+    assert len(picked) == 3
+    np.testing.assert_allclose(
+        picked.energies, [data.energies[3], data.energies[0], data.energies[-1]]
+    )
+    np.testing.assert_allclose(picked.forces[0], data.forces[3])
+    np.testing.assert_allclose(picked.structures[1].cell, data.structures[0].cell)
+    assert picked.stresses is not None
+    np.testing.assert_allclose(picked.stresses[2], data.stresses[-1])
+
+
+def test_index_by_negative_and_mask() -> None:
+    """Negative positions and a boolean mask select the same entries."""
+    data = read_vasprun_dataset(vasprun_files)
+    n = len(data)
+    mask = np.zeros(n, dtype=bool)
+    mask[[1, n - 2]] = True
+
+    by_mask = data[mask]
+    by_position = data[[1, -2]]
+
+    assert len(by_mask) == 2
+    np.testing.assert_allclose(by_mask.energies, by_position.energies)
+    np.testing.assert_allclose(by_mask.forces[1], data.forces[n - 2])
+
+
+def test_index_keeps_stresses_none() -> None:
+    """Selecting entries keeps stresses None rather than trying to index it."""
+    data = read_vasprun_dataset(vasprun_files)
+    data = PypolymlpStructureData(
+        structures=data.structures,
+        energies=data.energies,
+        forces=data.forces,
+        stresses=None,
+    )
+    assert data[[0, 2]].stresses is None
+
+
+def test_index_rejects_unsupported() -> None:
+    """A bare integer, an out-of-range position and a bad mask are rejected."""
+    data = read_vasprun_dataset(vasprun_files)
+    n = len(data)
+
+    with pytest.raises(TypeError):
+        data[0]
+    with pytest.raises(TypeError):
+        data[[0.0, 1.0]]
+    with pytest.raises(IndexError):
+        data[[0, n]]
+    with pytest.raises(IndexError):
+        data[[-n - 1]]
+    with pytest.raises(IndexError):
+        data[np.ones(n - 1, dtype=bool)]
+
+
 def test_split_pypolymlp_dataset_empty_side() -> None:
     """A test_size that empties either side is rejected."""
     data = read_vasprun_dataset(vasprun_files)

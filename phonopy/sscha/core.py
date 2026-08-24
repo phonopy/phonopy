@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
@@ -13,6 +15,27 @@ from phonopy import Phonopy
 from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.physical_units import get_physical_units
+
+
+@dataclass(frozen=True)
+class SSCHAIterationResult:
+    """Free energy obtained in one SSCHA iteration.
+
+    The values belong to the force constants that the iteration sampled, i.e.
+    those current when it started, not to the ones it produced from that
+    sample. The harmonic part and the ensemble averaged for the anharmonic
+    part then come from the same force constants, which makes the free energy
+    the SSCHA free energy of those force constants.
+
+    Energies are in eV per primitive cell.
+
+    """
+
+    iteration: int
+    free_energy: float
+    free_energy_error: float
+    harmonic: float
+    anharmonic: float
 
 
 class MLPSSCHA:
@@ -27,6 +50,8 @@ class MLPSSCHA:
         max_iterations: int | None = None,
         distance: float | None = None,
         fc_calculator: str | None = None,
+        fc_calculator_options: str | None = None,
+        mesh: float | Sequence[int] | NDArray[np.int64] | None = None,
         random_seed: int | None = None,
         log_level: int = 0,
     ) -> None:
@@ -46,9 +71,18 @@ class MLPSSCHA:
             Distance of displacements, by default is None, which gives 0.01.
         fc_calculator : str, optional
             Force constants calculator. The default is None, which means "symfc".
-        random_seed : int or None, optional
-            Seed for random number generator passed to generate_displacements.
+        fc_calculator_options : str, optional
+            Options passed to the force constants calculator. symfc takes
+            ``"use_mkl = True"``, which needs ``sparse_dot_mkl`` installed.
             The default is None.
+        mesh : float, array_like, or None, optional
+            Sampling mesh used to compute the harmonic part of the free energy,
+            by default 100.0.
+        random_seed : int or None, optional
+            Seed of the whole run. Each iteration derives its own seed from it,
+            so that the run is reproducible while the iterations stay
+            independent of each other. The default is None, which leaves the
+            sampling unseeded.
         log_level : int, optional
             Log level, by default 0.
 
@@ -77,8 +111,21 @@ class MLPSSCHA:
             self._fc_calculator = "symfc"
         else:
             self._fc_calculator = fc_calculator
+        self._fc_calculator_options = fc_calculator_options
+        self._mesh: float | Sequence[int] | NDArray[np.int64]
+        if mesh is None:
+            self._mesh = 100.0
+        else:
+            self._mesh = mesh
         self._random_seed = random_seed
         self._log_level = log_level
+
+        self._free_energy: float | None = None
+        self._free_energy_error: float | None = None
+        self._harmonic_free_energy: float | None = None
+        self._anharmonic_free_energy: float | None = None
+        self._history: list[SSCHAIterationResult] = []
+        self._initial_force_constants_provided = ph.force_constants is not None
 
         self._ph = ph.replicate()
         self._ph.mlp = PhonopyMLP(mlp=mlp.mlp)
@@ -110,7 +157,89 @@ class MLPSSCHA:
     @property
     def free_energy(self) -> float:
         """Return free energy in eV."""
-        return self._free_energy
+        return self._require_free_energy(self._free_energy)
+
+    @property
+    def harmonic_free_energy(self) -> float:
+        """Return harmonic part of the free energy in eV.
+
+        This is the free energy of the harmonic phonons of the force
+        constants, computed by mesh sampling. It carries no sampling noise.
+
+        """
+        return self._require_free_energy(self._harmonic_free_energy)
+
+    @property
+    def anharmonic_free_energy(self) -> float:
+        """Return anharmonic part of the free energy in eV.
+
+        This is the ensemble average of the anharmonic correction over the
+        supercells with random displacements. The statistical error of the
+        free energy comes entirely from it.
+
+        """
+        return self._require_free_energy(self._anharmonic_free_energy)
+
+    @property
+    def history(self) -> tuple[SSCHAIterationResult, ...]:
+        """Return free energies of the iterations run so far.
+
+        The initialization step (iteration 0) is absent: its displacements are
+        drawn at a fixed distance rather than from a canonical ensemble, so no
+        free energy is defined for it.
+
+        """
+        return tuple(self._history)
+
+    @property
+    def temperature(self) -> float:
+        """Return temperature in K."""
+        return self._temperature
+
+    @property
+    def number_of_snapshots(self) -> int | Literal["auto"]:
+        """Return number of snapshots sampled in each iteration."""
+        return self._number_of_snapshots
+
+    @property
+    def max_iterations(self) -> int:
+        """Return maximum number of iterations."""
+        return self._max_iterations
+
+    @property
+    def distance(self) -> float:
+        """Return displacement distance used in the initialization step."""
+        return self._distance
+
+    @property
+    def fc_calculator(self) -> str:
+        """Return force constants calculator."""
+        return self._fc_calculator
+
+    @property
+    def fc_calculator_options(self) -> str | None:
+        """Return options passed to the force constants calculator."""
+        return self._fc_calculator_options
+
+    @property
+    def mesh(self) -> float | Sequence[int] | NDArray[np.int64]:
+        """Return sampling mesh used for the harmonic free energy."""
+        return self._mesh
+
+    @property
+    def random_seed(self) -> int | None:
+        """Return seed of the random number generator."""
+        return self._random_seed
+
+    @property
+    def initial_force_constants_provided(self) -> bool:
+        """Return whether force constants were given at instantiation.
+
+        When they were, the initialization step is skipped and the iterations
+        start from them.
+
+        """
+        return self._initial_force_constants_provided
 
     @property
     def force_constants(self) -> NDArray[np.double]:
@@ -129,7 +258,16 @@ class MLPSSCHA:
         to it.
 
         """
-        return self._free_energy_error
+        return self._require_free_energy(self._free_energy_error)
+
+    @staticmethod
+    def _require_free_energy(value: float | None) -> float:
+        if value is None:
+            raise RuntimeError(
+                "Free energy is not calculated yet. Run an iteration, or call "
+                "sample_supercells() and calculate_free_energy()."
+            )
+        return value
 
     @property
     def harmonic_potential_energy(self) -> float:
@@ -143,15 +281,46 @@ class MLPSSCHA:
 
     @property
     def _harmonic_potential_energies(self) -> NDArray[np.double]:
-        """Return harmonic potential energies of individual supercells."""
+        """Return harmonic potential energies of individual supercells.
+
+        For supercell m,
+
+            E_m = (1/2) sum_{i j a b} Phi[i, j, a, b] u[m, i, a] u[m, j, b],
+
+        a matrix product once (atom, Cartesian) is flattened into one index on
+        both. It is the diagonal of u.Phi.u^T, and only the diagonal, so the
+        rows are contracted one by one rather than forming the whole of it.
+
+        """
         d = self._ph.displacements
         assert isinstance(d, np.ndarray)
-        return np.einsum("ijkl,mik,mjl->m", self.force_constants, d, d) / 2
+        fc = self.force_constants
+        n = 3 * fc.shape[0]
+        phi = fc.transpose(0, 2, 1, 3).reshape(n, n)
+        u = d.reshape(-1, n)
+        return (np.dot(u, phi) * u).sum(axis=1) / 2
 
     @property
     def _potential_energies(self) -> NDArray[np.double]:
         """Return potential energies of individual supercells."""
         return self._ph.supercell_energies - self._supercell_energy
+
+    def _sampling_seed(self) -> int | None:
+        """Return the random seed of the current iteration.
+
+        Reusing one seed for every iteration would make them all draw the same
+        random numbers, so their free energies would no longer be independent
+        samples of the same quantity and averaging them would gain less than
+        1/sqrt(K). A seed is therefore derived per iteration from the seed
+        given at instantiation. The derivation is a pure function of that seed
+        and the iteration number, so the run stays reproducible and does not
+        depend on the order in which the sampling methods are called.
+
+        """
+        if self._random_seed is None:
+            return None
+        seed_sequence = np.random.SeedSequence([self._random_seed, self._iter_counter])
+        return int(seed_sequence.generate_state(1, dtype=np.uint32)[0])
 
     def sample_supercells(self) -> None:
         """Sample supercells with random displacements and evaluate the MLPs.
@@ -172,7 +341,7 @@ class MLPSSCHA:
         self._ph.generate_displacements(
             number_of_snapshots=self._number_of_snapshots,
             temperature=self._temperature,
-            random_seed=self._random_seed,
+            random_seed=self._sampling_seed(),
         )
 
         if self._log_level:
@@ -192,7 +361,9 @@ class MLPSSCHA:
         self._ph.evaluate_mlp()
         self._ph.force_constants = fc
 
-    def calculate_free_energy(self, mesh: float = 100.0) -> None:
+    def calculate_free_energy(
+        self, mesh: float | Sequence[int] | NDArray[np.int64] | None = None
+    ) -> None:
         """Calculate SSCHA free energy and its statistical error.
 
         Given the force constants Phi, the free energy per primitive cell is
@@ -221,8 +392,14 @@ class MLPSSCHA:
         conditional on Phi. The uncertainty of Phi itself, which is determined
         from a stochastic sampling, is not included.
 
+        Parameters
+        ----------
+        mesh : float, array_like, or None, optional
+            Sampling mesh for F_harm. The default is None, which means the
+            mesh given at instantiation.
+
         """
-        self._ph.run_mesh(mesh=mesh)
+        self._ph.run_mesh(mesh=self._mesh if mesh is None else mesh)
         self._ph.run_thermal_properties(temperatures=[self._temperature])
         hfe = (
             self._ph.thermal_properties.free_energy[0] / get_physical_units().EvTokJmol
@@ -231,7 +408,9 @@ class MLPSSCHA:
         anharmonic = (
             self._potential_energies - self._harmonic_potential_energies
         ) / n_cell
-        self._free_energy = hfe + float(np.average(anharmonic))
+        self._harmonic_free_energy = float(hfe)
+        self._anharmonic_free_energy = float(np.average(anharmonic))
+        self._free_energy = self._harmonic_free_energy + self._anharmonic_free_energy
         if len(anharmonic) > 1:
             self._free_energy_error = float(
                 np.std(anharmonic, ddof=1) / np.sqrt(len(anharmonic))
@@ -278,18 +457,37 @@ class MLPSSCHA:
             self._ph.generate_displacements(
                 distance=self._distance,
                 number_of_snapshots=self._number_of_snapshots,
-                random_seed=self._random_seed,
+                random_seed=self._sampling_seed(),
             )
             if self._log_level:
                 print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
             self._ph.evaluate_mlp()
         else:
             self.sample_supercells()
+            # The free energy is evaluated here, before the force constants are
+            # refitted below, so that its harmonic part and the ensemble
+            # averaged for its anharmonic part belong to the same force
+            # constants. Evaluated after the refit, the two would come from
+            # different force constants and the value would be no SSCHA free
+            # energy of either. The initialization step is left out: its
+            # displacements are drawn at a fixed distance rather than from a
+            # canonical ensemble, so it has no free energy to record.
+            self.calculate_free_energy()
+            self._history.append(
+                SSCHAIterationResult(
+                    iteration=self._iter_counter,
+                    free_energy=self.free_energy,
+                    free_energy_error=self.free_energy_error,
+                    harmonic=self.harmonic_free_energy,
+                    anharmonic=self.anharmonic_free_energy,
+                )
+            )
 
         if self._log_level:
-            print("Calculate force constants using symfc", flush=True)
+            print(f"Calculate force constants using {self._fc_calculator}", flush=True)
         self._ph.produce_force_constants(
-            fc_calculator="symfc",
+            fc_calculator=self._fc_calculator,
+            fc_calculator_options=self._fc_calculator_options,
             fc_calculator_log_level=self._log_level if self._log_level > 1 else 0,
             calculate_full_force_constants=True,
             show_drift=False,

@@ -29,6 +29,7 @@ from phonopy.qha.calc import (
     polynomial_design_matrix,
 )
 from phonopy.qha.lattice import compute_axial_thermal_expansion
+from phonopy.qha.lattice_smoothing import SmoothingMethod, smooth_lattice_parameters
 from phonopy.qha.thermal import (
     compute_electronic_contributions_from_states,
     compute_thermal_properties,
@@ -386,6 +387,24 @@ class AnisotropicQHAResult:
         Per-temperature boolean flag, True when the located free-energy
         minimum lies outside the sampled lattice box, i.e. the equilibrium
         lattice parameters are extrapolated. shape=(N,)
+    mesh : float or array_like, optional
+        Mesh numbers used for the phonon sampling, recorded as they were
+        given. The axial thermal expansions are sensitive to this setting,
+        so it is carried with the result and written into the output
+        headers. None when the result was built without recording it.
+    lattice_smoothing : Literal["none", "einstein"]
+        The smoothing that was applied to the lattice parameters along
+        temperature.
+    smoothing_terms : int
+        Number of Einstein terms that smoothing used. Meaningless, and
+        left at its default, when lattice_smoothing is "none".
+    with_electronic : bool
+        Whether the electronic free energy F_el was included. Recorded for
+        the same reason as mesh: it shifts the axial split substantially
+        while leaving the volumetric expansion nearly unchanged.
+    pressure : float, optional
+        Pressure in GPa added as the pV term, or None when the minimized
+        free energy is the Helmholtz free energy.
 
     """
 
@@ -403,6 +422,11 @@ class AnisotropicQHAResult:
     surface_fit_rank: int
     surface_n_terms: int
     minimum_extrapolated: NDArray[np.bool_]
+    mesh: float | Sequence[int] | NDArray[np.int64] | None = None
+    lattice_smoothing: SmoothingMethod = "none"
+    smoothing_terms: int = 2
+    with_electronic: bool = False
+    pressure: float | None = None
 
     def __post_init__(self) -> None:
         """Make ndarray fields read-only."""
@@ -414,10 +438,17 @@ def run_anisotropic_qha(
     temperatures: Sequence[float] | NDArray[np.double],
     internal_energies: Sequence[float] | NDArray[np.double] | None = None,
     electronic_structures: Sequence[ElectronicStates] | None = None,
-    mesh: float | Sequence[int] | NDArray[np.int64] = 100.0,
+    electronic_free_energies: (
+        Sequence[Sequence[float]] | NDArray[np.double] | None
+    ) = None,
+    phonon_free_energies: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    mesh: float | Sequence[int] | NDArray[np.int64] = 200.0,
     pressure: float | None = None,
     surface_degree: int = 3,
+    lattice_smoothing: SmoothingMethod | None = None,
+    smoothing_terms: int = 2,
     verbose: bool = False,
+    is_gamma_center: bool = False,
 ) -> AnisotropicQHAResult:
     """Run an anisotropic quasi-harmonic approximation calculation.
 
@@ -454,14 +485,73 @@ def run_anisotropic_qha(
         Electronic states at each lattice grid point; when given the
         electronic free energies and entropies are added to the phonon
         contributions, as in run_qha.
+    electronic_free_energies : array_like, optional
+        Electronic free energies F_el(T) - F_el(0) in eV per primitive cell,
+        already computed outside, with shape (temperatures, n_points). The
+        counterpart of phonon_free_energies for the electronic term, and
+        mutually exclusive with electronic_structures.
+
+        The integration is what makes this worth having: on a dense mesh the
+        linear tetrahedron method costs a minute or more per grid point, and
+        computing it once outside lets it be parallelized over the grid,
+        reused across runs, or replaced by another method entirely. The
+        values must be anchored at T = 0 and normalized per primitive cell,
+        consistently with internal_energies.
+    phonon_free_energies : array_like, optional
+        Vibrational free energies in eV per primitive cell, already computed
+        outside, with shape (temperatures, n_points). Given these, the mesh
+        sampling is skipped and ``mesh`` is unused; the Phonopy instances then
+        supply only the cells and volumes, and their force constants are
+        neither required nor read.
+
+        This is the way in for methods whose force constants depend on
+        temperature, such as SSCHA or TDEP: one force-constant set per grid
+        point cannot represent them, so their free energy has to be computed
+        per temperature and handed over. The values must be normalized per
+        primitive cell, consistently with internal_energies.
     mesh : float or array_like, optional
-        Mesh numbers passed to Phonopy.run_mesh.
+        Mesh passed to Phonopy.run_mesh, 200 by default. This is denser
+        than the 100 of run_qha, deliberately: the axial split is a
+        difference of large Grueneisen components and needs the denser mesh,
+        while the volumetric expansion, being their average, is converged at
+        100. Unused when phonon_free_energies is given.
+
+        A length measure is resolved against each grid point's own
+        reciprocal lattice, so cells that differ enough in a lattice length
+        receive different numbers of divisions. That is a step in F_phonon
+        across the lattice grid, i.e. in the very quantity this function
+        differentiates, and it falls on whichever pair of neighbouring grid
+        points happens to straddle the rounding. Explicit numbers of
+        divisions avoid it by sampling every grid point identically; pass
+        is_gamma_center=True with them to keep the Gamma-centred grid a
+        length would have given.
+    is_gamma_center : bool, optional
+        Generate a Gamma-centred mesh instead of the Monkhorst-Pack one.
+        Ignored when mesh is a length, for which phonopy enforces a
+        Gamma-centred mesh, so this only takes effect together with
+        explicit numbers of divisions. Default is False, phonopy's own
+        default, which shifts the grid by half a division.
     pressure : float, optional
         Pressure in GPa added to the free energy as a pV term, turning the
         minimized free energy into a Gibbs free energy.
     surface_degree : int, optional
         Total degree of the polynomial fitted to F over the free lattice
         DOF.
+    lattice_smoothing : Literal["none", "einstein"] or None, optional
+        Smooth the equilibrium lattice parameters along temperature before
+        differentiating them. See
+        phonopy.qha.lattice_smoothing.smooth_lattice_parameters. None, the
+        default, takes "einstein" when phonon_free_energies is given and
+        "none" otherwise.
+
+        The thermal expansions are central differences of a(T), b(T),
+        c(T), so a scatter in those reaches them amplified. Free
+        energies from a sampled method carry such a scatter, since
+        each temperature is minimized on its own; free energies from
+        force constants do not, and "none" is right for them.
+    smoothing_terms : int, optional
+        Number of Einstein terms the smoothing fits, at least 2. Default
+        is 2. Unused with lattice_smoothing="none".
     verbose : bool, optional
         Print the equilibrium lattice parameters at each temperature.
 
@@ -471,7 +561,12 @@ def run_anisotropic_qha(
 
     """
     temps_in, el = _validate_anisotropic_inputs(
-        phonopys, internal_energies, temperatures, electronic_structures
+        phonopys,
+        internal_energies,
+        temperatures,
+        electronic_structures,
+        phonon_free_energies,
+        electronic_free_energies,
     )
     lattice_lengths = np.array(
         [np.linalg.norm(ph.unitcell.cell, axis=1) for ph in phonopys], dtype="double"
@@ -491,12 +586,22 @@ def run_anisotropic_qha(
         )
     free_points = lattice_lengths[:, free_indices]
 
-    fe_phonon, _, _ = compute_thermal_properties(phonopys, temps_in, mesh, verbose)
-    units = get_physical_units()
+    if phonon_free_energies is None:
+        fe_phonon, _, _ = compute_thermal_properties(
+            phonopys, temps_in, mesh, verbose, is_gamma_center=is_gamma_center
+        )
+        fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+    else:
+        fe_phonon_ev = np.array(phonon_free_energies, dtype="double")
+    if lattice_smoothing is None:
+        # phonon_free_energies usually comes from a sampled method, and the
+        # thermal expansions amplify the scatter it leaves.
+        lattice_smoothing = "einstein" if phonon_free_energies is not None else "none"
     el = _add_static_contributions(
         el,
-        fe_phonon / units.EvTokJmol,
+        fe_phonon_ev,
         electronic_structures,
+        electronic_free_energies,
         temps_in,
         volumes,
         pressure,
@@ -564,14 +669,33 @@ def run_anisotropic_qha(
                 f"c = {c:.6f} A  fit RMS = {fit.rms_residual:.3e} eV{flag}"
             )
 
+    axial_slopes = None
+    if lattice_smoothing != "none":
+        equilibrium_lattice_parameters, axial_slopes = smooth_lattice_parameters(
+            temps_in,
+            equilibrium_lattice_parameters,
+            method=lattice_smoothing,
+            n_terms=smoothing_terms,
+        )
+
     k = float((volumes / lattice_lengths.prod(axis=1)).mean())
     equilibrium_volumes = k * equilibrium_lattice_parameters.prod(axis=1)
-    thermal_expansion = compute_volumetric_thermal_expansion(
-        temps_in, equilibrium_volumes
-    )
-    axial_thermal_expansions = compute_axial_thermal_expansion(
-        temps_in, equilibrium_lattice_parameters
-    )
+    if axial_slopes is None:
+        thermal_expansion = compute_volumetric_thermal_expansion(
+            temps_in, equilibrium_volumes
+        )
+        axial_thermal_expansions = compute_axial_thermal_expansion(
+            temps_in, equilibrium_lattice_parameters
+        )
+    else:
+        # The smoothed lattice parameters come from a model that is
+        # differentiable in closed form, so its slope is taken directly
+        # rather than approximated by differences of it. V is the product
+        # of the three lengths, so beta is the sum of the axial terms.
+        axial_thermal_expansions = (
+            axial_slopes[: m - 1] / equilibrium_lattice_parameters[: m - 1]
+        )
+        thermal_expansion = axial_thermal_expansions.sum(axis=1)
 
     n = m - 1
     return AnisotropicQHAResult(
@@ -589,6 +713,13 @@ def run_anisotropic_qha(
         surface_fit_rank=surface_fit_rank,
         surface_n_terms=n_terms,
         minimum_extrapolated=minimum_extrapolated[:n],
+        mesh=mesh,
+        lattice_smoothing=lattice_smoothing,
+        smoothing_terms=smoothing_terms,
+        with_electronic=(
+            electronic_structures is not None or electronic_free_energies is not None
+        ),
+        pressure=pressure,
     )
 
 
@@ -597,6 +728,10 @@ def _validate_anisotropic_inputs(
     internal_energies: Sequence[float] | NDArray[np.double] | None,
     temperatures: Sequence[float] | NDArray[np.double],
     electronic_structures: Sequence[ElectronicStates] | None,
+    phonon_free_energies: Sequence[Sequence[float]] | NDArray[np.double] | None = None,
+    electronic_free_energies: (
+        Sequence[Sequence[float]] | NDArray[np.double] | None
+    ) = None,
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Validate run_anisotropic_qha inputs and return them as arrays.
 
@@ -640,9 +775,33 @@ def _validate_anisotropic_inputs(
         raise ValueError(
             "electronic_structures must have one entry per Phonopy instance."
         )
-    for i, ph in enumerate(phonopys):
-        if ph.force_constants is None:
-            raise RuntimeError(f"Force constants are not set in phonopys[{i}].")
+    if electronic_structures is not None and electronic_free_energies is not None:
+        raise ValueError(
+            "electronic_structures and electronic_free_energies are two ways "
+            "of giving the same term; give one or the other."
+        )
+    if electronic_free_energies is not None:
+        fe_el = np.array(electronic_free_energies, dtype="double")
+        if fe_el.shape != (len(temps_in), n_points):
+            raise ValueError(
+                f"electronic_free_energies must have shape "
+                f"{(len(temps_in), n_points)} (temperatures, Phonopy "
+                f"instances), but has {fe_el.shape}."
+            )
+    if phonon_free_energies is None:
+        for i, ph in enumerate(phonopys):
+            if ph.force_constants is None:
+                raise RuntimeError(f"Force constants are not set in phonopys[{i}].")
+    else:
+        # The free energies replace the mesh sampling entirely, so the force
+        # constants are not consulted and need not be set.
+        fe = np.array(phonon_free_energies, dtype="double")
+        if fe.shape != (len(temps_in), n_points):
+            raise ValueError(
+                f"phonon_free_energies must have shape "
+                f"{(len(temps_in), n_points)} (temperatures, Phonopy "
+                f"instances), but has {fe.shape}."
+            )
     return temps_in, el
 
 
@@ -650,20 +809,23 @@ def _add_static_contributions(
     el: NDArray[np.double],
     fe_phonon_ev: NDArray[np.double],
     electronic_structures: Sequence[ElectronicStates] | None,
+    electronic_free_energies: Sequence[Sequence[float]] | NDArray[np.double] | None,
     temperatures: NDArray[np.double],
     volumes: NDArray[np.double],
     pressure: float | None,
 ) -> NDArray[np.double]:
     """Assemble the total free energy F(T) at each sample cell in eV.
 
-    Adds the phonon free energy, the relative electronic free energy (when
-    electronic_structures are given) and the pV term (when a pressure is
-    given) to the static internal energies. Returns an array of shape
-    (temperatures, n_points).
+    Adds the phonon free energy, the relative electronic free energy (from
+    electronic_structures or given ready-made) and the pV term (when a
+    pressure is given) to the static internal energies. Returns an array of
+    shape (temperatures, n_points).
 
     """
     total = fe_phonon_ev + el
-    if electronic_structures is not None:
+    if electronic_free_energies is not None:
+        total = total + np.array(electronic_free_energies, dtype="double")
+    elif electronic_structures is not None:
         fe_el_rel, _ = compute_electronic_contributions_from_states(
             electronic_structures, temperatures
         )

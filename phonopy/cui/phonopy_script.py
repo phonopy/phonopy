@@ -79,6 +79,7 @@ from phonopy.physical_units import (
     get_physical_units,
 )
 from phonopy.sscha.core import MLPSSCHA
+from phonopy.sscha.output import write_sscha_yaml
 from phonopy.structure.atomic_data import (
     get_atomic_data,
     set_ASE_atomic_masses_iupac2016,
@@ -711,7 +712,6 @@ def _produce_force_constants(
     phonon: Phonopy,
     settings: PhonopySettings,
     confs: dict,
-    load_phonopy_yaml: bool,
     log_level: int,
 ):
     """Calculate or read force constants.
@@ -745,11 +745,8 @@ def _produce_force_constants(
         fc_calculator, fc_calculator_options = (
             _get_fc_calculator_and_options_from_settings(settings, log_level=log_level)
         )
-        # Set "symfc" for type-II dataset when phonopy-load is called without
-        # specifying fc-calculator.
-        if load_phonopy_yaml and settings.fc_symmetry and fc_calculator is None:
-            fc_calculator = "symfc"
-
+        # A type-II dataset without an explicit fc-calculator is handled by
+        # produce_force_constants, which falls back to symfc.
         produce_force_constants(
             phonon,
             fc_calculator=fc_calculator,
@@ -776,6 +773,31 @@ def _get_fc_calculator_and_options_from_settings(
     return fc_calculator, fc_calculator_options
 
 
+def _prepare_pypolymlp(phonon: Phonopy, settings: PhonopySettings, log_level: int):
+    """Load an existing polynomial MLP or develop one from the dataset.
+
+    A dataset carrying forces is moved to mlp_dataset for training; a
+    displacement-only dataset, or none at all, leaves an existing polymlp.yaml
+    as the only source, which develop_or_load_pypolymlp tries first.
+
+    """
+    move_force_dataset_to_mlp_dataset(phonon)
+
+    try:
+        develop_or_load_pypolymlp(
+            phonon, mlp_params=settings.mlp_params, log_level=log_level
+        )
+    except (
+        PypolymlpDevelopmentError,
+        PypolymlpFileNotFoundError,
+        PypolymlpTrainingDatasetNotFoundError,
+    ) as e:
+        print_error_message(str(e))
+        if log_level:
+            print_error()
+        sys.exit(1)
+
+
 def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
     if log_level:
         print(
@@ -790,8 +812,12 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
         temperature=settings.random_displacement_temperature,
         number_of_snapshots=settings.random_displacements,
         max_iterations=settings.sscha_iterations,
+        mesh=settings.mesh_numbers,
+        random_seed=settings.random_seed,
         log_level=log_level,
     )
+    fc_filenames: dict[int, str] = {}
+    yaml_filename = ""
     for iter_num in sscha:
         ph = sscha.phonopy
         out_filename = ph.save(
@@ -803,12 +829,18 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
             },
             compression=True,
         )
+        fc_filenames[iter_num] = out_filename
+        # Rewritten after every iteration, so that a run stopped part way
+        # leaves the free energies it did reach.
+        yaml_filename = write_sscha_yaml(sscha, fc_filenames)
         if log_level:
-            sscha.calculate_free_energy()
-            print(
-                f"SSCHA free energy: {sscha.free_energy * 1000:.3f} "
-                f"+/- {sscha.free_energy_error * 1000:.3f} meV"
-            )
+            # The initialization step has no free energy; see MLPSSCHA.history.
+            if sscha.history and sscha.history[-1].iteration == iter_num:
+                result = sscha.history[-1]
+                print(
+                    f"SSCHA free energy: {result.free_energy * 1000:.3f} "
+                    f"+/- {result.free_energy_error * 1000:.3f} meV"
+                )
             if iter_num == 0:
                 print("Initial ", end="")
             else:
@@ -819,6 +851,7 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
     phonon.force_constants = ph.force_constants
 
     if log_level:
+        print(f'SSCHA free energies are written into "{yaml_filename}".')
         print(
             "-------------------------------- SSCHA end "
             "---------------------------------"
@@ -2248,21 +2281,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         # Prepare polynomial MLPs #
         ###########################
         if settings.use_pypolymlp:
-            move_force_dataset_to_mlp_dataset(phonon)
-
-            try:
-                develop_or_load_pypolymlp(
-                    phonon, mlp_params=settings.mlp_params, log_level=log_level
-                )
-            except (
-                PypolymlpDevelopmentError,
-                PypolymlpFileNotFoundError,
-                PypolymlpTrainingDatasetNotFoundError,
-            ) as e:
-                print_error_message(str(e))
-                if log_level:
-                    print_error()
-                sys.exit(1)
+            _prepare_pypolymlp(phonon, settings, log_level)
 
         ################################################
         # Relax atomic positions using polynomial MLPs #
@@ -2301,7 +2320,6 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             phonon,
             settings,
             confs,
-            load_phonopy_yaml,
             log_level,
         )
 
@@ -2319,6 +2337,13 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     # MLPSSCHA (pypolymlp-sscha) #
     ##############################
     if settings.use_pypolymlp and settings.sscha_iterations:
+        # Reading force constants (--readfc) skips the block above, and with it
+        # the MLP preparation, so the MLP is prepared here instead. This is the
+        # cheap way to run SSCHA: the harmonic force constants come from a
+        # file, no random displacements are spent on them, and --rd sets the
+        # SSCHA snapshot count alone.
+        if phonon.mlp is None:
+            _prepare_pypolymlp(phonon, settings, log_level)
         _run_MLPSSCHA(phonon, settings, log_level)
 
     ###################################################################
