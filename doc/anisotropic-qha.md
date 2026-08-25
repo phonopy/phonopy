@@ -453,7 +453,7 @@ Run the analysis directly on the intermediate dataset:
 
 ```bash
 % phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --tmax 1000 --dt 10 \
-    --contour-temp 0 500 1000 --compare-eos --electronic
+    --contour-temp 0 500 1000 --compare-eos
 ```
 
 `--tmax` and `--dt` are in K and set the temperature grid, here 0 to 1000 K in
@@ -481,19 +481,21 @@ hand. Cells sharing a {math}`c/a` have one shape, which is what a volume-path
 equation-of-state fit assumes; five or more of them are printed as a
 ready-made `--eos-index` line.
 
-`--electronic` adds the electronic free energy {math}`F_\mathrm{el}`, and only
-when the dataset carries the electronic states; by default it is ignored. The
-integration is the linear tetrahedron method when the states carry the k-point
-grid, and the k-point sum otherwise. The k-point sum integrates a
-delta-function density of states and converges slowly, so a mesh chosen for
-the total energy is not dense enough for it. The run prints which of the two
-it used, and at how many grid points.
+The electronic free energy {math}`F_\mathrm{el}` is added whenever the dataset
+carries the electronic states, and `--no-electronic` leaves it out. The
+integration is the linear tetrahedron method, which needs the k-point grid the
+states were computed on. Without it the command stops rather than falling back
+on the k-point sum: that sum integrates a delta-function density of states and
+needs far more irreducible k points than a mesh chosen for the total energy
+has. The run prints the energy window and the grid spacing it integrated over.
+The result is written to `fel.hdf5`, which `--electronic-free-energies` takes
+back on a later run, since the integration is the same every time.
 
-Check that convergence on the thermal expansion, not on {math}`F_\mathrm{el}`.
-The two integrations can agree closely on {math}`F_\mathrm{el}` at a mesh
-where they differ severalfold in {math}`\alpha_c`: the expansion is a
-derivative of the free-energy surface, and the k-point sum's error varies
-across the lattice grid.
+Converge the mesh on the thermal expansion rather than on
+{math}`F_\mathrm{el}`. Two meshes can agree closely on {math}`F_\mathrm{el}`
+and still differ severalfold in {math}`\alpha_c`, because the expansion is a
+derivative of the free-energy surface and the error varies across the lattice
+grid.
 
 The same analysis, driven from the API:
 

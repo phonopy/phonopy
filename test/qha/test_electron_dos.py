@@ -8,7 +8,7 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points
-from phonopy.qha.electron import ElectronicStates, compute_tetrahedron_dos
+from phonopy.qha.electron import ElectronicStates, _tetrahedron_dos_and_count
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -70,7 +70,9 @@ def _integral(states: ElectronicStates, n_points: int = 4001) -> float:
     low = float(states.eigenvalues.min()) - 1.0
     high = float(states.eigenvalues.max()) + 1.0
     energies = np.linspace(low, high, n_points)
-    return float(np.trapezoid(compute_tetrahedron_dos(states, energies), energies))
+    return float(
+        np.trapezoid(_tetrahedron_dos_and_count(states, energies)[0], energies)
+    )
 
 
 def test_dos_normalization(aln_cell: PhonopyAtoms):
@@ -120,7 +122,7 @@ def test_dos_is_non_negative(aln_cell: PhonopyAtoms):
     energies = np.linspace(
         float(states.eigenvalues.min()), float(states.eigenvalues.max()), 501
     )
-    assert (compute_tetrahedron_dos(states, energies) >= 0.0).all()
+    assert (_tetrahedron_dos_and_count(states, energies)[0] >= 0.0).all()
 
 
 def test_dos_does_not_depend_on_the_block_size(aln_cell: PhonopyAtoms):
@@ -138,10 +140,10 @@ def test_dos_does_not_depend_on_the_block_size(aln_cell: PhonopyAtoms):
         float(states.eigenvalues.min()), float(states.eigenvalues.max()), 401
     )
 
-    whole = compute_tetrahedron_dos(states, energies, max_bytes=np.inf)
+    whole = _tetrahedron_dos_and_count(states, energies, max_bytes=np.inf)[0]
     for max_bytes in (1.0, 1e4, 1e5):
         np.testing.assert_allclose(
-            compute_tetrahedron_dos(states, energies, max_bytes=max_bytes),
+            _tetrahedron_dos_and_count(states, energies, max_bytes=max_bytes)[0],
             whole,
             rtol=0.0,
             atol=0.0,
@@ -157,7 +159,7 @@ def test_tetrahedron_dos_needs_the_grid(aln_cell: PhonopyAtoms):
         n_electrons=states.n_electrons,
     )
     with pytest.raises(ValueError, match="needs kpoints, mesh and cell"):
-        compute_tetrahedron_dos(without, np.linspace(0.0, 1.0, 11))
+        _tetrahedron_dos_and_count(without, np.linspace(0.0, 1.0, 11))
 
 
 def test_electronic_states_grid_fields_go_together(aln_cell: PhonopyAtoms):

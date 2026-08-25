@@ -87,21 +87,20 @@ def test_free_energy_is_zero_at_zero_temperature():
 
 
 def test_chemical_potential_starts_at_the_fermi_level():
-    """Test that mu(T = 0) is the Fermi level to within the energy spacing.
+    """Test that mu(T = 0) is the Fermi level exactly.
 
-    The count below the window is defined so that mu(0) = E_F, which is what
-    keeps the deep states out of every integral. What is left is the half
-    cell by which the trapezoidal rule misplaces a step edge, so the
-    agreement is of the order of the energy spacing and no better. On the
-    real grids this shows up as mu(0) - E_F = -0.77 meV.
+    Without a state count to solve against, the count below the window is
+    defined at the Fermi level and mu(0) is that level by construction. It
+    used to be solved for at T = 0 instead, where the occupation is a step
+    and the count a staircase in mu, which quantized mu(0) to the energy
+    grid and moved F(T) - F(0) by microelectronvolts.
 
     """
     energies, dos = _flat_dos(2.0)
     _, _, mu = free_energy_from_dos(
         energies, dos, _n_electrons(energies, dos), [0.0, 300.0], FERMI
     )
-    spacing = energies[1] - energies[0]
-    assert abs(mu[0] - FERMI) < spacing
+    assert mu[0] == FERMI
 
 
 def test_energy_grid_halving_moves_the_free_energy_by_microelectronvolts():
@@ -252,7 +251,10 @@ def test_the_integration_method_is_reported(capsys):
     without_grid = dataclasses.replace(with_grid, kpoints=None, mesh=None, cell=None)
 
     compute_electronic_contributions_from_states([with_grid], temperatures)
-    assert "linear tetrahedron method (1 point)" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    # The window and the spacing are reported too: they set what the tetrahedron
+    # integrated, and a file of free energies keeps no record of them.
+    assert "linear tetrahedron method (1 point, +-0.50 eV at 0.50 meV)" in out
 
     compute_electronic_contributions_from_states([without_grid], temperatures)
     assert "k-point sum (1 point)" in capsys.readouterr().out
@@ -261,7 +263,8 @@ def test_the_integration_method_is_reported(capsys):
         [with_grid, without_grid], temperatures
     )
     out = capsys.readouterr().out
-    assert "tetrahedron method (1 point) and by the k-point sum (1 point)" in out
+    assert "tetrahedron method (1 point," in out
+    assert "and by the k-point sum (1 point)" in out
 
 
 def test_window_must_contain_samples():
