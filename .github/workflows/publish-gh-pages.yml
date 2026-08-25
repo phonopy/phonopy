@@ -29,7 +29,7 @@ jobs:
           conda install --yes -c conda-forge \
             matplotlib-base pyyaml scipy numpy spglib h5py pip cmake \
             c-compiler cxx-compiler maturin \
-            sphinx-book-theme linkify-it-py myst-parser sphinxcontrib-bibtex sphinxcontrib-mermaid ipython
+            sphinx-book-theme linkify-it-py myst-parser sphinxcontrib-bibtex sphinxcontrib-mermaid sphinx-copybutton ipython
       - name: Setup symfc
         run: |
           conda activate test

@@ -32,11 +32,16 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "sphinx_copybutton",
     "sphinxcontrib.mermaid",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
 ]
 myst_enable_extensions = ["linkify", "dollarmath", "amsmath"]
+
+# Copy buttons on the code blocks that carry a caption, i.e. the scripts meant
+# to be taken away and run.
+copybutton_selector = "div.literal-block-wrapper div.highlight pre"
 
 # autodoc / autosummary
 autosummary_generate = True
