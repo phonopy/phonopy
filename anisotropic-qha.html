@@ -1198,7 +1198,7 @@ from that number.</p>
 <h2>4. Run the anisotropic QHA<a class="headerlink" href="#run-the-anisotropic-qha" title="Link to this heading">#</a></h2>
 <p>Run the analysis directly on the intermediate dataset:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--tmax<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--dt<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--contour-temp<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span>--compare-eos<span class="w"> </span>--electronic
+<span class="w">    </span>--contour-temp<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="m">1000</span><span class="w"> </span>--compare-eos
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">--tmax</span></code> and <code class="docutils literal notranslate"><span class="pre">--dt</span></code> are in K and set the temperature grid, here 0 to 1000 K in
@@ -1222,18 +1222,20 @@ by volume with their <span class="math notranslate nohighlight">\(c/a\)</span>, 
 hand. Cells sharing a <span class="math notranslate nohighlight">\(c/a\)</span> have one shape, which is what a volume-path
 equation-of-state fit assumes; five or more of them are printed as a
 ready-made <code class="docutils literal notranslate"><span class="pre">--eos-index</span></code> line.</p>
-<p><code class="docutils literal notranslate"><span class="pre">--electronic</span></code> adds the electronic free energy <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>, and only
-when the dataset carries the electronic states; by default it is ignored. The
-integration is the linear tetrahedron method when the states carry the k-point
-grid, and the k-point sum otherwise. The k-point sum integrates a
-delta-function density of states and converges slowly, so a mesh chosen for
-the total energy is not dense enough for it. The run prints which of the two
-it used, and at how many grid points.</p>
-<p>Check that convergence on the thermal expansion, not on <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>.
-The two integrations can agree closely on <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> at a mesh
-where they differ severalfold in <span class="math notranslate nohighlight">\(\alpha_c\)</span>: the expansion is a
-derivative of the free-energy surface, and the k-point sum’s error varies
-across the lattice grid.</p>
+<p>The electronic free energy <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> is added whenever the dataset
+carries the electronic states, and <code class="docutils literal notranslate"><span class="pre">--no-electronic</span></code> leaves it out. The
+integration is the linear tetrahedron method, which needs the k-point grid the
+states were computed on. Without it the command stops rather than falling back
+on the k-point sum: that sum integrates a delta-function density of states and
+needs far more irreducible k points than a mesh chosen for the total energy
+has. The run prints the energy window and the grid spacing it integrated over.
+The result is written to <code class="docutils literal notranslate"><span class="pre">fel.hdf5</span></code>, which <code class="docutils literal notranslate"><span class="pre">--electronic-free-energies</span></code> takes
+back on a later run, since the integration is the same every time.</p>
+<p>Converge the mesh on the thermal expansion rather than on
+<span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>. Two meshes can agree closely on <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>
+and still differ severalfold in <span class="math notranslate nohighlight">\(\alpha_c\)</span>, because the expansion is a
+derivative of the free-energy surface and the error varies across the lattice
+grid.</p>
 <p>The same analysis, driven from the API:</p>
 <div class="literal-block-wrapper docutils container" id="id3">
 <div class="code-block-caption"><span class="caption-text">Script 3 – the analysis through <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code></span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
