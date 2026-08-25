@@ -24,6 +24,7 @@ from phonopy.qha.electron import (
     ElectronicStates,
     compute_free_energy_and_entropy,
     compute_free_energy_by_tetrahedron,
+    resolve_energy_window,
 )
 
 
@@ -99,6 +100,9 @@ def compute_thermal_properties(
 def compute_electronic_contributions_from_states(
     electronic_structures: Sequence[ElectronicStates],
     temperatures: NDArray[np.double],
+    window: float | None = None,
+    energy_spacing: float = 0.0005,
+    require_tetrahedron: bool = False,
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Compute relative band free energies and entropies at temperatures.
 
@@ -117,27 +121,58 @@ def compute_electronic_contributions_from_states(
     fe_el_rel = np.zeros(shape, dtype="double")
     s_el = np.zeros(shape, dtype="double")
     temps_with_anchor = np.concatenate([[0.0], temperatures])
-    by_tetrahedron = [_has_tetrahedron_grid(states) for states in electronic_structures]
-    _report_electronic_integration(by_tetrahedron)
+    without_grid = [
+        i
+        for i, states in enumerate(electronic_structures)
+        if not _has_tetrahedron_grid(states)
+    ]
+    if without_grid and require_tetrahedron:
+        named = ", ".join(str(i + 1) for i in without_grid)
+        raise ValueError(
+            f"Grid point(s) {named} carry no k-point grid, so the linear "
+            "tetrahedron method cannot run. The k-point sum that is left "
+            "converges far too slowly for this term: it needs many more "
+            "irreducible k points, and on a mesh chosen for the total energy "
+            "the thermal expansion it gives can be off by a large factor. "
+            "Recompute the static grid with a regular mesh, or give the free "
+            "energies ready-made."
+        )
+    _report_electronic_integration(
+        len(electronic_structures) - len(without_grid),
+        len(without_grid),
+        resolve_energy_window(window, temps_with_anchor),
+        energy_spacing,
+    )
     for i, electronic_states in enumerate(electronic_structures):
-        if by_tetrahedron[i]:
-            fe, s = compute_free_energy_by_tetrahedron(
+        if i in set(without_grid):
+            fe, s = compute_free_energy_and_entropy(
                 electronic_states, temps_with_anchor
             )
         else:
-            fe, s = compute_free_energy_and_entropy(
-                electronic_states, temps_with_anchor
+            fe, s = compute_free_energy_by_tetrahedron(
+                electronic_states,
+                temps_with_anchor,
+                window=window,
+                energy_spacing=energy_spacing,
             )
         fe_el_rel[:, i] = fe[1:] - fe[0]
         s_el[:, i] = s[1:]
     return fe_el_rel, s_el
 
 
-def _report_electronic_integration(by_tetrahedron: Sequence[bool]) -> None:
-    """Print how the electronic free energy is integrated at each point."""
-    n_tetrahedron = sum(by_tetrahedron)
-    n_sum = len(by_tetrahedron) - n_tetrahedron
-    tetrahedron = f"the linear tetrahedron method ({_points(n_tetrahedron)})"
+def _report_electronic_integration(
+    n_tetrahedron: int, n_sum: int, window: float, energy_spacing: float
+) -> None:
+    """Print how the electronic free energy is integrated at each point.
+
+    The window and the spacing are named too: they set what the tetrahedron
+    integrated, and a file of free energies keeps no record of them.
+
+    """
+    tetrahedron = (
+        f"the linear tetrahedron method ({_points(n_tetrahedron)}, "
+        f"+-{window:.2f} eV at {energy_spacing * 1e3:.2f} meV)"
+    )
     k_sum = f"the k-point sum ({_points(n_sum)})"
     if n_sum == 0:
         print(f"Electronic free energy by {tetrahedron}.")
@@ -158,13 +193,13 @@ def _points(n: int) -> str:
 def _has_tetrahedron_grid(electronic_states: ElectronicStates) -> bool:
     """Return whether the states carry everything the tetrahedron needs.
 
-    kpoints, mesh and cell are taken together or not at all; the Fermi energy
-    is separate and the tetrahedron anchors the electron count to it.
+    kpoints, mesh and cell are taken together or not at all. A Fermi energy
+    the calculation reported is used when it is there and counted over the
+    k points when it is not, so it is not part of this.
 
     """
     return (
         electronic_states.kpoints is not None
         and electronic_states.mesh is not None
         and electronic_states.cell is not None
-        and electronic_states.fermi_energy is not None
     )

@@ -32,7 +32,9 @@ from phonopy.qha.free_energy_io import (
     FreeEnergyKind,
     check_free_energies,
     read_free_energies_hdf5,
+    write_free_energies_hdf5,
 )
+from phonopy.qha.thermal import compute_electronic_contributions_from_states
 
 
 def main_diagonal_positions(grid_shape: Sequence[int]) -> NDArray[np.int64]:
@@ -270,10 +272,27 @@ def get_options() -> Namespace:
         help="total degree of the F(a, c) surface polynomial (default: 3)",
     )
     parser.add_argument(
-        "--electronic",
-        action="store_true",
-        help="add the electronic free energy F_el from the electronic states "
-        "stored in the dataset (default: ignore them)",
+        "--no-electronic",
+        dest="electronic",
+        action="store_false",
+        default=True,
+        help="leave out the electronic free energy F_el, which is otherwise "
+        "integrated from the electronic states stored in the dataset",
+    )
+    parser.add_argument(
+        "--electronic-window",
+        type=float,
+        default=None,
+        metavar="EV",
+        help="half-width of the energy window F_el is integrated over "
+        "(default: 12 k_B T of the highest temperature, at least 0.5 eV)",
+    )
+    parser.add_argument(
+        "--electronic-spacing",
+        type=float,
+        default=0.0005,
+        metavar="EV",
+        help="spacing of the energy grid inside that window (default: 0.0005)",
     )
     parser.add_argument(
         "--electronic-free-energies",
@@ -351,12 +370,6 @@ def run() -> None:
         )
     indices = [point.index for point in dataset.grid_points]
 
-    if args.electronic and args.electronic_free_energies:
-        raise SystemExit(
-            "--electronic and --electronic-free-energies are two ways of "
-            "giving the same term; use one or the other."
-        )
-
     # Read before the force constants are built, so a mismatched file is
     # reported in a second rather than after the solver has run.
     if args.tmax is None and args.dt is None and args.phonon_free_energies:
@@ -384,7 +397,8 @@ def run() -> None:
     )
     phonopys = []
     internal_energies = []
-    electronic_structures: list | None = [] if args.electronic else None
+    read_states = args.electronic and not args.electronic_free_energies
+    electronic_structures: list | None = [] if read_states else None
     for point in dataset.grid_points:
         if phonon_free_energies is None:
             phonopys.append(point.to_phonopy(fc_calculator=args.fc_calculator))
@@ -405,8 +419,8 @@ def run() -> None:
                 electronic_structures = None
             else:
                 electronic_structures.append(point.electronic_states)
-    if args.electronic and electronic_structures is None:
-        print("  requested --electronic but the dataset has no electronic states")
+    if read_states and electronic_structures is None:
+        print("  the dataset has no electronic states, so F_el is left out")
     with_electronic = (
         electronic_structures is not None or args.electronic_free_energies is not None
     )
@@ -415,11 +429,27 @@ def run() -> None:
         f"(electronic F_el: {'on' if with_electronic else 'off'})"
     )
 
+    if electronic_structures is not None:
+        electronic_free_energies, _ = compute_electronic_contributions_from_states(
+            electronic_structures,
+            temperatures,
+            window=args.electronic_window,
+            energy_spacing=args.electronic_spacing,
+            require_tetrahedron=True,
+        )
+        write_free_energies_hdf5(
+            temperatures,
+            electronic_free_energies,
+            "fel.hdf5",
+            kind="electronic",
+            lattice_lengths=lattice_lengths,
+        )
+        print("Wrote fel.hdf5, which --electronic-free-energies takes back")
+
     result = run_anisotropic_qha(
         phonopys,
         temperatures,
         internal_energies=internal_energies,
-        electronic_structures=electronic_structures,
         electronic_free_energies=electronic_free_energies,
         phonon_free_energies=phonon_free_energies,
         mesh=args.mesh,
@@ -451,7 +481,10 @@ def run() -> None:
         "volume-temperature.dat and anisotropic_qha.png"
     )
 
-    contour_temps = args.contour_temp if args.contour_temp else [args.tmax]
+    # The highest temperature of the run, which --tmax need not have set.
+    contour_temps = (
+        args.contour_temp if args.contour_temp else [float(temperatures[-1])]
+    )
     written = anisotropic_plot.plot_F_contours(result, contour_temps)
     if written:
         print("Wrote " + ", ".join(written))
@@ -460,7 +493,7 @@ def run() -> None:
         written = anisotropic_plot.plot_component_contours(
             result,
             internal_energies,
-            electronic_structures,
+            None,  # F_el is passed as free energies below, states or not.
             contour_temps,
             electronic_free_energies=(
                 None
@@ -474,7 +507,7 @@ def run() -> None:
     if args.compare_eos and phonon_free_energies is not None:
         print("Skip the EOS cross-check: the volume-path driver computes")
         print("F_ph from force constants, which this run does not have.")
-    elif args.compare_eos and electronic_free_energies is not None:
+    elif args.compare_eos and args.electronic_free_energies:
         print("Skip the EOS cross-check: the volume-path driver takes the")
         print("electronic term as states, and F_el was given ready-made, so")
         print("the two paths would not carry the same physics. Run with")
