@@ -32,6 +32,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
@@ -42,6 +43,8 @@
     <script src="_static/documentation_options.js?v=e4428b72"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=8b0727dd"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
@@ -779,6 +782,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-sscha-sweep-script">Appendix: the SSCHA sweep script</a></li>
 </ul>
             </nav>
         </div>
@@ -1743,7 +1747,7 @@ small, so a difference there need not mean the temperature-dependent run is
 wrong.</p>
 </section>
 <section id="computing-the-free-energies-with-sscha">
-<h3>Computing the free energies with SSCHA<a class="headerlink" href="#computing-the-free-energies-with-sscha" title="Link to this heading">#</a></h3>
+<span id="anisotropic-qha-sscha"></span><h3>Computing the free energies with SSCHA<a class="headerlink" href="#computing-the-free-energies-with-sscha" title="Link to this heading">#</a></h3>
 <p>The MLPs are for the temperature-dependent route (<a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a>), not for a
 harmonic force-constant set. They are trained on thermal displacements, and a
 harmonic set would ask them for the small fixed displacements of step 2
@@ -1751,75 +1755,13 @@ instead. Steps 2 to 4 give the harmonic answer from the calculator directly.</p>
 <p><span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> is then no longer the harmonic expression of “The free
 energy” above. With SSCHA it is the SSCHA free energy of <a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a>,
 computed from force constants that change with temperature.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> of step 3 is used as it is. Script 7 below makes
-one SSCHA run at every grid point and every temperature. Each run starts from
-the harmonic force constants the dataset carries:</p>
-<div class="literal-block-wrapper docutils container" id="id7">
-<div class="code-block-caption"><span class="caption-text">Script 7 – SSCHA at every grid point and temperature</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.mlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyMLP</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.free_energy_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_free_energies_hdf5</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPSSCHA</span>
-
-<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># one extra point for finite diff</span>
-<span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">2000</span>
-<span class="n">ITERATIONS</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="n">MESH</span> <span class="o">=</span> <span class="mf">200.0</span>
-<span class="n">SEED</span> <span class="o">=</span> <span class="mi">1000</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">sscha_free_energy</span><span class="p">(</span><span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">force_constants</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Return the SSCHA free energy and its error in eV per primitive cell.</span>
-
-<span class="sd">    ``force_constants`` starts the iteration from a set of one's own. Without</span>
-<span class="sd">    it, it starts from the set ``ph`` carries.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">force_constants</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">ph</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">replicate</span><span class="p">()</span>
-        <span class="n">ph</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="n">force_constants</span>
-    <span class="n">sscha</span> <span class="o">=</span> <span class="n">MLPSSCHA</span><span class="p">(</span>
-        <span class="n">ph</span><span class="p">,</span>
-        <span class="n">mlp</span><span class="p">,</span>
-        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
-        <span class="n">number_of_snapshots</span><span class="o">=</span><span class="n">SNAPSHOTS</span><span class="p">,</span>
-        <span class="n">max_iterations</span><span class="o">=</span><span class="n">ITERATIONS</span><span class="p">,</span>
-        <span class="n">mesh</span><span class="o">=</span><span class="n">MESH</span><span class="p">,</span>
-        <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-    <span class="n">history</span> <span class="o">=</span> <span class="n">sscha</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
-    <span class="p">)</span>
-
-
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
-<span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
-
-<span class="n">free_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)))</span>
-<span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">free_energies</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
-    <span class="n">mlp</span> <span class="o">=</span> <span class="n">PhonopyMLP</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">"train/grid-</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">/polymlp.yaml"</span><span class="p">)</span>
-    <span class="n">ph</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">):</span>
-        <span class="n">free_energies</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span> <span class="n">errors</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">sscha_free_energy</span><span class="p">(</span>
-            <span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
-        <span class="p">)</span>
-
-<span class="n">write_free_energies_hdf5</span><span class="p">(</span>
-    <span class="n">TEMPERATURES</span><span class="p">,</span>
-    <span class="n">free_energies</span><span class="p">,</span>
-    <span class="s2">"fph.hdf5"</span><span class="p">,</span>
-    <span class="n">kind</span><span class="o">=</span><span class="s2">"phonon"</span><span class="p">,</span>
-    <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span>
-    <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
-    <span class="p">),</span>
-<span class="p">)</span>
+<p>The <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> of step 3 is used as it is. Script 7, listed in
+<a class="reference internal" href="#anisotropic-qha-sweep-script"><span class="std std-ref">Appendix: the SSCHA sweep script</span></a> at the end of this page, makes one SSCHA run at
+every grid point and every temperature. Each run starts from the harmonic force
+constants the dataset carries. With no options it runs the whole grid and
+writes <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script7.py
 </pre></div>
-</div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">MESH</span></code> is the mesh the harmonic part of the SSCHA free energy is sampled on,
 and matching it to the <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> of the analysis keeps one sampling through
@@ -1836,43 +1778,23 @@ worth the trouble. A run’s randomness comes from <code class="docutils literal
 number alone, since iteration <em>i</em> draws from <code class="docutils literal notranslate"><span class="pre">SeedSequence([SEED,</span> <span class="pre">i])</span></code>. It
 depends on neither its position in the two loops nor the order the runs are
 made in. Either loop can be sliced, or both.</p>
-<p>A slice holds a block of grid points and a block of temperatures. It writes the
-rows and the columns it was given:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">columns</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>                          <span class="c1"># this job's grid points</span>
-<span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>                        <span class="c1"># and its temperatures</span>
-<span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">]</span>
-<span class="o">...</span>
-<span class="n">write_free_energies_hdf5</span><span class="p">(</span>
-    <span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">rows</span><span class="p">],</span> <span class="n">free_energies</span><span class="p">,</span> <span class="s2">"fph-g000-004-t000-009.hdf5"</span><span class="p">,</span> <span class="o">...</span>
-<span class="p">)</span>
+<p><code class="docutils literal notranslate"><span class="pre">-g</span></code> and <code class="docutils literal notranslate"><span class="pre">-t</span></code> run one grid point at one temperature, and write that one value
+to its own file. The grid point is numbered from 1, and the temperature is in
+K, taken to the nearest of <code class="docutils literal notranslate"><span class="pre">TEMPERATURES</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script7.py<span class="w"> </span>-g<span class="w"> </span><span class="m">13</span><span class="w"> </span>-t<span class="w"> </span><span class="m">250</span>
+<span class="o">(</span><span class="m">013</span>,<span class="w"> </span><span class="m">250</span>.0<span class="o">)</span>
+Wrote<span class="w"> </span>fph-g013-t250K.hdf5
 </pre></div>
 </div>
-<p>The pieces are merged in two passes once they are all in. The temperature
-blocks of one grid point stack by rows, and the grid points then stack by
-columns:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.free_energy_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_free_energies_hdf5</span>
-
-<span class="c1"># parts[(grid block, temperature block)] = read_free_energies_hdf5(filename)</span>
-<span class="n">free_energies</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">lattice_lengths</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">}):</span>
-    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">parts</span><span class="p">[(</span><span class="n">g</span><span class="p">,</span> <span class="n">t</span><span class="p">)]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">gg</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">gg</span> <span class="o">==</span> <span class="n">g</span><span class="p">)]</span>
-    <span class="n">temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">temperatures</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">])</span>
-    <span class="n">free_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">free_energies</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">errors</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]))</span>
-    <span class="n">lattice_lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lattice_lengths</span><span class="p">)</span>
-
-<span class="n">write_free_energies_hdf5</span><span class="p">(</span>
-    <span class="n">temperatures</span><span class="p">,</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">free_energies</span><span class="p">),</span>
-    <span class="s2">"fph.hdf5"</span><span class="p">,</span>
-    <span class="n">kind</span><span class="o">=</span><span class="s2">"phonon"</span><span class="p">,</span>
-    <span class="n">errors</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">errors</span><span class="p">),</span>
-    <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">lattice_lengths</span><span class="p">),</span>
-<span class="p">)</span>
+<p>One such call is one job. <code class="docutils literal notranslate"><span class="pre">-c</span></code> gathers what they wrote into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script7.py<span class="w"> </span>-c
+Wrote<span class="w"> </span>fph.hdf5<span class="w"> </span>from<span class="w"> </span><span class="m">1025</span><span class="w"> </span>file<span class="o">(</span>s<span class="o">)</span>
 </pre></div>
 </div>
+<p>Each file is placed by the lattice lengths and the temperature it carries
+rather than by its name, so the order they are gathered in does not matter. A
+missing value stops the write and is named, since a gap would otherwise reach
+the analysis as a zero.</p>
 </section>
 <section id="supplying-the-free-energies-to-the-analysis">
 <h3>Supplying the free energies to the analysis<a class="headerlink" href="#supplying-the-free-energies-to-the-analysis" title="Link to this heading">#</a></h3>
@@ -1927,25 +1849,36 @@ carries the lattice lengths of the grid points, when they were written, and
 those are checked against the dataset. A file computed on another machine
 cannot then be paired with the wrong grid.</p>
 <p>A free energy from a sampled method carries the scatter of its sampling. The
-minimum of the surface at one temperature moves with that scatter, and it moves
-independently of the minimum at the next temperature. The axial expansions are
-differences along temperature, so they amplify it. The command above therefore
-smooths the lattice parameters before differentiating them, and says so as it
-runs.</p>
+lattice parameters that minimize the free-energy surface at one temperature
+move with that scatter, and they move independently of those at the next
+temperature. Without smoothing the analysis takes each of <span class="math notranslate nohighlight">\(da/dT\)</span>,
+<span class="math notranslate nohighlight">\(db/dT\)</span> and <span class="math notranslate nohighlight">\(dc/dT\)</span> as a central difference between neighbouring
+temperatures, which amplifies that scatter. The command above therefore smooths
+the lattice parameters before differentiating them, and says so as it runs.</p>
+<p>The form fitted to each lattice parameter is</p>
+<div class="math notranslate nohighlight">
+\[a(T) = a_0 + \sum_i A_i \frac{\theta_i}{e^{\theta_i / T} - 1},\]</div>
+<p>with amplitudes <span class="math notranslate nohighlight">\(A_i\)</span> of opposite sign and Einstein temperatures
+<span class="math notranslate nohighlight">\(\theta_i\)</span>, and the same for <span class="math notranslate nohighlight">\(b(T)\)</span> and <span class="math notranslate nohighlight">\(c(T)\)</span>. Each term is
+zero at <span class="math notranslate nohighlight">\(T = 0\)</span> with zero slope, so the fitted expansion vanishes at 0 K,
+as the third law requires. A general-purpose smoother assumes only smoothness,
+and a spline fitted to the same data returns a finite expansion at 0 K instead.
+Other forms share the property; this one is also the usual model for a lattice
+parameter that contracts at low temperature and expands at high temperature.</p>
+<p>Differentiating it term by term gives</p>
+<div class="math notranslate nohighlight">
+\[\frac{da}{dT} = \sum_i A_i
+\frac{(\theta_i / 2T)^2}{\sinh^2(\theta_i / 2T)},\]</div>
+<p>which is the derivative the axial expansions are built from once the fit is
+made.</p>
 <p>The smoothing is <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">einstein</span></code>, the default whenever
-<code class="docutils literal notranslate"><span class="pre">--phonon-free-energies</span></code> is given. It fits each of <span class="math notranslate nohighlight">\(a(T)\)</span>, <span class="math notranslate nohighlight">\(b(T)\)</span>
-and <span class="math notranslate nohighlight">\(c(T)\)</span> to a sum of Einstein terms of opposite sign, and
-differentiates the fit instead of the points. <code class="docutils literal notranslate"><span class="pre">--smooth-terms</span></code> sets how many
-terms, 2 by default. More terms follow a curve more closely, and follow its
-scatter more closely too. <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">none</span></code> turns the smoothing off.</p>
-<p>Each Einstein term is zero at <span class="math notranslate nohighlight">\(T = 0\)</span> with zero slope, so the fitted
-expansion vanishes at 0 K as the third law requires. The fit runs every
-starting guess and keeps the best of those that pass its checks. When none
-passes it raises, rather than returning a qualitatively wrong curve silently.</p>
-<p>Steps 0 to 4 default to <code class="docutils literal notranslate"><span class="pre">none</span></code>, since their free energies carry no sampling
-scatter. <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">einstein</span></code> can be given there too, and it changes how
-the expansions are computed: with a fit to differentiate, the axial slopes come
-from the closed form of the fit rather than from differences of the minima.</p>
+<code class="docutils literal notranslate"><span class="pre">--phonon-free-energies</span></code> is given. <code class="docutils literal notranslate"><span class="pre">--smooth-terms</span></code> sets how many terms, 2 by
+default. More terms follow a curve more closely, and follow its scatter more
+closely too. <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">none</span></code> turns the smoothing off.</p>
+<p>The free energies of steps 0 to 4 carry no sampling scatter, so the default
+there is <code class="docutils literal notranslate"><span class="pre">none</span></code> and the central differences are used.
+<code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">einstein</span></code> works there as well, for the analytic derivative in
+place of them.</p>
 <p>The same result comes from the API, with <code class="docutils literal notranslate"><span class="pre">phonon_free_energies</span></code> and
 <code class="docutils literal notranslate"><span class="pre">lattice_smoothing</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">run_anisotropic_qha</span><span class="p">(</span>
@@ -1959,7 +1892,231 @@ from the closed form of the fit rather than from differences of the minima.</p>
 </div>
 <p>With <code class="docutils literal notranslate"><span class="pre">phonon_free_energies</span></code> given, <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code> skips the mesh
 sampling and ignores <code class="docutils literal notranslate"><span class="pre">mesh</span></code>.</p>
+<p>Fitting a sum of Einstein terms is not a linear least squares, and different
+starting values converge to different curves. A converged curve can be wrong in
+shape: monotone where the data contracts, or dipping several times deeper than
+the data does. The fit therefore starts from a set of starting values, drops
+the curves whose shape disagrees with the data in those ways, and keeps the
+closest of what is left. If nothing is left, the command stops rather than
+returning a curve of the wrong shape.</p>
 </section>
+</section>
+<section id="appendix-the-sscha-sweep-script">
+<span id="anisotropic-qha-sweep-script"></span><h2>Appendix: the SSCHA sweep script<a class="headerlink" href="#appendix-the-sscha-sweep-script" title="Link to this heading">#</a></h2>
+<p>The script the section <a class="reference internal" href="#anisotropic-qha-sscha"><span class="std std-ref">Computing the free energies with SSCHA</span></a> calls. With no options it
+runs every grid point and every temperature and writes <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>. <code class="docutils literal notranslate"><span class="pre">-g</span></code> and
+<code class="docutils literal notranslate"><span class="pre">-t</span></code> run one of them and write it to its own file, which is how the sweep is
+spread over jobs, and <code class="docutils literal notranslate"><span class="pre">-c</span></code> gathers those files back into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>. <code class="docutils literal notranslate"><span class="pre">-v</span></code> logs
+each SSCHA iteration and lists them at the end, which is worth watching on the
+first few runs; <code class="docutils literal notranslate"><span class="pre">-vv</span></code> adds the force-constant fit.</p>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">Script 7 – SSCHA at every grid point and temperature</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.mlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyMLP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.free_energy_io</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">read_free_energies_hdf5</span><span class="p">,</span>
+    <span class="n">write_free_energies_hdf5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPSSCHA</span>
+
+<span class="n">DATASET</span> <span class="o">=</span> <span class="s2">"aniso_qha_dataset.hdf5"</span>
+<span class="n">MLP</span> <span class="o">=</span> <span class="s2">"train/grid-</span><span class="si">{:03d}</span><span class="s2">/polymlp.yaml"</span>  <span class="c1"># grid point, numbered from 1</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># one extra point for finite diff</span>
+<span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">2000</span>
+<span class="n">ITERATIONS</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">MESH</span> <span class="o">=</span> <span class="mf">200.0</span>
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">1000</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sscha_free_energy</span><span class="p">(</span><span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">force_constants</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the SSCHA free energy and its error in eV per primitive cell.</span>
+
+<span class="sd">    ``force_constants`` starts the iteration from a set of one's own. Without</span>
+<span class="sd">    it, it starts from the set ``ph`` carries. ``log_level`` is passed to</span>
+<span class="sd">    MLPSSCHA, and from 1 the iterations are listed here as well.</span>
+
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">force_constants</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">replicate</span><span class="p">()</span>
+        <span class="n">ph</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="n">force_constants</span>
+    <span class="n">sscha</span> <span class="o">=</span> <span class="n">MLPSSCHA</span><span class="p">(</span>
+        <span class="n">ph</span><span class="p">,</span>
+        <span class="n">mlp</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+        <span class="n">number_of_snapshots</span><span class="o">=</span><span class="n">SNAPSHOTS</span><span class="p">,</span>
+        <span class="n">max_iterations</span><span class="o">=</span><span class="n">ITERATIONS</span><span class="p">,</span>
+        <span class="n">mesh</span><span class="o">=</span><span class="n">MESH</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="n">sscha</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">log_level</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"  iter        F [eV]      error"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">sscha</span><span class="o">.</span><span class="n">history</span><span class="p">:</span>
+            <span class="n">mark</span> <span class="o">=</span> <span class="s2">" "</span> <span class="k">if</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span> <span class="k">else</span> <span class="s2">"*"</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">h</span><span class="o">.</span><span class="n">iteration</span><span class="si">:</span><span class="s2">4d</span><span class="si">}{</span><span class="n">mark</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span><span class="si">:</span><span class="s2">12.6f</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span><span class="si">:</span><span class="s2">10.6f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"  * the starting ensemble, left out of the mean"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_all</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run all and write it to file."""</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
+    <span class="n">free_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)))</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">free_energies</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
+        <span class="n">mlp</span> <span class="o">=</span> <span class="n">PhonopyMLP</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">MLP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">free_energies</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span> <span class="n">errors</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">sscha_free_energy</span><span class="p">(</span>
+                <span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span> <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span>
+            <span class="p">)</span>
+
+    <span class="n">write_free_energies_hdf5</span><span class="p">(</span>
+        <span class="n">TEMPERATURES</span><span class="p">,</span>
+        <span class="n">free_energies</span><span class="p">,</span>
+        <span class="s2">"fph.hdf5"</span><span class="p">,</span>
+        <span class="n">kind</span><span class="o">=</span><span class="s2">"phonon"</span><span class="p">,</span>
+        <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span>
+        <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_one</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">grid_point</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run one grid point at one temperature and write it to its own file.</span>
+
+<span class="sd">    ``grid_point`` is numbered from 1, as the directories are. ``temperature``</span>
+<span class="sd">    is in K, and the nearest of TEMPERATURES is the one run.</span>
+
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">grid_point</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="sa">f</span><span class="s2">"-g is 1 to </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="n">point</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">[</span><span class="n">grid_point</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TEMPERATURES</span> <span class="o">-</span> <span class="n">temperature</span><span class="p">)))</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">row</span><span class="p">]</span>
+
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
+    <span class="n">mlp</span> <span class="o">=</span> <span class="n">PhonopyMLP</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">MLP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grid_point</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">grid_point</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">free_energy</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">sscha_free_energy</span><span class="p">(</span><span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">)</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"fph-g</span><span class="si">{</span><span class="n">grid_point</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-t</span><span class="si">{</span><span class="n">t</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">K.hdf5"</span>
+    <span class="n">write_free_energies_hdf5</span><span class="p">(</span>
+        <span class="n">TEMPERATURES</span><span class="p">[[</span><span class="n">row</span><span class="p">]],</span>
+        <span class="p">[[</span><span class="n">free_energy</span><span class="p">]],</span>
+        <span class="n">filename</span><span class="p">,</span>
+        <span class="n">kind</span><span class="o">=</span><span class="s2">"phonon"</span><span class="p">,</span>
+        <span class="n">errors</span><span class="o">=</span><span class="p">[[</span><span class="n">error</span><span class="p">]],</span>
+        <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrote </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">collect</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">"fph-g*K.hdf5"</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">"fph.hdf5"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Gather the files run_one wrote into one file over the whole grid.</span>
+
+<span class="sd">    Each file is placed by the lattice lengths and the temperature it carries,</span>
+<span class="sd">    not by its name, and a gap stops the write.</span>
+
+<span class="sd">    """</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
+    <span class="n">lattice_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">])</span>
+    <span class="n">free_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">free_energies</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="n">paths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">read_free_energies_hdf5</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">temperatures</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TEMPERATURES</span> <span class="o">-</span> <span class="n">t</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">lengths</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">lattice_lengths</span><span class="p">):</span>
+                <span class="n">column</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lattice_lengths</span> <span class="o">-</span> <span class="n">lengths</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="n">free_energies</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">free_energies</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                <span class="n">errors</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+
+    <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">free_energies</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"(grid </span><span class="si">{</span><span class="n">c</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> K)"</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> file(s) read, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2"> of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">free_energies</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> values missing: </span><span class="si">{</span><span class="n">first</span><span class="si">}</span><span class="s2"> ..."</span>
+        <span class="p">)</span>
+
+    <span class="n">write_free_energies_hdf5</span><span class="p">(</span>
+        <span class="n">TEMPERATURES</span><span class="p">,</span>
+        <span class="n">free_energies</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">,</span>
+        <span class="n">kind</span><span class="o">=</span><span class="s2">"phonon"</span><span class="p">,</span>
+        <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span>
+        <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">lattice_lengths</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrote </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> file(s)"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--grid-point"</span><span class="p">,</span>
+        <span class="s2">"-g"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"grid point, numbered from 1 (default: all of them)"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--temperature"</span><span class="p">,</span>
+        <span class="s2">"-t"</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"temperature in K; the nearest of TEMPERATURES is run "</span>
+        <span class="s2">"(default: all of them)"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--collect"</span><span class="p">,</span>
+        <span class="s2">"-c"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"gather the fph-g*K.hdf5 files written by -g and -t into fph.hdf5"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"-v"</span><span class="p">,</span>
+        <span class="s2">"--verbose"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"count"</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"log each SSCHA iteration; -vv adds the force-constant fit"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="n">DATASET</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">collect</span><span class="p">:</span>
+        <span class="n">collect</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">grid_point</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">run_all</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">grid_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">run_one</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">grid_point</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="s2">"-g and -t go together."</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 </section>
 </section>
 
@@ -2020,6 +2177,7 @@ sampling and ignores <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-sscha-sweep-script">Appendix: the SSCHA sweep script</a></li>
 </ul>
   </nav></div>
 
