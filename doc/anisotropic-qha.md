@@ -1041,6 +1041,7 @@ temperature range is empirically hard to make accurate at displacements that
 small, so a difference there need not mean the temperature-dependent run is
 wrong.
 
+(anisotropic-qha-sscha)=
 ### Computing the free energies with SSCHA
 
 The MLPs are for the temperature-dependent route ({ref}`mlp-sscha`), not for a
@@ -1052,75 +1053,14 @@ instead. Steps 2 to 4 give the harmonic answer from the calculator directly.
 energy" above. With SSCHA it is the SSCHA free energy of {ref}`mlp-sscha`,
 computed from force constants that change with temperature.
 
-The `aniso_qha_dataset.hdf5` of step 3 is used as it is. Script 7 below makes
-one SSCHA run at every grid point and every temperature. Each run starts from
-the harmonic force constants the dataset carries:
+The `aniso_qha_dataset.hdf5` of step 3 is used as it is. Script 7, listed in
+{ref}`anisotropic-qha-sweep-script` at the end of this page, makes one SSCHA run at
+every grid point and every temperature. Each run starts from the harmonic force
+constants the dataset carries. With no options it runs the whole grid and
+writes `fph.hdf5`:
 
-```{code-block} python
-:caption: Script 7 -- SSCHA at every grid point and temperature
-
-import numpy as np
-
-from phonopy.interface.mlp import PhonopyMLP
-from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
-from phonopy.qha.free_energy_io import write_free_energies_hdf5
-from phonopy.sscha.core import MLPSSCHA
-
-TEMPERATURES = np.arange(0, 410, 10.0)  # one extra point for finite diff
-SNAPSHOTS = 2000
-ITERATIONS = 16
-MESH = 200.0
-SEED = 1000
-
-def sscha_free_energy(ph, mlp, temperature, force_constants=None):
-    """Return the SSCHA free energy and its error in eV per primitive cell.
-
-    ``force_constants`` starts the iteration from a set of one's own. Without
-    it, it starts from the set ``ph`` carries.
-    """
-    if force_constants is not None:
-        ph = ph.replicate()
-        ph.force_constants = force_constants
-    sscha = MLPSSCHA(
-        ph,
-        mlp,
-        temperature=temperature,
-        number_of_snapshots=SNAPSHOTS,
-        max_iterations=ITERATIONS,
-        mesh=MESH,
-        random_seed=SEED,
-    ).run()
-    history = sscha.history[1:]
-    return (
-        np.mean([h.free_energy for h in history]),
-        np.mean([h.free_energy_error for h in history]),
-    )
-
-
-dataset = read_aniso_qha_dataset("aniso_qha_dataset.hdf5")
-points = dataset.grid_points
-
-free_energies = np.zeros((len(TEMPERATURES), len(points)))
-errors = np.zeros_like(free_energies)
-
-for column, point in enumerate(points):
-    mlp = PhonopyMLP().load(f"train/grid-{point.index + 1:03d}/polymlp.yaml")
-    ph = point.to_phonopy()
-    for row, temperature in enumerate(TEMPERATURES):
-        free_energies[row, column], errors[row, column] = sscha_free_energy(
-            ph, mlp, float(temperature)
-        )
-
-write_free_energies_hdf5(
-    TEMPERATURES,
-    free_energies,
-    "fph.hdf5",
-    kind="phonon",
-    errors=errors,
-    lattice_lengths=np.array(
-        [np.linalg.norm(p.cell.cell, axis=1) for p in points]
-    ),
-)
+```bash
+% python script7.py
 ```
 
 `MESH` is the mesh the harmonic part of the SSCHA free energy is sampled on,
@@ -1139,46 +1079,27 @@ number alone, since iteration *i* draws from `SeedSequence([SEED, i])`. It
 depends on neither its position in the two loops nor the order the runs are
 made in. Either loop can be sliced, or both.
 
-A slice holds a block of grid points and a block of temperatures. It writes the
-rows and the columns it was given:
+`-g` and `-t` run one grid point at one temperature, and write that one value
+to its own file. The grid point is numbered from 1, and the temperature is in
+K, taken to the nearest of `TEMPERATURES`:
 
-```python
-columns = range(0, 5)                          # this job's grid points
-rows = np.arange(0, 10)                        # and its temperatures
-points = [dataset.grid_points[j] for j in columns]
-...
-write_free_energies_hdf5(
-    TEMPERATURES[rows], free_energies, "fph-g000-004-t000-009.hdf5", ...
-)
+```bash
+% python script7.py -g 13 -t 250
+(013, 250.0)
+Wrote fph-g013-t250K.hdf5
 ```
 
-The pieces are merged in two passes once they are all in. The temperature
-blocks of one grid point stack by rows, and the grid points then stack by
-columns:
+One such call is one job. `-c` gathers what they wrote into `fph.hdf5`:
 
-```python
-import numpy as np
-
-from phonopy.qha.free_energy_io import write_free_energies_hdf5
-
-# parts[(grid block, temperature block)] = read_free_energies_hdf5(filename)
-free_energies, errors, lattice_lengths = [], [], []
-for g in sorted({g for g, _ in parts}):
-    blocks = [parts[(g, t)] for t in sorted(t for gg, t in parts if gg == g)]
-    temperatures = np.concatenate([b.temperatures for b in blocks])
-    free_energies.append(np.vstack([b.free_energies for b in blocks]))
-    errors.append(np.vstack([b.errors for b in blocks]))
-    lattice_lengths.append(blocks[0].lattice_lengths)
-
-write_free_energies_hdf5(
-    temperatures,
-    np.column_stack(free_energies),
-    "fph.hdf5",
-    kind="phonon",
-    errors=np.column_stack(errors),
-    lattice_lengths=np.vstack(lattice_lengths),
-)
+```bash
+% python script7.py -c
+Wrote fph.hdf5 from 1025 file(s)
 ```
+
+Each file is placed by the lattice lengths and the temperature it carries
+rather than by its name, so the order they are gathered in does not matter. A
+missing value stops the write and is named, since a gap would otherwise reach
+the analysis as a zero.
 
 ### Supplying the free energies to the analysis
 
@@ -1244,28 +1165,46 @@ those are checked against the dataset. A file computed on another machine
 cannot then be paired with the wrong grid.
 
 A free energy from a sampled method carries the scatter of its sampling. The
-minimum of the surface at one temperature moves with that scatter, and it moves
-independently of the minimum at the next temperature. The axial expansions are
-differences along temperature, so they amplify it. The command above therefore
-smooths the lattice parameters before differentiating them, and says so as it
-runs.
+lattice parameters that minimize the free-energy surface at one temperature
+move with that scatter, and they move independently of those at the next
+temperature. Without smoothing the analysis takes each of {math}`da/dT`,
+{math}`db/dT` and {math}`dc/dT` as a central difference between neighbouring
+temperatures, which amplifies that scatter. The command above therefore smooths
+the lattice parameters before differentiating them, and says so as it runs.
+
+The form fitted to each lattice parameter is
+
+```{math}
+a(T) = a_0 + \sum_i A_i \frac{\theta_i}{e^{\theta_i / T} - 1},
+```
+
+with amplitudes {math}`A_i` of opposite sign and Einstein temperatures
+{math}`\theta_i`, and the same for {math}`b(T)` and {math}`c(T)`. Each term is
+zero at {math}`T = 0` with zero slope, so the fitted expansion vanishes at 0 K,
+as the third law requires. A general-purpose smoother assumes only smoothness,
+and a spline fitted to the same data returns a finite expansion at 0 K instead.
+Other forms share the property; this one is also the usual model for a lattice
+parameter that contracts at low temperature and expands at high temperature.
+
+Differentiating it term by term gives
+
+```{math}
+\frac{da}{dT} = \sum_i A_i
+\frac{(\theta_i / 2T)^2}{\sinh^2(\theta_i / 2T)},
+```
+
+which is the derivative the axial expansions are built from once the fit is
+made.
 
 The smoothing is `--smooth-lattice einstein`, the default whenever
-`--phonon-free-energies` is given. It fits each of {math}`a(T)`, {math}`b(T)`
-and {math}`c(T)` to a sum of Einstein terms of opposite sign, and
-differentiates the fit instead of the points. `--smooth-terms` sets how many
-terms, 2 by default. More terms follow a curve more closely, and follow its
-scatter more closely too. `--smooth-lattice none` turns the smoothing off.
+`--phonon-free-energies` is given. `--smooth-terms` sets how many terms, 2 by
+default. More terms follow a curve more closely, and follow its scatter more
+closely too. `--smooth-lattice none` turns the smoothing off.
 
-Each Einstein term is zero at {math}`T = 0` with zero slope, so the fitted
-expansion vanishes at 0 K as the third law requires. The fit runs every
-starting guess and keeps the best of those that pass its checks. When none
-passes it raises, rather than returning a qualitatively wrong curve silently.
-
-Steps 0 to 4 default to `none`, since their free energies carry no sampling
-scatter. `--smooth-lattice einstein` can be given there too, and it changes how
-the expansions are computed: with a fit to differentiate, the axial slopes come
-from the closed form of the fit rather than from differences of the minima.
+The free energies of steps 0 to 4 carry no sampling scatter, so the default
+there is `none` and the central differences are used.
+`--smooth-lattice einstein` works there as well, for the analytic derivative in
+place of them.
 
 The same result comes from the API, with `phonon_free_energies` and
 `lattice_smoothing`:
@@ -1282,3 +1221,229 @@ result = run_anisotropic_qha(
 
 With `phonon_free_energies` given, `run_anisotropic_qha` skips the mesh
 sampling and ignores `mesh`.
+
+Fitting a sum of Einstein terms is not a linear least squares, and different
+starting values converge to different curves. A converged curve can be wrong in
+shape: monotone where the data contracts, or dipping several times deeper than
+the data does. The fit therefore starts from a set of starting values, drops
+the curves whose shape disagrees with the data in those ways, and keeps the
+closest of what is left. If nothing is left, the command stops rather than
+returning a curve of the wrong shape.
+
+(anisotropic-qha-sweep-script)=
+## Appendix: the SSCHA sweep script
+
+The script the section {ref}`anisotropic-qha-sscha` calls. With no options it
+runs every grid point and every temperature and writes `fph.hdf5`. `-g` and
+`-t` run one of them and write it to its own file, which is how the sweep is
+spread over jobs, and `-c` gathers those files back into `fph.hdf5`. `-v` logs
+each SSCHA iteration and lists them at the end, which is worth watching on the
+first few runs; `-vv` adds the force-constant fit.
+
+```{code-block} python
+:caption: Script 7 -- SSCHA at every grid point and temperature
+
+import argparse
+import glob
+
+import numpy as np
+from phonopy.interface.mlp import PhonopyMLP
+from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
+from phonopy.qha.free_energy_io import (
+    read_free_energies_hdf5,
+    write_free_energies_hdf5,
+)
+from phonopy.sscha.core import MLPSSCHA
+
+DATASET = "aniso_qha_dataset.hdf5"
+MLP = "train/grid-{:03d}/polymlp.yaml"  # grid point, numbered from 1
+TEMPERATURES = np.arange(0, 410, 10.0)  # one extra point for finite diff
+SNAPSHOTS = 2000
+ITERATIONS = 16
+MESH = 200.0
+SEED = 1000
+
+
+def sscha_free_energy(ph, mlp, temperature, force_constants=None, log_level=0):
+    """Return the SSCHA free energy and its error in eV per primitive cell.
+
+    ``force_constants`` starts the iteration from a set of one's own. Without
+    it, it starts from the set ``ph`` carries. ``log_level`` is passed to
+    MLPSSCHA, and from 1 the iterations are listed here as well.
+
+    """
+    if force_constants is not None:
+        ph = ph.replicate()
+        ph.force_constants = force_constants
+    sscha = MLPSSCHA(
+        ph,
+        mlp,
+        temperature=temperature,
+        number_of_snapshots=SNAPSHOTS,
+        max_iterations=ITERATIONS,
+        mesh=MESH,
+        random_seed=SEED,
+        log_level=log_level,
+    ).run()
+    history = sscha.history[1:]
+    if log_level:
+        print("  iter        F [eV]      error", flush=True)
+        for h in sscha.history:
+            mark = " " if h in history else "*"
+            print(
+                f"  {h.iteration:4d}{mark} {h.free_energy:12.6f} "
+                f"{h.free_energy_error:10.6f}",
+                flush=True,
+            )
+        print("  * the starting ensemble, left out of the mean", flush=True)
+    return (
+        np.mean([h.free_energy for h in history]),
+        np.mean([h.free_energy_error for h in history]),
+    )
+
+
+def run_all(dataset, log_level=0):
+    """Run all and write it to file."""
+    points = dataset.grid_points
+    free_energies = np.zeros((len(TEMPERATURES), len(points)))
+    errors = np.zeros_like(free_energies)
+    for column, point in enumerate(points):
+        ph = point.to_phonopy()
+        mlp = PhonopyMLP().load(MLP.format(point.index + 1))
+        for row, temperature in enumerate(TEMPERATURES):
+            print(f"({point.index + 1:03d}, {temperature})", flush=True)
+            free_energies[row, column], errors[row, column] = sscha_free_energy(
+                ph, mlp, float(temperature), log_level=log_level
+            )
+
+    write_free_energies_hdf5(
+        TEMPERATURES,
+        free_energies,
+        "fph.hdf5",
+        kind="phonon",
+        errors=errors,
+        lattice_lengths=np.array(
+            [np.linalg.norm(p.cell.cell, axis=1) for p in points]
+        ),
+    )
+
+
+def run_one(dataset, grid_point, temperature, log_level=0):
+    """Run one grid point at one temperature and write it to its own file.
+
+    ``grid_point`` is numbered from 1, as the directories are. ``temperature``
+    is in K, and the nearest of TEMPERATURES is the one run.
+
+    """
+    if not 1 <= grid_point <= len(dataset.grid_points):
+        raise SystemExit(f"-g is 1 to {len(dataset.grid_points)}.")
+    point = dataset.grid_points[grid_point - 1]
+    row = int(np.argmin(np.abs(TEMPERATURES - temperature)))
+    t = TEMPERATURES[row]
+
+    ph = point.to_phonopy()
+    mlp = PhonopyMLP().load(MLP.format(grid_point))
+    print(f"({grid_point:03d}, {t})", flush=True)
+    free_energy, error = sscha_free_energy(ph, mlp, float(t), log_level=log_level)
+
+    filename = f"fph-g{grid_point:03d}-t{t:g}K.hdf5"
+    write_free_energies_hdf5(
+        TEMPERATURES[[row]],
+        [[free_energy]],
+        filename,
+        kind="phonon",
+        errors=[[error]],
+        lattice_lengths=np.linalg.norm(point.cell.cell, axis=1)[None, :],
+    )
+    print(f"Wrote {filename}", flush=True)
+
+
+def collect(dataset, pattern="fph-g*K.hdf5", filename="fph.hdf5"):
+    """Gather the files run_one wrote into one file over the whole grid.
+
+    Each file is placed by the lattice lengths and the temperature it carries,
+    not by its name, and a gap stops the write.
+
+    """
+    points = dataset.grid_points
+    lattice_lengths = np.array([np.linalg.norm(p.cell.cell, axis=1) for p in points])
+    free_energies = np.full((len(TEMPERATURES), len(points)), np.nan)
+    errors = np.full_like(free_energies, np.nan)
+
+    paths = sorted(glob.glob(pattern))
+    for path in paths:
+        part = read_free_energies_hdf5(path)
+        for i, t in enumerate(part.temperatures):
+            row = int(np.argmin(np.abs(TEMPERATURES - t)))
+            for j, lengths in enumerate(part.lattice_lengths):
+                column = int(np.argmin(np.abs(lattice_lengths - lengths).sum(axis=1)))
+                free_energies[row, column] = part.free_energies[i, j]
+                errors[row, column] = part.errors[i, j]
+
+    missing = np.argwhere(np.isnan(free_energies))
+    if len(missing) > 0:
+        first = ", ".join(
+            f"(grid {c + 1}, {TEMPERATURES[r]:g} K)" for r, c in missing[:5]
+        )
+        raise SystemExit(
+            f"{len(paths)} file(s) read, {len(missing)} of "
+            f"{free_energies.size} values missing: {first} ..."
+        )
+
+    write_free_energies_hdf5(
+        TEMPERATURES,
+        free_energies,
+        filename,
+        kind="phonon",
+        errors=errors,
+        lattice_lengths=lattice_lengths,
+    )
+    print(f"Wrote {filename} from {len(paths)} file(s)", flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--grid-point",
+        "-g",
+        type=int,
+        default=None,
+        help="grid point, numbered from 1 (default: all of them)",
+    )
+    parser.add_argument(
+        "--temperature",
+        "-t",
+        type=float,
+        default=None,
+        help="temperature in K; the nearest of TEMPERATURES is run "
+        "(default: all of them)",
+    )
+    parser.add_argument(
+        "--collect",
+        "-c",
+        action="store_true",
+        help="gather the fph-g*K.hdf5 files written by -g and -t into fph.hdf5",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="log each SSCHA iteration; -vv adds the force-constant fit",
+    )
+    args = parser.parse_args()
+
+    dataset = read_aniso_qha_dataset(DATASET)
+    if args.collect:
+        collect(dataset)
+    elif args.grid_point is None and args.temperature is None:
+        run_all(dataset, args.verbose)
+    elif args.grid_point is not None and args.temperature is not None:
+        run_one(dataset, args.grid_point, args.temperature, args.verbose)
+    else:
+        raise SystemExit("-g and -t go together.")
+
+
+if __name__ == "__main__":
+    main()
+```
