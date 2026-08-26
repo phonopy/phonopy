@@ -157,6 +157,21 @@ def read_free_energies_hdf5(
         )
 
 
+def _temperature_index(
+    stored: NDArray[np.double], wanted: NDArray[np.double], atol: float = 1e-6
+) -> NDArray[np.int64] | None:
+    """Return where each wanted temperature sits in stored.
+
+    None when stored is missing any of them, which is what separates a file
+    computed over a wider range from one computed on another grid.
+
+    """
+    close = np.abs(stored[None, :] - wanted[:, None]) <= atol
+    if not np.all(close.any(axis=1)):
+        return None
+    return np.argmax(close, axis=1).astype("int64")
+
+
 def check_free_energies(
     free_energies: FreeEnergies,
     kind: FreeEnergyKind,
@@ -166,10 +181,15 @@ def check_free_energies(
 ) -> NDArray[np.double]:
     """Check a file against the run it is about to be used in.
 
-    The kind, the temperature grid and the grid points all have to match, and
-    a mismatch is reported rather than paired row by row: the file is
-    typically computed on another machine, where nothing ties it to the
-    dataset the analysis reads.
+    The kind and the grid points have to match, and a mismatch is reported
+    rather than paired row by row: the file is typically computed on another
+    machine, where nothing ties it to the dataset the analysis reads.
+
+    The temperatures are the exception. A file computed over a wider range is
+    used for the run's own temperatures, so one expensive sweep to 1000 K can
+    be replotted to 400 K. Every temperature of the run has to be in it; one
+    that is not stops the run, since interpolating would hide a grid the file
+    was never computed on.
 
     Parameters
     ----------
@@ -188,7 +208,8 @@ def check_free_energies(
     Returns
     -------
     ndarray
-        The free energies. shape=(temperatures, grid_points)
+        The free energies on the run's temperature grid.
+        shape=(temperatures, grid_points)
 
     """
     source = "The free energies" if filename is None else f"{filename}"
@@ -198,12 +219,14 @@ def check_free_energies(
             f"{kind} ones are expected here."
         )
     temps = free_energies.temperatures
-    if len(temps) != len(temperatures) or not np.allclose(temps, temperatures):
+    index = _temperature_index(temps, temperatures)
+    if index is None:
         raise ValueError(
             f"{source} were computed on a different temperature grid: "
             f"{len(temps)} points from {temps[0]} to {temps[-1]} K against "
             f"{len(temperatures)} from {temperatures[0]} to "
-            f"{temperatures[-1]} K here."
+            f"{temperatures[-1]} K here, and do not hold every temperature "
+            "of this run. A file covering more temperatures is used as it is."
         )
     n_points = len(lattice_lengths)
     if free_energies.n_grid_points != n_points:
@@ -218,4 +241,4 @@ def check_free_energies(
             f"{source} were computed for different grid points: their lattice "
             f"lengths do not match those of the dataset."
         )
-    return free_energies.free_energies
+    return free_energies.free_energies[index]
