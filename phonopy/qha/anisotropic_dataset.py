@@ -35,7 +35,7 @@ from phonopy.harmonic.displacement import (
     Type1DisplacementDataset,
     Type2DisplacementDataset,
 )
-from phonopy.qha.electron import ElectronicStates
+from phonopy.qha.electron_states import ElectronicStates
 from phonopy.structure.atoms import PhonopyAtoms
 
 if TYPE_CHECKING:

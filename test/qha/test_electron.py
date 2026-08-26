@@ -4,11 +4,13 @@
 import numpy as np
 import pytest
 
-from phonopy.qha.electron import (
+from phonopy.qha.electron_kpoint_sum import (
     ElectronFreeEnergy,
-    ElectronicStates,
-    compute_free_energy_and_entropy,
+    compute_free_energy_by_kpoint_sum,
     get_free_energy_at_T,
+)
+from phonopy.qha.electron_states import (
+    ElectronicStates,
     read_electronic_states_hdf5,
     write_electronic_states_hdf5,
 )
@@ -413,7 +415,7 @@ def test_spin_polarized():
     np.testing.assert_allclose(free_energies, reference_free_energies, atol=1e-8)
 
 
-def test_compute_free_energy_and_entropy_Al():
+def test_compute_free_energy_by_kpoint_sum_Al():
     """Free energies match get_free_energy_at_T and S_el = -dF/dT holds.
 
     The entropy at 1000 K is also pinned against the VASP EENTRO reference
@@ -428,7 +430,7 @@ def test_compute_free_energy_and_entropy_Al():
         0, 1000, 10, eigenvalues, WEIGHTS_AL, 3.0
     )
 
-    free_energies, entropies = compute_free_energy_and_entropy(states, temperatures)
+    free_energies, entropies = compute_free_energy_by_kpoint_sum(states, temperatures)
 
     np.testing.assert_allclose(free_energies, fe_ref, rtol=0, atol=1e-12)
     assert entropies[0] == 0.0
@@ -582,16 +584,16 @@ def test_spin_degeneracy_survives_hdf5_round_trip(tmp_path):
     assert read_back[1].spin_degeneracy is None
 
 
-def test_compute_free_energy_and_entropy_uses_spin_degeneracy():
+def test_compute_free_energy_by_kpoint_sum_uses_spin_degeneracy():
     """ElectronicStates passes its spin degeneracy on to the calculation."""
     eigvals = _al_eigenvalues()
     temperatures = [300.0]
     common = {"eigenvalues": eigvals, "weights": WEIGHTS_AL, "n_electrons": 3.0}
 
-    fe_inferred, _ = compute_free_energy_and_entropy(
+    fe_inferred, _ = compute_free_energy_by_kpoint_sum(
         ElectronicStates(**common), temperatures
     )
-    fe_spinor, _ = compute_free_energy_and_entropy(
+    fe_spinor, _ = compute_free_energy_by_kpoint_sum(
         ElectronicStates(**common, spin_degeneracy=1), temperatures
     )
 
@@ -619,3 +621,26 @@ def test_fermi_energy_survives_hdf5_round_trip(tmp_path):
 
     assert read_back[0].fermi_energy == pytest.approx(7.5)
     assert read_back[1].fermi_energy is None
+
+
+def test_the_names_electron_py_used_to_hold_still_import():
+    """Test that splitting the module left every old import working.
+
+    ElectronFreeEnergy and its helpers moved to electron_kpoint_sum and the
+    states to electron_states, but phonopy.qha.electron is what the
+    documentation and existing scripts name.
+
+    """
+    from phonopy.qha import electron
+    from phonopy.qha.electron_kpoint_sum import compute_free_energy_by_kpoint_sum
+
+    for name in (
+        "ElectronicStates",
+        "ElectronFreeEnergy",
+        "get_free_energy_at_T",
+        "read_electronic_states_hdf5",
+        "write_electronic_states_hdf5",
+    ):
+        assert hasattr(electron, name), name
+    # The name the k-point sum carried while it was the only route.
+    assert electron.compute_free_energy_and_entropy is compute_free_energy_by_kpoint_sum

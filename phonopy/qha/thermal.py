@@ -21,11 +21,11 @@ from numpy.typing import NDArray
 
 from phonopy.api_phonopy import Phonopy
 from phonopy.qha.electron import (
-    ElectronicStates,
-    compute_free_energy_and_entropy,
     compute_free_energy_by_tetrahedron,
     resolve_energy_window,
 )
+from phonopy.qha.electron_kpoint_sum import compute_free_energy_by_kpoint_sum
+from phonopy.qha.electron_states import ElectronicStates
 
 
 def freeze_ndarray_fields(obj: Any) -> None:
@@ -145,7 +145,7 @@ def compute_electronic_contributions_from_states(
     )
     for i, electronic_states in enumerate(electronic_structures):
         if i in set(without_grid):
-            fe, s = compute_free_energy_and_entropy(
+            fe, s = compute_free_energy_by_kpoint_sum(
                 electronic_states, temps_with_anchor
             )
         else:
