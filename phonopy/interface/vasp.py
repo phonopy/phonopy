@@ -444,6 +444,33 @@ def _is_noncollinear_vaspout(f) -> bool:
     )
 
 
+def _vaspout_magnetic_moments(f, natom: int) -> NDArray[np.double] | None:
+    """Return the collinear MAGMOM of an open vaspout.h5, or None without one.
+
+    The moments the INCAR started from rather than the converged ones: they
+    are what VASP reduced its k-points with, and the tetrahedron method has to
+    reproduce that reduction to pair the eigenvalues with the grid.
+
+    input/incar echoes only the tags the INCAR set. Without MAGMOM every atom
+    starts at the same moment, which leaves the symmetry the one of the cell
+    alone, so None is the answer there too. Three components per atom is a
+    non-collinear calculation, which is not treated here.
+
+    """
+    incar = f.get("input/incar")
+    if incar is None:
+        return None
+    for tag in ("MAGMOM", "magmom"):
+        if tag not in incar:
+            continue
+        try:
+            magmom = np.atleast_1d(np.array(incar[tag][()], dtype="double"))
+        except (TypeError, ValueError):
+            return None
+        return magmom if len(magmom) == natom else None
+    return None
+
+
 def _mesh_from_vaspout_kpoints(group) -> NDArray[np.int64] | None:
     """Return the mesh an input/kpoints group describes, or None if it has none.
 
@@ -508,6 +535,10 @@ def electronic_states_from_vaspout(
     left out and only the k-point sum is available; see
     _mesh_from_vaspout_kpoints.
 
+    The cell of a collinear spin-polarized run carries the MAGMOM the INCAR
+    set, so that the symmetry behind the grid is the one VASP reduced its
+    k-points with; see _vaspout_magnetic_moments.
+
     Parameters
     ----------
     filename : str or os.PathLike
@@ -543,6 +574,12 @@ def electronic_states_from_vaspout(
                 np.array(poscar["position_ions"][:], dtype="double"),
                 float(poscar["scale"][()]),
             )
+            # Only a collinear spin-polarized run reduces its k-points with
+            # the moments; the spin axis of the eigenvalues is what says so.
+            if g["eigenvalues"].shape[0] == 2:
+                magmoms = _vaspout_magnetic_moments(f, len(cell))
+                if magmoms is not None:
+                    cell.magnetic_moments = magmoms
 
         return ElectronicStates(
             eigenvalues=g["eigenvalues"][:],  # (spin, kpoints, bands)

@@ -16,6 +16,14 @@ from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
+# Temperature in K standing in for 0 K, where k_B T is a division by zero.
+_ZERO_TEMPERATURE = 1e-10
+# k_B T in eV standing in for 0 K in the k-point sum, which is k_B times a
+# temperature five orders larger than the above. The two are not
+# interchangeable: sharpening this step changes which states at the Fermi
+# level are partially occupied, and with it the free energy at 0 K by a meV.
+_ZERO_KT = 1e-10
+
 
 @dataclasses.dataclass(frozen=True)
 class ElectronicStates:
@@ -79,7 +87,17 @@ class ElectronicStates:
     cell: PhonopyAtoms | None = None
 
     def __post_init__(self) -> None:
-        """Validate shapes."""
+        """Convert the array fields to ndarray and validate their shapes."""
+        object.__setattr__(
+            self, "eigenvalues", np.asarray(self.eigenvalues, dtype="double")
+        )
+        object.__setattr__(self, "weights", np.asarray(self.weights))
+        if self.kpoints is not None:
+            object.__setattr__(
+                self, "kpoints", np.asarray(self.kpoints, dtype="double")
+            )
+        if self.mesh is not None:
+            object.__setattr__(self, "mesh", np.asarray(self.mesh))
         if self.eigenvalues.ndim != 3:
             raise ValueError(
                 "eigenvalues must have shape (spin, kpoints, bands), not "
@@ -104,16 +122,15 @@ class ElectronicStates:
                 "kpoints, mesh and cell describe the sampling grid together; "
                 "give all three or none."
             )
-        if self.kpoints is not None:
+        if self.kpoints is not None and self.mesh is not None:
             if self.kpoints.shape != (self.eigenvalues.shape[1], 3):
                 raise ValueError(
                     "kpoints must have shape (kpoints, 3) matching "
                     f"eigenvalues, not {self.kpoints.shape}."
                 )
-            if np.asarray(self.mesh).shape not in ((3,), (3, 3)):
+            if self.mesh.shape not in ((3,), (3, 3)):
                 raise ValueError(
-                    "mesh must have shape (3,) or (3, 3), not "
-                    f"{np.asarray(self.mesh).shape}."
+                    f"mesh must have shape (3,) or (3, 3), not {self.mesh.shape}."
                 )
 
 
@@ -184,8 +201,6 @@ class _TetrahedronSampler:
 
         Parameters
         ----------
-        electronic_states : ElectronicStates
-            States carrying kpoints, mesh and cell.
         energies : array_like
             Energies to sample the density of states at, in eV.
         max_bytes : float, optional
@@ -195,7 +210,7 @@ class _TetrahedronSampler:
 
         Returns
         -------
-        ndarray
+        tuple of ndarray
             The density of states and the count, each shape=(len(energies),),
             dtype='double'
 
@@ -210,7 +225,8 @@ class _TetrahedronSampler:
             eigenvalues_all.max(axis=(0, 1)) >= low,
             eigenvalues_all.min(axis=(0, 1)) <= high,
         )
-        n_ir, n_band = eigenvalues_all.shape[1], int(np.count_nonzero(reaches))
+        n_ir = len(self._ir_grid_points)
+        n_band = int(np.count_nonzero(reaches))
         # The bands left out are full or empty over the whole mesh, and a full
         # one holds exactly one state per spin channel.
         below = np.logical_and(~reaches, eigenvalues_all.max(axis=(0, 1)) < low)
@@ -242,15 +258,6 @@ class _TetrahedronSampler:
         return dos * self._degeneracy, count * self._degeneracy
 
 
-def _tetrahedron_dos_and_count(
-    electronic_states: ElectronicStates,
-    energies: Sequence[float] | NDArray[np.double],
-    max_bytes: float = 2.0e8,
-) -> tuple[NDArray[np.double], NDArray[np.double]]:
-    """Return what one _TetrahedronSampler.sample gives, setup included."""
-    return _TetrahedronSampler(electronic_states).sample(energies, max_bytes)
-
-
 def _solve_chemical_potential(
     sampler: _TetrahedronSampler,
     n_electrons: float,
@@ -270,11 +277,11 @@ def _solve_chemical_potential(
         return float(sampler.sample(np.array([mu]))[1][0])
 
     low, high = centre - window, centre + window
-    if not count(low) <= n_electrons <= count(high):
+    n_low, n_high = count(low), count(high)
+    if not n_low <= n_electrons <= n_high:
         raise ValueError(
-            f"{n_electrons} electrons are outside the {count(low)} to "
-            f"{count(high)} states between {low} and {high} eV; widen the "
-            f"window."
+            f"{n_electrons} electrons are outside the {n_low} to {n_high} "
+            f"states between {low} and {high} eV; widen the window."
         )
     return float(brentq(lambda mu: count(mu) - n_electrons, low, high, xtol=1e-10))
 
@@ -310,12 +317,20 @@ def compute_free_energy_by_tetrahedron(
     caller's choice rather than an inference from the data: this one needs
     kpoints, mesh and cell on the states and raises without them.
 
+    **The two differ in what they return.** This one gives the free energy
+    against its own value at 0 K: the states outside the window are never
+    integrated, so the band sum itself would depend on the window and only
+    the difference means anything. compute_free_energy_and_entropy sums every
+    occupied state and returns that sum. Subtracting the value at the first
+    temperature, as compute_electronic_contributions_from_states does, leaves
+    the same quantity either way.
+
     Parameters
     ----------
     electronic_states : ElectronicStates
         States carrying kpoints, mesh, cell and fermi_energy.
     temperatures : array_like
-        Temperatures in K.
+        Temperatures in K, the first of them 0.
     window : float, optional
         Half-width of the energy window around the Fermi level in eV. None,
         the default, takes 12 k_B T of the highest temperature and at least
@@ -351,7 +366,6 @@ def compute_free_energy_by_tetrahedron(
         electronic_states.n_electrons,
         temperatures,
         fermi,
-        window=window,
         mu_0=mu_0,
     )
     return free_energy, entropy
@@ -363,7 +377,7 @@ def free_energy_from_dos(
     n_electrons: float,
     temperatures: Sequence[float] | NDArray[np.double],
     fermi_energy: float,
-    window: float = 2.0,
+    window: float | None = None,
     mu_0: float | None = None,
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Return F(T) - F(0), the entropy and mu(T) from a density of states.
@@ -386,12 +400,14 @@ def free_energy_from_dos(
     grid integrates to better than a few hundredths of an electron. Whatever
     absorbs that error is the chemical potential, and 0.03 electrons is a
     16 meV shift in mu, which is k_B T. Instead the count below the window is
-    defined by anchoring to the Fermi level the calculation reports,
+    defined by anchoring to mu_0, the chemical potential at T = 0,
 
-        n_below := n_electrons - int_window g(E) theta(E_F - E) dE
+        n_below := n_electrons - int_window g(E) f(E; mu_0, T -> 0) dE
 
-    so that mu(T = 0) = E_F by construction and every remaining integral runs
-    over a smooth stretch of the density of states.
+    so that the T -> 0 limit of mu is mu_0 itself and every remaining integral
+    runs over a smooth stretch of the density of states. Anchoring to the
+    Fermi level the calculation reports is not enough on its own; see mu_0
+    below.
 
     Parameters
     ----------
@@ -402,16 +418,22 @@ def free_energy_from_dos(
     n_electrons : float
         Number of electrons in the cell.
     temperatures : array_like
-        Temperatures in K.
+        Temperatures in K. The first has to be 0, since it is the reference
+        the free energies are reported against and the one temperature at
+        which mu is mu_0 rather than solved for.
     fermi_energy : float
         Fermi energy in eV, used as the anchor described above.
     window : float, optional
-        Half-width of the window around the Fermi level in eV. Default is
-        2.0, which is 58 k_B T at 400 K.
+        Half-width of the window around the Fermi level in eV. None, the
+        default, takes every energy given, which is what a caller that built
+        the grid inside its own window wants. A number narrows that grid
+        further.
     mu_0 : float, optional
-        Chemical potential at T = 0 in eV. Defaults to the Fermi energy.
-        Solving for it here instead would mean solving a step function on
-        this grid, which quantizes mu(0) to the spacing and moves
+        Chemical potential at T = 0 in eV. Defaults to the Fermi energy,
+        which the calculation reports from its own integration scheme and
+        which therefore need not reproduce n_electrons on this density of
+        states. Solving for it here instead would mean solving a step
+        function on this grid, which quantizes mu(0) to the spacing and moves
         F(T) - F(0) by of order a ueV; the caller is expected to have it from
         the tetrahedron count, which is continuous in energy.
 
@@ -426,54 +448,64 @@ def free_energy_from_dos(
 
     kb = get_physical_units().KB
     temps = np.asarray(temperatures, dtype="double")
-    low, high = fermi_energy - window, fermi_energy + window
-    inside = (energies >= low) & (energies <= high)
-    if not inside.any():
+    if len(temps) == 0 or temps[0] != 0.0:
+        given = temps[0] if len(temps) else "an empty list"
         raise ValueError(
-            f"The window {low} to {high} eV contains no density-of-states samples."
+            "The first temperature has to be 0 K, since the free energies are "
+            f"reported against it, but {given} was given."
         )
-    e_win = energies[inside]
-    g_win = dos[inside]
+    if window is None:
+        e_win = np.asarray(energies, dtype="double")
+        g_win = np.asarray(dos, dtype="double")
+    else:
+        inside = (energies >= fermi_energy - window) & (
+            energies <= fermi_energy + window
+        )
+        if not inside.any():
+            raise ValueError(
+                f"The window {fermi_energy - window} to {fermi_energy + window} eV "
+                "contains no density-of-states samples."
+            )
+        e_win = energies[inside]
+        g_win = dos[inside]
+    low, high = float(e_win.min()), float(e_win.max())
     if mu_0 is None:
         mu_0 = fermi_energy
-    # Anchored with the occupation the temperature loop uses, so that its
-    # T -> 0 limit is mu_0 itself rather than a nearby grid point.
-    kt_zero = get_physical_units().KB * 1e-10
+    # The count below the window is anchored with the occupation of the
+    # temperature loop's own T = 0, so that its T -> 0 limit is mu_0 itself
+    # rather than a nearby grid point.
+    kt_zero = kb * _ZERO_TEMPERATURE
     n_below = n_electrons - float(
         np.trapezoid(g_win * _occupation(e_win, mu_0, kt_zero), e_win)
     )
+
+    def excess_electrons(mu: float, kt: float) -> float:
+        """Return the electron count at (mu, kt) less the target count."""
+        counted = n_below + float(
+            np.trapezoid(g_win * _occupation(e_win, mu, kt), e_win)
+        )
+        return counted - n_electrons
 
     free_energies = np.zeros(len(temps), dtype="double")
     entropies = np.zeros(len(temps), dtype="double")
     mus = np.zeros(len(temps), dtype="double")
     for i, temperature in enumerate(temps):
-        kt = kb * max(float(temperature), 1e-10)
-
-        def count(mu: float, kt: float = kt) -> float:
-            return n_below + float(
-                np.trapezoid(g_win * _occupation(e_win, mu, kt), e_win)
-            )
-
+        kt = max(kb * float(temperature), kt_zero)
         if temperature == 0.0:
             mu = mu_0
         else:
-            mu = brentq(lambda mu: count(mu) - n_electrons, low, high, xtol=1e-12)
+            mu = brentq(excess_electrons, low, high, args=(kt,), xtol=1e-12)
         occupation = _occupation(e_win, mu, kt)
         band_energy = float(np.trapezoid(g_win * e_win * occupation, e_win))
-        # The integrand vanishes wherever the occupation saturates; masking
-        # keeps log(0) out of it rather than relying on cancellation.
         if temperature == 0.0:
             # Exactly zero by the third law. The step at mu_0 leaves one
             # half-occupied sample when mu_0 falls on the grid, and its
             # -k [f ln f + (1-f) ln(1-f)] would otherwise survive.
             entropies[i] = 0.0
         else:
-            mask = (occupation > 1e-12) & (occupation < 1.0 - 1e-12)
-            safe = np.where(mask, occupation, 0.5)
-            terms = np.where(
-                mask, safe * np.log(safe) + (1.0 - safe) * np.log1p(-safe), 0.0
+            entropies[i] = -kb * float(
+                np.trapezoid(g_win * _entropy_terms(occupation), e_win)
             )
-            entropies[i] = -kb * float(np.trapezoid(g_win * terms, e_win))
         free_energies[i] = band_energy - float(temperature) * entropies[i]
         mus[i] = mu
 
@@ -485,6 +517,18 @@ def _occupation(
 ) -> NDArray[np.double]:
     """Return the Fermi-Dirac occupation, guarded against overflow."""
     return 1.0 / (1.0 + np.exp(np.clip((energies - mu) / kt, -100.0, 100.0)))
+
+
+def _entropy_terms(occupations: NDArray[np.double]) -> NDArray[np.double]:
+    """Return f ln f + (1 - f) ln(1 - f), of the same shape as occupations.
+
+    The terms vanish wherever the occupation saturates; masking keeps log(0)
+    out of them rather than relying on cancellation.
+
+    """
+    mask = (occupations > 1e-12) & (occupations < 1.0 - 1e-12)
+    safe = np.where(mask, occupations, 0.5)
+    return np.where(mask, safe * np.log(safe) + (1.0 - safe) * np.log1p(-safe), 0.0)
 
 
 def _fermi_level_by_counting(electronic_states: ElectronicStates) -> float:
@@ -505,7 +549,7 @@ def _fermi_level_by_counting(electronic_states: ElectronicStates) -> float:
     ) * _spin_degeneracy(states)
     flat = np.concatenate([spin.ravel() for spin in eigenvalues])
     order = np.argsort(flat)
-    filled = np.searchsorted(np.cumsum(per_state[order]), states.n_electrons)
+    filled = int(np.searchsorted(np.cumsum(per_state[order]), states.n_electrons))
     return float(flat[order][min(filled, len(flat) - 1)])
 
 
@@ -527,6 +571,11 @@ def compute_free_energy_and_entropy(
     temperatures: Sequence[float] | NDArray[np.double],
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return band free energies and entropies at temperatures.
+
+    Each value is the whole band sum at that temperature, E - TS over the
+    occupied states, on the energy zero the eigenvalues carry. It is not a
+    difference from 0 K, which is what compute_free_energy_by_tetrahedron
+    returns instead.
 
     Parameters
     ----------
@@ -554,7 +603,7 @@ def compute_free_energy_and_entropy(
         efe.run(float(temp))
         free_energies.append(efe.free_energy)
         # ElectronFreeEnergy.entropy returns T * S in eV.
-        if temp > 1e-10:
+        if temp > _ZERO_TEMPERATURE:
             entropies.append(efe.entropy / temp)
         else:
             entropies.append(0.0)
@@ -797,9 +846,9 @@ class ElectronFreeEnergy:
 
         self._T: float
         self._f: NDArray[np.double]  # occupation numbers, shape=(kpoints, spin, bands)
-        self._mu = None
-        self._entropy = None
-        self._energy = None
+        self._mu: float | None = None
+        self._entropy: float | None = None
+        self._energy: float | None = None
 
     def run(self, temp: float) -> None:
         """Calculate free energies.
@@ -810,12 +859,13 @@ class ElectronFreeEnergy:
             Temperature in K
 
         """
-        if temp < 1e-10:
-            self._T = 1e-10
+        if temp < _ZERO_TEMPERATURE:
+            self._T = _ZERO_KT
         else:
             self._T = temp * get_physical_units().KB
-        self._mu = self._chemical_potential()
-        self._f = self._occupation_number(self._eigenvalues, self._mu)
+        mu = self._chemical_potential()
+        self._mu = mu
+        self._f = self._occupation_number(self._eigenvalues, mu)
         self._entropy = self._get_entropy()
         self._energy = self._get_energy()
 
@@ -849,12 +899,7 @@ class ElectronFreeEnergy:
         # f: shape=(kpoints, spin*bands), row i holds all (spin, band)
         # occupation numbers at the i-th irreducible k-point.
         f = self._f.reshape(len(self._weights), -1)
-        mask = (f > 1e-12) & (f < 1 - 1e-12)
-        f_safe = np.where(mask, f, 0.5)  # avoid log(0); masked out below anyway
-        terms = np.where(
-            mask, f_safe * np.log(f_safe) + (1 - f_safe) * np.log(1 - f_safe), 0.0
-        )
-        entropy = -(terms.sum(axis=1) * self._weights).sum()
+        entropy = -(_entropy_terms(f).sum(axis=1) * self._weights).sum()
         return float(entropy * self._g * self._T / self._weights.sum())
 
     def _get_energy(self) -> float:
@@ -908,7 +953,4 @@ class ElectronFreeEnergy:
         self, e: NDArray[np.double], mu: float
     ) -> NDArray[np.double]:
         """Return occupation numbers, same shape as `e`."""
-        de = (e - mu) / self._T
-        de = np.where(de < 100, de, 100.0)  # To avoid overflow
-        de = np.where(de > -100, de, -100.0)  # To avoid underflow
-        return 1.0 / (1 + np.exp(de))
+        return _occupation(e, mu, self._T)

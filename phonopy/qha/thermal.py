@@ -155,6 +155,9 @@ def compute_electronic_contributions_from_states(
                 window=window,
                 energy_spacing=energy_spacing,
             )
+        # The k-point sum returns the whole band sum and the tetrahedron
+        # returns it against 0 K, where fe[0] is zero; subtracting the anchor
+        # covers both.
         fe_el_rel[:, i] = fe[1:] - fe[0]
         s_el[:, i] = s[1:]
     return fe_el_rel, s_el
