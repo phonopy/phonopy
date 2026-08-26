@@ -102,20 +102,28 @@ def _read_free_energies(
 
     The file is typically computed on another machine, so nothing ties it to
     the dataset read here: check_free_energies compares its kind, temperature
-    grid and grid points before the values are used.
+    grid and grid points before the values are used. A file covering more
+    temperatures than the run is narrowed to the run's own.
 
     """
     if filename is None:
         return None
 
+    free_energies = read_free_energies_hdf5(filename)
     values = check_free_energies(
-        read_free_energies_hdf5(filename),
+        free_energies,
         kind,
         temperatures,
         lattice_lengths,
         filename=filename,
     )
-    print(f"{kind.capitalize()} free energy read from {filename}")
+    n_stored = len(free_energies.temperatures)
+    narrowed = (
+        f" ({len(temperatures)} of its {n_stored} temperatures)"
+        if n_stored != len(temperatures)
+        else ""
+    )
+    print(f"{kind.capitalize()} free energy read from {filename}{narrowed}")
     return values
 
 
