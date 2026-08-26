@@ -4,6 +4,18 @@
 
 ## Unreleased (v4.5.0)
 
+- Behavior change: `phonopy-vasp-efe` integrates the electronic free energy by
+  the linear tetrahedron method over the mesh each `vasprun.xml` describes,
+  where it used to sum Fermi-Dirac occupations over the irreducible k-points.
+  The sum needs far more k-points to converge, so `fe-v.dat` moves: on the
+  copper example, 120 irreducible k-points of a 16x16x16 mesh, by 11 per cent
+  of the temperature-dependent part at 1000 K. `--k-point-sum` restores the
+  previous behavior, and a file whose k-points are not a mesh takes the sum as
+  before. The first line of `fe-v.dat` now names the route that produced it.
+- `electronic_states.hdf5` stores the k-points, the mesh and the cell beside
+  the eigenvalues, so that `run_qha` can integrate by the tetrahedron method
+  too. Files written without them are read and integrated by the k-point sum
+  as before.
 - Behavior change: random displacements at finite temperature are drawn
   differently. A fixed random seed now gives the same displacements whatever
   LAPACK implementation is installed. Their distribution is unchanged, but the

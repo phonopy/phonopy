@@ -211,6 +211,17 @@ those used for `thermal_properties.yaml`. When `phonopy` was run with
 eigenvalues have to be carefully chosen to agree with those after applying
 `PRIMITIVE_AXES`, or energies are scaled a posteriori.
 
+The temperature-dependent part is integrated by the linear tetrahedron
+method over the sampling mesh each `vasprun.xml` describes, which converges
+at the mesh a static calculation uses anyway. The sum over irreducible
+k-points written above, which this command performed before, needs far more
+k-points to reach the same answer: on a 16x16x16 mesh of copper with 120
+irreducible k-points the two differ by 11 per cent of the
+temperature-dependent part at 1000 K. `--k-point-sum` selects it. A file
+whose k-points are an explicit list rather than a generated mesh has no grid
+to integrate over and takes the sum, as does one whose k-points cannot be
+paired with the grid; the command says which route each volume took.
+
 Note that with `--efe`, the electronic free energies enter the fitting of
 {math}`F(V;T)` and therefore the equilibrium volumes, thermal expansion,
 Gibbs free energy, bulk modulus, and `Cp-temperature.dat` computed by
@@ -380,7 +391,10 @@ For VASP, the collection above can also be done once with
 
 which writes `electronic_states.hdf5` containing the electronic states
 together with the volumes and the static energies (sigma->0) of all volume
-points, instead of computing `fe-v.dat`. The eigenvalues must be computed
+points, instead of computing `fe-v.dat`. The k-points, the mesh and the cell
+are stored beside them when the `vasprun.xml` describes a sampling mesh, so
+that `run_qha` can integrate by the tetrahedron method as well; a file
+written without them is integrated by the k-point sum. The eigenvalues must be computed
 for the primitive cell (see the remark on `PRIMITIVE_AXES` in
 {ref}`phonopy_qha_efe_option`). The volumes stored with the electronic
 states are checked against the primitive cell volumes of `phonopys` by

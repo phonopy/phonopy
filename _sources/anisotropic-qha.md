@@ -427,6 +427,7 @@ The layout, as written by `phonopy-anisotropic-qha-dataset` and read back by
     scaled_positions                 (natom, 3)
     numbers                          (natom,)
     masses                           (natom,)
+    magnetic_moments                 (natom,)     only when the cell has them
     supercell_matrix                 (3, 3)
     primitive_matrix                 (3, 3)
     displaced_atoms                  (ndisp,)     type-1 only

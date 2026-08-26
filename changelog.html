@@ -628,6 +628,18 @@
 <section id="unreleased-v4-5-0">
 <h2>Unreleased (v4.5.0)<a class="headerlink" href="#unreleased-v4-5-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
+<li><p>Behavior change: <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> integrates the electronic free energy by
+the linear tetrahedron method over the mesh each <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes,
+where it used to sum Fermi-Dirac occupations over the irreducible k-points.
+The sum needs far more k-points to converge, so <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> moves: on the
+copper example, 120 irreducible k-points of a 16x16x16 mesh, by 11 per cent
+of the temperature-dependent part at 1000 K. <code class="docutils literal notranslate"><span class="pre">--k-point-sum</span></code> restores the
+previous behavior, and a file whose k-points are not a mesh takes the sum as
+before. The first line of <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> now names the route that produced it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code> stores the k-points, the mesh and the cell beside
+the eigenvalues, so that <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> can integrate by the tetrahedron method
+too. Files written without them are read and integrated by the k-point sum
+as before.</p></li>
 <li><p>Behavior change: random displacements at finite temperature are drawn
 differently. A fixed random seed now gives the same displacements whatever
 LAPACK implementation is installed. Their distribution is unchanged, but the
