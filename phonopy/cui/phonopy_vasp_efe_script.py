@@ -5,6 +5,11 @@ Here the free energy is approximately given by:
 
     energy(sigma->0) - energy(T=0) + energy(T) - entropy(T) * T
 
+The temperature-dependent part is integrated by the linear tetrahedron
+method over the mesh the vasprun.xml describes. Files that carry no mesh,
+and --k-point-sum, take the sum over irreducible k-points this command used
+to perform, which converges far more slowly.
+
 """
 
 from __future__ import annotations
@@ -13,6 +18,7 @@ import argparse
 import dataclasses
 import os
 import sys
+import textwrap
 from collections.abc import Sequence
 
 import numpy as np
@@ -21,7 +27,8 @@ from numpy.typing import NDArray
 from phonopy.interface.vasp import parse_vasprunxml
 from phonopy.qha.electron import (
     ElectronicStates,
-    get_free_energy_at_T,
+    compute_free_energy_and_entropy,
+    compute_free_energy_by_tetrahedron,
     write_electronic_states_hdf5,
 )
 from phonopy.structure.atoms import PhonopyAtoms
@@ -36,6 +43,7 @@ class PhonopyVaspEfeMockArgs:
     tmin: float = 0.0
     tstep: float = 10.0
     quiet: bool = False
+    k_point_sum: bool = False
     write_electronic_states: bool = False
     filenames: Sequence[os.PathLike | str] | None = None
 
@@ -78,6 +86,18 @@ def get_options() -> argparse.Namespace:
         action="store_true",
         default=default_vals.quiet,
         help="Suppress progress messages printed while reading vasprun.xml files",
+    )
+    parser.add_argument(
+        "--k-point-sum",
+        dest="k_point_sum",
+        action="store_true",
+        default=default_vals.k_point_sum,
+        help=(
+            "Integrate the electronic free energy by summing Fermi-Dirac "
+            "occupations over the irreducible k-points, as this command did "
+            "before the linear tetrahedron method became the default "
+            "(deprecated: the sum needs far more k-points to converge)"
+        ),
     )
     parser.add_argument(
         "--es",
@@ -223,6 +243,48 @@ def collect_electronic_states(
     )
 
 
+def _free_energy_of_one_volume(
+    electronic_states: ElectronicStates,
+    temperatures: NDArray[np.double],
+    by_sum: bool = False,
+) -> tuple[NDArray[np.double], str]:
+    """Return F_el(T) - F_el(0) of one volume in eV, and how it was integrated.
+
+    The linear tetrahedron method unless the states carry no sampling grid or
+    their k-points cannot be paired with one, and unless the k-point sum is
+    asked for. The sum converges far more slowly: on the copper files of the
+    tests, 120 irreducible k-points of a 16x16x16 mesh, the two differ by
+    11 per cent at 1000 K.
+
+    The reference is 0 K in both cases, which is what U(V) already holds, so
+    a temperature grid that starts higher gets 0 K prepended and dropped
+    again.
+
+    """
+    anchored, first = _anchored_at_zero(temperatures)
+    if by_sum:
+        reason = "asked for"
+    else:
+        try:
+            free_energies, _ = compute_free_energy_by_tetrahedron(
+                electronic_states, anchored
+            )
+            return free_energies[first:], "linear tetrahedron method"
+        except (ValueError, RuntimeError) as exc:
+            reason = textwrap.shorten(str(exc), width=80, placeholder="...")
+    free_energies, _ = compute_free_energy_and_entropy(electronic_states, anchored)
+    return (free_energies - free_energies[0])[first:], f"k-point sum ({reason})"
+
+
+def _anchored_at_zero(
+    temperatures: NDArray[np.double],
+) -> tuple[NDArray[np.double], int]:
+    """Return the temperatures with 0 K in front, and where the given ones start."""
+    if len(temperatures) > 0 and temperatures[0] == 0.0:
+        return temperatures, 0
+    return np.concatenate([[0.0], temperatures]), 1
+
+
 def get_fe_ev_lines(
     args: argparse.Namespace | PhonopyVaspEfeMockArgs,
     verbose: bool = False,
@@ -243,8 +305,8 @@ def get_fe_ev_lines(
     if verbose:
         print("Computing electronic free energies for %d volume(s)" % n_vol)
         sys.stdout.flush()
+    temperatures = np.arange(args.tmin, args.tmax + 1e-8, args.tstep, dtype="double")
     free_energies = []
-    temperatures = None
     for i, (energy, electronic_states) in enumerate(
         zip(energy_sigma0, states_list, strict=True)
     ):
@@ -253,20 +315,15 @@ def get_fe_ev_lines(
                 "  [%d/%d] volume = %.4f A^3" % (i + 1, n_vol, electronic_states.volume)
             )
             sys.stdout.flush()
-        temps, fe = get_free_energy_at_T(
-            args.tmin,
-            args.tmax,
-            args.tstep,
-            electronic_states.eigenvalues,
-            electronic_states.weights,
-            electronic_states.n_electrons,
+        fe, method = _free_energy_of_one_volume(
+            electronic_states,
+            temperatures,
+            by_sum=getattr(args, "k_point_sum", False),
         )
-        free_energies.append(energy - fe[0] + fe)
-        if temperatures is None:
-            temperatures = temps
-        else:
-            assert (np.abs(temperatures - temps) < 1e-5).all()
-    assert temperatures is not None
+        if verbose:
+            print("        integrated by the %s" % method)
+            sys.stdout.flush()
+        free_energies.append(energy + fe)
     if verbose:
         print("Done. %d volume(s) processed." % n_vol)
         sys.stdout.flush()
