@@ -20,6 +20,7 @@ def _states_on_grid(
     n_spin: int = 1,
     spin_degeneracy: int | None = None,
     use_grg: bool = False,
+    is_shift: list[int] | None = None,
 ) -> ElectronicStates:
     """Return states on a grid, with eigenvalues of a free-electron shape.
 
@@ -33,10 +34,11 @@ def _states_on_grid(
         lattice=cell.cell,
         symmetry_dataset=Symmetry(cell).dataset,
         use_grg=use_grg,
+        is_shift=is_shift,
     )
     ir_grid_points, ir_grid_weights, _ = get_ir_grid_points(bz_grid)
     addresses = bz_grid.addresses[bz_grid.grg2bzg[ir_grid_points]]
-    kpoints = addresses @ bz_grid.QDinv.T
+    kpoints = (2 * addresses + bz_grid.PS) / 2.0 @ bz_grid.QDinv.T
 
     reciprocal = np.linalg.inv(cell.cell)
     cartesian = kpoints @ reciprocal.T
@@ -108,6 +110,32 @@ def test_dos_normalization_spin_polarized(aln_cell: PhonopyAtoms):
     """
     states = _states_on_grid(aln_cell, [5, 5, 4], n_bands=4, n_spin=2)
     assert _integral(states) == pytest.approx(8.0, rel=NORMALIZATION_TOLERANCE)
+
+
+def test_dos_normalization_shifted_mesh(aln_cell: PhonopyAtoms):
+    """Test a mesh shifted by half a division, as even Monkhorst-Pack is.
+
+    Nothing in the states says the mesh was shifted, so the sampler reads it
+    off the k-points and builds its grid with it. Without that the k-points
+    would sit half a division from every grid point and the mapping would
+    raise. AlN takes the shift along c, which its point group preserves.
+
+    The state count is checked rather than the integral of the density. A
+    shift leaves tetrahedra with all four corners in one symmetry orbit --
+    48 of the 2400 here -- and every band is exactly flat on those, so their
+    weight is a delta function that a sampled density cannot carry. It is
+    2.0 per cent of the states here, and the count keeps all of it because the
+    tetrahedron integrates the step analytically.
+
+    """
+    states = _states_on_grid(aln_cell, [5, 5, 4], n_bands=4, is_shift=[0, 0, 1])
+    energies = np.linspace(
+        float(states.eigenvalues.min()) - 1.0,
+        float(states.eigenvalues.max()) + 1.0,
+        401,
+    )
+    _, count = _TetrahedronSampler(states).sample(energies)
+    assert count[-1] == pytest.approx(8.0, rel=1e-10)
 
 
 def test_dos_normalization_generalized_regular_grid(ph_tio2: Phonopy):

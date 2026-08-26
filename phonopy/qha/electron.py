@@ -10,7 +10,12 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.phonon.grid import BZGrid, get_ir_grid_points, get_ir_kpoint_map
+from phonopy.phonon.grid import (
+    BZGrid,
+    get_grid_shift_from_kpoints,
+    get_ir_grid_points,
+    get_ir_kpoint_map,
+)
 from phonopy.phonon.spectrum import TetrahedronDOSAccumulator
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
@@ -153,11 +158,21 @@ class _TetrahedronSampler:
                 "ElectronicStates; without them only the k-point sum is "
                 "available."
             )
+        symmetry_dataset = Symmetry(states.cell).dataset
         self._bz_grid = BZGrid(
-            states.mesh,
-            lattice=states.cell.cell,
-            symmetry_dataset=Symmetry(states.cell).dataset,
+            states.mesh, lattice=states.cell.cell, symmetry_dataset=symmetry_dataset
         )
+        # The states carry where their k-points are but not how the mesh was
+        # placed, so the shift is read off the k-points and the grid rebuilt
+        # with it. A Gamma-centred mesh stops here.
+        shift = get_grid_shift_from_kpoints(states.kpoints, self._bz_grid)
+        if shift.any():
+            self._bz_grid = BZGrid(
+                states.mesh,
+                lattice=states.cell.cell,
+                symmetry_dataset=symmetry_dataset,
+                is_shift=shift,
+            )
         (
             self._ir_grid_points,
             self._ir_grid_weights,
@@ -324,6 +339,14 @@ def compute_free_energy_by_tetrahedron(
     occupied state and returns that sum. Subtracting the value at the first
     temperature, as compute_electronic_contributions_from_states does, leaves
     the same quantity either way.
+
+    **A shifted mesh loses a little of the density.** Where all four corners
+    of a tetrahedron fall in one symmetry orbit, every band is flat on it and
+    its weight is a delta function the sampled density cannot carry. The
+    number of such tetrahedra does not grow with the mesh, so the loss falls
+    away as the mesh is refined -- a per cent on a coarse mesh, well under a
+    tenth of that on one a static calculation would use. A Gamma-centred mesh
+    has none of them.
 
     Parameters
     ----------
