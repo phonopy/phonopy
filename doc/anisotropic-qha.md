@@ -801,15 +801,18 @@ the dataset of step 3:
 
 from pathlib import Path
 
+import numpy as np
+
 from phonopy.interface.vasp import write_vasp
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 
-TRAIN = "train"
+TRAIN = Path("train")
 TEMPERATURES = (0.0, 100.0, 250.0, 400.0)  # K
 SNAPSHOTS = 50  # structures per grid point and temperature
 SEED = 20260815
 
 dataset = read_aniso_qha_dataset("aniso_qha_dataset.hdf5")
+TRAIN.mkdir(parents=True, exist_ok=True)
 
 for temperature in TEMPERATURES:
     normals = None
@@ -823,11 +826,21 @@ for temperature in TEMPERATURES:
             normals = rd.draw_standard_normals(
                 SNAPSHOTS, random_seed=SEED + int(temperature)
             )
+            # Keep the draw itself. The displacements below record the
+            # ensemble, but only these reproduce it, and extending it with
+            # first_snapshot needs them.
+            np.savez_compressed(
+                TRAIN / f"normals-{int(temperature)}K.npz",
+                ii=normals[0],
+                ij=normals[1],
+                seed=SEED + int(temperature),
+                temperature=temperature,
+            )
         rd.run(temperature, standard_normals=normals)
         phonon.dataset = {"displacements": rd.u.copy()}
 
         # The stored index is 0-origin; the directories are numbered from 001.
-        set_dir = Path(TRAIN) / f"grid-{point.index + 1:03d}-{int(temperature)}K"
+        set_dir = TRAIN / f"grid-{point.index + 1:03d}-{int(temperature)}K"
         set_dir.mkdir(parents=True, exist_ok=True)
         # The displacements have to be saved beside the supercells: it is what
         # phonopy-init -f attaches the forces to below.
@@ -843,8 +856,8 @@ for temperature in TEMPERATURES:
 
 Each set directory then holds `phonopy_disp.yaml` and
 `disp-001/POSCAR .. disp-050/POSCAR`, the same layout as the phonon grid of
-step 2. Run the calculator in every `disp-*`, then collect the forces of each
-set:
+step 2, and `train/` holds one `normals-*.npz` per temperature beside them.
+Run the calculator in every `disp-*`, then collect the forces of each set:
 
 ```bash
 % phonopy-init -f disp-*/vaspout.h5 --save-params
@@ -1011,16 +1024,20 @@ therefore be extended, or generated in blocks, with
 
 A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
 not promise that `Generator` distribution methods give the same stream across
-its own versions (NEP 19).
-
-The {math}`\xi` themselves can be kept beside the training sets when the
-ensemble has to be reproducible:
+its own versions (NEP 19). **Save the {math}`\xi` themselves**, which Script 5
+does, one `normals-*.npz` per temperature beside the training sets:
 
 ```python
-import numpy as np
-
-np.savez_compressed("normals.npz", ii=normals[0], ij=normals[1])
+np.savez_compressed(
+    f"normals-{int(temperature)}K.npz", ii=normals[0], ij=normals[1]
+)
 ```
+
+Read one back with `np.load` and hand `(ii, ij)` to `run(standard_normals=)`,
+or to `draw_standard_normals(..., first_snapshot=N)` as the block already
+drawn. The displacements in each `phonopy_disp.yaml` record the ensemble that
+was run, and that is what the forces attach to, so a lost `npz` costs the
+extension rather than the training set.
 
 (anisotropic-qha-validate)=
 ### Validate the MLP
