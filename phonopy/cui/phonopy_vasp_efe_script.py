@@ -24,6 +24,7 @@ from phonopy.qha.electron import (
     get_free_energy_at_T,
     write_electronic_states_hdf5,
 )
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 @dataclasses.dataclass
@@ -118,6 +119,38 @@ def get_ev_lines(
     return lines_ev
 
 
+def _sampling_grid(vxml, use_kpoints_opt: bool) -> dict:
+    """Return the kpoints, mesh and cell of a vasprun.xml, or nothing.
+
+    What the tetrahedron method needs beyond the eigenvalues, as the keyword
+    arguments of ElectronicStates. A file whose k-points are an explicit list
+    rather than a generated mesh carries no divisions, and is left to the
+    k-point sum.
+
+    Whether the k-points can then be paired with a grid is not decided here;
+    a half-shifted mesh is read off them later, and an irregular list fails
+    that. See get_ir_kpoint_map.
+
+    """
+    try:
+        mesh = vxml.k_mesh_kpoints_opt if use_kpoints_opt else vxml.k_mesh
+        kpoints = vxml.kpointlist_kpoints_opt if use_kpoints_opt else vxml.kpointlist
+    except (RuntimeError, ValueError, TypeError):
+        return {}
+    mesh = np.asarray(mesh)
+    if mesh.shape != (3,) or (mesh < 1).any() or vxml.symbols is None:
+        return {}
+    return {
+        "kpoints": np.array(kpoints, dtype="double"),
+        "mesh": mesh.astype("int64"),
+        "cell": PhonopyAtoms(
+            symbols=vxml.symbols,
+            cell=vxml.lattice[-1],
+            scaled_positions=vxml.points[-1],
+        ),
+    }
+
+
 def collect_electronic_states(
     args: argparse.Namespace | PhonopyVaspEfeMockArgs,
     verbose: bool = False,
@@ -155,6 +188,7 @@ def collect_electronic_states(
             eigenvalues = vxml.eigenvalues[:, :, :, 0]
             k_mesh = vxml.k_mesh
             kpoints_label = "SCF mesh"
+        grid = _sampling_grid(vxml, vxml.has_kpoints_opt)
         n_electrons = vxml.NELECT
         assert n_electrons is not None
         if verbose:
@@ -174,6 +208,7 @@ def collect_electronic_states(
                 fermi_energy=vxml.efermi,
                 volume=vxml.volume[-1],
                 internal_energy=vxml.energies[-1, 1],
+                **grid,
             )
         )
         volumes.append(vxml.volume[-1])

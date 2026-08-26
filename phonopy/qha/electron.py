@@ -650,6 +650,12 @@ def write_electronic_states_hdf5(
     set. The number of volume points is stored in the root attribute
     "n_volumes".
 
+    States that carry the grid they were computed on also get kpoints
+    ((kpoints, 3)), mesh ((3,) or (3, 3)) and a "cell" subgroup of lattice,
+    scaled_positions, numbers and magnetic_moments, which is what the
+    tetrahedron method needs. A file without them reads back as a k-point sum,
+    which is what it was.
+
     """
     import h5py
 
@@ -686,6 +692,41 @@ def write_electronic_states_hdf5(
                 group.create_dataset(
                     "fermi_energy", data=float(electronic_states.fermi_energy)
                 )
+            if electronic_states.cell is not None:
+                assert electronic_states.kpoints is not None
+                assert electronic_states.mesh is not None
+                group.create_dataset("kpoints", data=electronic_states.kpoints)
+                group.create_dataset("mesh", data=electronic_states.mesh)
+                _write_cell(group, electronic_states.cell)
+
+
+def _write_cell(group, cell: PhonopyAtoms) -> None:
+    """Write the cell of one volume point into a "cell" subgroup."""
+    g = group.create_group("cell")
+    g.create_dataset("lattice", data=np.array(cell.cell, dtype="double"))
+    g.create_dataset(
+        "scaled_positions", data=np.array(cell.scaled_positions, dtype="double")
+    )
+    g.create_dataset("numbers", data=np.array(cell.numbers, dtype="int64"))
+    if cell.magnetic_moments is not None:
+        g.create_dataset(
+            "magnetic_moments", data=np.array(cell.magnetic_moments, dtype="double")
+        )
+
+
+def _read_cell(group) -> PhonopyAtoms | None:
+    """Return the cell of one volume point, or None without a "cell" subgroup."""
+    if "cell" not in group:
+        return None
+    g = group["cell"]
+    return PhonopyAtoms(
+        numbers=g["numbers"][:],
+        cell=g["lattice"][:],
+        scaled_positions=g["scaled_positions"][:],
+        magnetic_moments=(
+            g["magnetic_moments"][:] if "magnetic_moments" in g else None
+        ),
+    )
 
 
 def read_electronic_states_hdf5(
@@ -722,6 +763,9 @@ def read_electronic_states_hdf5(
                         if "fermi_energy" in group
                         else None
                     ),
+                    kpoints=group["kpoints"][:] if "kpoints" in group else None,
+                    mesh=group["mesh"][:] if "mesh" in group else None,
+                    cell=_read_cell(group),
                 )
             )
     return electronic_structures

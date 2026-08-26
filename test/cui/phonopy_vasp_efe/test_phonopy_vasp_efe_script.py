@@ -13,6 +13,7 @@ import pytest
 
 from phonopy.cui.phonopy_vasp_efe_script import (
     PhonopyVaspEfeMockArgs,
+    collect_electronic_states,
     get_fe_ev_lines,
     get_free_energy_lines,
     main,
@@ -301,6 +302,72 @@ def test_phonopy_vasp_efe_write_electronic_states(tmp_path):
         )
     finally:
         os.chdir(original_cwd)
+
+
+def test_collected_states_carry_the_sampling_grid():
+    """Test that the k-points, the mesh and the cell reach the states.
+
+    They are what the tetrahedron method needs beyond the eigenvalues, and
+    the vasprun.xml has all three. These files are a 16x16x16
+    Monkhorst-Pack mesh, so their k-points sit half a division off the
+    Gamma-centred grid and the shift is read back from them.
+
+    """
+    from phonopy.phonon.grid import BZGrid, get_grid_shift_from_kpoints
+    from phonopy.structure.symmetry import Symmetry
+
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(2)]
+    mockargs = PhonopyVaspEfeMockArgs(filenames=filenames, quiet=True)
+    _, _, states_list = collect_electronic_states(mockargs)
+
+    states = states_list[0]
+    assert states.cell is not None
+    np.testing.assert_array_equal(states.mesh, [16, 16, 16])
+    assert states.kpoints is not None
+    assert states.kpoints.shape == (states.eigenvalues.shape[1], 3)
+    assert len(states.cell) == 4
+
+    bz_grid = BZGrid(
+        states.mesh,
+        lattice=states.cell.cell,
+        symmetry_dataset=Symmetry(states.cell).dataset,
+    )
+    np.testing.assert_array_equal(
+        get_grid_shift_from_kpoints(states.kpoints, bz_grid), [1, 1, 1]
+    )
+
+
+def test_written_electronic_states_keep_the_sampling_grid(tmp_path):
+    """Test that the grid survives electronic_states.hdf5.
+
+    Without it the file reads back as states for the k-point sum, whatever
+    the calculation was.
+
+    """
+    from phonopy.qha.electron import (
+        read_electronic_states_hdf5,
+        write_electronic_states_hdf5,
+    )
+
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(2)]
+    mockargs = PhonopyVaspEfeMockArgs(filenames=filenames, quiet=True)
+    _, _, states_list = collect_electronic_states(mockargs)
+
+    path = tmp_path / "electronic_states.hdf5"
+    write_electronic_states_hdf5(states_list, filename=path)
+    read_back = read_electronic_states_hdf5(filename=path)
+
+    for written, read in zip(states_list, read_back, strict=True):
+        assert read.cell is not None
+        assert written.kpoints is not None
+        np.testing.assert_allclose(read.kpoints, written.kpoints)
+        np.testing.assert_array_equal(read.mesh, written.mesh)
+        assert written.cell is not None
+        np.testing.assert_allclose(read.cell.cell, written.cell.cell)
+        np.testing.assert_allclose(
+            read.cell.scaled_positions, written.cell.scaled_positions
+        )
+        np.testing.assert_array_equal(read.cell.numbers, written.cell.numbers)
 
 
 def test_phonopy_vasp_efe_write_electronic_states_rejects_scale_factor(tmp_path):
