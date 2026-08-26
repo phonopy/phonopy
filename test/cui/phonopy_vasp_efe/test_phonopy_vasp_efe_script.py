@@ -414,10 +414,11 @@ def test_states_without_a_grid_fall_back_to_the_k_point_sum():
     without = _dataclasses.replace(states_list[0], kpoints=None, mesh=None, cell=None)
 
     temperatures = np.array([0.0, 1000.0])
-    fell_back, method = _free_energy_of_one_volume(without, temperatures)
-    asked, _ = _free_energy_of_one_volume(states_list[0], temperatures, by_sum=True)
+    fell_back, method, reason = _free_energy_of_one_volume(without, temperatures)
+    asked, _, _ = _free_energy_of_one_volume(states_list[0], temperatures, by_sum=True)
 
-    assert method.startswith("k-point sum")
+    assert method == "k-point sum"
+    assert "kpoints, mesh and cell" in reason
     np.testing.assert_allclose(fell_back, asked, rtol=1e-12)
 
 

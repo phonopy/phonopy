@@ -217,11 +217,10 @@ at the mesh a static calculation uses anyway. The sum over irreducible
 k-points written above, which this command performed before, needs far more
 k-points to reach the same answer: on a 16x16x16 mesh of copper with 120
 irreducible k-points the two differ by 11 per cent of the
-temperature-dependent part at 1000 K. It is kept as `--k-point-sum` for
-backward comparison and is deprecated. A file whose k-points are an explicit
-list rather than a generated mesh has no grid to integrate over and takes
-the sum, as does one whose k-points cannot be paired with the grid; the
-command says which route each volume took.
+temperature-dependent part at 1000 K. `--k-point-sum` selects it. A file
+whose k-points are an explicit list rather than a generated mesh has no grid
+to integrate over and takes the sum, as does one whose k-points cannot be
+paired with the grid; the command says which route each volume took.
 
 Note that with `--efe`, the electronic free energies enter the fitting of
 {math}`F(V;T)` and therefore the equilibrium volumes, thermal expansion,

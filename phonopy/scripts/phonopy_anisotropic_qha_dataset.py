@@ -57,7 +57,7 @@ from phonopy.qha.anisotropic_dataset import (
     AnisoQHAGridPoint,
     write_aniso_qha_dataset,
 )
-from phonopy.qha.electron import ElectronicStates
+from phonopy.qha.electron_states import ElectronicStates
 from phonopy.qha.lattice_sampling import get_free_lattice_dof
 from phonopy.structure.atoms import PhonopyAtoms
 

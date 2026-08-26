@@ -24,7 +24,7 @@ from phonopy.file_IO import (
     write_force_constants_to_hdf5,
 )
 from phonopy.physical_units import get_physical_units
-from phonopy.qha.electron import ElectronicStates
+from phonopy.qha.electron_states import ElectronicStates
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import group_by_key

@@ -38,7 +38,7 @@ from phonopy.qha.thermal import (
 
 if TYPE_CHECKING:
     from phonopy.api_phonopy import Phonopy
-    from phonopy.qha.electron import ElectronicStates
+    from phonopy.qha.electron_states import ElectronicStates
 
 
 class FreeEnergySurfaceFit:
