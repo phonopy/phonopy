@@ -272,4 +272,41 @@ def test_window_must_contain_samples():
     energies = np.linspace(0.0, 1.0, 101)
     dos = np.ones_like(energies)
     with pytest.raises(ValueError, match="contains no density-of-states"):
-        free_energy_from_dos(energies, dos, 1.0, [300.0], FERMI, window=0.1)
+        free_energy_from_dos(energies, dos, 1.0, [0.0, 300.0], FERMI, window=0.1)
+
+
+def test_temperatures_must_start_at_zero():
+    """Test that free energies against something other than 0 K are refused.
+
+    They are reported against the first temperature, and 0 K is also the one
+    temperature at which mu is mu_0 rather than solved for. A grid that
+    starts elsewhere would silently be given the wrong reference.
+
+    """
+    energies, dos = _flat_dos(2.0)
+    with pytest.raises(ValueError, match="first temperature has to be 0 K"):
+        free_energy_from_dos(
+            energies, dos, _n_electrons(energies, dos), [100.0, 300.0], FERMI
+        )
+
+
+def test_the_whole_grid_is_used_without_a_window():
+    """Test that no window means every energy given, and a number narrows it.
+
+    The tetrahedron path builds its grid inside its own window already, so
+    applying a second one there would be the same clipping twice.
+
+    """
+    energies, dos = _flat_dos(2.0)
+    temperatures = [0.0, 300.0]
+    n_electrons = _n_electrons(energies, dos)
+    whole, _, _ = free_energy_from_dos(energies, dos, n_electrons, temperatures, FERMI)
+    same, _, _ = free_energy_from_dos(
+        energies, dos, n_electrons, temperatures, FERMI, window=WINDOW
+    )
+    narrow, _, _ = free_energy_from_dos(
+        energies, dos, n_electrons, temperatures, FERMI, window=0.02
+    )
+    np.testing.assert_allclose(whole, same, rtol=0.0, atol=0.0)
+    # 0.02 eV is under k_B T at 300 K, so the tail is cut and the answer moves.
+    assert abs(narrow[-1] - whole[-1]) > 1e-6

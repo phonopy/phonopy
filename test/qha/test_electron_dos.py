@@ -8,7 +8,7 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points
-from phonopy.qha.electron import ElectronicStates, _tetrahedron_dos_and_count
+from phonopy.qha.electron import ElectronicStates, _TetrahedronSampler
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -71,7 +71,7 @@ def _integral(states: ElectronicStates, n_points: int = 4001) -> float:
     high = float(states.eigenvalues.max()) + 1.0
     energies = np.linspace(low, high, n_points)
     return float(
-        np.trapezoid(_tetrahedron_dos_and_count(states, energies)[0], energies)
+        np.trapezoid(_TetrahedronSampler(states).sample(energies)[0], energies)
     )
 
 
@@ -122,7 +122,7 @@ def test_dos_is_non_negative(aln_cell: PhonopyAtoms):
     energies = np.linspace(
         float(states.eigenvalues.min()), float(states.eigenvalues.max()), 501
     )
-    assert (_tetrahedron_dos_and_count(states, energies)[0] >= 0.0).all()
+    assert (_TetrahedronSampler(states).sample(energies)[0] >= 0.0).all()
 
 
 def test_dos_does_not_depend_on_the_block_size(aln_cell: PhonopyAtoms):
@@ -140,10 +140,11 @@ def test_dos_does_not_depend_on_the_block_size(aln_cell: PhonopyAtoms):
         float(states.eigenvalues.min()), float(states.eigenvalues.max()), 401
     )
 
-    whole = _tetrahedron_dos_and_count(states, energies, max_bytes=np.inf)[0]
+    sampler = _TetrahedronSampler(states)
+    whole = sampler.sample(energies, max_bytes=np.inf)[0]
     for max_bytes in (1.0, 1e4, 1e5):
         np.testing.assert_allclose(
-            _tetrahedron_dos_and_count(states, energies, max_bytes=max_bytes)[0],
+            sampler.sample(energies, max_bytes=max_bytes)[0],
             whole,
             rtol=0.0,
             atol=0.0,
@@ -159,7 +160,7 @@ def test_tetrahedron_dos_needs_the_grid(aln_cell: PhonopyAtoms):
         n_electrons=states.n_electrons,
     )
     with pytest.raises(ValueError, match="needs kpoints, mesh and cell"):
-        _tetrahedron_dos_and_count(without, np.linspace(0.0, 1.0, 11))
+        _TetrahedronSampler(without)
 
 
 def test_electronic_states_grid_fields_go_together(aln_cell: PhonopyAtoms):
