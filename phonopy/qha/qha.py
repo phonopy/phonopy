@@ -25,7 +25,7 @@ from phonopy.qha.calc import (
     compute_heat_capacity_p_polyfit,
     compute_volumetric_thermal_expansion,
 )
-from phonopy.qha.electron import ElectronicStates
+from phonopy.qha.electron_states import ElectronicStates
 from phonopy.qha.eos import fit_to_eos, get_eos
 from phonopy.qha.lattice import LatticeParametersFit, compute_axial_thermal_expansion
 from phonopy.qha.thermal import (
@@ -230,7 +230,7 @@ def run_qha(
         F_el(T, V) = internal_energies + fe(T) - fe(0) are
         computed internally within the fixed density-of-states (Mermin)
         approximation, which is intended for metals (see
-        phonopy.qha.electron.ElectronFreeEnergy). The electronic
+        phonopy.qha.electron_kpoint_sum.ElectronFreeEnergy). The electronic
         entropies are obtained analytically and the heat capacities by a
         single numerical differentiation; both enter C_P and the
         Gruneisen parameters.

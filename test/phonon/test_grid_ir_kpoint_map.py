@@ -14,7 +14,12 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.phonon.grid import BZGrid, get_ir_grid_points, get_ir_kpoint_map
+from phonopy.phonon.grid import (
+    BZGrid,
+    get_grid_shift_from_kpoints,
+    get_ir_grid_points,
+    get_ir_kpoint_map,
+)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -46,7 +51,7 @@ def _ir_kpoints(bz_grid: BZGrid) -> tuple[np.ndarray, np.ndarray]:
     """
     ir_grid_points, ir_grid_weights, _ = get_ir_grid_points(bz_grid)
     addresses = bz_grid.addresses[bz_grid.grg2bzg[ir_grid_points]]
-    kpoints = addresses / bz_grid.D_diag
+    kpoints = (2 * addresses + bz_grid.PS) / 2.0 @ bz_grid.QDinv.T
     return kpoints, ir_grid_weights / ir_grid_weights.sum()
 
 
@@ -91,20 +96,65 @@ def test_get_ir_kpoint_map_accepts_counts_or_weights(aln_cell: PhonopyAtoms):
     )
 
 
-def test_get_ir_kpoint_map_rejects_shifted_grid(aln_cell: PhonopyAtoms):
-    """Test that a shifted mesh raises instead of being mapped.
+def test_get_ir_kpoint_map_maps_a_shifted_grid(aln_cell: PhonopyAtoms):
+    """Test that a mesh shifted by half a division maps as a centred one does.
 
-    The tetrahedron method needs a Gamma-centred mesh. A Monkhorst-Pack one
-    has to reach the caller as an error rather than as a mapping that happens
-    to return the right number of indices.
+    The half shift moves every k-point equally, so the addresses come back
+    after subtracting it. AlN takes a shift along c, which its point group
+    preserves.
+
+    """
+    shifted = _bz_grid(aln_cell, is_shift=[0, 0, 1])
+    kpoints, weights = _ir_kpoints(shifted)
+    ir_grid_points, _, _ = get_ir_grid_points(shifted)
+
+    id_map = get_ir_kpoint_map(kpoints, weights, shifted)
+
+    np.testing.assert_array_equal(id_map, np.arange(len(ir_grid_points)))
+
+
+def test_get_ir_kpoint_map_rejects_a_grid_shifted_differently(aln_cell: PhonopyAtoms):
+    """Test that k-points off a grid's own shift raise rather than map.
+
+    The centred k-points sit half a division from every point of the shifted
+    grid, which is as far off as a k-point can be.
 
     """
     bz_grid = _bz_grid(aln_cell)
     kpoints, weights = _ir_kpoints(bz_grid)
     shifted = _bz_grid(aln_cell, is_shift=[0, 0, 1])
 
-    with pytest.raises(ValueError, match="Gamma-centred"):
+    with pytest.raises(ValueError, match="does not lie on the grid"):
         get_ir_kpoint_map(kpoints, weights, shifted)
+
+
+def test_get_grid_shift_from_kpoints(aln_cell: PhonopyAtoms):
+    """Test that the shift is read off the k-points themselves.
+
+    What a calculator writes about its mesh does not say where it placed the
+    points, so the points have to.
+
+    """
+    centred = _bz_grid(aln_cell)
+    shifted = _bz_grid(aln_cell, is_shift=[0, 0, 1])
+
+    np.testing.assert_array_equal(
+        get_grid_shift_from_kpoints(_ir_kpoints(centred)[0], centred), [0, 0, 0]
+    )
+    # Read against the centred grid: QDinv does not depend on the shift, which
+    # is what lets the shift be found before the grid that carries it is built.
+    np.testing.assert_array_equal(
+        get_grid_shift_from_kpoints(_ir_kpoints(shifted)[0], centred), [0, 0, 1]
+    )
+
+
+def test_get_grid_shift_from_kpoints_rejects_an_irregular_list(aln_cell: PhonopyAtoms):
+    """Test that k-points that are neither on nor half off the grid raise."""
+    bz_grid = _bz_grid(aln_cell)
+    kpoints, _ = _ir_kpoints(bz_grid)
+
+    with pytest.raises(ValueError, match="not a regular mesh"):
+        get_grid_shift_from_kpoints(kpoints + 0.01, bz_grid)
 
 
 def test_get_ir_kpoint_map_rejects_off_grid_kpoints(aln_cell: PhonopyAtoms):
@@ -122,13 +172,15 @@ def test_get_ir_kpoint_map_rejects_off_grid_kpoints(aln_cell: PhonopyAtoms):
 
 
 def test_get_ir_kpoint_map_rejects_monkhorst_pack_kpoints(aln_cell: PhonopyAtoms):
-    """Test that a half-shifted Monkhorst-Pack mesh is refused.
+    """Test that a half-shifted Monkhorst-Pack mesh misses a centred grid.
 
-    This is what decides mappability in practice. A Monkhorst-Pack mesh with
-    even divisions is written by VASP exactly as one with odd divisions --
-    mode 'm', zero shift -- and only its k-point coordinates differ, every
-    one of them landing on a half-integer address. Nothing in the input
-    description separates the two, so the k-points themselves have to.
+    A Monkhorst-Pack mesh with even divisions is written by VASP exactly as
+    one with odd divisions -- mode 'm', zero shift -- and only its k-point
+    coordinates differ, every one of them landing on a half-integer address.
+    Nothing in the input description separates the two, so the k-points
+    themselves have to, which is what get_grid_shift_from_kpoints reads and
+    what the grid then has to be built with. Handed the centred grid instead,
+    the mapping raises rather than pairing eigenvalues with the wrong points.
 
     Measured on a real 8x8x8 Monkhorst-Pack calculation, whose k-points are
     at 0.0625 + n/8.

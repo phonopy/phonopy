@@ -35,7 +35,7 @@ from phonopy.harmonic.displacement import (
     Type1DisplacementDataset,
     Type2DisplacementDataset,
 )
-from phonopy.qha.electron import ElectronicStates
+from phonopy.qha.electron_states import ElectronicStates
 from phonopy.structure.atoms import PhonopyAtoms
 
 if TYPE_CHECKING:
@@ -224,6 +224,12 @@ def _write_grid_point(grid: h5py.Group, point: AnisoQHAGridPoint) -> None:
     )
     g.create_dataset("numbers", data=np.array(cell.numbers, dtype="int64"))
     g.create_dataset("masses", data=np.array(cell.masses, dtype="double"))
+    if cell.magnetic_moments is not None:
+        # The symmetry behind the tetrahedron grid is searched on this cell,
+        # so a collinear magnetic calculation has to keep its moments here.
+        g.create_dataset(
+            "magnetic_moments", data=np.array(cell.magnetic_moments, dtype="double")
+        )
     g.create_dataset(
         "lattice_lengths", data=np.linalg.norm(np.array(cell.cell), axis=1)
     )
@@ -372,6 +378,9 @@ def _read_grid_point(g: h5py.Group) -> AnisoQHAGridPoint:
         cell=g["lattice"][:],
         scaled_positions=g["scaled_positions"][:],
         masses=g["masses"][:],
+        magnetic_moments=(
+            g["magnetic_moments"][:] if "magnetic_moments" in g else None
+        ),
     )
     electronic_states = (
         _read_electronic_states(g["electronic_states"], cell)

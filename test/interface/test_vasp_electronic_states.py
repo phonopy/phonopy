@@ -36,6 +36,8 @@ def _write_vaspout(
     n_kpoints_opt: int = 3,
     efermi: float = 1.0,
     efermi_opt: float = 2.0,
+    n_spin: int = 1,
+    magmom: list[float] | None = None,
 ) -> None:
     """Write a vaspout.h5 with as much as the reader needs and no more."""
     import h5py
@@ -52,14 +54,20 @@ def _write_vaspout(
 
     with h5py.File(path, "w") as w:
         g = w.create_group("results/electron_eigenvalues")
-        g.create_dataset("eigenvalues", data=np.zeros((1, n_kpoints, 3)))
+        g.create_dataset("eigenvalues", data=np.zeros((n_spin, n_kpoints, 3)))
         g.create_dataset(
             "kpoints_symmetry_weight", data=np.full(n_kpoints, 1.0 / n_kpoints)
         )
         g.create_dataset("kpoint_coords", data=np.zeros((n_kpoints, 3)))
         g.create_dataset("nelectrons", data=4.0)
-        w.create_group("results/electron_dos").create_dataset("ncdij", data=np.int32(1))
+        w.create_group("results/electron_dos").create_dataset(
+            "ncdij", data=np.int32(n_spin)
+        )
         w["results/electron_dos"].create_dataset("efermi", data=efermi)
+        if magmom is not None:
+            w.create_group("input/incar").create_dataset(
+                "MAGMOM", data=np.asarray(magmom, dtype="double")
+            )
 
         poscar = w.create_group("input/poscar")
         poscar.create_dataset("lattice_vectors", data=np.eye(3) * 4.0)
@@ -74,7 +82,7 @@ def _write_vaspout(
         if kpoints_opt_group is not None:
             write_kpoints(w["input"], "kpoints_opt", kpoints_opt_group)
             o = w.create_group("results/electron_eigenvalues_kpoints_opt")
-            o.create_dataset("eigenvalues", data=np.zeros((1, n_kpoints_opt, 3)))
+            o.create_dataset("eigenvalues", data=np.zeros((n_spin, n_kpoints_opt, 3)))
             o.create_dataset(
                 "kpoints_symmetry_weight",
                 data=np.full(n_kpoints_opt, 1.0 / n_kpoints_opt),
@@ -227,6 +235,53 @@ def test_kpoints_opt_can_be_declined(tmp_path):
     states = electronic_states_from_vaspout(path, kpoints_opt=False)
     np.testing.assert_array_equal(states.mesh, [4, 4, 4])
     assert states.eigenvalues.shape[1] == 2
+
+
+def test_magmom_is_attached_to_the_cell(tmp_path):
+    """Test that a collinear spin-polarized run carries its MAGMOM.
+
+    The symmetry behind the tetrahedron grid is searched on this cell, and it
+    has to be the symmetry VASP reduced its k-points with. Without the
+    moments a magnetic cell would be reduced as a non-magnetic one, leaving
+    fewer irreducible points than the file has k-points.
+
+    """
+    path = tmp_path / "vaspout.h5"
+    _write_vaspout(path, kpoints_group=_divisions("g"), n_spin=2, magmom=[1.5])
+    states = electronic_states_from_vaspout(path)
+    assert states.cell is not None
+    np.testing.assert_allclose(states.cell.magnetic_moments, [1.5])
+
+
+def test_magmom_is_ignored_without_spin_polarization(tmp_path):
+    """Test that MAGMOM is left out when the eigenvalues carry one spin channel.
+
+    A run that ends up non-spin-polarized reduces its k-points without the
+    moments, whatever the INCAR asked for.
+
+    """
+    path = tmp_path / "vaspout.h5"
+    _write_vaspout(path, kpoints_group=_divisions("g"), n_spin=1, magmom=[1.5])
+    states = electronic_states_from_vaspout(path)
+    assert states.cell is not None
+    assert states.cell.magnetic_moments is None
+
+
+def test_magmom_of_three_components_is_ignored(tmp_path):
+    """Test that a non-collinear MAGMOM is left out rather than misread.
+
+    Three numbers per atom is a direction, which this path does not treat;
+    taking them for one moment per atom would search the symmetry of a
+    different cell.
+
+    """
+    path = tmp_path / "vaspout.h5"
+    _write_vaspout(
+        path, kpoints_group=_divisions("g"), n_spin=2, magmom=[0.0, 0.0, 1.5]
+    )
+    states = electronic_states_from_vaspout(path)
+    assert states.cell is not None
+    assert states.cell.magnetic_moments is None
 
 
 def test_demanding_a_missing_kpoints_opt_raises(tmp_path):

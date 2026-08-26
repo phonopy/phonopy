@@ -13,6 +13,7 @@ import pytest
 
 from phonopy.cui.phonopy_vasp_efe_script import (
     PhonopyVaspEfeMockArgs,
+    collect_electronic_states,
     get_fe_ev_lines,
     get_free_energy_lines,
     main,
@@ -69,7 +70,7 @@ def test_phonopy_vasp_efe_ev_values():
 
 
 def test_phonopy_vasp_efe_fe_values():
-    """Test fe-v.dat numerical values."""
+    """Test fe-v.dat numerical values, integrated by the tetrahedron method."""
     filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]
     args = PhonopyVaspEfeMockArgs(filenames=filenames)
     lines_fe, _ = get_fe_ev_lines(args)
@@ -85,6 +86,27 @@ def test_phonopy_vasp_efe_fe_values():
     np.testing.assert_allclose(row0[3], -17.34336569, rtol=1e-6)
 
     # T=1000 row
+    row_last = [float(v) for v in data_lines[-1].split()]
+    np.testing.assert_allclose(row_last[0], 1000.0, atol=1e-5)
+    np.testing.assert_allclose(row_last[1], -17.29272678, rtol=1e-6)
+    np.testing.assert_allclose(row_last[2], -17.33632873, rtol=1e-6)
+    np.testing.assert_allclose(row_last[3], -17.35760587, rtol=1e-6)
+
+
+def test_phonopy_vasp_efe_fe_values_by_the_k_point_sum():
+    """Test that --k-point-sum reproduces what this command wrote before.
+
+    The deprecated route, kept for backward compatibility. On these files,
+    120 irreducible k-points of a 16x16x16 mesh, it differs from the
+    tetrahedron method by 1.6 meV at 1000 K, which is 11 per cent of the
+    temperature-dependent part.
+
+    """
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]
+    args = PhonopyVaspEfeMockArgs(filenames=filenames, k_point_sum=True)
+    lines_fe, _ = get_fe_ev_lines(args)
+
+    data_lines = [line for line in lines_fe if not line.startswith("#")]
     row_last = [float(v) for v in data_lines[-1].split()]
     np.testing.assert_allclose(row_last[0], 1000.0, atol=1e-5)
     np.testing.assert_allclose(row_last[1], -17.29111981, rtol=1e-6)
@@ -103,11 +125,11 @@ def test_phonopy_vasp_efe_temperature_range():
 
     row1 = [float(v) for v in data_lines[1].split()]
     np.testing.assert_allclose(row1[0], 100.0, atol=1e-5)
-    np.testing.assert_allclose(row1[1], -17.27897379, rtol=1e-6)
+    np.testing.assert_allclose(row1[1], -17.27899684, rtol=1e-6)
 
     row2 = [float(v) for v in data_lines[2].split()]
     np.testing.assert_allclose(row2[0], 200.0, atol=1e-5)
-    np.testing.assert_allclose(row2[1], -17.27926217, rtol=1e-6)
+    np.testing.assert_allclose(row2[1], -17.27940751, rtol=1e-6)
 
 
 def test_phonopy_vasp_efe_uses_kpoints_opt():
@@ -119,7 +141,11 @@ def test_phonopy_vasp_efe_uses_kpoints_opt():
 
     """
     from phonopy.interface.vasp import parse_vasprunxml
-    from phonopy.qha.electron import get_free_energy_at_T
+    from phonopy.qha.electron import (
+        ElectronicStates,
+        compute_free_energy_by_tetrahedron,
+    )
+    from phonopy.structure.atoms import PhonopyAtoms
 
     filename = cwd.parents[1] / "interface" / "vasprun_kpoints_opt.xml.xz"
     args = PhonopyVaspEfeMockArgs(filenames=[filename], tmax=100.0, tstep=50.0)
@@ -129,15 +155,22 @@ def test_phonopy_vasp_efe_uses_kpoints_opt():
 
     vxml = parse_vasprunxml(filename)
     assert vxml.has_kpoints_opt
-    _, fe = get_free_energy_at_T(
-        0.0,
-        100.0,
-        50.0,
-        vxml.eigenvalues_kpoints_opt[:, :, :, 0],
-        vxml.k_weights_kpoints_opt,
-        vxml.NELECT,
+    states = ElectronicStates(
+        eigenvalues=vxml.eigenvalues_kpoints_opt[:, :, :, 0],
+        weights=vxml.k_weights_kpoints_opt,
+        n_electrons=vxml.NELECT,
+        spin_degeneracy=vxml.spin_degeneracy,
+        fermi_energy=vxml.efermi,
+        kpoints=vxml.kpointlist_kpoints_opt,
+        mesh=vxml.k_mesh_kpoints_opt,
+        cell=PhonopyAtoms(
+            symbols=vxml.symbols,
+            cell=vxml.lattice[-1],
+            scaled_positions=vxml.points[-1],
+        ),
     )
-    ref = vxml.energies[-1, 1] - fe[0] + fe
+    fe, _ = compute_free_energy_by_tetrahedron(states, [0.0, 50.0, 100.0])
+    ref = vxml.energies[-1, 1] + fe
     for row, r in zip(rows, ref, strict=True):
         np.testing.assert_allclose(row[1], r, rtol=1e-8)
 
@@ -163,8 +196,8 @@ def test_phonopy_vasp_efe_kpoints_opt_values():
     fe_rows = _data_rows(lines_fe)
     assert len(fe_rows) == 3  # T = 0, 50, 100
     np.testing.assert_allclose(fe_rows[0], [0.0, -21.10777233], rtol=1e-6, atol=1e-5)
-    np.testing.assert_allclose(fe_rows[1], [50.0, -21.10779563], rtol=1e-6, atol=1e-5)
-    np.testing.assert_allclose(fe_rows[2], [100.0, -21.10797222], rtol=1e-6, atol=1e-5)
+    np.testing.assert_allclose(fe_rows[1], [50.0, -21.10782457], rtol=1e-8, atol=1e-8)
+    np.testing.assert_allclose(fe_rows[2], [100.0, -21.10798721], rtol=1e-8, atol=1e-8)
 
 
 def test_get_free_energy_lines():
@@ -261,7 +294,7 @@ def test_phonopy_vasp_efe_write_electronic_states(tmp_path):
 
     """
     from phonopy.qha.electron import (
-        get_free_energy_at_T,
+        compute_free_energy_by_tetrahedron,
         read_electronic_states_hdf5,
     )
 
@@ -287,20 +320,106 @@ def test_phonopy_vasp_efe_write_electronic_states(tmp_path):
         np.testing.assert_allclose(states[0].internal_energy, -17.27885993, rtol=1e-6)
 
         # Recomputed F_el(T=1000 K) matches the pinned fe-v.dat value of
-        # test_phonopy_vasp_efe_fe_values.
-        _, fe = get_free_energy_at_T(
-            0.0,
-            1000.0,
-            10.0,
-            states[0].eigenvalues,
-            states[0].weights,
-            states[0].n_electrons,
-        )
+        # test_phonopy_vasp_efe_fe_values, which also says that the grid
+        # stored with the states is the one the run integrated over.
+        fe, _ = compute_free_energy_by_tetrahedron(states[0], [0.0, 1000.0])
         np.testing.assert_allclose(
-            states[0].internal_energy - fe[0] + fe[-1], -17.29111981, rtol=1e-6
+            states[0].internal_energy + fe[-1], -17.29272678, rtol=1e-6
         )
     finally:
         os.chdir(original_cwd)
+
+
+def test_collected_states_carry_the_sampling_grid():
+    """Test that the k-points, the mesh and the cell reach the states.
+
+    They are what the tetrahedron method needs beyond the eigenvalues, and
+    the vasprun.xml has all three. These files are a 16x16x16
+    Monkhorst-Pack mesh, so their k-points sit half a division off the
+    Gamma-centred grid and the shift is read back from them.
+
+    """
+    from phonopy.phonon.grid import BZGrid, get_grid_shift_from_kpoints
+    from phonopy.structure.symmetry import Symmetry
+
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(2)]
+    mockargs = PhonopyVaspEfeMockArgs(filenames=filenames, quiet=True)
+    _, _, states_list = collect_electronic_states(mockargs)
+
+    states = states_list[0]
+    assert states.cell is not None
+    np.testing.assert_array_equal(states.mesh, [16, 16, 16])
+    assert states.kpoints is not None
+    assert states.kpoints.shape == (states.eigenvalues.shape[1], 3)
+    assert len(states.cell) == 4
+
+    bz_grid = BZGrid(
+        states.mesh,
+        lattice=states.cell.cell,
+        symmetry_dataset=Symmetry(states.cell).dataset,
+    )
+    np.testing.assert_array_equal(
+        get_grid_shift_from_kpoints(states.kpoints, bz_grid), [1, 1, 1]
+    )
+
+
+def test_written_electronic_states_keep_the_sampling_grid(tmp_path):
+    """Test that the grid survives electronic_states.hdf5.
+
+    Without it the file reads back as states for the k-point sum, whatever
+    the calculation was.
+
+    """
+    from phonopy.qha.electron import (
+        read_electronic_states_hdf5,
+        write_electronic_states_hdf5,
+    )
+
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(2)]
+    mockargs = PhonopyVaspEfeMockArgs(filenames=filenames, quiet=True)
+    _, _, states_list = collect_electronic_states(mockargs)
+
+    path = tmp_path / "electronic_states.hdf5"
+    write_electronic_states_hdf5(states_list, filename=path)
+    read_back = read_electronic_states_hdf5(filename=path)
+
+    for written, read in zip(states_list, read_back, strict=True):
+        assert read.cell is not None
+        assert written.kpoints is not None
+        np.testing.assert_allclose(read.kpoints, written.kpoints)
+        np.testing.assert_array_equal(read.mesh, written.mesh)
+        assert written.cell is not None
+        np.testing.assert_allclose(read.cell.cell, written.cell.cell)
+        np.testing.assert_allclose(
+            read.cell.scaled_positions, written.cell.scaled_positions
+        )
+        np.testing.assert_array_equal(read.cell.numbers, written.cell.numbers)
+
+
+def test_states_without_a_grid_fall_back_to_the_k_point_sum():
+    """Test that states carrying no mesh are integrated by the sum.
+
+    A vasprun.xml whose k-points are an explicit list has no divisions to
+    build a grid from, and every file written before the grid was stored
+    reads back that way. The command has to keep working on them.
+
+    """
+    import dataclasses as _dataclasses
+
+    from phonopy.cui.phonopy_vasp_efe_script import _free_energy_of_one_volume
+
+    filenames = [cwd / "vasprun.xmls/vasprun.xml-00.xz"]
+    mockargs = PhonopyVaspEfeMockArgs(filenames=filenames, quiet=True)
+    _, _, states_list = collect_electronic_states(mockargs)
+    without = _dataclasses.replace(states_list[0], kpoints=None, mesh=None, cell=None)
+
+    temperatures = np.array([0.0, 1000.0])
+    fell_back, method, reason = _free_energy_of_one_volume(without, temperatures)
+    asked, _, _ = _free_energy_of_one_volume(states_list[0], temperatures, by_sum=True)
+
+    assert method == "k-point sum"
+    assert "kpoints, mesh and cell" in reason
+    np.testing.assert_allclose(fell_back, asked, rtol=1e-12)
 
 
 def test_phonopy_vasp_efe_write_electronic_states_rejects_scale_factor(tmp_path):

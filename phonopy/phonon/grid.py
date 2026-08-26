@@ -1140,6 +1140,61 @@ def get_ir_grid_points(
     return ir_grid_points, ir_grid_weights, ir_grid_map
 
 
+def get_grid_shift_from_kpoints(
+    kpoints: Sequence[Sequence[float]] | NDArray[np.double],
+    bz_grid: BZGrid,
+) -> NDArray[np.int64]:
+    """Return the half-grid shift a calculator's k-points sit on.
+
+    A calculator reports where its k-points are but not how it placed them,
+    and a Monkhorst-Pack mesh with even divisions is written exactly as a
+    Gamma-centred one. The k-points settle it: with the grid's own relation
+    inverted, an unshifted axis leaves integer addresses and a shifted one
+    leaves half-integers.
+
+    The answer is ``BZGrid``'s ``is_shift``, so building the grid takes two
+    steps: one grid to invert the relation with, the shift read off it, then
+    the grid to use. ``QDinv`` does not depend on the shift, so the first grid
+    can be the Gamma-centred one.
+
+    Parameters
+    ----------
+    kpoints : array_like
+        Irreducible k-points in fractional coordinates of the reciprocal
+        basis vectors. shape=(num_kpoints, 3), dtype='double'
+    bz_grid : BZGrid
+        Grid whose mesh the k-points belong to, shifted or not.
+
+    Returns
+    -------
+    ndarray
+        0 or 1 per axis, to be given to BZGrid as is_shift.
+        shape=(3,), dtype='int64'
+
+    Raises
+    ------
+    ValueError
+        If an axis is neither integral nor half-integral throughout, which is
+        what an explicit k-point list or a band path looks like here.
+
+    """
+    kpts = np.asarray(kpoints, dtype="double")
+    if kpts.ndim != 2 or kpts.shape[1] != 3:
+        raise ValueError(f"kpoints must have shape (n, 3), not {kpts.shape}.")
+    addresses = kpts @ np.linalg.inv(bz_grid.QDinv).T
+    distance = np.abs(addresses - np.rint(addresses))
+    unshifted = (distance < 1e-3).all(axis=0)
+    shifted = (np.abs(distance - 0.5) < 1e-3).all(axis=0)
+    if not (unshifted | shifted).all():
+        axis = int(np.flatnonzero(~(unshifted | shifted))[0])
+        raise ValueError(
+            f"Along axis {axis} the k-points are neither all on the grid with "
+            f"D_diag={bz_grid.D_diag.tolist()} nor all half a division off "
+            "it, so they are not a regular mesh."
+        )
+    return np.where(shifted, 1, 0).astype("int64")
+
+
 def get_ir_kpoint_map(
     kpoints: Sequence[Sequence[float]] | NDArray[np.double],
     weights: Sequence[float] | NDArray[np.double] | NDArray[np.int64],
@@ -1159,10 +1214,11 @@ def get_ir_kpoint_map(
     "Recovering reduced coordinates" section of the ``BZGrid`` docstring for
     the relation this inverts.
 
-    The mapping is only defined for a Gamma-centred grid. A shifted
-    (Monkhorst-Pack) mesh, an explicit k-point list and a band path all fail
-    one of the checks below, and all of them raise: a wrong mapping silently
-    pairs eigenvalues with the wrong grid points.
+    A half-grid shift is allowed, and the k-points are then expected on the
+    grid as ``bz_grid`` shifts it; ``get_grid_shift_from_kpoints`` reads that
+    shift off the k-points themselves. An explicit k-point list and a band
+    path fail one of the checks below, and all of them raise: a wrong mapping
+    silently pairs eigenvalues with the wrong grid points.
 
     Parameters
     ----------
@@ -1187,9 +1243,9 @@ def get_ir_kpoint_map(
     Raises
     ------
     ValueError
-        If the grid is shifted, if the k-points do not lie on the grid, if
-        they do not correspond one-to-one with the irreducible grid points,
-        or if their weights disagree with the grid's.
+        If the k-points do not lie on the grid, if they do not correspond
+        one-to-one with the irreducible grid points, or if their weights
+        disagree with the grid's.
 
     """
     kpts = np.asarray(kpoints, dtype="double")
@@ -1199,13 +1255,9 @@ def get_ir_kpoint_map(
     if wts.ndim != 1 or len(wts) != len(kpts):
         raise ValueError("weights must have one value per k-point.")
 
-    if np.any(bz_grid.PS != 0):
-        raise ValueError(
-            "The tetrahedron method needs a Gamma-centred mesh, but this "
-            f"BZGrid is shifted by PS={bz_grid.PS.tolist()}."
-        )
-    # Inverse of the q-point relation in the BZGrid docstring.
-    addresses = kpts @ np.linalg.inv(bz_grid.QDinv).T
+    # Inverse of the q-point relation in the BZGrid docstring, less the half
+    # shift the grid carries, which leaves the integer addresses.
+    addresses = kpts @ np.linalg.inv(bz_grid.QDinv).T - bz_grid.PS / 2.0
 
     # Check that the k-points lie on the grid. The tolerance is loose against
     # the precision they are printed with and tight against a genuine miss,
@@ -1216,9 +1268,10 @@ def get_ir_kpoint_map(
     if off_grid[worst] > 1e-3:
         raise ValueError(
             f"k-point {worst} at {kpts[worst].tolist()} does not lie on the "
-            f"grid with D_diag={bz_grid.D_diag.tolist()}: it misses an "
-            f"address by {off_grid[worst]:.3e} in units of a grid division. "
-            "The k-points are not a Gamma-centred regular grid."
+            f"grid with D_diag={bz_grid.D_diag.tolist()} and "
+            f"PS={bz_grid.PS.tolist()}: it misses an address by "
+            f"{off_grid[worst]:.3e} in units of a grid division. The k-points "
+            "are not the regular grid this BZGrid describes."
         )
 
     ir_grid_points, ir_grid_weights, ir_grid_map = get_ir_grid_points(bz_grid)
