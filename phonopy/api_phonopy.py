@@ -1231,12 +1231,20 @@ class Phonopy:
             test_size=test_size,
         )
 
-    def save_mlp(self, filename: str | os.PathLike | None = None) -> None:
-        """Save machine learning potential."""
+    def save_mlp(
+        self, filename: str | os.PathLike | None = None, optimal: bool = True
+    ) -> None:
+        """Save machine learning potential.
+
+        With `optimal` False, every MLP fitted over the regularization
+        parameters is written rather than only the best one. This requires
+        pypolymlp>=0.21.0.
+
+        """
         if self._mlp is None:
             raise RuntimeError("MLP is not developed yet.")
 
-        self._mlp.save(filename=filename)
+        self._mlp.save(filename=filename, optimal=optimal)
 
     def load_mlp(self, filename: str | os.PathLike | None = None) -> None:
         """Load machine learning potential."""

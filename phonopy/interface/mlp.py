@@ -36,14 +36,22 @@ class PhonopyMLP:
         """Return MLP instance."""
         return self._mlp
 
-    def save(self, filename: str | os.PathLike | None = None) -> None:
-        """Save MLP."""
+    def save(
+        self, filename: str | os.PathLike | None = None, optimal: bool = True
+    ) -> None:
+        """Save MLP.
+
+        With `optimal` False, every MLP fitted over the regularization
+        parameters is written rather than only the best one; see
+        save_pypolymlp.
+
+        """
         _filename: str | os.PathLike
         if filename is None:
             _filename = "polymlp.yaml"
         else:
             _filename = filename
-        save_pypolymlp(self._mlp, _filename)  # type: ignore[arg-type]
+        save_pypolymlp(self._mlp, _filename, optimal=optimal)
 
     def load(self, filename: str | os.PathLike | None = None) -> PhonopyMLP:
         """Load MLP."""

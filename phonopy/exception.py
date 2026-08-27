@@ -56,6 +56,12 @@ class PypolymlpDevelopmentError(RuntimeError):
     pass
 
 
+class PypolymlpVersionError(RuntimeError):
+    """Exception when installed pypolymlp is too old for a requested feature."""
+
+    pass
+
+
 class BORNFileParseError(RuntimeError):
     """Exception when parsing BORN file fails."""
 

@@ -2,17 +2,21 @@
 """Tests for pypolymlp calculater interface."""
 
 import pathlib
+import re
 
 import numpy as np
 import pytest
 
 from phonopy import Phonopy
+from phonopy.exception import PypolymlpVersionError
+from phonopy.interface.mlp import PhonopyMLP
 from phonopy.interface.pypolymlp import (
     PypolymlpData,
     PypolymlpParams,
     develop_pypolymlp,
     evalulate_pypolymlp,
     parse_mlp_params,
+    save_pypolymlp,
 )
 
 cwd_called = pathlib.Path.cwd()
@@ -276,6 +280,53 @@ def test_parse_mlp_params_reg_alpha():
     )
 
 
+def test_parse_mlp_params_optimal():
+    """Test that optimal is parsed as a boolean and defaults to True.
+
+    It rides in --mlp-params beside ntrain and ntest, which are likewise read
+    by phonopy rather than passed to pypolymlp's fit.
+    """
+    assert PypolymlpParams().optimal is True
+    assert parse_mlp_params("cutoff = 6.0").optimal is True
+
+    for text in (".false.", "false", "False"):
+        assert parse_mlp_params(f"optimal = {text}").optimal is False
+    for text in (".true.", "true"):
+        assert parse_mlp_params(f"optimal = {text}").optimal is True
+
+    with_others = parse_mlp_params("cutoff = 6.0, optimal = .false.")
+    assert with_others.optimal is False
+    assert with_others.cutoff == 6.0
+
+    assert parse_mlp_params({"optimal": False}).optimal is False
+
+    # A value that is neither is a mistake worth stopping on, unlike an
+    # unrecognized key, which parse_mlp_params drops silently.
+    with pytest.raises(ValueError):
+        parse_mlp_params("optimal = maybe")
+
+
+def test_parse_mlp_params_atom_energies_symbols():
+    """Test that element symbols survive the string parser.
+
+    parse_mlp_params lower-cases the values it reads, which used to turn "Na"
+    into "na" and make develop_pypolymlp raise KeyError when it looked the
+    symbol up. The spelling of an element is restored instead, so the input is
+    case-insensitive.
+    """
+    assert parse_mlp_params(
+        "atom_energies = Si -0.35864636 O -0.95743902"
+    ).atom_energies == {"Si": -0.35864636, "O": -0.95743902}
+    assert parse_mlp_params("atom_energies = na -0.22 CL -0.25").atom_energies == {
+        "Na": -0.22,
+        "Cl": -0.25,
+    }
+    # A dict is taken as given and is not respelled.
+    assert parse_mlp_params({"atom_energies": {"Na": -0.22}}).atom_energies == {
+        "Na": -0.22
+    }
+
+
 def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     """Test of pypolymlp-develop using NaCl 2x2x2 with RD results."""
     pytest.importorskip("pypolymlp", minversion="0.10.0")
@@ -483,3 +534,115 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
         5.452067104603176,
     ]
     np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=5e-5)
+
+
+def _develop_small_mlp(ph_nacl_rd: Phonopy):
+    """Return an MLP fitted to a few structures, for the save tests."""
+    data = PypolymlpData(
+        displacements=ph_nacl_rd.displacements,
+        forces=ph_nacl_rd.forces,
+        supercell_energies=ph_nacl_rd.supercell_energies,
+        supercell=ph_nacl_rd.supercell,
+    )
+    return develop_pypolymlp(
+        data[:4],
+        data[8:],
+        params=PypolymlpParams(gtinv_maxl=(4, 4), atom_energies=atom_energies),
+    )
+
+
+def test_save_pypolymlp_optimal(ph_nacl_rd: Phonopy, tmp_path):
+    """Test that the default writes one MLP and no log."""
+    pytest.importorskip("pypolymlp", minversion="0.10.0")
+    filename = tmp_path / "polymlp.yaml"
+    save_pypolymlp(_develop_small_mlp(ph_nacl_rd), str(filename))
+
+    assert filename.exists()
+    assert not list(tmp_path.glob("polymlp.yaml.v*"))
+    assert not (tmp_path / "polymlp.log").exists()
+
+
+def test_save_pypolymlp_all(ph_nacl_rd: Phonopy, tmp_path):
+    """Test that optimal=False writes every fitted MLP and a log beside them.
+
+    The file name is passed as a Path: pypolymlp builds the versioned names by
+    string concatenation, so a PathLike used to raise TypeError here.
+
+    """
+    pytest.importorskip("pypolymlp", minversion="0.21.0")
+    filename = tmp_path / "polymlp.yaml"
+    save_pypolymlp(_develop_small_mlp(ph_nacl_rd), filename, optimal=False)
+
+    versions = sorted(tmp_path.glob("polymlp.yaml.v*"))
+    assert versions, "no MLP was written"
+    # The number is the position in the regularization ladder, not a count of
+    # the files written, so it may skip a value.
+    assert all(re.fullmatch(r"polymlp\.yaml\.v\d{2}", v.name) for v in versions)
+
+    # The log names every file it wrote and reports its regularization
+    # parameter, and it sits beside them rather than in the current directory.
+    log = (tmp_path / "polymlp.log").read_text()
+    for path in versions:
+        assert str(path) in log
+    assert log.count("alpha:") == len(versions)
+
+
+def test_phonopy_save_mlp_all(ph_nacl_rd: Phonopy, tmp_path, monkeypatch):
+    """Test that optimal reaches pypolymlp through Phonopy.save_mlp."""
+    pytest.importorskip("pypolymlp", minversion="0.21.0")
+    ph = Phonopy(
+        ph_nacl_rd.unitcell,
+        ph_nacl_rd.supercell_matrix,
+        ph_nacl_rd.primitive_matrix,
+    )
+    ph._mlp = PhonopyMLP(mlp=_develop_small_mlp(ph_nacl_rd))
+
+    # The log would land in the current directory if its name were not derived
+    # from the file name, so run somewhere the pollution would be visible.
+    monkeypatch.chdir(tmp_path)
+    outdir = tmp_path / "out"
+    outdir.mkdir()
+    ph.save_mlp(filename=outdir / "polymlp.yaml", optimal=False)
+
+    assert sorted(p.name for p in outdir.glob("polymlp.*")) != []
+    assert (outdir / "polymlp.log").exists()
+    assert not (tmp_path / "polymlp.log").exists()
+
+
+def test_save_pypolymlp_all_requires_new_pypolymlp(ph_nacl_rd: Phonopy, tmp_path):
+    """Test that an old pypolymlp is reported as a version problem."""
+    pytest.importorskip("pypolymlp", minversion="0.10.0")
+
+    class _OldMLP:
+        def save_mlp(self, filename):
+            raise AssertionError("should not be reached")
+
+    with pytest.raises(PypolymlpVersionError):
+        save_pypolymlp(_OldMLP(), str(tmp_path / "polymlp.yaml"), optimal=False)
+
+
+def test_develop_and_save_pypolymlp_optimal(ph_nacl_rd: Phonopy, tmp_path):
+    """Test that --mlp-params "optimal = .false." reaches the saved files."""
+    pytest.importorskip("pypolymlp", minversion="0.21.0")
+    from phonopy.cui.load_helper import _develop_and_save_pypolymlp
+
+    ph = Phonopy(
+        ph_nacl_rd.unitcell,
+        ph_nacl_rd.supercell_matrix,
+        ph_nacl_rd.primitive_matrix,
+    )
+    ph.mlp_dataset = {
+        "displacements": ph_nacl_rd.displacements,
+        "forces": ph_nacl_rd.forces,
+        "supercell_energies": ph_nacl_rd.supercell_energies,
+    }
+    params = (
+        "gtinv_maxl = 4 4, ntrain = 4, ntest = 4, optimal = .false., "
+        "atom_energies = Na -0.22078441 Cl -0.24955105"
+    )
+    _develop_and_save_pypolymlp(
+        ph, mlp_params=params, mlp_filename=tmp_path / "polymlp.yaml"
+    )
+
+    assert list(tmp_path.glob("polymlp.yaml.v*"))
+    assert (tmp_path / "polymlp.log").exists()
