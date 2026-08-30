@@ -772,7 +772,8 @@ window.runMermaid = runMermaid;</script>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-mlp-per-grid-point">One MLP per grid point</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-displacements">The training displacements</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-ridge-penalty">The descriptor and the ridge penalty</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pinning-the-ridge-penalty-across-the-grid">Pinning the ridge penalty across the grid</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-one-draw-of-standard-normals">Sharing one draw of standard normals</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>
@@ -1505,15 +1506,18 @@ the dataset of step 3:</p>
 <div class="code-block-caption"><span class="caption-text">Script 5 – the thermal training displacements</span><a class="headerlink" href="#id5" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_vasp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
 
-<span class="n">TRAIN</span> <span class="o">=</span> <span class="s2">"train"</span>
+<span class="n">TRAIN</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"train"</span><span class="p">)</span>
 <span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">250.0</span><span class="p">,</span> <span class="mf">400.0</span><span class="p">)</span>  <span class="c1"># K</span>
 <span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># structures per grid point and temperature</span>
 <span class="n">SEED</span> <span class="o">=</span> <span class="mi">20260815</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
+<span class="n">TRAIN</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">TEMPERATURES</span><span class="p">:</span>
     <span class="n">normals</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1527,11 +1531,21 @@ the dataset of step 3:</p>
             <span class="n">normals</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">draw_standard_normals</span><span class="p">(</span>
                 <span class="n">SNAPSHOTS</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
             <span class="p">)</span>
+            <span class="c1"># Keep the draw itself. The displacements below record the</span>
+            <span class="c1"># ensemble, but only these reproduce it, and extending it with</span>
+            <span class="c1"># first_snapshot needs them.</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span>
+                <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"normals-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">K.npz"</span><span class="p">,</span>
+                <span class="n">ii</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">ij</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span>
+                <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="n">rd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">standard_normals</span><span class="o">=</span><span class="n">normals</span><span class="p">)</span>
         <span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"displacements"</span><span class="p">:</span> <span class="n">rd</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">copy</span><span class="p">()}</span>
 
         <span class="c1"># The stored index is 0-origin; the directories are numbered from 001.</span>
-        <span class="n">set_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">TRAIN</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">K"</span>
+        <span class="n">set_dir</span> <span class="o">=</span> <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">K"</span>
         <span class="n">set_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># The displacements have to be saved beside the supercells: it is what</span>
         <span class="c1"># phonopy-init -f attaches the forces to below.</span>
@@ -1548,8 +1562,8 @@ the dataset of step 3:</p>
 </div>
 <p>Each set directory then holds <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and
 <code class="docutils literal notranslate"><span class="pre">disp-001/POSCAR</span> <span class="pre">..</span> <span class="pre">disp-050/POSCAR</span></code>, the same layout as the phonon grid of
-step 2. Run the calculator in every <code class="docutils literal notranslate"><span class="pre">disp-*</span></code>, then collect the forces of each
-set:</p>
+step 2, and <code class="docutils literal notranslate"><span class="pre">train/</span></code> holds one <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> per temperature beside them.
+Run the calculator in every <code class="docutils literal notranslate"><span class="pre">disp-*</span></code>, then collect the forces of each set:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-f<span class="w"> </span>disp-*/vaspout.h5<span class="w"> </span>--save-params
 <span class="c1"># -&gt; phonopy_params.yaml, with the displacements, forces and supercell energies</span>
 </pre></div>
@@ -1610,67 +1624,108 @@ everything computed from it. To see by how much, draw a second set of the same
 size at one grid point, train a second MLP on it, and compare the frequencies
 the two give there.</p>
 </section>
-<section id="the-descriptor-and-the-ridge-penalty">
-<h3>The descriptor and the ridge penalty<a class="headerlink" href="#the-descriptor-and-the-ridge-penalty" title="Link to this heading">#</a></h3>
-<p>Three choices interact here: how many features the descriptor has, how many
-structures the training set holds, and how hard the ridge penalty damps the
-fit. The penalty absorbs a mismatch between the first two, so it also tells
-whether they are matched.</p>
+<section id="the-descriptor-and-the-amount-of-training-data">
+<h3>The descriptor and the amount of training data<a class="headerlink" href="#the-descriptor-and-the-amount-of-training-data" title="Link to this heading">#</a></h3>
+<p>There are two things to choose here: how big a descriptor to use, and how
+many structures to train it on. The ridge penalty is not a third choice. It is
+what the fit falls back on when the descriptor is too large for the training
+set, so the penalty pypolymlp selects indicates whether the two are matched.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> also sets the descriptor. Example feature counts for a
 one-element system, with pypolymlp 0.20.5:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>features</p></th>
-<th class="head"><p>added to <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code></p></th>
+<th class="head"><p>model parameters added to <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code></p></th>
+<th class="head"><p>time</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>781</p></td>
-<td><p>nothing; the default</p></td>
+<td><p>nothing; phonopy’s defaults</p></td>
+<td><p>1.0</p></td>
 </tr>
 <tr class="row-odd"><td><p>1,176</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
+<td><p>1.2</p></td>
 </tr>
 <tr class="row-even"><td><p>2,600</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
+<td><p>5.6</p></td>
 </tr>
 <tr class="row-odd"><td><p>3,848</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span></code></p></td>
+<td><p>7.1</p></td>
 </tr>
 <tr class="row-even"><td><p>6,820</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4</span></code></p></td>
+<td><p>1.4</p></td>
 </tr>
 <tr class="row-odd"><td><p>13,920</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
+<td><p>1.4</p></td>
 </tr>
 <tr class="row-even"><td><p>22,495</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+<td><p>6.4</p></td>
 </tr>
 <tr class="row-odd"><td><p>27,664</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
+<td><p>5.9</p></td>
 </tr>
 <tr class="row-even"><td><p>45,680</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+<td><p>7.7</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>A heavier descriptor costs more to fit and more to evaluate, and the SSCHA of
-this step evaluates it once per snapshot per iteration, so the choice sets the
-cost of the whole step.</p>
-<p>A heavier descriptor also needs more training data to converge, and where the
-ridge penalty lands – the alpha that <code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code> scans – is a cheap
-way to watch that. Fit the default range and see which penalty pypolymlp keeps: with
-too few structures the smallest test RMSE sits at the large-penalty end, and
-the optimum moves towards smaller penalties as structures are added, settling
-once there are enough of them. A descriptor whose optimum has not moved off
-the large end is held up by the training set rather than by the descriptor,
-and adding features will not help until adding structures does.</p>
-<p><strong>Pin the ridge penalty across the grid.</strong> pypolymlp fits every penalty in
-<code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code> and keeps the one with the smallest test RMSE, chosen
-separately at every grid point. The analysis differentiates across the grid,
-so a penalty that changes from one grid point to the next puts a step into the
-quantity being differentiated. Collapse the range to one point to pin it:</p>
+<p>Phonopy’s defaults are <code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">max_p</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">3</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">8</span> <span class="pre">8</span></code>, <code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">cutoff</span> <span class="pre">=</span> <span class="pre">8.0</span></code>. Phonopy
+passes them to pypolymlp itself. The other rows change one or two of them.</p>
+<p>The SSCHA of this step evaluates the descriptor once per snapshot per
+iteration, so the evaluation time sets the cost of the whole step. The last
+column is that time in one execution example, relative to the first row.</p>
+<p>The evaluation time is dominated by <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code> rather than by the feature
+count. The table holds two pairs that differ in <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code> alone, 1,176
+against 2,600 and 13,920 against 27,664, and both cost about four times more
+at <code class="docutils literal notranslate"><span class="pre">12</span> <span class="pre">12</span></code> than at <code class="docutils literal notranslate"><span class="pre">8</span> <span class="pre">8</span></code>. Raising <code class="docutils literal notranslate"><span class="pre">model_type</span></code> or the number of gaussians
+instead multiplies the feature count while adding a few tens of per cent to
+the time: 781 to 13,920 is eighteen times the features for 1.4 times the
+time. So a descriptor that gains its features that way can carry several
+times more of them for a fraction of the time.</p>
+<p>More evaluation time still usually buys a lower force RMSE, once there is
+enough training data to determine the extra features. The rule is only rough:
+a fast descriptor with many features can beat a slow one with few. A lower
+force RMSE also does not have to reach the thermal expansion, which is what
+this step is for. The next section says what the MLPs are judged by instead.</p>
+<p>How much training data a descriptor needs is a separate question. Fit with the
+default <code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code>, which scans five penalties from 1e-3 to 1e1, and
+see which one pypolymlp keeps. With too few structures the penalty with the
+smallest test RMSE sits at the large-penalty end of the range. As structures
+are added, that penalty moves towards smaller values, and it stops moving once
+there are enough structures. If that penalty is still at the large end, the
+training set is what limits the accuracy, not the descriptor. Adding features
+will not help until more structures are added.</p>
+<p>Repeat that fit at several training-set sizes. Plot the selected penalty
+against the size, with one line per descriptor. A line that is still falling
+at the largest size has not converged. A line that has flattened has
+converged, and more structures will not improve that descriptor. Each point
+costs one fit. Running the SSCHA at every grid point and temperature, which is
+the next step, costs far more than that. Make this plot first.</p>
+<p>These two things are independent: how long a descriptor takes to evaluate, and
+how much training data it needs. A descriptor that is slow to evaluate may
+need only a few dozen structures, and a fast one may need many more. Use the
+last column to judge what a descriptor costs and what force RMSE it can reach.
+Use the selected penalty to judge whether the training set is large enough for
+it.</p>
+</section>
+<section id="pinning-the-ridge-penalty-across-the-grid">
+<h3>Pinning the ridge penalty across the grid<a class="headerlink" href="#pinning-the-ridge-penalty-across-the-grid" title="Link to this heading">#</a></h3>
+<p>pypolymlp fits every penalty in <code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code> and keeps the one with the
+smallest test RMSE, chosen separately at every grid point. The analysis
+differentiates across the grid, so a penalty that changes from one grid point
+to the next puts a step into the quantity being differentiated. Collapse the
+range to one point to pin it:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>grid-NNN-merged.yaml<span class="w"> </span>--pypolymlp<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--mlp-params<span class="o">=</span><span class="s2">"ntrain=..., ntest=..., reg_alpha_params = -3.0 -3.0 1"</span><span class="w"> </span>-v
 </pre></div>
@@ -1721,14 +1776,18 @@ therefore be extended, or generated in blocks, with
 <code class="docutils literal notranslate"><span class="pre">draw_standard_normals(...,</span> <span class="pre">first_snapshot=N)</span></code>.</p>
 <p>A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
 not promise that <code class="docutils literal notranslate"><span class="pre">Generator</span></code> distribution methods give the same stream across
-its own versions (NEP 19).</p>
-<p>The <span class="math notranslate nohighlight">\(\xi\)</span> themselves can be kept beside the training sets when the
-ensemble has to be reproducible:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
-<span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="s2">"normals.npz"</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ij</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+its own versions (NEP 19). <strong>Save the <span class="math notranslate nohighlight">\(\xi\)</span> themselves</strong>, which Script 5
+does, one <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> per temperature beside the training sets:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"normals-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">K.npz"</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ij</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
 </pre></div>
 </div>
+<p>Read one back with <code class="docutils literal notranslate"><span class="pre">np.load</span></code> and hand <code class="docutils literal notranslate"><span class="pre">(ii,</span> <span class="pre">ij)</span></code> to <code class="docutils literal notranslate"><span class="pre">run(standard_normals=)</span></code>,
+or to <code class="docutils literal notranslate"><span class="pre">draw_standard_normals(...,</span> <span class="pre">first_snapshot=N)</span></code> as the block already
+drawn. The displacements in each <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> record the ensemble that
+was run, and that is what the forces attach to, so a lost <code class="docutils literal notranslate"><span class="pre">npz</span></code> costs the
+extension rather than the training set.</p>
 </section>
 <section id="validate-the-mlp">
 <span id="anisotropic-qha-validate"></span><h3>Validate the MLP<a class="headerlink" href="#validate-the-mlp" title="Link to this heading">#</a></h3>
@@ -2170,7 +2229,8 @@ first few runs; <code class="docutils literal notranslate"><span class="pre">-vv
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variant-temperature-dependent-force-constants-from-per-grid-point-mlps">5. Variant: temperature-dependent force constants from per-grid-point MLPs</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-mlp-per-grid-point">One MLP per grid point</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-displacements">The training displacements</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-ridge-penalty">The descriptor and the ridge penalty</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pinning-the-ridge-penalty-across-the-grid">Pinning the ridge penalty across the grid</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sharing-one-draw-of-standard-normals">Sharing one draw of standard normals</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>

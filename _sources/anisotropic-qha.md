@@ -801,15 +801,18 @@ the dataset of step 3:
 
 from pathlib import Path
 
+import numpy as np
+
 from phonopy.interface.vasp import write_vasp
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 
-TRAIN = "train"
+TRAIN = Path("train")
 TEMPERATURES = (0.0, 100.0, 250.0, 400.0)  # K
 SNAPSHOTS = 50  # structures per grid point and temperature
 SEED = 20260815
 
 dataset = read_aniso_qha_dataset("aniso_qha_dataset.hdf5")
+TRAIN.mkdir(parents=True, exist_ok=True)
 
 for temperature in TEMPERATURES:
     normals = None
@@ -823,11 +826,21 @@ for temperature in TEMPERATURES:
             normals = rd.draw_standard_normals(
                 SNAPSHOTS, random_seed=SEED + int(temperature)
             )
+            # Keep the draw itself. The displacements below record the
+            # ensemble, but only these reproduce it, and extending it with
+            # first_snapshot needs them.
+            np.savez_compressed(
+                TRAIN / f"normals-{int(temperature)}K.npz",
+                ii=normals[0],
+                ij=normals[1],
+                seed=SEED + int(temperature),
+                temperature=temperature,
+            )
         rd.run(temperature, standard_normals=normals)
         phonon.dataset = {"displacements": rd.u.copy()}
 
         # The stored index is 0-origin; the directories are numbered from 001.
-        set_dir = Path(TRAIN) / f"grid-{point.index + 1:03d}-{int(temperature)}K"
+        set_dir = TRAIN / f"grid-{point.index + 1:03d}-{int(temperature)}K"
         set_dir.mkdir(parents=True, exist_ok=True)
         # The displacements have to be saved beside the supercells: it is what
         # phonopy-init -f attaches the forces to below.
@@ -843,8 +856,8 @@ for temperature in TEMPERATURES:
 
 Each set directory then holds `phonopy_disp.yaml` and
 `disp-001/POSCAR .. disp-050/POSCAR`, the same layout as the phonon grid of
-step 2. Run the calculator in every `disp-*`, then collect the forces of each
-set:
+step 2, and `train/` holds one `normals-*.npz` per temperature beside them.
+Run the calculator in every `disp-*`, then collect the forces of each set:
 
 ```bash
 % phonopy-init -f disp-*/vaspout.h5 --save-params
@@ -910,46 +923,81 @@ everything computed from it. To see by how much, draw a second set of the same
 size at one grid point, train a second MLP on it, and compare the frequencies
 the two give there.
 
-### The descriptor and the ridge penalty
+### The descriptor and the amount of training data
 
-Three choices interact here: how many features the descriptor has, how many
-structures the training set holds, and how hard the ridge penalty damps the
-fit. The penalty absorbs a mismatch between the first two, so it also tells
-whether they are matched.
+There are two things to choose here: how big a descriptor to use, and how
+many structures to train it on. The ridge penalty is not a third choice. It is
+what the fit falls back on when the descriptor is too large for the training
+set, so the penalty pypolymlp selects indicates whether the two are matched.
 
 `--mlp-params` also sets the descriptor. Example feature counts for a
 one-element system, with pypolymlp 0.20.5:
 
-| features | added to `--mlp-params` |
-|---|---|
-| 781 | nothing; the default |
-| 1,176 | `gaussian_params2 = 0 7 15` |
-| 2,600 | `gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` |
-| 3,848 | `gaussian_params2 = 0 7 15, gtinv_order = 4, gtinv_maxl = 16 12 4` |
-| 6,820 | `model_type = 4` |
-| 13,920 | `model_type = 4, gaussian_params2 = 0 7 15` |
-| 22,495 | `model_type = 4, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` |
-| 27,664 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` |
-| 45,680 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` |
+| features | model parameters added to `--mlp-params` | time |
+|---|---|---|
+| 781 | nothing; phonopy's defaults | 1.0 |
+| 1,176 | `gaussian_params2 = 0 7 15` | 1.2 |
+| 2,600 | `gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.6 |
+| 3,848 | `gaussian_params2 = 0 7 15, gtinv_order = 4, gtinv_maxl = 16 12 4` | 7.1 |
+| 6,820 | `model_type = 4` | 1.4 |
+| 13,920 | `model_type = 4, gaussian_params2 = 0 7 15` | 1.4 |
+| 22,495 | `model_type = 4, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 6.4 |
+| 27,664 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.9 |
+| 45,680 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 7.7 |
 
-A heavier descriptor costs more to fit and more to evaluate, and the SSCHA of
-this step evaluates it once per snapshot per iteration, so the choice sets the
-cost of the whole step.
+Phonopy's defaults are `model_type = 3`, `max_p = 2`, `gtinv_order = 3`,
+`gtinv_maxl = 8 8`, `gaussian_params2 = 0 7 10` and `cutoff = 8.0`. Phonopy
+passes them to pypolymlp itself. The other rows change one or two of them.
 
-A heavier descriptor also needs more training data to converge, and where the
-ridge penalty lands -- the alpha that `reg_alpha_params` scans -- is a cheap
-way to watch that. Fit the default range and see which penalty pypolymlp keeps: with
-too few structures the smallest test RMSE sits at the large-penalty end, and
-the optimum moves towards smaller penalties as structures are added, settling
-once there are enough of them. A descriptor whose optimum has not moved off
-the large end is held up by the training set rather than by the descriptor,
-and adding features will not help until adding structures does.
+The SSCHA of this step evaluates the descriptor once per snapshot per
+iteration, so the evaluation time sets the cost of the whole step. The last
+column is that time in one execution example, relative to the first row.
 
-**Pin the ridge penalty across the grid.** pypolymlp fits every penalty in
-`reg_alpha_params` and keeps the one with the smallest test RMSE, chosen
-separately at every grid point. The analysis differentiates across the grid,
-so a penalty that changes from one grid point to the next puts a step into the
-quantity being differentiated. Collapse the range to one point to pin it:
+The evaluation time is dominated by `gtinv_maxl` rather than by the feature
+count. The table holds two pairs that differ in `gtinv_maxl` alone, 1,176
+against 2,600 and 13,920 against 27,664, and both cost about four times more
+at `12 12` than at `8 8`. Raising `model_type` or the number of gaussians
+instead multiplies the feature count while adding a few tens of per cent to
+the time: 781 to 13,920 is eighteen times the features for 1.4 times the
+time. So a descriptor that gains its features that way can carry several
+times more of them for a fraction of the time.
+
+More evaluation time still usually buys a lower force RMSE, once there is
+enough training data to determine the extra features. The rule is only rough:
+a fast descriptor with many features can beat a slow one with few. A lower
+force RMSE also does not have to reach the thermal expansion, which is what
+this step is for. The next section says what the MLPs are judged by instead.
+
+How much training data a descriptor needs is a separate question. Fit with the
+default `reg_alpha_params`, which scans five penalties from 1e-3 to 1e1, and
+see which one pypolymlp keeps. With too few structures the penalty with the
+smallest test RMSE sits at the large-penalty end of the range. As structures
+are added, that penalty moves towards smaller values, and it stops moving once
+there are enough structures. If that penalty is still at the large end, the
+training set is what limits the accuracy, not the descriptor. Adding features
+will not help until more structures are added.
+
+Repeat that fit at several training-set sizes. Plot the selected penalty
+against the size, with one line per descriptor. A line that is still falling
+at the largest size has not converged. A line that has flattened has
+converged, and more structures will not improve that descriptor. Each point
+costs one fit. Running the SSCHA at every grid point and temperature, which is
+the next step, costs far more than that. Make this plot first.
+
+These two things are independent: how long a descriptor takes to evaluate, and
+how much training data it needs. A descriptor that is slow to evaluate may
+need only a few dozen structures, and a fast one may need many more. Use the
+last column to judge what a descriptor costs and what force RMSE it can reach.
+Use the selected penalty to judge whether the training set is large enough for
+it.
+
+### Pinning the ridge penalty across the grid
+
+pypolymlp fits every penalty in `reg_alpha_params` and keeps the one with the
+smallest test RMSE, chosen separately at every grid point. The analysis
+differentiates across the grid, so a penalty that changes from one grid point
+to the next puts a step into the quantity being differentiated. Collapse the
+range to one point to pin it:
 
 ```bash
 % phonopy grid-NNN-merged.yaml --pypolymlp \
@@ -1011,16 +1059,20 @@ therefore be extended, or generated in blocks, with
 
 A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
 not promise that `Generator` distribution methods give the same stream across
-its own versions (NEP 19).
-
-The {math}`\xi` themselves can be kept beside the training sets when the
-ensemble has to be reproducible:
+its own versions (NEP 19). **Save the {math}`\xi` themselves**, which Script 5
+does, one `normals-*.npz` per temperature beside the training sets:
 
 ```python
-import numpy as np
-
-np.savez_compressed("normals.npz", ii=normals[0], ij=normals[1])
+np.savez_compressed(
+    f"normals-{int(temperature)}K.npz", ii=normals[0], ij=normals[1]
+)
 ```
+
+Read one back with `np.load` and hand `(ii, ij)` to `run(standard_normals=)`,
+or to `draw_standard_normals(..., first_snapshot=N)` as the block already
+drawn. The displacements in each `phonopy_disp.yaml` record the ensemble that
+was run, and that is what the forces attach to, so a lost `npz` costs the
+extension rather than the training set.
 
 (anisotropic-qha-validate)=
 ### Validate the MLP

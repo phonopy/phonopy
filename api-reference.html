@@ -1302,11 +1302,17 @@ is used for test. Default is 0.1.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="phonopy.Phonopy.save_mlp">
-<span class="sig-name descname"><span class="pre">save_mlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.save_mlp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.save_mlp" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">save_mlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.save_mlp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.save_mlp" title="Link to this definition">#</a></dt>
 <dd><p>Save machine learning potential.</p>
+<p>With <cite>optimal</cite> False, every MLP fitted over the regularization
+parameters is written rather than only the best one. This requires
+pypolymlp&gt;=0.21.0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.14)"><em>PathLike</em></a><em> | </em><em>None</em>)</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.14)"><em>PathLike</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>optimal</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>

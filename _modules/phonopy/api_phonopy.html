@@ -1957,12 +1957,20 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="Phonopy.save_mlp">
 <a class="viewcode-back" href="../../api-reference.html#phonopy.Phonopy.save_mlp">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">save_mlp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Save machine learning potential."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_mlp</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">optimal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Save machine learning potential.</span>
+
+<span class="sd">        With `optimal` False, every MLP fitted over the regularization</span>
+<span class="sd">        parameters is written rather than only the best one. This requires</span>
+<span class="sd">        pypolymlp&gt;=0.21.0.</span>
+
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mlp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"MLP is not developed yet."</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_mlp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mlp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">optimal</span><span class="o">=</span><span class="n">optimal</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Phonopy.load_mlp">
