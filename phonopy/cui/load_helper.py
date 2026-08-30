@@ -442,11 +442,11 @@ def _develop_and_save_pypolymlp(
 ) -> None:
     """Develop MLPs by pypolymlp and save them into polymlp.yaml."""
     if forces_in_dataset(phonon.mlp_dataset):
+        if mlp_params is None:
+            pmlp_params = PypolymlpParams()
+        else:
+            pmlp_params = parse_mlp_params(mlp_params)
         if log_level:
-            if mlp_params is None:
-                pmlp_params = PypolymlpParams()
-            else:
-                pmlp_params = parse_mlp_params(mlp_params)
             print("Parameters:")
             for k, v in dataclasses.asdict(pmlp_params).items():
                 if v is not None:
@@ -454,7 +454,7 @@ def _develop_and_save_pypolymlp(
             print("Developing MLPs by pypolymlp...", flush=True)
 
         try:
-            phonon.develop_mlp(params=mlp_params)
+            phonon.develop_mlp(params=pmlp_params)
         except PypolymlpDevelopmentError as e:
             if log_level:
                 print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
@@ -464,7 +464,7 @@ def _develop_and_save_pypolymlp(
             _mlp_filename = "polymlp.yaml"
         else:
             _mlp_filename = mlp_filename
-        phonon.save_mlp(filename=_mlp_filename)
+        phonon.save_mlp(filename=_mlp_filename, optimal=pmlp_params.optimal)
         if log_level:
             print(f'MLPs were written into "{_mlp_filename}"', flush=True)
     else:

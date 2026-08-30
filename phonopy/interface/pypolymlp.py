@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypeVar
@@ -11,7 +12,11 @@ from typing import Any, Literal, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.exception import PypolymlpDevelopmentError, PypolymlpRelaxationError
+from phonopy.exception import (
+    PypolymlpDevelopmentError,
+    PypolymlpRelaxationError,
+    PypolymlpVersionError,
+)
 from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.harmonic.displacement import Type2DisplacementDataset
 from phonopy.physical_units import get_physical_units
@@ -114,6 +119,12 @@ class PypolymlpParams:
         is judged by something other than its own force error: selecting on
         test RMSE picks the least regularized model, whose weakly determined
         directions are free to differ between separately trained potentials.
+    optimal : bool, optional
+        Whether to keep only the MLP with the smallest test RMSE when the MLP
+        is written to file. With False, every ridge penalty of
+        reg_alpha_params that pypolymlp fitted is written, which is how one
+        fit yields the whole ladder. This parameter does not reach pypolymlp's
+        fit; it is read when the MLP is saved. Default is True.
 
     """
 
@@ -128,6 +139,7 @@ class PypolymlpParams:
     ntrain: int | None = None
     ntest: int | None = None
     reg_alpha_params: tuple[float, float, int] = (-3.0, 1.0, 5)
+    optimal: bool = True
 
 
 @dataclass
@@ -632,6 +644,7 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
     ntrain: Optional[int] = None
     ntest: Optional[int] = None
     reg_alpha_params: Sequence[float, float, int] = (-3.0, 1.0, 5)
+    optimal: bool = True
 
     Parameters
     ----------
@@ -645,7 +658,10 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
         "cutoff = 10.0, gtinv_maxl = 8 8"
         "atom_energies = Si -0.35864636 O -0.95743902"
         "reg_alpha_params = -1.0 -1.0 1"
+        "optimal = .false."
 
+    An unrecognized key is ignored without a warning, so a misspelt parameter
+    silently leaves its default in place.
 
     """
     if isinstance(params, dict):
@@ -674,11 +690,23 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
                     raise ValueError(
                         "The input list must have an even number of elements."
                     )
+                # The values were lower-cased above, so the symbols are put
+                # back into the spelling of an element: Na, not na.
                 params_dict[key] = {
-                    vals[i]: float(vals[i + 1]) for i in range(0, len(vals), 2)
+                    vals[i].capitalize(): float(vals[i + 1])
+                    for i in range(0, len(vals), 2)
                 }
             elif key == "cutoff":
                 params_dict[key] = float(val)
+            elif key == "optimal":
+                # val is lower-cased above, and both the conf-file style and
+                # the bare word are accepted.
+                if val in (".true.", "true"):
+                    params_dict[key] = True
+                elif val in (".false.", "false"):
+                    params_dict[key] = False
+                else:
+                    raise ValueError(f'"optimal" must be true or false, not "{val}".')
             else:
                 if key in ("model_type", "max_p", "gtinv_order", "ntrain", "ntest"):
                     params_dict[key] = int(val)
@@ -687,9 +715,50 @@ def parse_mlp_params(params: str | dict | PypolymlpParams) -> PypolymlpParams:
         raise RuntimeError("params has to be dict, str, or PypolymlpParams.")
 
 
-def save_pypolymlp(mlp: Pypolymlp, filename: str) -> None:  # type: ignore
-    """Save MLP data to file."""
-    mlp.save_mlp(filename=filename)
+def save_pypolymlp(  # type: ignore
+    mlp: Pypolymlp, filename: str | os.PathLike, optimal: bool = True
+) -> None:
+    """Save MLP data to file.
+
+    Parameters
+    ----------
+    mlp : Pypolymlp
+        Developed MLP.
+    filename : str or os.PathLike
+        File name to write the MLP into.
+    optimal : bool, optional
+        With True, only the MLP with the lowest prediction error is written.
+        With False, every MLP that pypolymlp fitted over its regularization
+        parameters is written, as `filename`.v01, `filename`.v02, ...,
+        accompanied by a log file listing their regularization parameters and
+        test errors. The number is the position in the regularization ladder
+        rather than a count of the files written, so a fit that pypolymlp
+        discarded leaves a gap. The log is written beside `filename` with its
+        suffix
+        replaced by ".log", since pypolymlp would otherwise put it in the
+        current directory whatever `filename` says. This requires
+        pypolymlp>=0.21.0. Default is True.
+
+    """
+    # pypolymlp builds the versioned names by concatenating strings, so a
+    # PathLike must be converted here rather than passed through.
+    path = pathlib.Path(filename)
+    if optimal:
+        mlp.save_mlp(filename=str(path))
+        return
+
+    # pypolymlp<0.21.0 has no `optimal` parameter. The TypeError it raises is
+    # chained so that one raised inside save_mlp remains visible.
+    try:
+        mlp.save_mlp(
+            filename=str(path),
+            filename_log=str(path.with_suffix(".log")),
+            optimal=False,
+        )
+    except TypeError as e:
+        raise PypolymlpVersionError(
+            "Writing all MLPs requires pypolymlp>=0.21.0."
+        ) from e
 
 
 def load_pypolymlp(filename: str | os.PathLike | None) -> Pypolymlp:  # type: ignore

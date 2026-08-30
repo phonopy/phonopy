@@ -257,11 +257,44 @@ def test_free_energies_checked_against_the_run(tmp_path: pathlib.Path) -> None:
     with pytest.raises(ValueError, match="hold phonon free energies"):
         _read_free_energies(str(path), "electronic", temperatures, lengths)
     with pytest.raises(ValueError, match="different temperature grid"):
-        _read_free_energies(str(path), "phonon", np.arange(0.0, 51.0, 10.0), lengths)
+        # Reaches past the file.
+        _read_free_energies(str(path), "phonon", np.arange(0.0, 151.0, 10.0), lengths)
+    with pytest.raises(ValueError, match="different temperature grid"):
+        # Inside the file's range, but on temperatures it does not hold.
+        _read_free_energies(str(path), "phonon", np.arange(0.0, 51.0, 5.0), lengths)
     with pytest.raises(ValueError, match="grid points against"):
         _read_free_energies(str(path), "phonon", temperatures, lengths[:2])
     with pytest.raises(ValueError, match="different grid points"):
         _read_free_energies(str(path), "phonon", temperatures, lengths + 0.5)
+
+
+def test_free_energies_over_a_wider_range(tmp_path: pathlib.Path) -> None:
+    """A file covering more temperatures than the run is narrowed to the run.
+
+    One expensive sweep to a high temperature is then replotted over any
+    subset of its own grid.
+
+    """
+    from phonopy.qha.free_energy_io import write_free_energies_hdf5
+
+    stored = np.arange(0.0, 1001.0, 10.0)
+    values = -0.01 * (stored[:, None] / 100.0) ** 2 * np.arange(1, 4)[None, :]
+    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
+    path = tmp_path / "fe.hdf5"
+    write_free_energies_hdf5(
+        stored, values, path, kind="phonon", lattice_lengths=lengths
+    )
+
+    wanted = np.arange(0.0, 401.0, 10.0)
+    read = _read_free_energies(str(path), "phonon", wanted, lengths)
+    assert read.shape == (len(wanted), 3)
+    np.testing.assert_allclose(read, values[: len(wanted)])
+
+    # Every second temperature, which is a subset but not a leading slice.
+    coarse = np.arange(0.0, 401.0, 20.0)
+    read = _read_free_energies(str(path), "phonon", coarse, lengths)
+    assert read.shape == (len(coarse), 3)
+    np.testing.assert_allclose(read, values[: len(wanted) : 2])
 
 
 def test_phonon_free_energies_round_trip(
