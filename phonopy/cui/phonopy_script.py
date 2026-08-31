@@ -35,7 +35,9 @@ from phonopy.cui.phonopy_argparse import (
     PhonopyMockArgs,
     get_collect_parser,
     get_parser,
+    get_symmetry_parser,
     resolve_collect_args,
+    resolve_symmetry_args,
     show_deprecated_option_warnings,
 )
 from phonopy.cui.settings import (
@@ -1631,6 +1633,10 @@ def _start_phonopy(load_phonopy_yaml: bool = False, mode: str | None = None):
         parser, deprecated = get_collect_parser()
         args = parser.parse_args()
         resolve_collect_args(args, parser)
+    elif mode == "symmetry":
+        parser, deprecated = get_symmetry_parser()
+        args = parser.parse_args()
+        resolve_symmetry_args(args)
     else:
         parser, deprecated = get_parser(load_phonopy_yaml=load_phonopy_yaml)
         args = parser.parse_args()
@@ -2022,6 +2028,12 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             "load_phonopy_yaml": False,
             "mode": "collect",
         }
+    For the phonopy-symmetry command (experimental; crystal symmetry
+    display):
+        argparse_control = {
+            "load_phonopy_yaml": False,
+            "mode": "symmetry",
+        }
     For the phonopy-load command (deprecated alias of phonopy):
         argparse_control = {
             "load_phonopy_yaml": True,
@@ -2047,11 +2059,15 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     # CLI mode. "init" handles operations that run before phonon calculation
     # and exit (displacement generation, FORCE_SETS/FORCE_CONSTANTS file
     # creation from external calculator results, symmetry display). "collect"
-    # is the FORCE_SETS creation subset of "init", offered separately by the
-    # experimental phonopy-collect. "run" is the phonon-calculation workflow.
+    # is the FORCE_SETS creation subset of "init", and "symmetry" its
+    # symmetry display, offered separately by the experimental
+    # phonopy-collect and phonopy-symmetry. "run" is the phonon-calculation
+    # workflow.
     # When unset (e.g. from pytest harnesses that exercise either flow), no
     # mode-based enforcement happens.
-    mode: Literal["init", "run", "collect"] | None = argparse_control.get("mode")
+    mode: Literal["init", "run", "collect", "symmetry"] | None = argparse_control.get(
+        "mode"
+    )
     deprecated_command = argparse_control.get("deprecated_command")
     if deprecated_command is not None:
         print("")
@@ -2091,7 +2107,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             print("Pure and Applied Chemistry, 88(3), 265-291 (2016).")
             print("")
 
-    # phonopy --symmetry (phonopy-init only)
+    # phonopy-init --symmetry, and the whole of phonopy-symmetry.
     run_symmetry_info = getattr(args, "is_check_symmetry", False)
 
     ##################################################
