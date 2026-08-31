@@ -430,12 +430,17 @@ def _read_electronic_states(
     two. A file written before they were stored reads back as a k-point sum,
     which is what it was.
 
+    `volume` is set from the same cell whether or not the grid is there. It is
+    what says which cell these states describe, and the analysis needs that to
+    put F_el on the primitive-cell normalization of the phonon free energy.
+
     """
     has_grid = "kpoints" in eg and "mesh" in eg
     return ElectronicStates(
         eigenvalues=eg["eigenvalues"][:],
         weights=eg["weights"][:],
         n_electrons=float(eg["n_electrons"][()]),
+        volume=None if cell is None else float(cell.volume),
         spin_degeneracy=(
             int(eg["spin_degeneracy"][()]) if "spin_degeneracy" in eg else None
         ),

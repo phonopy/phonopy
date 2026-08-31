@@ -438,9 +438,12 @@ def run() -> None:
     )
 
     if electronic_structures is not None:
+        # Handed on as electronic_free_energies, which run_anisotropic_qha
+        # takes as it is, so the normalization has to be settled here.
         electronic_free_energies, _ = compute_electronic_contributions_from_states(
             electronic_structures,
             temperatures,
+            primitive_volumes=[ph.primitive.volume for ph in phonopys],
             window=args.electronic_window,
             energy_spacing=args.electronic_spacing,
             require_tetrahedron=True,

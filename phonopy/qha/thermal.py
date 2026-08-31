@@ -97,9 +97,78 @@ def compute_thermal_properties(
     return fe_phonon, entropy, cv
 
 
+def _states_cell_volume(electronic_states: ElectronicStates) -> float | None:
+    """Return the volume of the cell the states were computed on.
+
+    The states record that cell in one of two ways, depending on where they
+    came from, and neither is always there. A VASP reader sets ``cell``, and
+    the anisotropic dataset restores it from the grid-point lattice; the
+    electronic_states.hdf5 of the volume-path workflow keeps ``volume``
+    instead. None means the states say nothing, and the caller then has to
+    take them as already normalized.
+
+    """
+    if electronic_states.cell is not None:
+        return float(electronic_states.cell.volume)
+    if electronic_states.volume is not None:
+        return float(electronic_states.volume)
+    return None
+
+
+def primitive_cell_fractions(
+    electronic_structures: Sequence[ElectronicStates],
+    primitive_volumes: Sequence[float] | NDArray[np.double] | None,
+) -> NDArray[np.double]:
+    """Return the factor putting each states quantity per primitive cell.
+
+    Phonon thermal properties are per primitive cell, while a calculator
+    reports quantities for the cell it was run on. The two cells coincide for
+    a primitive lattice and differ by the centring multiplicity otherwise.
+    The factor is the ratio of the two volumes, so it is read off the data
+    rather than assumed: states computed on the primitive cell already give
+    1, and nothing is scaled twice.
+
+    It is 1 as well when primitive_volumes is None, or when the states record
+    no cell of their own.
+
+    Not every driver needs this. run_qha requires the states to sit on the
+    same cell as the phonons and checks their volume, so whatever cell
+    ph.primitive is -- the unit cell included -- one normalization already
+    runs through its inputs. The anisotropic driver cannot ask for that: its
+    reference is the conventional cell, from which the free lattice DOF are
+    read, while primitive_matrix picks the primitive cell out of it, so a
+    centred lattice puts the calculator's cell and the phonon normalization
+    apart by construction.
+
+    """
+    fractions = np.ones(len(electronic_structures), dtype="double")
+    if primitive_volumes is None:
+        return fractions
+    volumes = np.asarray(primitive_volumes, dtype="double")
+    for i, electronic_states in enumerate(electronic_structures):
+        states_volume = _states_cell_volume(electronic_states)
+        if states_volume is not None and states_volume > 0.0:
+            fractions[i] = volumes[i] / states_volume
+    return fractions
+
+
+def _report_primitive_cell_scaling(fractions: NDArray[np.double]) -> None:
+    """Print the conversion to the primitive cell when there is one."""
+    if np.allclose(fractions, 1.0):
+        return
+    ratios = sorted({round(1.0 / f, 6) for f in fractions})
+    named = ", ".join(f"{r:g}" for r in ratios)
+    print(
+        f"The states were computed on a cell {named} times the primitive "
+        f"cell, so F_el is scaled to the primitive cell."
+    )
+
+
 def compute_electronic_contributions_from_states(
     electronic_structures: Sequence[ElectronicStates],
     temperatures: NDArray[np.double],
+    *,
+    primitive_volumes: Sequence[float] | NDArray[np.double] | None,
     window: float | None = None,
     energy_spacing: float = 0.0005,
     require_tetrahedron: bool = False,
@@ -110,6 +179,13 @@ def compute_electronic_contributions_from_states(
     eV/K, respectively. fe_el_rel = fe(T) - fe(0) is anchored at T = 0,
     which is evaluated explicitly so that the temperature grid does not
     need to start at 0 K.
+
+    The states are integrated over the cell they were computed on. Given
+    primitive_volumes, the result is scaled to that normalization by
+    primitive_cell_fractions. primitive_volumes is keyword-only and has no
+    default, so that a caller adding phonon quantities to these has to say
+    which cell it normalizes to; pass None when the caller has already
+    established that the states and the phonons share one cell.
 
     States carrying the k-point grid they were computed on are integrated by
     the linear tetrahedron method, the rest by the k-point sum, which
@@ -160,7 +236,10 @@ def compute_electronic_contributions_from_states(
         # covers both.
         fe_el_rel[:, i] = fe[1:] - fe[0]
         s_el[:, i] = s[1:]
-    return fe_el_rel, s_el
+
+    fractions = primitive_cell_fractions(electronic_structures, primitive_volumes)
+    _report_primitive_cell_scaling(fractions)
+    return fe_el_rel * fractions, s_el * fractions
 
 
 def _report_electronic_integration(

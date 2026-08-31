@@ -24,9 +24,18 @@ file that already carries the forces (as written by ``phonopy-init -f``). The
 latter keeps the force collection in phonopy's own tools, so this command
 need not know how the displaced supercells were laid out.
 
-In either case the grid-point cell is the relaxed cell of the static single
-point, so internal-coordinate relaxation is honored. The displacements and
-forces are stored raw; the analysis recomputes the force constants.
+In either case the grid-point cell comes from the phonon entry, which Script 2
+of the documentation builds on the relaxed static cell, so internal-coordinate
+relaxation is honored. Without --phonon there is no phonon entry and the static
+cell becomes the grid point, which then has to be the conventional unit cell:
+the free lattice DOF are read from its lattice-vector rows. The displacements
+and forces are stored raw; the analysis recomputes the force constants.
+
+U is stored per primitive cell, on the same normalization as the phonon free
+energy of the analysis. The static single point may have been run on the unit
+cell or on the primitive cell, so U is scaled by the primitive cell's share of
+whichever it was, read off the atom counts. The factor is 1 unless the lattice
+is centred and the run used the unit cell.
 
 The static single point must come from VASP: the internal energy U(a, c) and
 the electronic states are read from VASP outputs (vaspout.h5 / vasprun.xml),
@@ -239,15 +248,33 @@ def load_phonon(path: str) -> Phonopy:
     return ph
 
 
+def primitive_cell_fraction(
+    primitive: PhonopyAtoms, static_cell: PhonopyAtoms
+) -> float:
+    """Return the primitive cell as a fraction of the cell U was computed on.
+
+    U is multiplied by this before it is stored, which puts it on the
+    primitive-cell normalization of the phonon free energy. The static single
+    point may be run on the conventional unit cell or on the primitive cell,
+    whichever suits the calculation -- a long rhombohedral cell is easier to
+    handle in its hexagonal setting -- so which one it was is read off the
+    atom counts rather than assumed. Atom counts are used because strain
+    changes the volumes but not them. The result is 1, 1/2, 1/3 or 1/4.
+
+    """
+    return len(primitive) / len(static_cell)
+
+
 def _check_paired_cells(
     index: int,
     static_path: str,
     static_cell: PhonopyAtoms,
     phonon_path: str,
     phonon_cell: PhonopyAtoms,
+    phonon_primitive: PhonopyAtoms,
     rtol: float = 1e-5,
 ) -> None:
-    """Raise unless the paired static and phonon entries are the same cell.
+    """Raise unless the static entry is a cell of the phonon grid point.
 
     --static and --phonon are paired by position, so a point missing from each
     list would pair the U of one lattice with the forces of another and go
@@ -256,16 +283,29 @@ def _check_paired_cells(
     directories are named. Only the lattice is compared, because a relaxation
     moves the internal coordinates while the lattice is what the grid samples.
 
+    The static single point may be run on the grid point's unit cell or on its
+    primitive cell, so both are accepted. A mis-pairing still fails, since the
+    lattice of another grid point matches neither.
+
     """
     static_lengths = np.linalg.norm(np.array(static_cell.cell), axis=1)
-    phonon_lengths = np.linalg.norm(np.array(phonon_cell.cell), axis=1)
-    if np.allclose(static_lengths, phonon_lengths, rtol=rtol, atol=0.0):
-        return
+    accepted = {"unit cell": phonon_cell, "primitive cell": phonon_primitive}
+    for lengths in (
+        np.linalg.norm(np.array(candidate.cell), axis=1)
+        for candidate in accepted.values()
+    ):
+        if np.allclose(static_lengths, lengths, rtol=rtol, atol=0.0):
+            return
+    named = "\n".join(
+        f"  {phonon_path} {label}: a, b, c = "
+        f"{np.round(np.linalg.norm(np.array(candidate.cell), axis=1), 6).tolist()}"
+        for label, candidate in accepted.items()
+    )
     raise SystemExit(
-        f"Grid point {index}: the static and phonon entries are different "
-        f"cells, so they are mis-paired.\n"
+        f"Grid point {index}: the static entry is neither the unit cell nor "
+        f"the primitive cell of the phonon entry, so they are mis-paired.\n"
         f"  {static_path}: a, b, c = {np.round(static_lengths, 6).tolist()}\n"
-        f"  {phonon_path}: a, b, c = {np.round(phonon_lengths, 6).tolist()}\n"
+        f"{named}\n"
         f"--static and --phonon are paired by position; check that the two "
         f"lists enumerate the grid points in the same order."
     )
@@ -273,7 +313,7 @@ def _check_paired_cells(
 
 def build_calculator_grid_point(
     index: int, static_path: str, phonon_path: str, with_electronic: bool
-) -> AnisoQHAGridPoint:
+) -> tuple[AnisoQHAGridPoint, float]:
     """Assemble one grid point from pre-computed calculator outputs.
 
     The cell, supercell / primitive matrices, displacements and forces come
@@ -286,8 +326,11 @@ def build_calculator_grid_point(
     assert dataset is not None
 
     static_cell, energy, _, _ = read_vasprun_calculation(static_path)
-    _check_paired_cells(index, static_path, static_cell, phonon_path, ph.unitcell)
+    _check_paired_cells(
+        index, static_path, static_cell, phonon_path, ph.unitcell, ph.primitive
+    )
     electronic = read_electronic_states(static_path) if with_electronic else None
+    fraction = primitive_cell_fraction(ph.primitive, static_cell)
 
     return AnisoQHAGridPoint(
         index=index,
@@ -295,14 +338,14 @@ def build_calculator_grid_point(
         supercell_matrix=np.array(ph.supercell_matrix, dtype="int64"),
         primitive_matrix=np.array(ph.primitive_matrix, dtype="double"),
         dataset=dataset,
-        internal_energy=energy,
+        internal_energy=energy * fraction,
         electronic_states=electronic,
-    )
+    ), fraction
 
 
 def build_static_grid_point(
     index: int, static_path: str, reference: Phonopy, with_electronic: bool
-) -> AnisoQHAGridPoint:
+) -> tuple[AnisoQHAGridPoint, float]:
     """Assemble one grid point from the static single point alone.
 
     No phonon calculation is read, so the grid point carries no displacement
@@ -315,7 +358,19 @@ def build_static_grid_point(
 
     """
     cell, energy, _, _ = read_vasprun_calculation(static_path)
+    if len(cell) != len(reference.unitcell):
+        raise SystemExit(
+            f"Grid point {index}: the static entry has {len(cell)} atoms "
+            f"against the {len(reference.unitcell)} of the reference unit "
+            f"cell.\n  {static_path}\n"
+            f"Without --phonon this cell becomes the grid point, and the free "
+            f"lattice DOF are read from its lattice-vector rows, so it has to "
+            f"be the conventional unit cell. Run the static single point on "
+            f"that cell, or supply --phonon as well, where the grid-point cell "
+            f"comes from the phonon entry and the static one may be either."
+        )
     electronic = read_electronic_states(static_path) if with_electronic else None
+    fraction = primitive_cell_fraction(reference.primitive, cell)
 
     return AnisoQHAGridPoint(
         index=index,
@@ -323,9 +378,9 @@ def build_static_grid_point(
         supercell_matrix=np.array(reference.supercell_matrix, dtype="int64"),
         primitive_matrix=np.array(reference.primitive_matrix, dtype="double"),
         dataset=None,
-        internal_energy=energy,
+        internal_energy=energy * fraction,
         electronic_states=electronic,
-    )
+    ), fraction
 
 
 def resolve_static_paths(args: Namespace) -> list[tuple[int, str]]:
@@ -469,6 +524,7 @@ def run() -> None:
     indices = [idx for idx, _ in static_paths]
 
     points = []
+    fractions = []
     if not args.phonon:
         print(
             f"No --phonon given: building from the static grid alone, "
@@ -477,20 +533,29 @@ def run() -> None:
             f"argument of run_anisotropic_qha."
         )
         for idx, static_path in static_paths:
-            points.append(
-                build_static_grid_point(idx, static_path, reference, args.electronic)
+            point, fraction = build_static_grid_point(
+                idx, static_path, reference, args.electronic
             )
+            points.append(point)
+            fractions.append(fraction)
     else:
         phonon_paths = resolve_phonon_paths(args, indices)
         print(f"Reading pre-computed forces for {len(phonon_paths)} grid point(s)")
         for (idx, static_path), phonon_path in zip(
             static_paths, phonon_paths, strict=True
         ):
-            points.append(
-                build_calculator_grid_point(
-                    idx, static_path, phonon_path, args.electronic
-                )
+            point, fraction = build_calculator_grid_point(
+                idx, static_path, phonon_path, args.electronic
             )
+            points.append(point)
+            fractions.append(fraction)
+
+    for n_cells in sorted({int(round(1.0 / f)) for f in fractions if f != 1.0}):
+        print(
+            f"The static single point was run on a cell holding {n_cells} "
+            f"primitive cells, so U is stored as 1/{n_cells} of the "
+            f"calculator energy, matching the phonon free energy."
+        )
 
     for point in points:
         print(

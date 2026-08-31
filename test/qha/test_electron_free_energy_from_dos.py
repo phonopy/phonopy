@@ -220,7 +220,9 @@ def test_qha_integrates_by_tetrahedron_when_the_states_carry_the_grid():
     temperatures = np.array([300.0])
     states = _half_filled_band([8, 8, 8])
 
-    fe_el_rel, _ = compute_electronic_contributions_from_states([states], temperatures)
+    fe_el_rel, _ = compute_electronic_contributions_from_states(
+        [states], temperatures, primitive_volumes=None
+    )
     tetrahedron, _ = compute_free_energy_by_tetrahedron(states, np.array([0.0, 300.0]))
 
     assert fe_el_rel[0, 0] == pytest.approx(tetrahedron[-1])
@@ -233,7 +235,9 @@ def test_qha_falls_back_to_the_kpoint_sum_without_the_grid():
         _half_filled_band([8, 8, 8]), kpoints=None, mesh=None, cell=None
     )
 
-    fe_el_rel, _ = compute_electronic_contributions_from_states([states], temperatures)
+    fe_el_rel, _ = compute_electronic_contributions_from_states(
+        [states], temperatures, primitive_volumes=None
+    )
     k_sum, _ = compute_free_energy_and_entropy(states, np.array([0.0, 300.0]))
 
     assert fe_el_rel[0, 0] == pytest.approx(k_sum[-1] - k_sum[0])
@@ -250,17 +254,21 @@ def test_the_integration_method_is_reported(capsys):
     with_grid = _half_filled_band([8, 8, 8])
     without_grid = dataclasses.replace(with_grid, kpoints=None, mesh=None, cell=None)
 
-    compute_electronic_contributions_from_states([with_grid], temperatures)
+    compute_electronic_contributions_from_states(
+        [with_grid], temperatures, primitive_volumes=None
+    )
     out = capsys.readouterr().out
     # The window and the spacing are reported too: they set what the tetrahedron
     # integrated, and a file of free energies keeps no record of them.
     assert "linear tetrahedron method (1 point, +-0.50 eV at 0.50 meV)" in out
 
-    compute_electronic_contributions_from_states([without_grid], temperatures)
+    compute_electronic_contributions_from_states(
+        [without_grid], temperatures, primitive_volumes=None
+    )
     assert "k-point sum (1 point)" in capsys.readouterr().out
 
     compute_electronic_contributions_from_states(
-        [with_grid, without_grid], temperatures
+        [with_grid, without_grid], temperatures, primitive_volumes=None
     )
     out = capsys.readouterr().out
     assert "tetrahedron method (1 point," in out
