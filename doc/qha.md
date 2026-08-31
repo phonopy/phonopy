@@ -355,9 +355,7 @@ for i in range(11):
         )
     )
 
-result = run_qha(
-    phonopys, temperatures, electronic_structures=electronic_structures
-)
+result = run_qha(phonopys, temperatures, electronic_structures=electronic_structures)
 ```
 
 Since the electronic states carry the volumes and the static internal
@@ -405,9 +403,7 @@ with `read_electronic_states_hdf5`:
 from phonopy.qha.electron import read_electronic_states_hdf5
 
 electronic_structures = read_electronic_states_hdf5("electronic_states.hdf5")
-result = run_qha(
-    phonopys, temperatures, electronic_structures=electronic_structures
-)
+result = run_qha(phonopys, temperatures, electronic_structures=electronic_structures)
 ```
 
 (phonopy_qha_lattice_parameters)=

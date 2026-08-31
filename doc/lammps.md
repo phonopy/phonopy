@@ -159,10 +159,12 @@ from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.interface.calculator import write_supercells_with_displacements
 
 cell = read_cell_yaml("phonopy_unitcell.yaml")
-ph = phonopy.load(unitcell=cell, supercell_matrix=[2, 2, 2], calculator='lammps')
+ph = phonopy.load(unitcell=cell, supercell_matrix=[2, 2, 2], calculator="lammps")
 ph.generate_displacements()
 ph.save("phonopy_disp.yaml")
-write_supercells_with_displacements("lammps", ph.supercell, ph.supercells_with_displacements)
+write_supercells_with_displacements(
+    "lammps", ph.supercell, ph.supercells_with_displacements
+)
 ```
 
 With route (b), `phonopy_disp.yaml` stores the cell in the original (unrotated)

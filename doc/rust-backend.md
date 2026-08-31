@@ -88,8 +88,8 @@ The constructor and loader take a `lang` keyword:
 ```python
 import phonopy
 
-ph = phonopy.load("phonopy_disp.yaml")                # lang="Rust" (default)
-ph_c = phonopy.load("phonopy_disp.yaml", lang="C")    # legacy C backend
+ph = phonopy.load("phonopy_disp.yaml")  # lang="Rust" (default)
+ph_c = phonopy.load("phonopy_disp.yaml", lang="C")  # legacy C backend
 ```
 
 The current value is exposed as the read-only `Phonopy.lang` property.

@@ -145,8 +145,10 @@ import phonopy
 ph = phonopy.load("phonopy_params.yaml")
 ph.generate_displacements(number_of_snapshots=10000, temperature=300)
 u = np.linalg.norm(ph.displacements, axis=2)
-print(f"mean {u.mean():.3f}  p99 {np.percentile(u, 99):.3f}  "
-      f"p99.9 {np.percentile(u, 99.9):.3f}  max {u.max():.3f}")
+print(
+    f"mean {u.mean():.3f}  p99 {np.percentile(u, 99):.3f}  "
+    f"p99.9 {np.percentile(u, 99.9):.3f}  max {u.max():.3f}"
+)
 ```
 
 For the KCl of this example at 300 K this gives mean 0.244, p99 0.515, p99.9
@@ -698,9 +700,7 @@ from phonopy.sscha.core import MLPSSCHA
 ph = phonopy.load("phonopy_sscha_fc_10.yaml.xz", log_level=0)
 ph.load_mlp("polymlp.yaml")
 
-sscha = MLPSSCHA(
-    ph, ph.mlp, temperature=300.0, number_of_snapshots=1000, mesh=100.0
-)
+sscha = MLPSSCHA(ph, ph.mlp, temperature=300.0, number_of_snapshots=1000, mesh=100.0)
 sscha.sample_supercells()
 sscha.calculate_free_energy()
 
@@ -806,6 +806,7 @@ be converted to `polymlp.yaml` using the following Python snippet.
 
 ```python
 from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
+
 polymlp = Pypolymlp()
 polymlp.convert_to_yaml(filename_txt="phonopy.pmlp", filename_yaml="polymlp.yaml")
 ```

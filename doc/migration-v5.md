@@ -65,7 +65,7 @@ frequencies = d["frequencies"]
 **Replacement:**
 
 ```python
-bs = ph.run_band_structure(paths)   # returns a BandStructure
+bs = ph.run_band_structure(paths)  # returns a BandStructure
 frequencies = bs.frequencies
 # or, equivalently, through the property:
 frequencies = ph.band_structure.frequencies
@@ -84,7 +84,7 @@ free_energy = d["free_energy"]
 **Replacement:**
 
 ```python
-tp = ph.run_thermal_properties()    # returns a ThermalProperties
+tp = ph.run_thermal_properties()  # returns a ThermalProperties
 free_energy = tp.free_energy
 ```
 
