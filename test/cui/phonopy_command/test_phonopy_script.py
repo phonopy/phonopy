@@ -6,6 +6,7 @@ from __future__ import annotations
 import itertools
 import os
 import pathlib
+import sys
 import tempfile
 from unittest.mock import MagicMock, patch
 
@@ -20,7 +21,9 @@ from phonopy.cui.phonopy_argparse import (
     get_collect_parser,
     get_init_parser,
     get_run_parser,
+    get_symmetry_parser,
     resolve_collect_args,
+    resolve_symmetry_args,
 )
 from phonopy.cui.phonopy_script import (
     _detect_collect_operation,
@@ -1744,6 +1747,82 @@ def test_phonopy_collect_creates_force_sets():
             _check_no_files()
         finally:
             os.chdir(original_cwd)
+
+
+def test_symmetry_parser_takes_the_cell_as_an_argument():
+    """phonopy-symmetry takes the unit cell as its one argument."""
+    parser, _ = get_symmetry_parser()
+    args = parser.parse_args(["--qe", "--tolerance", "1e-3", "NaCl.in"])
+    resolve_symmetry_args(args)
+    assert args.cell_filename == "NaCl.in"
+    assert args.qe_mode is True
+    assert args.symmetry_tolerance == 1e-3
+    # phonopy-symmetry reads no configuration file.
+    assert args.filename == []
+
+
+def test_symmetry_parser_without_a_cell():
+    """Without an argument the calculator's default file name is used."""
+    parser, _ = get_symmetry_parser()
+    args = parser.parse_args([])
+    resolve_symmetry_args(args)
+    assert args.cell_filename is None
+
+
+def test_symmetry_parser_sets_is_check_symmetry():
+    """The command means --symmetry, which is what drives the settings.
+
+    Setting it is not cosmetic: it injects the dummy ``dim``, without which
+    the cell cannot be read at all for want of a supercell matrix.
+
+    """
+    parser, _ = get_symmetry_parser()
+    args = parser.parse_args(["POSCAR-unitcell"])
+    resolve_symmetry_args(args)
+    assert args.is_check_symmetry is True
+
+    settings = PhonopyConfParser(args=args, load_phonopy_yaml=False).settings
+    np.testing.assert_array_equal(settings.supercell_matrix, np.eye(3, dtype=int))
+
+
+@pytest.mark.parametrize(
+    "flag", ["-d", "--rd", "-f", "--fz", "--fc", "--nosym", "--mass", "--sp", "-c"]
+)
+def test_symmetry_parser_rejects_flags_it_does_not_offer(flag: str):
+    """Only what the symmetry display actually reads is offered."""
+    parser, _ = get_symmetry_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([flag, "POSCAR-unitcell"])
+
+
+def test_symmetry_parser_rejects_dim():
+    """--dim replaces the display with a file, so it is left to phonopy-init."""
+    parser, _ = get_symmetry_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--dim", "2", "2", "2", "POSCAR-unitcell"])
+
+
+def test_phonopy_symmetry_shows_symmetry(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    """phonopy-symmetry reads a cell, prints its symmetry and writes the cells."""
+    from phonopy.scripts.phonopy_symmetry import run
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["phonopy-symmetry", str(cwd / "POSCAR-unitcell_Cr")]
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        run()
+    assert excinfo.value.code == 0
+
+    captured = capsys.readouterr()
+    assert "space_group_type:" in captured.out
+
+    for created_filename in ("BPOSCAR", "PPOSCAR", "phonopy_symcells.yaml"):
+        assert (tmp_path / created_filename).exists()
 
 
 def _get_phonopy_args(

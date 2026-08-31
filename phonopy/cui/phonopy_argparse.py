@@ -78,8 +78,8 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
     _add_logging_options(parser)
 
 
-def _add_common_options(parser: argparse.ArgumentParser) -> None:
-    """Add options accepted by every command flavor."""
+def _add_cell_options(parser: argparse.ArgumentParser) -> None:
+    """Add options that shape how the input cell is read."""
     parser.add_argument(
         "--pa",
         "--primitive-axis",
@@ -95,13 +95,6 @@ def _add_common_options(parser: argparse.ArgumentParser) -> None:
         type=float,
         default=None,
         help="Symmetry tolerance to search",
-    )
-    parser.add_argument(
-        "--nosym",
-        dest="is_nosym",
-        action="store_true",
-        default=None,
-        help="Symmetry is not imposed.",
     )
     parser.add_argument(
         "--magmom",
@@ -136,6 +129,18 @@ def _add_common_options(parser: argparse.ArgumentParser) -> None:
             "separate species-resolved atoms instead of merging them into "
             "mixed-species sites."
         ),
+    )
+
+
+def _add_common_options(parser: argparse.ArgumentParser) -> None:
+    """Add options accepted by every command flavor."""
+    _add_cell_options(parser)
+    parser.add_argument(
+        "--nosym",
+        dest="is_nosym",
+        action="store_true",
+        default=None,
+        help="Symmetry is not imposed.",
     )
     parser.add_argument(
         "--mass",
@@ -1158,6 +1163,59 @@ def resolve_collect_args(
             "--fz names the supercell without displacement; the displaced "
             "ones are still needed as arguments."
         )
+
+
+def get_symmetry_parser() -> tuple[argparse.ArgumentParser, list[str]]:
+    """Return argument parser for the phonopy-symmetry command.
+
+    This command is experimental. It offers the --symmetry operation of
+    phonopy-init, which generates nothing and only reads a cell, prints its
+    symmetry and exits. phonopy-init keeps accepting --symmetry unchanged.
+
+    The cell is a positional argument and there is no -c. Of the options
+    that phonopy-init offers alongside --symmetry, only those the operation
+    actually reads are here: --nosym and --mass never reach it.
+
+    --dim is not offered either, though it does reach the operation: it
+    replaces the symmetry display with a phonopy_supercell.yaml, which is
+    generation rather than inspection and suppresses what this command is
+    named after. Use phonopy-init --symmetry --dim for it.
+
+    """
+    deprecated = fix_deprecated_option_names(sys.argv)
+    parser = argparse.ArgumentParser(
+        description=("phonopy-symmetry: show the crystal symmetry of a unit cell."),
+        allow_abbrev=False,
+        formatter_class=_SortedHelpFormatter,
+    )
+    _add_cell_options(parser)
+    _add_logging_options(parser)
+    add_arguments_of_calculators(parser, calculator_info)
+    _reject_removed_options(parser)
+    parser.add_argument(
+        "unitcell_filename",
+        nargs="?",
+        metavar="FILE",
+        default=None,
+        help=("Unit cell file. Defaults to the calculator's own default file name."),
+    )
+    return parser, deprecated
+
+
+def resolve_symmetry_args(args: argparse.Namespace) -> None:
+    """Map phonopy-symmetry onto the settings the operation is driven by.
+
+    ``cell_filename`` is where the settings layer looks for the input cell,
+    and ``filename`` is set empty because phonopy-symmetry reads no
+    configuration file. ``is_check_symmetry`` is what the whole command
+    means; setting it also injects the dummy ``dim`` that lets a cell be
+    read without a supercell matrix, and silences the log around the yaml
+    output.
+
+    """
+    args.cell_filename = args.unitcell_filename
+    args.filename = []
+    args.is_check_symmetry = True
 
 
 def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
