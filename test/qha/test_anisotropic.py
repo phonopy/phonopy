@@ -480,6 +480,120 @@ def test_run_anisotropic_electronic_free_energies(ph_nacl: Phonopy) -> None:
         )
 
 
+def _dummy_states(cell, scale: float = 1.0):
+    """Return synthetic electronic states recorded on the given cell.
+
+    ``volume`` is what records the cell: ElectronicStates takes ``cell`` only
+    together with kpoints and mesh, which these states do not have.
+
+    """
+    from phonopy.qha.electron_states import ElectronicStates
+
+    rng = np.random.default_rng(0)
+    eigenvalues = np.sort(rng.normal(size=(1, 4, 6)), axis=-1)
+    return ElectronicStates(
+        eigenvalues=eigenvalues * scale,
+        weights=np.ones(4),
+        n_electrons=6.0,
+        volume=cell.volume,
+    )
+
+
+def test_primitive_cell_fractions_of_a_centred_lattice(ph_nacl: Phonopy) -> None:
+    """The fraction is read off the cell the states record, not assumed.
+
+    NaCl is face-centred: 8 atoms in the unit cell, 2 in the primitive cell.
+    States computed on the unit cell are scaled by 1/4; states computed on
+    the primitive cell are already normalized and are left alone.
+
+    """
+    from phonopy.qha.electron_states import ElectronicStates
+    from phonopy.qha.thermal import primitive_cell_fractions
+
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    volumes = [ph.primitive.volume for ph in phonopys]
+
+    on_unitcell = [_dummy_states(ph.unitcell) for ph in phonopys]
+    np.testing.assert_allclose(
+        primitive_cell_fractions(on_unitcell, volumes), np.full(len(phonopys), 0.25)
+    )
+
+    on_primitive = [_dummy_states(ph.primitive) for ph in phonopys]
+    np.testing.assert_allclose(
+        primitive_cell_fractions(on_primitive, volumes), np.ones(len(phonopys))
+    )
+
+    # States that record no cell of their own are taken as already normalized.
+    no_cell = [
+        ElectronicStates(
+            eigenvalues=np.zeros((1, 1, 1)), weights=np.ones(1), n_electrons=1.0
+        )
+    ] * len(phonopys)
+    np.testing.assert_allclose(
+        primitive_cell_fractions(no_cell, volumes), np.ones(len(phonopys))
+    )
+
+
+def test_electronic_states_are_scaled_to_the_primitive_cell(ph_nacl: Phonopy) -> None:
+    """F_el from the states is put on the primitive-cell normalization.
+
+    The states describe the unit cell the calculator ran on, while the phonon
+    free energy is per primitive cell. NaCl is face-centred, so the two differ
+    by a factor of four. Handing the same term over ready-made, already
+    scaled, has to give the same answer.
+
+    """
+    from phonopy.qha.thermal import compute_electronic_contributions_from_states
+
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+
+    # The bands vary from grid point to grid point, so F_el varies over the
+    # lattice and its normalization reaches the minimized surface. The states
+    # are recorded on the unit cell, which is what the calculator runs on.
+    states = [
+        _dummy_states(ph.unitcell, scale=1.0 + 0.05 * i)
+        for i, ph in enumerate(phonopys)
+    ]
+    fe_raw, _ = compute_electronic_contributions_from_states(
+        states, TEMPERATURES, primitive_volumes=None
+    )
+
+    from_states = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        electronic_structures=states,
+        mesh=MESH,
+        surface_degree=2,
+    )
+    ready_made = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        electronic_free_energies=fe_raw * 0.25,
+        mesh=MESH,
+        surface_degree=2,
+    )
+    np.testing.assert_allclose(
+        from_states.equilibrium_lattice_parameters,
+        ready_made.equilibrium_lattice_parameters,
+    )
+    # The unscaled term is a different answer, so the factor is doing work.
+    unscaled = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        electronic_free_energies=fe_raw,
+        mesh=MESH,
+        surface_degree=2,
+    )
+    assert not np.allclose(
+        from_states.equilibrium_lattice_parameters,
+        unscaled.equilibrium_lattice_parameters,
+    )
+
+
 def test_run_anisotropic_electronic_free_energies_shape_checked(
     ph_nacl: Phonopy,
 ) -> None:
