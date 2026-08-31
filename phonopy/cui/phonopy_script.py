@@ -33,7 +33,11 @@ from phonopy.cui.load_helper import (
 )
 from phonopy.cui.phonopy_argparse import (
     PhonopyMockArgs,
+    get_collect_parser,
     get_parser,
+    get_symmetry_parser,
+    resolve_collect_args,
+    resolve_symmetry_args,
     show_deprecated_option_warnings,
 )
 from phonopy.cui.settings import (
@@ -1623,10 +1627,19 @@ def _run_calculation(
         _run_irreps(phonon, settings, log_level)
 
 
-def _start_phonopy(**argparse_control):
+def _start_phonopy(load_phonopy_yaml: bool = False, mode: str | None = None):
     """Parse arguments and set some basic parameters."""
-    parser, deprecated = get_parser(**argparse_control)
-    args = parser.parse_args()
+    if mode == "collect":
+        parser, deprecated = get_collect_parser()
+        args = parser.parse_args()
+        resolve_collect_args(args, parser)
+    elif mode == "symmetry":
+        parser, deprecated = get_symmetry_parser()
+        args = parser.parse_args()
+        resolve_symmetry_args(args)
+    else:
+        parser, deprecated = get_parser(load_phonopy_yaml=load_phonopy_yaml)
+        args = parser.parse_args()
 
     # Set log level. `is_check_symmetry` (phonopy-init only) and
     # `is_graph_save` (phonopy only) live on different parsers after the
@@ -1661,7 +1674,7 @@ def _start_phonopy(**argparse_control):
             if rust_threads > 0:
                 print(f"Rust backend (phonors) using rayon ({rust_threads} threads).")
 
-        if argparse_control.get("load_phonopy_yaml", False):
+        if load_phonopy_yaml:
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
         print(f"Spglib version {spglib.spg_get_version()}")  # type: ignore
@@ -1892,6 +1905,20 @@ def _init_phonopy(
     return phonon
 
 
+def _detect_collect_operation(settings: PhonopySettings) -> str | None:
+    """Return a label of the collection operation requested, or None.
+
+    The collection operations build a FORCE_SETS file from the forces of
+    calculator output. They are what phonopy-collect offers. --fc is not
+    among them: it reads the force constants of a vasprun.xml directly and
+    looks at no displacement dataset.
+
+    """
+    if settings.create_force_sets or settings.create_force_sets_zero:
+        return "-f / --fz"
+    return None
+
+
 def _detect_init_operation(
     run_symmetry_info: bool, settings: PhonopySettings
 ) -> str | None:
@@ -1908,8 +1935,9 @@ def _detect_init_operation(
     """
     if run_symmetry_info:
         return "--symmetry"
-    if settings.create_force_sets or settings.create_force_sets_zero:
-        return "-f / --fz"
+    collect_op_label = _detect_collect_operation(settings)
+    if collect_op_label is not None:
+        return collect_op_label
     if settings.create_force_constants:
         return "--fc"
     if settings.create_displacements and not settings.use_pypolymlp:
@@ -1994,6 +2022,18 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             "load_phonopy_yaml": False,
             "mode": "init",
         }
+    For the phonopy-collect command (experimental; FORCE_SETS file
+    generation from calculator output):
+        argparse_control = {
+            "load_phonopy_yaml": False,
+            "mode": "collect",
+        }
+    For the phonopy-symmetry command (experimental; crystal symmetry
+    display):
+        argparse_control = {
+            "load_phonopy_yaml": False,
+            "mode": "symmetry",
+        }
     For the phonopy-load command (deprecated alias of phonopy):
         argparse_control = {
             "load_phonopy_yaml": True,
@@ -2018,10 +2058,16 @@ def main(**argparse_control: bool | PhonopyMockArgs):
 
     # CLI mode. "init" handles operations that run before phonon calculation
     # and exit (displacement generation, FORCE_SETS/FORCE_CONSTANTS file
-    # creation from external calculator results, symmetry display). "run" is
-    # the phonon-calculation workflow. When unset (e.g. from pytest harnesses
-    # that exercise either flow), no mode-based enforcement happens.
-    mode: Literal["init", "run"] | None = argparse_control.get("mode")
+    # creation from external calculator results, symmetry display). "collect"
+    # is the FORCE_SETS creation subset of "init", and "symmetry" its
+    # symmetry display, offered separately by the experimental
+    # phonopy-collect and phonopy-symmetry. "run" is the phonon-calculation
+    # workflow.
+    # When unset (e.g. from pytest harnesses that exercise either flow), no
+    # mode-based enforcement happens.
+    mode: Literal["init", "run", "collect", "symmetry"] | None = argparse_control.get(
+        "mode"
+    )
     deprecated_command = argparse_control.get("deprecated_command")
     if deprecated_command is not None:
         print("")
@@ -2035,7 +2081,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         if log_level is None:
             log_level = 1
     else:
-        args, log_level = _start_phonopy(load_phonopy_yaml=load_phonopy_yaml)
+        args, log_level = _start_phonopy(load_phonopy_yaml=load_phonopy_yaml, mode=mode)
 
     plot_conf = {
         "plot_graph": getattr(args, "is_graph_plot", False),
@@ -2061,7 +2107,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             print("Pure and Applied Chemistry, 88(3), 265-291 (2016).")
             print("")
 
-    # phonopy --symmetry (phonopy-init only)
+    # phonopy-init --symmetry, and the whole of phonopy-symmetry.
     run_symmetry_info = getattr(args, "is_check_symmetry", False)
 
     ##################################################
@@ -2082,6 +2128,14 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             "-d or --rd (without RANDOM_DISPLACEMENT_TEMPERATURE/PYPOLYMLP), "
             "-f, --fz, --fc, or --symmetry. "
             "For phonon calculations, use 'phonopy'."
+        )
+        if log_level:
+            print_error()
+        sys.exit(1)
+    if mode == "collect" and _detect_collect_operation(settings) is None:
+        print_error_message(
+            "No collection operation requested. 'phonopy-collect' requires "
+            "calculator output files as arguments."
         )
         if log_level:
             print_error()

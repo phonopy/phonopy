@@ -64,7 +64,7 @@ class MLPSSCHA:
         temperature : float, optional
             Temperature in K, by default 300.0.
         number_of_snapshots : int, optional
-            Number of snapshots, by default 2000.
+            Number of snapshots, by default 1000.
         max_iterations : int, optional
             Maximum number of iterations, by default 10.
         distance : float, optional

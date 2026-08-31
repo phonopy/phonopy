@@ -273,8 +273,11 @@ def run_qha(
     units = get_physical_units()
     fe_phonon_ev = fe_phonon / units.EvTokJmol
     if electronic_structures is not None:
+        # No conversion here: the volume check in _validate_inputs has
+        # already established that the states are on the same cell as the
+        # phonons, whichever cell ph.primitive is.
         fe_el_rel, s_el = compute_electronic_contributions_from_states(
-            electronic_structures, temps_in
+            electronic_structures, temps_in, primitive_volumes=None
         )
         el = el + fe_el_rel
         cv_el = temps_in[:, None] * np.gradient(s_el, temps_in, axis=0, edge_order=2)

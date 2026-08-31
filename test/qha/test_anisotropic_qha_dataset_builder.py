@@ -21,6 +21,7 @@ from phonopy.scripts.phonopy_anisotropic_qha_dataset import (
     build_calculator_grid_point,
     load_phonon,
     load_phonon_from_disp_dirs,
+    primitive_cell_fraction,
     read_electronic_states,
     run,
 )
@@ -44,10 +45,10 @@ def _make_grid_point_dirs(base: Path, idx: int) -> None:
     """
     tag = f"grid-{idx:03d}"
 
-    # The static single point is run on the unit cell, which is what makes its
-    # energy the internal energy per unit cell that the analysis expects; the
-    # builder checks the paired cells agree. vasprun-00001..00003 are the 3
-    # displaced supercells.
+    # The static single point is run on the unit cell, and the builder checks
+    # the paired cells agree. NaCl is face-centred, so its unit cell holds four
+    # primitive cells and the builder stores U as a quarter of the energy read
+    # here. vasprun-00001..00003 are the 3 displaced supercells.
     sdir = base / "static-grid" / tag
     sdir.mkdir(parents=True)
     _decompress(FIXTURE / "unitcell-static.xml.xz", sdir / "vasprun.xml")
@@ -142,12 +143,13 @@ def test_build_calculator_grid_point(tmp_path):
     pgrid = tmp_path / "phonon-grid"
     sgrid = tmp_path / "static-grid"
 
-    point = build_calculator_grid_point(
+    point, fraction = build_calculator_grid_point(
         0,
         str(sgrid / "grid-000" / "vasprun.xml"),
         str(pgrid / "grid-000"),
         with_electronic=False,
     )
+    assert fraction == 0.25
 
     # Forces match the disp vaspruns, in disp-* order.
     expected_forces = np.array(
@@ -162,10 +164,64 @@ def test_build_calculator_grid_point(tmp_path):
     assert point.dataset["forces"].shape == point.dataset["displacements"].shape
     assert point.n_displacements == 3
 
-    # Internal energy matches the static single point.
+    # Internal energy matches the static single point, per primitive cell.
     _, energy, _, _ = read_vasprun_calculation(str(sgrid / "grid-000" / "vasprun.xml"))
-    assert point.internal_energy == energy
+    assert point.internal_energy == pytest.approx(energy / 4)
     assert point.electronic_states is None
+
+
+def test_internal_energy_is_stored_per_primitive_cell(tmp_path, capsys):
+    """U is scaled to the primitive cell, matching the phonon free energy.
+
+    The calculator reports U for the unit cell it was run on. The analysis
+    normalizes the phonon free energy and the volumes per primitive cell, so
+    a centred lattice would otherwise mix two normalizations. NaCl is
+    face-centred: 8 atoms in the unit cell, 2 in the primitive cell.
+
+    """
+    _make_grid_point_dirs(tmp_path, 0)
+    sgrid = tmp_path / "static-grid"
+    pgrid = tmp_path / "phonon-grid"
+
+    ph = load_phonon_from_disp_dirs(str(pgrid / "grid-000"))
+    assert len(ph.unitcell) == 8
+    assert len(ph.primitive) == 2
+
+    # Which cell the static single point used is read off the atom counts,
+    # so either cell is accepted and neither is assumed.
+    assert primitive_cell_fraction(ph.primitive, ph.unitcell) == 0.25
+    assert primitive_cell_fraction(ph.primitive, ph.primitive) == 1.0
+
+    point, fraction = build_calculator_grid_point(
+        0,
+        str(sgrid / "grid-000" / "vasprun.xml"),
+        str(pgrid / "grid-000"),
+        with_electronic=False,
+    )
+    _, energy, _, _ = read_vasprun_calculation(str(sgrid / "grid-000" / "vasprun.xml"))
+    assert fraction == 0.25
+    assert point.internal_energy == pytest.approx(energy * 0.25)
+
+
+def test_paired_cells_accept_either_cell_of_the_grid_point(tmp_path):
+    """The static entry may be the grid point's unit cell or its primitive cell.
+
+    U may be computed on whichever of the two suits the calculation. A cell
+    that is neither is still a mis-pairing and stops the builder.
+
+    """
+    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _check_paired_cells
+
+    _make_grid_point_dirs(tmp_path, 0)
+    ph = load_phonon_from_disp_dirs(str(tmp_path / "phonon-grid" / "grid-000"))
+
+    for cell in (ph.unitcell, ph.primitive):
+        _check_paired_cells(0, "static", cell, "phonon", ph.unitcell, ph.primitive)
+
+    other = ph.unitcell.copy()
+    other.cell = np.array(other.cell) * 1.05
+    with pytest.raises(SystemExit, match="mis-paired"):
+        _check_paired_cells(0, "static", other, "phonon", ph.unitcell, ph.primitive)
 
 
 def test_load_phonon_from_params_yaml(tmp_path):

@@ -4,27 +4,36 @@ orphan: true
 
 # Anisotropic QHA
 
-This recipe computes the anisotropic (axis-resolved) thermal expansion of a
-crystal in the quasi-harmonic approximation (QHA), by directly optimizing the
-lattice parameters on a grid rather than along the 1D volume path. Steps 0 to
-4 are the recipe: the phonons come from displaced supercells computed with the
-calculator, and no machine-learning potential (MLP) is involved.
+This page computes the anisotropic thermal expansion of a crystal in the
+quasi-harmonic approximation (QHA): one expansion coefficient per crystal axis,
+rather than one for the volume. The ordinary QHA minimizes the free energy
+along a single path in volume. This one samples the lattice parameters on a
+grid and minimizes over them directly, so the axes are free to expand by
+different amounts.
 
-Step 5 is a variant for the case where the harmonic approximation is what
-limits the answer. An MLP is trained at each grid point and used for
-temperature-dependent force constants, whose free energies enter the analysis
-directly instead of as force sets. It is the exception; most calculations do
-not need it.
+**Steps 0 to 4 are the whole calculation.** The phonons come from displaced
+supercells computed with the calculator, and no machine-learning potential
+(MLP) is involved.
+
+**Step 5 is a variant**, for a crystal whose anharmonicity the harmonic
+approximation cannot carry. An MLP is trained at each grid point and gives
+force constants that change with temperature. The free energies from those
+force constants enter the analysis directly, in place of the force sets. Most
+calculations do not need this step.
+
+{math}`a`, {math}`b` and {math}`c` on this page are the lattice parameters of
+the **standardized conventional unit cell**, never of the primitive cell.
+Step 0 explains why the recipe is built on that cell.
 
 The free lattice degrees of freedom (DOF) are detected from the symmetry: one
 for cubic ({math}`a`), two for hexagonal, tetragonal and rhombohedral
-({math}`a, c`), and three for orthorhombic ({math}`a, b, c`). Cell angles are held fixed, so monoclinic
-and triclinic crystals are out of scope. This page uses {math}`(a, c)` throughout as a
-concrete example; substitute the free DOF of your system. The lattice
-parameters and axial thermal expansions are produced for any of the supported
-systems. Contour maps of the free energy {math}`F(a, c)` at a fixed
-temperature -- the surface whose minimum gives those lattice parameters -- are
-drawn only when there are exactly two free DOF.
+({math}`a, c`), and three for orthorhombic ({math}`a, b, c`). Cell angles are
+held fixed, so monoclinic and triclinic crystals are out of scope. This page
+uses {math}`(a, c)` throughout as a concrete example; substitute the free DOF
+of your system. The lattice parameters and axial thermal expansions are
+produced for any of the supported systems. Contour maps of the free energy
+{math}`F(a, c)` at a fixed temperature -- the surface whose minimum gives those
+lattice parameters -- are drawn only when there are exactly two free DOF.
 
 ```{warning}
 **This workflow is experimental.** Everything on this page works and is
@@ -35,28 +44,43 @@ way between releases, without a deprecation period; options have already been
 added and removed as the recipe was used on real systems.
 
 So rebuild the dataset from the calculator outputs rather than relying on an
-old file being readable, keep the commands that produced a result alongside
-it, and pin the phonopy version if a campaign has to stay reproducible across
-it. The page is not yet part of the documentation navigation for the same
+old file being readable, keep beside every result the commands that produced
+it, and pin the phonopy version whenever a campaign has to stay reproducible
+across releases. The page is not yet part of the documentation navigation for
+the same
 reason.
 ```
 
-The commands are `phonopy-strain-cells`, the dataset builder
-`phonopy-anisotropic-qha-dataset` and the analysis command
-`phonopy-anisotropic-qha`. Step 4 runs the analysis in one command; the API
-script beneath it does the same thing with more control.
+Four commands do the work, one per step:
 
-Prerequisites: `h5py`, `symfc`, a VASP setup (VASP is the supported
-calculator), and, for the variant of step 5, `pypolymlp`.
+- `phonopy-init` prepares the equilibrium reference of step 0, and collects
+  the forces of the phonon grid in step 2.
+- `phonopy-strain-cells` samples the strained cells of step 1.
+- `phonopy-anisotropic-qha-dataset` gathers the calculator outputs into the
+  intermediate dataset of step 3.
+- `phonopy-anisotropic-qha` runs the analysis of step 4.
+
+Step 4 runs the analysis in one command. The API script printed under it does
+the same thing with more control.
+
+Prerequisites: `h5py`, `symfc`, a VASP setup, and `pypolymlp` for the variant
+of step 5.
 
 All lengths are in the native length unit of the input cell (Angstrom for
 VASP); no unit conversion is applied by the tools.
 
 ```{note}
-This page is written with VASP in mind, the only calculator interface this
-workflow has been exercised with. The commands and helper scripts assume VASP
-inputs and outputs (`POSCAR`, `vasprun.xml`, `vaspout.h5`); other calculators are
-not tested here.
+**VASP is the only calculator this workflow runs with.** The commands and the
+helper scripts assume VASP inputs and outputs (`POSCAR`, `vasprun.xml`,
+`vaspout.h5`).
+
+The binding constraint is the static grid. The internal energy
+{math}`U(a_i, c_i)` and the electronic states are read from VASP outputs, and
+phonopy has no interface yet for reading the static single-point energy of the
+other calculators. So `phonopy-anisotropic-qha-dataset` stops early on a
+reference naming one of them, rather than building a dataset with
+{math}`U(a_i, c_i)` missing. Nothing else stands in the way: the readers for
+the other calculators are simply not written yet.
 ```
 
 ## The free energy
@@ -81,14 +105,14 @@ F_\mathrm{ph}(a, c; T) = \sum_{\mathbf{q}\nu} \left[
 
 where the frequencies {math}`\omega_{\mathbf{q}\nu}` come from that grid
 point's force constants of step 2, and the sum runs over the modes at the
-q points of the sampling mesh. Step 5 replaces this term; the rest of the
-page up to it uses it as written.
+q points of the sampling mesh. Steps 0 to 4 use this expression as written.
+Step 5 replaces it with the SSCHA free energy.
 
 {math}`a` and {math}`c` are continuous above: {math}`F` is written for any
 lattice. The calculator returns values only at the sampled cells
-{math}`(a_i, c_i)` of step 1, and step 4 fits a surface through those values
-before minimizing it, which is what makes {math}`a(T)` and {math}`c(T)`
-continuous functions of temperature.
+{math}`(a_i, c_i)` of step 1. Step 4 therefore fits a surface through those
+values and minimizes the surface, and that is what makes {math}`a(T)` and
+{math}`c(T)` continuous functions of temperature.
 
 ## Overview
 
@@ -126,22 +150,37 @@ itself. Start from one relaxed equilibrium cell and turn it into the reference
 ```
 
 `REFERENCE_UNITCELL` must be the standardized conventional cell, whose lattice
-vectors are the crystal axes a, b and c in that row order. The free lattice DOF
-are taken per row, so a primitive cell of a centred lattice cannot be used: its
-rows are centring vectors rather than crystal axes. For body-centred tetragonal,
-for example, all three primitive rows have the same length, and scaling them
-would only change the volume, never {math}`c/a`. A rhombohedral cell must likewise be
-given in the hexagonal setting. `phonopy-strain-cells` rejects such a cell; if
-in doubt, take the `BPOSCAR` written by
-{ref}`phonopy-init --symmetry <symmetry_option>`,
-which is the conventional cell. A conventional cell that is merely rotated in
+vectors are the crystal axes a, b and c in that row order.
+
+The conventional cell is what makes the grid small. The number of grid points
+is set by the number of free lattice DOF, and the symmetry of the conventional
+cell is what reduces that number: two for hexagonal instead of three, one for
+cubic instead of three. The primitive cell of a centred lattice hides that
+symmetry in its rows, and the same crystal would then be sampled over more DOF
+than it has.
+
+The free lattice DOF are taken per row, so a primitive cell of a centred
+lattice cannot be used at all: its rows are centring vectors rather than
+crystal axes. For body-centred tetragonal, for example, all three primitive
+rows have the same length, and scaling them would only change the volume, never
+{math}`c/a`. A rhombohedral cell must likewise be given in the hexagonal
+setting. `phonopy-strain-cells` rejects such a cell; if in doubt, take the
+`BPOSCAR` written by {ref}`phonopy-init --symmetry <symmetry_option>`. That
+file is the conventional cell. A conventional cell that is merely rotated in
 Cartesian space is fine.
+
+Everything the recipe writes follows from this choice. `phonopy-strain-cells`
+strains the unit cell of `phonopy_disp.yaml` and writes unit cells; the
+displaced supercells are built on them; and the lattice parameters reported at
+the end are theirs. The primitive cell enters only as the normalization of the
+energies, which "Run the anisotropic QHA" covers.
 
 `--dim` fixes the supercell matrix, which `phonopy-init` records together with
 the unit cell, the primitive matrix and the calculator. `phonopy-strain-cells`
 reads the equilibrium cell and calculator from it;
 `phonopy-anisotropic-qha-dataset` reads the
-calculator and the free lattice DOF it implies (which lengths are independent --
+calculator, and takes the free lattice DOF from the symmetry of that cell
+(which lengths are independent --
 {math}`a, c` with {math}`b = a` for hexagonal). Keep `--dim` consistent with
 the phonon-grid
 supercell in step 2.
@@ -175,48 +214,86 @@ Provenance written to strain_cells.yaml
 The main diagonal of the grid, printed above with each cell's {math}`c/a`, is
 the volume path that `phonopy-anisotropic-qha --compare-eos` fits. Equal
 fractional ranges and equal counts keep {math}`c/a` constant along it, which is
-the cleanest input to the cross-check; unequal ranges or counts still give a
-path, but its shape varies along it.
+the cleanest input to the cross-check. Unequal ranges or counts still give a
+path, but {math}`c/a` then varies along it, and the fit mixes a change of shape
+into what it reads as a change of volume.
 
-The cells are written as strained **unit cells** `unitcell-NNN`, which is what
-the static grid needs. Each run also writes `strain_cells.yaml`, recording the
-ranges, the grid shape and the free-DOF lengths of every cell. Nothing in the
-run is random, so the same command reproduces the same cells.
+The cells are written as strained **unit cells** `unitcell-NNN`. When
+`primitive_matrix` is not the identity, the primitive cell is a different cell,
+and the same run writes it as `primcell-NNN` too:
 
-For each `unitcell-*`:
+```text
+Wrote 25 strained unit cell(s) as unitcell-001 .. unitcell-025 in vasp format.
+Also wrote the primitive cell of each as primcell-001 .. primcell-025
+(primitive 2 atoms, unit cell 8 atoms). The static single point may be run on
+either cell.
+```
+
+The test is on the matrix, not on the atom counts, so a primitive cell taken in
+an unusual setting is written as well even though it holds the same atoms. The
+hexagonal example above is the other case: `auto` resolves to the identity
+there, the two cells are one cell, and only the unit cells are written.
+
+The two files are one grid point. Run the static single point on whichever
+suits the calculation and pass that one to the builder; "Run the anisotropic
+QHA" says how {math}`U` is put on one normalization afterwards.
+
+The primitive cells take their atoms from `phonopy_disp.yaml` rather than from
+a fresh symmetry search. The strain scales the crystal axes and leaves the
+fractional coordinates alone, so only the lattice is rebuilt. The atom order is
+then the same at every grid point, and does not move with the symmetry
+tolerance.
+
+Each run also writes `strain_cells.yaml`, recording the ranges, the grid shape
+and the free-DOF lengths of every cell, with the `primcell-NNN` name beside
+each `unitcell-NNN` when both were written. Nothing in the run is random, so
+the same command reproduces the same cells.
+
+For each grid point, on whichever of the two cells you chose:
 
 1. Relax the internal coordinates if the structure has free internal parameters
-   (e.g. the wurtzite `u`). A crystal with no internal DOF (e.g. HCP) skips this
-   -- the strained cell is already the relaxed cell.
-2. Run a static single point. Use `ISIF >= 2` if you also want stress; write
-   `vaspout.h5` if you want the electronic states for {math}`F_\mathrm{el}`.
-   Sample the Brillouin zone on a Gamma-centred regular mesh: the k points and
-   the mesh are then stored with the states, and {math}`F_\mathrm{el}` is
-   integrated by the linear tetrahedron method rather than summed over k
-   points. The mesh a static single point already needs is dense enough for
-   the tetrahedron method; a KPOINTS_OPT block, which is read in preference to
-   the SCF mesh, gives the electronic states a denser one where that is wanted.
+   (e.g. the wurtzite `u`). A crystal with no internal DOF (e.g. HCP) skips
+   this step -- the strained cell is already the relaxed cell.
+2. Run a static single point. Three settings matter.
+
+   - `ISIF >= 2`, if you also want the stress.
+   - Write `vaspout.h5`, if you want the electronic states for
+     {math}`F_\mathrm{el}`. A run that writes only `vasprun.xml` carries no
+     eigenvalues, and the dataset is then built without {math}`F_\mathrm{el}`.
+   - Sample the Brillouin zone on a Gamma-centred regular mesh. The k points
+     and the mesh are then stored with the states, and {math}`F_\mathrm{el}`
+     is integrated by the linear tetrahedron method rather than summed over k
+     points.
+
+   The mesh a static single point already needs is dense enough for the
+   tetrahedron method, so no extra one has to be chosen. Where a denser mesh is
+   wanted for the electronic states alone, add a KPOINTS_OPT block: the states
+   are read from that block in preference to the SCF mesh.
 3. Place the output in `static-grid/grid-NNN/` (one directory per grid point,
    containing `vaspout.h5` or `vasprun.xml`). Any layout works -- the builder
    is given the paths explicitly -- but a name that sorts in the sampling order
    keeps the two grids easy to pass together, and no index file is needed.
    Sorting in that order also matters for `--compare-eos`: the builder
-   recognises a tensor grid only when the cells reach it in the order they
+   recognizes a tensor grid only when the cells reach it in the order they
    were generated, and records its shape for the main-diagonal volume path.
 
-Edit the paths at the top and run it; distribute the VASP inputs separately.
+Script 1 below lays out those directories. Edit the paths at the top of it and
+run it. It writes the POSCARs only; the rest of the VASP input -- `INCAR`,
+`POTCAR`, `KPOINTS` -- has to be distributed separately.
 
 ```{code-block} python
-:caption: Script 1 -- the static-grid input POSCARs, from the `unitcell-*` above
+:caption: Script 1 -- the static-grid input POSCARs, from the strained cells above
 
 import glob
 from pathlib import Path
 from phonopy.interface.calculator import read_crystal_structure, write_crystal_structure
 
-UNITCELLS = "unitcell-*"  # strained cells from phonopy-strain-cells
+# Strained cells from phonopy-strain-cells. Put "primcell-*" here instead to
+# run the static grid on the primitive cells.
+CELLS = "unitcell-*"
 STATIC_GRID = "static-grid"
 
-for path in sorted(glob.glob(UNITCELLS)):
+for path in sorted(glob.glob(CELLS)):
     idx = int(Path(path).stem.split("-")[-1])
     cell, _ = read_crystal_structure(path, interface_mode="vasp")
     static_dir = Path(STATIC_GRID) / f"grid-{idx:03d}"
@@ -239,17 +316,26 @@ Place the results as `phonon-grid/grid-NNN/` each containing the
 match those under `static-grid/`, since the two grids are paired by the order
 they are passed in, but matching names make that order easy to get right.
 
-The script below reads each `static-grid/grid-NNN/CONTCAR` (the relaxed
-structure, equal to the input POSCAR when there is no internal DOF), so run
-it only after the static grid is done. Edit the paths at the top and run it;
-distribute the VASP inputs separately.
+Script 2 below reads each `static-grid/grid-NNN/CONTCAR`, the relaxed
+structure, which equals the input POSCAR when there is no internal DOF. So run
+it only after the static grid is done. Edit the paths at the top of it, and
+distribute the rest of the VASP input separately, as in step 1.
 
-`SUPERCELL_MATRIX` must be the `--dim` of step 0, since the dataset builder
-takes the free lattice DOF and the calculator from the same
-`phonopy_disp.yaml`. `DISTANCE` is the displacement distance in Angstrom
-(phonopy's own default is 0.01); the same value has to be used at every grid
-point, because the force constants of the grid points are differentiated
-against one another.
+`SUPERCELL_MATRIX` and `DISTANCE` must both be the same at every grid point,
+for one reason. The analysis fits a surface through the {math}`F_i(T)` of the
+grid and differentiates it. Either setting biases {math}`F_\mathrm{ph}` a
+little -- the supercell size through how far the force constants reach, the
+displacement distance through the anharmonic error of the finite difference. A
+bias that is equal everywhere shifts the surface without tilting it, and the
+axial expansions do not see it. A bias that changes from one grid point to the
+next tilts the surface, and the axial expansions follow the tilt.
+
+So keep `SUPERCELL_MATRIX` at the `--dim` of step 0, which is also the value
+stored when a dataset is built from the static grid alone. `DISTANCE` is the
+displacement distance in Angstrom, 0.03 here against phonopy's own default of
+0.01. Nothing checks either of them: the builder reads the supercell matrix
+from each phonon grid point separately, and never compares the grid points with
+one another or with step 0.
 
 ```{code-block} python
 :caption: Script 2 -- the phonon grid, from the relaxed static-grid cells
@@ -290,13 +376,8 @@ grid points are given as two path lists, `--static` and `--phonon`, and paired
 **by position** after shell expansion:
 
 ```{note}
-`phonopy-anisotropic-qha-dataset` works with VASP only for now, simply because
-the readers for the other calculators are not implemented yet. The binding
-constraint is the static grid: the internal energy {math}`U(a_i, c_i)` and the
-electronic states are read from VASP outputs (`vaspout.h5` / `vasprun.xml`), and
-phonopy has no interface yet to read the static single-point energy of the other
-calculators. A reference naming one of them therefore stops the command early,
-rather than producing a dataset with a missing {math}`U(a_i, c_i)`.
+The builder reads VASP outputs only, and stops early on a reference naming
+another calculator. The opening note of this page says why.
 ```
 
 ```bash
@@ -330,8 +411,14 @@ Any names work, and one list can mix directories and files. The `--static` and
 
 For each grid point the builder reads:
 
-- the static single point, giving the internal energy {math}`U(a_i, c_i)`; its
-  relaxed cell becomes the grid-point cell. The electronic states for
+- the static single point, giving the internal energy {math}`U(a_i, c_i)`. It
+  may have been run on the grid point's unit cell or on its primitive cell, and
+  the builder accepts either; anything else is reported as a mis-pairing. With
+  `--phonon` given, the grid-point cell is the phonon entry's cell rather than
+  this one, so a relaxation carried into the phonon grid is honored. Without
+  `--phonon` this cell becomes the grid point itself, and it then has to be the
+  conventional unit cell, since the free lattice DOF are read from its rows.
+  The electronic states for
   {math}`F_\mathrm{el}` are read automatically from the same `vaspout.h5` when
   it carries the eigenvalues (a static point written with only `vasprun.xml` is
   built without {math}`F_\mathrm{el}`; pass `--no-electronic` to skip them
@@ -340,18 +427,19 @@ For each grid point the builder reads:
 - the phonon grid point, in one of two forms. A **directory** holding
   `phonopy_disp.yaml` and the per-displacement `disp-*` subdirectories: the
   builder reads each `disp-*` calculator output itself, so no `FORCE_SETS` or
-  `phonopy_params.yaml` is needed. Or a **phonopy.yaml-like file** whose forces
-  {ref}`phonopy-init -f <f_force_sets_option>` has already collected, which is
-  the simpler route when the calculations were not laid out by Script 2:
+  `phonopy_params.yaml` is needed. Or a **phonopy.yaml-like file** carrying
+  forces that {ref}`phonopy-init -f <f_force_sets_option>` has already
+  collected. This second form is the simpler route when the calculations were
+  not laid out by Script 2:
 
   ```bash
   % phonopy-init --sp -f disp-*/vasprun.xml   # -> phonopy_params.yaml
   % phonopy-init -f disp-*/vasprun.xml        # -> FORCE_SETS, beside phonopy_disp.yaml
   ```
 
-  Pass the resulting `phonopy_params.yaml`, or the `phonopy_disp.yaml` whose
-  `FORCE_SETS` sits beside it ({ref}`--sp <save_params_option>` merges the two
-  into one file). A file with no forces and no neighboring `FORCE_SETS` is
+  Pass the resulting `phonopy_params.yaml`. A `phonopy_disp.yaml` with its
+  `FORCE_SETS` beside it works too ({ref}`--sp <save_params_option>` merges the
+  two into one file). A file with no forces and no neighboring `FORCE_SETS` is
   rejected rather than silently producing an empty grid point. Either form
   supplies the per-grid-point supercell / primitive matrices.
 
@@ -369,11 +457,13 @@ checks both against the structures in the calculator outputs.
 
 **Across grid points**, the lattice of each static single point must match the
 cell of the phonon grid point it is paired with. A mismatch stops the command
-and names both paths. This catches a grid point missing from each list, which
-would otherwise combine the {math}`U` of one lattice with the forces of
-another while the list lengths still matched, and a static single point run on
-a supercell rather than the unit cell, which would put {math}`U` on the wrong
-normalization.
+and names both paths. Two mistakes are caught this way.
+
+- A grid point missing from each list. The list lengths still match, so
+  nothing else notices, and the {math}`U` of one lattice would be combined
+  with the forces of another.
+- A static single point run on a supercell. Its {math}`U` would then be on the
+  wrong normalization.
 
 **Within one grid point**, sorted order is only a guess at the displacement
 order: `disp-1, disp-10, disp-2` sorts differently from how it counts. Each
@@ -408,11 +498,13 @@ rather than as force constants keeps the file independent of the
 force-constant method, and makes it an archive that outlives the calculator
 scratch.
 
-The electronic states carry the eigenvalues, the k-point weights and the
-electron count, and, when the static calculation sampled a Gamma-centred
-regular mesh, the k points and the mesh themselves. That is what lets a reader
-of the file integrate {math}`F_\mathrm{el}` by the linear tetrahedron method;
-a file written without them is integrated by the k-point sum.
+The electronic states always carry the eigenvalues, the k-point weights and the
+electron count. They carry the k points and the mesh as well, but only when the
+static calculation sampled a Gamma-centred regular mesh. Those last two are
+what the linear tetrahedron method needs, so a file without them is integrated
+only by the k-point sum. The two readers then part company: the
+`run_anisotropic_qha` API falls back on the k-point sum, while the
+`phonopy-anisotropic-qha` command stops instead. Step 4 gives the reason.
 
 The layout, as written by `phonopy-anisotropic-qha-dataset` and read back by
 `phonopy.qha.anisotropic_dataset.read_aniso_qha_dataset`:
@@ -459,10 +551,12 @@ Run the analysis directly on the intermediate dataset:
 
 `--tmax` and `--dt` are in K and set the temperature grid, here 0 to 1000 K in
 steps of 10 K. The thermal expansions are central differences on that grid, so
-the last temperature point is consumed by them and the results stop one step
-below `--tmax`. `--mesh` sets the phonon sampling mesh and defaults to 200,
-denser than `run_qha`'s 100: the axial split needs it, while the volumetric
-expansion is already converged at 100.
+the top temperature is consumed and the results stop one step below `--tmax`:
+990 K for the command above.
+
+`--mesh` sets the phonon sampling mesh and defaults to 200, denser than
+`run_qha`'s 100. The axial thermal expansions need the denser mesh, while the
+volumetric expansion is already converged at 100.
 
 The command rebuilds one Phonopy per grid point, with force constants from the
 stored displacements and forces, runs `run_anisotropic_qha`, and writes
@@ -478,17 +572,21 @@ the grid. The diagonal comes from the grid shape the builder recorded, so the
 cross-check needs a `--grid` run in step 1 whose cells were gathered in order.
 Without a recorded shape the command skips the cross-check and lists the cells
 by volume with their {math}`c/a`, so that `--eos-index` can name a path by
-hand. Cells sharing a {math}`c/a` have one shape, which is what a volume-path
-equation-of-state fit assumes; five or more of them are printed as a
-ready-made `--eos-index` line.
+hand. Cells that share a {math}`c/a` differ in volume alone, and differing in
+volume alone is what a volume-path equation-of-state fit assumes. Any five or
+more such cells are printed as a ready-made `--eos-index` line.
 
 The electronic free energy {math}`F_\mathrm{el}` is added whenever the dataset
 carries the electronic states, and `--no-electronic` leaves it out. The
-integration is the linear tetrahedron method, which needs the k-point grid the
-states were computed on. Without it the command stops rather than falling back
-on the k-point sum: that sum integrates a delta-function density of states and
-needs far more irreducible k points than a mesh chosen for the total energy
-has. The run prints the energy window and the grid spacing it integrated over.
+integration is the linear tetrahedron method. That method needs the k-point
+grid the states were computed on, and without that grid the command stops. It
+does not fall back on the k-point sum. The sum integrates a delta-function
+density of states, and so needs far more irreducible k points than a mesh
+chosen for the
+total energy has. The `run_anisotropic_qha` API is looser and does fall back on
+the sum, one grid point at a time, so a script calling the API has to check the
+mesh for itself. The run prints the energy window and the grid spacing it
+integrated over.
 The result is written to `fel.hdf5`, which `--electronic-free-energies` takes
 back on a later run, since the integration is the same every time.
 
@@ -578,19 +676,55 @@ temperature grid,
 \alpha_c = \frac{1}{c}\frac{dc}{dT},
 ```
 
-which is what consumes one temperature point: with `--tmax 1000 --dt 10`
-the results stop at 990 K.
-
 The fit is over the lattice only: each temperature is minimized on its own,
-and the raw {math}`a(T)`, {math}`c(T)` are differenced. With the
-calculator's harmonic free energies that is what is wanted, since they
-carry no sampling scatter. `--smooth-lattice` fits the lattice parameters
-along temperature first and differentiates the fit instead, which step 5
-needs. It defaults to `none` here, and to `einstein` when
-`--phonon-free-energies` is given.
+and the raw {math}`a(T)`, {math}`c(T)` are differenced. The calculator's
+harmonic free energies carry no sampling scatter, so differencing them
+directly is the right thing to do here. A free energy that does carry scatter
+needs the lattice parameters smoothed along temperature first, which is
+`--smooth-lattice`; {ref}`step 5 <anisotropic-qha-temperature-dependent>`
+covers it, since that is where such free energies come from.
 
-The internal energies are expected in eV per primitive cell, which they are when
-the static-grid single point is the primitive (unit) cell.
+The **energies** are normalized **per primitive cell**, in eV: the internal
+energies, the phonon free energies and the electronic free energies. The
+volumes the analysis works in are that cell's too, which is what a pressure
+run builds its {math}`pV` term on. Which cell it is comes from
+`primitive_matrix` in `phonopy_disp.yaml`, which `phonopy-init` sets to `auto`
+unless `--pa` says otherwise.
+
+Nothing else on the page follows the primitive cell. The grid, the lattice
+parameters and the axial thermal expansions are all the conventional cell's,
+as step 0 says.
+
+The static single point need not be run on that cell. Either the conventional
+unit cell or the primitive cell will do, whichever suits the calculation -- a
+long rhombohedral cell is easier to handle in its hexagonal setting, while a
+large conventional cell may be cheaper to run as its primitive cell. The
+builder settles the normalization: it reads the number of atoms in the cell
+{math}`U` was computed on, and multiplies {math}`U` by the primitive cell's
+share of it. A static point already on the primitive cell is left alone. One
+run on a cell holding four of them is divided by four, and the builder says so:
+
+```text
+The static single point was run on a cell holding 4 primitive cells, so U is
+stored as 1/4 of the calculator energy, matching the phonon free energy.
+```
+
+Which cell it was is read off the atom counts rather than assumed, because
+strain changes the volumes but not them.
+
+Two restrictions come with this freedom. The static cell has to be the
+conventional unit cell when `--phonon` is omitted, since that cell then becomes
+the grid point and the free lattice DOF are read from its rows; the builder
+stops and says so. And with `--phonon` given, the static cell must be a cell of
+the grid point it is paired with, either of the two. A cell from another grid
+point matches neither, so a mis-pairing is still caught.
+
+{math}`F_\mathrm{el}` is normalized the same way, where the analysis
+integrates it from the stored electronic states. The states record the cell
+they were computed on, so states already on the primitive cell are not scaled a
+second time. Arrays handed to `run_anisotropic_qha` directly are the exception:
+`internal_energies`, `electronic_free_energies` and `phonon_free_energies` are
+taken as they are, and have to be per primitive cell already.
 
 ### Supplying {math}`F_\mathrm{el}` ready-made
 
@@ -663,28 +797,113 @@ states and the two paths would then carry different physics.
 (anisotropic-qha-temperature-dependent)=
 ## 5. Variant: temperature-dependent force constants from per-grid-point MLPs
 
-Anharmonic effects appear only in structures that the small displacements of
-step 2 never reach. One way to get at them is to displace the atoms with
-the temperature folded in: every atom is moved at once, by an amount drawn
-from the canonical distribution of the harmonic crystal at that
-temperature, which the force constants of step 2 define. That distribution
-is Gaussian in the normal coordinates, with the width the equation below
-gives. The forces the calculator returns for such supercells are a
-first-principles sample of the potential energy surface in the region a
-crystal at that temperature actually visits.
+The displacements of step 2 are small, and the forces they give are almost
+harmonic. Anharmonic effects appear only in supercells displaced further than
+that. Here such supercells are made by moving every atom at once, by amounts
+drawn at random from the thermal distribution of the harmonic crystal at a
+chosen temperature.
 
-Training an MLP on that sample is what this page does with it, and the
-trained MLP then supplies the
-temperature-dependent force constants whose free energies the analysis
-takes directly. The displacements come first.
+The force constants of step 2 define that harmonic crystal. It separates into
+independent normal modes. Each mode is a harmonic oscillator, so its own normal
+coordinate is Gaussian about zero, and the width of that Gaussian is set by the
+mode's frequency and by the temperature. One snapshot draws every mode from its
+own Gaussian, and the displacement of each atom follows from the sum over the
+modes. "The thermal distribution" below writes the width down.
 
-The distribution is fixed once, from the harmonic force constants: a
-one-shot draw, not iterated to self-consistency with the anharmonic force
-constants as SSCHA does. For a training set that is enough, since it has
-to cover the region rather than reproduce the ensemble. Where
-anharmonicity softens the modes, the true distribution is the wider of the
-two, which is one reason to draw at a temperature above the production
-range.
+The calculator then computes forces on supercells displaced that way at that
+temperature. These displacements are usually not small, so the forces carry
+more of the anharmonic contribution than those of step 2 do, and are enough to
+train an MLP on.
+
+The displacements, the forces and the supercell energies together are used to
+build the MLP at every grid point. Each MLP is fitted to that grid point's own
+training set.
+
+The MLP is then used, within the temperature range its training set covers. An
+MLP is an intermediate representation, convenient because it interpolates
+between the temperatures it was trained at. The self-consistent harmonic
+approximation ({ref}`SSCHA <mlp-sscha>`) runs with it at every grid point and
+every temperature, and returns force constants that change with temperature.
+The anharmonic free energies follow from those. The analysis takes them and
+minimizes {math}`F(a, c; T)` over the lattice at each
+temperature. What comes out is {math}`a(T)`, {math}`c(T)` and the axial
+thermal expansions.
+
+### Where this step fits
+
+Steps 0 to 4 displace one atom at a time and need a few supercells per grid
+point. They give the quasi-harmonic answer.
+
+Step 5 needs a training set at every grid point instead. In the script below
+that is 50 structures at each of four temperatures, so 200 calculator runs per
+grid point. What it gives back is force constants that change with
+temperature. Use it when anharmonicity is large enough to matter for the
+property being computed.
+
+Steps 0 to 3 are as in the Overview, up to and including the dataset. What
+differs comes after it: the MLPs and the free energies,
+
+```{mermaid}
+flowchart TD
+    DS(["aniso_qha_dataset.hdf5<br/>cells, U, F_el,<br/>harmonic force constants"])
+    DS --> DISP["thermal displacements<br/>one shared draw of<br/>standard normals"]
+    DISP --> CALCT{{"calculator forces"}}
+    CALCT --> DEV["train one MLP<br/>per grid point"]
+    DEV --> MLP(["polymlp.yaml<br/>per grid point"])
+    MLP --> SSCHA["SSCHA<br/>per grid point and temperature"]
+    SSCHA --> FE(["F_ph(T) per<br/>grid point"])
+```
+
+and the analysis they meet in:
+
+```{mermaid}
+flowchart TD
+    DS2(["aniso_qha_dataset.hdf5"])
+    FE2(["F_ph(T) per<br/>grid point"])
+    DS2 --> AQ["run_anisotropic_qha"]
+    FE2 -->|"phonon_free_energies"| AQ
+    AQ --> RES(["a(T), c(T),<br/>alpha_a, alpha_c"])
+```
+
+### One MLP per grid point
+
+The MLP gives the temperature-dependent force constants.
+{ref}`anisotropic-qha-sscha` below computes the anharmonic phonon free energy
+{math}`F_\mathrm{ph}(a, c; T)` from them.
+
+{math}`U(a, c)` comes from the calculator on the static grid of step 1, not
+from the MLP. The analysis minimizes {math}`F` over the lattice at each
+temperature. The shape of {math}`U` near the minimum therefore decides where
+the minimum lies. The axial expansions measure how that minimum moves as the
+temperature rises. A small error in the shape of {math}`U` moves the minimum,
+and the axial expansions follow that error. That is why {math}`U` is taken
+from the calculator rather than from the MLP. The same sensitivity is behind
+the choice of the linear tetrahedron method for {math}`F_\mathrm{el}` in
+step 4: both terms shape the surface that the analysis differentiates.
+
+Each MLP is evaluated only at its own grid point. It has to reproduce the
+forces and energies of displaced supercells there and nowhere else. The forces
+give the temperature-dependent force constants. The energies enter the SSCHA
+free energy as differences from the undisplaced supercell of that grid point.
+The grid as a whole carries the lattice dependence of
+{math}`F_\mathrm{ph}`, so in this procedure the MLPs are never asked to
+interpolate in the lattice parameters.
+
+The MLPs are fitted independently, so their errors can jump from one grid
+point to the next. Drawing the displacements from one set of standard normals
+is expected to smooth those errors out. See {ref}`anisotropic-qha-normals`.
+
+### The thermal distribution
+
+The training structures are supercells displaced along the thermal
+distribution of the harmonic crystal. Drawing them costs nothing beyond the
+force constants of step 2, and the amplitudes are the ones the crystal
+actually visits at the temperature asked for.
+
+The distribution is drawn once, from the harmonic force constants. SSCHA
+iterates its own distribution to self-consistency with the anharmonic force
+constants; this draw does not. In practice that has been enough for a training
+set.
 
 Each mode {math}`(\mathbf{q}, \nu)` of the supercell is a harmonic oscillator
 in equilibrium at {math}`T`, so its normal coordinate is normally distributed
@@ -718,83 +937,26 @@ along. Each {math}`\xi_{\mathbf{q}\nu}` fixes how far its own mode is
 displaced in this snapshot, and the sum turns those into the displacement
 of every atom.
 
-Steps 0 to 4 need one or a few displaced supercells per grid point, and
-give the quasi-harmonic answer. Step 5 needs a training set at every grid
-point instead -- 50 structures at each of four temperatures in the script
-below, so 200 calculator runs per grid point -- and gives force constants
-that change with temperature. Use it when anharmonicity is large enough to
-matter for the property being computed.
-
-Steps 0 to 3 are as in the Overview, up to and including the dataset. What
-differs comes after it: the MLPs and the free energies,
-
-```{mermaid}
-flowchart TD
-    DS(["aniso_qha_dataset.hdf5<br/>cells, U, F_el,<br/>harmonic force constants"])
-    DS --> DISP["thermal displacements<br/>one shared draw of<br/>standard normals"]
-    DISP --> CALCT{{"calculator forces"}}
-    CALCT --> DEV["train one MLP<br/>per grid point"]
-    DEV --> MLP(["polymlp.yaml<br/>per grid point"])
-    MLP --> SSCHA["SSCHA<br/>per grid point and temperature"]
-    SSCHA --> FE(["F_ph(T) per<br/>grid point"])
-```
-
-and the analysis they meet in:
-
-```{mermaid}
-flowchart TD
-    DS2(["aniso_qha_dataset.hdf5"])
-    FE2(["F_ph(T) per<br/>grid point"])
-    DS2 --> AQ["run_anisotropic_qha"]
-    FE2 -->|"phonon_free_energies"| AQ
-    AQ --> RES(["a(T), c(T),<br/>alpha_a, alpha_c"])
-```
-
-### One MLP per grid point
-
-The MLP enters one term of {math}`F(a, c; T)`: the anharmonic phonon free
-energy {math}`F_\mathrm{ph}(a, c; T)`. The MLP gives the
-temperature-dependent force constants, and the free energy that goes with
-them is computed as "Computing and supplying the free energies" below
-describes.
-
-{math}`U(a, c)` comes from the calculator on the static grid of step 1, not
-from the MLP. The analysis finds {math}`a(T)` and {math}`c(T)` by
-minimizing {math}`F` over the lattice, so the shape of {math}`U` near that
-minimum decides where the minimum sits and how it moves with temperature.
-The axial expansions are derivatives of that motion, so an error in the
-shape of {math}`U` reaches them amplified: an error that is small on the
-scale of {math}`F` can be a large fraction of a small axial expansion, and
-can change whether it comes out positive or negative.
-
-One MLP is trained per grid point, on that grid point's own training set, and
-evaluated only there. Each MLP then has to reproduce the forces
-and energies of displaced supercells at one grid point. The forces give the
-temperature-dependent force constants, and the energies enter the SSCHA free
-energy as differences from the undisplaced supercell of that grid point. The
-grid as a whole carries the lattice dependence of {math}`F_\mathrm{ph}`, so
-the MLPs never interpolate in the lattice parameters.
-
-The MLPs are fitted independently, so their errors can jump from one grid
-point to the next. Drawing the displacements from one set of
-standard normals smooths them; see {ref}`anisotropic-qha-normals`.
-
 ### The training displacements
 
-Four steps, once the phonon grid of step 2 exists.
+Four steps, once the dataset of step 3 exists. The harmonic force constants
+it carries are what set the widths of the draw.
 
-1. Pick the temperatures. Cover the production range and add one point above
-   it, since an MLP is poor outside the range it was trained on.
-2. Generate the displacements with the script below. It uses one draw of
-   standard normals at every grid point; see
-   {ref}`anisotropic-qha-normals`.
+1. Pick temperatures covering the range you want, and add one point above
+   that range. An MLP tends to be poor outside the range it was trained on.
+   Script 5 below trains at 0, 100, 250 and 400 K. Script 7 then analyses up
+   to 400 K, and the finite difference consumes that top point, so the
+   reported results stop at 390 K and stay inside the trained range.
+2. Generate the displacements with the script below. It reads the harmonic
+   force constants from the dataset of step 3, and uses one draw of standard
+   normals at every grid point; see {ref}`anisotropic-qha-normals`.
 3. Run the calculator on every supercell, and collect the forces of each set
-   with {ref}`phonopy-init -f <f_force_sets_option>`.
-4. Merge each grid point's temperatures into one training set, and train its
-   MLP.
-
-Step 2 is the script below, which reads the harmonic force constants from
-the dataset of step 3:
+   with {ref}`phonopy-init -f <f_force_sets_option>`. This writes one
+   `phonopy_params.yaml` per set, holding its displacements, forces and
+   supercell energies.
+4. Merge the `phonopy_params.yaml` files of each grid point, one per
+   temperature, into a single training set, and train that grid point's MLP
+   on it.
 
 ```{code-block} python
 :caption: Script 5 -- the thermal training displacements
@@ -865,10 +1027,15 @@ Run the calculator in every `disp-*`, then collect the forces of each set:
 ```
 
 A grid point has one such set per temperature, and its MLP is trained on all
-of them at once. Concatenating them in temperature order would put one
-temperature at the front of the list and another at the back, and pypolymlp
-takes its training structures from the front and its test structures from the
-back, so the sets are interleaved instead:
+of them at once. The sets are merged by interleaving, so that the temperatures
+alternate through the merged list instead of following one another in blocks.
+
+The reason is how `ntrain` and `ntest` cut the merged list. `ntrain` takes that
+many structures from its **head** and `ntest` takes that many from its
+**tail**; neither looks at what is in them. In blocks the head would be the
+coldest temperatures and the tail the hottest, so the MLP would be fitted to
+one part of the range and tested on another. Interleaved, any head and any
+tail hold the temperatures in equal parts:
 
 ```{code-block} python
 :caption: Script 6 -- one training set per grid point, from its temperatures
@@ -900,29 +1067,101 @@ for index in range(1, N_GRID + 1):
         stacked = np.array([s.dataset[key] for s in sets])
         merged[key] = stacked.swapaxes(0, 1).reshape(-1, *stacked.shape[2:])
 
+    mlp_dir = TRAIN / f"grid-{index:03d}"
+    mlp_dir.mkdir(parents=True, exist_ok=True)
     phonon = sets[0]
     phonon.dataset = merged
     phonon.save(
-        TRAIN / f"grid-{index:03d}-merged.yaml",
+        mlp_dir / "merged.yaml",
         settings={"force_sets": True, "displacements": True},
     )
 ```
 
-Then train one MLP per grid point on its merged set:
+Then train one MLP per grid point on its merged set. `phonopy --pypolymlp`
+always writes the MLP as `polymlp.yaml` in the current directory, and the name
+cannot be changed from the command line. So run the training inside that grid
+point's own directory. Run it in `train/` instead and the 25 grid points write
+over one file, leaving only the last one:
 
 ```bash
-% phonopy grid-NNN-merged.yaml --pypolymlp --mlp-params="ntrain=..., ntest=..." -v
-# -> polymlp.yaml, beside that grid point's training set
+% cd train/grid-013
+% phonopy merged.yaml --pypolymlp --mlp-params="ntrain=..., ntest=..." -v
+# -> train/grid-013/polymlp.yaml
 ```
 
-The structures behind that fit are the ones Script 5 drew: `SNAPSHOTS` per grid
-point and temperature, a finite sample of the harmonic crystal's canonical
-distribution rather than the distribution itself. A grid point's MLP therefore
-depends on which structures its own draw happened to produce, and so does
-everything computed from it. To see by how much, draw a second set of the same
-size at one grid point, train a second MLP on it, and compare the frequencies
-the two give there.
+Script 7 reads the MLPs back from `train/grid-NNN/polymlp.yaml`, which is where
+this puts them.
 
+The displacements are drawn at random, so a training set of a given size is
+one draw among many. A second draw of the same size would give a different
+training set, and with it a different MLP and different results downstream.
+
+That difference can be measured. Pick one grid point. Draw a second set of the
+same size there with a different seed, and train a second MLP on it. Comparing
+the phonon frequencies the two MLPs give is the cheap check, but it may not be
+enough. The frequencies can agree closely while the axial expansions still
+differ, so compare the quantity you intend to report.
+
+### What the draw leaves at its defaults
+
+Script 5 leaves the other parameters of `init_random_displacements` at their
+defaults. Three of these parameters change the displacements:
+`cutoff_frequency`, `dist_func` and `max_distance`.
+
+`cutoff_frequency` is 0.01 THz by default. A mode's amplitude grows without
+bound as its {math}`|\omega|` goes to zero, so the draw leaves out every mode
+below the cutoff. The acoustic modes at {math}`\Gamma` fall below it in any
+calculation, and a grid point close to an instability can have others that do.
+
+The draw takes {math}`|\omega|`, so an imaginary mode is drawn as a real mode
+of the same magnitude. A quasi-harmonic grid can reach grid points that are
+dynamically unstable, so look at their frequencies before training on them.
+`RandomDisplacements.treat_imaginary_modes` is the explicit treatment. It takes
+{math}`|\omega|` at the commensurate points, shifts the modes between
+`freq_from` and `freq_to` up by `freq_shift`, and rebuilds the force constants
+from the shifted modes.
+
+`dist_func` chooses the occupation the draw uses, quantum by default or
+classical. `max_distance` shortens any displacement longer than the length
+given, which caps the tail of the distribution.
+
+(anisotropic-qha-normals)=
+### Sharing one draw of standard normals
+
+Drawing the {math}`\xi` once and using the same values at every grid point
+gives one realization of the randomness over the whole grid. The surface fit
+then carries it as a smooth function of the lattice parameters. The analysis
+differentiates that surface, so smoothness matters.
+
+`draw_standard_normals` returns the drawn {math}`\xi`, not displacements, and
+`run(standard_normals=...)` takes a set back. The script above does exactly
+this.
+
+The same {math}`\xi` still gives different displacements at each grid point.
+Each grid point scales them by its own frequencies and eigenvectors, which
+makes the draw thermal there. The displacement fields of neighboring grid
+points then resemble one another.
+
+Snapshot *i* is drawn from `SeedSequence([random_seed, i])`, so it depends on
+its index and on nothing else. Asking for snapshots 0 to 99 and later for 100
+to 199 gives the same 200 as asking for 0 to 199 at once. An ensemble can
+therefore be extended, or generated in blocks, with
+`draw_standard_normals(..., first_snapshot=N)`.
+
+A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
+not promise that `Generator` distribution methods give the same stream across
+its own versions (NEP 19). **Save the {math}`\xi` themselves.** Script 5 does
+that, writing one `normals-*.npz` per temperature beside the training sets.
+
+Read one back with `np.load` and hand `(ii, ij)` to
+`run(standard_normals=...)`, or to
+`draw_standard_normals(..., first_snapshot=N)` as the block already drawn.
+
+The displacements in each `phonopy_disp.yaml` record the ensemble that was
+run, and the forces attach to those, so a lost `npz` costs the extension
+rather than the training set.
+
+(anisotropic-qha-validate)=
 ### The descriptor and the amount of training data
 
 There are two things to choose here: how big a descriptor to use, and how
@@ -931,9 +1170,11 @@ what the fit falls back on when the descriptor is too large for the training
 set, so the penalty pypolymlp selects indicates whether the two are matched.
 
 `--mlp-params` also sets the descriptor. Example feature counts for a
-one-element system, with pypolymlp 0.20.5:
+one-element system, with pypolymlp 0.20.5. The last column is the time to
+evaluate the descriptor once, relative to the first row, measured in one
+execution:
 
-| features | model parameters added to `--mlp-params` | time |
+| features | model parameters added to `--mlp-params` | relative time |
 |---|---|---|
 | 781 | nothing; phonopy's defaults | 1.0 |
 | 1,176 | `gaussian_params2 = 0 7 15` | 1.2 |
@@ -965,8 +1206,9 @@ times more of them for a fraction of the time.
 More evaluation time still usually buys a lower force RMSE, once there is
 enough training data to determine the extra features. The rule is only rough:
 a fast descriptor with many features can beat a slow one with few. A lower
-force RMSE also does not have to reach the thermal expansion, which is what
-this step is for. The next section says what the MLPs are judged by instead.
+force RMSE also does not have to reach the thermal expansion, and the thermal
+expansion is what this step is for. The next section says what the MLPs are
+judged by instead.
 
 How much training data a descriptor needs is a separate question. Fit with the
 default `reg_alpha_params`, which scans five penalties from 1e-3 to 1e1, and
@@ -1008,135 +1250,87 @@ The three numbers are `linspace(p0, p1, p2)` of the base-10 logarithm, so
 `-3.0 -3.0 1` is alpha = 1e-3 alone, against the default `-3.0 1.0 5` of 1e-3
 to 1e1 in five steps.
 
+### Validate the MLP
+
 The MLPs are judged by their phonons rather than by the force RMSE. The RMSE
 includes large-amplitude structures that the harmonic and quasi-harmonic
 quantities never visit, while the frequencies are what enter
-{math}`F_\mathrm{ph}`.
+{math}`F_\mathrm{ph}`. The comparison below is still made on the forces,
+because it is cheap and it is what shows where an MLP is weak; the frequencies
+are what decides whether it is good enough.
 
-### What the draw leaves at its defaults
+The thermal supercells of this step already carry calculator forces. Evaluate
+the same supercells with the MLP, and compare the two sets of forces. Nothing
+new has to be run with the calculator. Use the structures held out as the test
+set, since the MLP was fitted to the others.
 
-`init_random_displacements` takes settings the script above does not pass.
-Three of them decide what the ensemble looks like.
-
-`cutoff_frequency` is 0.01 THz by default. A mode's amplitude grows without
-bound as its {math}`|\omega|` goes to zero, so the draw leaves out every mode
-below the cutoff. The acoustic modes at {math}`\Gamma` fall below it in any
-calculation, and a grid point close to an instability can have others that do.
-
-The draw takes {math}`|\omega|`, so an imaginary mode is drawn as a real mode
-of the same magnitude. A quasi-harmonic grid can reach grid points that are
-dynamically unstable, so look at their frequencies before training on them. `RandomDisplacements.treat_imaginary_modes` is the explicit
-treatment. It takes {math}`|\omega|` at the commensurate points, shifts the
-modes between `freq_from` and `freq_to` up by `freq_shift`, and rebuilds the
-force constants from that.
-
-`dist_func` chooses the occupation the draw uses, quantum by default or
-classical. `max_distance` shortens any displacement longer than the length
-given, which caps the tail of the distribution.
-
-(anisotropic-qha-normals)=
-### Sharing one draw of standard normals
-
-Drawing the {math}`\xi` once and using the same values at every grid point
-gives one realization of the randomness over the whole grid. The surface fit
-then carries it as a smooth function of the lattice parameters. The analysis
-differentiates that surface, so smoothness matters.
-
-`draw_standard_normals` returns the drawn {math}`\xi`, not displacements, and
-`run(standard_normals=...)` takes a set back. The script above does exactly
-this.
-
-The same {math}`\xi` still gives different displacements at each grid point.
-Each grid point scales them by its own frequencies and eigenvectors, which
-makes the draw thermal there. The displacement fields of neighbouring grid
-points then resemble one another.
-
-Snapshot *i* is drawn from `SeedSequence([random_seed, i])`, so it depends on
-its index and on nothing else. Asking for snapshots 0 to 99 and later for 100
-to 199 gives the same 200 as asking for 0 to 199 at once. An ensemble can
-therefore be extended, or generated in blocks, with
-`draw_standard_normals(..., first_snapshot=N)`.
-
-A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
-not promise that `Generator` distribution methods give the same stream across
-its own versions (NEP 19). **Save the {math}`\xi` themselves**, which Script 5
-does, one `normals-*.npz` per temperature beside the training sets:
-
-```python
-np.savez_compressed(
-    f"normals-{int(temperature)}K.npz", ii=normals[0], ij=normals[1]
-)
-```
-
-Read one back with `np.load` and hand `(ii, ij)` to `run(standard_normals=)`,
-or to `draw_standard_normals(..., first_snapshot=N)` as the block already
-drawn. The displacements in each `phonopy_disp.yaml` record the ensemble that
-was run, and that is what the forces attach to, so a lost `npz` costs the
-extension rather than the training set.
-
-(anisotropic-qha-validate)=
-### Validate the MLP
-
-The thermal supercells of this step already carry calculator forces. The same
-supercells evaluated with the MLP give a second set of forces to compare them
-with, and nothing new has to be run with the calculator. It is recommended to
-use the structures held out as the test set, because the MLP was fitted to the
-rest.
-
-The comparison is made one temperature at a time. Each temperature has its own
-amplitudes,
-and one MLP is trained on all the temperatures together. Its accuracy can
-differ from one temperature to the next.
+Compare one temperature at a time. Each temperature has its own displacement
+amplitudes, and one MLP is trained on all of them together, so its accuracy
+can differ from one temperature to the next.
 
 The phonon grid of step 2 can be compared in the same way, and there the force
 constants and the frequencies can be compared as well. Its displacements are
 one fixed distance, 0.03 Angstrom in the script there, which is usually
 smaller than the amplitudes of the 0 K draw. An MLP trained across a
-temperature range is empirically hard to make accurate at displacements that
-small, so a difference there need not mean the temperature-dependent run is
+temperature range tends to be hard to make accurate at displacements that
+small. A difference there need not mean the temperature-dependent run is
 wrong.
 
 (anisotropic-qha-sscha)=
 ### Computing the free energies with SSCHA
 
-The MLPs are for the temperature-dependent route ({ref}`mlp-sscha`), not for a
-harmonic force-constant set. They are trained on thermal displacements, and a
-harmonic set would ask them for the small fixed displacements of step 2
-instead. Steps 2 to 4 give the harmonic answer from the calculator directly.
-
-{math}`F_\mathrm{ph}` is then no longer the harmonic expression of "The free
-energy" above. With SSCHA it is the SSCHA free energy of {ref}`mlp-sscha`,
-computed from force constants that change with temperature.
+{math}`F_\mathrm{ph}` is the SSCHA free energy of {ref}`mlp-sscha`, computed
+from force constants that change with temperature. It is no longer the
+harmonic expression of "The free energy" above.
 
 The `aniso_qha_dataset.hdf5` of step 3 is used as it is. Script 7, listed in
-{ref}`anisotropic-qha-sweep-script` at the end of this page, makes one SSCHA run at
-every grid point and every temperature. Each run starts from the harmonic force
-constants the dataset carries. With no options it runs the whole grid and
-writes `fph.hdf5`:
+{ref}`anisotropic-qha-sweep-script` at the end of this page, makes one SSCHA
+run at every grid point and every temperature. Save it as `script7.py`. Each
+run starts from the harmonic force constants the dataset carries. With no
+options it runs the whole grid and writes `fph.hdf5`:
 
 ```bash
 % python script7.py
 ```
 
+Four constants at the top set the run.
+
+`SNAPSHOTS` is how many supercells each SSCHA iteration draws, 2000 in the
+script against phonopy's own 1000. It is the main cost of the step, and it is
+also what sets the error bar below. `ITERATIONS` is how many iterations each
+run makes, 16 against phonopy's 10; the iteration is what drives the force
+constants to self-consistency, so too few leaves them short of it.
+
 `MESH` is the mesh the harmonic part of the SSCHA free energy is sampled on,
-and matching it to the `--mesh` of the analysis keeps one sampling through
-the calculation. `SEED` fixes the whole run: iteration *i* draws from
+and matching it to the `--mesh` of the analysis keeps one sampling through the
+calculation. `SEED` fixes the whole run: iteration *i* draws from
 `SeedSequence([SEED, i])`, so the run is reproducible while the iterations stay
 independent.
+
+Each run reports one free energy and one error, both averaged over its
+iterations with the first one dropped. The first iteration samples the
+starting ensemble, which is still the harmonic one of step 2 rather than a
+self-consistent one, and Script 7 marks it in its log. The error of a single
+iteration is the standard error of the mean of the anharmonic term over that
+iteration's snapshots, so it falls as `SNAPSHOTS` rises. It is conditional on
+the force constants of that iteration and does not carry their own
+uncertainty, so it is a lower bound on the error of the free energy rather
+than the whole of it. `fph.hdf5` stores it beside the free energy.
 
 ### Splitting the runs across jobs
 
 One SSCHA run is minutes with the lightest descriptor and longer with a heavy
 one. Multiplied by the grid points and the temperatures, the step comes to
 hours or days. Spreading the runs over processes, nodes or jobs is therefore
-worth the trouble. A run's randomness comes from `SEED` and the iteration
-number alone, since iteration *i* draws from `SeedSequence([SEED, i])`. It
-depends on neither its position in the two loops nor the order the runs are
-made in. Either loop can be sliced, or both.
+worth the trouble, and nothing stands in the way. A run's randomness comes
+from `SEED` and the iteration number alone, as above, so it depends on neither
+a run's position in the two loops nor the order the runs are made in. Either
+loop can be sliced, or both.
 
 `-g` and `-t` run one grid point at one temperature, and write that one value
-to its own file. The grid point is numbered from 1, and the temperature is in
-K, taken to the nearest of `TEMPERATURES`:
+to its own file. The two go together, and one without the other stops the
+script. The grid point is numbered from 1, and the temperature is in K, taken
+to the nearest of `TEMPERATURES`:
 
 ```bash
 % python script7.py -g 13 -t 250
@@ -1187,8 +1381,8 @@ The values are per primitive cell. They are normalized the same way as
 `internal_energies` already carries.
 
 Since no force constants are read, the analysis also runs on a dataset built
-from the static grid alone, which is what a method that never computed
-calculator phonons has to work with:
+from the static grid alone. That is all a method has to work with when it
+never computed calculator phonons:
 
 ```bash
 % phonopy-anisotropic-qha-dataset phonopy_disp.yaml \
@@ -1201,8 +1395,9 @@ phonon_free_energies argument of run_anisotropic_qha.
   grid 25 U=... eV n_disp=0
 ```
 
-Its grid points carry the cells, {math}`U` and the electronic states. Script 7
-cannot use it, since it has no harmonic force constants to start the SSCHA runs
+Its grid points carry the cells, {math}`U` and the electronic states, but no
+harmonic force constants. Script 7 therefore cannot use such a dataset, having
+nothing to start the SSCHA runs
 from.
 
 ### Running the analysis
@@ -1223,7 +1418,7 @@ A free energy from a sampled method carries the scatter of its sampling. The
 lattice parameters that minimize the free-energy surface at one temperature
 move with that scatter, and they move independently of those at the next
 temperature. Without smoothing the analysis takes each of {math}`da/dT`,
-{math}`db/dT` and {math}`dc/dT` as a central difference between neighbouring
+{math}`db/dT` and {math}`dc/dT` as a central difference between neighboring
 temperatures, which amplifies that scatter. The command above therefore smooths
 the lattice parameters before differentiating them, and says so as it runs.
 

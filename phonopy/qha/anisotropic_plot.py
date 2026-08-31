@@ -252,7 +252,9 @@ def plot_component_contours(
         fe_el_rel = np.asarray(electronic_free_energies, dtype="double")
     elif electronic_structures is not None:
         fe_el_rel, _ = compute_electronic_contributions_from_states(
-            electronic_structures, result.temperatures
+            electronic_structures,
+            result.temperatures,
+            primitive_volumes=result.primitive_volumes,
         )
     else:
         fe_el_rel = None

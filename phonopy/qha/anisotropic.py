@@ -34,6 +34,7 @@ from phonopy.qha.thermal import (
     compute_electronic_contributions_from_states,
     compute_thermal_properties,
     freeze_ndarray_fields,
+    primitive_cell_fractions,
 )
 
 if TYPE_CHECKING:
@@ -398,6 +399,11 @@ class AnisotropicQHAResult:
     smoothing_terms : int
         Number of Einstein terms that smoothing used. Meaningless, and
         left at its default, when lattice_smoothing is "none".
+    primitive_volumes : ndarray, optional
+        Primitive-cell volume at each lattice grid point, the volume every
+        free energy in this result is normalized per. Recorded so that a
+        later consumer can put a raw calculator quantity on the same
+        normalization. shape=(n_points,)
     with_electronic : bool
         Whether the electronic free energy F_el was included. Recorded for
         the same reason as mesh: it shifts the axial split substantially
@@ -423,6 +429,7 @@ class AnisotropicQHAResult:
     surface_n_terms: int
     minimum_extrapolated: NDArray[np.bool_]
     mesh: float | Sequence[int] | NDArray[np.int64] | None = None
+    primitive_volumes: NDArray[np.double] | None = None
     lattice_smoothing: SmoothingMethod = "none"
     smoothing_terms: int = 2
     with_electronic: bool = False
@@ -714,6 +721,7 @@ def run_anisotropic_qha(
         surface_n_terms=n_terms,
         minimum_extrapolated=minimum_extrapolated[:n],
         mesh=mesh,
+        primitive_volumes=volumes,
         lattice_smoothing=lattice_smoothing,
         smoothing_terms=smoothing_terms,
         with_electronic=(
@@ -764,6 +772,9 @@ def _validate_anisotropic_inputs(
                 for electronic_states in electronic_structures
             ],
             dtype="double",
+        ) * primitive_cell_fractions(
+            electronic_structures,
+            [ph.primitive.volume for ph in phonopys],
         )
     else:
         el = np.array(internal_energies, dtype="double")
@@ -827,7 +838,7 @@ def _add_static_contributions(
         total = total + np.array(electronic_free_energies, dtype="double")
     elif electronic_structures is not None:
         fe_el_rel, _ = compute_electronic_contributions_from_states(
-            electronic_structures, temperatures
+            electronic_structures, temperatures, primitive_volumes=volumes
         )
         total = total + fe_el_rel
     if pressure is not None:

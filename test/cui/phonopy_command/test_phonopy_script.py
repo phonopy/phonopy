@@ -6,6 +6,7 @@ from __future__ import annotations
 import itertools
 import os
 import pathlib
+import sys
 import tempfile
 from unittest.mock import MagicMock, patch
 
@@ -17,10 +18,15 @@ import yaml
 import phonopy
 from phonopy.cui.phonopy_argparse import (
     PhonopyMockArgs,
+    get_collect_parser,
     get_init_parser,
     get_run_parser,
+    get_symmetry_parser,
+    resolve_collect_args,
+    resolve_symmetry_args,
 )
 from phonopy.cui.phonopy_script import (
+    _detect_collect_operation,
     _detect_init_operation,
     _prepare_dataset_by_pypolymlp,
     main,
@@ -1595,6 +1601,228 @@ def _ls():
 
 def _check_no_files():
     assert not list(pathlib.Path(".").iterdir())
+
+
+def test_collect_parser_maps_positional_to_force_sets():
+    """phonopy-collect takes the calculator output files as arguments."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["vasprun.xml-001", "vasprun.xml-002"])
+    resolve_collect_args(args, parser)
+    assert args.create_force_sets == ["vasprun.xml-001", "vasprun.xml-002"]
+    # phonopy-collect reads no configuration file.
+    assert args.filename == []
+
+
+def test_collect_parser_takes_dataset_as_first_argument():
+    """A phonopy.yaml-like file placed first names the displacement dataset."""
+    disp_filename = str(cwd / "NaCl" / "phonopy_disp.yaml.xz")
+    parser, _ = get_collect_parser()
+    args = parser.parse_args([disp_filename, "vasprun.xml-001"])
+    resolve_collect_args(args, parser)
+    assert args.filename == [disp_filename]
+    assert args.create_force_sets == ["vasprun.xml-001"]
+
+
+def test_collect_parser_leaves_missing_first_file_to_the_force_sets():
+    """A first argument that is not a readable yaml stays a force file.
+
+    Reporting it is left to the file existence check downstream, which names
+    every missing file rather than only the first.
+
+    """
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["no-such-file.xml", "vasprun.xml-001"])
+    resolve_collect_args(args, parser)
+    assert args.filename == []
+    assert args.create_force_sets == ["no-such-file.xml", "vasprun.xml-001"]
+
+
+def test_collect_parser_accepts_options_beside_the_files():
+    """Options and files mix freely, the files staying positional."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["vasprun.xml-001", "--sp"])
+    resolve_collect_args(args, parser)
+    assert args.create_force_sets == ["vasprun.xml-001"]
+    assert args.save_params is True
+
+
+def test_collect_parser_fz_takes_only_the_perfect_supercell():
+    """--fz names the supercell without displacement; the rest stay positional."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(
+        ["--fz", "perfect.xml", "vasprun.xml-001", "vasprun.xml-002"]
+    )
+    resolve_collect_args(args, parser)
+    assert args.create_force_sets is None
+    assert args.create_force_sets_zero == [
+        "perfect.xml",
+        "vasprun.xml-001",
+        "vasprun.xml-002",
+    ]
+
+
+def test_collect_parser_fz_without_displaced_supercells():
+    """--fz alone collects nothing and says so."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["--fz", "perfect.xml"])
+    with pytest.raises(SystemExit) as excinfo:
+        resolve_collect_args(args, parser)
+    assert excinfo.value.code == 2
+
+
+@pytest.mark.parametrize("flag", ["-d", "--rd", "--dim", "--symmetry", "--fc", "-f"])
+def test_collect_parser_rejects_flags_it_does_not_offer(flag: str):
+    """Setup flags, --fc, and -f (the files are positional) are not offered."""
+    parser, _ = get_collect_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([flag])
+
+
+@pytest.mark.parametrize("flag", ["--vasp", "--qe", "--wien2k"])
+def test_collect_parser_rejects_calculator_flags(flag: str):
+    """The calculator is read from phonopy_disp.yaml, not from a flag."""
+    parser, _ = get_collect_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([flag, "vasprun.xml-001"])
+
+
+def test_detect_collect_operation():
+    """The collection operations are -f and --fz.
+
+    --fc is a setup operation but not a collection one: it reads the force
+    constants of a vasprun.xml directly, without a displacement dataset.
+
+    """
+    settings = PhonopySettings()
+    assert _detect_collect_operation(settings) is None
+
+    settings.create_force_sets = ["vasprun.xml-001"]
+    assert _detect_collect_operation(settings) == "-f / --fz"
+
+    settings = PhonopySettings()
+    settings.create_force_constants = "vasprun.xml"
+    assert _detect_collect_operation(settings) is None
+    assert _detect_init_operation(False, settings) == "--fc"
+
+
+def test_phonopy_collect_mode_requires_collect_flag(capsys: pytest.CaptureFixture[str]):
+    """Phonopy-collect (mode='collect') errors when no files are given."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args()
+            argparse_control["mode"] = "collect"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+            captured = capsys.readouterr()
+            assert "No collection operation" in captured.out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_phonopy_collect_creates_force_sets():
+    """Phonopy-collect (mode='collect') writes FORCE_SETS."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "NaCl" / "vasprun.xml-001.xz",
+                    cwd / "NaCl" / "vasprun.xml-002.xz",
+                ],
+            )
+            argparse_control["mode"] = "collect"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            file_path = pathlib.Path("FORCE_SETS")
+            assert file_path.exists()
+            file_path.unlink()
+
+            _check_no_files()
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_symmetry_parser_takes_the_cell_as_an_argument():
+    """phonopy-symmetry takes the unit cell as its one argument."""
+    parser, _ = get_symmetry_parser()
+    args = parser.parse_args(["--qe", "--tolerance", "1e-3", "NaCl.in"])
+    resolve_symmetry_args(args)
+    assert args.cell_filename == "NaCl.in"
+    assert args.qe_mode is True
+    assert args.symmetry_tolerance == 1e-3
+    # phonopy-symmetry reads no configuration file.
+    assert args.filename == []
+
+
+def test_symmetry_parser_without_a_cell():
+    """Without an argument the calculator's default file name is used."""
+    parser, _ = get_symmetry_parser()
+    args = parser.parse_args([])
+    resolve_symmetry_args(args)
+    assert args.cell_filename is None
+
+
+def test_symmetry_parser_sets_is_check_symmetry():
+    """The command means --symmetry, which is what drives the settings.
+
+    Setting it is not cosmetic: it injects the dummy ``dim``, without which
+    the cell cannot be read at all for want of a supercell matrix.
+
+    """
+    parser, _ = get_symmetry_parser()
+    args = parser.parse_args(["POSCAR-unitcell"])
+    resolve_symmetry_args(args)
+    assert args.is_check_symmetry is True
+
+    settings = PhonopyConfParser(args=args, load_phonopy_yaml=False).settings
+    np.testing.assert_array_equal(settings.supercell_matrix, np.eye(3, dtype=int))
+
+
+@pytest.mark.parametrize(
+    "flag", ["-d", "--rd", "-f", "--fz", "--fc", "--nosym", "--mass", "--sp", "-c"]
+)
+def test_symmetry_parser_rejects_flags_it_does_not_offer(flag: str):
+    """Only what the symmetry display actually reads is offered."""
+    parser, _ = get_symmetry_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([flag, "POSCAR-unitcell"])
+
+
+def test_symmetry_parser_rejects_dim():
+    """--dim replaces the display with a file, so it is left to phonopy-init."""
+    parser, _ = get_symmetry_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--dim", "2", "2", "2", "POSCAR-unitcell"])
+
+
+def test_phonopy_symmetry_shows_symmetry(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    """phonopy-symmetry reads a cell, prints its symmetry and writes the cells."""
+    from phonopy.scripts.phonopy_symmetry import run
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["phonopy-symmetry", str(cwd / "POSCAR-unitcell_Cr")]
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        run()
+    assert excinfo.value.code == 0
+
+    captured = capsys.readouterr()
+    assert "space_group_type:" in captured.out
+
+    for created_filename in ("BPOSCAR", "PPOSCAR", "phonopy_symcells.yaml"):
+        assert (tmp_path / created_filename).exists()
 
 
 def _get_phonopy_args(

@@ -28,6 +28,7 @@ from phonopy.qha.lattice_sampling import (
     grid_strained_cells,
     write_strain_cells_manifest,
 )
+from phonopy.structure.atoms import PhonopyAtoms
 
 MANIFEST_FILENAME = "strain_cells.yaml"
 
@@ -151,6 +152,29 @@ def _print_diagonal_path(
         print("    (fewer than 5 cells; --compare-eos needs at least 5.)")
 
 
+def _strained_primitive(
+    phonon: phonopy.Phonopy, unitcell: PhonopyAtoms
+) -> PhonopyAtoms:
+    """Return the primitive cell of one strained unit cell.
+
+    The atoms are the primitive cell of phonopy_disp.yaml, taken as they are:
+    the strain scales the crystal axes and leaves the fractional coordinates
+    and the atom order alone. Only the lattice is rebuilt, by the relation
+    Primitive is defined by, primitive_matrix.T . unitcell. Reading the atoms
+    rather than searching for them again keeps one atom order across the whole
+    grid, and keeps the cells independent of the symmetry tolerance.
+
+    """
+    primitive = phonon.primitive
+    return PhonopyAtoms(
+        cell=np.dot(np.array(phonon.primitive_matrix).T, np.array(unitcell.cell)),
+        scaled_positions=primitive.scaled_positions,
+        numbers=primitive.numbers,
+        masses=primitive.masses,
+        magnetic_moments=primitive.magnetic_moments,
+    )
+
+
 def run() -> None:
     """Run the phonopy-strain-cells command."""
     args = get_options()
@@ -203,6 +227,22 @@ def run() -> None:
     for filename, structure in zip(filenames, cells, strict=True):
         write_crystal_structure(filename, structure, interface_mode=calculator)
 
+    # The static single point may be run on either cell, so both are written
+    # whenever the primitive matrix makes them different cells. The same test
+    # as warn_if_primitive_matrix_auto_changed_cell, so a primitive cell taken
+    # in an unusual setting counts even when it holds the same atoms.
+    primitive_filenames: list[str] | None = None
+    if not np.allclose(np.array(phonon.primitive_matrix), np.eye(3), atol=1e-5):
+        primitive_filenames = [
+            f"primcell-{i + 1:0{width}d}" for i in range(len(unitcells))
+        ]
+        for filename, unitcell in zip(primitive_filenames, unitcells, strict=True):
+            write_crystal_structure(
+                filename,
+                _strained_primitive(phonon, unitcell),
+                interface_mode=calculator,
+            )
+
     grid_shape = [grid_counts[label] for label in dof.labels]
 
     manifest = build_strain_cells_manifest(
@@ -219,6 +259,7 @@ def run() -> None:
         kind=kind,
         unitcells=list(unitcells),
         filenames=filenames,
+        primitive_filenames=primitive_filenames,
     )
     write_strain_cells_manifest(MANIFEST_FILENAME, manifest)
 
@@ -226,6 +267,14 @@ def run() -> None:
         f"Wrote {len(cells)} {kind}(s) as "
         f"{filenames[0]} .. {filenames[-1]} in {calculator} format."
     )
+    if primitive_filenames is not None:
+        print(
+            f"Also wrote the primitive cell of each as "
+            f"{primitive_filenames[0]} .. {primitive_filenames[-1]} "
+            f"(primitive {len(phonon.primitive)} atoms, "
+            f"unit cell {len(phonon.unitcell)} atoms). "
+            f"The static single point may be run on either cell."
+        )
     shape = " x ".join(str(grid_counts[label]) for label in dof.labels)
     print(f"Grid sampling: {shape} over ({', '.join(dof.labels)}).")
     _print_diagonal_path(dof, ranges, grid_counts)
