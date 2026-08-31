@@ -108,7 +108,7 @@ def _check_conventional_cell(
         "row 2 = c), so the conventional cell is required; a primitive cell "
         "of a centred lattice, or a non-standard axis order or setting, "
         "cannot be used. The conventional cell is written as BPOSCAR by "
-        '"phonopy --symmetry".'
+        '"phonopy-init --symmetry".'
     )
 
 
@@ -123,7 +123,7 @@ def get_free_lattice_dof(cell: PhonopyAtoms, symprec: float = 1e-5) -> LatticeDO
     ----------
     cell : PhonopyAtoms
         Standardized conventional cell in its native length unit, e.g. the
-        BPOSCAR written by "phonopy --symmetry".
+        BPOSCAR written by "phonopy-init --symmetry".
     symprec : float, optional
         Symmetry search tolerance passed to spglib.
 
@@ -284,6 +284,7 @@ def build_strain_cells_manifest(
     kind: str,
     unitcells: Sequence[PhonopyAtoms],
     filenames: Sequence[str],
+    primitive_filenames: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     """Build a provenance manifest for a phonopy-strain-cells run.
 
@@ -293,7 +294,9 @@ def build_strain_cells_manifest(
     run_anisotropic_qha.
 
     The recorded per-cell lengths are the free-DOF lengths of the unit cells,
-    which are the physically meaningful strained grid.
+    which are the physically meaningful strained grid. The primitive cells,
+    when they were written, are recorded beside them as primitive_file: they
+    are the same grid point, and the static single point may be run on either.
 
     Parameters
     ----------
@@ -329,10 +332,17 @@ def build_strain_cells_manifest(
     dict
 
     """
+    primitive = (
+        list(primitive_filenames) if primitive_filenames else [None] * len(filenames)
+    )
     cells: list[dict[str, Any]] = []
-    for filename, unitcell in zip(filenames, unitcells, strict=True):
+    for filename, unitcell, primitive_filename in zip(
+        filenames, unitcells, primitive, strict=True
+    ):
         lengths = np.linalg.norm(unitcell.cell, axis=1)
         entry: dict[str, Any] = {"file": filename}
+        if primitive_filename is not None:
+            entry["primitive_file"] = primitive_filename
         for label in dof.labels:
             entry[label] = round(float(lengths[dof.rows[label][0]]), 6)
         cells.append(entry)
