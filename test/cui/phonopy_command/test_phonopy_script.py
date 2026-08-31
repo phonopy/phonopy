@@ -17,10 +17,13 @@ import yaml
 import phonopy
 from phonopy.cui.phonopy_argparse import (
     PhonopyMockArgs,
+    get_collect_parser,
     get_init_parser,
     get_run_parser,
+    resolve_collect_args,
 )
 from phonopy.cui.phonopy_script import (
+    _detect_collect_operation,
     _detect_init_operation,
     _prepare_dataset_by_pypolymlp,
     main,
@@ -1595,6 +1598,152 @@ def _ls():
 
 def _check_no_files():
     assert not list(pathlib.Path(".").iterdir())
+
+
+def test_collect_parser_maps_positional_to_force_sets():
+    """phonopy-collect takes the calculator output files as arguments."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["vasprun.xml-001", "vasprun.xml-002"])
+    resolve_collect_args(args, parser)
+    assert args.create_force_sets == ["vasprun.xml-001", "vasprun.xml-002"]
+    # phonopy-collect reads no configuration file.
+    assert args.filename == []
+
+
+def test_collect_parser_takes_dataset_as_first_argument():
+    """A phonopy.yaml-like file placed first names the displacement dataset."""
+    disp_filename = str(cwd / "NaCl" / "phonopy_disp.yaml.xz")
+    parser, _ = get_collect_parser()
+    args = parser.parse_args([disp_filename, "vasprun.xml-001"])
+    resolve_collect_args(args, parser)
+    assert args.filename == [disp_filename]
+    assert args.create_force_sets == ["vasprun.xml-001"]
+
+
+def test_collect_parser_leaves_missing_first_file_to_the_force_sets():
+    """A first argument that is not a readable yaml stays a force file.
+
+    Reporting it is left to the file existence check downstream, which names
+    every missing file rather than only the first.
+
+    """
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["no-such-file.xml", "vasprun.xml-001"])
+    resolve_collect_args(args, parser)
+    assert args.filename == []
+    assert args.create_force_sets == ["no-such-file.xml", "vasprun.xml-001"]
+
+
+def test_collect_parser_accepts_options_beside_the_files():
+    """Options and files mix freely, the files staying positional."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["vasprun.xml-001", "--sp"])
+    resolve_collect_args(args, parser)
+    assert args.create_force_sets == ["vasprun.xml-001"]
+    assert args.save_params is True
+
+
+def test_collect_parser_fz_takes_only_the_perfect_supercell():
+    """--fz names the supercell without displacement; the rest stay positional."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(
+        ["--fz", "perfect.xml", "vasprun.xml-001", "vasprun.xml-002"]
+    )
+    resolve_collect_args(args, parser)
+    assert args.create_force_sets is None
+    assert args.create_force_sets_zero == [
+        "perfect.xml",
+        "vasprun.xml-001",
+        "vasprun.xml-002",
+    ]
+
+
+def test_collect_parser_fz_without_displaced_supercells():
+    """--fz alone collects nothing and says so."""
+    parser, _ = get_collect_parser()
+    args = parser.parse_args(["--fz", "perfect.xml"])
+    with pytest.raises(SystemExit) as excinfo:
+        resolve_collect_args(args, parser)
+    assert excinfo.value.code == 2
+
+
+@pytest.mark.parametrize("flag", ["-d", "--rd", "--dim", "--symmetry", "--fc", "-f"])
+def test_collect_parser_rejects_flags_it_does_not_offer(flag: str):
+    """Setup flags, --fc, and -f (the files are positional) are not offered."""
+    parser, _ = get_collect_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([flag])
+
+
+@pytest.mark.parametrize("flag", ["--vasp", "--qe", "--wien2k"])
+def test_collect_parser_rejects_calculator_flags(flag: str):
+    """The calculator is read from phonopy_disp.yaml, not from a flag."""
+    parser, _ = get_collect_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([flag, "vasprun.xml-001"])
+
+
+def test_detect_collect_operation():
+    """The collection operations are -f and --fz.
+
+    --fc is a setup operation but not a collection one: it reads the force
+    constants of a vasprun.xml directly, without a displacement dataset.
+
+    """
+    settings = PhonopySettings()
+    assert _detect_collect_operation(settings) is None
+
+    settings.create_force_sets = ["vasprun.xml-001"]
+    assert _detect_collect_operation(settings) == "-f / --fz"
+
+    settings = PhonopySettings()
+    settings.create_force_constants = "vasprun.xml"
+    assert _detect_collect_operation(settings) is None
+    assert _detect_init_operation(False, settings) == "--fc"
+
+
+def test_phonopy_collect_mode_requires_collect_flag(capsys: pytest.CaptureFixture[str]):
+    """Phonopy-collect (mode='collect') errors when no files are given."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args()
+            argparse_control["mode"] = "collect"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+            captured = capsys.readouterr()
+            assert "No collection operation" in captured.out
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_phonopy_collect_creates_force_sets():
+    """Phonopy-collect (mode='collect') writes FORCE_SETS."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+                create_force_sets=[
+                    cwd / "NaCl" / "vasprun.xml-001.xz",
+                    cwd / "NaCl" / "vasprun.xml-002.xz",
+                ],
+            )
+            argparse_control["mode"] = "collect"
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            file_path = pathlib.Path("FORCE_SETS")
+            assert file_path.exists()
+            file_path.unlink()
+
+            _check_no_files()
+        finally:
+            os.chdir(original_cwd)
 
 
 def _get_phonopy_args(

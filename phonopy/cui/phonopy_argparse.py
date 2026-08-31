@@ -9,6 +9,7 @@ import os
 import sys
 from typing import Sequence
 
+from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
     add_arguments_of_calculators,
     calculator_info,
@@ -72,6 +73,13 @@ def show_deprecated_option_warnings(deprecated: list[str]) -> None:
 
 def _add_shared_options(parser: argparse.ArgumentParser) -> None:
     """Add options accepted by both phonopy-init and phonopy."""
+    _add_common_options(parser)
+    _add_displacement_options(parser)
+    _add_logging_options(parser)
+
+
+def _add_common_options(parser: argparse.ArgumentParser) -> None:
+    """Add options accepted by every command flavor."""
     parser.add_argument(
         "--pa",
         "--primitive-axis",
@@ -192,6 +200,10 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="Save parameters that can run phonopy in phonopy_params.yaml.",
     )
+
+
+def _add_displacement_options(parser: argparse.ArgumentParser) -> None:
+    """Add options that shape displacement generation."""
     parser.add_argument(
         "-d",
         "--displacement",
@@ -257,6 +269,10 @@ def _add_shared_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="Set plus minus displacements",
     )
+
+
+def _add_logging_options(parser: argparse.ArgumentParser) -> None:
+    """Add options that control the amount of output."""
     parser.add_argument(
         "-q",
         "--quiet",
@@ -1044,6 +1060,104 @@ def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
         ),
     )
     return parser, deprecated
+
+
+def get_collect_parser() -> tuple[argparse.ArgumentParser, list[str]]:
+    """Return argument parser for the phonopy-collect command.
+
+    This command is experimental. It offers the FORCE_SETS creation of
+    phonopy-init under a name that says when it runs, and takes the
+    calculator output files as positional arguments. phonopy-init keeps
+    accepting -f, --fz and --fc unchanged.
+
+    There is no -f: the files are the positional arguments. --fz takes only
+    the supercell without displacement, so that the displaced ones sit where
+    they always sit.
+
+    --fc is not offered. It reads the force constants of a vasprun.xml
+    directly, so it is VASP-only and looks at no displacement dataset, which
+    leaves nothing of this command's shape to share.
+
+    The calculator selection flags (--qe, --vasp, ...) are not offered: the
+    calculator is recorded in phonopy_disp.yaml and read from there. The
+    pre-v2 disp.yaml, which carries no calculator, is therefore read as VASP;
+    use phonopy-init for it.
+
+    A displacement dataset other than phonopy_disp.yaml is named by placing
+    it first among the arguments, the way the phonopy command takes a
+    phonopy.yaml-like file. There is no option for it.
+
+    """
+    deprecated = fix_deprecated_option_names(sys.argv)
+    parser = argparse.ArgumentParser(
+        description=(
+            "phonopy-collect: collect calculator results into a FORCE_SETS or "
+            "FORCE_CONSTANTS file."
+        ),
+        allow_abbrev=False,
+        formatter_class=_SortedHelpFormatter,
+    )
+    _add_common_options(parser)
+    _add_logging_options(parser)
+    parser.add_argument(
+        "--fz",
+        "--force-sets-zero",
+        metavar="FILE",
+        dest="perfect_filename",
+        default=None,
+        help=(
+            "Subtract the residual forces of the supercell without "
+            "displacement, whose calculator output file this is"
+        ),
+    )
+    _reject_removed_options(parser)
+    parser.add_argument(
+        "force_filenames",
+        nargs="*",
+        metavar="FILE",
+        help=(
+            "Calculator output files to collect into FORCE_SETS, i.e. the "
+            "argument of -f. A phonopy.yaml-like file placed first names the "
+            "displacement dataset; otherwise phonopy_disp.yaml is read."
+        ),
+    )
+    return parser, deprecated
+
+
+def resolve_collect_args(
+    args: argparse.Namespace, parser: argparse.ArgumentParser
+) -> None:
+    """Split phonopy-collect positional arguments by what the files are.
+
+    A phonopy.yaml-like file placed first names the displacement dataset and
+    is passed on as ``filename``, which is where the settings layer looks for
+    it. Only the first file is examined, because reading a whole vasprun.xml
+    to find out that it is not YAML is not worth its cost.
+
+    What is left are the calculator output files of the displaced supercells.
+    With --fz they follow the supercell without displacement, in the one list
+    the settings layer takes.
+
+    """
+    filenames = list(getattr(args, "force_filenames", None) or [])
+    args.filename = []
+    args.create_force_sets = None
+    args.create_force_sets_zero = None
+    if (
+        filenames
+        and os.path.isfile(filenames[0])
+        and is_file_phonopy_yaml(filenames[0])
+    ):
+        args.filename = [filenames.pop(0)]
+    if args.perfect_filename is None:
+        args.create_force_sets = filenames or None
+    elif filenames:
+        args.create_force_sets_zero = [args.perfect_filename] + filenames
+    else:
+        parser.error(
+            "--fz names the supercell without displacement; the displaced "
+            "ones are still needed as arguments."
+        )
 
 
 def get_run_parser() -> tuple[argparse.ArgumentParser, list[str]]:
