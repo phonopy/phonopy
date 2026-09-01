@@ -1758,13 +1758,8 @@ set,
 is computed by `sample_u2` and estimates {math}`\langle u^2
 \rangle_{\tilde{\rho}_\Phi(T')}`. The ratio {math}`\overline{u^2} / \langle
 u^2 \rangle_{\tilde{\rho}_\Phi(T)}` is 1 when {math}`T'` equals {math}`T`, the
-temperature the directory is named after.
-
-`check_amplitudes` forms that ratio at every trained temperature. A set with
-the wrong label gives a ratio far from 1 at the temperature its directory
-names, and the temperature that minimizes {math}`|\ln (\overline{u^2} /
-\langle u^2 \rangle_{\tilde{\rho}_\Phi(T)})|` is {math}`T'`. The script prints
-it as `closest`.
+temperature the directory is named after. `check_amplitudes` prints it for
+every set, and a set with the wrong label gives a ratio far from 1.
 
 The next check compares neighbouring grid points. Grid points {math}`g` and
 {math}`g'` draw from {math}`\tilde{\rho}_{\Phi^{(g)}}(T)` and
@@ -1870,23 +1865,17 @@ def read_set(set_dir, point):
 
 
 def check_amplitudes(dataset, temperatures):
-    """Compare each set with the reference at every trained temperature."""
+    """Compare each set with the reference at the temperature it is named after."""
     u = {}  # (grid point numbered from 1, temperature) -> displacements
-    print("grid    T        <u^2> / uu   closest")
+    print("grid    T        <u^2> / uu")
     for point in dataset.grid_points:
         index = point.index + 1
         reference = reference_u2(point, temperatures)
         for temperature in temperatures:
             set_dir = TRAIN / f"grid-{index:03d}-{temperature}K"
             u[index, temperature] = read_set(set_dir, point)
-            sample = sample_u2(u[index, temperature])
-            ratios = {t: sample / reference[t] for t in temperatures}
-            closest = min(ratios, key=lambda t: abs(np.log(ratios[t])))
-            mark = "" if closest == temperature else f"   <- {closest} K"
-            print(
-                f"{index:4d} {temperature:5d} K   "
-                f"{ratios[temperature]:10.3f}   {closest:5d} K{mark}"
-            )
+            ratio = sample_u2(u[index, temperature]) / reference[temperature]
+            print(f"{index:4d} {temperature:5d} K   {ratio:10.3f}")
     return u
 
 
@@ -1968,8 +1957,7 @@ Mistakes were introduced deliberately in the NaCl grid, and the checks
 reported them.
 
 - A set drawn at the wrong temperature gave a ratio of 3.9 for a 0 K directory
-  holding the 300 K draw, and 0.26 for the reverse. `closest` named the
-  temperature the set was drawn at in both cases.
+  holding the 300 K draw, and 0.26 for the reverse.
 - Normals not shared across the grid gave `rms|du| / rms u` of 1.42, the
   {math}`\sqrt{2}` of two independent draws. `sampling_matrix="eigenvector"`
   gave 1.35.
