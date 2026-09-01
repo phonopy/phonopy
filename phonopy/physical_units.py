@@ -394,9 +394,17 @@ def get_calculator_physical_units(
             / (2 * pi)
             / 1e12
         )  # [THz] 154.10794
+        # Cells stay in bohr and force constants in hartree/bohr^2, so
+        # e^2/(4*pi*eps0) is 1 hartree*bohr here. DFTB+ is left on the
+        # eV*angstrom value it has used since 2021.
+        nac_factor = (
+            physical_units.Hartree * physical_units.Bohr
+            if interface_mode in ("dftbp", "exciting")
+            else 1.0
+        )
         units = CalculatorPhysicalUnits(
             factor=ElkToTHz,
-            nac_factor=physical_units.Hartree * physical_units.Bohr,
+            nac_factor=nac_factor,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
             energy_to_eV=physical_units.Hartree,
