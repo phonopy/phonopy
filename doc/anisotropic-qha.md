@@ -1077,10 +1077,8 @@ for index in range(1, N_GRID + 1):
     )
 ```
 
-Nothing after these two scripts checks what they wrote.
-{ref}`anisotropic-qha-check-displacements` compares each set against the
-distribution it was drawn from. Run the checks that need only the displacements
-before starting the calculator.
+To check the sets before starting the calculator, see
+{ref}`anisotropic-qha-check-displacements`.
 
 Then train one MLP per grid point on its merged set. `phonopy --pypolymlp`
 always writes the MLP as `polymlp.yaml` in the current directory, and the name
@@ -1714,7 +1712,10 @@ into `train/grid-NNN-TK/`. Script 6 merges the sets of one grid point into
 The checks in this appendix compare what script 5 and script 6 wrote against
 the distribution the supercells were drawn from. They take seconds. The checks
 on the displacements read `phonopy_disp.yaml` and the dataset of step 3, so
-run them before the calculator.
+run them before the calculator. Script 6 merges the forces with the
+displacements, so the check on the merged sets has something to read only
+after the calculator, and before then it reports every grid point as having no
+`merged.yaml`.
 
 The draw and the reference use the same force constants {math}`\Phi`. The
 check therefore tests the temperature a set was drawn at, and tests nothing
@@ -1758,13 +1759,8 @@ set,
 is computed by `sample_u2` and estimates {math}`\langle u^2
 \rangle_{\tilde{\rho}_\Phi(T')}`. The ratio {math}`\overline{u^2} / \langle
 u^2 \rangle_{\tilde{\rho}_\Phi(T)}` is 1 when {math}`T'` equals {math}`T`, the
-temperature the directory is named after.
-
-`check_amplitudes` forms that ratio at every trained temperature. A set with
-the wrong label gives a ratio far from 1 at the temperature its directory
-names, and the temperature that minimizes {math}`|\ln (\overline{u^2} /
-\langle u^2 \rangle_{\tilde{\rho}_\Phi(T)})|` is {math}`T'`. The script prints
-it as `closest`.
+temperature the directory is named after. `check_amplitudes` prints it for
+every set, and a set with the wrong label gives a ratio far from 1.
 
 The next check compares neighbouring grid points. Grid points {math}`g` and
 {math}`g'` draw from {math}`\tilde{\rho}_{\Phi^{(g)}}(T)` and
@@ -1772,37 +1768,36 @@ The next check compares neighbouring grid points. Grid points {math}`g` and
 the strain between the two grid points. The grid points also share one draw of
 standard normals ({ref}`anisotropic-qha-normals`), so at a fixed temperature
 and snapshot their displacements differ only through {math}`\Phi^{(g)}` and
-{math}`\Phi^{(g')}`. `relative_difference` measures that difference as
+{math}`\Phi^{(g')}`. `correlation` measures how close the two sets are as
 
 ```{math}
-d(g, g') = \frac{\operatorname{rms} \bigl( u^{(g)} - u^{(g')} \bigr)}
-{\operatorname{rms} u^{(g)}},
+\rho(g, g') = \frac{\sum_{n} \sum_{l\kappa j}
+u_{l\kappa j}^{(g,n)} u_{l\kappa j}^{(g',n)}}
+{\Bigl[ \sum_{n} \sum_{l\kappa j} \bigl( u_{l\kappa j}^{(g,n)} \bigr)^2
+\sum_{n} \sum_{l\kappa j} \bigl( u_{l\kappa j}^{(g',n)} \bigr)^2
+\Bigr]^{1/2}},
 ```
 
-with the root mean square taken over the snapshots, the atoms and the
-Cartesian directions. Shared normals keep {math}`d` small, and the spacing of
-the grid sets its size.
+where {math}`u_{l\kappa j}^{(g,n)}` is snapshot {math}`n` of the set at grid
+point {math}`g`, and every sum runs over the {math}`N` snapshots and the
+supercell. Shared normals put {math}`\rho` near 1, and the spacing of the grid
+sets how far below 1 it falls. `check_neighbours` prints {math}`1 - \rho`.
 
-Two draws that do not share their normals are uncorrelated, so {math}`\langle
-(u^{(g)} - u^{(g')})^2 \rangle = \langle (u^{(g)})^2 \rangle + \langle
-(u^{(g')})^2 \rangle` and {math}`d` is {math}`\sqrt{2}`. A value near
-{math}`\sqrt{2}` means the normals were not shared.
+Two draws that do not share their normals are uncorrelated, so {math}`\rho` is
+0. A value of {math}`1 - \rho` near 1 means the normals were not shared.
 
-Neighbouring sets are close only under the default
-`sampling_matrix="symmetric"`, which builds the displacements from the
-Hermitian square root {math}`E \operatorname{diag}(\sigma) E^\dagger`. That
-product depends on {math}`\Phi` alone. With `"eigenvector"`, the
-behaviour of phonopy 4.4 and earlier, the displacements depend on the
-eigenvectors the solver returned, and the same normals give a different
-displacement field at each grid point.
+`read_set` compares the basis vectors of each set against those of the grid
+point its directory is named after. The set carries its own unit cell in
+`phonopy_disp.yaml`, the cell script 5 built the supercells from, and the
+dataset of step 3 carries the relaxed cell of each grid point as `point.cell`.
+Both comparands are `cell`, the 3x3 matrix whose rows are the basis vectors,
+and they agree element by element to 1e-8 Angstrom when the directory holds
+the grid point it names. `read_set` also counts the snapshots of the set.
 
-`read_set` compares the lattice of each set against the lattice of the grid
-point its directory is named after, and counts the snapshots it holds. The
-lattice catches an off-by-one in the `point.index + 1` of script 5.
-
-`check_merged` reads the merged set of script 6. It counts the structures, and
-it checks that the structures of each temperature are at the offsets
-`k::len(TEMPERATURES)` the merge writes them to.
+`check_merged` reads the merged set of script 6. It counts the structures and
+checks that the structures of each temperature are at the offsets
+`k::len(TEMPERATURES)` the merge writes them to. It closes with the number of
+merged sets it read, and names the grid points that have no `merged.yaml`.
 
 ### The script
 
@@ -1843,9 +1838,10 @@ def sample_u2(displacements):
     return (displacements**2).sum() / len(displacements)
 
 
-def relative_difference(u_a, u_b):
-    """Return rms(u_a - u_b) / rms(u_a)."""
-    return np.sqrt(((u_a - u_b) ** 2).mean()) / np.sqrt((u_a**2).mean())
+def correlation(u_a, u_b):
+    """Return the correlation of two sets of displacements."""
+    a, b = u_a.ravel(), u_b.ravel()
+    return float(a @ b / np.sqrt((a @ a) * (b @ b)))
 
 
 def neighbour_pairs(shape):
@@ -1859,10 +1855,10 @@ def neighbour_pairs(shape):
 
 
 def read_set(set_dir, point):
-    """Return the displacements of one set, with its lattice and count."""
+    """Return the displacements of one set, with its cell and count checked."""
     ph = phonopy.load(set_dir / "phonopy_disp.yaml", produce_fc=False, log_level=0)
     if not np.allclose(ph.unitcell.cell, point.cell.cell, atol=1e-8):
-        print(f"  {set_dir}: lattice is not that of grid point {point.index + 1}")
+        print(f"  {set_dir}: not the basis vectors of grid point {point.index + 1}")
     displacements = np.array(ph.dataset["displacements"])
     if len(displacements) != SNAPSHOTS:
         print(f"  {set_dir}: {len(displacements)} snapshots, not {SNAPSHOTS}")
@@ -1870,36 +1866,30 @@ def read_set(set_dir, point):
 
 
 def check_amplitudes(dataset, temperatures):
-    """Compare each set with the reference at every trained temperature."""
+    """Compare each set with the reference at the temperature it is named after."""
     u = {}  # (grid point numbered from 1, temperature) -> displacements
-    print("grid    T        <u^2> / uu   closest")
+    print("grid    T        <u^2> / uu")
     for point in dataset.grid_points:
         index = point.index + 1
         reference = reference_u2(point, temperatures)
         for temperature in temperatures:
             set_dir = TRAIN / f"grid-{index:03d}-{temperature}K"
             u[index, temperature] = read_set(set_dir, point)
-            sample = sample_u2(u[index, temperature])
-            ratios = {t: sample / reference[t] for t in temperatures}
-            closest = min(ratios, key=lambda t: abs(np.log(ratios[t])))
-            mark = "" if closest == temperature else f"   <- {closest} K"
-            print(
-                f"{index:4d} {temperature:5d} K   "
-                f"{ratios[temperature]:10.3f}   {closest:5d} K{mark}"
-            )
+            ratio = sample_u2(u[index, temperature]) / reference[temperature]
+            print(f"{index:4d} {temperature:5d} K   {ratio:10.3f}")
     return u
 
 
 def check_neighbours(u, temperatures, pairs):
     """Compare the displacement field of neighbouring grid points."""
-    print("\n   T    neighbouring grid points, rms|du| / rms u")
+    print("\n   T    neighbouring grid points, 1 - correlation")
     for temperature in temperatures:
         values = [
-            relative_difference(u[a, temperature], u[b, temperature]) for a, b in pairs
+            1.0 - correlation(u[a, temperature], u[b, temperature]) for a, b in pairs
         ]
         print(
-            f"{temperature:5d} K   median {np.median(values):.3f}   "
-            f"max {max(values):.3f}"
+            f"{temperature:5d} K   median {np.median(values):.1e}   "
+            f"max {max(values):.1e}"
         )
 
 
@@ -1907,10 +1897,13 @@ def check_merged(dataset, u, temperatures):
     """Check the size and the interleaving of each merged set."""
     print("\nmerged sets")
     expected = len(temperatures) * SNAPSHOTS
+    checked = 0
+    missing = []
     for point in dataset.grid_points:
         index = point.index + 1
         merged = TRAIN / f"grid-{index:03d}" / "merged.yaml"
         if not merged.exists():
+            missing.append(index)
             continue
         ph = phonopy.load(merged, produce_fc=False, log_level=0)
         d = np.array(ph.dataset["displacements"])
@@ -1922,7 +1915,13 @@ def check_merged(dataset, u, temperatures):
                     f"  {merged}: the {temperature} K structures are not at "
                     f"{k}::{len(temperatures)}"
                 )
-    print("  checked")
+        checked += 1
+    print(
+        f"  {checked} of {len(dataset.grid_points)} grid points, "
+        f"{expected} structures each"
+    )
+    if missing:
+        print(f"  no merged.yaml at grid points {', '.join(map(str, missing))}")
 
 
 def main():
@@ -1941,37 +1940,3 @@ The grid points are ordered row-major over `dataset.grid_shape`, so
 `neighbour_pairs` adds the stride of each axis to the flat index of a grid
 point. A dataset that is not a tensor grid has `grid_shape` None, and its
 pairs have to be given to `check_neighbours` explicitly.
-
-### Measured values
-
-The values here were measured on the NaCl test data of this repository
-(`test/phonopy_params_NaCl-{0.995,1.00,1.005}.yaml.xz`, a 64-atom supercell at
-three volumes 0.5 per cent apart), used as a three-point grid with the draw at
-its defaults. They give the size of each quantity, and they are not tolerances
-for another system.
-
-The ratio of the sample {math}`\langle u^2 \rangle` to `uu` was 1.003, 0.999,
-0.997 and 0.997 at 0, 100, 250 and 400 K with 50 snapshots, and within 0.03 of
-1 with 8 snapshots. The references at those temperatures were 0.89, 1.34, 2.83
-and 4.42 Angstrom squared. The spacing between the references is much larger
-than the spread of the estimate, so the check separates the temperatures.
-
-Per atom and direction the estimate has a relative error of
-{math}`\sqrt{2/N}`. The sum over the supercell averages most of that error
-away, and 50 snapshots are enough.
-
-`rms|du| / rms u` between neighbours was 0.005 at 0 K and 0.009 at 300 K for
-the 0.5 per cent step in volume. The value grows with the spacing of the grid.
-Expect that order, and read anything near 1 as a failure.
-
-Mistakes were introduced deliberately in the NaCl grid, and the checks
-reported them.
-
-- A set drawn at the wrong temperature gave a ratio of 3.9 for a 0 K directory
-  holding the 300 K draw, and 0.26 for the reverse. `closest` named the
-  temperature the set was drawn at in both cases.
-- Normals not shared across the grid gave `rms|du| / rms u` of 1.42, the
-  {math}`\sqrt{2}` of two independent draws. `sampling_matrix="eigenvector"`
-  gave 1.35.
-- A merge left in blocks was reported for each temperature, with the offset at
-  which the check expected it.
