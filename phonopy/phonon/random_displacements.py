@@ -34,9 +34,22 @@ def bose_einstein_dist(
     Returns
     -------
     ndarray or float
-        Phonon occupation numbers.
+        Phonon occupation numbers. At t=0, the t -> 0 limit is returned, which
+        is zero for a positive frequency, -1 for a negative frequency, and nan
+        at zero frequency.
+
+    Raises
+    ------
+    ValueError
+        If t is negative.
 
     """
+    if t < 0:
+        raise ValueError(f"Temperature must not be negative, but {t} was given.")
+    if t == 0:
+        # The expression below divides by zero at t=0.
+        n = np.where(x > 0, 0.0, np.where(x < 0, -1.0, np.nan))
+        return n if isinstance(x, np.ndarray) else n[()]
     return 1.0 / (
         np.exp(get_physical_units().THzToEv * x / (get_physical_units().KB * t)) - 1
     )
