@@ -134,8 +134,9 @@ yaml files, e.g.,
 
 ```python
 import yaml
+
 with open("band.yaml") as f:
-   data = yaml.load(f)
+    data = yaml.load(f)
 ```
 
 ### `mesh.yaml`, `band.yaml`, `qpoints.yaml`

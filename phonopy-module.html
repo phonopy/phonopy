@@ -543,12 +543,15 @@ module is imported by:</p>
 <p>The instance of <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> can be made by reading a crystal structure in a
 variety of calculator formats found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_crystal_structure</span>
-<span class="n">unitcell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"POSCAR-unitcell"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">'vasp'</span><span class="p">)</span>
+
+<span class="n">unitcell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"POSCAR-unitcell"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">"vasp"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For VASP format, the keyword argument of <code class="docutils literal notranslate"><span class="pre">interface_mode</span></code> can be omitted. For
 QE,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"NaCl.in"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">'qe'</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span>
+    <span class="s2">"NaCl.in"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s2">"qe"</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">read_crystal_structure</span></code> returns a tuple and the first element is the
@@ -573,21 +576,25 @@ objects.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.atoms</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyAtoms</span>
 
 <span class="n">a</span> <span class="o">=</span> <span class="mf">5.404</span>
-<span class="n">unitcell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">'Si'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
-                        <span class="n">cell</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span><span class="p">),</span>
-                        <span class="n">scaled_positions</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                                          <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                          <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                          <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                                          <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">],</span>
-                                          <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
-                                          <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
-                                          <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">]])</span>
-<span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span>
-                 <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
-                 <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                   <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                   <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="n">unitcell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
+    <span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s2">"Si"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="n">cell</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span><span class="p">),</span>
+    <span class="n">scaled_positions</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">],</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span>
+    <span class="n">unitcell</span><span class="p">,</span>
+    <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
+    <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
+<span class="p">)</span>
 <span class="n">phonon</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
 <span class="n">supercells</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">supercells_with_displacements</span>
 </pre></div>
@@ -619,11 +626,11 @@ information on physical unit conversion is found at
 <span class="p">)</span>
 
 <span class="n">calc</span> <span class="o">=</span> <span class="s2">"qe"</span>  <span class="c1"># Quantum Espresso</span>
-<span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"pw.in"</span><span class="p">,</span>
-    <span class="n">interface_mode</span><span class="o">=</span><span class="n">calc</span><span class="p">)</span>
+<span class="n">unitcell</span><span class="p">,</span> <span class="n">optional_structure_info</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">"pw.in"</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="n">calc</span><span class="p">)</span>
 
-<span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span>
-    <span class="n">set_factor_by_calculator</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span>
+    <span class="n">unitcell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calc</span><span class="p">,</span> <span class="n">set_factor_by_calculator</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 
 <span class="n">phonon</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
 <span class="n">supercells</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">supercells_with_displacements</span>
@@ -649,9 +656,11 @@ calculation outputs have to be collected by users. However output parsers for
 selected calculators are found under <code class="docutils literal notranslate"><span class="pre">phonopy.interface</span></code>, which may be useful.
 The forces have to be stored in a specific structure: a numpy array (or nested
 list) as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="p">[</span> <span class="n">f_1x</span><span class="p">,</span> <span class="n">f_1y</span><span class="p">,</span> <span class="n">f_1z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">f_2x</span><span class="p">,</span> <span class="n">f_2y</span><span class="p">,</span> <span class="n">f_2z</span> <span class="p">],</span> <span class="o">...</span> <span class="p">],</span> <span class="c1"># first supercell</span>
-  <span class="p">[</span> <span class="p">[</span> <span class="n">f_1x</span><span class="p">,</span> <span class="n">f_1y</span><span class="p">,</span> <span class="n">f_1z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">f_2x</span><span class="p">,</span> <span class="n">f_2y</span><span class="p">,</span> <span class="n">f_2z</span> <span class="p">],</span> <span class="o">...</span> <span class="p">],</span> <span class="c1"># second supercell</span>
-  <span class="o">...</span>                                                   <span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">[[</span><span class="n">f_1x</span><span class="p">,</span> <span class="n">f_1y</span><span class="p">,</span> <span class="n">f_1z</span><span class="p">],</span> <span class="p">[</span><span class="n">f_2x</span><span class="p">,</span> <span class="n">f_2y</span><span class="p">,</span> <span class="n">f_2z</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>  <span class="c1"># first supercell</span>
+    <span class="p">[[</span><span class="n">f_1x</span><span class="p">,</span> <span class="n">f_1y</span><span class="p">,</span> <span class="n">f_1z</span><span class="p">],</span> <span class="p">[</span><span class="n">f_2x</span><span class="p">,</span> <span class="n">f_2y</span><span class="p">,</span> <span class="n">f_2z</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>  <span class="c1"># second supercell</span>
+    <span class="o">...</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
 </div>
 <p>This array (<code class="docutils literal notranslate"><span class="pre">sets_of_forces</span></code>) is set to the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object by:</p>
@@ -719,9 +728,9 @@ future major version. The data attributes of the result objects
 listed below are the stable surface.</p>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bs</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">run_band_structure</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>  <span class="c1"># compute and return</span>
-<span class="n">bs</span><span class="o">.</span><span class="n">frequencies</span>                          <span class="c1"># read data attributes</span>
-<span class="n">bs</span><span class="o">.</span><span class="n">write_yaml</span><span class="p">()</span>                         <span class="c1"># file output</span>
-<span class="n">bs</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>                             <span class="c1"># draw into a matplotlib Axes</span>
+<span class="n">bs</span><span class="o">.</span><span class="n">frequencies</span>  <span class="c1"># read data attributes</span>
+<span class="n">bs</span><span class="o">.</span><span class="n">write_yaml</span><span class="p">()</span>  <span class="c1"># file output</span>
+<span class="n">bs</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>  <span class="c1"># draw into a matplotlib Axes</span>
 </pre></div>
 </div>
 <p>Internal machinery such as <code class="docutils literal notranslate"><span class="pre">DynamicalMatrix</span></code> and <code class="docutils literal notranslate"><span class="pre">GroupVelocity</span></code> is
@@ -806,7 +815,7 @@ are written in the default behaviour.</p>
 <code class="docutils literal notranslate"><span class="pre">filename</span></code> keword argument, which may be necessary if using certain CUI commands
 that expect a particular filename</p>
 <p>The force constants can be written as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s1">'force_constants'</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"force_constants"</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
 </section>
@@ -829,8 +838,10 @@ Imaginary frequencies are encoded as negative real numbers.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.band_structure</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_band_qpoints_and_path_connections</span>
 
-<span class="n">path</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.625</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">]]]</span>
+<span class="n">path</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.625</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">]],</span>
+    <span class="p">[[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">]],</span>
+<span class="p">]</span>
 <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"$</span><span class="se">\\</span><span class="s2">Gamma$"</span><span class="p">,</span> <span class="s2">"X"</span><span class="p">,</span> <span class="s2">"U"</span><span class="p">,</span> <span class="s2">"K"</span><span class="p">,</span> <span class="s2">"$</span><span class="se">\\</span><span class="s2">Gamma$"</span><span class="p">,</span> <span class="s2">"L"</span><span class="p">,</span> <span class="s2">"W"</span><span class="p">]</span>
 <span class="n">qpoints</span><span class="p">,</span> <span class="n">connections</span> <span class="o">=</span> <span class="n">get_band_qpoints_and_path_connections</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="mi">51</span><span class="p">)</span>
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
@@ -940,16 +951,14 @@ constant volume at temperatures are obtained from the returned
 <code class="docutils literal notranslate"><span class="pre">free_energy</span></code>, <code class="docutils literal notranslate"><span class="pre">entropy</span></code>, and <code class="docutils literal notranslate"><span class="pre">heat_capacity</span></code> (the same object is also
 accessible via the <code class="docutils literal notranslate"><span class="pre">thermal_properties</span></code> property).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">run_mesh</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>
-<span class="n">tp</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">run_thermal_properties</span><span class="p">(</span><span class="n">t_step</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                                   <span class="n">t_max</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-                                   <span class="n">t_min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">tp</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">run_thermal_properties</span><span class="p">(</span><span class="n">t_step</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">t_max</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">t_min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">temperatures</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">temperatures</span>
 <span class="n">free_energy</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">free_energy</span>
 <span class="n">entropy</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">entropy</span>
 <span class="n">heat_capacity</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">heat_capacity</span>
 
 <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">cv</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">temperatures</span><span class="p">,</span> <span class="n">free_energy</span><span class="p">,</span> <span class="n">entropy</span><span class="p">,</span> <span class="n">heat_capacity</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">((</span><span class="s2">"</span><span class="si">%12.3f</span><span class="s2"> "</span> <span class="o">+</span> <span class="s2">"</span><span class="si">%15.7f</span><span class="s2">"</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span> <span class="n">t</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">cv</span> <span class="p">))</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s2">"</span><span class="si">%12.3f</span><span class="s2"> "</span> <span class="o">+</span> <span class="s2">"</span><span class="si">%15.7f</span><span class="s2">"</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">cv</span><span class="p">))</span>
 
 <span class="n">phonon</span><span class="o">.</span><span class="n">plot_thermal_properties</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -998,19 +1007,13 @@ following keys:</p>
 </tbody>
 </table>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">born</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.08878299</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="o">-</span><span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08878299</span><span class="p">]]]</span>
-<span class="n">epsilon</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">2.56544559</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-           <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.56544559</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-           <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">2.56544559</span><span class="p">]]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">born</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[[</span><span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.08878299</span><span class="p">]],</span>
+    <span class="p">[[</span><span class="o">-</span><span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08878299</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08878299</span><span class="p">]],</span>
+<span class="p">]</span>
+<span class="n">epsilon</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">2.56544559</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.56544559</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">2.56544559</span><span class="p">]]</span>
 <span class="n">factors</span> <span class="o">=</span> <span class="mf">14.400</span>
-<span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'born'</span><span class="p">:</span> <span class="n">born</span><span class="p">,</span>
-                     <span class="s1">'factor'</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span>
-                     <span class="s1">'dielectric'</span><span class="p">:</span> <span class="n">epsilon</span><span class="p">}</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"born"</span><span class="p">:</span> <span class="n">born</span><span class="p">,</span> <span class="s2">"factor"</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span> <span class="s2">"dielectric"</span><span class="p">:</span> <span class="n">epsilon</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
@@ -1023,9 +1026,7 @@ a band path or a mesh), use <code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">dynamical_matrices</span></code> (the same object is also accessible via the
 <code class="docutils literal notranslate"><span class="pre">qpoints</span></code> property).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qpts</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">run_qpoints</span><span class="p">(</span>
-    <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-     <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-     <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+    <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
     <span class="n">with_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">with_group_velocities</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1167,15 +1168,15 @@ the convention of LAPACK, which can be shown at
 <section id="initialization">
 <h3>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">#</a></h3>
 <p>The usable keywords in the initialization are:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">scaled_positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">numbers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">masses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">magnetic_moments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">species_table</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="n">species_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">scaled_positions</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">positions</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">numbers</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">symbols</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">masses</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">magnetic_moments</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">species_table</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+<span class="n">species_ids</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
 </pre></div>
 </div>
 <p>At least three arguments have to be given at the initialization, which are</p>
@@ -1196,14 +1197,14 @@ arising from the Virtual Crystal Approximation; see <a class="reference internal
 <section id="cell">
 <span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">cell</span></code><a class="headerlink" href="#cell" title="Link to this heading">#</a></h4>
 <p>Basis vectors are given in the matrix form in Cartesian coordinates.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">a_x</span><span class="p">,</span> <span class="n">a_y</span><span class="p">,</span> <span class="n">a_z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">b_x</span><span class="p">,</span> <span class="n">b_y</span><span class="p">,</span> <span class="n">b_z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">c_x</span><span class="p">,</span> <span class="n">c_y</span><span class="p">,</span> <span class="n">c_z</span> <span class="p">]</span> <span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span><span class="n">a_x</span><span class="p">,</span> <span class="n">a_y</span><span class="p">,</span> <span class="n">a_z</span><span class="p">],</span> <span class="p">[</span><span class="n">b_x</span><span class="p">,</span> <span class="n">b_y</span><span class="p">,</span> <span class="n">b_z</span><span class="p">],</span> <span class="p">[</span><span class="n">c_x</span><span class="p">,</span> <span class="n">c_y</span><span class="p">,</span> <span class="n">c_z</span><span class="p">]]</span>
 </pre></div>
 </div>
 </section>
 <section id="scaled-positions">
 <h4><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code><a class="headerlink" href="#scaled-positions" title="Link to this heading">#</a></h4>
 <p>Atomic positions in fractional coordinates.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">x1_a</span><span class="p">,</span> <span class="n">x1_b</span><span class="p">,</span> <span class="n">x1_c</span> <span class="p">],</span> <span class="p">[</span> <span class="n">x2_a</span><span class="p">,</span> <span class="n">x2_b</span><span class="p">,</span> <span class="n">x2_c</span> <span class="p">],</span> <span class="p">[</span> <span class="n">x3_a</span><span class="p">,</span> <span class="n">x3_b</span><span class="p">,</span> <span class="n">x3_c</span> <span class="p">],</span> <span class="o">...</span> <span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span><span class="n">x1_a</span><span class="p">,</span> <span class="n">x1_b</span><span class="p">,</span> <span class="n">x1_c</span><span class="p">],</span> <span class="p">[</span><span class="n">x2_a</span><span class="p">,</span> <span class="n">x2_b</span><span class="p">,</span> <span class="n">x2_c</span><span class="p">],</span> <span class="p">[</span><span class="n">x3_a</span><span class="p">,</span> <span class="n">x3_b</span><span class="p">,</span> <span class="n">x3_c</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
@@ -1218,7 +1219,7 @@ arising from the Virtual Crystal Approximation; see <a class="reference internal
 <section id="symbols">
 <h4><code class="docutils literal notranslate"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Link to this heading">#</a></h4>
 <p>Chemical symbols, e.g.,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">'Zn'</span><span class="p">,</span> <span class="s1">'Zn'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">,</span> <span class="s1">'O'</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s2">"Zn"</span><span class="p">,</span> <span class="s2">"Zn"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">,</span> <span class="s2">"O"</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>for the ZnO unit cell.</p>
@@ -1319,8 +1320,8 @@ masses are the weight-averaged sum of constituent atomic masses.</p>
 
 <span class="n">species_table</span><span class="p">,</span> <span class="n">species_ids</span> <span class="o">=</span> <span class="n">build_species_table_from_mixtures</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="p">[(</span><span class="s2">"Si"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>                  <span class="c1"># ordinary Si</span>
-        <span class="p">[(</span><span class="s2">"Ge"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="s2">"Sn"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span>     <span class="c1"># GeSn mixed-species site</span>
+        <span class="p">[(</span><span class="s2">"Si"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>  <span class="c1"># ordinary Si</span>
+        <span class="p">[(</span><span class="s2">"Ge"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="s2">"Sn"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span>  <span class="c1"># GeSn mixed-species site</span>
     <span class="p">]</span>
 <span class="p">)</span>
 <span class="n">cell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span>
@@ -1414,7 +1415,7 @@ which supports two conventions selected through the ``mode`` keyword:
 - ``mode="weighted_sum"`` (the default) produces the weighted sum,
 
   ```python
-  F_site = sum_k (w_k * F_k)
+  F_site = sum_k(w_k * F_k)
   ```
 
   where ``w_k`` is the constituent weight stored in the mixture entry of
@@ -1462,7 +1463,7 @@ vectors, and <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{s}\
 vectors. Be careful that the lattice vectors of the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class are the
 row vectors (<a class="reference internal" href="#phonopy-atoms-cell"><span class="std std-ref">cell</span></a>). Therefore the phonopy code, which
 relies on the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">supercell_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="p">((</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">supercell_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,)</span>
 </pre></div>
 </div>
 </section>
@@ -1481,7 +1482,9 @@ given by</p>
 vectors. Be careful that the lattice vectors of the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class are the
 row vectors (<a class="reference internal" href="#phonopy-atoms-cell"><span class="std std-ref">cell</span></a>). Therefore the phonopy code, which
 relies on the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="p">(</span><span class="n">supercell_lattice</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="p">)</span> <span class="o">@</span> <span class="n">primitive_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">supercell_lattice</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="p">)</span> <span class="o">@</span> <span class="n">primitive_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -1498,6 +1501,7 @@ follows that of input crystal structure.</p>
 loading data from a <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> file, which may include all the necessary
 information to run phonopy. A typical usage is:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_params.yaml"</span><span class="p">)</span>
 </pre></div>
 </div>

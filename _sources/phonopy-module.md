@@ -78,14 +78,17 @@ variety of calculator formats found at {ref}`calculator_interfaces`.
 
 ```python
 from phonopy.interface.calculator import read_crystal_structure
-unitcell, _ = read_crystal_structure("POSCAR-unitcell", interface_mode='vasp')
+
+unitcell, _ = read_crystal_structure("POSCAR-unitcell", interface_mode="vasp")
 ```
 
 For VASP format, the keyword argument of `interface_mode` can be omitted. For
 QE,
 
 ```python
-unitcell, optional_structure_info = read_crystal_structure("NaCl.in", interface_mode='qe')
+unitcell, optional_structure_info = read_crystal_structure(
+    "NaCl.in", interface_mode="qe"
+)
 ```
 
 Note that `read_crystal_structure` returns a tuple and the first element is the
@@ -113,21 +116,25 @@ from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 
 a = 5.404
-unitcell = PhonopyAtoms(symbols=['Si'] * 8,
-                        cell=(np.eye(3) * a),
-                        scaled_positions=[[0, 0, 0],
-                                          [0, 0.5, 0.5],
-                                          [0.5, 0, 0.5],
-                                          [0.5, 0.5, 0],
-                                          [0.25, 0.25, 0.25],
-                                          [0.25, 0.75, 0.75],
-                                          [0.75, 0.25, 0.75],
-                                          [0.75, 0.75, 0.25]])
-phonon = Phonopy(unitcell,
-                 supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
-                 primitive_matrix=[[0, 0.5, 0.5],
-                                   [0.5, 0, 0.5],
-                                   [0.5, 0.5, 0]])
+unitcell = PhonopyAtoms(
+    symbols=["Si"] * 8,
+    cell=(np.eye(3) * a),
+    scaled_positions=[
+        [0, 0, 0],
+        [0, 0.5, 0.5],
+        [0.5, 0, 0.5],
+        [0.5, 0.5, 0],
+        [0.25, 0.25, 0.25],
+        [0.25, 0.75, 0.75],
+        [0.75, 0.25, 0.75],
+        [0.75, 0.75, 0.25],
+    ],
+)
+phonon = Phonopy(
+    unitcell,
+    supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
+    primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
+)
 phonon.generate_displacements(distance=0.03)
 supercells = phonon.supercells_with_displacements
 ```
@@ -161,11 +168,11 @@ from phonopy.interface.calculator import (
 )
 
 calc = "qe"  # Quantum Espresso
-unitcell, optional_structure_info = read_crystal_structure("pw.in",
-    interface_mode=calc)
+unitcell, optional_structure_info = read_crystal_structure("pw.in", interface_mode=calc)
 
-phonon = Phonopy(unitcell, supercell_matrix=np.eye(3), calculator=calc,
-    set_factor_by_calculator=True)
+phonon = Phonopy(
+    unitcell, supercell_matrix=np.eye(3), calculator=calc, set_factor_by_calculator=True
+)
 
 phonon.generate_displacements(distance=0.03)
 supercells = phonon.supercells_with_displacements
@@ -191,9 +198,11 @@ The forces have to be stored in a specific structure: a numpy array (or nested
 list) as follows:
 
 ```python
-[ [ [ f_1x, f_1y, f_1z ], [ f_2x, f_2y, f_2z ], ... ], # first supercell
-  [ [ f_1x, f_1y, f_1z ], [ f_2x, f_2y, f_2z ], ... ], # second supercell
-  ...                                                   ]
+[
+    [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...],  # first supercell
+    [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...],  # second supercell
+    ...,
+]
 ```
 
 This array (`sets_of_forces`) is set to the `Phonopy` object by:
@@ -273,9 +282,9 @@ listed below are the stable surface.
 
 ```python
 bs = phonon.run_band_structure(paths)  # compute and return
-bs.frequencies                          # read data attributes
-bs.write_yaml()                         # file output
-bs.plot(ax)                             # draw into a matplotlib Axes
+bs.frequencies  # read data attributes
+bs.write_yaml()  # file output
+bs.plot(ax)  # draw into a matplotlib Axes
 ```
 
 Internal machinery such as `DynamicalMatrix` and `GroupVelocity` is
@@ -325,7 +334,7 @@ that expect a particular filename
 The force constants can be written as follows:
 
 ```python
-phonon.save(settings={'force_constants': True})
+phonon.save(settings={"force_constants": True})
 ```
 
 ### Band structure
@@ -351,8 +360,10 @@ In `example/NaCl`, the phonopy is executed from python script, e.g.,
 import phonopy
 from phonopy.phonon.band_structure import get_band_qpoints_and_path_connections
 
-path = [[[0, 0, 0], [0.5, 0, 0.5], [0.625, 0.25, 0.625]],
-        [[0.375, 0.375, 0.75], [0, 0, 0], [0.5, 0.5, 0.5], [0.5, 0.25, 0.75]]]
+path = [
+    [[0, 0, 0], [0.5, 0, 0.5], [0.625, 0.25, 0.625]],
+    [[0.375, 0.375, 0.75], [0, 0, 0], [0.5, 0.5, 0.5], [0.5, 0.25, 0.75]],
+]
 labels = ["$\\Gamma$", "X", "U", "K", "$\\Gamma$", "L", "W"]
 qpoints, connections = get_band_qpoints_and_path_connections(path, npoints=51)
 phonon = phonopy.load("phonopy_disp.yaml")
@@ -487,16 +498,14 @@ accessible via the `thermal_properties` property).
 
 ```python
 phonon.run_mesh([20, 20, 20])
-tp = phonon.run_thermal_properties(t_step=10,
-                                   t_max=1000,
-                                   t_min=0)
+tp = phonon.run_thermal_properties(t_step=10, t_max=1000, t_min=0)
 temperatures = tp.temperatures
 free_energy = tp.free_energy
 entropy = tp.entropy
 heat_capacity = tp.heat_capacity
 
 for t, F, S, cv in zip(temperatures, free_energy, entropy, heat_capacity):
-    print(("%12.3f " + "%15.7f" * 3) % ( t, F, S, cv ))
+    print(("%12.3f " + "%15.7f" * 3) % (t, F, S, cv))
 
 phonon.plot_thermal_properties().show()
 ```
@@ -522,19 +531,13 @@ following keys:
 | `'Lambda'` | float, optional | Smearing parameter of the Ewald-like sum of the Gonze-Lee method. When omitted, determined automatically. |
 
 ```python
-born = [[[1.08878299, 0, 0],
-         [0, 1.08878299, 0],
-         [0, 0, 1.08878299]],
-        [[-1.08878299, 0, 0],
-         [0, -1.08878299, 0],
-         [0, 0, -1.08878299]]]
-epsilon = [[2.56544559, 0, 0],
-           [0, 2.56544559, 0],
-           [0, 0, 2.56544559]]
+born = [
+    [[1.08878299, 0, 0], [0, 1.08878299, 0], [0, 0, 1.08878299]],
+    [[-1.08878299, 0, 0], [0, -1.08878299, 0], [0, 0, -1.08878299]],
+]
+epsilon = [[2.56544559, 0, 0], [0, 2.56544559, 0], [0, 0, 2.56544559]]
 factors = 14.400
-phonon.nac_params = {'born': born,
-                     'factor': factors,
-                     'dielectric': epsilon}
+phonon.nac_params = {"born": born, "factor": factors, "dielectric": epsilon}
 ```
 
 ### Phonon at arbitrary q-points
@@ -548,9 +551,7 @@ a band path or a mesh), use `run_qpoints()`. It returns a
 
 ```python
 qpts = phonon.run_qpoints(
-    [[0.0, 0.0, 0.0],
-     [0.5, 0.0, 0.0],
-     [0.5, 0.5, 0.5]],
+    [[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [0.5, 0.5, 0.5]],
     with_eigenvectors=True,
     with_group_velocities=True,
 )
@@ -703,15 +704,15 @@ if eigvecs is not None:
 The usable keywords in the initialization are:
 
 ```python
-cell=None,
-scaled_positions=None,
-positions=None,
-numbers=None,
-symbols=None,
-masses=None,
-magnetic_moments=None,
-species_table=None,
-species_ids=None,
+cell = (None,)
+scaled_positions = (None,)
+positions = (None,)
+numbers = (None,)
+symbols = (None,)
+masses = (None,)
+magnetic_moments = (None,)
+species_table = (None,)
+species_ids = (None,)
 ```
 
 At least three arguments have to be given at the initialization, which are
@@ -737,7 +738,7 @@ The following variables are implemented in the `PhonopyAtoms` class in
 Basis vectors are given in the matrix form in Cartesian coordinates.
 
 ```python
-[ [ a_x, a_y, a_z ], [ b_x, b_y, b_z ], [ c_x, c_y, c_z ] ]
+[[a_x, a_y, a_z], [b_x, b_y, b_z], [c_x, c_y, c_z]]
 ```
 
 #### `scaled_positions`
@@ -745,7 +746,7 @@ Basis vectors are given in the matrix form in Cartesian coordinates.
 Atomic positions in fractional coordinates.
 
 ```python
-[ [ x1_a, x1_b, x1_c ], [ x2_a, x2_b, x2_c ], [ x3_a, x3_b, x3_c ], ... ]
+[[x1_a, x1_b, x1_c], [x2_a, x2_b, x2_c], [x3_a, x3_b, x3_c], ...]
 ```
 
 #### `positions`
@@ -763,7 +764,7 @@ where `np` means the numpy module (`import numpy as np`).
 Chemical symbols, e.g.,
 
 ```python
-['Zn', 'Zn', 'O', 'O']
+["Zn", "Zn", "O", "O"]
 ```
 
 for the ZnO unit cell.
@@ -874,8 +875,8 @@ from phonopy.structure.atoms import (
 
 species_table, species_ids = build_species_table_from_mixtures(
     [
-        [("Si", 1.0)],                  # ordinary Si
-        [("Ge", 0.5), ("Sn", 0.5)],     # GeSn mixed-species site
+        [("Si", 1.0)],  # ordinary Si
+        [("Ge", 0.5), ("Sn", 0.5)],  # GeSn mixed-species site
     ]
 )
 cell = PhonopyAtoms(
@@ -976,7 +977,7 @@ which supports two conventions selected through the ``mode`` keyword:
 - ``mode="weighted_sum"`` (the default) produces the weighted sum,
 
   ```python
-  F_site = sum_k (w_k * F_k)
+  F_site = sum_k(w_k * F_k)
   ```
 
   where ``w_k`` is the constituent weight stored in the mixture entry of
@@ -1028,7 +1029,7 @@ row vectors ({ref}`phonopy_Atoms_cell`). Therefore the phonopy code, which
 relies on the `PhonopyAtoms` class, is usually written such as
 
 ```python
-supercell_lattice = (original_lattice.T @ supercell_matrix).T,
+supercell_lattice = ((original_lattice.T @ supercell_matrix).T,)
 ```
 
 (variable_primitive_matrix)=
@@ -1052,7 +1053,9 @@ row vectors ({ref}`phonopy_Atoms_cell`). Therefore the phonopy code, which
 relies on the `PhonopyAtoms` class, is usually written such as
 
 ```python
-primitive_lattice = (supercell_lattice.T @ np.linalg.inv(supercell_matrix) @ primitive_matrix).T,
+primitive_lattice = (
+    (supercell_lattice.T @ np.linalg.inv(supercell_matrix) @ primitive_matrix).T,
+)
 ```
 
 ### Symmetry search tolerance
@@ -1070,6 +1073,7 @@ information to run phonopy. A typical usage is:
 
 ```python
 import phonopy
+
 phonon = phonopy.load("phonopy_params.yaml")
 ```
 

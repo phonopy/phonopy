@@ -808,7 +808,8 @@ if q2r.epsilon is not None:
         q2r.borns,
         q2r.epsilon,
         supercell_matrix=np.diag(q2r.dimension),
-        symmetrize_tensors=True)
+        symmetrize_tensors=True,
+    )
     print("default")
     print(("%13.8f" * 9) % tuple(epsilon.ravel()))
     for z in borns:

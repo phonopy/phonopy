@@ -517,8 +517,8 @@ the Python API or the <code class="docutils literal notranslate"><span class="pr
 <p>The constructor and loader take a <code class="docutils literal notranslate"><span class="pre">lang</span></code> keyword:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
 
-<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>                <span class="c1"># lang="Rust" (default)</span>
-<span class="n">ph_c</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>    <span class="c1"># legacy C backend</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>  <span class="c1"># lang="Rust" (default)</span>
+<span class="n">ph_c</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>  <span class="c1"># legacy C backend</span>
 </pre></div>
 </div>
 <p>The current value is exposed as the read-only <code class="docutils literal notranslate"><span class="pre">Phonopy.lang</span></code> property.

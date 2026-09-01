@@ -786,6 +786,11 @@ window.runMermaid = runMermaid;</script>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-sscha-sweep-script">Appendix: the SSCHA sweep script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-script">The script</a></li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -1763,6 +1768,8 @@ tail hold the temperatures in equal parts:</p>
 </pre></div>
 </div>
 </div>
+<p>To check the sets before starting the calculator, see
+<a class="reference internal" href="#anisotropic-qha-check-displacements"><span class="std std-ref">Appendix: checking the training displacements</span></a>.</p>
 <p>Then train one MLP per grid point on its merged set. <code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">--pypolymlp</span></code>
 always writes the MLP as <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> in the current directory, and the name
 cannot be changed from the command line. So run the training inside that grid
@@ -2354,6 +2361,224 @@ first few runs; <code class="docutils literal notranslate"><span class="pre">-vv
 </div>
 </div>
 </section>
+<section id="appendix-checking-the-training-displacements">
+<span id="anisotropic-qha-check-displacements"></span><h2>Appendix: checking the training displacements<a class="headerlink" href="#appendix-checking-the-training-displacements" title="Link to this heading">#</a></h2>
+<p>Script 5 writes one set of displaced supercells per grid point and temperature,
+into <code class="docutils literal notranslate"><span class="pre">train/grid-NNN-TK/</span></code>. Script 6 merges the sets of one grid point into
+<code class="docutils literal notranslate"><span class="pre">train/grid-NNN/merged.yaml</span></code>. The calculator is run on the POSCAR of each
+<code class="docutils literal notranslate"><span class="pre">disp-*</span></code>, and <code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">--pypolymlp</span></code> trains on <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>.</p>
+<p>The checks in this appendix compare what script 5 and script 6 wrote against
+the distribution the supercells were drawn from. They take seconds. The checks
+on the displacements read <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and the dataset of step 3, so
+run them before the calculator. Script 6 merges the forces with the
+displacements, so the check on the merged sets has something to read only
+after the calculator, and before then it reports every grid point as having no
+<code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>.</p>
+<p>The draw and the reference use the same force constants <span class="math notranslate nohighlight">\(\Phi\)</span>. The
+check therefore tests the temperature a set was drawn at, and tests nothing
+about <span class="math notranslate nohighlight">\(\Phi\)</span> itself. Force constants that are wrong at a grid point
+change the draw and the reference by the same amount, and the ratio still
+comes out 1. Wrong force constants have to be caught at step 2, from the
+frequencies.</p>
+<section id="what-each-check-compares">
+<h3>What each check compares<a class="headerlink" href="#what-each-check-compares" title="Link to this heading">#</a></h3>
+<p>One check compares the amplitude of a set against the temperature its
+directory is named after. Script 5 draws the supercells of a set from the
+harmonic density matrix <span class="math notranslate nohighlight">\(\tilde{\rho}_\Phi(T)\)</span> of that grid point’s
+force constants <span class="math notranslate nohighlight">\(\Phi\)</span>, the distribution the SSCHA free energy of
+<a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">Temperature dependent force constants calculation using pypolymlp and symfc</span></a> averages over. <code class="docutils literal notranslate"><span class="pre">run_correlation_matrix(T)</span></code> fills
+<code class="docutils literal notranslate"><span class="pre">RandomDisplacements.uu</span></code> with its second moment,</p>
+<div class="math notranslate nohighlight">
+\[\langle u_{l\kappa j} u_{l'\kappa' j'} \rangle_{\tilde{\rho}_\Phi(T)},\]</div>
+<p>in Angstrom squared, at the same commensurate points and with the same cutoff
+as the draw. Summing the diagonal over the supercell,</p>
+<div class="math notranslate nohighlight">
+\[\langle u^2 \rangle_{\tilde{\rho}_\Phi(T)} = \sum_{l\kappa j}
+\langle u_{l\kappa j} u_{l\kappa j} \rangle_{\tilde{\rho}_\Phi(T)},\]</div>
+<p>is <code class="docutils literal notranslate"><span class="pre">np.einsum(&quot;iiaa-&gt;&quot;,</span> <span class="pre">rd.uu)</span></code> in <code class="docutils literal notranslate"><span class="pre">reference_u2</span></code>.</p>
+<p>A set of <span class="math notranslate nohighlight">\(N\)</span> snapshots is a sample of <span class="math notranslate nohighlight">\(\tilde{\rho}_\Phi(T')\)</span>,
+where <span class="math notranslate nohighlight">\(T'\)</span> is the temperature it was drawn at. The same sum over the
+set,</p>
+<div class="math notranslate nohighlight">
+\[\overline{u^2} = \frac{1}{N} \sum_{n=1}^{N} \sum_{l\kappa j}
+\bigl( u_{l\kappa j}^{(n)} \bigr)^2,\]</div>
+<p>is computed by <code class="docutils literal notranslate"><span class="pre">sample_u2</span></code> and estimates <span class="math notranslate nohighlight">\(\langle u^2 \rangle_{\tilde{\rho}_\Phi(T')}\)</span>. The ratio <span class="math notranslate nohighlight">\(\overline{u^2} / \langle u^2 \rangle_{\tilde{\rho}_\Phi(T)}\)</span> is 1 when <span class="math notranslate nohighlight">\(T'\)</span> equals <span class="math notranslate nohighlight">\(T\)</span>, the
+temperature the directory is named after. <code class="docutils literal notranslate"><span class="pre">check_amplitudes</span></code> prints it for
+every set, and a set with the wrong label gives a ratio far from 1.</p>
+<p>The next check compares neighbouring grid points. Grid points <span class="math notranslate nohighlight">\(g\)</span> and
+<span class="math notranslate nohighlight">\(g'\)</span> draw from <span class="math notranslate nohighlight">\(\tilde{\rho}_{\Phi^{(g)}}(T)\)</span> and
+<span class="math notranslate nohighlight">\(\tilde{\rho}_{\Phi^{(g')}}(T)\)</span>, whose force constants differ only by
+the strain between the two grid points. The grid points also share one draw of
+standard normals (<a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">Sharing one draw of standard normals</span></a>), so at a fixed temperature
+and snapshot their displacements differ only through <span class="math notranslate nohighlight">\(\Phi^{(g)}\)</span> and
+<span class="math notranslate nohighlight">\(\Phi^{(g')}\)</span>. <code class="docutils literal notranslate"><span class="pre">correlation</span></code> measures how close the two sets are as</p>
+<div class="math notranslate nohighlight">
+\[\rho(g, g') = \frac{\sum_{n} \sum_{l\kappa j}
+u_{l\kappa j}^{(g,n)} u_{l\kappa j}^{(g',n)}}
+{\Bigl[ \sum_{n} \sum_{l\kappa j} \bigl( u_{l\kappa j}^{(g,n)} \bigr)^2
+\sum_{n} \sum_{l\kappa j} \bigl( u_{l\kappa j}^{(g',n)} \bigr)^2
+\Bigr]^{1/2}},\]</div>
+<p>where <span class="math notranslate nohighlight">\(u_{l\kappa j}^{(g,n)}\)</span> is snapshot <span class="math notranslate nohighlight">\(n\)</span> of the set at grid
+point <span class="math notranslate nohighlight">\(g\)</span>, and every sum runs over the <span class="math notranslate nohighlight">\(N\)</span> snapshots and the
+supercell. Shared normals put <span class="math notranslate nohighlight">\(\rho\)</span> near 1, and the spacing of the grid
+sets how far below 1 it falls. <code class="docutils literal notranslate"><span class="pre">check_neighbours</span></code> prints <span class="math notranslate nohighlight">\(1 - \rho\)</span>.</p>
+<p>Two draws that do not share their normals are uncorrelated, so <span class="math notranslate nohighlight">\(\rho\)</span> is
+0. A value of <span class="math notranslate nohighlight">\(1 - \rho\)</span> near 1 means the normals were not shared.</p>
+<p><code class="docutils literal notranslate"><span class="pre">read_set</span></code> compares the basis vectors of each set against those of the grid
+point its directory is named after. The set carries its own unit cell in
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, the cell script 5 built the supercells from, and the
+dataset of step 3 carries the relaxed cell of each grid point as <code class="docutils literal notranslate"><span class="pre">point.cell</span></code>.
+Both comparands are <code class="docutils literal notranslate"><span class="pre">cell</span></code>, the 3x3 matrix whose rows are the basis vectors,
+and they agree element by element to 1e-8 Angstrom when the directory holds
+the grid point it names. <code class="docutils literal notranslate"><span class="pre">read_set</span></code> also counts the snapshots of the set.</p>
+<p><code class="docutils literal notranslate"><span class="pre">check_merged</span></code> reads the merged set of script 6. It counts the structures and
+checks that the structures of each temperature are at the offsets
+<code class="docutils literal notranslate"><span class="pre">k::len(TEMPERATURES)</span></code> the merge writes them to. It closes with the number of
+merged sets it read, and names the grid points that have no <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>.</p>
+</section>
+<section id="the-script">
+<h3>The script<a class="headerlink" href="#the-script" title="Link to this heading">#</a></h3>
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-text">Script 8 – checking the training displacements</span><a class="headerlink" href="#id8" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
+
+<span class="n">DATASET</span> <span class="o">=</span> <span class="s2">"aniso_qha_dataset.hdf5"</span>
+<span class="n">TRAIN</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"train"</span><span class="p">)</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+<span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">50</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">reference_u2</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return &lt;u^2&gt; per temperature, from the force constants of one point.</span>
+
+<span class="sd">    uu[i, j] is the 3x3 block of atoms i and j, in Angstrom^2.</span>
+
+<span class="sd">    """</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">init_random_displacements</span><span class="p">()</span>
+    <span class="n">rd</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">random_displacements</span>
+    <span class="n">reference</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">temperatures</span><span class="p">:</span>
+        <span class="n">rd</span><span class="o">.</span><span class="n">run_correlation_matrix</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">temperature</span><span class="p">))</span>
+        <span class="n">reference</span><span class="p">[</span><span class="n">temperature</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"iiaa-&gt;"</span><span class="p">,</span> <span class="n">rd</span><span class="o">.</span><span class="n">uu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reference</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_u2</span><span class="p">(</span><span class="n">displacements</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return &lt;u^2&gt; over the snapshots of one set."""</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">displacements</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">displacements</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">correlation</span><span class="p">(</span><span class="n">u_a</span><span class="p">,</span> <span class="n">u_b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the correlation of two sets of displacements."""</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">u_a</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">u_b</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span> <span class="o">@</span> <span class="n">b</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">a</span> <span class="o">@</span> <span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">@</span> <span class="n">b</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">neighbour_pairs</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Yield the grid points adjacent along each axis, numbered from 1."""</span>
+    <span class="n">strides</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]))</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">))]</span>
+    <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">))):</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">stride</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strides</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">position</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]:</span>
+                <span class="k">yield</span> <span class="n">flat</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">flat</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">stride</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">read_set</span><span class="p">(</span><span class="n">set_dir</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the displacements of one set, with its cell and count checked."""</span>
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">set_dir</span> <span class="o">/</span> <span class="s2">"phonopy_disp.yaml"</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">set_dir</span><span class="si">}</span><span class="s2">: not the basis vectors of grid point </span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">displacements</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"displacements"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">displacements</span><span class="p">)</span> <span class="o">!=</span> <span class="n">SNAPSHOTS</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">set_dir</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">displacements</span><span class="p">)</span><span class="si">}</span><span class="s2"> snapshots, not </span><span class="si">{</span><span class="n">SNAPSHOTS</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">displacements</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_amplitudes</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compare each set with the reference at the temperature it is named after."""</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># (grid point numbered from 1, temperature) -&gt; displacements</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"grid    T        &lt;u^2&gt; / uu"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="n">reference_u2</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">temperatures</span><span class="p">:</span>
+            <span class="n">set_dir</span> <span class="o">=</span> <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2">K"</span>
+            <span class="n">u</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">temperature</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_set</span><span class="p">(</span><span class="n">set_dir</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">sample_u2</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">temperature</span><span class="p">])</span> <span class="o">/</span> <span class="n">reference</span><span class="p">[</span><span class="n">temperature</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">4d</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">temperature</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2"> K   </span><span class="si">{</span><span class="n">ratio</span><span class="si">:</span><span class="s2">10.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">u</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_neighbours</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">,</span> <span class="n">pairs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compare the displacement field of neighbouring grid points."""</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">   T    neighbouring grid points, 1 - correlation"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">temperatures</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="mf">1.0</span> <span class="o">-</span> <span class="n">correlation</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">temperature</span><span class="p">],</span> <span class="n">u</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">temperature</span><span class="p">])</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">pairs</span>
+        <span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">temperature</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2"> K   median </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">   "</span>
+            <span class="sa">f</span><span class="s2">"max </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_merged</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check the size and the interleaving of each merged set."""</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">merged sets"</span><span class="p">)</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">temperatures</span><span class="p">)</span> <span class="o">*</span> <span class="n">SNAPSHOTS</span>
+    <span class="n">checked</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"grid-</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span> <span class="o">/</span> <span class="s2">"merged.yaml"</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">merged</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"displacements"</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">merged</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="si">}</span><span class="s2"> structures, not </span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">temperatures</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">k</span> <span class="p">::</span> <span class="nb">len</span><span class="p">(</span><span class="n">temperatures</span><span class="p">)],</span> <span class="n">u</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">temperature</span><span class="p">]):</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">merged</span><span class="si">}</span><span class="s2">: the </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> K structures are not at "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">::</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">temperatures</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+        <span class="n">checked</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">checked</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">)</span><span class="si">}</span><span class="s2"> grid points, "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2"> structures each"</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  no merged.yaml at grid points </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">missing</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Check the sets of script 5 and the merged sets of script 6."""</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="n">DATASET</span><span class="p">)</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">check_amplitudes</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">TEMPERATURES</span><span class="p">)</span>
+    <span class="n">check_neighbours</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">TEMPERATURES</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">neighbour_pairs</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_shape</span><span class="p">)))</span>
+    <span class="n">check_merged</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">TEMPERATURES</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>The grid points are ordered row-major over <code class="docutils literal notranslate"><span class="pre">dataset.grid_shape</span></code>, so
+<code class="docutils literal notranslate"><span class="pre">neighbour_pairs</span></code> adds the stride of each axis to the flat index of a grid
+point. A dataset that is not a tensor grid has <code class="docutils literal notranslate"><span class="pre">grid_shape</span></code> None, and its
+pairs have to be given to <code class="docutils literal notranslate"><span class="pre">check_neighbours</span></code> explicitly.</p>
+</section>
+</section>
 </section>
 
 
@@ -2417,6 +2642,11 @@ first few runs; <code class="docutils literal notranslate"><span class="pre">-vv
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-sscha-sweep-script">Appendix: the SSCHA sweep script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-script">The script</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

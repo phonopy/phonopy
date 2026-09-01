@@ -1077,6 +1077,9 @@ for index in range(1, N_GRID + 1):
     )
 ```
 
+To check the sets before starting the calculator, see
+{ref}`anisotropic-qha-check-displacements`.
+
 Then train one MLP per grid point on its merged set. `phonopy --pypolymlp`
 always writes the MLP as `polymlp.yaml` in the current directory, and the name
 cannot be changed from the command line. So run the training inside that grid
@@ -1697,3 +1700,243 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+(anisotropic-qha-check-displacements)=
+## Appendix: checking the training displacements
+
+Script 5 writes one set of displaced supercells per grid point and temperature,
+into `train/grid-NNN-TK/`. Script 6 merges the sets of one grid point into
+`train/grid-NNN/merged.yaml`. The calculator is run on the POSCAR of each
+`disp-*`, and `phonopy --pypolymlp` trains on `merged.yaml`.
+
+The checks in this appendix compare what script 5 and script 6 wrote against
+the distribution the supercells were drawn from. They take seconds. The checks
+on the displacements read `phonopy_disp.yaml` and the dataset of step 3, so
+run them before the calculator. Script 6 merges the forces with the
+displacements, so the check on the merged sets has something to read only
+after the calculator, and before then it reports every grid point as having no
+`merged.yaml`.
+
+The draw and the reference use the same force constants {math}`\Phi`. The
+check therefore tests the temperature a set was drawn at, and tests nothing
+about {math}`\Phi` itself. Force constants that are wrong at a grid point
+change the draw and the reference by the same amount, and the ratio still
+comes out 1. Wrong force constants have to be caught at step 2, from the
+frequencies.
+
+### What each check compares
+
+One check compares the amplitude of a set against the temperature its
+directory is named after. Script 5 draws the supercells of a set from the
+harmonic density matrix {math}`\tilde{\rho}_\Phi(T)` of that grid point's
+force constants {math}`\Phi`, the distribution the SSCHA free energy of
+{ref}`mlp-sscha` averages over. `run_correlation_matrix(T)` fills
+`RandomDisplacements.uu` with its second moment,
+
+```{math}
+\langle u_{l\kappa j} u_{l'\kappa' j'} \rangle_{\tilde{\rho}_\Phi(T)},
+```
+
+in Angstrom squared, at the same commensurate points and with the same cutoff
+as the draw. Summing the diagonal over the supercell,
+
+```{math}
+\langle u^2 \rangle_{\tilde{\rho}_\Phi(T)} = \sum_{l\kappa j}
+\langle u_{l\kappa j} u_{l\kappa j} \rangle_{\tilde{\rho}_\Phi(T)},
+```
+
+is `np.einsum("iiaa->", rd.uu)` in `reference_u2`.
+
+A set of {math}`N` snapshots is a sample of {math}`\tilde{\rho}_\Phi(T')`,
+where {math}`T'` is the temperature it was drawn at. The same sum over the
+set,
+
+```{math}
+\overline{u^2} = \frac{1}{N} \sum_{n=1}^{N} \sum_{l\kappa j}
+\bigl( u_{l\kappa j}^{(n)} \bigr)^2,
+```
+
+is computed by `sample_u2` and estimates {math}`\langle u^2
+\rangle_{\tilde{\rho}_\Phi(T')}`. The ratio {math}`\overline{u^2} / \langle
+u^2 \rangle_{\tilde{\rho}_\Phi(T)}` is 1 when {math}`T'` equals {math}`T`, the
+temperature the directory is named after. `check_amplitudes` prints it for
+every set, and a set with the wrong label gives a ratio far from 1.
+
+The next check compares neighbouring grid points. Grid points {math}`g` and
+{math}`g'` draw from {math}`\tilde{\rho}_{\Phi^{(g)}}(T)` and
+{math}`\tilde{\rho}_{\Phi^{(g')}}(T)`, whose force constants differ only by
+the strain between the two grid points. The grid points also share one draw of
+standard normals ({ref}`anisotropic-qha-normals`), so at a fixed temperature
+and snapshot their displacements differ only through {math}`\Phi^{(g)}` and
+{math}`\Phi^{(g')}`. `correlation` measures how close the two sets are as
+
+```{math}
+\rho(g, g') = \frac{\sum_{n} \sum_{l\kappa j}
+u_{l\kappa j}^{(g,n)} u_{l\kappa j}^{(g',n)}}
+{\Bigl[ \sum_{n} \sum_{l\kappa j} \bigl( u_{l\kappa j}^{(g,n)} \bigr)^2
+\sum_{n} \sum_{l\kappa j} \bigl( u_{l\kappa j}^{(g',n)} \bigr)^2
+\Bigr]^{1/2}},
+```
+
+where {math}`u_{l\kappa j}^{(g,n)}` is snapshot {math}`n` of the set at grid
+point {math}`g`, and every sum runs over the {math}`N` snapshots and the
+supercell. Shared normals put {math}`\rho` near 1, and the spacing of the grid
+sets how far below 1 it falls. `check_neighbours` prints {math}`1 - \rho`.
+
+Two draws that do not share their normals are uncorrelated, so {math}`\rho` is
+0. A value of {math}`1 - \rho` near 1 means the normals were not shared.
+
+`read_set` compares the basis vectors of each set against those of the grid
+point its directory is named after. The set carries its own unit cell in
+`phonopy_disp.yaml`, the cell script 5 built the supercells from, and the
+dataset of step 3 carries the relaxed cell of each grid point as `point.cell`.
+Both comparands are `cell`, the 3x3 matrix whose rows are the basis vectors,
+and they agree element by element to 1e-8 Angstrom when the directory holds
+the grid point it names. `read_set` also counts the snapshots of the set.
+
+`check_merged` reads the merged set of script 6. It counts the structures and
+checks that the structures of each temperature are at the offsets
+`k::len(TEMPERATURES)` the merge writes them to. It closes with the number of
+merged sets it read, and names the grid points that have no `merged.yaml`.
+
+### The script
+
+```{code-block} python
+:caption: Script 8 -- checking the training displacements
+
+from pathlib import Path
+
+import numpy as np
+
+import phonopy
+from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
+
+DATASET = "aniso_qha_dataset.hdf5"
+TRAIN = Path("train")
+TEMPERATURES = (0, 100, 250, 400)
+SNAPSHOTS = 50
+
+
+def reference_u2(point, temperatures):
+    """Return <u^2> per temperature, from the force constants of one point.
+
+    uu[i, j] is the 3x3 block of atoms i and j, in Angstrom^2.
+
+    """
+    phonon = point.to_phonopy()
+    phonon.init_random_displacements()
+    rd = phonon.random_displacements
+    reference = {}
+    for temperature in temperatures:
+        rd.run_correlation_matrix(float(temperature))
+        reference[temperature] = np.einsum("iiaa->", rd.uu)
+    return reference
+
+
+def sample_u2(displacements):
+    """Return <u^2> over the snapshots of one set."""
+    return (displacements**2).sum() / len(displacements)
+
+
+def correlation(u_a, u_b):
+    """Return the correlation of two sets of displacements."""
+    a, b = u_a.ravel(), u_b.ravel()
+    return float(a @ b / np.sqrt((a @ a) * (b @ b)))
+
+
+def neighbour_pairs(shape):
+    """Yield the grid points adjacent along each axis, numbered from 1."""
+    strides = [int(np.prod(shape[axis + 1 :])) for axis in range(len(shape))]
+    for flat in range(int(np.prod(shape))):
+        position = np.unravel_index(flat, shape)
+        for axis, stride in enumerate(strides):
+            if position[axis] + 1 < shape[axis]:
+                yield flat + 1, flat + 1 + stride
+
+
+def read_set(set_dir, point):
+    """Return the displacements of one set, with its cell and count checked."""
+    ph = phonopy.load(set_dir / "phonopy_disp.yaml", produce_fc=False, log_level=0)
+    if not np.allclose(ph.unitcell.cell, point.cell.cell, atol=1e-8):
+        print(f"  {set_dir}: not the basis vectors of grid point {point.index + 1}")
+    displacements = np.array(ph.dataset["displacements"])
+    if len(displacements) != SNAPSHOTS:
+        print(f"  {set_dir}: {len(displacements)} snapshots, not {SNAPSHOTS}")
+    return displacements
+
+
+def check_amplitudes(dataset, temperatures):
+    """Compare each set with the reference at the temperature it is named after."""
+    u = {}  # (grid point numbered from 1, temperature) -> displacements
+    print("grid    T        <u^2> / uu")
+    for point in dataset.grid_points:
+        index = point.index + 1
+        reference = reference_u2(point, temperatures)
+        for temperature in temperatures:
+            set_dir = TRAIN / f"grid-{index:03d}-{temperature}K"
+            u[index, temperature] = read_set(set_dir, point)
+            ratio = sample_u2(u[index, temperature]) / reference[temperature]
+            print(f"{index:4d} {temperature:5d} K   {ratio:10.3f}")
+    return u
+
+
+def check_neighbours(u, temperatures, pairs):
+    """Compare the displacement field of neighbouring grid points."""
+    print("\n   T    neighbouring grid points, 1 - correlation")
+    for temperature in temperatures:
+        values = [
+            1.0 - correlation(u[a, temperature], u[b, temperature]) for a, b in pairs
+        ]
+        print(
+            f"{temperature:5d} K   median {np.median(values):.1e}   "
+            f"max {max(values):.1e}"
+        )
+
+
+def check_merged(dataset, u, temperatures):
+    """Check the size and the interleaving of each merged set."""
+    print("\nmerged sets")
+    expected = len(temperatures) * SNAPSHOTS
+    checked = 0
+    missing = []
+    for point in dataset.grid_points:
+        index = point.index + 1
+        merged = TRAIN / f"grid-{index:03d}" / "merged.yaml"
+        if not merged.exists():
+            missing.append(index)
+            continue
+        ph = phonopy.load(merged, produce_fc=False, log_level=0)
+        d = np.array(ph.dataset["displacements"])
+        if len(d) != expected:
+            print(f"  {merged}: {len(d)} structures, not {expected}")
+        for k, temperature in enumerate(temperatures):
+            if not np.allclose(d[k :: len(temperatures)], u[index, temperature]):
+                print(
+                    f"  {merged}: the {temperature} K structures are not at "
+                    f"{k}::{len(temperatures)}"
+                )
+        checked += 1
+    print(
+        f"  {checked} of {len(dataset.grid_points)} grid points, "
+        f"{expected} structures each"
+    )
+    if missing:
+        print(f"  no merged.yaml at grid points {', '.join(map(str, missing))}")
+
+
+def main():
+    """Check the sets of script 5 and the merged sets of script 6."""
+    dataset = read_aniso_qha_dataset(DATASET)
+    u = check_amplitudes(dataset, TEMPERATURES)
+    check_neighbours(u, TEMPERATURES, list(neighbour_pairs(dataset.grid_shape)))
+    check_merged(dataset, u, TEMPERATURES)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+The grid points are ordered row-major over `dataset.grid_shape`, so
+`neighbour_pairs` adds the stride of each axis to the flat index of a grid
+point. A dataset that is not a tensor grid has `grid_shape` None, and its
+pairs have to be given to `check_neighbours` explicitly.

@@ -89,7 +89,7 @@ def run(
     )
     dsf = phonon.dynamic_structure_factor
     q_cartesian = np.dot(dsf.qpoints, np.linalg.inv(phonon.primitive.cell).T)
-    distances = np.sqrt((q_cartesian ** 2).sum(axis=1))
+    distances = np.sqrt((q_cartesian**2).sum(axis=1))
 
     print("# [1] Distance from Gamma point,")
     print("# [2-4] Q-points in cubic reciprocal space, ")
@@ -106,7 +106,10 @@ def run(
         text = "%f  " % d
         text += "%f %f %f  " % tuple(Q)
         text += " ".join(
-            ["%f" % (f[bi].sum() * get_physical_units().THzToEv * 1000 / len(bi)) for bi in bi_sets]
+            [
+                "%f" % (f[bi].sum() * get_physical_units().THzToEv * 1000 / len(bi))
+                for bi in bi_sets
+            ]
         )
         text += "  "
         text += " ".join(["%f" % (S[bi].sum()) for bi in bi_sets])

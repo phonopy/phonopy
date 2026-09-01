@@ -568,10 +568,12 @@ silicon primitive cell:</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_supercells_with_displacements</span>
 
 <span class="n">cell</span> <span class="o">=</span> <span class="n">read_cell_yaml</span><span class="p">(</span><span class="s2">"phonopy_unitcell.yaml"</span><span class="p">)</span>
-<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s1">'lammps'</span><span class="p">)</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s2">"lammps"</span><span class="p">)</span>
 <span class="n">ph</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">()</span>
 <span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
-<span class="n">write_supercells_with_displacements</span><span class="p">(</span><span class="s2">"lammps"</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span>
+<span class="n">write_supercells_with_displacements</span><span class="p">(</span>
+    <span class="s2">"lammps"</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>With route (b), <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> stores the cell in the original (unrotated)
