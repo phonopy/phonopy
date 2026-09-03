@@ -215,6 +215,7 @@ def test_compare_eos_writes_the_comparison(
 def test_free_energies_round_trip(tmp_path: pathlib.Path) -> None:
     """A written file is read back and accepted on a matching grid."""
     from phonopy.qha.free_energy_io import (
+        PhononFreeEnergies,
         read_free_energies_hdf5,
         write_free_energies_hdf5,
     )
@@ -224,14 +225,14 @@ def test_free_energies_round_trip(tmp_path: pathlib.Path) -> None:
     lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
     path = tmp_path / "fe.hdf5"
     write_free_energies_hdf5(
-        temperatures, values, path, kind="phonon", lattice_lengths=lengths
+        PhononFreeEnergies(temperatures, values, lattice_lengths=lengths), path
     )
 
-    read = _read_free_energies(str(path), "phonon", temperatures, lengths)
-    np.testing.assert_allclose(read, values)
+    read = _read_free_energies(str(path), PhononFreeEnergies, temperatures, lengths)
+    np.testing.assert_allclose(read.free_energies, values)
 
     back = read_free_energies_hdf5(path)
-    assert back.kind == "phonon"
+    assert isinstance(back, PhononFreeEnergies)
     assert back.n_grid_points == 3
     np.testing.assert_allclose(back.temperatures, temperatures)
     np.testing.assert_allclose(back.lattice_lengths, lengths)
@@ -244,28 +245,36 @@ def test_free_energies_checked_against_the_run(tmp_path: pathlib.Path) -> None:
     it to the dataset it is used with.
 
     """
-    from phonopy.qha.free_energy_io import write_free_energies_hdf5
+    from phonopy.qha.free_energy_io import (
+        ElectronicFreeEnergies,
+        PhononFreeEnergies,
+        write_free_energies_hdf5,
+    )
 
     temperatures = np.arange(0.0, 101.0, 10.0)
     values = np.zeros((len(temperatures), 3))
     lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
     path = tmp_path / "fe.hdf5"
     write_free_energies_hdf5(
-        temperatures, values, path, kind="phonon", lattice_lengths=lengths
+        PhononFreeEnergies(temperatures, values, lattice_lengths=lengths), path
     )
 
-    with pytest.raises(ValueError, match="hold phonon free energies"):
-        _read_free_energies(str(path), "electronic", temperatures, lengths)
+    with pytest.raises(ValueError, match="hold PhononFreeEnergies"):
+        _read_free_energies(str(path), ElectronicFreeEnergies, temperatures, lengths)
     with pytest.raises(ValueError, match="different temperature grid"):
         # Reaches past the file.
-        _read_free_energies(str(path), "phonon", np.arange(0.0, 151.0, 10.0), lengths)
+        _read_free_energies(
+            str(path), PhononFreeEnergies, np.arange(0.0, 151.0, 10.0), lengths
+        )
     with pytest.raises(ValueError, match="different temperature grid"):
         # Inside the file's range, but on temperatures it does not hold.
-        _read_free_energies(str(path), "phonon", np.arange(0.0, 51.0, 5.0), lengths)
+        _read_free_energies(
+            str(path), PhononFreeEnergies, np.arange(0.0, 51.0, 5.0), lengths
+        )
     with pytest.raises(ValueError, match="grid points against"):
-        _read_free_energies(str(path), "phonon", temperatures, lengths[:2])
+        _read_free_energies(str(path), PhononFreeEnergies, temperatures, lengths[:2])
     with pytest.raises(ValueError, match="different grid points"):
-        _read_free_energies(str(path), "phonon", temperatures, lengths + 0.5)
+        _read_free_energies(str(path), PhononFreeEnergies, temperatures, lengths + 0.5)
 
 
 def test_free_energies_over_a_wider_range(tmp_path: pathlib.Path) -> None:
@@ -275,26 +284,29 @@ def test_free_energies_over_a_wider_range(tmp_path: pathlib.Path) -> None:
     subset of its own grid.
 
     """
-    from phonopy.qha.free_energy_io import write_free_energies_hdf5
+    from phonopy.qha.free_energy_io import (
+        PhononFreeEnergies,
+        write_free_energies_hdf5,
+    )
 
     stored = np.arange(0.0, 1001.0, 10.0)
     values = -0.01 * (stored[:, None] / 100.0) ** 2 * np.arange(1, 4)[None, :]
     lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
     path = tmp_path / "fe.hdf5"
     write_free_energies_hdf5(
-        stored, values, path, kind="phonon", lattice_lengths=lengths
+        PhononFreeEnergies(stored, values, lattice_lengths=lengths), path
     )
 
     wanted = np.arange(0.0, 401.0, 10.0)
-    read = _read_free_energies(str(path), "phonon", wanted, lengths)
-    assert read.shape == (len(wanted), 3)
-    np.testing.assert_allclose(read, values[: len(wanted)])
+    read = _read_free_energies(str(path), PhononFreeEnergies, wanted, lengths)
+    assert read.free_energies.shape == (len(wanted), 3)
+    np.testing.assert_allclose(read.free_energies, values[: len(wanted)])
 
     # Every second temperature, which is a subset but not a leading slice.
     coarse = np.arange(0.0, 401.0, 20.0)
-    read = _read_free_energies(str(path), "phonon", coarse, lengths)
-    assert read.shape == (len(coarse), 3)
-    np.testing.assert_allclose(read, values[: len(wanted) : 2])
+    read = _read_free_energies(str(path), PhononFreeEnergies, coarse, lengths)
+    assert read.free_energies.shape == (len(coarse), 3)
+    np.testing.assert_allclose(read.free_energies, values[: len(wanted) : 2])
 
 
 def test_phonon_free_energies_round_trip(
@@ -308,6 +320,7 @@ def test_phonon_free_energies_round_trip(
     """
     from phonopy.physical_units import get_physical_units
     from phonopy.qha.free_energy_io import (
+        PhononFreeEnergies,
         read_free_energies_hdf5,
         write_free_energies_hdf5,
     )
@@ -320,13 +333,198 @@ def test_phonon_free_energies_round_trip(
 
     path = tmp_path / "fph.hdf5"
     write_free_energies_hdf5(
-        TEMPERATURES, fe_phonon_ev, path, kind="phonon", lattice_lengths=lengths
+        PhononFreeEnergies(TEMPERATURES, fe_phonon_ev, lattice_lengths=lengths), path
     )
 
     back = read_free_energies_hdf5(path)
-    assert back.kind == "phonon"
+    assert isinstance(back, PhononFreeEnergies)
     np.testing.assert_allclose(back.free_energies, fe_phonon_ev)
     np.testing.assert_allclose(
-        _read_free_energies(str(path), "phonon", TEMPERATURES, lengths),
+        _read_free_energies(
+            str(path), PhononFreeEnergies, TEMPERATURES, lengths
+        ).free_energies,
         fe_phonon_ev,
+    )
+
+
+def _decomposed(temperatures: NDArray[np.double]) -> dict[str, NDArray[np.double]]:
+    """Return a free energy and the three terms it was assembled from."""
+    grid = np.arange(1, 4)[None, :]
+    potential = 0.02 * (temperatures[:, None] / 100.0) * grid
+    reference = -40.0 - 0.1 * grid[0]
+    return {
+        "free_energies": -0.01 * (temperatures[:, None] / 100.0) ** 2 * grid,
+        "reference_energies": reference,
+        "potential_energies": potential,
+        "harmonic_potential_energies": 0.5 * potential,
+    }
+
+
+def test_free_energy_terms_round_trip(tmp_path: pathlib.Path) -> None:
+    """The SSCHA terms survive a write and read, and narrow with the values.
+
+    reference_energies is what lets the reader choose the energy scale: added
+    back it puts F on the potential's own, and left out F stays measured from
+    the undisplaced cell.
+
+    """
+    from phonopy.qha.free_energy_io import (
+        PhononFreeEnergies,
+        SSCHAFreeEnergies,
+        read_free_energies_hdf5,
+        write_free_energies_hdf5,
+    )
+
+    stored = np.arange(0.0, 1001.0, 10.0)
+    terms = _decomposed(stored)
+    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
+    path = tmp_path / "fph.hdf5"
+    write_free_energies_hdf5(
+        SSCHAFreeEnergies(stored, lattice_lengths=lengths, **terms), path
+    )
+
+    back = read_free_energies_hdf5(path)
+    assert isinstance(back, SSCHAFreeEnergies)
+    for name, values in terms.items():
+        np.testing.assert_allclose(getattr(back, name), values)
+
+    # The terms that have a temperature axis are narrowed with the free
+    # energies, so they stay aligned; the two that do not are left alone.
+    # Narrowing keeps the type, and the SSCHA ones pass as phonon free
+    # energies.
+    wanted = np.arange(0.0, 401.0, 20.0)
+    read = _read_free_energies(str(path), PhononFreeEnergies, wanted, lengths)
+    assert isinstance(read, SSCHAFreeEnergies)
+    for name in SSCHAFreeEnergies.OVER_TEMPERATURE:
+        if name in terms:
+            assert getattr(read, name).shape == (len(wanted), 3)
+            np.testing.assert_allclose(
+                getattr(read, name), terms[name][: len(wanted) * 2 : 2]
+            )
+    for name in SSCHAFreeEnergies.OVER_GRID:
+        np.testing.assert_allclose(getattr(read, name), terms[name])
+
+
+def test_free_energy_terms_are_checked() -> None:
+    """The halves are the input; their difference is derived and checked.
+
+    Passing the difference on its own is the way in for a sweep that recorded
+    no more than that, and is transitional.
+
+    """
+    from phonopy.qha.free_energy_io import ElectronicFreeEnergies, SSCHAFreeEnergies
+
+    temperatures = np.arange(0.0, 101.0, 10.0)
+    terms = _decomposed(temperatures)
+    values = terms.pop("free_energies")
+    reference = terms["reference_energies"]
+    halves = {
+        "potential_energies": terms["potential_energies"],
+        "harmonic_potential_energies": terms["harmonic_potential_energies"],
+    }
+    difference = halves["potential_energies"] - halves["harmonic_potential_energies"]
+
+    with pytest.raises(TypeError, match="reference_energies"):
+        SSCHAFreeEnergies(temperatures, values, **halves)
+
+    # The halves are the ordinary input, and the difference comes from them.
+    made = SSCHAFreeEnergies(
+        temperatures,
+        values,
+        reference_energies=reference,
+        **halves,
+    )
+    np.testing.assert_allclose(made.anharmonic_corrections, difference)
+
+    # Without them, only the transitional input will do.
+    with pytest.raises(ValueError, match="Give potential_energies"):
+        SSCHAFreeEnergies(
+            temperatures,
+            values,
+            reference_energies=reference,
+        )
+    SSCHAFreeEnergies(
+        temperatures,
+        values,
+        reference_energies=reference,
+        anharmonic_corrections=difference,
+    )
+
+    with pytest.raises(ValueError, match="given together"):
+        SSCHAFreeEnergies(
+            temperatures,
+            values,
+            reference_energies=reference,
+            potential_energies=halves["potential_energies"],
+        )
+    with pytest.raises(ValueError, match="must equal potential_energies"):
+        SSCHAFreeEnergies(
+            temperatures,
+            values,
+            reference_energies=reference,
+            anharmonic_corrections=halves["potential_energies"],
+            **halves,
+        )
+    with pytest.raises(ValueError, match="reference_energies is one value per grid"):
+        SSCHAFreeEnergies(
+            temperatures,
+            values,
+            reference_energies=reference[:2],
+            **halves,
+        )
+
+    # The electronic term has no such fields to be given at all.
+    with pytest.raises(TypeError, match="reference_energies"):
+        ElectronicFreeEnergies(
+            temperatures,
+            values,
+            reference_energies=reference,
+            **halves,
+        )
+
+
+def test_internal_energies_from_the_free_energies(tmp_path: pathlib.Path) -> None:
+    """--use-mlp-internal-energies needs a file that carries them.
+
+    Falling back to U = 0 would leave the static energy out of the surface
+    altogether, so a file that does not record it stops the run.
+
+    """
+    from phonopy.qha.free_energy_io import (
+        PhononFreeEnergies,
+        SSCHAFreeEnergies,
+        write_free_energies_hdf5,
+    )
+    from phonopy.scripts.phonopy_anisotropic_qha import (
+        internal_energies_from_the_potential,
+    )
+
+    temperatures = np.arange(0.0, 101.0, 10.0)
+    terms = _decomposed(temperatures)
+    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
+
+    with pytest.raises(SystemExit, match="needs --phonon-free-energies"):
+        internal_energies_from_the_potential(None)
+
+    bare = tmp_path / "bare.hdf5"
+    write_free_energies_hdf5(
+        PhononFreeEnergies(
+            temperatures, terms["free_energies"], lattice_lengths=lengths
+        ),
+        bare,
+    )
+    read = _read_free_energies(str(bare), PhononFreeEnergies, temperatures, lengths)
+    assert isinstance(read, PhononFreeEnergies)
+    with pytest.raises(SystemExit, match="do not record the energy"):
+        internal_energies_from_the_potential(read, str(bare))
+
+    full = tmp_path / "full.hdf5"
+    write_free_energies_hdf5(
+        SSCHAFreeEnergies(temperatures, lattice_lengths=lengths, **terms),
+        full,
+    )
+    read = _read_free_energies(str(full), PhononFreeEnergies, temperatures, lengths)
+    np.testing.assert_allclose(
+        internal_energies_from_the_potential(read, str(full)),
+        terms["reference_energies"],
     )

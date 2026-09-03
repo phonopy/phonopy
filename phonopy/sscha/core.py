@@ -27,7 +27,12 @@ class SSCHAIterationResult:
     part then come from the same force constants, which makes the free energy
     the SSCHA free energy of those force constants.
 
-    Energies are in eV per primitive cell.
+    ``anharmonic`` is ``potential_energy - harmonic_potential_energy``. The
+    two are reported apart because they cancel: each varies far more than
+    their difference does.
+
+    Energies are in eV per primitive cell, and are measured from the supercell
+    without displacements, whose own energy is ``MLPSSCHA.supercell_energy``.
 
     """
 
@@ -36,6 +41,8 @@ class SSCHAIterationResult:
     free_energy_error: float
     harmonic: float
     anharmonic: float
+    potential_energy: float
+    harmonic_potential_energy: float
 
 
 class MLPSSCHA:
@@ -270,13 +277,38 @@ class MLPSSCHA:
         return value
 
     @property
+    def n_cell(self) -> int:
+        """Return the number of primitive cells in the supercell.
+
+        What takes the per-supercell quantities to the per-primitive-cell ones
+        the free energy is reported in.
+
+        """
+        return len(self._ph.supercell) // len(self._ph.primitive)
+
+    @property
+    def supercell_energy(self) -> float:
+        """Return the energy of the supercell without displacements.
+
+        E_0 of ``calculate_free_energy``, evaluated once at instantiation. The
+        free energy is measured from it, so adding it back puts the free
+        energy on the potential's own energy scale.
+
+        """
+        return self._supercell_energy
+
+    @property
     def harmonic_potential_energy(self) -> float:
-        """Return supercell energies."""
+        """Return the ensemble average of the harmonic potential energy."""
         return float(np.average(self._harmonic_potential_energies))
 
     @property
     def potential_energy(self) -> float:
-        """Return potential energy."""
+        """Return the ensemble average of the potential energy.
+
+        Measured from the supercell without displacements.
+
+        """
         return float(np.average(self._potential_energies))
 
     @property
@@ -404,7 +436,7 @@ class MLPSSCHA:
         hfe = (
             self._ph.thermal_properties.free_energy[0] / get_physical_units().EvTokJmol
         )
-        n_cell = len(self._ph.supercell) / len(self._ph.primitive)
+        n_cell = self.n_cell
         anharmonic = (
             self._potential_energies - self._harmonic_potential_energies
         ) / n_cell
@@ -480,6 +512,10 @@ class MLPSSCHA:
                     free_energy_error=self.free_energy_error,
                     harmonic=self.harmonic_free_energy,
                     anharmonic=self.anharmonic_free_energy,
+                    potential_energy=self.potential_energy / self.n_cell,
+                    harmonic_potential_energy=(
+                        self.harmonic_potential_energy / self.n_cell
+                    ),
                 )
             )
 
