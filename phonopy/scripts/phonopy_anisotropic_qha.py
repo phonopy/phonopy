@@ -29,7 +29,10 @@ from phonopy.qha import anisotropic_output, anisotropic_plot
 from phonopy.qha.anisotropic import AnisotropicQHAResult
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.qha.free_energy_io import (
-    FreeEnergyKind,
+    ElectronicFreeEnergies,
+    FreeEnergies,
+    PhononFreeEnergies,
+    SSCHAFreeEnergies,
     check_free_energies,
     read_free_energies_hdf5,
     write_free_energies_hdf5,
@@ -94,14 +97,14 @@ def suggest_eos_cells(result: AnisotropicQHAResult, indices: Sequence[int]) -> N
 
 def _read_free_energies(
     filename: str | None,
-    kind: FreeEnergyKind,
+    expected: type[FreeEnergies],
     temperatures: NDArray[np.double],
     lattice_lengths: NDArray[np.double],
-) -> NDArray[np.double] | None:
+) -> FreeEnergies | None:
     """Read a ready-made free energy and check it against this run.
 
     The file is typically computed on another machine, so nothing ties it to
-    the dataset read here: check_free_energies compares its kind, temperature
+    the dataset read here: check_free_energies compares its type, temperature
     grid and grid points before the values are used. A file covering more
     temperatures than the run is narrowed to the run's own.
 
@@ -112,7 +115,7 @@ def _read_free_energies(
     free_energies = read_free_energies_hdf5(filename)
     values = check_free_energies(
         free_energies,
-        kind,
+        expected,
         temperatures,
         lattice_lengths,
         filename=filename,
@@ -123,15 +126,43 @@ def _read_free_energies(
         if n_stored != len(temperatures)
         else ""
     )
-    print(f"{kind.capitalize()} free energy read from {filename}{narrowed}")
+    # The type that was read, not the one asked for: a phonon file may be an
+    # SSCHAFreeEnergies, and that is what --use-mlp-internal-energies needs.
+    print(f"{type(values).__name__} read from {filename}{narrowed}")
     return values
+
+
+def internal_energies_from_the_potential(
+    free_energies: FreeEnergies | None, filename: str | None = None
+) -> NDArray[np.double]:
+    """Return U as the potential's own, for --use-mlp-internal-energies.
+
+    That is the energy the phonon free energies are measured from. Used in
+    place of the dataset's U, it puts the surface on the energy scale of the
+    method that produced those free energies rather than on the calculator's.
+
+    """
+    if free_energies is None:
+        raise SystemExit(
+            "--use-mlp-internal-energies takes U from the phonon free "
+            "energies, so it needs --phonon-free-energies."
+        )
+    if not isinstance(free_energies, SSCHAFreeEnergies):
+        source = "The phonon free energies" if filename is None else f"{filename}"
+        raise SystemExit(
+            f"{source} do not record the energy they are measured from, so U "
+            f"cannot be taken from them. Write them with the reference "
+            f"energies, or drop --use-mlp-internal-energies and take U from "
+            f"the dataset."
+        )
+    return free_energies.reference_energies
 
 
 def compare_thermal_expansion_eos(
     result: AnisotropicQHAResult,
     phonopys: Sequence,
     temperatures: NDArray[np.double],
-    internal_energies: Sequence[float],
+    internal_energies: Sequence[float] | NDArray[np.double],
     electronic_structures: Sequence | None,
     mesh: float,
     positions: Sequence[int],
@@ -332,6 +363,14 @@ def get_options() -> Namespace:
         "the way in for a method whose force constants depend on temperature",
     )
     parser.add_argument(
+        "--use-mlp-internal-energies",
+        action="store_true",
+        help="take the internal energy U from --phonon-free-energies instead "
+        "of from the dataset. The file has to carry the static energies of "
+        "the method that wrote it, and F is then assembled on that method's "
+        "own energy scale rather than on the calculator's",
+    )
+    parser.add_argument(
         "--contour-temp",
         type=float,
         nargs="*",
@@ -397,14 +436,22 @@ def run() -> None:
         [np.linalg.norm(point.cell.cell, axis=1) for point in dataset.grid_points],
         dtype="double",
     )
-    electronic_free_energies = _read_free_energies(
-        args.electronic_free_energies, "electronic", temperatures, lattice_lengths
+    electronic_read = _read_free_energies(
+        args.electronic_free_energies,
+        ElectronicFreeEnergies,
+        temperatures,
+        lattice_lengths,
     )
-    phonon_free_energies = _read_free_energies(
-        args.phonon_free_energies, "phonon", temperatures, lattice_lengths
+    phonon_read = _read_free_energies(
+        args.phonon_free_energies, PhononFreeEnergies, temperatures, lattice_lengths
     )
+    electronic_free_energies = (
+        None if electronic_read is None else electronic_read.free_energies
+    )
+    phonon_free_energies = None if phonon_read is None else phonon_read.free_energies
     phonopys = []
-    internal_energies = []
+    internal_energies: Sequence[float] | NDArray[np.double]
+    dataset_energies: list[float] = []
     read_states = args.electronic and not args.electronic_free_energies
     electronic_structures: list | None = [] if read_states else None
     for point in dataset.grid_points:
@@ -421,12 +468,19 @@ def run() -> None:
                     log_level=0,
                 )
             )
-        internal_energies.append(point.internal_energy)
+        dataset_energies.append(point.internal_energy)
         if electronic_structures is not None:
             if point.electronic_states is None:
                 electronic_structures = None
             else:
                 electronic_structures.append(point.electronic_states)
+    if args.use_mlp_internal_energies:
+        internal_energies = internal_energies_from_the_potential(
+            phonon_read, args.phonon_free_energies
+        )
+        print("Internal energy U taken from the phonon free energies")
+    else:
+        internal_energies = dataset_energies
     if read_states and electronic_structures is None:
         print("  the dataset has no electronic states, so F_el is left out")
     with_electronic = (
@@ -449,11 +503,12 @@ def run() -> None:
             require_tetrahedron=True,
         )
         write_free_energies_hdf5(
-            temperatures,
-            electronic_free_energies,
+            ElectronicFreeEnergies(
+                temperatures,
+                electronic_free_energies,
+                lattice_lengths=lattice_lengths,
+            ),
             "fel.hdf5",
-            kind="electronic",
-            lattice_lengths=lattice_lengths,
         )
         print("Wrote fel.hdf5, which --electronic-free-energies takes back")
 

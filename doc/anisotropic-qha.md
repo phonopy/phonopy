@@ -1383,6 +1383,12 @@ The values are per primitive cell. They are normalized the same way as
 `internal_energies`, and they do not include the static energy, which
 `internal_energies` already carries.
 
+An MLP evaluates the undisplaced supercell, and its free energies are measured
+from that energy. `SSCHAFreeEnergies` records it as `reference_energies`, and
+`phonopy-anisotropic-qha --use-mlp-internal-energies` adds it back and takes
+`U = 0`, which puts the whole surface on the potential's own energy scale
+rather than the calculator's.
+
 Since no force constants are read, the analysis also runs on a dataset built
 from the static grid alone. That is all a method has to work with when it
 never computed calculator phonons:
@@ -1503,6 +1509,7 @@ import numpy as np
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.qha.free_energy_io import (
+    SSCHAFreeEnergies,
     read_free_energies_hdf5,
     write_free_energies_hdf5,
 )
@@ -1516,9 +1523,14 @@ ITERATIONS = 16
 MESH = 200.0
 SEED = 1000
 
-
 def sscha_free_energy(ph, mlp, temperature, force_constants=None, log_level=0):
-    """Return the SSCHA free energy and its error in eV per primitive cell.
+    """Return the SSCHA free energy and its terms in eV per primitive cell.
+
+    The free energy, its error, the two ensemble averages the anharmonic
+    correction is the difference of, and the energy of the supercell without
+    displacements the whole is measured from, per primitive cell. That last
+    one is returned twice: as the static energy to put back, and as the origin
+    the free energy is measured from. They are the same here and need not be.
 
     ``force_constants`` starts the iteration from a set of one's own. Without
     it, it starts from the set ``ph`` carries. ``log_level`` is passed to
@@ -1552,32 +1564,47 @@ def sscha_free_energy(ph, mlp, temperature, force_constants=None, log_level=0):
     return (
         np.mean([h.free_energy for h in history]),
         np.mean([h.free_energy_error for h in history]),
+        np.mean([h.potential_energy for h in history]),
+        np.mean([h.harmonic_potential_energy for h in history]),
+        sscha.supercell_energy / sscha.n_cell,
     )
 
 
 def run_all(dataset, log_level=0):
     """Run all and write it to file."""
     points = dataset.grid_points
-    free_energies = np.zeros((len(TEMPERATURES), len(points)))
-    errors = np.zeros_like(free_energies)
+    shape = (len(TEMPERATURES), len(points))
+    free_energies = np.zeros(shape)
+    errors = np.zeros(shape)
+    potential = np.zeros(shape)
+    harmonic_potential = np.zeros(shape)
+    reference = np.zeros(len(points))
     for column, point in enumerate(points):
         ph = point.to_phonopy()
         mlp = PhonopyMLP().load(MLP.format(point.index + 1))
         for row, temperature in enumerate(TEMPERATURES):
             print(f"({point.index + 1:03d}, {temperature})", flush=True)
-            free_energies[row, column], errors[row, column] = sscha_free_energy(
-                ph, mlp, float(temperature), log_level=log_level
-            )
+            (
+                free_energies[row, column],
+                errors[row, column],
+                potential[row, column],
+                harmonic_potential[row, column],
+                reference[column],
+            ) = sscha_free_energy(ph, mlp, float(temperature), log_level=log_level)
 
     write_free_energies_hdf5(
-        TEMPERATURES,
-        free_energies,
-        "fph.hdf5",
-        kind="phonon",
-        errors=errors,
-        lattice_lengths=np.array(
-            [np.linalg.norm(p.cell.cell, axis=1) for p in points]
+        SSCHAFreeEnergies(
+            TEMPERATURES,
+            free_energies,
+            errors=errors,
+            lattice_lengths=np.array(
+                [np.linalg.norm(p.cell.cell, axis=1) for p in points]
+            ),
+            reference_energies=reference,
+            potential_energies=potential,
+            harmonic_potential_energies=harmonic_potential,
         ),
+        "fph.hdf5",
     )
 
 
@@ -1597,16 +1624,22 @@ def run_one(dataset, grid_point, temperature, log_level=0):
     ph = point.to_phonopy()
     mlp = PhonopyMLP().load(MLP.format(grid_point))
     print(f"({grid_point:03d}, {t})", flush=True)
-    free_energy, error = sscha_free_energy(ph, mlp, float(t), log_level=log_level)
+    free_energy, error, potential, harmonic_potential, reference = sscha_free_energy(
+        ph, mlp, float(t), log_level=log_level
+    )
 
     filename = f"fph-g{grid_point:03d}-t{t:g}K.hdf5"
     write_free_energies_hdf5(
-        TEMPERATURES[[row]],
-        [[free_energy]],
+        SSCHAFreeEnergies(
+            TEMPERATURES[[row]],
+            np.array([[free_energy]]),
+            errors=np.array([[error]]),
+            lattice_lengths=np.linalg.norm(point.cell.cell, axis=1)[None, :],
+            reference_energies=np.array([reference]),
+            potential_energies=np.array([[potential]]),
+            harmonic_potential_energies=np.array([[harmonic_potential]]),
+        ),
         filename,
-        kind="phonon",
-        errors=[[error]],
-        lattice_lengths=np.linalg.norm(point.cell.cell, axis=1)[None, :],
     )
     print(f"Wrote {filename}", flush=True)
 
@@ -1620,8 +1653,12 @@ def collect(dataset, pattern="fph-g*K.hdf5", filename="fph.hdf5"):
     """
     points = dataset.grid_points
     lattice_lengths = np.array([np.linalg.norm(p.cell.cell, axis=1) for p in points])
-    free_energies = np.full((len(TEMPERATURES), len(points)), np.nan)
-    errors = np.full_like(free_energies, np.nan)
+    shape = (len(TEMPERATURES), len(points))
+    free_energies = np.full(shape, np.nan)
+    errors = np.full(shape, np.nan)
+    potential = np.full(shape, np.nan)
+    harmonic_potential = np.full(shape, np.nan)
+    reference = np.full(len(points), np.nan)
 
     paths = sorted(glob.glob(pattern))
     for path in paths:
@@ -1632,6 +1669,9 @@ def collect(dataset, pattern="fph-g*K.hdf5", filename="fph.hdf5"):
                 column = int(np.argmin(np.abs(lattice_lengths - lengths).sum(axis=1)))
                 free_energies[row, column] = part.free_energies[i, j]
                 errors[row, column] = part.errors[i, j]
+                potential[row, column] = part.potential_energies[i, j]
+                harmonic_potential[row, column] = part.harmonic_potential_energies[i, j]
+                reference[column] = part.reference_energies[j]
 
     missing = np.argwhere(np.isnan(free_energies))
     if len(missing) > 0:
@@ -1644,12 +1684,16 @@ def collect(dataset, pattern="fph-g*K.hdf5", filename="fph.hdf5"):
         )
 
     write_free_energies_hdf5(
-        TEMPERATURES,
-        free_energies,
+        SSCHAFreeEnergies(
+            TEMPERATURES,
+            free_energies,
+            errors=errors,
+            lattice_lengths=lattice_lengths,
+            reference_energies=reference,
+            potential_energies=potential,
+            harmonic_potential_energies=harmonic_potential,
+        ),
         filename,
-        kind="phonon",
-        errors=errors,
-        lattice_lengths=lattice_lengths,
     )
     print(f"Wrote {filename} from {len(paths)} file(s)", flush=True)
 

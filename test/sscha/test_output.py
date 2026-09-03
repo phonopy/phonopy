@@ -35,6 +35,7 @@ class _StubSSCHA:
         self.random_seed = 42
         self.fc_calculator = "symfc"
         self.distance = 0.01
+        self.supercell_energy = -1234.5
 
 
 def _history() -> tuple[SSCHAIterationResult, ...]:
@@ -45,6 +46,8 @@ def _history() -> tuple[SSCHAIterationResult, ...]:
             free_energy_error=8.9e-5,
             harmonic=-0.098446,
             anharmonic=0.000339,
+            potential_energy=0.001234,
+            harmonic_potential_energy=0.000895,
         ),
         SSCHAIterationResult(
             iteration=2,
@@ -52,6 +55,8 @@ def _history() -> tuple[SSCHAIterationResult, ...]:
             free_energy_error=6.9e-5,
             harmonic=-0.098531,
             anharmonic=0.000338,
+            potential_energy=0.001230,
+            harmonic_potential_energy=0.000892,
         ),
     )
 
@@ -81,6 +86,7 @@ def test_write_sscha_yaml_settings(tmp_path: pathlib.Path) -> None:
         "mesh": [4, 4, 4],
         "random_seed": 42,
         "fc_calculator": "symfc",
+        "supercell_energy": -1234500.0,
         "initial_force_constants": "provided",
     }
     assert data["free_energy_unit"] == "meV"

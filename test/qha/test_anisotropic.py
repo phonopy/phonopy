@@ -798,3 +798,47 @@ def test_run_anisotropic_smoothing_uses_the_analytic_slope(ph_nacl: Phonopy) -> 
     # the smoothed ones come from a model whose slope vanishes at 0 K.
     assert raw.axial_thermal_expansions[0].max() == 0.0
     assert smoothed.axial_thermal_expansions[0] == pytest.approx(0.0, abs=1e-12)
+
+
+def test_internal_energy_folded_into_the_free_energies(ph_nacl: Phonopy) -> None:
+    """U in the free energies with U = 0 is the same surface as U beside them.
+
+    An MLP evaluates the undisplaced supercell, so its free energy can be put
+    on its own energy scale instead of the calculator's static energy. The
+    driver only sums the terms, and this is what says so.
+
+    """
+    from phonopy.physical_units import get_physical_units
+    from phonopy.qha.thermal import compute_thermal_properties
+
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    energies = _tetragonal_internal_energies(phonopys)
+    fe_phonon, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, MESH)
+    fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
+
+    beside = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=energies,
+        phonon_free_energies=fe_phonon_ev,
+        surface_degree=2,
+    )
+    folded = run_anisotropic_qha(
+        phonopys,
+        TEMPERATURES,
+        internal_energies=np.zeros(len(phonopys)),
+        phonon_free_energies=fe_phonon_ev + np.array(energies)[None, :],
+        surface_degree=2,
+    )
+
+    for name in (
+        "equilibrium_lattice_parameters",
+        "equilibrium_volumes",
+        "axial_thermal_expansions",
+        "thermal_expansion",
+        "helmholtz_lattice",
+        "gibbs_free_energies",
+    ):
+        np.testing.assert_allclose(
+            getattr(folded, name), getattr(beside, name), rtol=1e-12, atol=0.0
+        )

@@ -219,7 +219,7 @@ def _fit_and_grid(
 
 def plot_component_contours(
     result: AnisotropicQHAResult,
-    internal_energies: Sequence[float],
+    internal_energies: Sequence[float] | NDArray[np.double],
     electronic_structures: Sequence | None,
     temperatures: Sequence[float],
     n: int = 200,

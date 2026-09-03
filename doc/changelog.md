@@ -4,6 +4,13 @@
 
 ## Unreleased (v4.5.0)
 
+- `MLPSSCHA.supercell_energy` reports the energy of the supercell without
+  displacements, which the SSCHA free energy is measured from and which was
+  computed and then discarded, and `MLPSSCHA.n_cell` the number of primitive
+  cells in the supercell, which takes it to the unit the free energy is
+  reported in. `sscha_free_energies.yaml` records the supercell energy beside
+  the other settings, and each iteration now reports `potential_energy` and
+  `harmonic_potential_energy`, the two terms `anharmonic` is the difference of.
 - Behavior change: `phonopy-vasp-efe` integrates the electronic free energy by
   the linear tetrahedron method over the mesh each `vasprun.xml` describes,
   where it used to sum Fermi-Dirac occupations over the irreducible k-points.

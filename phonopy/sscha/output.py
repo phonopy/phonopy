@@ -16,18 +16,23 @@ from phonopy.sscha.core import MLPSSCHA
 _HEADER_COMMENT = """\
 # SSCHA free energies, one entry per iteration.
 #
-# The free energy of an iteration is that of the force constants the iteration
-# sampled ("sampled_force_constants"), not of the ones it produced from that
-# sample ("produced_force_constants"): the harmonic part and the ensemble
-# averaged for the anharmonic part then belong to the same force constants.
-# The initialization step (iteration 0) is absent, its displacements being
-# drawn at a fixed distance rather than from a canonical ensemble.
+# An iteration's free energy belongs to the force constants it sampled
+# ("sampled_force_constants"), not to the ones it produced from that sample
+# ("produced_force_constants"). The harmonic part and the ensemble averaged
+# for the anharmonic part then come from the same force constants. The
+# initialization step (iteration 0) is absent: its displacements are drawn at
+# a fixed distance rather than from a canonical ensemble.
 #
-# Energies are per primitive cell. "free_energy" is the sum of "harmonic" and
-# "anharmonic". "free_energy_error" is the standard error of the mean of the
-# anharmonic part over the sampled supercells, the harmonic part carrying no
-# sampling noise. It is conditional on the force constants and does not cover
-# their own stochastic uncertainty.
+# Energies are per primitive cell, measured from the energy of the supercell
+# without displacements, which is reported as "supercell_energy" among the
+# settings. "free_energy" is "harmonic" plus "anharmonic", and "anharmonic" is
+# "potential_energy" minus "harmonic_potential_energy". Those two are reported
+# apart because they cancel: each varies far more than their difference does.
+#
+# "free_energy_error" is the standard error of the mean of the anharmonic part
+# over the sampled supercells; the harmonic part carries no sampling noise. It
+# is conditional on the force constants, and does not cover their own
+# stochastic uncertainty.
 """
 
 _UNIT = "meV"
@@ -102,6 +107,7 @@ def _settings_lines(sscha: MLPSSCHA) -> list[str]:
         f"  mesh: {_yaml_value(sscha.mesh)}",
         f"  random_seed: {_yaml_value(sscha.random_seed)}",
         f"  fc_calculator: {sscha.fc_calculator}",
+        f"  supercell_energy: {sscha.supercell_energy * _EV_TO_UNIT:.6f}",
     ]
     if sscha.initial_force_constants_provided:
         lines.append("  initial_force_constants: provided")
@@ -128,6 +134,11 @@ def _iterations_lines(sscha: MLPSSCHA, filenames: Mapping[int, str]) -> list[str
         )
         lines.append(f"  harmonic: {result.harmonic * _EV_TO_UNIT:.6f}")
         lines.append(f"  anharmonic: {result.anharmonic * _EV_TO_UNIT:.6f}")
+        lines.append(f"  potential_energy: {result.potential_energy * _EV_TO_UNIT:.6f}")
+        lines.append(
+            f"  harmonic_potential_energy: "
+            f"{result.harmonic_potential_energy * _EV_TO_UNIT:.6f}"
+        )
     return lines
 
 
