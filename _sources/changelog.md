@@ -4,6 +4,18 @@
 
 ## Unreleased (v4.5.0)
 
+- `MLPSSCHA.supercell_energy` reports the energy of the supercell without
+  displacements, which the SSCHA free energy is measured from and which was
+  computed and then discarded, and `MLPSSCHA.n_cell` the number of primitive
+  cells in the supercell, which takes it to the unit the free energy is
+  reported in. `sscha_free_energies.yaml` records the supercell energy beside
+  the other settings, and each iteration now reports `potential_energy` and
+  `harmonic_potential_energy`, the two terms `anharmonic` is the difference of.
+- Bug fix: the non-analytical term correction factor for Elk, TURBOMOLE and
+  Fleur is 1 again, the value {ref}`documented
+  <nac_default_value_interfaces>` for them. It became 14.399652 in v3.4.0,
+  when those three interfaces were folded into one branch with DFTB+, which
+  shifted LO frequencies for anyone running NAC through them.
 - Behavior change: `phonopy-vasp-efe` integrates the electronic free energy by
   the linear tetrahedron method over the mesh each `vasprun.xml` describes,
   where it used to sum Fermi-Dirac occupations over the irreducible k-points.

@@ -951,8 +951,8 @@ after every iteration and is written whether or not the log is enabled:</p>
 <p>Energies are per primitive cell. <code class="docutils literal notranslate"><span class="pre">free_energy</span></code> is the sum of <code class="docutils literal notranslate"><span class="pre">harmonic</span></code> and
 <code class="docutils literal notranslate"><span class="pre">anharmonic</span></code>. With <span class="math notranslate nohighlight">\(N\)</span> sampled supercells, which is the number given by
 <code class="docutils literal notranslate"><span class="pre">--rd</span></code>, the anharmonic part is the mean of</p>
-<div class="math notranslate nohighlight">
-\[a_i = \frac{1}{n_\mathrm{cell}} \left( E_i - E_0 - \frac{1}{2}
+<div class="math notranslate nohighlight" id="equation-eq-sscha-anharmonic">
+<span class="eqno">(1)<a class="headerlink" href="#equation-eq-sscha-anharmonic" title="Link to this equation">#</a></span>\[E^\mathrm{anh}_i = \frac{1}{n_\mathrm{cell}} \left( E_i - E_0 - \frac{1}{2}
 \sum_{l\kappa j, l'\kappa' j'} \Phi_{l\kappa j, l'\kappa' j'}
 u^{(i)}_{l\kappa j} u^{(i)}_{l'\kappa' j'} \right),\]</div>
 <p>where <span class="math notranslate nohighlight">\(E_i\)</span> is the energy of the <span class="math notranslate nohighlight">\(i\)</span>-th supercell, <span class="math notranslate nohighlight">\(E_0\)</span> that
@@ -960,15 +960,15 @@ of the supercell without displacements, <span class="math notranslate nohighligh
 <span class="math notranslate nohighlight">\(n_\mathrm{cell}\)</span> the number of primitive cells in the supercell. The
 reported value and its error are then</p>
 <div class="math notranslate nohighlight">
-\[\hat{\mathcal{F}}_\Phi = \tilde{F}_\Phi + \bar{a},
+\[\hat{\mathcal{F}}_\Phi = \tilde{F}_\Phi + \bar{E}^\mathrm{anh},
 \qquad
-\bar{a} = \frac{1}{N} \sum_{i=1}^{N} a_i,
+\bar{E}^\mathrm{anh} = \frac{1}{N} \sum_{i=1}^{N} E^\mathrm{anh}_i,
 \qquad
-\hat{\sigma} = \frac{\mathrm{std}(a)}{\sqrt{N}},\]</div>
+\hat{\sigma} = \frac{\mathrm{std}(E^\mathrm{anh})}{\sqrt{N}},\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathrm{std}\)</span> is the sample standard deviation,</p>
 <div class="math notranslate nohighlight">
-\[\mathrm{std}(a) = \left[ \frac{1}{N - 1} \sum_{i=1}^{N}
-\left( a_i - \bar{a} \right)^2 \right]^{1/2}.\]</div>
+\[\mathrm{std}(E^\mathrm{anh}) = \left[ \frac{1}{N - 1} \sum_{i=1}^{N}
+\left( E^\mathrm{anh}_i - \bar{E}^\mathrm{anh} \right)^2 \right]^{1/2}.\]</div>
 <p><code class="docutils literal notranslate"><span class="pre">free_energy_error</span></code> is this <span class="math notranslate nohighlight">\(\hat{\sigma}\)</span>: the harmonic part is fixed by
 the force constants and carries no sampling noise, so the whole statistical
 error comes from the anharmonic term. The file also records the settings the

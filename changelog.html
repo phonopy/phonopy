@@ -628,6 +628,17 @@
 <section id="unreleased-v4-5-0">
 <h2>Unreleased (v4.5.0)<a class="headerlink" href="#unreleased-v4-5-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MLPSSCHA.supercell_energy</span></code> reports the energy of the supercell without
+displacements, which the SSCHA free energy is measured from and which was
+computed and then discarded, and <code class="docutils literal notranslate"><span class="pre">MLPSSCHA.n_cell</span></code> the number of primitive
+cells in the supercell, which takes it to the unit the free energy is
+reported in. <code class="docutils literal notranslate"><span class="pre">sscha_free_energies.yaml</span></code> records the supercell energy beside
+the other settings, and each iteration now reports <code class="docutils literal notranslate"><span class="pre">potential_energy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">harmonic_potential_energy</span></code>, the two terms <code class="docutils literal notranslate"><span class="pre">anharmonic</span></code> is the difference of.</p></li>
+<li><p>Bug fix: the non-analytical term correction factor for Elk, TURBOMOLE and
+Fleur is 1 again, the value <a class="reference internal" href="interfaces.html#nac-default-value-interfaces"><span class="std std-ref">documented</span></a> for them. It became 14.399652 in v3.4.0,
+when those three interfaces were folded into one branch with DFTB+, which
+shifted LO frequencies for anyone running NAC through them.</p></li>
 <li><p>Behavior change: <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> integrates the electronic free energy by
 the linear tetrahedron method over the mesh each <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes,
 where it used to sum Fermi-Dirac occupations over the irreducible k-points.
