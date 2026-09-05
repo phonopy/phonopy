@@ -10,24 +10,21 @@ PhononFreeEnergies or SSCHAFreeEnergies -- and each says in its own docstring
 what it carries. The file records the type that wrote it, and
 check_free_energies refuses one that does not belong to the run at hand.
 
-SSCHAIterations is the exception: it holds what an SSCHA sweep sampled,
-before any averaging, and is the free energy of nothing. The averaging reads
-it and writes SSCHAFreeEnergies. Handing it to the analysis is refused on its
-type, rather than averaged on the spot over iterations nobody chose.
-
 """
 
 from __future__ import annotations
 
 import dataclasses
 import os
-from typing import ClassVar
+from collections.abc import Sequence
+from typing import Any, ClassVar
 
 import h5py  # type: ignore[import-untyped]
 import numpy as np
 from numpy.typing import NDArray
 
 from phonopy import __version__
+from phonopy.sscha.run import SSCHARun
 
 
 @dataclasses.dataclass(frozen=True)
@@ -144,7 +141,7 @@ class SSCHAFreeEnergies(PhononFreeEnergies):
     transient_iterations : int, optional
         How many iterations at the start of each run were left out of the
         averages, or None. A count, not a position on the iteration axis.
-        The iterations themselves are in the SSCHAIterations the averaging
+        The iterations themselves are in the SSCHARun files the averaging
         read, so this is the record of what was taken from them.
 
     Notes
@@ -220,124 +217,32 @@ class SSCHAFreeEnergies(PhononFreeEnergies):
             )
 
 
-@dataclasses.dataclass(frozen=True)
-class SSCHAIterations:
-    """What an SSCHA sweep sampled, before any averaging.
-
-    The runs write this and the averaging reads it. It is the free energy of
-    nothing: every array carries an iteration axis, and which iterations to
-    average over is chosen afterwards. The averaging writes
-    SSCHAFreeEnergies, and that is what the analysis takes.
-
-    Attributes
-    ----------
-    temperatures : ndarray
-        Temperatures in K. shape=(temperatures,)
-    free_energies : ndarray
-        SSCHA free energy of each iteration, in eV per primitive cell.
-        shape=(temperatures, grid_points, iterations)
-    errors : ndarray
-        Statistical error of each iteration's free energy, in eV per
-        primitive cell. shape=(temperatures, grid_points, iterations)
-    potential_energies : ndarray
-        Ensemble average of the potential energy of each iteration, measured
-        from reference_energies, in eV per primitive cell.
-        shape=(temperatures, grid_points, iterations)
-    harmonic_potential_energies : ndarray
-        Ensemble average of the harmonic potential energy of each iteration's
-        own force constants, in eV per primitive cell.
-        shape=(temperatures, grid_points, iterations)
-    reference_energies : ndarray
-        The energy the free energies are measured from, in eV per primitive
-        cell. shape=(grid_points,)
-    lattice_lengths : ndarray, optional
-        Lattice-vector lengths (a, b, c) of the grid points in angstrom, or
-        None. Carried so that a reader can place each file on the grid.
-        shape=(grid_points, 3)
-
-    Notes
-    -----
-    The iteration axis holds the iterations of one run in the order they were
-    made, starting with the first one the run recorded. MLPSSCHA numbers and
-    logs those from 1, so index k on this axis is the run's iteration k + 1.
-    The transient is counted rather than pointed at, so it does not depend on
-    that numbering: 2 leaves out the first two iterations, whichever numbers
-    they carry.
-
-    """
-
-    ITERATION_RESOLVED: ClassVar[tuple[str, ...]] = (
-        "free_energies",
-        "errors",
-        "potential_energies",
-        "harmonic_potential_energies",
-    )
-
-    temperatures: NDArray[np.double]
-    free_energies: NDArray[np.double]
-    errors: NDArray[np.double]
-    potential_energies: NDArray[np.double]
-    harmonic_potential_energies: NDArray[np.double]
-    reference_energies: NDArray[np.double]
-    lattice_lengths: NDArray[np.double] | None = None
-
-    def __post_init__(self) -> None:
-        """Check the arrays against each other."""
-        shape = self.free_energies.shape
-        if len(shape) != 3 or shape[0] != len(self.temperatures):
-            raise ValueError(
-                "free_energies must have shape (temperatures, grid_points, "
-                f"iterations) with {len(self.temperatures)} rows, but has "
-                f"{shape}."
-            )
-        for name in self.ITERATION_RESOLVED:
-            values = getattr(self, name)
-            if values.shape != shape:
-                raise ValueError(
-                    f"{name} must have the shape of free_energies, {shape}, "
-                    f"but has {values.shape}."
-                )
-        if self.reference_energies.shape != (shape[1],):
-            raise ValueError(
-                "reference_energies is one value per grid point, so it must "
-                f"have shape {(shape[1],)}, but has "
-                f"{self.reference_energies.shape}."
-            )
-        lengths = self.lattice_lengths
-        if lengths is not None and lengths.shape != (shape[1], 3):
-            raise ValueError(
-                f"lattice_lengths must have shape {(shape[1], 3)}, "
-                f"but has {lengths.shape}."
-            )
-
-    @property
-    def n_grid_points(self) -> int:
-        """Return the number of grid points."""
-        return int(self.free_energies.shape[1])
-
-    @property
-    def n_iterations(self) -> int:
-        """Return the number of iterations each run made."""
-        return int(self.free_energies.shape[2])
-
-
-TYPES: dict[str, type] = {
+TYPES: dict[str, type[FreeEnergies]] = {
     cls.__name__: cls
-    for cls in (
-        ElectronicFreeEnergies,
-        PhononFreeEnergies,
-        SSCHAFreeEnergies,
-        SSCHAIterations,
-    )
+    for cls in (ElectronicFreeEnergies, PhononFreeEnergies, SSCHAFreeEnergies)
 }
 
 
-def _write_hdf5(stored, filename: str | os.PathLike) -> None:
-    """Write one of the types of this module, recording which it is."""
-    name = type(stored).__name__
+def write_free_energies_hdf5(
+    free_energies: FreeEnergies,
+    filename: str | os.PathLike = "free_energies.hdf5",
+) -> None:
+    """Write free energies over a temperature grid and a lattice grid.
+
+    Parameters
+    ----------
+    free_energies : FreeEnergies
+        One of the types of this module. The file records which, so that
+        reading it back as another term is refused rather than silent.
+    filename : str or os.PathLike, optional
+        Output file name.
+
+    """
+    name = type(free_energies).__name__
     if name not in TYPES:
-        raise ValueError(f"{name} is not one of {', '.join(TYPES)}.")
-    free_energies = stored
+        raise ValueError(
+            f"{name} is not one of the free energy types, {', '.join(TYPES)}."
+        )
 
     with h5py.File(filename, "w") as w:
         w.attrs["creator"] = "phonopy"
@@ -350,20 +255,26 @@ def _write_hdf5(stored, filename: str | os.PathLike) -> None:
                 w.create_dataset(field.name, data=values)
 
 
-def _read_hdf5(filename: str | os.PathLike):
-    """Read a file written by _write_hdf5, as the type that wrote it."""
+def read_free_energies_hdf5(
+    filename: str | os.PathLike = "free_energies.hdf5",
+) -> FreeEnergies:
+    """Read free energies written by write_free_energies_hdf5.
+
+    They come back as the type that wrote them.
+
+    """
     with h5py.File(filename, "r") as f:
         name = str(f.attrs["type"]) if "type" in f.attrs else ""
         if name not in TYPES:
             raise ValueError(
-                f"{filename} records the type {name!r}, which is not one of "
-                f"{', '.join(TYPES)}."
+                f"{filename} records the free energy type {name!r}, which is "
+                f"not one of {', '.join(TYPES)}."
             )
         cls = TYPES[name]
         # Only what the type declares, so a file written when it had a field
         # more is still read, ignoring that one.
         declared = {field.name for field in dataclasses.fields(cls)}
-        stored = {}
+        stored: dict[str, Any] = {}
         for key in f:
             if key not in declared:
                 continue
@@ -378,67 +289,93 @@ def _read_hdf5(filename: str | os.PathLike):
             raise ValueError(f"{filename} is a {name}, but {error}") from error
 
 
-def write_free_energies_hdf5(
-    free_energies: FreeEnergies,
-    filename: str | os.PathLike = "free_energies.hdf5",
-) -> None:
-    """Write free energies over a temperature grid and a lattice grid.
+def assemble_sscha_free_energies(
+    runs: Sequence[SSCHARun],
+    temperatures: NDArray[np.double],
+    lattice_lengths: NDArray[np.double],
+    transient: int = 1,
+) -> SSCHAFreeEnergies:
+    """Average a sweep's runs and place them on its grid.
+
+    Each run averages itself over the iterations after the transient, so
+    another transient costs no sampling: read the same runs and assemble them
+    again.
+
+    A run is placed by the temperature and the lattice lengths it carries
+    rather than by where it came from, so the order they are given in does
+    not matter. A grid point and temperature that no run covers stops the
+    assembly, and so does one that two runs cover.
 
     Parameters
     ----------
-    free_energies : FreeEnergies
-        One of the free energy types of this module. The file records which,
-        so that reading it back as another term is refused rather than silent.
-    filename : str or os.PathLike, optional
-        Output file name.
+    runs : Sequence[SSCHARun]
+        What the sweep sampled, one per grid point and temperature.
+    temperatures : ndarray
+        Temperatures of the grid in K. shape=(temperatures,)
+    lattice_lengths : ndarray
+        Lattice-vector lengths (a, b, c) of the grid points in angstrom.
+        shape=(grid_points, 3)
+    transient : int, optional
+        How many iterations at the start of each run to leave out of its
+        average. Default is 1, which drops the iteration that samples the
+        starting force constants. How many more belong to the transient
+        depends on the system; SSCHARun.report shows it.
 
     """
-    if not isinstance(free_energies, FreeEnergies):
+    shape = (len(temperatures), len(lattice_lengths))
+    free_energies = np.full(shape, np.nan)
+    errors = np.full(shape, np.nan)
+    potential = np.full(shape, np.nan)
+    harmonic_potential = np.full(shape, np.nan)
+    reference = np.full(shape[1], np.nan)
+
+    counts = {run.n_iterations for run in runs}
+    if len(counts) > 1:
         raise ValueError(
-            f"{type(free_energies).__name__} is not a free energy. "
-            "write_sscha_iterations_hdf5 writes what a sweep sampled."
+            f"The runs made {sorted(counts)} iterations. Averaging over "
+            "different numbers of them would weight the grid unevenly."
         )
-    _write_hdf5(free_energies, filename)
+    for run in runs:
+        if run.lattice_lengths is None:
+            raise ValueError(
+                "A run carries no lattice_lengths, so it cannot be placed on the grid."
+            )
+        row = int(np.argmin(np.abs(temperatures - run.temperature)))
+        column = int(
+            np.argmin(np.abs(lattice_lengths - run.lattice_lengths).sum(axis=1))
+        )
+        if not np.isnan(free_energies[row, column]):
+            raise ValueError(
+                f"Two runs cover grid point {column + 1} at {temperatures[row]:g} K."
+            )
+        (
+            free_energies[row, column],
+            errors[row, column],
+            potential[row, column],
+            harmonic_potential[row, column],
+        ) = run.averaged(transient)
+        reference[column] = run.reference_energy
 
-
-def read_free_energies_hdf5(
-    filename: str | os.PathLike = "free_energies.hdf5",
-) -> FreeEnergies:
-    """Read free energies written by write_free_energies_hdf5.
-
-    They come back as the type that wrote them.
-
-    """
-    stored = _read_hdf5(filename)
-    if not isinstance(stored, FreeEnergies):
+    missing = np.argwhere(np.isnan(free_energies))
+    if len(missing) > 0:
+        first = ", ".join(
+            f"(grid point {c + 1}, {temperatures[r]:g} K)" for r, c in missing[:5]
+        )
         raise ValueError(
-            f"{filename} holds {type(stored).__name__}, what a sweep sampled "
-            "rather than a free energy. Average it into free energies first."
+            f"{len(runs)} run(s) given, {len(missing)} of {free_energies.size} "
+            f"values missing: {first} ..."
         )
-    return stored
 
-
-def write_sscha_iterations_hdf5(
-    iterations: SSCHAIterations,
-    filename: str | os.PathLike = "sscha.hdf5",
-) -> None:
-    """Write what an SSCHA sweep sampled, before any averaging."""
-    if not isinstance(iterations, SSCHAIterations):
-        raise ValueError(f"{type(iterations).__name__} is not SSCHAIterations.")
-    _write_hdf5(iterations, filename)
-
-
-def read_sscha_iterations_hdf5(
-    filename: str | os.PathLike = "sscha.hdf5",
-) -> SSCHAIterations:
-    """Read what write_sscha_iterations_hdf5 wrote."""
-    stored = _read_hdf5(filename)
-    if not isinstance(stored, SSCHAIterations):
-        raise ValueError(
-            f"{filename} holds {type(stored).__name__}, which is already "
-            "averaged. The iterations are in the file the runs wrote."
-        )
-    return stored
+    return SSCHAFreeEnergies(
+        np.asarray(temperatures, dtype="double"),
+        free_energies,
+        errors=errors,
+        lattice_lengths=np.asarray(lattice_lengths, dtype="double"),
+        reference_energies=reference,
+        potential_energies=potential,
+        harmonic_potential_energies=harmonic_potential,
+        transient_iterations=transient,
+    )
 
 
 def _temperature_index(
