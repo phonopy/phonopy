@@ -10,6 +10,11 @@ PhononFreeEnergies or SSCHAFreeEnergies -- and each says in its own docstring
 what it carries. The file records the type that wrote it, and
 check_free_energies refuses one that does not belong to the run at hand.
 
+SSCHAIterations is the exception: it holds what an SSCHA sweep sampled,
+before any averaging, and is the free energy of nothing. The averaging reads
+it and writes SSCHAFreeEnergies. Handing it to the analysis is refused on its
+type, rather than averaged on the spot over iterations nobody chose.
+
 """
 
 from __future__ import annotations
@@ -51,11 +56,12 @@ class FreeEnergies:
 
     """
 
-    # The arrays with a temperature axis, and those with one value per grid
-    # point. The subtypes extend them; __post_init__ and check_free_energies
-    # are what read them.
-    OVER_TEMPERATURE: ClassVar[tuple[str, ...]] = ("free_energies", "errors")
-    OVER_GRID: ClassVar[tuple[str, ...]] = ()
+    # Which shape a field has. TEMPERATURE_DEPENDENT is (temperatures,
+    # grid_points) and TEMPERATURE_INDEPENDENT is (grid_points,). The
+    # subtypes extend them, and __post_init__ and check_free_energies read
+    # them.
+    TEMPERATURE_DEPENDENT: ClassVar[tuple[str, ...]] = ("free_energies", "errors")
+    TEMPERATURE_INDEPENDENT: ClassVar[tuple[str, ...]] = ()
 
     temperatures: NDArray[np.double]
     free_energies: NDArray[np.double]
@@ -70,14 +76,14 @@ class FreeEnergies:
                 f"free_energies must have shape (temperatures, grid_points) "
                 f"with {len(self.temperatures)} rows, but has {shape}."
             )
-        for name in self.OVER_TEMPERATURE:
+        for name in self.TEMPERATURE_DEPENDENT:
             values = getattr(self, name, None)
             if values is not None and values.shape != shape:
                 raise ValueError(
                     f"{name} must have the shape of free_energies, {shape}, "
                     f"but has {values.shape}."
                 )
-        for name in self.OVER_GRID:
+        for name in self.TEMPERATURE_INDEPENDENT:
             values = getattr(self, name, None)
             if values is not None and values.shape != (shape[1],):
                 raise ValueError(
@@ -135,6 +141,11 @@ class SSCHAFreeEnergies(PhononFreeEnergies):
         potential_energies - harmonic_potential_energies, always present once
         the instance is made. Deprecated as an input; see the notes.
         shape=(temperatures, grid_points)
+    transient_iterations : int, optional
+        How many iterations at the start of each run were left out of the
+        averages, or None. A count, not a position on the iteration axis.
+        The iterations themselves are in the SSCHAIterations the averaging
+        read, so this is the record of what was taken from them.
 
     Notes
     -----
@@ -152,14 +163,23 @@ class SSCHAFreeEnergies(PhononFreeEnergies):
     Giving anharmonic_corrections instead of potential_energies and
     harmonic_potential_energies is deprecated.
 
+    free_energies, potential_energies and harmonic_potential_energies are the
+    means over the iterations after the transient, and errors is the standard
+    error of that mean. Nothing here can check them, because the iterations
+    they came from are in a separate file; transient_iterations is kept so
+    that two of these files can be compared knowing how each was taken.
+
     """
 
-    OVER_TEMPERATURE: ClassVar[tuple[str, ...]] = FreeEnergies.OVER_TEMPERATURE + (
-        "anharmonic_corrections",
-        "potential_energies",
-        "harmonic_potential_energies",
+    TEMPERATURE_DEPENDENT: ClassVar[tuple[str, ...]] = (
+        FreeEnergies.TEMPERATURE_DEPENDENT
+        + (
+            "anharmonic_corrections",
+            "potential_energies",
+            "harmonic_potential_energies",
+        )
     )
-    OVER_GRID: ClassVar[tuple[str, ...]] = ("reference_energies",)
+    TEMPERATURE_INDEPENDENT: ClassVar[tuple[str, ...]] = ("reference_energies",)
 
     reference_energies: NDArray[np.double]
     potential_energies: NDArray[np.double] | None = None
@@ -167,6 +187,7 @@ class SSCHAFreeEnergies(PhononFreeEnergies):
     # Never None once __post_init__ has run, which is why it is not typed
     # optional: every reader of the attribute gets an array.
     anharmonic_corrections: NDArray[np.double] = None  # type: ignore[assignment]
+    transient_iterations: int | None = None
 
     def __post_init__(self) -> None:
         """Check the two terms, and derive their difference when it is absent."""
@@ -199,32 +220,124 @@ class SSCHAFreeEnergies(PhononFreeEnergies):
             )
 
 
-TYPES: dict[str, type[FreeEnergies]] = {
+@dataclasses.dataclass(frozen=True)
+class SSCHAIterations:
+    """What an SSCHA sweep sampled, before any averaging.
+
+    The runs write this and the averaging reads it. It is the free energy of
+    nothing: every array carries an iteration axis, and which iterations to
+    average over is chosen afterwards. The averaging writes
+    SSCHAFreeEnergies, and that is what the analysis takes.
+
+    Attributes
+    ----------
+    temperatures : ndarray
+        Temperatures in K. shape=(temperatures,)
+    free_energies : ndarray
+        SSCHA free energy of each iteration, in eV per primitive cell.
+        shape=(temperatures, grid_points, iterations)
+    errors : ndarray
+        Statistical error of each iteration's free energy, in eV per
+        primitive cell. shape=(temperatures, grid_points, iterations)
+    potential_energies : ndarray
+        Ensemble average of the potential energy of each iteration, measured
+        from reference_energies, in eV per primitive cell.
+        shape=(temperatures, grid_points, iterations)
+    harmonic_potential_energies : ndarray
+        Ensemble average of the harmonic potential energy of each iteration's
+        own force constants, in eV per primitive cell.
+        shape=(temperatures, grid_points, iterations)
+    reference_energies : ndarray
+        The energy the free energies are measured from, in eV per primitive
+        cell. shape=(grid_points,)
+    lattice_lengths : ndarray, optional
+        Lattice-vector lengths (a, b, c) of the grid points in angstrom, or
+        None. Carried so that a reader can place each file on the grid.
+        shape=(grid_points, 3)
+
+    Notes
+    -----
+    The iteration axis holds the iterations of one run in the order they were
+    made, starting with the first one the run recorded. MLPSSCHA numbers and
+    logs those from 1, so index k on this axis is the run's iteration k + 1.
+    The transient is counted rather than pointed at, so it does not depend on
+    that numbering: 2 leaves out the first two iterations, whichever numbers
+    they carry.
+
+    """
+
+    ITERATION_RESOLVED: ClassVar[tuple[str, ...]] = (
+        "free_energies",
+        "errors",
+        "potential_energies",
+        "harmonic_potential_energies",
+    )
+
+    temperatures: NDArray[np.double]
+    free_energies: NDArray[np.double]
+    errors: NDArray[np.double]
+    potential_energies: NDArray[np.double]
+    harmonic_potential_energies: NDArray[np.double]
+    reference_energies: NDArray[np.double]
+    lattice_lengths: NDArray[np.double] | None = None
+
+    def __post_init__(self) -> None:
+        """Check the arrays against each other."""
+        shape = self.free_energies.shape
+        if len(shape) != 3 or shape[0] != len(self.temperatures):
+            raise ValueError(
+                "free_energies must have shape (temperatures, grid_points, "
+                f"iterations) with {len(self.temperatures)} rows, but has "
+                f"{shape}."
+            )
+        for name in self.ITERATION_RESOLVED:
+            values = getattr(self, name)
+            if values.shape != shape:
+                raise ValueError(
+                    f"{name} must have the shape of free_energies, {shape}, "
+                    f"but has {values.shape}."
+                )
+        if self.reference_energies.shape != (shape[1],):
+            raise ValueError(
+                "reference_energies is one value per grid point, so it must "
+                f"have shape {(shape[1],)}, but has "
+                f"{self.reference_energies.shape}."
+            )
+        lengths = self.lattice_lengths
+        if lengths is not None and lengths.shape != (shape[1], 3):
+            raise ValueError(
+                f"lattice_lengths must have shape {(shape[1], 3)}, "
+                f"but has {lengths.shape}."
+            )
+
+    @property
+    def n_grid_points(self) -> int:
+        """Return the number of grid points."""
+        return int(self.free_energies.shape[1])
+
+    @property
+    def n_iterations(self) -> int:
+        """Return the number of iterations each run made."""
+        return int(self.free_energies.shape[2])
+
+
+TYPES: dict[str, type] = {
     cls.__name__: cls
-    for cls in (ElectronicFreeEnergies, PhononFreeEnergies, SSCHAFreeEnergies)
+    for cls in (
+        ElectronicFreeEnergies,
+        PhononFreeEnergies,
+        SSCHAFreeEnergies,
+        SSCHAIterations,
+    )
 }
 
 
-def write_free_energies_hdf5(
-    free_energies: FreeEnergies,
-    filename: str | os.PathLike = "free_energies.hdf5",
-) -> None:
-    """Write free energies over a temperature grid and a lattice grid.
-
-    Parameters
-    ----------
-    free_energies : FreeEnergies
-        One of the types of this module. The file records which, so that
-        reading it back as another term is refused rather than silent.
-    filename : str or os.PathLike, optional
-        Output file name.
-
-    """
-    name = type(free_energies).__name__
+def _write_hdf5(stored, filename: str | os.PathLike) -> None:
+    """Write one of the types of this module, recording which it is."""
+    name = type(stored).__name__
     if name not in TYPES:
-        raise ValueError(
-            f"{name} is not one of the free energy types, {', '.join(TYPES)}."
-        )
+        raise ValueError(f"{name} is not one of {', '.join(TYPES)}.")
+    free_energies = stored
 
     with h5py.File(filename, "w") as w:
         w.attrs["creator"] = "phonopy"
@@ -237,6 +350,57 @@ def write_free_energies_hdf5(
                 w.create_dataset(field.name, data=values)
 
 
+def _read_hdf5(filename: str | os.PathLike):
+    """Read a file written by _write_hdf5, as the type that wrote it."""
+    with h5py.File(filename, "r") as f:
+        name = str(f.attrs["type"]) if "type" in f.attrs else ""
+        if name not in TYPES:
+            raise ValueError(
+                f"{filename} records the type {name!r}, which is not one of "
+                f"{', '.join(TYPES)}."
+            )
+        cls = TYPES[name]
+        # Only what the type declares, so a file written when it had a field
+        # more is still read, ignoring that one.
+        declared = {field.name for field in dataclasses.fields(cls)}
+        stored = {}
+        for key in f:
+            if key not in declared:
+                continue
+            # transient_iterations is a count, stored as a scalar dataset.
+            if f[key].shape == ():
+                stored[key] = f[key][()].item()
+            else:
+                stored[key] = np.array(f[key][:], dtype="double")
+        try:
+            return cls(**stored)
+        except TypeError as error:
+            raise ValueError(f"{filename} is a {name}, but {error}") from error
+
+
+def write_free_energies_hdf5(
+    free_energies: FreeEnergies,
+    filename: str | os.PathLike = "free_energies.hdf5",
+) -> None:
+    """Write free energies over a temperature grid and a lattice grid.
+
+    Parameters
+    ----------
+    free_energies : FreeEnergies
+        One of the free energy types of this module. The file records which,
+        so that reading it back as another term is refused rather than silent.
+    filename : str or os.PathLike, optional
+        Output file name.
+
+    """
+    if not isinstance(free_energies, FreeEnergies):
+        raise ValueError(
+            f"{type(free_energies).__name__} is not a free energy. "
+            "write_sscha_iterations_hdf5 writes what a sweep sampled."
+        )
+    _write_hdf5(free_energies, filename)
+
+
 def read_free_energies_hdf5(
     filename: str | os.PathLike = "free_energies.hdf5",
 ) -> FreeEnergies:
@@ -245,24 +409,36 @@ def read_free_energies_hdf5(
     They come back as the type that wrote them.
 
     """
-    with h5py.File(filename, "r") as f:
-        name = str(f.attrs["type"]) if "type" in f.attrs else ""
-        if name not in TYPES:
-            raise ValueError(
-                f"{filename} records the free energy type {name!r}, which is "
-                f"not one of {', '.join(TYPES)}."
-            )
-        cls = TYPES[name]
-        # Only what the type declares, so a file written when it had a field
-        # more is still read, ignoring that one.
-        declared = {field.name for field in dataclasses.fields(cls)}
-        stored = {
-            key: np.array(f[key][:], dtype="double") for key in f if key in declared
-        }
-        try:
-            return cls(**stored)
-        except TypeError as error:
-            raise ValueError(f"{filename} is a {name}, but {error}") from error
+    stored = _read_hdf5(filename)
+    if not isinstance(stored, FreeEnergies):
+        raise ValueError(
+            f"{filename} holds {type(stored).__name__}, what a sweep sampled "
+            "rather than a free energy. Average it into free energies first."
+        )
+    return stored
+
+
+def write_sscha_iterations_hdf5(
+    iterations: SSCHAIterations,
+    filename: str | os.PathLike = "sscha.hdf5",
+) -> None:
+    """Write what an SSCHA sweep sampled, before any averaging."""
+    if not isinstance(iterations, SSCHAIterations):
+        raise ValueError(f"{type(iterations).__name__} is not SSCHAIterations.")
+    _write_hdf5(iterations, filename)
+
+
+def read_sscha_iterations_hdf5(
+    filename: str | os.PathLike = "sscha.hdf5",
+) -> SSCHAIterations:
+    """Read what write_sscha_iterations_hdf5 wrote."""
+    stored = _read_hdf5(filename)
+    if not isinstance(stored, SSCHAIterations):
+        raise ValueError(
+            f"{filename} holds {type(stored).__name__}, which is already "
+            "averaged. The iterations are in the file the runs wrote."
+        )
+    return stored
 
 
 def _temperature_index(
@@ -355,7 +531,7 @@ def check_free_energies(
         )
     narrowed = {
         name: getattr(free_energies, name)[index]
-        for name in free_energies.OVER_TEMPERATURE
+        for name in free_energies.TEMPERATURE_DEPENDENT
         if getattr(free_energies, name) is not None
     }
     return dataclasses.replace(free_energies, temperatures=temps[index], **narrowed)

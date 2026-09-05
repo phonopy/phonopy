@@ -547,7 +547,9 @@ Energies are per primitive cell. `free_energy` is the sum of `harmonic` and
 `--rd`, the anharmonic part is the mean of
 
 ```{math}
-a_i = \frac{1}{n_\mathrm{cell}} \left( E_i - E_0 - \frac{1}{2}
+:label: eq_sscha_anharmonic
+
+E^\mathrm{anh}_i = \frac{1}{n_\mathrm{cell}} \left( E_i - E_0 - \frac{1}{2}
 \sum_{l\kappa j, l'\kappa' j'} \Phi_{l\kappa j, l'\kappa' j'}
 u^{(i)}_{l\kappa j} u^{(i)}_{l'\kappa' j'} \right),
 ```
@@ -558,18 +560,18 @@ of the supercell without displacements, {math}`u^{(i)}` its displacements, and
 reported value and its error are then
 
 ```{math}
-\hat{\mathcal{F}}_\Phi = \tilde{F}_\Phi + \bar{a},
+\hat{\mathcal{F}}_\Phi = \tilde{F}_\Phi + \bar{E}^\mathrm{anh},
 \qquad
-\bar{a} = \frac{1}{N} \sum_{i=1}^{N} a_i,
+\bar{E}^\mathrm{anh} = \frac{1}{N} \sum_{i=1}^{N} E^\mathrm{anh}_i,
 \qquad
-\hat{\sigma} = \frac{\mathrm{std}(a)}{\sqrt{N}},
+\hat{\sigma} = \frac{\mathrm{std}(E^\mathrm{anh})}{\sqrt{N}},
 ```
 
 where {math}`\mathrm{std}` is the sample standard deviation,
 
 ```{math}
-\mathrm{std}(a) = \left[ \frac{1}{N - 1} \sum_{i=1}^{N}
-\left( a_i - \bar{a} \right)^2 \right]^{1/2}.
+\mathrm{std}(E^\mathrm{anh}) = \left[ \frac{1}{N - 1} \sum_{i=1}^{N}
+\left( E^\mathrm{anh}_i - \bar{E}^\mathrm{anh} \right)^2 \right]^{1/2}.
 ```
 
 `free_energy_error` is this {math}`\hat{\sigma}`: the harmonic part is fixed by
