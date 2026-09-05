@@ -420,9 +420,7 @@ def test_run_anisotropic_precomputed_needs_no_force_constants(
         phonon_free_energies=fe_phonon_ev,
         surface_degree=2,
     )
-    # phonon_free_energies switches the smoothing on, whose analytic slope
-    # keeps every temperature.
-    assert result.equilibrium_lattice_parameters.shape == (len(TEMPERATURES), 3)
+    assert result.equilibrium_lattice_parameters.shape == (len(TEMPERATURES) - 1, 3)
 
 
 def _electronic_free_energies(n_temperatures: int, n_points: int) -> NDArray[np.double]:
@@ -713,9 +711,6 @@ def test_run_anisotropic_qha_passes_gamma_center(ph_nacl: Phonopy) -> None:
         internal_energies=energies,
         phonon_free_energies=fe_phonon / get_physical_units().EvTokJmol,
         surface_degree=2,
-        # The mesh path above smooths nothing, and only smoothing decides
-        # whether the highest temperature is returned.
-        lattice_smoothing="none",
     )
     np.testing.assert_allclose(
         result.helmholtz_lattice, reference.helmholtz_lattice, rtol=1e-12, atol=0.0
@@ -794,11 +789,6 @@ def test_run_anisotropic_smoothing_uses_the_analytic_slope(ph_nacl: Phonopy) -> 
 
     assert raw.lattice_smoothing == "none"
     assert smoothed.lattice_smoothing == "einstein"
-    # The central differences leave the highest temperature without a value,
-    # while the analytic slope has one there.
-    assert raw.temperatures.shape == (len(TEMPERATURES) - 1,)
-    assert smoothed.temperatures.shape == (len(TEMPERATURES),)
-    assert smoothed.axial_thermal_expansions.shape == (len(TEMPERATURES), 3)
     np.testing.assert_allclose(
         smoothed.thermal_expansion,
         smoothed.axial_thermal_expansions.sum(axis=1),

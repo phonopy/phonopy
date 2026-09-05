@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import copy
-import os
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -16,7 +15,6 @@ from phonopy import Phonopy
 from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.physical_units import get_physical_units
-from phonopy.sscha.run import SSCHARun, write_sscha_run_hdf5
 
 
 @dataclass(frozen=True)
@@ -458,32 +456,6 @@ class MLPSSCHA:
             if self._log_level:
                 print("")
         return self
-
-    def to_sscha_run(self) -> SSCHARun:
-        """Return what this run sampled, one value per iteration.
-
-        Every iteration is kept and none is averaged, so that which of them
-        to average over is chosen afterwards rather than here.
-
-        """
-        history = self.history
-        if not history:
-            raise RuntimeError("The run has no iteration to report yet.")
-        return SSCHARun(
-            temperature=self.temperature,
-            free_energies=np.array([h.free_energy for h in history]),
-            errors=np.array([h.free_energy_error for h in history]),
-            potential_energies=np.array([h.potential_energy for h in history]),
-            harmonic_potential_energies=np.array(
-                [h.harmonic_potential_energy for h in history]
-            ),
-            reference_energy=self.supercell_energy / self.n_cell,
-            lattice_lengths=np.linalg.norm(self._ph.unitcell.cell, axis=1),
-        )
-
-    def write_hdf5(self, filename: str | os.PathLike = "sscha.hdf5") -> None:
-        """Write what this run sampled to an hdf5 file."""
-        write_sscha_run_hdf5(self.to_sscha_run(), filename)
 
     def __iter__(self) -> MLPSSCHA:
         """Iterate over force constants calculations."""
