@@ -77,6 +77,7 @@ class _FakeSSCHA:
         self.fc_calculator = "symfc"
         self.distance = 0.01
         self.initial_force_constants_provided = True
+        self.supercell_energy = -1234.5
 
     def __iter__(self) -> Iterator[int]:
         # One iteration, so that _run_MLPSSCHA reaches its final assignment.

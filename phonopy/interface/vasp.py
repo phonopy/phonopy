@@ -368,6 +368,30 @@ def _vaspout_energy_sigma0(f) -> float:
     raise RuntimeError('vaspout.h5 does not contain "energy(sigma->0)".')
 
 
+def _check_vaspout_finished(filename: str | os.PathLike, ion_dynamics) -> None:
+    """Raise when the last ionic step of a vaspout.h5 was never written.
+
+    VASP allocates the ion_dynamics arrays for an ionic step and fills them
+    when the step ends, so a run stopped before that leaves every group in
+    place and every number zero. The file opens and reads like any other, and
+    the zeros would go on as an energy and as forces.
+
+    What is tested is that nothing was written, not that a value is small:
+    the step's energies and forces hold no nonzero number at all. A finished
+    calculation writes a total energy of order 100 eV or more and forces that
+    are not all zero, so no tolerance enters and no real result is refused.
+
+    """
+    energies = ion_dynamics["energies"][-1]
+    forces = ion_dynamics["forces"][-1]
+    if not energies.any() and not forces.any():
+        raise RuntimeError(
+            f"{filename} holds no result: nothing was written to the "
+            "energies or the forces of its last ionic step, which is the "
+            "state VASP leaves when it is stopped before the step ends."
+        )
+
+
 def _read_vaspout_forces(
     filename: str | os.PathLike,
 ) -> tuple[NDArray[np.double], NDArray[np.double], float]:
@@ -380,6 +404,7 @@ def _read_vaspout_forces(
     h5py = _load_h5py()
     with h5py.File(filename, "r") as f:
         g = f["intermediate/ion_dynamics"]
+        _check_vaspout_finished(filename, g)
         forces = np.array(g["forces"][-1], dtype="double", order="C")
         points = np.array(g["position_ions"][-1], dtype="double", order="C")
         energy = _vaspout_energy_sigma0(f)
@@ -399,6 +424,7 @@ def read_vaspout_calculation(
     h5py = _load_h5py()
     with h5py.File(filename, "r") as f:
         g = f["intermediate/ion_dynamics"]
+        _check_vaspout_finished(filename, g)
         scale = float(g["scale"][()])
         lattice = np.array(g["lattice_vectors"][-1], dtype="double")
         positions = np.array(g["position_ions"][-1], dtype="double")

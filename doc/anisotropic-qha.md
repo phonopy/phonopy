@@ -868,8 +868,8 @@ flowchart TD
 ### One MLP per grid point
 
 The MLP gives the temperature-dependent force constants.
-{ref}`anisotropic-qha-sscha` below computes the anharmonic phonon free energy
-{math}`F_\mathrm{ph}(a, c; T)` from them.
+{ref}`The SSCHA step <anisotropic-qha-sscha>` below computes the anharmonic
+phonon free energy {math}`F_\mathrm{ph}(a, c; T)` from them.
 
 {math}`U(a, c)` comes from the calculator on the static grid of step 1, not
 from the MLP. The analysis minimizes {math}`F` over the lattice at each
@@ -1078,7 +1078,7 @@ for index in range(1, N_GRID + 1):
 ```
 
 To check the sets before starting the calculator, see
-{ref}`anisotropic-qha-check-displacements`.
+{ref}`checking the training displacements <anisotropic-qha-check-displacements>`.
 
 Then train one MLP per grid point on its merged set. `phonopy --pypolymlp`
 always writes the MLP as `polymlp.yaml` in the current directory, and the name
@@ -1282,27 +1282,47 @@ wrong.
 (anisotropic-qha-sscha)=
 ### Computing the free energies with SSCHA
 
-{math}`F_\mathrm{ph}` is the SSCHA free energy of {ref}`mlp-sscha`, computed
-from force constants that change with temperature. It is no longer the
+{math}`F_\mathrm{ph}` is the SSCHA free energy defined in
+{ref}`SSCHA <mlp-sscha>`, computed from force constants that change with
+temperature. It is no longer the
 harmonic expression of "The free energy" above.
 
 The `aniso_qha_dataset.hdf5` of step 3 is used as it is. Script 7, listed in
-{ref}`anisotropic-qha-sweep-script` at the end of this page, makes one SSCHA
-run at every grid point and every temperature. Save it as `script7.py`. Each
-run starts from the harmonic force constants the dataset carries. With no
-options it runs the whole grid and writes `fph.hdf5`:
+{ref}`the appendix <anisotropic-qha-sweep-script>` at the end of this page,
+makes one SSCHA run at every grid point and every temperature. Save it as
+`script7.py`. Each run starts from the harmonic force constants the dataset
+carries. With no options it runs the whole grid and writes `sscha.hdf5`, and
+`-a` turns that into the `fph.hdf5` the analysis reads:
 
 ```bash
-% python script7.py
+% python script7.py -v
+% python script7.py -a
 ```
 
-Four constants at the top set the run.
+`-v` lists the iterations of every run. The transient is chosen from that
+list, so the first sweep is worth running with it; `-vv` adds the
+force-constant fit.
+
+Sampling and averaging are separate steps whichever way the runs are made.
+The averaging is where the transient is chosen, and doing it apart means
+choosing again costs a second of arithmetic rather than the whole sweep.
+
+The constants at the top set the run and what its averaging leaves out.
 
 `SNAPSHOTS` is how many supercells each SSCHA iteration draws, 2000 in the
-script against phonopy's own 1000. It is the main cost of the step, and it is
-also what sets the error bar below. `ITERATIONS` is how many iterations each
-run makes, 16 against phonopy's 10; the iteration is what drives the force
-constants to self-consistency, so too few leaves them short of it.
+script against phonopy's own 1000. Each one is an MLP evaluation, which makes
+it the main cost of the step.
+
+`ITERATIONS` is how many iterations each run makes, 16 against phonopy's 10.
+The early ones drive the force constants to self-consistency, and they are the
+run's transient.
+
+After the transient the iterations do not settle on a value. Each one refits
+the force constants from a **fresh sample**, so the step between iterations
+stops shrinking, and the free energies scatter about a fixed point instead of
+approaching one. Every iteration past the transient is therefore an
+independent sample of the free energy, and averaging them is what improves the
+estimate.
 
 `MESH` is the mesh the harmonic part of the SSCHA free energy is sampled on,
 and matching it to the `--mesh` of the analysis keeps one sampling through the
@@ -1310,25 +1330,100 @@ calculation. `SEED` fixes the whole run: iteration *i* draws from
 `SeedSequence([SEED, i])`, so the run is reproducible while the iterations stay
 independent.
 
-Each run reports one free energy and one error, both averaged over its
-iterations with the first one dropped. The first iteration samples the
-starting ensemble, which is still the harmonic one of step 2 rather than a
-self-consistent one, and Script 7 marks it in its log. The error of a single
-iteration is the standard error of the mean of the anharmonic term over that
-iteration's snapshots, so it falls as `SNAPSHOTS` rises. It is conditional on
-the force constants of that iteration and does not carry their own
-uncertainty, so it is a lower bound on the error of the free energy rather
-than the whole of it. `fph.hdf5` stores it beside the free energy.
+A run stores every iteration and averages none of them. `-a` takes the mean
+over the iterations after the transient, one of them by default, and
+`--transient` sets how many. Choosing another is a second gather and costs no
+sampling, and `--transient` on a run marks its log alone.
+
+The error of one iteration is the standard error of the mean of the anharmonic
+term over that iteration's snapshots,
+
+```{math}
+e_i = \frac{\sigma_i}{\sqrt{N}}, \qquad
+\sigma_i^2 = \frac{1}{N - 1} \sum_{k=1}^{N}
+\left( E^\mathrm{anh}_k - \bar{E}^\mathrm{anh} \right)^2,
+```
+
+where {math}`E^\mathrm{anh}_k` is the anharmonic energy of the {math}`k`-th
+displaced supercell of that iteration, per primitive cell, written out in
+Eq. {eq}`eq_sscha_anharmonic` of {ref}`SSCHA <mlp-sscha>`.
+{math}`\bar{E}^\mathrm{anh}` is the mean over the {math}`N` snapshots, and
+{math}`N` is `SNAPSHOTS`.
+
+The iterations are independent draws, so the error of their mean is
+
+```{math}
+e = \frac{1}{m} \sqrt{\sum_{i=1}^{m} e_i^2} = \frac{\sigma}{\sqrt{mN}},
+```
+
+where {math}`m` = `ITERATIONS` - `transient`. The second form holds when the
+{math}`\sigma_i` are alike, with {math}`\sigma` their common value.
+{math}`mN` is how many supercells the run evaluates.
+
+The error depends on that product ({math}`mN`) alone, so it says nothing about
+how to split the cost between `ITERATIONS` and `SNAPSHOTS`. Two other things
+settle that split. `ITERATIONS` has to exceed the transient with samples left
+to average, and the log shows how long the transient is. Each iteration fits
+its force constants from its own `SNAPSHOTS` supercells, so a small
+`SNAPSHOTS` leaves every iteration's force constants noisy however many
+iterations follow.
+
+It is recommended to give the budget to `SNAPSHOTS`, and to raise
+`ITERATIONS` only until the transient is cleared with samples to spare. The
+two buy the same error, and only `SNAPSHOTS` improves the force constants that
+everything other than the free energy is computed from.
+
+Each {math}`e_i` holds its own iteration's force constants fixed, so {math}`e`
+counts the sampling of the snapshots alone. The force constants were fitted
+from a sample as well, and that variation appears as scatter of the kept
+iterations about their mean, which is the column `-v` prints. Iterations that
+scatter by about their own {math}`e_i` say that {math}`e` is the whole of it.
+
+### Choosing the transient
+
+`--transient` sets how many iterations are left out of the averages. The
+default is `DEFAULT_TRANSIENT`, 1. Iteration 1 uses the harmonic force
+constants of step 2, so its free energy is that of those force constants and
+not of self-consistent ones.
+
+How long the transient is depends on the system. It lasts until the force
+constants reach self-consistency, and that takes longer the further the
+harmonic force constants start from them. The default of 1 is a floor, not a
+measurement.
+
+`-v` prints each iteration's distance from the mean of the kept ones, divided
+by that iteration's own error. An iteration past the transient gives about 1,
+since it scatters about the fixed point by its own error. A larger value means
+the iteration was still approaching that point.
+
+```
+  iter       F [meV]   error [meV]   (F - mean)/error
+     1*      98.5931        0.0121              +46.9
+     2       98.0729        0.0113               +4.1
+     3       98.0141        0.0108               -1.1
+     4       98.0166        0.0110               -0.9
+     5       98.0118        0.0112               -1.3
+     6       98.0153        0.0109               -1.0
+  * left out as the transient. Of the kept iterations the furthest from the
+    mean is 2, at 4.1 sigma.
+```
+
+Iteration 2 above gives 4.1, so `--transient 2` drops it. Raise `--transient`
+until every kept iteration is within a few units. Check the highest
+temperature as well as the lowest, since the distance between the harmonic and
+the self-consistent force constants grows with temperature.
 
 ### Splitting the runs across jobs
 
 One SSCHA run is minutes with the lightest descriptor and longer with a heavy
 one. Multiplied by the grid points and the temperatures, the step comes to
 hours or days. Spreading the runs over processes, nodes or jobs is therefore
-worth the trouble, and nothing stands in the way. A run's randomness comes
-from `SEED` and the iteration number alone, as above, so it depends on neither
-a run's position in the two loops nor the order the runs are made in. Either
-loop can be sliced, or both.
+worth the trouble.
+
+Nothing constrains how they are spread. A run's randomness comes from `SEED`
+and the iteration number alone, so a run gives the same numbers wherever it
+sits in the two loops and whenever it is made. Either loop can be sliced, or
+both.
 
 `-g` and `-t` run one grid point at one temperature, and write that one value
 to its own file. The two go together, and one without the other stops the
@@ -1338,20 +1433,46 @@ to the nearest of `TEMPERATURES`:
 ```bash
 % python script7.py -g 13 -t 250
 (013, 250.0)
-Wrote fph-g013-t250K.hdf5
+Wrote sscha-g013-t250K.hdf5
 ```
 
-One such call is one job. `-c` gathers what they wrote into `fph.hdf5`:
+Sampling writes `sscha*.hdf5`, one file per run here and one for the whole
+grid when the grid is run in one process. Averaging writes `fph.hdf5`, which
+is the file the analysis reads.
+
+The two are different types, not two spellings of one. A `sscha*.hdf5` file
+holds `SSCHAIterations`, every iteration and no average, and is what another
+transient is taken from. `fph.hdf5` holds `SSCHAFreeEnergies`, the averages
+and the transient they were taken with. Handing the analysis a `sscha*.hdf5`
+file stops with a message about its type, rather than averaging it over
+iterations nobody chose.
+
+One such call is one job. `-a` gathers the `sscha*.hdf5` files into
+`fph.hdf5`:
 
 ```bash
-% python script7.py -c
+% python script7.py -a
 Wrote fph.hdf5 from 1025 file(s)
 ```
 
 Each file is placed by the lattice lengths and the temperature it carries
 rather than by its name, so the order they are gathered in does not matter. A
-missing value stops the write and is named, since a gap would otherwise reach
-the analysis as a zero.
+missing value stops the write and is named, since the analysis would otherwise
+read a gap as a zero.
+
+`-a` averages the iterations each file carries rather than reading the
+averages the runs wrote, so `--transient` applies to the whole grid at once:
+
+```bash
+% python script7.py -a --transient 2
+```
+
+That costs no sampling, so gathering the same files again with another value
+is how one transient is compared with another. The runs gathered into one file
+have to have made the same number of iterations, since one array cannot hold
+runs of two lengths, and one grid point and temperature covered by two files
+stops the write.
+
 
 ### Supplying the free energies to the analysis
 
@@ -1382,6 +1503,12 @@ itself, and the force constants have to be there.
 The values are per primitive cell. They are normalized the same way as
 `internal_energies`, and they do not include the static energy, which
 `internal_energies` already carries.
+
+An MLP evaluates the undisplaced supercell, and its free energies are measured
+from that energy. `SSCHAFreeEnergies` records it as `reference_energies`, and
+`phonopy-anisotropic-qha --use-mlp-internal-energies` adds it back and takes
+`U = 0`, which puts the whole surface on the potential's own energy scale
+rather than the calculator's.
 
 Since no force constants are read, the analysis also runs on a dataset built
 from the static grid alone. That is all a method has to work with when it
@@ -1486,12 +1613,14 @@ returning a curve of the wrong shape.
 (anisotropic-qha-sweep-script)=
 ## Appendix: the SSCHA sweep script
 
-The script the section {ref}`anisotropic-qha-sscha` calls. With no options it
-runs every grid point and every temperature and writes `fph.hdf5`. `-g` and
+The script {ref}`the SSCHA step <anisotropic-qha-sscha>` calls. With no options it
+runs every grid point and every temperature and writes `sscha.hdf5`. `-g` and
 `-t` run one of them and write it to its own file, which is how the sweep is
-spread over jobs, and `-c` gathers those files back into `fph.hdf5`. `-v` logs
-each SSCHA iteration and lists them at the end, which is worth watching on the
-first few runs; `-vv` adds the force-constant fit.
+spread over jobs. `-a` gathers what the runs wrote into `fph.hdf5`.
+`--transient` says how many iterations at the start of each run to leave out
+of the averages, and applies to a gather as well as to a run. `-v` lists each
+iteration with its departure from the mean of the kept ones, which is what
+the transient is chosen from; `-vv` adds the force-constant fit.
 
 ```{code-block} python
 :caption: Script 7 -- SSCHA at every grid point and temperature
@@ -1503,8 +1632,11 @@ import numpy as np
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.qha.free_energy_io import (
-    read_free_energies_hdf5,
+    SSCHAFreeEnergies,
+    SSCHAIterations,
+    read_sscha_iterations_hdf5,
     write_free_energies_hdf5,
+    write_sscha_iterations_hdf5,
 )
 from phonopy.sscha.core import MLPSSCHA
 
@@ -1515,10 +1647,96 @@ SNAPSHOTS = 2000
 ITERATIONS = 16
 MESH = 200.0
 SEED = 1000
+DEFAULT_TRANSIENT = 1
 
 
-def sscha_free_energy(ph, mlp, temperature, force_constants=None, log_level=0):
-    """Return the SSCHA free energy and its error in eV per primitive cell.
+def report_iterations(history, transient):
+    """List the iterations, and how far each sits from the mean of the kept ones.
+
+    The departure is measured in the iteration's own error, so it reads the
+    same whatever the system: an iteration standing well outside the scatter
+    of the others has not reached self-consistency and belongs to the
+    transient.
+
+    """
+    kept = history[transient:]
+    mean = np.mean([h.free_energy for h in kept])
+    print("  iter       F [meV]   error [meV]   (F - mean)/error", flush=True)
+    for position, h in enumerate(history):
+        mark = "*" if position < transient else " "
+        print(
+            f"  {h.iteration:4d}{mark} {h.free_energy * 1e3:12.4f} "
+            f"{h.free_energy_error * 1e3:13.4f} "
+            f"{(h.free_energy - mean) / h.free_energy_error:+18.1f}",
+            flush=True,
+        )
+    worst = max(kept, key=lambda h: abs(h.free_energy - mean) / h.free_energy_error)
+    sigma = abs(worst.free_energy - mean) / worst.free_energy_error
+    print(
+        f"  * left out as the transient. Of the kept iterations the furthest "
+        f"from the mean is {worst.iteration}, at {sigma:.1f} sigma.",
+        flush=True,
+    )
+    print(
+        "  A kept iteration far outside the scatter of the rest is still in "
+        "the transient: raise --transient and look again.",
+        flush=True,
+    )
+
+
+def average(iterations, transient):
+    """Return the mean over the iterations after the transient."""
+    return iterations[..., transient:].mean(axis=-1)
+
+
+def combine(errors, transient):
+    """Return the error of that mean, over the iterations after the transient.
+
+    The iterations are independent draws, so their errors add in quadrature
+    rather than being averaged.
+
+    """
+    kept = errors[..., transient:]
+    return np.sqrt(np.square(kept).sum(axis=-1)) / kept.shape[-1]
+
+
+def write_sampled(temperatures, lattice_lengths, terms, reference, filename):
+    """Write what the runs sampled, one value per iteration."""
+    free_energies, errors, potential, harmonic_potential = terms
+    write_sscha_iterations_hdf5(
+        SSCHAIterations(
+            temperatures,
+            free_energies,
+            errors,
+            potential,
+            harmonic_potential,
+            reference,
+            lattice_lengths=lattice_lengths,
+        ),
+        filename,
+    )
+
+
+def sscha_free_energy(
+    ph,
+    mlp,
+    temperature,
+    force_constants=None,
+    transient=DEFAULT_TRANSIENT,
+    log_level=0,
+):
+    """Return the iterations of one SSCHA run, in eV per primitive cell.
+
+    The free energy, its error, and the two ensemble averages the anharmonic
+    correction is the difference of, one value per iteration; then the energy
+    of the supercell without displacements the whole is measured from. That
+    last one is returned twice: as the static energy to put back, and as the
+    origin the free energy is measured from. They are the same here and need
+    not be.
+
+    Every iteration is returned and no averaging is done here, so that
+    another transient can be taken later without sampling again. ``transient``
+    is used for the log alone.
 
     ``force_constants`` starts the iteration from a set of one's own. Without
     it, it starts from the set ``ph`` carries. ``log_level`` is passed to
@@ -1538,50 +1756,52 @@ def sscha_free_energy(ph, mlp, temperature, force_constants=None, log_level=0):
         random_seed=SEED,
         log_level=log_level,
     ).run()
-    history = sscha.history[1:]
+    history = sscha.history
     if log_level:
-        print("  iter        F [eV]      error", flush=True)
-        for h in sscha.history:
-            mark = " " if h in history else "*"
-            print(
-                f"  {h.iteration:4d}{mark} {h.free_energy:12.6f} "
-                f"{h.free_energy_error:10.6f}",
-                flush=True,
-            )
-        print("  * the starting ensemble, left out of the mean", flush=True)
+        report_iterations(history, transient)
     return (
-        np.mean([h.free_energy for h in history]),
-        np.mean([h.free_energy_error for h in history]),
+        np.array([h.free_energy for h in history]),
+        np.array([h.free_energy_error for h in history]),
+        np.array([h.potential_energy for h in history]),
+        np.array([h.harmonic_potential_energy for h in history]),
+        sscha.supercell_energy / sscha.n_cell,
     )
 
 
-def run_all(dataset, log_level=0):
+def run_all(dataset, transient=DEFAULT_TRANSIENT, log_level=0):
     """Run all and write it to file."""
     points = dataset.grid_points
-    free_energies = np.zeros((len(TEMPERATURES), len(points)))
-    errors = np.zeros_like(free_energies)
+    shape = (len(TEMPERATURES), len(points), ITERATIONS)
+    free_energies = np.zeros(shape)
+    errors = np.zeros(shape)
+    potential = np.zeros(shape)
+    harmonic_potential = np.zeros(shape)
+    reference = np.zeros(len(points))
     for column, point in enumerate(points):
         ph = point.to_phonopy()
         mlp = PhonopyMLP().load(MLP.format(point.index + 1))
         for row, temperature in enumerate(TEMPERATURES):
             print(f"({point.index + 1:03d}, {temperature})", flush=True)
-            free_energies[row, column], errors[row, column] = sscha_free_energy(
-                ph, mlp, float(temperature), log_level=log_level
+            (
+                free_energies[row, column],
+                errors[row, column],
+                potential[row, column],
+                harmonic_potential[row, column],
+                reference[column],
+            ) = sscha_free_energy(
+                ph, mlp, float(temperature), transient=transient, log_level=log_level
             )
 
-    write_free_energies_hdf5(
+    write_sampled(
         TEMPERATURES,
-        free_energies,
-        "fph.hdf5",
-        kind="phonon",
-        errors=errors,
-        lattice_lengths=np.array(
-            [np.linalg.norm(p.cell.cell, axis=1) for p in points]
-        ),
+        np.array([np.linalg.norm(p.cell.cell, axis=1) for p in points]),
+        (free_energies, errors, potential, harmonic_potential),
+        reference,
+        "sscha.hdf5",
     )
 
 
-def run_one(dataset, grid_point, temperature, log_level=0):
+def run_one(dataset, grid_point, temperature, transient=DEFAULT_TRANSIENT, log_level=0):
     """Run one grid point at one temperature and write it to its own file.
 
     ``grid_point`` is numbered from 1, as the directories are. ``temperature``
@@ -1597,59 +1817,98 @@ def run_one(dataset, grid_point, temperature, log_level=0):
     ph = point.to_phonopy()
     mlp = PhonopyMLP().load(MLP.format(grid_point))
     print(f"({grid_point:03d}, {t})", flush=True)
-    free_energy, error = sscha_free_energy(ph, mlp, float(t), log_level=log_level)
+    *terms, reference = sscha_free_energy(
+        ph, mlp, float(t), transient=transient, log_level=log_level
+    )
 
-    filename = f"fph-g{grid_point:03d}-t{t:g}K.hdf5"
-    write_free_energies_hdf5(
+    filename = f"sscha-g{grid_point:03d}-t{t:g}K.hdf5"
+    write_sampled(
         TEMPERATURES[[row]],
-        [[free_energy]],
+        np.linalg.norm(point.cell.cell, axis=1)[None, :],
+        tuple(term[None, None, :] for term in terms),
+        np.array([reference]),
         filename,
-        kind="phonon",
-        errors=[[error]],
-        lattice_lengths=np.linalg.norm(point.cell.cell, axis=1)[None, :],
     )
     print(f"Wrote {filename}", flush=True)
 
 
-def collect(dataset, pattern="fph-g*K.hdf5", filename="fph.hdf5"):
-    """Gather the files run_one wrote into one file over the whole grid.
+def assemble(
+    dataset,
+    transient=DEFAULT_TRANSIENT,
+    pattern="sscha*.hdf5",
+    filename="fph.hdf5",
+):
+    """Gather what the runs wrote, and average it over one transient.
 
-    Each file is placed by the lattice lengths and the temperature it carries,
-    not by its name, and a gap stops the write.
+    The pattern takes the whole-grid sscha.hdf5 of run_all and the per-run
+    files of run_one alike. Each is placed by the lattice lengths and the
+    temperature it carries, not by its name; a gap stops the write, and so
+    does a grid point and temperature covered twice. The averages are taken
+    here from the iterations the files carry, so --transient covers the whole
+    grid at once and costs no sampling.
 
     """
     points = dataset.grid_points
     lattice_lengths = np.array([np.linalg.norm(p.cell.cell, axis=1) for p in points])
-    free_energies = np.full((len(TEMPERATURES), len(points)), np.nan)
-    errors = np.full_like(free_energies, np.nan)
-
     paths = sorted(glob.glob(pattern))
-    for path in paths:
-        part = read_free_energies_hdf5(path)
+    if not paths:
+        raise SystemExit(f"No file matches {pattern}.")
+    parts = [read_sscha_iterations_hdf5(path) for path in paths]
+    counts = {part.n_iterations for part in parts}
+    if len(counts) > 1:
+        raise SystemExit(
+            f"The files hold {sorted(counts)} iterations. One array cannot "
+            "carry runs of different lengths, so gather them apart."
+        )
+    shape = (len(TEMPERATURES), len(points), counts.pop())
+    free_energies = np.full(shape, np.nan)
+    errors = np.full(shape, np.nan)
+    potential = np.full(shape, np.nan)
+    harmonic_potential = np.full(shape, np.nan)
+    reference = np.full(len(points), np.nan)
+
+    seen = set()
+    for path, part in zip(paths, parts):
         for i, t in enumerate(part.temperatures):
             row = int(np.argmin(np.abs(TEMPERATURES - t)))
             for j, lengths in enumerate(part.lattice_lengths):
                 column = int(np.argmin(np.abs(lattice_lengths - lengths).sum(axis=1)))
+                if (row, column) in seen:
+                    raise SystemExit(
+                        f"{path} covers grid point {column + 1} at "
+                        f"{TEMPERATURES[row]:g} K, which another file covers "
+                        "as well. Gather one sweep at a time."
+                    )
+                seen.add((row, column))
                 free_energies[row, column] = part.free_energies[i, j]
                 errors[row, column] = part.errors[i, j]
+                potential[row, column] = part.potential_energies[i, j]
+                harmonic_potential[row, column] = part.harmonic_potential_energies[i, j]
+                reference[column] = part.reference_energies[j]
 
-    missing = np.argwhere(np.isnan(free_energies))
+    located = free_energies[:, :, 0]
+    missing = np.argwhere(np.isnan(located))
     if len(missing) > 0:
         first = ", ".join(
             f"(grid {c + 1}, {TEMPERATURES[r]:g} K)" for r, c in missing[:5]
         )
         raise SystemExit(
             f"{len(paths)} file(s) read, {len(missing)} of "
-            f"{free_energies.size} values missing: {first} ..."
+            f"{located.size} values missing: {first} ..."
         )
 
     write_free_energies_hdf5(
-        TEMPERATURES,
-        free_energies,
+        SSCHAFreeEnergies(
+            TEMPERATURES,
+            average(free_energies, transient),
+            errors=combine(errors, transient),
+            lattice_lengths=lattice_lengths,
+            reference_energies=reference,
+            potential_energies=average(potential, transient),
+            harmonic_potential_energies=average(harmonic_potential, transient),
+            transient_iterations=transient,
+        ),
         filename,
-        kind="phonon",
-        errors=errors,
-        lattice_lengths=lattice_lengths,
     )
     print(f"Wrote {filename} from {len(paths)} file(s)", flush=True)
 
@@ -1672,10 +1931,17 @@ def main():
         "(default: all of them)",
     )
     parser.add_argument(
-        "--collect",
-        "-c",
+        "--assemble",
+        "-a",
         action="store_true",
-        help="gather the fph-g*K.hdf5 files written by -g and -t into fph.hdf5",
+        help="gather the sscha*.hdf5 the runs wrote into fph.hdf5",
+    )
+    parser.add_argument(
+        "--transient",
+        type=int,
+        default=DEFAULT_TRANSIENT,
+        help="how many iterations at the start of a run are its transient "
+        "and are left out of the averages (default: %(default)s)",
     )
     parser.add_argument(
         "-v",
@@ -1687,12 +1953,14 @@ def main():
     args = parser.parse_args()
 
     dataset = read_aniso_qha_dataset(DATASET)
-    if args.collect:
-        collect(dataset)
+    if args.assemble:
+        assemble(dataset, args.transient)
     elif args.grid_point is None and args.temperature is None:
-        run_all(dataset, args.verbose)
+        run_all(dataset, args.transient, args.verbose)
     elif args.grid_point is not None and args.temperature is not None:
-        run_one(dataset, args.grid_point, args.temperature, args.verbose)
+        run_one(
+            dataset, args.grid_point, args.temperature, args.transient, args.verbose
+        )
     else:
         raise SystemExit("-g and -t go together.")
 
@@ -1730,7 +1998,7 @@ One check compares the amplitude of a set against the temperature its
 directory is named after. Script 5 draws the supercells of a set from the
 harmonic density matrix {math}`\tilde{\rho}_\Phi(T)` of that grid point's
 force constants {math}`\Phi`, the distribution the SSCHA free energy of
-{ref}`mlp-sscha` averages over. `run_correlation_matrix(T)` fills
+{ref}`SSCHA <mlp-sscha>` averages over. `run_correlation_matrix(T)` fills
 `RandomDisplacements.uu` with its second moment,
 
 ```{math}
