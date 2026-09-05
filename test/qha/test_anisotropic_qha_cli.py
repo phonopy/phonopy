@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 import pathlib
 
 import numpy as np
@@ -406,128 +405,109 @@ def test_free_energy_terms_round_trip(tmp_path: pathlib.Path) -> None:
         np.testing.assert_allclose(getattr(read, name), terms[name])
 
 
-def _sweep(temperatures, lengths, iterations=6):
-    """Return one SSCHARun per grid point and temperature."""
-    from phonopy.sscha.run import SSCHARun
-
+def _sampled(temperatures: NDArray[np.double], iterations: int = 6) -> dict:
+    """Return what a sweep sampled: every term with an iteration axis."""
     rng = np.random.default_rng(0)
-    runs = []
-    for column, cell in enumerate(lengths):
-        for t in temperatures:
-
-            def series(base):
-                v = base + rng.normal(0.0, 1e-5, iterations)
-                v[0] += 5e-4  # a transient first iteration
-                return v
-
-            runs.append(
-                SSCHARun(
-                    temperature=float(t),
-                    free_energies=series(0.1 + 0.001 * column - 1e-5 * t),
-                    errors=rng.uniform(1e-6, 1e-5, iterations),
-                    potential_energies=series(0.2),
-                    harmonic_potential_energies=series(0.15),
-                    reference_energy=-40.0 - column,
-                    lattice_lengths=np.array(cell),
-                )
-            )
-    return runs
+    terms = _decomposed(temperatures)
+    shape = terms["free_energies"].shape + (iterations,)
+    sampled = {
+        "temperatures": temperatures,
+        "reference_energies": terms["reference_energies"],
+        "errors": rng.uniform(1e-6, 1e-5, shape),
+    }
+    for name in ("free_energies", "potential_energies", "harmonic_potential_energies"):
+        sampled[name] = terms[name][:, :, None] + rng.normal(0.0, 1e-4, shape)
+    return sampled
 
 
-def test_assemble_sscha_free_energies() -> None:
-    """The runs are placed by what they carry, and each averages itself.
+def test_sscha_iterations_round_trip(tmp_path: pathlib.Path) -> None:
+    """What a sweep sampled survives a write and read, as its own type.
 
-    Another transient is a second assembly of the same runs, so it costs no
-    sampling; the file records which one it was.
+    It is kept so that the averaging can be run again over another set of
+    iterations without sampling again.
 
     """
-    from phonopy.qha.free_energy_io import assemble_sscha_free_energies
-
-    temperatures = np.arange(0.0, 31.0, 10.0)
-    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
-    runs = _sweep(temperatures, lengths)
-
-    fe = assemble_sscha_free_energies(runs, temperatures, lengths, transient=1)
-    assert fe.free_energies.shape == (4, 3)
-    assert fe.transient_iterations == 1
-    np.testing.assert_allclose(fe.lattice_lengths, lengths)
-
-    # Placement is by content, so the order given does not matter.
-    shuffled = assemble_sscha_free_energies(
-        runs[::-1], temperatures, lengths, transient=1
+    from phonopy.qha.free_energy_io import (
+        SSCHAIterations,
+        read_sscha_iterations_hdf5,
+        write_sscha_iterations_hdf5,
     )
-    np.testing.assert_allclose(shuffled.free_energies, fe.free_energies)
 
-    # Each entry is that run's own average and combined error.
-    run = runs[0]
-    row = int(np.argmin(np.abs(temperatures - run.temperature)))
-    column = int(np.argmin(np.abs(lengths - run.lattice_lengths).sum(axis=1)))
-    average = run.averaged(1)
-    assert fe.free_energies[row, column] == pytest.approx(average.free_energy)
-    assert fe.errors[row, column] == pytest.approx(average.error)
-
-    # A second transient moves the values without touching the runs.
-    other = assemble_sscha_free_energies(runs, temperatures, lengths, transient=2)
-    assert other.transient_iterations == 2
-    assert not np.allclose(other.free_energies, fe.free_energies)
-
-
-def test_assemble_sscha_free_energies_refuses_a_gap_and_a_clash() -> None:
-    """A grid point no run covers stops the assembly, and so does a double."""
-    from phonopy.qha.free_energy_io import assemble_sscha_free_energies
-
-    temperatures = np.arange(0.0, 31.0, 10.0)
+    sampled = _sampled(np.arange(0.0, 101.0, 10.0))
     lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
-    runs = _sweep(temperatures, lengths)
-
-    with pytest.raises(ValueError, match="values missing"):
-        assemble_sscha_free_energies(runs[:-1], temperatures, lengths)
-    with pytest.raises(ValueError, match="Two runs cover"):
-        assemble_sscha_free_energies(runs + runs[:1], temperatures, lengths)
-    short = dataclasses.replace(
-        runs[0],
-        free_energies=runs[0].free_energies[:4],
-        errors=runs[0].errors[:4],
-        potential_energies=runs[0].potential_energies[:4],
-        harmonic_potential_energies=runs[0].harmonic_potential_energies[:4],
+    path = tmp_path / "sscha.hdf5"
+    write_sscha_iterations_hdf5(
+        SSCHAIterations(lattice_lengths=lengths, **sampled), path
     )
-    with pytest.raises(ValueError, match="iterations. Averaging over"):
-        assemble_sscha_free_energies([short] + runs[1:], temperatures, lengths)
+
+    back = read_sscha_iterations_hdf5(path)
+    assert isinstance(back, SSCHAIterations)
+    assert back.n_grid_points == 3
+    assert back.n_iterations == 6
+    for name, values in sampled.items():
+        np.testing.assert_allclose(getattr(back, name), values)
 
 
-def test_transient_iterations_is_kept_as_a_label(tmp_path: pathlib.Path) -> None:
-    """The averaged file records which iterations it was taken from.
+def test_sscha_iterations_are_not_free_energies(tmp_path: pathlib.Path) -> None:
+    """The two files are different types, and neither is read as the other.
 
-    The iterations themselves are in the SSCHARun files the averaging read,
-    so nothing here can check the count; it travels with the averages so that
-    two of these files can be compared knowing how each was taken.
+    The analysis takes SSCHAFreeEnergies. Reading a sweep's own file as one
+    would average it over iterations nobody chose, so the read refuses.
 
     """
     from phonopy.qha.free_energy_io import (
         SSCHAFreeEnergies,
+        SSCHAIterations,
         read_free_energies_hdf5,
+        read_sscha_iterations_hdf5,
         write_free_energies_hdf5,
+        write_sscha_iterations_hdf5,
     )
 
     temperatures = np.arange(0.0, 101.0, 10.0)
-    terms = _decomposed(temperatures)
+    sampled = _sampled(temperatures)
     lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
-    path = tmp_path / "fph.hdf5"
+    sweep = tmp_path / "sscha.hdf5"
+    write_sscha_iterations_hdf5(
+        SSCHAIterations(lattice_lengths=lengths, **sampled), sweep
+    )
+    with pytest.raises(ValueError, match="rather than a free energy"):
+        read_free_energies_hdf5(sweep)
+
+    terms = _decomposed(temperatures)
+    averaged = tmp_path / "fph.hdf5"
     write_free_energies_hdf5(
         SSCHAFreeEnergies(
             temperatures, lattice_lengths=lengths, transient_iterations=2, **terms
         ),
-        path,
+        averaged,
     )
-    back = read_free_energies_hdf5(path)
-    assert back.transient_iterations == 2
-    assert isinstance(back.transient_iterations, int)
+    with pytest.raises(ValueError, match="already"):
+        read_sscha_iterations_hdf5(averaged)
 
-    # It is optional, and absent means the file does not say.
-    write_free_energies_hdf5(
-        SSCHAFreeEnergies(temperatures, lattice_lengths=lengths, **terms), path
-    )
-    assert read_free_energies_hdf5(path).transient_iterations is None
+    # The averaged file records what was taken, and holds no iterations.
+    back = read_free_energies_hdf5(averaged)
+    assert back.transient_iterations == 2
+    assert not hasattr(back, "iteration_free_energies")
+
+
+def test_sscha_iterations_shapes_are_checked() -> None:
+    """Every term needs the iteration axis, and the grid has to line up."""
+    from phonopy.qha.free_energy_io import SSCHAIterations
+
+    sampled = _sampled(np.arange(0.0, 101.0, 10.0))
+    SSCHAIterations(**sampled)
+
+    with pytest.raises(ValueError, match="free_energies must have shape"):
+        SSCHAIterations(
+            **{**sampled, "free_energies": sampled["free_energies"][:, :, 0]}
+        )
+    with pytest.raises(ValueError, match="errors must have the shape"):
+        SSCHAIterations(**{**sampled, "errors": sampled["errors"][:, :, :3]})
+    with pytest.raises(ValueError, match="reference_energies is one value"):
+        SSCHAIterations(**{**sampled, "reference_energies": np.zeros(2)})
+    with pytest.raises(ValueError, match="lattice_lengths must have shape"):
+        SSCHAIterations(lattice_lengths=np.zeros((2, 3)), **sampled)
 
 
 def test_free_energy_terms_are_checked() -> None:

@@ -330,13 +330,10 @@ class FreeEnergySurfaceFit:
 class AnisotropicQHAResult:
     """Immutable results of an anisotropic quasi-harmonic calculation.
 
-    Temperature-indexed arrays have the same length N. With
-    lattice_smoothing="none" the thermal expansions are central
-    differences, which leave the highest input temperature without a
-    value, and N is one less than the number of input temperature points;
-    with a smoothing method the expansions are the analytic slope of the
-    fitted model and N is the number of input points. Quantities computed
-    by central differences (thermal_expansion,
+    Temperature-indexed arrays have the same length N, which is one less
+    than the number of input temperature points (the extra point is
+    consumed by the finite differences of the thermal expansions).
+    Quantities computed by central differences (thermal_expansion,
     axial_thermal_expansions) carry a leading zero. Energies and volumes
     refer to the primitive cell, consistently with the phonon thermal
     properties, while the lattice parameters are the unit-cell
@@ -473,9 +470,8 @@ def run_anisotropic_qha(
     parameters a(T), b(T), c(T) and, by central differences, the axial
     thermal expansions.
 
-    Note that with lattice_smoothing="none" the central differences consume
-    one temperature point: supply one more point than the temperature range
-    of interest.
+    Note that finite differences consume one temperature point: supply one
+    more point than the temperature range of interest.
 
     Parameters
     ----------
@@ -618,13 +614,13 @@ def run_anisotropic_qha(
         pressure,
     )
 
-    n_temperatures = len(temps_in)
+    m = len(temps_in)
     n_points = len(phonopys)
-    helmholtz_lattice = np.zeros((n_temperatures, n_points), dtype="double")
-    equilibrium_lattice_parameters = np.zeros((n_temperatures, 3), dtype="double")
-    gibbs_free_energies = np.zeros(n_temperatures, dtype="double")
-    surface_fit_rms = np.zeros(n_temperatures, dtype="double")
-    minimum_extrapolated = np.zeros(n_temperatures, dtype=bool)
+    helmholtz_lattice = np.zeros((m, n_points), dtype="double")
+    equilibrium_lattice_parameters = np.zeros((m, 3), dtype="double")
+    gibbs_free_energies = np.zeros(m, dtype="double")
+    surface_fit_rms = np.zeros(m, dtype="double")
+    minimum_extrapolated = np.zeros(m, dtype=bool)
     surface_fit_rank = n_terms
 
     axis_labels = ("a", "b", "c")
@@ -644,7 +640,7 @@ def run_anisotropic_qha(
             hi = free_points[:, pos].max()
             print(f"Sampled range {axis_labels[col]}: [{lo:.6f}, {hi:.6f}] A")
 
-    for i in range(n_temperatures):
+    for i in range(m):
         fe = el[i]
         helmholtz_lattice[i] = fe
         fit = FreeEnergySurfaceFit(free_points, fe, degree=surface_degree)
@@ -689,41 +685,41 @@ def run_anisotropic_qha(
             n_terms=smoothing_terms,
         )
 
-    volume_ratio = float((volumes / lattice_lengths.prod(axis=1)).mean())
-    equilibrium_volumes = volume_ratio * equilibrium_lattice_parameters.prod(axis=1)
+    k = float((volumes / lattice_lengths.prod(axis=1)).mean())
+    equilibrium_volumes = k * equilibrium_lattice_parameters.prod(axis=1)
     if axial_slopes is None:
-        # The central differences leave the highest temperature without a
-        # value, so it is not returned.
         thermal_expansion = compute_volumetric_thermal_expansion(
             temps_in, equilibrium_volumes
         )
         axial_thermal_expansions = compute_axial_thermal_expansion(
             temps_in, equilibrium_lattice_parameters
         )
-        n_returned = n_temperatures - 1
     else:
         # The smoothed lattice parameters come from a model that is
         # differentiable in closed form, so its slope is taken directly
         # rather than approximated by differences of it. V is the product
         # of the three lengths, so beta is the sum of the axial terms.
-        axial_thermal_expansions = axial_slopes / equilibrium_lattice_parameters
+        axial_thermal_expansions = (
+            axial_slopes[: m - 1] / equilibrium_lattice_parameters[: m - 1]
+        )
         thermal_expansion = axial_thermal_expansions.sum(axis=1)
-        n_returned = n_temperatures
+
+    n = m - 1
     return AnisotropicQHAResult(
-        temperatures=temps_in[:n_returned],
+        temperatures=temps_in[:n],
         lattice_lengths=lattice_lengths,
         free_lattice_indices=np.array(free_indices, dtype="int64"),
         surface_degree=surface_degree,
-        helmholtz_lattice=helmholtz_lattice[:n_returned],
-        equilibrium_lattice_parameters=equilibrium_lattice_parameters[:n_returned],
-        equilibrium_volumes=equilibrium_volumes[:n_returned],
-        gibbs_free_energies=gibbs_free_energies[:n_returned],
+        helmholtz_lattice=helmholtz_lattice[:n],
+        equilibrium_lattice_parameters=equilibrium_lattice_parameters[:n],
+        equilibrium_volumes=equilibrium_volumes[:n],
+        gibbs_free_energies=gibbs_free_energies[:n],
         thermal_expansion=thermal_expansion,
         axial_thermal_expansions=axial_thermal_expansions,
-        surface_fit_rms=surface_fit_rms[:n_returned],
+        surface_fit_rms=surface_fit_rms[:n],
         surface_fit_rank=surface_fit_rank,
         surface_n_terms=n_terms,
-        minimum_extrapolated=minimum_extrapolated[:n_returned],
+        minimum_extrapolated=minimum_extrapolated[:n],
         mesh=mesh,
         primitive_volumes=volumes,
         lattice_smoothing=lattice_smoothing,
