@@ -848,9 +848,11 @@ flowchart TD
     DS(["aniso_qha_dataset.hdf5<br/>cells, U, F_el,<br/>harmonic force constants"])
     DS --> DISP["thermal displacements<br/>one shared draw of<br/>standard normals"]
     DISP --> CALCT{{"calculator forces"}}
-    CALCT --> DEV["train one MLP<br/>per grid point"]
+    CALCT --> TR(["merged.yaml<br/>per grid point"])
+    TR --> DEV["train one MLP<br/>per grid point"]
     DEV --> MLP(["polymlp.yaml<br/>per grid point"])
     MLP --> SSCHA["SSCHA<br/>per grid point and temperature"]
+    TR --> SSCHA
     SSCHA --> FE(["F_ph(T) per<br/>grid point"])
 ```
 
@@ -1092,7 +1094,8 @@ over one file, leaving only the last one:
 ```
 
 Script 7 reads the MLPs back from `train/grid-NNN/polymlp.yaml`, which is where
-this puts them.
+this puts them, and the cell and the starting force constants from the
+`merged.yaml` beside them.
 
 The displacements are drawn at random, so a training set of a given size is
 one draw among many. A second draw of the same size would give a different
@@ -1286,50 +1289,82 @@ wrong.
 temperature. It is no longer the
 harmonic expression of "The free energy" above.
 
-The `aniso_qha_dataset.hdf5` of step 3 is used as it is. Script 7, listed in
-{ref}`the appendix <anisotropic-qha-sweep-script>` at the end of this page,
-computes the free energy at one (temperature, grid point) pair. Save it as
-`script7.py`. The axial thermal expansions are computed from the free energies
-of all the pairs.
+`phonopy-mlpsscha` computes the free energy at one (temperature, grid point)
+pair, from that grid point's own training set and MLP. Script 7 below runs the
+temperatures of one grid point, and script 8, listed in {ref}`the appendix
+<anisotropic-qha-gather-script>` at the end of this page, gathers what the runs
+wrote. Save them as `script7.sh` and `script8.py`. The axial thermal expansions
+are computed from the free energies of all the pairs.
 
-`TEMPERATURES` **must be decided before the first SSCHA run**. The script has
-`TEMPERATURES = np.arange(0, 410, 10.0)` at the top, 0 to 400 K in 10 K steps.
-These 41 temperatures over the 5 x 5 lattice grid of step 1 require 1,025
-calls of `script7.py`.
+The temperatures **must be decided before the first SSCHA run**, since the
+gather places every run on one temperature grid. The two scripts carry
+0 to 400 K in 10 K steps. These 41 temperatures over the 5 x 5 lattice grid of
+step 1 are 1,025 runs.
 
 {math}`a(T)` and {math}`c(T)` are obtained by minimizing the free-energy
 surface at each temperature. The axial expansions then come from an Einstein
 fit of {math}`a(T)` and {math}`c(T)` over the whole temperature range,
 described in {ref}`running the analysis
 <anisotropic-qha-sscha-analysis>`. A temperature at the end of that range is
-not interpolated, so it is recommended to take the highest of `TEMPERATURES`
-above the highest temperature to report.
+not interpolated, so it is recommended to run above the highest temperature to
+report.
 
-Script 7 starts each run from the harmonic force constants the dataset carries
-and writes the run to its own file. `-a` gathers those files into the
-`fph.hdf5` the analysis reads:
+One SSCHA run reads `train/grid-NNN/merged.yaml` for the cell and
+`train/grid-NNN/polymlp.yaml` for the forces, and writes what every iteration
+sampled to its own file. Script 7 is one grid point at every temperature, which
+is the unit a job usually gets:
 
-```bash
-% python script7.py -g 13 -t 250 -v
-% python script7.py -a
+```{code-block} bash
+:caption: Script 7 -- the SSCHA runs of one grid point
+
+#!/bin/bash
+# One grid point at every temperature:  ./script7.sh 13
+set -e
+g=$(printf '%03d' "$1")  # 13 -> 013
+
+for t in {0..400..10}; do
+    phonopy-mlpsscha "train/grid-$g/merged.yaml" \
+        --mlp "train/grid-$g/polymlp.yaml" \
+        -t "$t" \
+        --snapshots 2000 \
+        --iterations 16 \
+        --mesh 200 \
+        --random-seed 1000 \
+        -o "sscha-g$g-t${t}K.hdf5"
+done
 ```
 
+The argument is the grid point, numbered from 1 as the directories are. A run
+reads those two files and nothing else: `aniso_qha_dataset.hdf5` is read only
+by the gather, for the lattice lengths it places the runs by.
+
+The force constants a run starts from are those of `merged.yaml`, which
+phonopy fits with symfc to the training displacements of all four temperatures.
+They are not the harmonic force constants of step 2: the training set was drawn
+at 0, 100, 250 and 400 K, so the fit already carries some of the thermal
+displacement. How far they sit from the self-consistent force constants of a
+given temperature is what {ref}`choosing the transient
+<anisotropic-qha-transient>` reads off the listing.
+
 {ref}`Gathering the runs <anisotropic-qha-gather>` below covers how the calls
-are spread over jobs and how `-a` puts them back together. It is worth making
-one run first with `-v`, which lists its iterations. The transient is chosen
-from that listing, and `-vv` adds the force-constant fit.
+are spread over jobs and how script 8 puts them back together. It is worth
+making one of them by hand first, with `-v` added, which lists its iterations.
+The transient is chosen from that listing, and `-vv` adds the force-constant
+fit.
 
 Sampling and averaging are separate steps. The averaging is where the
 transient is chosen, and doing it apart means choosing again costs a second of
 arithmetic rather than the whole sweep.
 
-The other constants at the top set the run and what its averaging leaves out.
+### The options of an SSCHA run and its error
 
-`SNAPSHOTS` is how many supercells each SSCHA iteration draws, 2000 in the
-script against phonopy's own 1000. Each one is an MLP evaluation, which makes
+The options set what one SSCHA run samples and what its averaging leaves out.
+
+`--snapshots` is how many supercells each SSCHA iteration draws, 2000 in
+script 7 against phonopy's own 1000. Each one is an MLP evaluation, which makes
 it the main cost of the step.
 
-`ITERATIONS` is how many iterations each run makes, 16 against phonopy's 10.
+`--iterations` is how many iterations each run makes, 16 against phonopy's 10.
 The early ones drive the force constants to self-consistency, and they are the
 run's transient.
 
@@ -1340,16 +1375,16 @@ approaching one. Every iteration past the transient is therefore an
 independent sample of the free energy, and averaging them is what improves the
 estimate.
 
-`MESH` is the mesh the harmonic part of the SSCHA free energy is sampled on,
+`--mesh` is the mesh the harmonic part of the SSCHA free energy is sampled on,
 and matching it to the `--mesh` of the analysis keeps one sampling through the
-calculation. `SEED` fixes the whole run: iteration *i* draws from
-`SeedSequence([SEED, i])`, so the run is reproducible while the iterations stay
+calculation. `--random-seed` fixes the whole run: iteration *i* draws from
+`SeedSequence([seed, i])`, so the run is reproducible while the iterations stay
 independent.
 
-A run stores every iteration and averages none of them. `-a` takes the mean
+A run stores every iteration and averages none of them. Script 8 takes the mean
 over the iterations after the transient, one of them by default, and
 `--transient` sets how many. Choosing another is a second gather and costs no
-sampling, and `--transient` on a run marks its log alone.
+sampling, and `--transient` on a run marks its listing alone.
 
 The error of one iteration is the standard error of the mean of the anharmonic
 term over that iteration's snapshots,
@@ -1364,7 +1399,7 @@ where {math}`E^\mathrm{anh}_k` is the anharmonic energy of the {math}`k`-th
 displaced supercell of that iteration, per primitive cell, written out in
 Eq. {eq}`eq_sscha_anharmonic` of {ref}`SSCHA <mlp-sscha>`.
 {math}`\bar{E}^\mathrm{anh}` is the mean over the {math}`N` snapshots, and
-{math}`N` is `SNAPSHOTS`.
+{math}`N` is `--snapshots`.
 
 The iterations are independent draws, so the error of their mean is
 
@@ -1372,22 +1407,22 @@ The iterations are independent draws, so the error of their mean is
 e = \frac{1}{m} \sqrt{\sum_{i=1}^{m} e_i^2} = \frac{\sigma}{\sqrt{mN}},
 ```
 
-where {math}`m` = `ITERATIONS` - `transient`. The second form holds when the
-{math}`\sigma_i` are alike, with {math}`\sigma` their common value.
+where {math}`m` = `--iterations` - `--transient`. The second form holds when
+the {math}`\sigma_i` are alike, with {math}`\sigma` their common value.
 {math}`mN` is how many supercells the run evaluates.
 
 The error depends on that product ({math}`mN`) alone, so it says nothing about
-how to split the cost between `ITERATIONS` and `SNAPSHOTS`. Two other things
-settle that split. `ITERATIONS` has to exceed the transient with samples left
-to average, and the log shows how long the transient is. Each iteration fits
-its force constants from its own `SNAPSHOTS` supercells, so a small
-`SNAPSHOTS` leaves every iteration's force constants noisy however many
+how to split the cost between `--iterations` and `--snapshots`. Two other
+things settle that split. `--iterations` has to exceed the transient with
+samples left to average, and the listing shows how long the transient is. Each
+iteration fits its force constants from its own `--snapshots` supercells, so a
+small `--snapshots` leaves every iteration's force constants noisy however many
 iterations follow.
 
-It is recommended to give the budget to `SNAPSHOTS`, and to raise
-`ITERATIONS` only until the transient is cleared with samples to spare. The
-two buy the same error, and only `SNAPSHOTS` improves the force constants that
-everything other than the free energy is computed from.
+It is recommended to give the budget to `--snapshots`, and to raise
+`--iterations` only until the transient is cleared with samples to spare. The
+two buy the same error, and only `--snapshots` improves the force constants
+that everything other than the free energy is computed from.
 
 Each {math}`e_i` holds its own iteration's force constants fixed, so {math}`e`
 counts the sampling of the snapshots alone. The force constants were fitted
@@ -1401,19 +1436,19 @@ scatter by about their own {math}`e_i` say that {math}`e` is the whole of it.
 One SSCHA run is minutes with the lightest descriptor and longer with a heavy
 one, and the 1,025 of them are independent of each other, so they can be split
 over processes, nodes or jobs however is convenient. A run's randomness comes
-from `SEED` and the iteration number alone, so it gives the same numbers
-whenever and wherever it is made.
-
-The grid point is numbered from 1, and the temperature is in K, taken to the
-nearest of `TEMPERATURES`. A submitting script can therefore carry its own
-temperatures, since one that is off by rounding still lands on the temperature
-the gather expects.
+from `--random-seed` and the iteration number alone, so it gives the same
+numbers whenever and wherever it is made.
 
 ```bash
-% python script7.py -g 13 -t 250
-(013, 250.0)
-Wrote sscha-g013-t250K.hdf5
+% ./script7.sh 13
+Wrote sscha-g013-t0K.hdf5
+Wrote sscha-g013-t10K.hdf5
+...
 ```
+
+The gather places each run at the nearest of its `TEMPERATURES`. A submitting
+script can therefore carry its own temperatures, since one that is off by
+rounding still lands on the temperature the gather expects.
 
 Sampling writes one `sscha-g*K.hdf5` per run. Averaging writes `fph.hdf5`,
 which is the file the analysis reads.
@@ -1425,10 +1460,10 @@ and the transient they were taken with. Handing the analysis a run stops with
 a message about its type, rather than averaging it over iterations nobody
 chose.
 
-`-a` gathers the `sscha-g*K.hdf5` files into `fph.hdf5`:
+Script 8 gathers the `sscha-g*K.hdf5` files into `fph.hdf5`:
 
 ```bash
-% python script7.py -a
+% python script8.py
 Wrote fph.hdf5 from 1025 file(s)
 ```
 
@@ -1439,16 +1474,17 @@ read a gap as a zero. A grid point and temperature that two files cover stops
 the write as well.
 
 
+(anisotropic-qha-transient)=
 ### Choosing the transient
 
 `--transient` sets how many iterations are left out of the averages. The
-default is `DEFAULT_TRANSIENT`, 1. Iteration 1 uses the harmonic force
-constants of step 2, so its free energy is that of those force constants and
-not of self-consistent ones.
+default is `DEFAULT_TRANSIENT`, 1. Iteration 1 uses the force constants fitted
+to `merged.yaml`, so its free energy is that of those force constants and not
+of self-consistent ones.
 
 How long the transient is depends on the system. It lasts until the force
 constants reach self-consistency, and that takes longer the further the
-harmonic force constants start from them. The default of 1 is a floor, not a
+starting force constants sit from them. The default of 1 is a floor, not a
 measurement.
 
 `-v` prints each iteration's distance from the mean of the kept ones, divided
@@ -1469,15 +1505,16 @@ the iteration was still approaching that point.
 ```
 
 Iteration 2 above gives 4.1, so `--transient 2` drops it. Raise `--transient`
-until every kept iteration is within a few units. Check the highest
-temperature as well as the lowest, since the distance between the harmonic and
-the self-consistent force constants grows with temperature.
+until every kept iteration is within a few units. Check the lowest temperature
+as well as the highest: the starting force constants are one fit over the whole
+training range, so they sit furthest from the self-consistent ones at its two
+ends.
 
-The run files hold every iteration and no average. `-a` computes the averages,
-leaving out the first `--transient` iterations of each run:
+The run files hold every iteration and no average. Script 8 computes the
+averages, leaving out the first `--transient` iterations of each run:
 
 ```bash
-% python script7.py -a --transient 2
+% python script8.py --transient 2
 ```
 
 Trying `--transient 3` will simply overwrite the existing `fph.hdf5`.
@@ -1539,9 +1576,11 @@ phonon_free_energies argument of run_anisotropic_qha.
 ```
 
 Its grid points carry the cells, {math}`U` and the electronic states, but no
-harmonic force constants. Script 7 therefore cannot use such a dataset, having
-nothing to start the SSCHA runs
-from.
+harmonic force constants. The SSCHA runs of step 5 read `merged.yaml` and the
+gather reads only the cells, so both are content with such a dataset. What it
+cannot do is the draw of step 5: script 5 takes the widths of the thermal
+distribution from those harmonic force constants, and there are none
+here.
 
 (anisotropic-qha-sscha-analysis)=
 ### Running the analysis
@@ -1624,75 +1663,31 @@ the curves whose shape disagrees with the data in those ways, and keeps the
 closest of what is left. If nothing is left, the command stops rather than
 returning a curve of the wrong shape.
 
-(anisotropic-qha-sweep-script)=
-## Appendix: the SSCHA sweep script
+(anisotropic-qha-gather-script)=
+## Appendix: the gather script
 
-The script {ref}`the SSCHA step <anisotropic-qha-sscha>` calls. `-g` and `-t`
-run one grid point at one temperature and write it to its own file, and `-a`
-gathers what the runs wrote into `fph.hdf5`.
-`--transient` says how many iterations at the start of each run to leave out
-of the averages, and applies to a gather as well as to a run. `-v` lists each
-iteration with its departure from the mean of the kept ones, which is what
-the transient is chosen from; `-vv` adds the force-constant fit.
+What {ref}`gathering the runs <anisotropic-qha-gather>` calls. It reads the
+dataset of step 3 for the lattice lengths it places the runs by, and nothing
+else of it. `--transient` says how many iterations at the start of each run to
+leave out of the averages.
 
 ```{code-block} python
-:caption: Script 7 -- SSCHA at every grid point and temperature
+:caption: Script 8 -- the runs gathered into the free energies of the analysis
 
 import argparse
 import glob
 
 import numpy as np
-from phonopy.interface.mlp import PhonopyMLP
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 from phonopy.qha.free_energy_io import (
     assemble_sscha_free_energies,
     write_free_energies_hdf5,
 )
-from phonopy.sscha.core import MLPSSCHA
-from phonopy.sscha.run import read_sscha_run_hdf5, write_sscha_run_hdf5
+from phonopy.sscha.run import read_sscha_run_hdf5
 
 DATASET = "aniso_qha_dataset.hdf5"
-MLP = "train/grid-{:03d}/polymlp.yaml"  # grid point, numbered from 1
 TEMPERATURES = np.arange(0, 410, 10.0)  # 0 to 400 K in 10 K steps
-SNAPSHOTS = 2000
-ITERATIONS = 16
-MESH = 200.0
-SEED = 1000
 DEFAULT_TRANSIENT = 1
-
-
-def run_sscha(
-    dataset, grid_point, temperature, transient=DEFAULT_TRANSIENT, log_level=0
-):
-    """Run one grid point at one temperature and write it to its own file.
-
-    ``grid_point`` is numbered from 1, as the directories are. ``temperature``
-    is in K, and the nearest of TEMPERATURES is the one run.
-
-    """
-    if not 1 <= grid_point <= len(dataset.grid_points):
-        raise SystemExit(f"-g is 1 to {len(dataset.grid_points)}.")
-    point = dataset.grid_points[grid_point - 1]
-    t = TEMPERATURES[int(np.argmin(np.abs(TEMPERATURES - temperature)))]
-
-    print(f"({grid_point:03d}, {t})", flush=True)
-    sscha = MLPSSCHA(
-        point.to_phonopy(),
-        PhonopyMLP().load(MLP.format(grid_point)),
-        temperature=float(t),
-        number_of_snapshots=SNAPSHOTS,
-        max_iterations=ITERATIONS,
-        mesh=MESH,
-        random_seed=SEED,
-        log_level=log_level,
-    )
-    run = sscha.run().to_sscha_run()
-    if log_level:
-        run.report(transient)
-
-    filename = f"sscha-g{grid_point:03d}-t{t:g}K.hdf5"
-    write_sscha_run_hdf5(run, filename)
-    print(f"Wrote {filename}", flush=True)
 
 
 def assemble(
@@ -1722,50 +1717,15 @@ def assemble(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--grid-point",
-        "-g",
-        type=int,
-        default=None,
-        help="grid point to run, numbered from 1",
-    )
-    parser.add_argument(
-        "--temperature",
-        "-t",
-        type=float,
-        default=None,
-        help="temperature in K; the nearest of TEMPERATURES is run",
-    )
-    parser.add_argument(
-        "--assemble",
-        "-a",
-        action="store_true",
-        help="gather the sscha-g*K.hdf5 the runs wrote into fph.hdf5",
-    )
-    parser.add_argument(
         "--transient",
         type=int,
         default=DEFAULT_TRANSIENT,
         help="how many iterations at the start of a run are its transient "
         "and are left out of the averages (default: %(default)s)",
     )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="log each SSCHA iteration; -vv adds the force-constant fit",
-    )
     args = parser.parse_args()
 
-    dataset = read_aniso_qha_dataset(DATASET)
-    if args.assemble:
-        assemble(dataset, args.transient)
-    elif args.grid_point is None or args.temperature is None:
-        raise SystemExit("Give -g and -t to run, or -a to gather.")
-    else:
-        run_sscha(
-            dataset, args.grid_point, args.temperature, args.transient, args.verbose
-        )
+    assemble(read_aniso_qha_dataset(DATASET), args.transient)
 
 
 if __name__ == "__main__":
@@ -1873,7 +1833,7 @@ merged sets it read, and names the grid points that have no `merged.yaml`.
 ### The script
 
 ```{code-block} python
-:caption: Script 8 -- checking the training displacements
+:caption: Script 9 -- checking the training displacements
 
 from pathlib import Path
 

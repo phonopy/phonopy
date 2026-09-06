@@ -481,7 +481,7 @@ class MLPSSCHA:
             lattice_lengths=np.linalg.norm(self._ph.unitcell.cell, axis=1),
         )
 
-    def write_hdf5(self, filename: str | os.PathLike = "sscha.hdf5") -> None:
+    def write_hdf5(self, filename: str | os.PathLike = "mlpsscha.hdf5") -> None:
         """Write what this run sampled to an hdf5 file."""
         write_sscha_run_hdf5(self.to_sscha_run(), filename)
 
