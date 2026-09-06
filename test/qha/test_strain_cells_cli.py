@@ -10,8 +10,8 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
+from phonopy.cui.phonopy_strain_cells_script import main
 from phonopy.interface.vasp import read_vasp
-from phonopy.scripts.phonopy_strain_cells import run
 from phonopy.structure.atoms import PhonopyAtoms
 
 
@@ -85,7 +85,7 @@ def test_cli_writes_the_primitive_cell_of_a_centred_lattice(
         ],
     )
 
-    run()
+    main()
 
     out = capsys.readouterr().out
     assert "primitive 2 atoms, unit cell 8 atoms" in out
@@ -158,7 +158,7 @@ def test_cli_writes_the_primitive_cell_of_an_unusual_setting(
         ],
     )
 
-    run()
+    main()
 
     out = capsys.readouterr().out
     assert "primitive 1 atoms, unit cell 1 atoms" in out
@@ -189,7 +189,7 @@ def test_cli_writes_no_primitive_cell_for_a_primitive_lattice(
         ],
     )
 
-    run()
+    main()
 
     assert sorted(tmp_path.glob("primcell-*")) == []
     assert "primitive cell of each" not in capsys.readouterr().out
@@ -203,7 +203,7 @@ def test_cli_dof_display(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(sys, "argv", ["phonopy-strain-cells", "phonopy_disp.yaml"])
 
-    run()
+    main()
 
     out = capsys.readouterr().out
     assert "tetragonal" in out
@@ -238,7 +238,7 @@ def test_cli_grid_sampling(tmp_path, monkeypatch, capsys) -> None:
         ],
     )
 
-    run()
+    main()
 
     out = capsys.readouterr().out
     files = sorted(tmp_path.glob("unitcell-*"))
@@ -276,7 +276,7 @@ def test_cli_grid_rectangular(tmp_path, monkeypatch, capsys) -> None:
         ],
     )
 
-    run()
+    main()
 
     out = capsys.readouterr().out
     assert len(sorted(tmp_path.glob("unitcell-*"))) == 30  # 5 x 6
@@ -309,7 +309,7 @@ def test_cli_requires_a_grid(tmp_path, monkeypatch) -> None:
         ],
     )
     with pytest.raises(SystemExit):
-        run()
+        main()
 
 
 def test_cli_rejects_non_free_parameter(tmp_path, monkeypatch) -> None:
@@ -335,4 +335,4 @@ def test_cli_rejects_non_free_parameter(tmp_path, monkeypatch) -> None:
     )
 
     with pytest.raises(SystemExit):
-        run()
+        main()

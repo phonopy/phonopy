@@ -185,7 +185,7 @@ class SSCHARun:
 
 
 def write_sscha_run_hdf5(
-    run: SSCHARun, filename: str | os.PathLike = "sscha.hdf5"
+    run: SSCHARun, filename: str | os.PathLike = "mlpsscha.hdf5"
 ) -> None:
     """Write what one SSCHA run sampled.
 
@@ -206,7 +206,7 @@ def write_sscha_run_hdf5(
                 w.create_dataset(field.name, data=values)
 
 
-def read_sscha_run_hdf5(filename: str | os.PathLike = "sscha.hdf5") -> SSCHARun:
+def read_sscha_run_hdf5(filename: str | os.PathLike = "mlpsscha.hdf5") -> SSCHARun:
     """Read what write_sscha_run_hdf5 wrote."""
     with h5py.File(filename, "r") as f:
         name = str(f.attrs["type"]) if "type" in f.attrs else ""

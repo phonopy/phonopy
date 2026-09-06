@@ -332,7 +332,7 @@ def test_strain_cells_cli_rejects_displacement_options(option: str) -> None:
     quietly produce plain unit cells.
 
     """
-    from phonopy.scripts.phonopy_strain_cells import get_options
+    from phonopy.cui.phonopy_strain_cells_script import get_options
 
     argv = ["phonopy-strain-cells", "phonopy_disp.yaml", option]
     with mock.patch.object(sys, "argv", argv), pytest.raises(SystemExit):
