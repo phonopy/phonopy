@@ -294,6 +294,7 @@ def assemble_sscha_free_energies(
     temperatures: NDArray[np.double],
     lattice_lengths: NDArray[np.double],
     transient: int = 1,
+    atol: float = 1e-3,
 ) -> SSCHAFreeEnergies:
     """Average a sweep's runs and place them on its grid.
 
@@ -303,8 +304,10 @@ def assemble_sscha_free_energies(
 
     A run is placed by the temperature and the lattice lengths it carries
     rather than by where it came from, so the order they are given in does
-    not matter. A grid point and temperature that no run covers stops the
-    assembly, and so does one that two runs cover.
+    not matter. A run whose temperature is none of temperatures is left out,
+    so a sweep computed over a wider or a finer temperature grid gathers to
+    the grid asked for here. A grid point and temperature that no run covers
+    stops the assembly, and so does one that two runs cover.
 
     Parameters
     ----------
@@ -320,6 +323,11 @@ def assemble_sscha_free_energies(
         average. Default is 1, which drops the iteration that samples the
         starting force constants. How many more belong to the transient
         depends on the system; SSCHARun.report shows it.
+    atol : float, optional
+        How far in K a run's temperature may sit from one of temperatures and
+        still be that temperature. Default is 1e-3, which takes the rounding
+        of a temperature written to a file name and read back, and leaves a
+        run made at another temperature out.
 
     """
     shape = (len(temperatures), len(lattice_lengths))
@@ -335,12 +343,16 @@ def assemble_sscha_free_energies(
             f"The runs made {sorted(counts)} iterations. Averaging over "
             "different numbers of them would weight the grid unevenly."
         )
+    off_grid: list[float] = []
     for run in runs:
         if run.lattice_lengths is None:
             raise ValueError(
                 "A run carries no lattice_lengths, so it cannot be placed on the grid."
             )
         row = int(np.argmin(np.abs(temperatures - run.temperature)))
+        if abs(temperatures[row] - run.temperature) > atol:
+            off_grid.append(run.temperature)
+            continue
         column = int(
             np.argmin(np.abs(lattice_lengths - run.lattice_lengths).sum(axis=1))
         )
@@ -361,9 +373,16 @@ def assemble_sscha_free_energies(
         first = ", ".join(
             f"(grid point {c + 1}, {temperatures[r]:g} K)" for r, c in missing[:5]
         )
+        left_out = ""
+        if off_grid:
+            temperatures_left_out = ", ".join(f"{t:g}" for t in sorted(off_grid)[:5])
+            left_out = (
+                f" ({len(off_grid)} of them left out at temperatures that are "
+                f"not on the grid: {temperatures_left_out} K)"
+            )
         raise ValueError(
-            f"{len(runs)} run(s) given, {len(missing)} of {free_energies.size} "
-            f"values missing: {first} ..."
+            f"{len(runs)} run(s) given{left_out}, {len(missing)} of "
+            f"{free_energies.size} values missing: {first} ..."
         )
 
     return SSCHAFreeEnergies(

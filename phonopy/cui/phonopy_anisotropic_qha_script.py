@@ -547,6 +547,13 @@ def main() -> None:
         "volume-temperature.dat and anisotropic_qha.png"
     )
 
+    # Only a smoothed run has minima of its own to show the fit against.
+    if result.unsmoothed_lattice_parameters is not None:
+        fig = anisotropic_plot.plot_lattice_smoothing(result)
+        fig.savefig("lattice_smoothing.png")
+        plt.close(fig)
+        print("Wrote lattice_smoothing.png")
+
     # The highest temperature of the run, which --tmax need not have set.
     contour_temps = (
         args.contour_temp if args.contour_temp else [float(temperatures[-1])]

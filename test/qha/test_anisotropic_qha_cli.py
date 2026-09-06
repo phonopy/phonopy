@@ -472,6 +472,27 @@ def test_assemble_sscha_free_energies() -> None:
     assert not np.allclose(other.free_energies, fe.free_energies)
 
 
+def test_assemble_sscha_free_energies_gathers_a_wider_sweep() -> None:
+    """A run at a temperature off the grid is left out, not placed at a neighbour."""
+    from phonopy.qha.free_energy_io import assemble_sscha_free_energies
+
+    temperatures = np.arange(0.0, 31.0, 10.0)
+    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
+    runs = _sweep(temperatures, lengths)
+    off_grid = _sweep(np.array([5.0, 15.0, 40.0]), lengths)
+
+    fe = assemble_sscha_free_energies(runs, temperatures, lengths, transient=1)
+    gathered = assemble_sscha_free_energies(
+        runs + off_grid, temperatures, lengths, transient=1
+    )
+    np.testing.assert_allclose(gathered.free_energies, fe.free_energies)
+
+    # A temperature the sweep never made is missing, and the message says how
+    # many runs were left out.
+    with pytest.raises(ValueError, match="not on the grid"):
+        assemble_sscha_free_energies(runs + off_grid, np.array([0.0, 12.0]), lengths)
+
+
 def test_assemble_sscha_free_energies_refuses_a_gap_and_a_clash() -> None:
     """A grid point no run covers stops the assembly, and so does a double."""
     from phonopy.qha.free_energy_io import assemble_sscha_free_energies

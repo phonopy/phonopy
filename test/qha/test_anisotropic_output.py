@@ -69,6 +69,28 @@ def test_write_lattice_parameters(result: AnisotropicQHAResult, tmp_path: Path) 
     )
 
 
+def test_write_lattice_parameters_of_a_smoothed_result(
+    result: AnisotropicQHAResult, tmp_path: Path
+) -> None:
+    """A smoothed result writes what the smoothing was fitted to as well."""
+    unsmoothed = result.equilibrium_lattice_parameters + 1e-3
+    smoothed = dataclasses.replace(
+        result,
+        lattice_smoothing="einstein",
+        unsmoothed_lattice_parameters=unsmoothed,
+    )
+    fn = tmp_path / "lp.dat"
+    aniso_output.write_lattice_parameters_temperature(smoothed, filename=fn)
+    lines = _data_lines(fn)
+    assert len(lines) == len(result.temperatures)
+    values = [float(x) for x in lines[-1].split()]
+    assert len(values) == 7
+    np.testing.assert_allclose(
+        values[1:4], result.equilibrium_lattice_parameters[-1], rtol=1e-12
+    )
+    np.testing.assert_allclose(values[4:7], unsmoothed[-1], rtol=1e-12)
+
+
 def test_write_axial_thermal_expansion(
     result: AnisotropicQHAResult, tmp_path: Path
 ) -> None:
@@ -174,6 +196,29 @@ def test_plot_anisotropic_qha_returns_figure(result: AnisotropicQHAResult) -> No
     ]
     assert twin, "the lattice-parameter panel has no twin axis"
     assert lattice_panel.lines and twin[0].lines
+    plt.close(fig)
+
+
+def test_plot_lattice_smoothing(result: AnisotropicQHAResult) -> None:
+    """The smoothing plot is a column per free DOF, and needs a smoothed result."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    with pytest.raises(ValueError, match="was not smoothed"):
+        aniso_plot.plot_lattice_smoothing(result)
+
+    smoothed = dataclasses.replace(
+        result,
+        lattice_smoothing="einstein",
+        unsmoothed_lattice_parameters=result.equilibrium_lattice_parameters + 1e-4,
+    )
+    fig = aniso_plot.plot_lattice_smoothing(smoothed)
+    assert isinstance(fig, plt.Figure)
+    # Two free DOF, a and c, over the value row and the residual row.
+    assert len(fig.axes) == 4
+    assert all(ax.lines for ax in fig.axes)
     plt.close(fig)
 
 

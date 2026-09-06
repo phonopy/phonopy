@@ -809,6 +809,23 @@ def test_run_anisotropic_smoothing_uses_the_analytic_slope(ph_nacl: Phonopy) -> 
     assert raw.axial_thermal_expansions[0].max() == 0.0
     assert smoothed.axial_thermal_expansions[0] == pytest.approx(0.0, abs=1e-12)
 
+    # The smoothed run keeps the minima it was fitted to, which are the raw
+    # run's own over the temperatures the raw run returns.
+    assert raw.unsmoothed_lattice_parameters is None
+    assert smoothed.unsmoothed_lattice_parameters is not None
+    assert smoothed.unsmoothed_lattice_parameters.shape == (len(TEMPERATURES), 3)
+    np.testing.assert_allclose(
+        smoothed.unsmoothed_lattice_parameters[: len(raw.temperatures)],
+        raw.equilibrium_lattice_parameters,
+        rtol=1e-12,
+    )
+    # The fit follows the minima closely here, so how far it sits from them is
+    # no test of anything; what is tested is that they are two arrays.
+    assert not np.array_equal(
+        smoothed.unsmoothed_lattice_parameters,
+        smoothed.equilibrium_lattice_parameters,
+    )
+
 
 def test_internal_energy_folded_into_the_free_energies(ph_nacl: Phonopy) -> None:
     """U in the free energies with U = 0 is the same surface as U beside them.

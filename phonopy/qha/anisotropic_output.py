@@ -109,15 +109,26 @@ def write_lattice_parameters_temperature(
     filename: str | os.PathLike = "lattice_parameters-temperature.dat",
     provenance: Sequence[str] | None = None,
 ) -> None:
-    """Write equilibrium lattice parameters vs temperature in file."""
+    """Write equilibrium lattice parameters vs temperature in file.
+
+    A smoothed result carries what the surface minima gave before the
+    smoothing, and that is written as three columns more, so that the
+    smoothing can be plotted against what it was fitted to.
+
+    """
+    unsmoothed = result.unsmoothed_lattice_parameters
+    columns = "temperature (K), a, b, c (angstrom)"
+    if unsmoothed is not None:
+        columns += ", a, b, c before the smoothing (angstrom)"
     with open(filename, "w") as w:
-        _write_header(w, result, "temperature (K), a, b, c (angstrom)", provenance)
-        for t, abc in zip(
-            result.temperatures,
-            result.equilibrium_lattice_parameters,
-            strict=True,
+        _write_header(w, result, columns, provenance)
+        for i, (t, abc) in enumerate(
+            zip(result.temperatures, result.equilibrium_lattice_parameters, strict=True)
         ):
-            w.write("%20.15f %25.15f %25.15f %25.15f\n" % (t, *abc))
+            w.write("%20.15f %25.15f %25.15f %25.15f" % (t, *abc))
+            if unsmoothed is not None:
+                w.write("%25.15f %25.15f %25.15f" % tuple(unsmoothed[i]))
+            w.write("\n")
 
 
 def write_axial_thermal_expansion(

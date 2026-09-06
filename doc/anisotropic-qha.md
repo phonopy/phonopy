@@ -1451,9 +1451,12 @@ Wrote sscha-g013-t10K.hdf5
 ...
 ```
 
-The gather places each run at the nearest of its `TEMPERATURES`. A submitting
-script can therefore carry its own temperatures, since one that is off by
-rounding still lands on the temperature the gather expects.
+The gather places each run at the one of its `TEMPERATURES` the run's own
+temperature matches, to within 1e-3 K. A submitting script can therefore carry
+its own temperatures, since one that is off by rounding still lands on the
+temperature the gather expects. A run at a temperature that is on no such
+grid point is left out, so a sweep computed over a wider or a finer grid than
+`TEMPERATURES` gathers to `TEMPERATURES`.
 
 Sampling writes one `sscha-g*K.hdf5` per run. Averaging writes `fph.hdf5`,
 which is the file the analysis reads.
@@ -1469,7 +1472,7 @@ Script 8 gathers the `sscha-g*K.hdf5` files into `fph.hdf5`:
 
 ```bash
 % python script8.py
-Wrote fph.hdf5 from 1025 file(s)
+Wrote fph.hdf5, 41 temperature(s) x 25 grid point(s), from 1025 file(s)
 ```
 
 Each file is placed by the lattice lengths and the temperature it carries
@@ -1665,6 +1668,23 @@ the curves whose shape disagrees with the data in those ways, and keeps the
 closest of what is left. If nothing is left, the command stops rather than
 returning a curve of the wrong shape.
 
+A fit is worth seeing against what it was fitted to. A smoothed run therefore
+keeps the surface minima as well, in `unsmoothed_lattice_parameters`, and
+writes them as three columns more in `lattice_parameters-temperature.dat`:
+temperature, the smoothed {math}`a`, {math}`b`, {math}`c`, then the same three
+before the smoothing.
+
+It also writes `lattice_smoothing.png`, one column per free lattice DOF. The
+upper row is the fit as a line over the minima as dots, and the lower row is
+what is left over, fit minus minimum, in {math}`10^{-4}` angstrom. The
+residuals are what the fit is judged on. Sampling scatter shows as a band
+around zero as wide as the scatter is, while a fit of the wrong shape shows as
+an excursion over a range of temperature, and that is the case to raise
+`--smooth-terms` for.
+
+An unsmoothed run has nothing to compare against, so `--smooth-lattice none`
+writes the four columns alone and no `lattice_smoothing.png`.
+
 (anisotropic-qha-gather-script)=
 ## Appendix: the gather script
 
@@ -1713,7 +1733,12 @@ def assemble(
     except ValueError as error:
         raise SystemExit(str(error)) from error
     write_free_energies_hdf5(free_energies, filename)
-    print(f"Wrote {filename} from {len(paths)} file(s)", flush=True)
+    n_temperatures, n_points = free_energies.free_energies.shape
+    print(
+        f"Wrote {filename}, {n_temperatures} temperature(s) x "
+        f"{n_points} grid point(s), from {len(paths)} file(s)",
+        flush=True,
+    )
 
 
 def main():
