@@ -12,13 +12,13 @@ from numpy.typing import NDArray
 from qha_utils import MESH, TEMPERATURES, internal_energies, scaled_phonopy
 
 from phonopy import Phonopy, run_anisotropic_qha
-from phonopy.qha.anisotropic import AnisotropicQHAResult
-from phonopy.scripts.phonopy_anisotropic_qha import (
+from phonopy.cui.phonopy_anisotropic_qha_script import (
     _read_free_energies,
     compare_thermal_expansion_eos,
     main_diagonal_positions,
     suggest_eos_cells,
 )
+from phonopy.qha.anisotropic import AnisotropicQHAResult
 
 
 def _result_with_lattice(
@@ -615,13 +615,13 @@ def test_internal_energies_from_the_free_energies(tmp_path: pathlib.Path) -> Non
     altogether, so a file that does not record it stops the run.
 
     """
+    from phonopy.cui.phonopy_anisotropic_qha_script import (
+        internal_energies_from_the_potential,
+    )
     from phonopy.qha.free_energy_io import (
         PhononFreeEnergies,
         SSCHAFreeEnergies,
         write_free_energies_hdf5,
-    )
-    from phonopy.scripts.phonopy_anisotropic_qha import (
-        internal_energies_from_the_potential,
     )
 
     temperatures = np.arange(0.0, 101.0, 10.0)

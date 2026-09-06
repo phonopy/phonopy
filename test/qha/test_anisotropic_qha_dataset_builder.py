@@ -11,20 +11,20 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from phonopy.cui.phonopy_anisotropic_qha_dataset_script import (
+    build_calculator_grid_point,
+    load_phonon,
+    load_phonon_from_disp_dirs,
+    main,
+    primitive_cell_fraction,
+    read_electronic_states,
+)
 from phonopy.file_IO import write_FORCE_SETS
 from phonopy.interface.vasp import (
     electronic_states_from_vaspout,
     read_vasprun_calculation,
 )
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
-from phonopy.scripts.phonopy_anisotropic_qha_dataset import (
-    build_calculator_grid_point,
-    load_phonon,
-    load_phonon_from_disp_dirs,
-    primitive_cell_fraction,
-    read_electronic_states,
-    run,
-)
 
 FIXTURE = Path(__file__).parent.parent / "cui" / "phonopy_command" / "vaspruns_NaCl_rd"
 VASPRUNS = [f"vasprun-0000{i}.xml.xz" for i in range(4)]
@@ -88,7 +88,7 @@ def _tensor_grid(a_values, c_values):
 
 def test_detect_grid_shape_of_a_tensor_grid():
     """A tensor grid is recognised, with one count per free DOF."""
-    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
 
     assert _detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.0, 5.1])) == (3, 2)
     assert _detect_grid_shape(np.array([[3.0], [3.1], [3.2]])) == (3,)
@@ -101,7 +101,7 @@ def test_detect_grid_shape_of_scattered_cells():
     the number of cells.
 
     """
-    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
 
     rng = np.random.default_rng(0)
     assert _detect_grid_shape(rng.uniform(3.0, 3.5, size=(12, 2))) is None
@@ -115,7 +115,7 @@ def test_detect_grid_shape_rejects_a_reordered_grid():
     the shape would pick the wrong ones.
 
     """
-    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
 
     grid = _tensor_grid([3.0, 3.1, 3.2], [5.0, 5.1, 5.2])
     assert _detect_grid_shape(grid) == (3, 3)
@@ -131,7 +131,7 @@ def test_detect_grid_shape_rejects_a_reordered_grid():
 
 def test_detect_grid_shape_requires_ascending_axes():
     """Axes have to ascend so that the diagonal is a monotonic volume path."""
-    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _detect_grid_shape
+    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
 
     assert _detect_grid_shape(_tensor_grid([3.2, 3.1, 3.0], [5.0, 5.1, 5.2])) is None
     assert _detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.2, 5.1, 5.0])) is None
@@ -210,7 +210,7 @@ def test_paired_cells_accept_either_cell_of_the_grid_point(tmp_path):
     that is neither is still a mis-pairing and stops the builder.
 
     """
-    from phonopy.scripts.phonopy_anisotropic_qha_dataset import _check_paired_cells
+    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _check_paired_cells
 
     _make_grid_point_dirs(tmp_path, 0)
     ph = load_phonon_from_disp_dirs(str(tmp_path / "phonon-grid" / "grid-000"))
@@ -271,7 +271,7 @@ def test_load_phonon_without_forces_raises(tmp_path):
 
 
 def test_builder_run_and_analysis(tmp_path, monkeypatch):
-    """run() writes a dataset that rebuilds into working phonons."""
+    """main() writes a dataset that rebuilds into working phonons."""
     pytest.importorskip("symfc")
     for idx in (0, 1):
         _make_grid_point_dirs(tmp_path, idx)
@@ -294,7 +294,7 @@ def test_builder_run_and_analysis(tmp_path, monkeypatch):
             str(out),
         ],
     )
-    run()
+    main()
 
     dataset = read_aniso_qha_dataset(out)
     assert len(dataset.grid_points) == 2
@@ -338,7 +338,7 @@ def test_builder_run_with_explicit_paths(tmp_path, monkeypatch):
         + phonons
         + ["-o", str(out)],
     )
-    run()
+    main()
 
     dataset = read_aniso_qha_dataset(out)
     assert len(dataset.grid_points) == 2
@@ -365,7 +365,7 @@ def test_builder_run_rejects_length_mismatch(tmp_path, monkeypatch):
         ],
     )
     with pytest.raises(SystemExit, match="do not match"):
-        run()
+        main()
 
 
 def _write_minimal_vaspout(
@@ -496,7 +496,7 @@ def test_builder_run_rejects_mispaired_cells(tmp_path, monkeypatch):
         ],
     )
     with pytest.raises(SystemExit, match="mis-paired"):
-        run()
+        main()
 
 
 def test_builder_run_static_only(tmp_path, monkeypatch):
@@ -526,7 +526,7 @@ def test_builder_run_static_only(tmp_path, monkeypatch):
             str(out),
         ],
     )
-    run()
+    main()
 
     dataset = read_aniso_qha_dataset(out)
     assert len(dataset.grid_points) == 2
@@ -538,7 +538,7 @@ def test_builder_run_static_only(tmp_path, monkeypatch):
             point.to_phonopy()
 
     # The analysis command explains the situation instead of raising through.
-    from phonopy.scripts.phonopy_anisotropic_qha import run as run_analysis
+    from phonopy.cui.phonopy_anisotropic_qha_script import main as run_analysis
 
     monkeypatch.setattr(sys, "argv", ["phonopy-anisotropic-qha", str(out)])
     with pytest.raises(SystemExit, match="carries no displacements or forces"):
