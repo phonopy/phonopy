@@ -1155,8 +1155,10 @@ therefore be extended, or generated in blocks, with
 
 A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
 not promise that `Generator` distribution methods give the same stream across
-its own versions (NEP 19). **Save the {math}`\xi` themselves.** Script 5 does
-that, writing one `normals-*.npz` per temperature beside the training sets.
+its own versions
+([NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)). **Save the
+{math}`\xi` themselves.** Script 5 does that, writing one `normals-*.npz` per
+temperature beside the training sets.
 
 Read one back with `np.load` and hand `(ii, ij)` to
 `run(standard_normals=...)`, or to
@@ -1435,9 +1437,12 @@ scatter by about their own {math}`e_i` say that {math}`e` is the whole of it.
 
 One SSCHA run is minutes with the lightest descriptor and longer with a heavy
 one, and the 1,025 of them are independent of each other, so they can be split
-over processes, nodes or jobs however is convenient. A run's randomness comes
-from `--random-seed` and the iteration number alone, so it gives the same
-numbers whenever and wherever it is made.
+over processes, nodes or jobs however is convenient.
+{ref}`Spreading the sweep over a cluster <anisotropic-qha-distributed>` is one
+way. The same `--random-seed` draws the same supercells, so a run does the same
+sampling wherever it is made and however often it is repeated;
+{ref}`what a rerun reproduces <anisotropic-qha-reproducing>` says where that
+stops.
 
 ```bash
 % ./script7.sh 13
@@ -1468,10 +1473,7 @@ Wrote fph.hdf5 from 1025 file(s)
 ```
 
 Each file is placed by the lattice lengths and the temperature it carries
-rather than by its name, so the order they are gathered in does not matter. A
-missing value stops the write and is named, since the analysis would otherwise
-read a gap as a zero. A grid point and temperature that two files cover stops
-the write as well.
+rather than by its name, so the order they are gathered in does not matter.
 
 
 (anisotropic-qha-transient)=
@@ -1971,3 +1973,101 @@ The grid points are ordered row-major over `dataset.grid_shape`, so
 `neighbour_pairs` adds the stride of each axis to the flat index of a grid
 point. A dataset that is not a tensor grid has `grid_shape` None, and its
 pairs have to be given to `check_neighbours` explicitly.
+
+(anisotropic-qha-distributed)=
+## Appendix: spreading the sweep over a cluster
+
+The 1,025 runs do not talk to each other, so any split of them is allowed.
+Two are usual.
+
+One job per grid point runs script 7 with the grid point as its argument: 25
+jobs of 41 runs. One job per (grid point, temperature) is 1,025 jobs of one
+run, which suits a queue with a short time limit. The job is then a template
+with the grid point and the temperature left as placeholders:
+
+```{code-block} bash
+:caption: Script 10 -- one job per grid point and temperature
+
+#!/bin/bash
+#SBATCH --job-name=sscha-GRID-TEMP
+#SBATCH --output=sscha-gGRID-tTEMPK.log
+grid=train/grid-GRID
+
+phonopy-mlpsscha "$grid/merged.yaml" \
+    --mlp "$grid/polymlp.yaml" \
+    -t TEMP \
+    --snapshots 2000 \
+    --iterations 16 \
+    --mesh 200 \
+    --random-seed 1000 \
+    -o "sscha-gGRID-tTEMPK.hdf5"
+```
+
+The `#SBATCH` lines are Slurm's, and the resource lines a site asks for belong
+beside them. Set a name whatever the scheduler. A job read from standard input
+takes the submitting command as its name, and a queue listing of 1,025 jobs
+called `sbatch` says nothing about which run is which.
+
+`train/grid-GRID` is a relative path, so the job has to start in the directory
+the sweep was submitted from. Slurm starts it there. Grid Engine needs
+`#$ -cwd` in the template, and PBS a `cd $PBS_O_WORKDIR` before the command.
+
+`sed` fills the placeholders in, and `sbatch` reads the job from its standard
+input when it is not given a file:
+
+```bash
+for g in {001..025}; do
+    for t in {0..400..10}; do
+        sed -e "s/GRID/$g/g" -e "s/TEMP/$t/g" job.sh | sbatch
+    done
+done
+```
+
+The jobs may be submitted in any order and may finish in any order, and a job
+may be run again. {ref}`What a rerun reproduces <anisotropic-qha-reproducing>`
+says why, and where that stops.
+
+(anisotropic-qha-reproducing)=
+## Appendix: what a rerun reproduces
+
+`phonopy-mlpsscha` displaces the supercells of an SSCHA iteration along the
+thermal distribution, and scripts 7 and 10 call it once per (grid point,
+temperature). Script 5 draws its training structures from the thermal
+distribution of the harmonic force constants. Both the command and script 5
+draw through `RandomDisplacements`, which takes its random numbers from NumPy.
+
+NumPy does not promise the same random numbers from one release to the next
+([NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)). A machine carrying
+a different NumPy may therefore draw different supercells.
+
+The supercells of an SSCHA run are a way of averaging. Another draw of the same
+size returns a free energy differing by about the error the run reports.
+Nothing reads the draw a second time, so `phonopy-mlpsscha` writes no record of
+it.
+
+The MLPs are fitted to the structures script 5 drew, so another draw there
+gives another potential. Script 5 writes its draw to `normals-*.npz` beside the
+training sets, and {ref}`sharing one draw of standard normals
+<anisotropic-qha-normals>` says how to read one back.
+
+On one NumPy, the seed fixes what is drawn. Script 5 passes
+`SEED + int(temperature)` to `draw_standard_normals`, so each of its
+temperatures is one reproducible draw. `phonopy-mlpsscha` passes
+`--random-seed`, and iteration *i* of an SSCHA run derives its own seed from
+that and *i*, as `SeedSequence([seed, i])`, so the iterations of one run draw
+independently of one another.
+
+A seeded run therefore draws the same supercells whenever it is made. The
+machine it runs on, when it runs and how many times it has run change nothing,
+so the sweep is safe to spread over a cluster and safe to resubmit.
+
+A run made without `--random-seed`, or an API call with `random_seed=None`,
+sets no seed. The draw is then a fresh sample every time.
+
+A rerun writing the same file name replaces that file. A rerun writing another
+name leaves two run files at one (grid point, temperature). Script 8 then stops
+and prints which grid point and temperature has two.
+
+A run file deleted by mistake stops script 8 as well, and the message lists the
+first few (grid point, temperature) left without a file. Running those points
+again is enough, since a rerun draws the supercells the lost run drew.
