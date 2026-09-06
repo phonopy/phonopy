@@ -34,6 +34,61 @@ def plot_lattice_parameters(result: AnisotropicQHAResult) -> Any:
     return plt
 
 
+def plot_lattice_smoothing(result: AnisotropicQHAResult) -> Any:
+    """Return a Figure showing the smoothing against the minima it was fitted to.
+
+    One column per free lattice DOF, since those are the lengths the surface
+    minimization moves. The upper row is the fit as a line over the minima as
+    dots, and the lower row is what is left over, fit minus minimum, in
+    1e-4 angstrom. The residuals are what the fit is judged on: sampling
+    scatter shows as a band around zero of the width the scatter has, and a
+    fit of the wrong shape shows as an excursion over a range of temperature.
+
+    Raises ValueError for a result that was not smoothed, which has no minima
+    of its own to compare against.
+
+    """
+    import matplotlib.pyplot as plt
+
+    unsmoothed = result.unsmoothed_lattice_parameters
+    if unsmoothed is None:
+        raise ValueError(
+            "The result was not smoothed, so its lattice parameters are the "
+            "surface minima themselves and there is nothing to compare."
+        )
+
+    t = result.temperatures
+    columns = [int(i) for i in result.free_lattice_indices]
+    names = ("a", "b", "c")
+    fig, axs = plt.subplots(
+        2, len(columns), figsize=(4.0 * len(columns), 6.0), sharex=True, squeeze=False
+    )
+    for k, i in enumerate(columns):
+        name = names[i]
+        fitted = result.equilibrium_lattice_parameters[:, i]
+        ax = axs[0][k]
+        ax.plot(t, unsmoothed[:, i], ".", color="0.4", label="surface minima")
+        ax.plot(t, fitted, "-", color=f"C{k}")
+        ax.set_ylabel(rf"${name}$ $(\AA)$")
+        ax.set_title(
+            f"{result.lattice_smoothing}, {result.smoothing_terms} terms"
+            if k == 0
+            else ""
+        )
+        ax.legend(loc="best")
+
+        residual = (fitted - unsmoothed[:, i]) * 1e4
+        ax = axs[1][k]
+        ax.plot(t, residual, ".-", color=f"C{k}")
+        ax.axhline(0.0, color="0.6", lw=0.7, ls=":", zorder=0)
+        ax.set_xlim(t[0], t[-1])
+        ax.set_xlabel("Temperature (K)")
+        ax.set_ylabel(rf"${name}$ fit $-$ minimum $(10^{{-4}} \AA)$")
+
+    fig.tight_layout()
+    return fig
+
+
 def plot_volume_temperature(result: AnisotropicQHAResult) -> Any:
     """Return pyplot of equilibrium volume vs temperature."""
     import matplotlib.pyplot as plt
