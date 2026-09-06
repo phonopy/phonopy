@@ -782,18 +782,21 @@ window.runMermaid = runMermaid;</script>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pinning-the-ridge-penalty-across-the-grid">Pinning the ridge penalty across the grid</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#computing-the-free-energies-with-sscha">Computing the free energies with SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-an-sscha-run-and-its-error">The options of an SSCHA run and its error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gathering-the-runs-into-fph-hdf5">Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-transient">Choosing the transient</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#splitting-the-runs-across-jobs">Splitting the runs across jobs</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-the-free-energies-to-the-analysis">Supplying the free energies to the analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-sscha-sweep-script">Appendix: the SSCHA sweep script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-gather-script">Appendix: the gather script</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-script">The script</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-spreading-the-sweep-over-a-cluster">Appendix: spreading the sweep over a cluster</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
 </ul>
             </nav>
         </div>
@@ -1561,9 +1564,11 @@ differs comes after it: the MLPs and the free energies,</p>
     DS([&quot;aniso_qha_dataset.hdf5&lt;br/&gt;cells, U, F_el,&lt;br/&gt;harmonic force constants&quot;])
     DS --&gt; DISP[&quot;thermal displacements&lt;br/&gt;one shared draw of&lt;br/&gt;standard normals&quot;]
     DISP --&gt; CALCT{{&quot;calculator forces&quot;}}
-    CALCT --&gt; DEV[&quot;train one MLP&lt;br/&gt;per grid point&quot;]
+    CALCT --&gt; TR([&quot;merged.yaml&lt;br/&gt;per grid point&quot;])
+    TR --&gt; DEV[&quot;train one MLP&lt;br/&gt;per grid point&quot;]
     DEV --&gt; MLP([&quot;polymlp.yaml&lt;br/&gt;per grid point&quot;])
     MLP --&gt; SSCHA[&quot;SSCHA&lt;br/&gt;per grid point and temperature&quot;]
+    TR --&gt; SSCHA
     SSCHA --&gt; FE([&quot;F_ph(T) per&lt;br/&gt;grid point&quot;])
     </pre><p>and the analysis they meet in:</p>
 <pre  class="mermaid">
@@ -1640,11 +1645,10 @@ of every atom.</p>
 <p>Four steps, once the dataset of step 3 exists. The harmonic force constants
 it carries are what set the widths of the draw.</p>
 <ol class="arabic simple">
-<li><p>Pick temperatures covering the range you want, and add one point above
-that range. An MLP tends to be poor outside the range it was trained on.
-Script 5 below trains at 0, 100, 250 and 400 K. Script 7 then analyses up
-to 400 K, and the finite difference consumes that top point, so the
-reported results stop at 390 K and stay inside the trained range.</p></li>
+<li><p>Pick temperatures covering the temperatures script 7 will run. An MLP
+tends to be poor outside the range it was trained on. Script 5 below
+trains at 0, 100, 250 and 400 K, and script 7 runs up to 400 K, so every
+SSCHA run stays inside the trained range.</p></li>
 <li><p>Generate the displacements with the script below. It reads the harmonic
 force constants from the dataset of step 3, and uses one draw of standard
 normals at every grid point; see <a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">Sharing one draw of standard normals</span></a>.</p></li>
@@ -1784,7 +1788,8 @@ over one file, leaving only the last one:</p>
 </pre></div>
 </div>
 <p>Script 7 reads the MLPs back from <code class="docutils literal notranslate"><span class="pre">train/grid-NNN/polymlp.yaml</span></code>, which is where
-this puts them.</p>
+this puts them, and the cell and the starting force constants from the
+<code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code> beside them.</p>
 <p>The displacements are drawn at random, so a training set of a given size is
 one draw among many. A second draw of the same size would give a different
 training set, and with it a different MLP and different results downstream.</p>
@@ -1834,8 +1839,10 @@ therefore be extended, or generated in blocks, with
 <code class="docutils literal notranslate"><span class="pre">draw_standard_normals(...,</span> <span class="pre">first_snapshot=N)</span></code>.</p>
 <p>A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
 not promise that <code class="docutils literal notranslate"><span class="pre">Generator</span></code> distribution methods give the same stream across
-its own versions (NEP 19). <strong>Save the <span class="math notranslate nohighlight">\(\xi\)</span> themselves.</strong> Script 5 does
-that, writing one <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> per temperature beside the training sets.</p>
+its own versions
+(<a class="reference external" href="https://numpy.org/neps/nep-0019-rng-policy.html">NEP 19</a>). <strong>Save the
+<span class="math notranslate nohighlight">\(\xi\)</span> themselves.</strong> Script 5 does that, writing one <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> per
+temperature beside the training sets.</p>
 <p>Read one back with <code class="docutils literal notranslate"><span class="pre">np.load</span></code> and hand <code class="docutils literal notranslate"><span class="pre">(ii,</span> <span class="pre">ij)</span></code> to
 <code class="docutils literal notranslate"><span class="pre">run(standard_normals=...)</span></code>, or to
 <code class="docutils literal notranslate"><span class="pre">draw_standard_normals(...,</span> <span class="pre">first_snapshot=N)</span></code> as the block already drawn.</p>
@@ -1985,27 +1992,70 @@ wrong.</p>
 <a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">SSCHA</span></a>, computed from force constants that change with
 temperature. It is no longer the
 harmonic expression of “The free energy” above.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> of step 3 is used as it is. Script 7, listed in
-<a class="reference internal" href="#anisotropic-qha-sweep-script"><span class="std std-ref">the appendix</span></a> at the end of this page,
-makes one SSCHA run at every grid point and every temperature. Save it as
-<code class="docutils literal notranslate"><span class="pre">script7.py</span></code>. Each run starts from the harmonic force constants the dataset
-carries. With no options it runs the whole grid and writes <code class="docutils literal notranslate"><span class="pre">sscha.hdf5</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">-a</span></code> turns that into the <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code> the analysis reads:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script7.py<span class="w"> </span>-v
-%<span class="w"> </span>python<span class="w"> </span>script7.py<span class="w"> </span>-a
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> computes the free energy at one (temperature, grid point)
+pair, from that grid point’s own training set and MLP. Script 7 below runs the
+temperatures of one grid point, and script 8, listed in <a class="reference internal" href="#anisotropic-qha-gather-script"><span class="std std-ref">the appendix</span></a> at the end of this page, gathers what the runs
+wrote. Save them as <code class="docutils literal notranslate"><span class="pre">script7.sh</span></code> and <code class="docutils literal notranslate"><span class="pre">script8.py</span></code>. The axial thermal expansions
+are computed from the free energies of all the pairs.</p>
+<p>The temperatures <strong>must be decided before the first SSCHA run</strong>, since the
+gather places every run on one temperature grid. The two scripts carry
+0 to 400 K in 10 K steps. These 41 temperatures over the 5 x 5 lattice grid of
+step 1 are 1,025 runs.</p>
+<p><span class="math notranslate nohighlight">\(a(T)\)</span> and <span class="math notranslate nohighlight">\(c(T)\)</span> are obtained by minimizing the free-energy
+surface at each temperature. The axial expansions then come from an Einstein
+fit of <span class="math notranslate nohighlight">\(a(T)\)</span> and <span class="math notranslate nohighlight">\(c(T)\)</span> over the whole temperature range,
+described in <a class="reference internal" href="#anisotropic-qha-sscha-analysis"><span class="std std-ref">running the analysis</span></a>. A temperature at the end of that range is
+not interpolated, so it is recommended to run above the highest temperature to
+report.</p>
+<p>One SSCHA run reads <code class="docutils literal notranslate"><span class="pre">train/grid-NNN/merged.yaml</span></code> for the cell and
+<code class="docutils literal notranslate"><span class="pre">train/grid-NNN/polymlp.yaml</span></code> for the forces, and writes what every iteration
+sampled to its own file. Script 7 is one grid point at every temperature, which
+is the unit a job usually gets:</p>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">Script 7 – the SSCHA runs of one grid point</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1"># One grid point at every temperature:  ./script7.sh 13</span>
+<span class="nb">set</span><span class="w"> </span>-e
+<span class="nv">g</span><span class="o">=</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">'%03d'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$1</span><span class="s2">"</span><span class="k">)</span><span class="w">  </span><span class="c1"># 13 -&gt; 013</span>
+
+<span class="k">for</span><span class="w"> </span>t<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">0</span>..400..10<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span>phonopy-mlpsscha<span class="w"> </span><span class="s2">"train/grid-</span><span class="nv">$g</span><span class="s2">/merged.yaml"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--mlp<span class="w"> </span><span class="s2">"train/grid-</span><span class="nv">$g</span><span class="s2">/polymlp.yaml"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-t<span class="w"> </span><span class="s2">"</span><span class="nv">$t</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--snapshots<span class="w"> </span><span class="m">2000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--iterations<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--mesh<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--random-seed<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-o<span class="w"> </span><span class="s2">"sscha-g</span><span class="nv">$g</span><span class="s2">-t</span><span class="si">${</span><span class="nv">t</span><span class="si">}</span><span class="s2">K.hdf5"</span>
+<span class="k">done</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">-v</span></code> lists the iterations of every run. The transient is chosen from that
-list, so the first sweep is worth running with it; <code class="docutils literal notranslate"><span class="pre">-vv</span></code> adds the
-force-constant fit.</p>
-<p>Sampling and averaging are separate steps whichever way the runs are made.
-The averaging is where the transient is chosen, and doing it apart means
-choosing again costs a second of arithmetic rather than the whole sweep.</p>
-<p>The constants at the top set the run and what its averaging leaves out.</p>
-<p><code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code> is how many supercells each SSCHA iteration draws, 2000 in the
-script against phonopy’s own 1000. Each one is an MLP evaluation, which makes
+</div>
+<p>The argument is the grid point, numbered from 1 as the directories are. A run
+reads those two files and nothing else: <code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> is read only
+by the gather, for the lattice lengths it places the runs by.</p>
+<p>The force constants a run starts from are those of <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>, which
+phonopy fits with symfc to the training displacements of all four temperatures.
+They are not the harmonic force constants of step 2: the training set was drawn
+at 0, 100, 250 and 400 K, so the fit already carries some of the thermal
+displacement. How far they sit from the self-consistent force constants of a
+given temperature is what <a class="reference internal" href="#anisotropic-qha-transient"><span class="std std-ref">choosing the transient</span></a> reads off the listing.</p>
+<p><a class="reference internal" href="#anisotropic-qha-gather"><span class="std std-ref">Gathering the runs</span></a> below covers how the calls
+are spread over jobs and how script 8 puts them back together. It is worth
+making one of them by hand first, with <code class="docutils literal notranslate"><span class="pre">-v</span></code> added, which lists its iterations.
+The transient is chosen from that listing, and <code class="docutils literal notranslate"><span class="pre">-vv</span></code> adds the force-constant
+fit.</p>
+<p>Sampling and averaging are separate steps. The averaging is where the
+transient is chosen, and doing it apart means choosing again costs a second of
+arithmetic rather than the whole sweep.</p>
+</section>
+<section id="the-options-of-an-sscha-run-and-its-error">
+<h3>The options of an SSCHA run and its error<a class="headerlink" href="#the-options-of-an-sscha-run-and-its-error" title="Link to this heading">#</a></h3>
+<p>The options set what one SSCHA run samples and what its averaging leaves out.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> is how many supercells each SSCHA iteration draws, 2000 in
+script 7 against phonopy’s own 1000. Each one is an MLP evaluation, which makes
 it the main cost of the step.</p>
-<p><code class="docutils literal notranslate"><span class="pre">ITERATIONS</span></code> is how many iterations each run makes, 16 against phonopy’s 10.
+<p><code class="docutils literal notranslate"><span class="pre">--iterations</span></code> is how many iterations each run makes, 16 against phonopy’s 10.
 The early ones drive the force constants to self-consistency, and they are the
 run’s transient.</p>
 <p>After the transient the iterations do not settle on a value. Each one refits
@@ -2014,15 +2064,15 @@ stops shrinking, and the free energies scatter about a fixed point instead of
 approaching one. Every iteration past the transient is therefore an
 independent sample of the free energy, and averaging them is what improves the
 estimate.</p>
-<p><code class="docutils literal notranslate"><span class="pre">MESH</span></code> is the mesh the harmonic part of the SSCHA free energy is sampled on,
+<p><code class="docutils literal notranslate"><span class="pre">--mesh</span></code> is the mesh the harmonic part of the SSCHA free energy is sampled on,
 and matching it to the <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> of the analysis keeps one sampling through the
-calculation. <code class="docutils literal notranslate"><span class="pre">SEED</span></code> fixes the whole run: iteration <em>i</em> draws from
-<code class="docutils literal notranslate"><span class="pre">SeedSequence([SEED,</span> <span class="pre">i])</span></code>, so the run is reproducible while the iterations stay
+calculation. <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code> fixes the whole run: iteration <em>i</em> draws from
+<code class="docutils literal notranslate"><span class="pre">SeedSequence([seed,</span> <span class="pre">i])</span></code>, so the run is reproducible while the iterations stay
 independent.</p>
-<p>A run stores every iteration and averages none of them. <code class="docutils literal notranslate"><span class="pre">-a</span></code> takes the mean
+<p>A run stores every iteration and averages none of them. Script 8 takes the mean
 over the iterations after the transient, one of them by default, and
 <code class="docutils literal notranslate"><span class="pre">--transient</span></code> sets how many. Choosing another is a second gather and costs no
-sampling, and <code class="docutils literal notranslate"><span class="pre">--transient</span></code> on a run marks its log alone.</p>
+sampling, and <code class="docutils literal notranslate"><span class="pre">--transient</span></code> on a run marks its listing alone.</p>
 <p>The error of one iteration is the standard error of the mean of the anharmonic
 term over that iteration’s snapshots,</p>
 <div class="math notranslate nohighlight">
@@ -2033,39 +2083,74 @@ term over that iteration’s snapshots,</p>
 displaced supercell of that iteration, per primitive cell, written out in
 Eq. <a class="reference internal" href="mlp-sscha.html#equation-eq-sscha-anharmonic">(1)</a> of <a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">SSCHA</span></a>.
 <span class="math notranslate nohighlight">\(\bar{E}^\mathrm{anh}\)</span> is the mean over the <span class="math notranslate nohighlight">\(N\)</span> snapshots, and
-<span class="math notranslate nohighlight">\(N\)</span> is <code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code>.</p>
+<span class="math notranslate nohighlight">\(N\)</span> is <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>.</p>
 <p>The iterations are independent draws, so the error of their mean is</p>
 <div class="math notranslate nohighlight">
 \[e = \frac{1}{m} \sqrt{\sum_{i=1}^{m} e_i^2} = \frac{\sigma}{\sqrt{mN}},\]</div>
-<p>where <span class="math notranslate nohighlight">\(m\)</span> = <code class="docutils literal notranslate"><span class="pre">ITERATIONS</span></code> - <code class="docutils literal notranslate"><span class="pre">transient</span></code>. The second form holds when the
-<span class="math notranslate nohighlight">\(\sigma_i\)</span> are alike, with <span class="math notranslate nohighlight">\(\sigma\)</span> their common value.
+<p>where <span class="math notranslate nohighlight">\(m\)</span> = <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> - <code class="docutils literal notranslate"><span class="pre">--transient</span></code>. The second form holds when
+the <span class="math notranslate nohighlight">\(\sigma_i\)</span> are alike, with <span class="math notranslate nohighlight">\(\sigma\)</span> their common value.
 <span class="math notranslate nohighlight">\(mN\)</span> is how many supercells the run evaluates.</p>
 <p>The error depends on that product (<span class="math notranslate nohighlight">\(mN\)</span>) alone, so it says nothing about
-how to split the cost between <code class="docutils literal notranslate"><span class="pre">ITERATIONS</span></code> and <code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code>. Two other things
-settle that split. <code class="docutils literal notranslate"><span class="pre">ITERATIONS</span></code> has to exceed the transient with samples left
-to average, and the log shows how long the transient is. Each iteration fits
-its force constants from its own <code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code> supercells, so a small
-<code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code> leaves every iteration’s force constants noisy however many
+how to split the cost between <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> and <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>. Two other
+things settle that split. <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> has to exceed the transient with
+samples left to average, and the listing shows how long the transient is. Each
+iteration fits its force constants from its own <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> supercells, so a
+small <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> leaves every iteration’s force constants noisy however many
 iterations follow.</p>
-<p>It is recommended to give the budget to <code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code>, and to raise
-<code class="docutils literal notranslate"><span class="pre">ITERATIONS</span></code> only until the transient is cleared with samples to spare. The
-two buy the same error, and only <code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code> improves the force constants that
-everything other than the free energy is computed from.</p>
+<p>It is recommended to give the budget to <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>, and to raise
+<code class="docutils literal notranslate"><span class="pre">--iterations</span></code> only until the transient is cleared with samples to spare. The
+two buy the same error, and only <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> improves the force constants
+that everything other than the free energy is computed from.</p>
 <p>Each <span class="math notranslate nohighlight">\(e_i\)</span> holds its own iteration’s force constants fixed, so <span class="math notranslate nohighlight">\(e\)</span>
 counts the sampling of the snapshots alone. The force constants were fitted
 from a sample as well, and that variation appears as scatter of the kept
 iterations about their mean, which is the column <code class="docutils literal notranslate"><span class="pre">-v</span></code> prints. Iterations that
 scatter by about their own <span class="math notranslate nohighlight">\(e_i\)</span> say that <span class="math notranslate nohighlight">\(e\)</span> is the whole of it.</p>
 </section>
+<section id="gathering-the-runs-into-fph-hdf5">
+<span id="anisotropic-qha-gather"></span><h3>Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code><a class="headerlink" href="#gathering-the-runs-into-fph-hdf5" title="Link to this heading">#</a></h3>
+<p>One SSCHA run is minutes with the lightest descriptor and longer with a heavy
+one, and the 1,025 of them are independent of each other, so they can be split
+over processes, nodes or jobs however is convenient.
+<a class="reference internal" href="#anisotropic-qha-distributed"><span class="std std-ref">Spreading the sweep over a cluster</span></a> is one
+way. The same <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code> draws the same supercells, so a run does the same
+sampling wherever it is made and however often it is repeated;
+<a class="reference internal" href="#anisotropic-qha-reproducing"><span class="std std-ref">what a rerun reproduces</span></a> says where that
+stops.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>./script7.sh<span class="w"> </span><span class="m">13</span>
+Wrote<span class="w"> </span>sscha-g013-t0K.hdf5
+Wrote<span class="w"> </span>sscha-g013-t10K.hdf5
+...
+</pre></div>
+</div>
+<p>The gather places each run at the nearest of its <code class="docutils literal notranslate"><span class="pre">TEMPERATURES</span></code>. A submitting
+script can therefore carry its own temperatures, since one that is off by
+rounding still lands on the temperature the gather expects.</p>
+<p>Sampling writes one <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code> per run. Averaging writes <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>,
+which is the file the analysis reads.</p>
+<p>The two are different types, not two spellings of one. A <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code>
+file holds an <code class="docutils literal notranslate"><span class="pre">SSCHARun</span></code>, every iteration and no average, and is what another
+transient is taken from. <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code> holds <code class="docutils literal notranslate"><span class="pre">SSCHAFreeEnergies</span></code>, the averages
+and the transient they were taken with. Handing the analysis a run stops with
+a message about its type, rather than averaging it over iterations nobody
+chose.</p>
+<p>Script 8 gathers the <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code> files into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script8.py
+Wrote<span class="w"> </span>fph.hdf5<span class="w"> </span>from<span class="w"> </span><span class="m">1025</span><span class="w"> </span>file<span class="o">(</span>s<span class="o">)</span>
+</pre></div>
+</div>
+<p>Each file is placed by the lattice lengths and the temperature it carries
+rather than by its name, so the order they are gathered in does not matter.</p>
+</section>
 <section id="choosing-the-transient">
-<h3>Choosing the transient<a class="headerlink" href="#choosing-the-transient" title="Link to this heading">#</a></h3>
+<span id="anisotropic-qha-transient"></span><h3>Choosing the transient<a class="headerlink" href="#choosing-the-transient" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">--transient</span></code> sets how many iterations are left out of the averages. The
-default is <code class="docutils literal notranslate"><span class="pre">DEFAULT_TRANSIENT</span></code>, 1. Iteration 1 uses the harmonic force
-constants of step 2, so its free energy is that of those force constants and
-not of self-consistent ones.</p>
+default is <code class="docutils literal notranslate"><span class="pre">DEFAULT_TRANSIENT</span></code>, 1. Iteration 1 uses the force constants fitted
+to <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>, so its free energy is that of those force constants and not
+of self-consistent ones.</p>
 <p>How long the transient is depends on the system. It lasts until the force
 constants reach self-consistency, and that takes longer the further the
-harmonic force constants start from them. The default of 1 is a floor, not a
+starting force constants sit from them. The default of 1 is a floor, not a
 measurement.</p>
 <p><code class="docutils literal notranslate"><span class="pre">-v</span></code> prints each iteration’s distance from the mean of the kept ones, divided
 by that iteration’s own error. An iteration past the transient gives about 1,
@@ -2083,58 +2168,19 @@ the iteration was still approaching that point.</p>
 </pre></div>
 </div>
 <p>Iteration 2 above gives 4.1, so <code class="docutils literal notranslate"><span class="pre">--transient</span> <span class="pre">2</span></code> drops it. Raise <code class="docutils literal notranslate"><span class="pre">--transient</span></code>
-until every kept iteration is within a few units. Check the highest
-temperature as well as the lowest, since the distance between the harmonic and
-the self-consistent force constants grows with temperature.</p>
-</section>
-<section id="splitting-the-runs-across-jobs">
-<h3>Splitting the runs across jobs<a class="headerlink" href="#splitting-the-runs-across-jobs" title="Link to this heading">#</a></h3>
-<p>One SSCHA run is minutes with the lightest descriptor and longer with a heavy
-one. Multiplied by the grid points and the temperatures, the step comes to
-hours or days. Spreading the runs over processes, nodes or jobs is therefore
-worth the trouble.</p>
-<p>Nothing constrains how they are spread. A run’s randomness comes from <code class="docutils literal notranslate"><span class="pre">SEED</span></code>
-and the iteration number alone, so a run gives the same numbers wherever it
-sits in the two loops and whenever it is made. Either loop can be sliced, or
-both.</p>
-<p><code class="docutils literal notranslate"><span class="pre">-g</span></code> and <code class="docutils literal notranslate"><span class="pre">-t</span></code> run one grid point at one temperature, and write that one value
-to its own file. The two go together, and one without the other stops the
-script. The grid point is numbered from 1, and the temperature is in K, taken
-to the nearest of <code class="docutils literal notranslate"><span class="pre">TEMPERATURES</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script7.py<span class="w"> </span>-g<span class="w"> </span><span class="m">13</span><span class="w"> </span>-t<span class="w"> </span><span class="m">250</span>
-<span class="o">(</span><span class="m">013</span>,<span class="w"> </span><span class="m">250</span>.0<span class="o">)</span>
-Wrote<span class="w"> </span>sscha-g013-t250K.hdf5
+until every kept iteration is within a few units. Check the lowest temperature
+as well as the highest: the starting force constants are one fit over the whole
+training range, so they sit furthest from the self-consistent ones at its two
+ends.</p>
+<p>The run files hold every iteration and no average. Script 8 computes the
+averages, leaving out the first <code class="docutils literal notranslate"><span class="pre">--transient</span></code> iterations of each run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script8.py<span class="w"> </span>--transient<span class="w"> </span><span class="m">2</span>
 </pre></div>
 </div>
-<p>Sampling writes <code class="docutils literal notranslate"><span class="pre">sscha*.hdf5</span></code>, one file per run here and one for the whole
-grid when the grid is run in one process. Averaging writes <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>, which
-is the file the analysis reads.</p>
-<p>The two are different types, not two spellings of one. A <code class="docutils literal notranslate"><span class="pre">sscha*.hdf5</span></code> file
-holds <code class="docutils literal notranslate"><span class="pre">SSCHAIterations</span></code>, every iteration and no average, and is what another
-transient is taken from. <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code> holds <code class="docutils literal notranslate"><span class="pre">SSCHAFreeEnergies</span></code>, the averages
-and the transient they were taken with. Handing the analysis a <code class="docutils literal notranslate"><span class="pre">sscha*.hdf5</span></code>
-file stops with a message about its type, rather than averaging it over
-iterations nobody chose.</p>
-<p>One such call is one job. <code class="docutils literal notranslate"><span class="pre">-a</span></code> gathers the <code class="docutils literal notranslate"><span class="pre">sscha*.hdf5</span></code> files into
-<code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script7.py<span class="w"> </span>-a
-Wrote<span class="w"> </span>fph.hdf5<span class="w"> </span>from<span class="w"> </span><span class="m">1025</span><span class="w"> </span>file<span class="o">(</span>s<span class="o">)</span>
-</pre></div>
-</div>
-<p>Each file is placed by the lattice lengths and the temperature it carries
-rather than by its name, so the order they are gathered in does not matter. A
-missing value stops the write and is named, since the analysis would otherwise
-read a gap as a zero.</p>
-<p><code class="docutils literal notranslate"><span class="pre">-a</span></code> averages the iterations each file carries rather than reading the
-averages the runs wrote, so <code class="docutils literal notranslate"><span class="pre">--transient</span></code> applies to the whole grid at once:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script7.py<span class="w"> </span>-a<span class="w"> </span>--transient<span class="w"> </span><span class="m">2</span>
-</pre></div>
-</div>
-<p>That costs no sampling, so gathering the same files again with another value
-is how one transient is compared with another. The runs gathered into one file
-have to have made the same number of iterations, since one array cannot hold
-runs of two lengths, and one grid point and temperature covered by two files
-stops the write.</p>
+<p>Trying <code class="docutils literal notranslate"><span class="pre">--transient</span> <span class="pre">3</span></code> will simply overwrite the existing <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>.</p>
+<p>The runs gathered into one file must all have made the same number of
+iterations. Averaging over different numbers would weight the grid unevenly,
+so the gather stops and names the numbers it found.</p>
 </section>
 <section id="supplying-the-free-energies-to-the-analysis">
 <h3>Supplying the free energies to the analysis<a class="headerlink" href="#supplying-the-free-energies-to-the-analysis" title="Link to this heading">#</a></h3>
@@ -2179,12 +2225,14 @@ phonon_free_energies<span class="w"> </span>argument<span class="w"> </span>of<s
 </pre></div>
 </div>
 <p>Its grid points carry the cells, <span class="math notranslate nohighlight">\(U\)</span> and the electronic states, but no
-harmonic force constants. Script 7 therefore cannot use such a dataset, having
-nothing to start the SSCHA runs
-from.</p>
+harmonic force constants. The SSCHA runs of step 5 read <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code> and the
+gather reads only the cells, so both are content with such a dataset. What it
+cannot do is the draw of step 5: script 5 takes the widths of the thermal
+distribution from those harmonic force constants, and there are none
+here.</p>
 </section>
 <section id="running-the-analysis">
-<h3>Running the analysis<a class="headerlink" href="#running-the-analysis" title="Link to this heading">#</a></h3>
+<span id="anisotropic-qha-sscha-analysis"></span><h3>Running the analysis<a class="headerlink" href="#running-the-analysis" title="Link to this heading">#</a></h3>
 <p>The file is given to the analysis with <code class="docutils literal notranslate"><span class="pre">--phonon-free-energies</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--phonon-free-energies<span class="w"> </span>fph.hdf5
 </pre></div>
@@ -2247,329 +2295,56 @@ closest of what is left. If nothing is left, the command stops rather than
 returning a curve of the wrong shape.</p>
 </section>
 </section>
-<section id="appendix-the-sscha-sweep-script">
-<span id="anisotropic-qha-sweep-script"></span><h2>Appendix: the SSCHA sweep script<a class="headerlink" href="#appendix-the-sscha-sweep-script" title="Link to this heading">#</a></h2>
-<p>The script <a class="reference internal" href="#anisotropic-qha-sscha"><span class="std std-ref">the SSCHA step</span></a> calls. With no options it
-runs every grid point and every temperature and writes <code class="docutils literal notranslate"><span class="pre">sscha.hdf5</span></code>. <code class="docutils literal notranslate"><span class="pre">-g</span></code> and
-<code class="docutils literal notranslate"><span class="pre">-t</span></code> run one of them and write it to its own file, which is how the sweep is
-spread over jobs. <code class="docutils literal notranslate"><span class="pre">-a</span></code> gathers what the runs wrote into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>.
-<code class="docutils literal notranslate"><span class="pre">--transient</span></code> says how many iterations at the start of each run to leave out
-of the averages, and applies to a gather as well as to a run. <code class="docutils literal notranslate"><span class="pre">-v</span></code> lists each
-iteration with its departure from the mean of the kept ones, which is what
-the transient is chosen from; <code class="docutils literal notranslate"><span class="pre">-vv</span></code> adds the force-constant fit.</p>
-<div class="literal-block-wrapper docutils container" id="id7">
-<div class="code-block-caption"><span class="caption-text">Script 7 – SSCHA at every grid point and temperature</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
+<section id="appendix-the-gather-script">
+<span id="anisotropic-qha-gather-script"></span><h2>Appendix: the gather script<a class="headerlink" href="#appendix-the-gather-script" title="Link to this heading">#</a></h2>
+<p>What <a class="reference internal" href="#anisotropic-qha-gather"><span class="std std-ref">gathering the runs</span></a> calls. It reads the
+dataset of step 3 for the lattice lengths it places the runs by, and nothing
+else of it. <code class="docutils literal notranslate"><span class="pre">--transient</span></code> says how many iterations at the start of each run to
+leave out of the averages.</p>
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-text">Script 8 – the runs gathered into the free energies of the analysis</span><a class="headerlink" href="#id8" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.mlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyMLP</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.free_energy_io</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">SSCHAFreeEnergies</span><span class="p">,</span>
-    <span class="n">SSCHAIterations</span><span class="p">,</span>
-    <span class="n">read_sscha_iterations_hdf5</span><span class="p">,</span>
+    <span class="n">assemble_sscha_free_energies</span><span class="p">,</span>
     <span class="n">write_free_energies_hdf5</span><span class="p">,</span>
-    <span class="n">write_sscha_iterations_hdf5</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPSSCHA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_run_hdf5</span>
 
 <span class="n">DATASET</span> <span class="o">=</span> <span class="s2">"aniso_qha_dataset.hdf5"</span>
-<span class="n">MLP</span> <span class="o">=</span> <span class="s2">"train/grid-</span><span class="si">{:03d}</span><span class="s2">/polymlp.yaml"</span>  <span class="c1"># grid point, numbered from 1</span>
-<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># one extra point for finite diff</span>
-<span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">2000</span>
-<span class="n">ITERATIONS</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="n">MESH</span> <span class="o">=</span> <span class="mf">200.0</span>
-<span class="n">SEED</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># 0 to 400 K in 10 K steps</span>
 <span class="n">DEFAULT_TRANSIENT</span> <span class="o">=</span> <span class="mi">1</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">report_iterations</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">transient</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""List the iterations, and how far each sits from the mean of the kept ones.</span>
-
-<span class="sd">    The departure is measured in the iteration's own error, so it reads the</span>
-<span class="sd">    same whatever the system: an iteration standing well outside the scatter</span>
-<span class="sd">    of the others has not reached self-consistency and belongs to the</span>
-<span class="sd">    transient.</span>
-
-<span class="sd">    """</span>
-    <span class="n">kept</span> <span class="o">=</span> <span class="n">history</span><span class="p">[</span><span class="n">transient</span><span class="p">:]</span>
-    <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">kept</span><span class="p">])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"  iter       F [meV]   error [meV]   (F - mean)/error"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">history</span><span class="p">):</span>
-        <span class="n">mark</span> <span class="o">=</span> <span class="s2">"*"</span> <span class="k">if</span> <span class="n">position</span> <span class="o">&lt;</span> <span class="n">transient</span> <span class="k">else</span> <span class="s2">" "</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">h</span><span class="o">.</span><span class="n">iteration</span><span class="si">:</span><span class="s2">4d</span><span class="si">}{</span><span class="n">mark</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">12.4f</span><span class="si">}</span><span class="s2"> "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">13.4f</span><span class="si">}</span><span class="s2"> "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mean</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span><span class="si">:</span><span class="s2">+18.1f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-            <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="n">worst</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">h</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span><span class="p">)</span>
-    <span class="n">sigma</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">worst</span><span class="o">.</span><span class="n">free_energy</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">worst</span><span class="o">.</span><span class="n">free_energy_error</span>
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"  * left out as the transient. Of the kept iterations the furthest "</span>
-        <span class="sa">f</span><span class="s2">"from the mean is </span><span class="si">{</span><span class="n">worst</span><span class="o">.</span><span class="n">iteration</span><span class="si">}</span><span class="s2">, at </span><span class="si">{</span><span class="n">sigma</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> sigma."</span><span class="p">,</span>
-        <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="s2">"  A kept iteration far outside the scatter of the rest is still in "</span>
-        <span class="s2">"the transient: raise --transient and look again."</span><span class="p">,</span>
-        <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">average</span><span class="p">(</span><span class="n">iterations</span><span class="p">,</span> <span class="n">transient</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Return the mean over the iterations after the transient."""</span>
-    <span class="k">return</span> <span class="n">iterations</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">transient</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">combine</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">transient</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Return the error of that mean, over the iterations after the transient.</span>
-
-<span class="sd">    The iterations are independent draws, so their errors add in quadrature</span>
-<span class="sd">    rather than being averaged.</span>
-
-<span class="sd">    """</span>
-    <span class="n">kept</span> <span class="o">=</span> <span class="n">errors</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">transient</span><span class="p">:]</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">kept</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">write_sampled</span><span class="p">(</span><span class="n">temperatures</span><span class="p">,</span> <span class="n">lattice_lengths</span><span class="p">,</span> <span class="n">terms</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Write what the runs sampled, one value per iteration."""</span>
-    <span class="n">free_energies</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">potential</span><span class="p">,</span> <span class="n">harmonic_potential</span> <span class="o">=</span> <span class="n">terms</span>
-    <span class="n">write_sscha_iterations_hdf5</span><span class="p">(</span>
-        <span class="n">SSCHAIterations</span><span class="p">(</span>
-            <span class="n">temperatures</span><span class="p">,</span>
-            <span class="n">free_energies</span><span class="p">,</span>
-            <span class="n">errors</span><span class="p">,</span>
-            <span class="n">potential</span><span class="p">,</span>
-            <span class="n">harmonic_potential</span><span class="p">,</span>
-            <span class="n">reference</span><span class="p">,</span>
-            <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">lattice_lengths</span><span class="p">,</span>
-        <span class="p">),</span>
-        <span class="n">filename</span><span class="p">,</span>
-    <span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">sscha_free_energy</span><span class="p">(</span>
-    <span class="n">ph</span><span class="p">,</span>
-    <span class="n">mlp</span><span class="p">,</span>
-    <span class="n">temperature</span><span class="p">,</span>
-    <span class="n">force_constants</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">transient</span><span class="o">=</span><span class="n">DEFAULT_TRANSIENT</span><span class="p">,</span>
-    <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Return the iterations of one SSCHA run, in eV per primitive cell.</span>
-
-<span class="sd">    The free energy, its error, and the two ensemble averages the anharmonic</span>
-<span class="sd">    correction is the difference of, one value per iteration; then the energy</span>
-<span class="sd">    of the supercell without displacements the whole is measured from. That</span>
-<span class="sd">    last one is returned twice: as the static energy to put back, and as the</span>
-<span class="sd">    origin the free energy is measured from. They are the same here and need</span>
-<span class="sd">    not be.</span>
-
-<span class="sd">    Every iteration is returned and no averaging is done here, so that</span>
-<span class="sd">    another transient can be taken later without sampling again. ``transient``</span>
-<span class="sd">    is used for the log alone.</span>
-
-<span class="sd">    ``force_constants`` starts the iteration from a set of one's own. Without</span>
-<span class="sd">    it, it starts from the set ``ph`` carries. ``log_level`` is passed to</span>
-<span class="sd">    MLPSSCHA, and from 1 the iterations are listed here as well.</span>
-
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">force_constants</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">ph</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">replicate</span><span class="p">()</span>
-        <span class="n">ph</span><span class="o">.</span><span class="n">force_constants</span> <span class="o">=</span> <span class="n">force_constants</span>
-    <span class="n">sscha</span> <span class="o">=</span> <span class="n">MLPSSCHA</span><span class="p">(</span>
-        <span class="n">ph</span><span class="p">,</span>
-        <span class="n">mlp</span><span class="p">,</span>
-        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
-        <span class="n">number_of_snapshots</span><span class="o">=</span><span class="n">SNAPSHOTS</span><span class="p">,</span>
-        <span class="n">max_iterations</span><span class="o">=</span><span class="n">ITERATIONS</span><span class="p">,</span>
-        <span class="n">mesh</span><span class="o">=</span><span class="n">MESH</span><span class="p">,</span>
-        <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
-        <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-    <span class="n">history</span> <span class="o">=</span> <span class="n">sscha</span><span class="o">.</span><span class="n">history</span>
-    <span class="k">if</span> <span class="n">log_level</span><span class="p">:</span>
-        <span class="n">report_iterations</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">transient</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">free_energy_error</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">potential_energy</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">harmonic_potential_energy</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]),</span>
-        <span class="n">sscha</span><span class="o">.</span><span class="n">supercell_energy</span> <span class="o">/</span> <span class="n">sscha</span><span class="o">.</span><span class="n">n_cell</span><span class="p">,</span>
-    <span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">run_all</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="n">DEFAULT_TRANSIENT</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Run all and write it to file."""</span>
-    <span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">ITERATIONS</span><span class="p">)</span>
-    <span class="n">free_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">harmonic_potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
-        <span class="n">ph</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
-        <span class="n">mlp</span> <span class="o">=</span> <span class="n">PhonopyMLP</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">MLP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="p">(</span>
-                <span class="n">free_energies</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span>
-                <span class="n">errors</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span>
-                <span class="n">potential</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span>
-                <span class="n">harmonic_potential</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span>
-                <span class="n">reference</span><span class="p">[</span><span class="n">column</span><span class="p">],</span>
-            <span class="p">)</span> <span class="o">=</span> <span class="n">sscha_free_energy</span><span class="p">(</span>
-                <span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span> <span class="n">transient</span><span class="o">=</span><span class="n">transient</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span>
-            <span class="p">)</span>
-
-    <span class="n">write_sampled</span><span class="p">(</span>
-        <span class="n">TEMPERATURES</span><span class="p">,</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]),</span>
-        <span class="p">(</span><span class="n">free_energies</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">potential</span><span class="p">,</span> <span class="n">harmonic_potential</span><span class="p">),</span>
-        <span class="n">reference</span><span class="p">,</span>
-        <span class="s2">"sscha.hdf5"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">run_one</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">grid_point</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">transient</span><span class="o">=</span><span class="n">DEFAULT_TRANSIENT</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Run one grid point at one temperature and write it to its own file.</span>
-
-<span class="sd">    ``grid_point`` is numbered from 1, as the directories are. ``temperature``</span>
-<span class="sd">    is in K, and the nearest of TEMPERATURES is the one run.</span>
-
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">grid_point</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="sa">f</span><span class="s2">"-g is 1 to </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-    <span class="n">point</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">[</span><span class="n">grid_point</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-    <span class="n">row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TEMPERATURES</span> <span class="o">-</span> <span class="n">temperature</span><span class="p">)))</span>
-    <span class="n">t</span> <span class="o">=</span> <span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">row</span><span class="p">]</span>
-
-    <span class="n">ph</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">to_phonopy</span><span class="p">()</span>
-    <span class="n">mlp</span> <span class="o">=</span> <span class="n">PhonopyMLP</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">MLP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grid_point</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">grid_point</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="o">*</span><span class="n">terms</span><span class="p">,</span> <span class="n">reference</span> <span class="o">=</span> <span class="n">sscha_free_energy</span><span class="p">(</span>
-        <span class="n">ph</span><span class="p">,</span> <span class="n">mlp</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">transient</span><span class="o">=</span><span class="n">transient</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span>
-    <span class="p">)</span>
-
-    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"sscha-g</span><span class="si">{</span><span class="n">grid_point</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-t</span><span class="si">{</span><span class="n">t</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">K.hdf5"</span>
-    <span class="n">write_sampled</span><span class="p">(</span>
-        <span class="n">TEMPERATURES</span><span class="p">[[</span><span class="n">row</span><span class="p">]],</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span>
-        <span class="nb">tuple</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">),</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">reference</span><span class="p">]),</span>
-        <span class="n">filename</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrote </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">assemble</span><span class="p">(</span>
     <span class="n">dataset</span><span class="p">,</span>
     <span class="n">transient</span><span class="o">=</span><span class="n">DEFAULT_TRANSIENT</span><span class="p">,</span>
-    <span class="n">pattern</span><span class="o">=</span><span class="s2">"sscha*.hdf5"</span><span class="p">,</span>
+    <span class="n">pattern</span><span class="o">=</span><span class="s2">"sscha-g*K.hdf5"</span><span class="p">,</span>
     <span class="n">filename</span><span class="o">=</span><span class="s2">"fph.hdf5"</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Gather what the runs wrote, and average it over one transient.</span>
-
-<span class="sd">    The pattern takes the whole-grid sscha.hdf5 of run_all and the per-run</span>
-<span class="sd">    files of run_one alike. Each is placed by the lattice lengths and the</span>
-<span class="sd">    temperature it carries, not by its name; a gap stops the write, and so</span>
-<span class="sd">    does a grid point and temperature covered twice. The averages are taken</span>
-<span class="sd">    here from the iterations the files carry, so --transient covers the whole</span>
-<span class="sd">    grid at once and costs no sampling.</span>
-
-<span class="sd">    """</span>
-    <span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
-    <span class="n">lattice_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">])</span>
+<span class="w">    </span><span class="sd">"""Gather what the runs wrote into the free energies the analysis reads."""</span>
     <span class="n">paths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">paths</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No file matches </span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">read_sscha_iterations_hdf5</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
-    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">part</span><span class="o">.</span><span class="n">n_iterations</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">}</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"The files hold </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span><span class="si">}</span><span class="s2"> iterations. One array cannot "</span>
-            <span class="s2">"carry runs of different lengths, so gather them apart."</span>
-        <span class="p">)</span>
-    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">counts</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
-    <span class="n">free_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">harmonic_potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-
-    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">temperatures</span><span class="p">):</span>
-            <span class="n">row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">TEMPERATURES</span> <span class="o">-</span> <span class="n">t</span><span class="p">)))</span>
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">lengths</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">lattice_lengths</span><span class="p">):</span>
-                <span class="n">column</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lattice_lengths</span> <span class="o">-</span> <span class="n">lengths</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> covers grid point </span><span class="si">{</span><span class="n">column</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> at "</span>
-                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> K, which another file covers "</span>
-                        <span class="s2">"as well. Gather one sweep at a time."</span>
-                    <span class="p">)</span>
-                <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">))</span>
-                <span class="n">free_energies</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">free_energies</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
-                <span class="n">errors</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">errors</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
-                <span class="n">potential</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">potential_energies</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
-                <span class="n">harmonic_potential</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">harmonic_potential_energies</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
-                <span class="n">reference</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">reference_energies</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-
-    <span class="n">located</span> <span class="o">=</span> <span class="n">free_energies</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
-    <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">located</span><span class="p">))</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">first</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"(grid </span><span class="si">{</span><span class="n">c</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> K)"</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> file(s) read, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2"> of "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">located</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> values missing: </span><span class="si">{</span><span class="n">first</span><span class="si">}</span><span class="s2"> ..."</span>
-        <span class="p">)</span>
-
-    <span class="n">write_free_energies_hdf5</span><span class="p">(</span>
-        <span class="n">SSCHAFreeEnergies</span><span class="p">(</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">free_energies</span> <span class="o">=</span> <span class="n">assemble_sscha_free_energies</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">read_sscha_run_hdf5</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">],</span>
             <span class="n">TEMPERATURES</span><span class="p">,</span>
-            <span class="n">average</span><span class="p">(</span><span class="n">free_energies</span><span class="p">,</span> <span class="n">transient</span><span class="p">),</span>
-            <span class="n">errors</span><span class="o">=</span><span class="n">combine</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">transient</span><span class="p">),</span>
-            <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">lattice_lengths</span><span class="p">,</span>
-            <span class="n">reference_energies</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
-            <span class="n">potential_energies</span><span class="o">=</span><span class="n">average</span><span class="p">(</span><span class="n">potential</span><span class="p">,</span> <span class="n">transient</span><span class="p">),</span>
-            <span class="n">harmonic_potential_energies</span><span class="o">=</span><span class="n">average</span><span class="p">(</span><span class="n">harmonic_potential</span><span class="p">,</span> <span class="n">transient</span><span class="p">),</span>
-            <span class="n">transient_iterations</span><span class="o">=</span><span class="n">transient</span><span class="p">,</span>
-        <span class="p">),</span>
-        <span class="n">filename</span><span class="p">,</span>
-    <span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]),</span>
+            <span class="n">transient</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+    <span class="n">write_free_energies_hdf5</span><span class="p">(</span><span class="n">free_energies</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrote </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> file(s)"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--grid-point"</span><span class="p">,</span>
-        <span class="s2">"-g"</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"grid point, numbered from 1 (default: all of them)"</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--temperature"</span><span class="p">,</span>
-        <span class="s2">"-t"</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"temperature in K; the nearest of TEMPERATURES is run "</span>
-        <span class="s2">"(default: all of them)"</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"--assemble"</span><span class="p">,</span>
-        <span class="s2">"-a"</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"gather the sscha*.hdf5 the runs wrote into fph.hdf5"</span><span class="p">,</span>
-    <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">"--transient"</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
@@ -2577,26 +2352,9 @@ the transient is chosen from; <code class="docutils literal notranslate"><span c
         <span class="n">help</span><span class="o">=</span><span class="s2">"how many iterations at the start of a run are its transient "</span>
         <span class="s2">"and are left out of the averages (default: </span><span class="si">%(default)s</span><span class="s2">)"</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">"-v"</span><span class="p">,</span>
-        <span class="s2">"--verbose"</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">"count"</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"log each SSCHA iteration; -vv adds the force-constant fit"</span><span class="p">,</span>
-    <span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-    <span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="n">DATASET</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">assemble</span><span class="p">:</span>
-        <span class="n">assemble</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">transient</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">grid_point</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">run_all</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">transient</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">grid_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">run_one</span><span class="p">(</span>
-            <span class="n">dataset</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">grid_point</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">transient</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="s2">"-g and -t go together."</span><span class="p">)</span>
+    <span class="n">assemble</span><span class="p">(</span><span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="n">DATASET</span><span class="p">),</span> <span class="n">args</span><span class="o">.</span><span class="n">transient</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
@@ -2682,8 +2440,8 @@ merged sets it read, and names the grid points that have no <code class="docutil
 </section>
 <section id="the-script">
 <h3>The script<a class="headerlink" href="#the-script" title="Link to this heading">#</a></h3>
-<div class="literal-block-wrapper docutils container" id="id8">
-<div class="code-block-caption"><span class="caption-text">Script 8 – checking the training displacements</span><a class="headerlink" href="#id8" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id9">
+<div class="code-block-caption"><span class="caption-text">Script 9 – checking the training displacements</span><a class="headerlink" href="#id9" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -2823,6 +2581,87 @@ point. A dataset that is not a tensor grid has <code class="docutils literal not
 pairs have to be given to <code class="docutils literal notranslate"><span class="pre">check_neighbours</span></code> explicitly.</p>
 </section>
 </section>
+<section id="appendix-spreading-the-sweep-over-a-cluster">
+<span id="anisotropic-qha-distributed"></span><h2>Appendix: spreading the sweep over a cluster<a class="headerlink" href="#appendix-spreading-the-sweep-over-a-cluster" title="Link to this heading">#</a></h2>
+<p>The 1,025 runs do not talk to each other, so any split of them is allowed.
+Two are usual.</p>
+<p>One job per grid point runs script 7 with the grid point as its argument: 25
+jobs of 41 runs. One job per (grid point, temperature) is 1,025 jobs of one
+run, which suits a queue with a short time limit. The job is then a template
+with the grid point and the temperature left as placeholders:</p>
+<div class="literal-block-wrapper docutils container" id="id10">
+<div class="code-block-caption"><span class="caption-text">Script 10 – one job per grid point and temperature</span><a class="headerlink" href="#id10" title="Link to this code">#</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=sscha-GRID-TEMP</span>
+<span class="c1">#SBATCH --output=sscha-gGRID-tTEMPK.log</span>
+<span class="nv">grid</span><span class="o">=</span>train/grid-GRID
+
+phonopy-mlpsscha<span class="w"> </span><span class="s2">"</span><span class="nv">$grid</span><span class="s2">/merged.yaml"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--mlp<span class="w"> </span><span class="s2">"</span><span class="nv">$grid</span><span class="s2">/polymlp.yaml"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-t<span class="w"> </span>TEMP<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--snapshots<span class="w"> </span><span class="m">2000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--iterations<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--mesh<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--random-seed<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-o<span class="w"> </span><span class="s2">"sscha-gGRID-tTEMPK.hdf5"</span>
+</pre></div>
+</div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">#SBATCH</span></code> lines are Slurm’s, and the resource lines a site asks for belong
+beside them. Set a name whatever the scheduler. A job read from standard input
+takes the submitting command as its name, and a queue listing of 1,025 jobs
+called <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> says nothing about which run is which.</p>
+<p><code class="docutils literal notranslate"><span class="pre">train/grid-GRID</span></code> is a relative path, so the job has to start in the directory
+the sweep was submitted from. Slurm starts it there. Grid Engine needs
+<code class="docutils literal notranslate"><span class="pre">#$</span> <span class="pre">-cwd</span></code> in the template, and PBS a <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">$PBS_O_WORKDIR</span></code> before the command.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sed</span></code> fills the placeholders in, and <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> reads the job from its standard
+input when it is not given a file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>g<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">001</span>..025<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span>t<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">0</span>..400..10<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span>sed<span class="w"> </span>-e<span class="w"> </span><span class="s2">"s/GRID/</span><span class="nv">$g</span><span class="s2">/g"</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">"s/TEMP/</span><span class="nv">$t</span><span class="s2">/g"</span><span class="w"> </span>job.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sbatch
+<span class="w">    </span><span class="k">done</span>
+<span class="k">done</span>
+</pre></div>
+</div>
+<p>The jobs may be submitted in any order and may finish in any order, and a job
+may be run again. <a class="reference internal" href="#anisotropic-qha-reproducing"><span class="std std-ref">What a rerun reproduces</span></a>
+says why, and where that stops.</p>
+</section>
+<section id="appendix-what-a-rerun-reproduces">
+<span id="anisotropic-qha-reproducing"></span><h2>Appendix: what a rerun reproduces<a class="headerlink" href="#appendix-what-a-rerun-reproduces" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> displaces the supercells of an SSCHA iteration along the
+thermal distribution, and scripts 7 and 10 call it once per (grid point,
+temperature). Script 5 draws its training structures from the thermal
+distribution of the harmonic force constants. Both the command and script 5
+draw through <code class="docutils literal notranslate"><span class="pre">RandomDisplacements</span></code>, which takes its random numbers from NumPy.</p>
+<p>NumPy does not promise the same random numbers from one release to the next
+(<a class="reference external" href="https://numpy.org/neps/nep-0019-rng-policy.html">NEP 19</a>). A machine carrying
+a different NumPy may therefore draw different supercells.</p>
+<p>The supercells of an SSCHA run are a way of averaging. Another draw of the same
+size returns a free energy differing by about the error the run reports.
+Nothing reads the draw a second time, so <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> writes no record of
+it.</p>
+<p>The MLPs are fitted to the structures script 5 drew, so another draw there
+gives another potential. Script 5 writes its draw to <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> beside the
+training sets, and <a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">sharing one draw of standard normals</span></a> says how to read one back.</p>
+<p>On one NumPy, the seed fixes what is drawn. Script 5 passes
+<code class="docutils literal notranslate"><span class="pre">SEED</span> <span class="pre">+</span> <span class="pre">int(temperature)</span></code> to <code class="docutils literal notranslate"><span class="pre">draw_standard_normals</span></code>, so each of its
+temperatures is one reproducible draw. <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> passes
+<code class="docutils literal notranslate"><span class="pre">--random-seed</span></code>, and iteration <em>i</em> of an SSCHA run derives its own seed from
+that and <em>i</em>, as <code class="docutils literal notranslate"><span class="pre">SeedSequence([seed,</span> <span class="pre">i])</span></code>, so the iterations of one run draw
+independently of one another.</p>
+<p>A seeded run therefore draws the same supercells whenever it is made. The
+machine it runs on, when it runs and how many times it has run change nothing,
+so the sweep is safe to spread over a cluster and safe to resubmit.</p>
+<p>A run made without <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code>, or an API call with <code class="docutils literal notranslate"><span class="pre">random_seed=None</span></code>,
+sets no seed. The draw is then a fresh sample every time.</p>
+<p>A rerun writing the same file name replaces that file. A rerun writing another
+name leaves two run files at one (grid point, temperature). Script 8 then stops
+and prints which grid point and temperature has two.</p>
+<p>A run file deleted by mistake stops script 8 as well, and the message lists the
+first few (grid point, temperature) left without a file. Running those points
+again is enough, since a rerun draws the supercells the lost run drew.</p>
+</section>
 </section>
 
 
@@ -2880,18 +2719,21 @@ pairs have to be given to <code class="docutils literal notranslate"><span class
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pinning-the-ridge-penalty-across-the-grid">Pinning the ridge penalty across the grid</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-the-mlp">Validate the MLP</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#computing-the-free-energies-with-sscha">Computing the free energies with SSCHA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-an-sscha-run-and-its-error">The options of an SSCHA run and its error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gathering-the-runs-into-fph-hdf5">Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-transient">Choosing the transient</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#splitting-the-runs-across-jobs">Splitting the runs across jobs</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supplying-the-free-energies-to-the-analysis">Supplying the free energies to the analysis</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-sscha-sweep-script">Appendix: the SSCHA sweep script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-gather-script">Appendix: the gather script</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-script">The script</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-spreading-the-sweep-over-a-cluster">Appendix: spreading the sweep over a cluster</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
 </ul>
   </nav></div>
 
