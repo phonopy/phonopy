@@ -773,14 +773,32 @@ consistently with `internal_energies`. `electronic_structures` and
 `electronic_free_energies` are two ways of giving the same term, so pass one
 or the other.
 
-`phonopy-anisotropic-qha` takes the same thing from a file. Write it with the
-temperatures it was computed on:
+`phonopy-anisotropic-qha` takes the same thing from a file. Write it as an
+`ElectronicFreeEnergies`, which carries the temperatures it was computed on:
 
 ```python
-from phonopy.qha.electron import write_electronic_free_energies_hdf5
+from phonopy.qha.free_energy_io import (
+    ElectronicFreeEnergies,
+    write_free_energies_hdf5,
+)
 
-write_electronic_free_energies_hdf5(temperatures, fe_el, "fel.hdf5")
+write_free_energies_hdf5(
+    ElectronicFreeEnergies(
+        temperatures=temperatures,
+        free_energies=fe_el,
+        # Optional, and what lets the command check the file against the grid
+        # it is used with.
+        lattice_lengths=np.array(
+            [np.linalg.norm(point.cell.cell, axis=1) for point in dataset.grid_points]
+        ),
+    ),
+    "fel.hdf5",
+)
 ```
+
+`write_free_energies_hdf5` writes the phonon terms as well, and the file
+records which term it holds, so reading it back as another one is refused
+rather than silent.
 
 ```bash
 % phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --tmax 1000 --dt 10 \
