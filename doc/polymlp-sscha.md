@@ -419,9 +419,7 @@ across its own versions
 Script 1,
 
 ```python
-normals = rd.draw_standard_normals(
-    SNAPSHOTS, random_seed=SEED + int(temperature)
-)
+normals = rd.draw_standard_normals(SNAPSHOTS, random_seed=SEED + int(temperature))
 np.savez_compressed(
     TRAIN / f"normals-{int(temperature)}K.npz", ii=normals[0], ij=normals[1]
 )
