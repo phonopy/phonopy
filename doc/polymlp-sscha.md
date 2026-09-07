@@ -357,7 +357,7 @@ for t in TEMPERATURES:
 
 merged = {}
 for key in values:
-    # (temperature, structure, ...) -> (structure, temperature, ...)
+    # (temperature, structure, ...) -> (structure x temperature, ...)
     merged[key] = np.concatenate(np.swapaxes(values[key], 0, 1))
 
 phonon = ph.replicate()
