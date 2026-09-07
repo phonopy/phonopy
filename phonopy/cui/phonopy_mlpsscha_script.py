@@ -12,6 +12,10 @@ and the run then starts from force constants fitted to displacements drawn
 at --distance and evaluated by the potential. The potential is a pypolymlp
 file, given with --mlp.
 
+The supercells themselves are not kept, since the hdf5 file holds what was
+computed from them. --save-dataset writes the last iteration's, with the
+forces the potential gave them, as a compressed phonopy.yaml-like file.
+
 """
 
 from __future__ import annotations
@@ -19,9 +23,13 @@ from __future__ import annotations
 from argparse import ArgumentParser, Namespace
 
 import phonopy
+from phonopy import Phonopy
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.sscha.core import MLPSSCHA
 from phonopy.sscha.run import write_sscha_run_hdf5
+
+# Phonopy.save appends the ".xz" of the compressed file it writes.
+DATASET_FILENAME = "phonopy_mlpsscha_dataset.yaml"
 
 
 def get_options() -> Namespace:
@@ -98,6 +106,12 @@ def get_options() -> Namespace:
         "as its transient (default: %(default)s)",
     )
     parser.add_argument(
+        "--save-dataset",
+        action="store_true",
+        help="write the displacements and forces of the last iteration to "
+        f'"{DATASET_FILENAME}.xz"',
+    )
+    parser.add_argument(
         "--all-force-constants",
         action="store_true",
         help="also write the force constants of every iteration, so that "
@@ -115,12 +129,33 @@ def get_options() -> Namespace:
     return parser.parse_args()
 
 
+def write_dataset(ph: Phonopy, filename: str = DATASET_FILENAME) -> None:
+    """Write the displacements and forces the last iteration sampled.
+
+    One structure per snapshot makes the file large, so it is compressed.
+
+    """
+    written = ph.save(
+        filename,
+        settings={"force_sets": True, "displacements": True},
+        compression="xz",
+    )
+    print(f"Wrote {written}")
+
+
 def main() -> None:
     """Run the phonopy-mlpsscha command."""
     args = get_options()
 
+    ph = phonopy.load(args.filename, log_level=args.verbose)
+    if args.verbose:
+        if ph.nac_params is None:
+            print("NAC parameters are not used.")
+        else:
+            print("NAC parameters are used.")
+
     sscha = MLPSSCHA(
-        phonopy.load(args.filename, log_level=args.verbose),
+        ph,
         PhonopyMLP().load(args.mlp),
         temperature=args.temperature,
         number_of_snapshots=args.snapshots,
@@ -136,6 +171,9 @@ def main() -> None:
 
     write_sscha_run_hdf5(sscha_run, args.output)
     print(f"Wrote {args.output}")
+
+    if args.save_dataset:
+        write_dataset(sscha.phonopy)
 
 
 if __name__ == "__main__":

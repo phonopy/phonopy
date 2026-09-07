@@ -72,6 +72,7 @@ phonopy-yaml
 phonopy
 phonopy-init
 mlp-sscha
+polymlp-sscha
 formulation
 citation
 reference
