@@ -22,6 +22,8 @@ def _run(iterations: int = 6) -> SSCHARun:
         harmonic_potential_energies=0.15 + rng.normal(0.0, 1e-4, iterations),
         reference_energy=-23.4,
         lattice_lengths=np.array([4.56, 4.56, 2.818]),
+        force_constants=rng.normal(0.0, 1.0, (2, 8, 3, 3)),
+        p2s_map=np.array([0, 4]),
     )
 
 
@@ -41,6 +43,24 @@ def test_sscha_run_round_trip(tmp_path: pathlib.Path) -> None:
     for name in SSCHARun.PER_ITERATION:
         np.testing.assert_allclose(getattr(back, name), getattr(run, name))
     np.testing.assert_allclose(back.lattice_lengths, run.lattice_lengths)
+    np.testing.assert_allclose(back.force_constants, run.force_constants)
+    np.testing.assert_array_equal(back.p2s_map, run.p2s_map)
+    assert back.p2s_map.dtype == np.int64
+
+
+def test_sscha_run_without_force_constants(tmp_path: pathlib.Path) -> None:
+    """A file written before the fields existed still reads, as None."""
+    pytest.importorskip("h5py")
+    fields = {
+        name: getattr(_run(), name)
+        for name in ("temperature", "reference_energy", *SSCHARun.PER_ITERATION)
+    }
+    path = tmp_path / "sscha.hdf5"
+    write_sscha_run_hdf5(SSCHARun(**fields), path)
+
+    back = read_sscha_run_hdf5(path)
+    assert back.force_constants is None
+    assert back.p2s_map is None
 
 
 def test_sscha_run_is_not_a_free_energy(tmp_path: pathlib.Path) -> None:
