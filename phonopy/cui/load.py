@@ -233,6 +233,7 @@ def load(
         )
         _calculator = calculator
         _nac_params = nac_params
+        _nac_params_source = None
         _dataset = None
         _fc = None
     elif phonopy_yaml is not None:
@@ -249,10 +250,14 @@ def load(
             pmat = phpy_yaml.primitive_matrix
         else:
             pmat = primitive_matrix
+        _nac_params_source = None
         if nac_params is not None:
             _nac_params = nac_params
         elif is_nac:
             _nac_params = phpy_yaml.nac_params
+            # A file-pointer-like phonopy_yaml has no name to report.
+            if _nac_params is not None and isinstance(phonopy_yaml, (str, os.PathLike)):
+                _nac_params_source = str(phonopy_yaml)
         else:
             _nac_params = None
         _dataset = phpy_yaml.dataset
@@ -287,6 +292,7 @@ def load(
         ret_nac_params = load_helper.get_nac_params(
             primitive=phonon.primitive,
             nac_params=_nac_params,
+            nac_params_source=_nac_params_source,
             born_filename=born_filename,
             is_nac=is_nac,
             nac_factor=units.nac_factor,

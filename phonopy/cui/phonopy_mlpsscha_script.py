@@ -148,11 +148,10 @@ def main() -> None:
     args = get_options()
 
     ph = phonopy.load(args.filename, log_level=args.verbose)
-    if args.verbose:
-        if ph.nac_params is None:
-            print("NAC parameters are not used.")
-        else:
-            print("NAC parameters are used.")
+    # phonopy.load names the file it read NAC parameters from, so only
+    # their absence would otherwise go unsaid.
+    if args.verbose and ph.nac_params is None:
+        print("NAC parameters are not used.")
 
     sscha = MLPSSCHA(
         ph,
