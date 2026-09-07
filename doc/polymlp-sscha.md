@@ -1,14 +1,7 @@
 (polymlp-sscha)=
+(mlp-sscha)=
 
-# Temperature dependent force constants using pypolymlp and symfc (under construction)
-
-```{warning}
-**This page is under construction.** It is being written around
-`phonopy-mlpsscha` to replace {ref}`mlp-sscha`, which documents the same
-calculation through `phonopy --sscha`. The KCl example it is built on is not
-finished, so the logs and the numbers of several steps are still missing. Use
-{ref}`mlp-sscha` until this page replaces it.
-```
+# Temperature dependent force constants using pypolymlp and symfc
 
 ```{warning}
 **This is an experimental feature.** The command-line options of
@@ -107,9 +100,76 @@ them.
 
 ## 1. Harmonic force constants
 
-The finite displacement method gives them. `phonopy-init` writes the displaced
-supercells, the calculator computes their forces, and `phonopy-collect` puts
-the two together:
+### The NAC parameters
+
+KCl is polar, so the non-analytical term correction has to be there. The Born
+effective charges and the dielectric constant come from a separate calculation
+on the primitive cell, `LEPSILON = .TRUE.` in VASP, and are written as a `BORN`
+file:
+
+```
+14.399652
+2.364629719999998 0 0 0 2.364629719999998 0 0 0 2.364629719999998
+1.128900873333334 0 0 0 1.128900873333333 0 0 0 1.128900873333334
+-1.128900873333334 0 0 0 -1.128900873333333 0 0 0 -1.128900873333334
+```
+
+The first line is the unit conversion factor, the second the dielectric
+constant, and the last two the Born effective charges of the K and the Cl atom
+of the primitive cell.
+
+Write that file before the commands below, and the parameters travel with the
+cell through the whole calculation. `phonopy-init` reads `BORN` from the
+directory it runs in and writes a `nac` block into `phonopy_disp.yaml`,
+`phonopy-collect --save-params` carries the block into `phonopy_params.yaml`,
+and the scripts of step 2 carry it into every file they save, `merged.yaml`
+included. Writing `BORN` afterwards leaves the files already saved without it.
+
+The other way is to paste the block into a phonopy.yaml-like file that lacks
+it, at the top level beside `dataset`:
+
+```yaml
+nac:
+  born_effective_charge:
+  - # 1 (K)
+    - [  1.128900873333334, -0.000000000000000,  0.000000000000000 ]
+    - [  0.000000000000000,  1.128900873333333, -0.000000000000000 ]
+    - [  0.000000000000000,  0.000000000000000,  1.128900873333334 ]
+  - # 2 (Cl)
+    - [ -1.128900873333334,  0.000000000000000, -0.000000000000000 ]
+    - [ -0.000000000000000, -1.128900873333333,  0.000000000000000 ]
+    - [  0.000000000000000, -0.000000000000000, -1.128900873333334 ]
+  dielectric_constant:
+    - [  2.364629719999998,  0.000000000000000,  0.000000000000000 ]
+    - [  0.000000000000000,  2.364629719999998,  0.000000000000000 ]
+    - [  0.000000000000000,  0.000000000000000,  2.364629719999998 ]
+  unit_conversion_factor: 14.399652
+```
+
+Either way the log names the file the parameters came from, as
+`NAC parameters were read from "BORN".` or from the phonopy.yaml-like file that
+carried them. `phonopy-mlpsscha -v` adds `NAC parameters are not used.` when
+there are none.
+
+The iterations do not use these parameters. Their displacements are drawn from
+the force constants at the commensurate points of the supercell, where no
+correction is applied, so drawing with and without the `BORN` file above gives
+the same supercells, and the force constants that come out are the same.
+
+The free energy is another matter. Its harmonic part is sampled on a mesh,
+where the correction does apply, and for this KCl at 300 K the parameters above
+move it by 0.43 meV per primitive cell. That is several times the statistical
+error of one iteration, so a free energy that is to be compared with anything
+needs them. The band structures of step 5 need them as well, for the LO-TO
+splitting.
+
+A rerun with the same `--random-seed` draws the same supercells, so adding the
+`BORN` file to a run that was made without it changes the harmonic part alone.
+
+### The finite displacements
+
+`phonopy-init` writes the displaced supercells, the calculator computes their
+forces, and `phonopy-collect` puts the two together:
 
 ```bash
 % phonopy-init -c POSCAR-unitcell -d --dim 2 2 2 --amplitude 0.03
@@ -131,67 +191,6 @@ fitted to VASP forces, so these settings are what it can reproduce.
 `phonopy_params.yaml` then carries the cell, the displacements and the forces.
 Script 1 of step 2 fits the harmonic force constants from it, and
 `phonopy-mlpsscha` starts its iterations from them.
-
-### The NAC parameters
-
-KCl is polar, so the non-analytical term correction has to be there. The Born
-effective charges and the dielectric constant come from a separate calculation
-on the primitive cell, `LEPSILON = .TRUE.` in VASP, and are written as a `BORN`
-file:
-
-```
-14.399652
-2.364629719999998 0 0 0 2.364629719999998 0 0 0 2.364629719999998
-1.128900873333334 0 0 0 1.128900873333333 0 0 0 1.128900873333334
--1.128900873333334 0 0 0 -1.128900873333333 0 0 0 -1.128900873333334
-```
-
-The first line is the unit conversion factor, the second the dielectric
-constant, and the last two the Born effective charges of the K and the Cl atom
-of the primitive cell. `phonopy.load` reads `BORN` from the directory it runs
-in, so Script 1 of step 2 picks it up and writes the `nac` block into every
-file it saves.
-
-The other way is to paste that block into a phonopy.yaml-like file that lacks
-it, at the top level beside `dataset`:
-
-```yaml
-nac:
-  born_effective_charge:
-  - # 1 (K)
-    - [  1.128900873333334, -0.000000000000000,  0.000000000000000 ]
-    - [  0.000000000000000,  1.128900873333333, -0.000000000000000 ]
-    - [  0.000000000000000,  0.000000000000000,  1.128900873333334 ]
-  - # 2 (Cl)
-    - [ -1.128900873333334,  0.000000000000000, -0.000000000000000 ]
-    - [ -0.000000000000000, -1.128900873333333,  0.000000000000000 ]
-    - [  0.000000000000000, -0.000000000000000, -1.128900873333334 ]
-  dielectric_constant:
-    - [  2.364629719999998,  0.000000000000000,  0.000000000000000 ]
-    - [  0.000000000000000,  2.364629719999998,  0.000000000000000 ]
-    - [  0.000000000000000,  0.000000000000000,  2.364629719999998 ]
-  unit_conversion_factor: 14.399652
-```
-
-The two routes differ in what `phonopy.load` says. A `BORN` file is announced,
-as `NAC params were read from "BORN".`, while a `nac` block in the input file
-is read without a word. `phonopy-mlpsscha -v` prints `NAC parameters are used.`
-or `NAC parameters are not used.` after that line, which covers both routes.
-
-The iterations do not use these parameters. Their displacements are drawn from
-the force constants at the commensurate points of the supercell, where no
-correction is applied, so drawing with and without the `BORN` file above gives
-the same supercells, and the force constants that come out are the same.
-
-The free energy is another matter. Its harmonic part is sampled on a mesh,
-where the correction does apply, and for this KCl at 300 K the parameters above
-move it by 0.43 meV per primitive cell. That is several times the statistical
-error of one iteration, so a free energy that is to be compared with anything
-needs them. The band structures of step 5 need them as well, for the LO-TO
-splitting.
-
-A rerun with the same `--random-seed` draws the same supercells, so adding the
-`BORN` file to a run that was made without it changes the harmonic part alone.
 
 ## 2. The training set
 
@@ -286,10 +285,7 @@ for temperature in TEMPERATURES:
     set_dir.mkdir(parents=True, exist_ok=True)
     # The displacements have to be saved beside the supercells: phonopy-collect
     # attaches the forces to them below.
-    phonon.save(
-        set_dir / "phonopy_disp.yaml",
-        settings={"force_constants": False, "displacements": True},
-    )
+    phonon.save(set_dir / "phonopy_disp.yaml")
     for i, cell in enumerate(phonon.supercells_with_displacements, 1):
         disp_dir = set_dir / f"disp-{i:03d}"
         disp_dir.mkdir(exist_ok=True)
@@ -351,23 +347,23 @@ import phonopy
 TRAIN = Path("train")
 TEMPERATURES = (0, 100, 300, 500)  # the temperatures of Script 1
 
-sets = [
-    phonopy.load(
+values = {"displacements": [], "forces": [], "supercell_energies": []}
+for t in TEMPERATURES:
+    ph = phonopy.load(
         TRAIN / f"T{t}" / "phonopy_params.yaml", produce_fc=False, log_level=0
     )
-    for t in TEMPERATURES
-]
+    for key in values:
+        values[key].append(ph.dataset[key])
 
 merged = {}
-for key in ("displacements", "forces", "supercell_energies"):
-    stacked = np.array([s.dataset[key] for s in sets])
-    merged[key] = stacked.swapaxes(0, 1).reshape(-1, *stacked.shape[2:])
+for key in values:
+    # (temperature, structure, ...) -> (structure, temperature, ...)
+    merged[key] = np.concatenate(np.swapaxes(values[key], 0, 1))
 
-phonon = sets[0]
+phonon = ph.replicate()
+phonon.nac_params = ph.nac_params
 phonon.dataset = merged
-phonon.save(
-    TRAIN / "merged.yaml", settings={"force_sets": True, "displacements": True}
-)
+phonon.save(TRAIN / "merged.yaml")
 ```
 
 `train/merged.yaml` then holds the 200 structures with their displacements,
@@ -598,7 +594,52 @@ wrong.
 `phonopy-mlpsscha` reads the cell and the starting force constants from a
 phonopy.yaml-like file, and the potential from a pypolymlp file:
 
-<!-- fill: the KCl run at 300 K, its command and its log. -->
+```bash
+% mkdir sscha-300K && cd sscha-300K
+% phonopy-mlpsscha ../train/merged.yaml --mlp ../mlp-default/polymlp.yaml \
+      -t 300 --snapshots 2000 --iterations 11 --mesh 200 --random-seed 1000 \
+      --all-force-constants --save-dataset -v
+```
+
+```
+Set "vasp" mode.
+NAC parameters were read from "../train/merged.yaml".
+Displacement-force dataset was read from "../train/merged.yaml".
+Type-II dataset was found. Symfc is used as force constants calculator.
+-------------------------------- Symfc start -------------------------------
+Symfc version 1.7.0 (https://github.com/symfc/symfc)
+Citation: A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024)
+Computing [2] order force constants.
+Increase log-level to watch detailed symfc log.
+--------------------------------- Symfc end --------------------------------
+Max drift of force constants: -0.00000000 (yy) -0.00000000 (yy)
+Use provided force constants.
+
+[ SSCHA iteration 1 / 11 ]
+Generate 2000 supercells with displacements at 300.0 K
+  [0.004, 0.080] ****
+  [0.080, 0.156] ******************
+  [0.156, 0.232] ****************************
+  [0.232, 0.308] **************************
+  [0.308, 0.384] ***************
+  [0.384, 0.460] ******
+  [0.460, 0.536] **
+  [0.536, 0.613]
+  [0.613, 0.689]
+  [0.689, 0.765]
+Evaluate MLP to obtain forces using pypolymlp
+Calculate force constants using symfc
+
+(iterations 2 to 11 are omitted here)
+
+Wrote mlpsscha.hdf5
+Wrote phonopy_mlpsscha_dataset.yaml.xz
+```
+
+The run starts from the force constants symfc fits to the training set of
+step 2, which is what `Use provided force constants.` reports. The histogram
+is the distribution of the displacement magnitudes of that iteration's 2000
+supercells, in Angstrom.
 
 The input file may carry the force constants themselves, or the displacements
 and forces they are fitted from, which is what the `merged.yaml` of step 2
@@ -661,7 +702,24 @@ force-constant fit.
 (polymlp-sscha-reading)=
 ## 5. Reading the run
 
-<!-- fill: the -v listing of the KCl run at 300 K. -->
+```
+  iter       F [meV]   error [meV]   (F - mean)/error
+     1*     -97.6965        0.0481               +2.6
+     2      -97.8342        0.0496               -0.3
+     3      -97.8606        0.0501               -0.8
+     4      -97.8405        0.0495               -0.4
+     5      -97.7783        0.0498               +0.8
+     6      -97.8896        0.0488               -1.4
+     7      -97.8419        0.0504               -0.4
+     8      -97.8339        0.0498               -0.3
+     9      -97.7636        0.0498               +1.1
+    10      -97.7639        0.0489               +1.1
+    11      -97.7901        0.0510               +0.6
+  * left out as the transient. Of the kept iterations the furthest from the
+    mean is 6, at 1.4 sigma.
+  A kept iteration far outside the scatter of the rest is still in the
+  transient: raise the transient and look again.
+```
 
 The listing has one row per iteration. `F` is the SSCHA free energy of that
 iteration and `error` is its statistical error, both in meV per primitive cell.
@@ -710,43 +768,54 @@ per primitive cell, and the listing prints meV.
 
 ### The force constants
 
-`force_constants` is the refit made after the last iteration, in the compact
-form. It is the one set of force constants to use once the run has converged.
-`p2s_map` is carried beside it, and comparing the two against the cell they are
-read with catches force constants read against another cell.
+The force constants of the iterations after the transient are averaged, in the
+same way and for the same reason as their free energies. Each of them is fitted
+from that iteration's own `--snapshots` supercells, so each carries the noise of
+one draw, and the mean of {math}`K` of them carries {math}`\sqrt{K}` less of it.
+`averaged_force_constants` needs the history that `--all-force-constants`
+writes.
 
-Writing them into a phonopy.yaml-like file gives the SSCHA phonons of the
+The average is taken over the compact form on one cell, and each iteration's
+force constants are already symmetrized by symfc, so the average satisfies the
+symmetry and the sum rule as well. `p2s_map` is carried beside them, and
+comparing the two against the cell they are read with catches force constants
+read against another cell.
+
+Writing them as `force_constants.hdf5` gives the SSCHA phonons of the
 temperature the run was made at:
 
 ```{code-block} python
-:caption: Script 4 -- the SSCHA force constants as a phonopy.yaml-like file
+:caption: Script 4 -- the force constants of a run as force_constants.hdf5
 
-"""Write the force constants of a run beside the cell they belong to."""
+"""Write the force constants of a run for phonopy to read."""
 
-import phonopy
+from phonopy.file_IO import write_force_constants_to_hdf5
 from phonopy.sscha.run import read_sscha_run_hdf5
 
 RUN = "mlpsscha.hdf5"
-PHONOPY_PARAMS = "phonopy_params.yaml"  # the cell and the NAC parameters
-OUTPUT = "phonopy_sscha_fc.yaml"
+TRANSIENT = 1  # iterations left out of the average
 
 run = read_sscha_run_hdf5(RUN)
-ph = phonopy.load(PHONOPY_PARAMS, produce_fc=False, log_level=0)
-ph.force_constants = run.force_constants
-ph.save(OUTPUT, settings={"force_constants": True})
+write_force_constants_to_hdf5(
+    run.averaged_force_constants(TRANSIENT),
+    p2s_map=run.p2s_map,
+    physical_unit="eV/angstrom^2",
+)
 ```
 
-With `--all-force-constants`, `averaged_force_constants` averages over the
-iterations after the transient in the same way the free energy is averaged.
-Replace the line of Script 4 that sets `force_constants` with
+`phonopy-load` reads `force_constants.hdf5` from the directory it runs in, and
+takes it over the force constants it would otherwise fit from a displacement-
+force dataset. So the cell can be given as `train/merged.yaml`, whose dataset
+is left unused, and the SSCHA force constants are the ones the phonons come
+from.
 
-```python
-ph.force_constants = run.averaged_force_constants(2)
-```
+A run made without `--all-force-constants` has no history to average. Its
+`force_constants` is the refit made after the last iteration, which is fitted
+from that one iteration's supercells. Pass `run.force_constants` to Script 4 in
+that case, and read it as one sample rather than as the mean of several.
 
-The refit is one step after the last iteration of the history, so the refit and
-the average of the history are different quantities rather than one quantity
-computed twice.
+The refit comes one step after the last iteration of the history, so it is a
+different quantity from the average rather than the same one computed twice.
 
 ## The SSCHA free energy
 
@@ -865,8 +934,19 @@ the whole of the error.
 
 ## Convergence
 
-<!-- fill: the KCl listing read as a convergence check, with the scatter of
-     its iterations against their error. -->
+The listing of the KCl run is read as two numbers. Iteration 1 sits at 2.6
+sigma and is the transient, and the ten kept iterations sit within 1.4 sigma of
+their mean, which is the scatter of a converged run.
+
+Their mean is -97.8197 meV per primitive cell. Its error is 0.0157 meV by the
+quadrature above, against 0.0136 meV measured as the scatter of the ten values
+themselves. The two agree, so the iterations are stationary and independent,
+and either may be quoted. A scatter several times the quadrature would mean the
+force constants were still moving, and the transient has to be raised until the
+two agree.
+
+Averaging is worth having here. One iteration reports 0.05 meV, and the mean of
+ten reports 0.016 meV for no extra sampling.
 
 ### The phonons of the run
 
@@ -874,15 +954,39 @@ The SSCHA force constants differ from the harmonic ones, and their band
 structures show by how much:
 
 ```bash
+% # in sscha-300K, beside the force_constants.hdf5 of Script 4
+% phonopy-load ../train/merged.yaml --band auto --band-points 101
+% mv band.yaml band-sscha.yaml
+
+% # in the directory of step 1
 % phonopy-load phonopy_params.yaml --band auto --band-points 101
 % mv band.yaml band-harmonic.yaml
-% phonopy-load phonopy_sscha_fc.yaml --band auto --band-points 101
-% phonopy-bandplot band-harmonic.yaml band.yaml --legend
+
+% phonopy-bandplot band-harmonic.yaml sscha-300K/band-sscha.yaml --legend
 ```
 
-`phonopy_sscha_fc.yaml` is the file written in "The force constants" above.
+The two are run in different directories on purpose. `force_constants.hdf5`
+takes precedence over any dataset, so the harmonic band computed beside it
+would be the SSCHA one.
 
-<!-- fill: the band figure and what it shows for KCl. -->
+The harmonic cell needs the `BORN` file of step 1 beside it for the LO-TO
+splitting, and `train/merged.yaml` carries its own `nac` block.
+
+```{image} polymlp-sscha-bands.png
+:width: 70%
+```
+
+The red curves are the harmonic phonons and the blue ones the SSCHA phonons at
+300 K. The optical branches move up and the acoustic ones change little. The
+highest frequency of the whole band structure, the longitudinal optical mode at
+{math}`\Gamma`, moves from 6.16 to 6.33 THz. That shift is the temperature
+dependence the run was made for, and its size says whether the harmonic
+approximation was good enough for the property being computed.
+
+Averaging the force constants matters less here than the shift itself. The band
+structure of the refit made after the last iteration differs from the averaged
+one above by at most 0.02 THz, against the 0.17 THz the SSCHA moves the mode at
+{math}`\Gamma`.
 
 ### The size of the training set
 
@@ -916,15 +1020,47 @@ for n in 40 80 120 160; do
     phonopy-mlpsscha "../$MERGED" \
         --mlp polymlp.yaml \
         -t "$TEMPERATURE" \
-        --snapshots 1000 \
-        --iterations 12 \
+        --snapshots 2000 \
+        --iterations 11 \
+        --mesh 200 \
         --random-seed 1000 \
-        -o "mlpsscha-ntrain$n.hdf5" -v > sscha.log
+        --all-force-constants -v > sscha.log
     cd ..
 done
 ```
 
-<!-- fill: the free energies Script 5 gives for KCl. -->
+The settings of the SSCHA runs are those of step 4, so the four free energies
+are comparable with each other and with the run above. Script 5 gives, for the
+KCl of this page:
+
+| ntrain | test force RMSE | free energy |
+|---|---|---|
+| 40 | 0.00337 | -97.8150 |
+| 80 | 0.00118 | -97.8173 |
+| 120 | 0.00101 | -97.8182 |
+| 160 | 0.00091 | -97.8200 |
+
+The RMSE is in eV/Angstrom and the free energy in meV per primitive cell, each
+averaged over the ten iterations after the transient and carrying an error of
+0.016 meV.
+
+The potential keeps improving over this range and the free energy does not
+move. The force RMSE falls by a factor of nearly four from 40 structures to
+160, while the four free energies span 0.005 meV, a third of the error of any
+one of them. For this quantity 40 structures are already enough.
+
+The band structures say the same. Writing `force_constants.hdf5` for each size
+with Script 4 and overlaying the five with `phonopy-bandplot` leaves one
+visible curve: no difference between 40, 80, 120, 160 and 184 structures can be
+seen by eye. Measured against the 184-structure band, the largest difference is
+0.0045 THz at 40 structures and 0.0002 THz at 160, against the 0.17 THz by
+which the SSCHA moves the mode at {math}`\Gamma`. Make that plot for the system
+at hand rather than expecting the same of it.
+
+That is the reason to converge the quantity being reported rather than the
+force RMSE. The RMSE is dominated by the large-amplitude structures of the
+training set, and the free energy averages over the distribution the crystal
+actually visits at 300 K.
 
 A separate directory per size is necessary because an existing `polymlp.yaml`
 in the current directory is loaded and reused, by which the `ntrain` setting
@@ -1089,6 +1225,18 @@ sets no seed. The draw is then a fresh sample every time.
 
 A rerun writing the same file name replaces that file. Give each temperature
 its own `-o` name, so that a sweep leaves one file per temperature.
+
+## Converting `phonopy.pmlp` to `polymlp.yaml`
+
+In older versions, polynomial MLPs were stored in `phonopy.pmlp`. This file can
+be converted to `polymlp.yaml` using the following Python snippet.
+
+```python
+from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
+
+polymlp = Pypolymlp()
+polymlp.convert_to_yaml(filename_txt="phonopy.pmlp", filename_yaml="polymlp.yaml")
+```
 
 ## How to cite
 
