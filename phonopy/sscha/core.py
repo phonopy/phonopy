@@ -13,7 +13,10 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy import Phonopy
-from phonopy.harmonic.force_constants import compact_fc_to_full_fc
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
+)
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.physical_units import get_physical_units
 from phonopy.sscha.run import SSCHARun, write_sscha_run_hdf5
@@ -463,12 +466,15 @@ class MLPSSCHA:
         """Return what this run sampled, one value per iteration.
 
         Every iteration is kept and none is averaged, so that which of them
-        to average over is chosen afterwards rather than here.
+        to average over is chosen afterwards rather than here. The force
+        constants are the exception: the last iteration's are the converged
+        ones and are the only ones carried.
 
         """
         history = self.history
         if not history:
             raise RuntimeError("The run has no iteration to report yet.")
+        p2s_map = self._ph.primitive.p2s_map
         return SSCHARun(
             temperature=self.temperature,
             free_energies=np.array([h.free_energy for h in history]),
@@ -479,6 +485,10 @@ class MLPSSCHA:
             ),
             reference_energy=self.supercell_energy / self.n_cell,
             lattice_lengths=np.linalg.norm(self._ph.unitcell.cell, axis=1),
+            force_constants=full_fc_to_compact_fc(
+                self._ph.primitive, self.force_constants
+            ),
+            p2s_map=p2s_map,
         )
 
     def write_hdf5(self, filename: str | os.PathLike = "mlpsscha.hdf5") -> None:

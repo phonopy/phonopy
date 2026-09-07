@@ -22,6 +22,9 @@ from phonopy import __version__
 
 TYPE = "SSCHARun"
 
+# Read back as integers rather than as the doubles everything else is.
+INTEGER_FIELDS = ("p2s_map",)
+
 
 class SSCHAAverage(NamedTuple):
     """One run's estimate, over the iterations after its transient."""
@@ -61,6 +64,13 @@ class SSCHARun:
         Lattice-vector lengths (a, b, c) of the run's cell in angstrom, or
         None. Carried so that a sweep can place the run on its grid.
         shape=(3,)
+    force_constants : ndarray, optional
+        Second-order force constants of the last iteration, in the compact
+        form, in eV/angstrom^2, or None. shape=(p, supercell_atoms, 3, 3)
+    p2s_map : ndarray, optional
+        Indices in the supercell of the primitive cell's atoms, or None,
+        which is what makes force_constants readable as compact.
+        shape=(p,)
 
     Notes
     -----
@@ -72,6 +82,12 @@ class SSCHARun:
     self-consistent, and how many of them to leave out of an average is a
     property of the run rather than of this file, so nothing here records it.
     SSCHAFreeEnergies records the choice that was made from these.
+
+    force_constants is the last iteration's alone, where the free energies
+    are every iteration's.
+
+    p2s_map is recoverable from the cell, and is carried as the check that
+    the force constants are read against the cell they were made on.
 
     """
 
@@ -89,6 +105,8 @@ class SSCHARun:
     harmonic_potential_energies: NDArray[np.double]
     reference_energy: float
     lattice_lengths: NDArray[np.double] | None = None
+    force_constants: NDArray[np.double] | None = None
+    p2s_map: NDArray[np.int64] | None = None
 
     def __post_init__(self) -> None:
         """Check the arrays against each other."""
@@ -224,6 +242,8 @@ def read_sscha_run_hdf5(filename: str | os.PathLike = "mlpsscha.hdf5") -> SSCHAR
             # temperature and reference_energy are stored as scalar datasets.
             if f[key].shape == ():
                 stored[key] = float(f[key][()])
+            elif key in INTEGER_FIELDS:
+                stored[key] = np.array(f[key][:], dtype="int64")
             else:
                 stored[key] = np.array(f[key][:], dtype="double")
         try:
