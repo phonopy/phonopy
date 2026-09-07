@@ -65,8 +65,14 @@ class SSCHARun:
         None. Carried so that a sweep can place the run on its grid.
         shape=(3,)
     force_constants : ndarray, optional
-        Second-order force constants of the last iteration, in the compact
-        form, in eV/angstrom^2, or None. shape=(p, supercell_atoms, 3, 3)
+        Second-order force constants of the refit made after the last
+        iteration, in the compact form, in eV/angstrom^2, or None.
+        shape=(p, supercell_atoms, 3, 3)
+    force_constants_history : ndarray, optional
+        Second-order force constants each iteration's free energy was
+        calculated with, in the same form and units, or None. Its last entry
+        is not force_constants: the refit comes one step after it.
+        shape=(iterations, p, supercell_atoms, 3, 3)
     p2s_map : ndarray, optional
         Indices in the supercell of the primitive cell's atoms, or None,
         which is what makes force_constants readable as compact.
@@ -83,8 +89,9 @@ class SSCHARun:
     property of the run rather than of this file, so nothing here records it.
     SSCHAFreeEnergies records the choice that was made from these.
 
-    force_constants is the last iteration's alone, where the free energies
-    are every iteration's.
+    force_constants_history pairs with the free energies, one iteration for
+    one iteration, and is what averaged_force_constants takes its transient
+    off.
 
     p2s_map is recoverable from the cell, and is carried as the check that
     the force constants are read against the cell they were made on.
@@ -106,6 +113,7 @@ class SSCHARun:
     reference_energy: float
     lattice_lengths: NDArray[np.double] | None = None
     force_constants: NDArray[np.double] | None = None
+    force_constants_history: NDArray[np.double] | None = None
     p2s_map: NDArray[np.int64] | None = None
 
     def __post_init__(self) -> None:
@@ -160,6 +168,21 @@ class SSCHARun:
             float(self.potential_energies[kept].mean()),
             float(self.harmonic_potential_energies[kept].mean()),
         )
+
+    def averaged_force_constants(self, transient: int = 1) -> NDArray[np.double]:
+        """Return the force constants averaged over the kept iterations.
+
+        Needs the history rather than the refit, since a transient can only
+        be taken off iterations that are there.
+
+        """
+        fc = self.force_constants_history
+        if fc is None:
+            raise ValueError(
+                "averaged_force_constants needs force_constants_history, "
+                "which to_sscha_run writes with all_force_constants=True."
+            )
+        return fc[self._kept(transient)].mean(axis=0)
 
     def departures(self, transient: int = 1) -> NDArray[np.double]:
         """Return how far each iteration sits from the mean of the kept ones.

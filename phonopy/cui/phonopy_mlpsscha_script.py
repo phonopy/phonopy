@@ -98,6 +98,13 @@ def get_options() -> Namespace:
         "as its transient (default: %(default)s)",
     )
     parser.add_argument(
+        "--all-force-constants",
+        action="store_true",
+        help="also write the force constants of every iteration, so that "
+        "they can be averaged over a transient afterwards; the refit made "
+        "after the last iteration is written either way",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="count",
@@ -123,7 +130,7 @@ def main() -> None:
         random_seed=args.random_seed,
         log_level=args.verbose,
     )
-    sscha_run = sscha.run().to_sscha_run()
+    sscha_run = sscha.run().to_sscha_run(args.all_force_constants)
     if args.verbose:
         sscha_run.report(args.transient)
 
