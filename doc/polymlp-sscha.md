@@ -82,7 +82,7 @@ stands, and the settings each one takes are the capitalized names at its top.
 
 ```{mermaid}
 flowchart TD
-    FD["finite displacements"]
+    FD["small displacements"]
     FD --> FC(["harmonic<br/>force constants"])
     FC --> TD["thermal displacements<br/>at several temperatures"]
     TD --> CALC{{"calculator forces"}}
@@ -699,6 +699,47 @@ them.
 `-v` logs each iteration and prints the listing at the end. `-vv` adds the
 force-constant fit.
 
+(polymlp-sscha-api)=
+### The same run from Python
+
+The command is a thin wrapper around `MLPSSCHA`, which holds the iterations,
+and the two functions that write and read the hdf5 file. The script below
+does what the command above did:
+
+```python
+import phonopy
+from phonopy.interface.mlp import PhonopyMLP
+from phonopy.sscha.core import MLPSSCHA
+from phonopy.sscha.trace import write_sscha_trace_hdf5
+
+ph = phonopy.load("../train/merged.yaml", log_level=1)
+sscha = MLPSSCHA(
+    ph,
+    PhonopyMLP().load("../mlp-default/polymlp.yaml"),
+    temperature=300,
+    number_of_snapshots=2000,
+    max_iterations=11,
+    mesh=200,
+    random_seed=1000,
+    log_level=1,
+)
+run = sscha.run().to_trace(all_force_constants=True)
+write_sscha_trace_hdf5(run, "mlpsscha.hdf5")
+```
+
+The options of the command are the arguments of `MLPSSCHA`: `-t` is
+`temperature`, `--snapshots` is `number_of_snapshots`, `--iterations` is
+`max_iterations`, and `--mesh`, `--random-seed` and `--distance` keep their
+names. `fc_calculator` and `fc_calculator_options`, which the command does not
+expose, choose the force constants calculator and pass options to it.
+
+`MLPSSCHA.run()` runs every iteration and returns the instance itself.
+Iterating over it instead, `for iter_num in sscha:`, gives the iteration
+number after each one, which is where the command writes its per-iteration
+files. `to_trace` then returns an `SSCHATrace`, one value per iteration,
+which {ref}`step 5 <polymlp-sscha-reading>` reads back with
+`read_sscha_trace_hdf5`.
+
 (polymlp-sscha-reading)=
 ## 5. Reading the run
 
@@ -751,12 +792,12 @@ force constants of the refit made after the last iteration.
 
 """List the iterations of a run and average those after its transient."""
 
-from phonopy.sscha.run import read_sscha_run_hdf5
+from phonopy.sscha.trace import read_sscha_trace_hdf5
 
 RUN = "mlpsscha.hdf5"
 TRANSIENT = 2  # iterations left out of the average
 
-run = read_sscha_run_hdf5(RUN)
+run = read_sscha_trace_hdf5(RUN)
 run.report(TRANSIENT)
 average = run.averaged(TRANSIENT)
 print(f"{average.free_energy * 1e3:.4f} +/- {average.error * 1e3:.4f} meV")
@@ -790,12 +831,12 @@ temperature the run was made at:
 """Write the force constants of a run for phonopy to read."""
 
 from phonopy.file_IO import write_force_constants_to_hdf5
-from phonopy.sscha.run import read_sscha_run_hdf5
+from phonopy.sscha.trace import read_sscha_trace_hdf5
 
 RUN = "mlpsscha.hdf5"
 TRANSIENT = 1  # iterations left out of the average
 
-run = read_sscha_run_hdf5(RUN)
+run = read_sscha_trace_hdf5(RUN)
 write_force_constants_to_hdf5(
     run.averaged_force_constants(TRANSIENT),
     p2s_map=run.p2s_map,
