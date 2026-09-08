@@ -589,7 +589,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../../phonopy-yaml.html">phonopy-yaml format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../phonopy.html">phonopy command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../phonopy-init.html">phonopy-init command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference.html">References</a></li>
@@ -941,6 +941,7 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="n">_calculator</span> <span class="o">=</span> <span class="n">calculator</span>
         <span class="n">_nac_params</span> <span class="o">=</span> <span class="n">nac_params</span>
+        <span class="n">_nac_params_source</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">_dataset</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">_fc</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">elif</span> <span class="n">phonopy_yaml</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -957,10 +958,14 @@ window.runMermaid = runMermaid;</script>
             <span class="n">pmat</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive_matrix</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">pmat</span> <span class="o">=</span> <span class="n">primitive_matrix</span>
+        <span class="n">_nac_params_source</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">nac_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_nac_params</span> <span class="o">=</span> <span class="n">nac_params</span>
         <span class="k">elif</span> <span class="n">is_nac</span><span class="p">:</span>
             <span class="n">_nac_params</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">nac_params</span>
+            <span class="c1"># A file-pointer-like phonopy_yaml has no name to report.</span>
+            <span class="k">if</span> <span class="n">_nac_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">phonopy_yaml</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+                <span class="n">_nac_params_source</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">phonopy_yaml</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_nac_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">_dataset</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">dataset</span>
@@ -995,6 +1000,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">ret_nac_params</span> <span class="o">=</span> <span class="n">load_helper</span><span class="o">.</span><span class="n">get_nac_params</span><span class="p">(</span>
             <span class="n">primitive</span><span class="o">=</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span>
             <span class="n">nac_params</span><span class="o">=</span><span class="n">_nac_params</span><span class="p">,</span>
+            <span class="n">nac_params_source</span><span class="o">=</span><span class="n">_nac_params_source</span><span class="p">,</span>
             <span class="n">born_filename</span><span class="o">=</span><span class="n">born_filename</span><span class="p">,</span>
             <span class="n">is_nac</span><span class="o">=</span><span class="n">is_nac</span><span class="p">,</span>
             <span class="n">nac_factor</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">nac_factor</span><span class="p">,</span>

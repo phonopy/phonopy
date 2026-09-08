@@ -1,0 +1,2138 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Temperature dependent force constants using pypolymlp and symfc &#8212; Phonopy v.4.4.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="_static/documentation_options.js?v=e4428b72"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=8b0727dd"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'polymlp-sscha';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Formulations" href="formulation.html" />
+    <link rel="prev" title="phonopy-init command" href="phonopy-init.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.4" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.4.0</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Temperature dependent force constants using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v5.html">Migrating toward phonopy v5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/polymlp-sscha.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Temperature dependent force constants using pypolymlp and symfc</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#harmonic-force-constants">1. Harmonic force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-nac-parameters">The NAC parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-finite-displacements">The finite displacements</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-set">2. The training set</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermal-distribution">The thermal distribution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#drawing-the-displacements">Drawing the displacements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#merging-the-temperatures">Merging the temperatures</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducing-and-extending-the-draw">Reproducing and extending the draw</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-mlp">3. Training the MLP</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-parameters-of-the-mlp">The parameters of the MLP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validating-the-mlp">Validating the MLP</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-sscha">4. Running SSCHA</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-a-run">The options of a run</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-run">5. Reading the run</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mlpsscha-hdf5"><code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-force-constants">The force constants</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-sscha-free-energy">The SSCHA free energy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-one-iteration">The error of one iteration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-the-average">The error of the average</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence">Convergence</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-phonons-of-the-run">The phonons of the run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-size-of-the-training-set">The size of the training set</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#converting-phonopy-pmlp-to-polymlp-yaml">Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-cite">How to cite</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pypolymlp">pypolymlp</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc">symfc</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="temperature-dependent-force-constants-using-pypolymlp-and-symfc">
+<span id="mlp-sscha"></span><span id="polymlp-sscha"></span><h1>Temperature dependent force constants using pypolymlp and symfc<a class="headerlink" href="#temperature-dependent-force-constants-using-pypolymlp-and-symfc" title="Link to this heading">#</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>This is an experimental feature.</strong> The command-line options of
+<code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code>, the layout of <code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code>, and the <code class="docutils literal notranslate"><span class="pre">phonopy.sscha</span></code> API
+may change in a backward-incompatible way between releases, without a
+deprecation period.</p>
+</div>
+<p>Force constants that depend on temperature are computed here within the
+stochastic self-consistent harmonic approximation (SSCHA). They are determined
+self-consistently from supercells whose atoms are displaced randomly, the
+displacements being drawn from the canonical ensemble of the force constants
+themselves at the temperature. About SSCHA, please refer to the papers by
+<u>L. Monacelli <em>et al.</em>, J. Phys.: Condens. Matter <strong>33</strong> 363001 (2021)</u>
+and <u>A. van Roekeghem <em>et al.</em>, Comput. Phys. Commun. <strong>263</strong> 107945
+(2021)</u>. Technically, the computational procedure introduced here is
+equivalent to the approach of the latter paper.</p>
+<p>Every iteration needs the forces of many supercells, which makes a direct
+first-principles calculation expensive. Two codes make it affordable. The
+polynomial machine learning potential (MLP) code
+<a class="reference external" href="https://github.com/sekocha/pypolymlp">pypolymlp</a> is trained once on a dataset
+of supercell displacements, forces and energies, and then evaluates the forces
+of the sampled supercells in place of the calculator.
+<a class="reference external" href="https://github.com/symfc/symfc">symfc</a>, a dependency of phonopy that is
+installed together with it, fits the force constants to those displacements and
+forces using a symmetry-adapted basis.</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> runs the iterations at one temperature and writes what every
+one of them sampled to <code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code>. One call is one temperature. How many
+of the iterations to average over is chosen afterwards, from that file.</p>
+<p>For further details on combining phonopy calculations with pypolymlp, refer to
+<u>A. Togo and A. Seko, J. Chem. Phys. <strong>160</strong>, 211001 (2024)</u>
+[<a class="reference external" href="https://doi.org/10.1063/5.0211296">doi</a>]
+[<a class="reference external" href="https://arxiv.org/abs/2401.17531">arxiv</a>].</p>
+<p>The example on this page is KCl in the rocksalt structure, and its goal is to
+reproduce with a polynomial MLP the SSCHA force constants of <u>A. Togo <em>et
+al.</em>, J. Phys.: Condens. Matter <strong>34</strong>, 365401 (2022)</u>
+[<a class="reference external" href="https://doi.org/10.1088/1361-648X/ac7b01">doi</a>] (open access). Those force
+constants were computed with the calculator itself at every iteration, and the
+MLP takes its place here.</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
+<ul>
+<li><p><a class="reference external" href="https://github.com/sekocha/pypolymlp">pypolymlp</a> &gt;= 0.10.0</p>
+<p>For linux (x86-64), a compiled package of pypolymlp can be installed via
+conda-forge (recommended). Otherwise, pypolymlp can be installed from
+source-code.</p>
+</li>
+</ul>
+<p>symfc and h5py are dependencies of phonopy and are installed together with it.</p>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The KCl of the example is computed with VASP on a 2x2x2 supercell of its
+conventional unit cell, which is the supercell of the 2022 paper.</p>
+<p>The calculation has five steps.</p>
+<ol class="arabic simple">
+<li><p>Compute the harmonic force constants by the finite displacement method.</p></li>
+<li><p>Draw supercells from the thermal distribution those force constants define,
+at several temperatures, and compute their forces and energies with the
+calculator.</p></li>
+<li><p>Train the MLP on that dataset, which writes <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code>, which writes <code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code>.</p></li>
+<li><p>Read the run: choose how many leading iterations to leave out, and average
+the rest.</p></li>
+</ol>
+<p>Steps 1 and 2 call the calculator and are the expensive part. Steps 3 to 5 read
+what those two wrote.</p>
+<p>The numbered scripts on this page are meant to be saved under the names their
+captions give, <code class="docutils literal notranslate"><span class="pre">script1.py</span></code> and so on, and to be run from the directory that
+holds the <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> of step 1. Each of them is complete as it
+stands, and the settings each one takes are the capitalized names at its top.</p>
+<pre  class="mermaid">
+        flowchart TD
+    FD[&quot;finite displacements&quot;]
+    FD --&gt; FC([&quot;harmonic&lt;br/&gt;force constants&quot;])
+    FC --&gt; TD[&quot;thermal displacements&lt;br/&gt;at several temperatures&quot;]
+    TD --&gt; CALC{{&quot;calculator forces&quot;}}
+    CALC --&gt; TR([&quot;training set&quot;])
+    TR --&gt; DEV[&quot;train the MLP&quot;]
+    DEV --&gt; MLP([&quot;polymlp.yaml&quot;])
+    MLP --&gt; SSCHA[&quot;phonopy-mlpsscha&quot;]
+    FC --&gt; SSCHA
+    SSCHA --&gt; RUN([&quot;mlpsscha.hdf5&quot;])
+    </pre><p>The harmonic force constants are used twice. The thermal distribution of
+step 2 is the one they define, and the SSCHA iterations of step 4 start from
+them.</p>
+</section>
+<section id="harmonic-force-constants">
+<h2>1. Harmonic force constants<a class="headerlink" href="#harmonic-force-constants" title="Link to this heading">#</a></h2>
+<section id="the-nac-parameters">
+<h3>The NAC parameters<a class="headerlink" href="#the-nac-parameters" title="Link to this heading">#</a></h3>
+<p>KCl is polar, so the non-analytical term correction has to be there. The Born
+effective charges and the dielectric constant come from a separate calculation
+on the primitive cell, <code class="docutils literal notranslate"><span class="pre">LEPSILON</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> in VASP, and are written as a <code class="docutils literal notranslate"><span class="pre">BORN</span></code>
+file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">14.399652</span>
+<span class="mf">2.364629719999998</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">2.364629719999998</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">2.364629719999998</span>
+<span class="mf">1.128900873333334</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1.128900873333333</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1.128900873333334</span>
+<span class="o">-</span><span class="mf">1.128900873333334</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.128900873333333</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.128900873333334</span>
+</pre></div>
+</div>
+<p>The first line is the unit conversion factor, the second the dielectric
+constant, and the last two the Born effective charges of the K and the Cl atom
+of the primitive cell.</p>
+<p>Write that file before the commands below, and the parameters travel with the
+cell through the whole calculation. <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> reads <code class="docutils literal notranslate"><span class="pre">BORN</span></code> from the
+directory it runs in and writes a <code class="docutils literal notranslate"><span class="pre">nac</span></code> block into <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">phonopy-collect</span> <span class="pre">--save-params</span></code> carries the block into <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>,
+and the scripts of step 2 carry it into every file they save, <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>
+included. Writing <code class="docutils literal notranslate"><span class="pre">BORN</span></code> afterwards leaves the files already saved without it.</p>
+<p>The other way is to paste the block into a phonopy.yaml-like file that lacks
+it, at the top level beside <code class="docutils literal notranslate"><span class="pre">dataset</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nac</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">born_effective_charge</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="c1"># 1 (K)</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">  </span><span class="nv">1.128900873333334</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">1.128900873333333</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-0.000000000000000</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">1.128900873333334</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="c1"># 2 (Cl)</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">-1.128900873333334</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-0.000000000000000</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">-0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-1.128900873333333</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-1.128900873333334</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">dielectric_constant</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">  </span><span class="nv">2.364629719999998</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">2.364629719999998</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w">  </span><span class="nv">2.364629719999998</span><span class="w"> </span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">unit_conversion_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14.399652</span>
+</pre></div>
+</div>
+<p>Either way the log names the file the parameters came from, as
+<code class="docutils literal notranslate"><span class="pre">NAC</span> <span class="pre">parameters</span> <span class="pre">were</span> <span class="pre">read</span> <span class="pre">from</span> <span class="pre">&quot;BORN&quot;.</span></code> or from the phonopy.yaml-like file that
+carried them. <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span> <span class="pre">-v</span></code> adds <code class="docutils literal notranslate"><span class="pre">NAC</span> <span class="pre">parameters</span> <span class="pre">are</span> <span class="pre">not</span> <span class="pre">used.</span></code> when
+there are none.</p>
+<p>The iterations do not use these parameters. Their displacements are drawn from
+the force constants at the commensurate points of the supercell, where no
+correction is applied, so drawing with and without the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file above gives
+the same supercells, and the force constants that come out are the same.</p>
+<p>The free energy is another matter. Its harmonic part is sampled on a mesh,
+where the correction does apply, and for this KCl at 300 K the parameters above
+move it by 0.43 meV per primitive cell. That is several times the statistical
+error of one iteration, so a free energy that is to be compared with anything
+needs them. The band structures of step 5 need them as well, for the LO-TO
+splitting.</p>
+<p>A rerun with the same <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code> draws the same supercells, so adding the
+<code class="docutils literal notranslate"><span class="pre">BORN</span></code> file to a run that was made without it changes the harmonic part alone.</p>
+</section>
+<section id="the-finite-displacements">
+<h3>The finite displacements<a class="headerlink" href="#the-finite-displacements" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code> writes the displaced supercells, the calculator computes their
+forces, and <code class="docutils literal notranslate"><span class="pre">phonopy-collect</span></code> puts the two together:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-init<span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>--amplitude<span class="w"> </span><span class="m">0</span>.03
+%<span class="w"> </span><span class="c1"># run the calculator in disp-001 and disp-002</span>
+%<span class="w"> </span>phonopy-collect<span class="w"> </span>disp-*/vaspout.h5<span class="w"> </span>--save-params
+<span class="c1"># -&gt; phonopy_params.yaml</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code> is the conventional cell of KCl, with a = 6.292 Angstrom, and
+<code class="docutils literal notranslate"><span class="pre">--dim</span> <span class="pre">2</span> <span class="pre">2</span> <span class="pre">2</span></code> makes the supercell of 64 atoms. Fm-3m leaves two displacements,
+one on a K atom and one on a Cl atom, each 0.03 Angstrom.</p>
+<p>The VASP settings of this example are PBEsol, <code class="docutils literal notranslate"><span class="pre">ENCUT</span> <span class="pre">=</span> <span class="pre">500</span></code>, <code class="docutils literal notranslate"><span class="pre">EDIFF</span> <span class="pre">=</span> <span class="pre">1e-8</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ISMEAR</span> <span class="pre">=</span> <span class="pre">0</span></code> with <code class="docutils literal notranslate"><span class="pre">SIGMA</span> <span class="pre">=</span> <span class="pre">0.01</span></code>, <code class="docutils literal notranslate"><span class="pre">ISYM</span> <span class="pre">=</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">PREC</span> <span class="pre">=</span> <span class="pre">accurate</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ADDGRID</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>, on a 2x2x2 k-point mesh of the supercell. The SSCHA
+iterations take their forces from the MLP rather than from VASP, and the MLP is
+fitted to VASP forces, so these settings are what it can reproduce.</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> then carries the cell, the displacements and the forces.
+Script 1 of step 2 fits the harmonic force constants from it, and
+<code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> starts its iterations from them.</p>
+</section>
+</section>
+<section id="the-training-set">
+<h2>2. The training set<a class="headerlink" href="#the-training-set" title="Link to this heading">#</a></h2>
+<p>The displacements of step 1 are small, and the forces they give are almost
+harmonic. Anharmonic effects appear only in supercells displaced further than
+that. The training set is therefore made by moving every atom at once, by
+amounts drawn at random from the thermal distribution of the harmonic crystal
+at a chosen temperature.</p>
+<p>The harmonic force constants define that crystal. It separates into independent
+normal modes. Each mode is a harmonic oscillator, so its own normal coordinate
+is Gaussian about zero, and the width of that Gaussian is set by the mode’s
+frequency and by the temperature.</p>
+<p>The distribution is drawn once, from the harmonic force constants. SSCHA
+iterates its own distribution to self-consistency with the anharmonic force
+constants; this draw does not. In practice that has been enough for a training
+set.</p>
+<section id="the-thermal-distribution">
+<span id="polymlp-sscha-thermal-distribution"></span><h3>The thermal distribution<a class="headerlink" href="#the-thermal-distribution" title="Link to this heading">#</a></h3>
+<p>Each mode <span class="math notranslate nohighlight">\((\mathbf{q}, \nu)\)</span> of the supercell is a harmonic oscillator
+in equilibrium at <span class="math notranslate nohighlight">\(T\)</span>, so its normal coordinate is normally distributed
+about zero with variance</p>
+<div class="math notranslate nohighlight">
+\[\sigma_{\mathbf{q}\nu}^2 = \langle |Q_{\mathbf{q}\nu}|^2 \rangle
+= \frac{\hbar}{2\omega_{\mathbf{q}\nu}}
+  \coth \frac{\hbar \omega_{\mathbf{q}\nu}}{2 k_\mathrm{B} T}.\]</div>
+<p>A snapshot is one supercell with every atom displaced at once, unlike the
+displacements of step 1, which move one atom at a time. Each snapshot draws one
+<span class="math notranslate nohighlight">\(\xi_{\mathbf{q}\nu}\)</span> per mode from the standard normal distribution –
+mean 0, variance 1 – so that <span class="math notranslate nohighlight">\(Q_{\mathbf{q}\nu} = \sigma_{\mathbf{q}\nu} \xi_{\mathbf{q}\nu}\)</span>, and the displacements follow from
+the eigenvectors,</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{u}_{lj} = \frac{1}{\sqrt{N m_j}} \sum_{\mathbf{q}\nu}
+\sigma_{\mathbf{q}\nu}\, \xi_{\mathbf{q}\nu}\,
+\mathbf{e}^{j}_{\mathbf{q}\nu}\,
+e^{i \mathbf{q} \cdot \mathbf{r}_l},
+\qquad
+\xi_{\mathbf{q}\nu} \sim \mathcal{N}(0, 1).\]</div>
+<p>The frequencies set the amplitudes <span class="math notranslate nohighlight">\(\sigma_{\mathbf{q}\nu}\)</span>, and the
+eigenvectors set the pattern of atomic motion each mode displaces along. Each
+<span class="math notranslate nohighlight">\(\xi_{\mathbf{q}\nu}\)</span> fixes how far its own mode is displaced in this
+snapshot, and the sum turns those into the displacement of every atom.</p>
+</section>
+<section id="drawing-the-displacements">
+<h3>Drawing the displacements<a class="headerlink" href="#drawing-the-displacements" title="Link to this heading">#</a></h3>
+<p>Pick temperatures covering the temperatures the SSCHA runs will use. An MLP
+tends to be poor outside the range it was trained on. Script 1 draws at 0, 100,
+300 and 500 K, which covers a run at any temperature up to 500 K.</p>
+<p>Script 1 reads the harmonic force constants of step 1 from
+<code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>, draws <code class="docutils literal notranslate"><span class="pre">SNAPSHOTS</span></code> supercells at each temperature, and
+writes them in the layout <code class="docutils literal notranslate"><span class="pre">phonopy-collect</span></code> reads back.</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Script 1 – the thermal training displacements</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Draw the training supercells from the thermal distribution."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_vasp</span>
+
+<span class="n">PHONOPY_PARAMS</span> <span class="o">=</span> <span class="s2">"phonopy_params.yaml"</span>  <span class="c1"># harmonic force constants of step 1</span>
+<span class="n">TRAIN</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"train"</span><span class="p">)</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">300.0</span><span class="p">,</span> <span class="mf">500.0</span><span class="p">)</span>  <span class="c1"># K</span>
+<span class="n">SNAPSHOTS</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># structures per temperature</span>
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">20260907</span>
+
+<span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">TEMPERATURES</span><span class="p">:</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">PHONOPY_PARAMS</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">init_random_displacements</span><span class="p">()</span>
+    <span class="n">rd</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">random_displacements</span>
+    <span class="n">rd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="n">temperature</span><span class="p">,</span>
+        <span class="n">number_of_snapshots</span><span class="o">=</span><span class="n">SNAPSHOTS</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"displacements"</span><span class="p">:</span> <span class="n">rd</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">copy</span><span class="p">()}</span>
+
+    <span class="n">set_dir</span> <span class="o">=</span> <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"T</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">set_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># The displacements have to be saved beside the supercells: phonopy-collect</span>
+    <span class="c1"># attaches the forces to them below.</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">set_dir</span> <span class="o">/</span> <span class="s2">"phonopy_disp.yaml"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">disp_dir</span> <span class="o">=</span> <span class="n">set_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"disp-</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">disp_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">write_vasp</span><span class="p">(</span><span class="n">disp_dir</span> <span class="o">/</span> <span class="s2">"POSCAR"</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> fits the force constants to the displacements and forces the
+file carries, and <code class="docutils literal notranslate"><span class="pre">init_random_displacements</span></code> needs them.</p>
+<p>Each set has its own directory, <code class="docutils literal notranslate"><span class="pre">train/T0</span></code> to <code class="docutils literal notranslate"><span class="pre">train/T500</span></code>, holding
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">disp-001/POSCAR</span> <span class="pre">..</span> <span class="pre">disp-050/POSCAR</span></code>, the same layout
+as the finite displacement calculation of step 1. Run the calculator in every
+<code class="docutils literal notranslate"><span class="pre">disp-*</span></code>, then collect the forces of each set:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-collect<span class="w"> </span>disp-*/vaspout.h5<span class="w"> </span>--save-params
+<span class="c1"># -&gt; phonopy_params.yaml, with the displacements, forces and supercell energies</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-collect</span></code> takes the calculator output files as its arguments, and reads
+the displacements and the calculator from the <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> of the
+directory it runs in. Run it in each set directory in turn.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--save-params</span></code> writes <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>; without it the command writes
+<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, which carries no supercell energies. The SSCHA free energy needs
+those energies, and extracting them from the calculator output is supported for
+the VASP interface alone.</p>
+<p>Script 1 draws 50 supercells at each of the four temperatures, so the
+calculator runs 200 supercells of 64 atoms here. Collecting each set in turn
+leaves one <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> in <code class="docutils literal notranslate"><span class="pre">train/T0</span></code>, <code class="docutils literal notranslate"><span class="pre">train/T100</span></code>, <code class="docutils literal notranslate"><span class="pre">train/T300</span></code> and
+<code class="docutils literal notranslate"><span class="pre">train/T500</span></code>.</p>
+</section>
+<section id="merging-the-temperatures">
+<span id="polymlp-sscha-merging"></span><h3>Merging the temperatures<a class="headerlink" href="#merging-the-temperatures" title="Link to this heading">#</a></h3>
+<p>The MLP is trained on all four temperatures at once. Script 2 merges the sets
+by interleaving, so that the temperatures alternate through the merged list
+instead of following one another in blocks.</p>
+<p>The reason is how <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> cut the merged list. <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> takes that
+many structures from its head and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> takes that many from its tail, and
+neither looks at what is in them. In blocks the head would be the coldest
+temperatures and the tail the hottest, so the MLP would be fitted to one part
+of the range and tested on another. Interleaved, any head and any tail hold the
+temperatures in equal parts.</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Script 2 – one training set from the temperatures</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Merge the sets of the temperatures into one training set."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+
+<span class="n">TRAIN</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"train"</span><span class="p">)</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>  <span class="c1"># the temperatures of Script 1</span>
+
+<span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"displacements"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"forces"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"supercell_energies"</span><span class="p">:</span> <span class="p">[]}</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">TEMPERATURES</span><span class="p">:</span>
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+        <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"T</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">"</span> <span class="o">/</span> <span class="s2">"phonopy_params.yaml"</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+<span class="n">merged</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+    <span class="c1"># (temperature, structure, ...) -&gt; (structure x temperature, ...)</span>
+    <span class="n">merged</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="n">phonon</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">replicate</span><span class="p">()</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="n">ph</span><span class="o">.</span><span class="n">nac_params</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">merged</span>
+<span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">TRAIN</span> <span class="o">/</span> <span class="s2">"merged.yaml"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">train/merged.yaml</span></code> then holds the 200 structures with their displacements,
+forces and supercell energies, and is the file the MLP is trained on.</p>
+<p><a class="reference internal" href="#polymlp-sscha-check-displacements"><span class="std std-ref">Checking the training displacements</span></a>
+is a second of arithmetic on what Scripts 1 and 2 wrote, and the check on the
+displacements can be made before the calculator is run.</p>
+</section>
+<section id="what-the-draw-leaves-at-its-defaults">
+<span id="polymlp-sscha-draw-defaults"></span><h3>What the draw leaves at its defaults<a class="headerlink" href="#what-the-draw-leaves-at-its-defaults" title="Link to this heading">#</a></h3>
+<p>Script 1 leaves the other parameters of <code class="docutils literal notranslate"><span class="pre">init_random_displacements</span></code> at their
+defaults. The parameters that change the displacements are
+<code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">dist_func</span></code> and <code class="docutils literal notranslate"><span class="pre">max_distance</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code> is 0.01 THz by default. A mode’s amplitude grows without
+bound as its <span class="math notranslate nohighlight">\(|\omega|\)</span> goes to zero, so the draw leaves out every mode
+below the cutoff. The acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> fall below it in any
+calculation, and a crystal close to an instability can have others that do.</p>
+<p>The draw takes <span class="math notranslate nohighlight">\(|\omega|\)</span>, so an imaginary mode is drawn as a real mode
+of the same magnitude. Look at the frequencies of step 1 before training on a
+structure that has them. <code class="docutils literal notranslate"><span class="pre">RandomDisplacements.treat_imaginary_modes</span></code> is the
+explicit treatment. It takes <span class="math notranslate nohighlight">\(|\omega|\)</span> at the commensurate points,
+shifts the modes between <code class="docutils literal notranslate"><span class="pre">freq_from</span></code> and <code class="docutils literal notranslate"><span class="pre">freq_to</span></code> up by <code class="docutils literal notranslate"><span class="pre">freq_shift</span></code>, and
+rebuilds the force constants from the shifted modes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dist_func</span></code> chooses the occupation the draw uses, quantum by default or
+classical. <code class="docutils literal notranslate"><span class="pre">max_distance</span></code> shortens any displacement longer than the length
+given, which caps the tail of the distribution.</p>
+</section>
+<section id="reproducing-and-extending-the-draw">
+<span id="polymlp-sscha-normals"></span><h3>Reproducing and extending the draw<a class="headerlink" href="#reproducing-and-extending-the-draw" title="Link to this heading">#</a></h3>
+<p>Snapshot <em>i</em> is drawn from <code class="docutils literal notranslate"><span class="pre">SeedSequence([random_seed,</span> <span class="pre">i])</span></code>, so it depends on
+its index and on nothing else. Asking for snapshots 0 to 49 and later for 50 to
+99 gives the same 100 as asking for 0 to 99 at once. A training set can
+therefore be extended, or generated in blocks, with
+<code class="docutils literal notranslate"><span class="pre">run(...,</span> <span class="pre">first_snapshot=N)</span></code>.</p>
+<p>A seed alone does not reproduce a training set after a NumPy upgrade. NumPy
+does not promise that <code class="docutils literal notranslate"><span class="pre">Generator</span></code> distribution methods give the same stream
+across its own versions
+(<a class="reference external" href="https://numpy.org/neps/nep-0019-rng-policy.html">NEP 19</a>). Save the
+<span class="math notranslate nohighlight">\(\xi\)</span> themselves to keep the draw across such an upgrade.
+<code class="docutils literal notranslate"><span class="pre">draw_standard_normals</span></code> returns them rather than displacements, and
+<code class="docutils literal notranslate"><span class="pre">run(standard_normals=...)</span></code> takes a set back. In place of the <code class="docutils literal notranslate"><span class="pre">rd.run</span></code> call of
+Script 1,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">normals</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">draw_standard_normals</span><span class="p">(</span><span class="n">SNAPSHOTS</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">))</span>
+<span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span>
+    <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"normals-</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">K.npz"</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ij</span><span class="o">=</span><span class="n">normals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">rd</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">standard_normals</span><span class="o">=</span><span class="n">normals</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The displacements in each <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> record the training set that was
+run, and the forces attach to those, so a lost <code class="docutils literal notranslate"><span class="pre">normals.npz</span></code> costs the
+extension rather than the training set.</p>
+<p>The displacements are drawn at random, so a training set of a given size is one
+draw among many. A second draw of the same size would give a different training
+set, and with it a different MLP and different results downstream. Draw a
+second set with a different seed and train a second MLP on it to measure that
+difference, and compare the quantity you intend to report rather than the
+phonon frequencies alone.</p>
+</section>
+</section>
+<section id="training-the-mlp">
+<h2>3. Training the MLP<a class="headerlink" href="#training-the-mlp" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">--pypolymlp</span></code> trains the MLP on the merged set and writes it as
+<code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> in the current directory. The name cannot be changed from the
+command line, so run the training in the directory the MLP belongs to:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mkdir<span class="w"> </span>mlp-default<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>mlp-default
+%<span class="w"> </span>phonopy<span class="w"> </span>../train/merged.yaml<span class="w"> </span>--pypolymlp<span class="w"> </span>--mlp-params<span class="o">=</span><span class="s2">"ntrain=184, ntest=16"</span><span class="w"> </span>-v
+<span class="c1"># -&gt; mlp-default/polymlp.yaml</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ntrain=184,</span> <span class="pre">ntest=16</span></code> splits the 200 structures of step 2. The MLP this gives
+predicts the 16 test structures with a force RMSE of 0.00054 eV/Angstrom and an
+energy RMSE of 0.0083 meV/atom, and pypolymlp selects the smallest penalty of
+its ladder, 1e-3.</p>
+<p>A directory per MLP is what makes several descriptors comparable, since each
+fit writes <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> into the directory it runs in and would otherwise
+write over the previous one.</p>
+<p>Information about the development of MLPs using pypolymlp is provided between
+the <code class="docutils literal notranslate"><span class="pre">pypolymlp</span> <span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">pypolymlp</span> <span class="pre">end</span></code> sections of the log. The <code class="docutils literal notranslate"><span class="pre">-v</span></code> option
+shows the prediction errors of the developed MLPs. Those reported for the test
+dataset are the errors for the structures that were not used for the training,
+and therefore indicate how accurately the MLPs predict energies and forces of
+unseen supercells.</p>
+<section id="the-parameters-of-the-mlp">
+<h3>The parameters of the MLP<a class="headerlink" href="#the-parameters-of-the-mlp" title="Link to this heading">#</a></h3>
+<p>A few parameters can be specified using the <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> option for the
+development of MLPs. The parameters are provided as a string, separated by
+commas. A brief explanation of the available parameters can be found in the
+docstring of <code class="docutils literal notranslate"><span class="pre">PypolymlpParams</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">PypolymlpParams</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">help</span><span class="p">(</span><span class="n">PypolymlpParams</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ntrain</span></code> and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> are implemented in phonopy, while the remaining parameters
+are directly passed to pypolymlp. The dataset split is a straightforward one:
+the first <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> supercells of the merged list are used for training, and the
+last <code class="docutils literal notranslate"><span class="pre">ntest</span></code> supercells are reserved for testing.</p>
+<p>Optimizing pypolymlp parameters can be difficult, both in terms of achieving
+accuracy and managing the computational resources required. The current default
+parameters are likely suitable for systems up to ternary compounds. For binary
+systems, the calculations can generally be run on standard laptop computers,
+but for ternary systems, around 40 GB of memory or more may be necessary. For
+parameter adjustments, it is recommended to consult the
+<a class="reference external" href="https://github.com/sekocha/pypolymlp">pypolymlp</a> documentation and review the
+relevant research papers.</p>
+</section>
+<section id="the-descriptor-and-the-amount-of-training-data">
+<span id="polymlp-sscha-descriptor"></span><h3>The descriptor and the amount of training data<a class="headerlink" href="#the-descriptor-and-the-amount-of-training-data" title="Link to this heading">#</a></h3>
+<p>There are two things to choose here: how big a descriptor to use, and how many
+structures to train it on. The ridge penalty is not a third choice. It is what
+the fit falls back on when the descriptor is too large for the training set, so
+the penalty pypolymlp selects indicates whether the two are matched.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> also sets the descriptor. The table is the KCl of this page,
+trained on the 200 structures of step 2 split 184 / 16. The memory is the peak
+allocation pypolymlp reports for the training dataset, and the error is the
+force RMSE on the 16 test structures, at the ridge penalty pypolymlp selected:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>features</p></th>
+<th class="head"><p>model parameters added to <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code></p></th>
+<th class="head"><p>memory</p></th>
+<th class="head"><p>test force RMSE</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>8,283</p></td>
+<td><p>nothing; phonopy’s defaults</p></td>
+<td><p>3.5 GB</p></td>
+<td><p>0.00054</p></td>
+</tr>
+<tr class="row-odd"><td><p>12,328</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
+<td><p>6.0 GB</p></td>
+<td><p>0.00069</p></td>
+</tr>
+<tr class="row-even"><td><p>30,680</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
+<td><p>24.1 GB</p></td>
+<td><p>0.00084</p></td>
+</tr>
+<tr class="row-odd"><td><p>38,302</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+<td><p>34.7 GB</p></td>
+<td><p>0.00079</p></td>
+</tr>
+<tr class="row-even"><td><p>50,328</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span></code></p></td>
+<td><p>40.5 GB</p></td>
+<td><p>0.00082</p></td>
+</tr>
+<tr class="row-odd"><td><p>55,992</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+<td><p>50.2 GB</p></td>
+<td><p>0.00080</p></td>
+</tr>
+<tr class="row-even"><td><p>103,818</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4</span></code></p></td>
+<td><p>172.5 GB</p></td>
+<td><p>0.00100</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The RMSE is in eV/Angstrom. Phonopy’s defaults are <code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">3</span></code>,
+<code class="docutils literal notranslate"><span class="pre">max_p</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">8</span> <span class="pre">8</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">cutoff</span> <span class="pre">=</span> <span class="pre">8.0</span></code>. Phonopy passes them to
+pypolymlp itself, and the other rows change one or two of them.</p>
+<p>The memory is set by the normal matrix the ridge solver forms, which has one
+row and one column per feature. The solver’s own requirement therefore grows as
+the square of the feature count, and pypolymlp reports it as the Cholesky
+minimum: 1.1 GB at 8,283 features and 172.5 GB at 103,818, which is a whole
+node for one fit. The peak allocation of the table adds the design matrix on
+top of that. Read both numbers in the log before submitting the job.</p>
+<p>The feature count itself grows with the number of elements. KCl has two, and
+<code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4</span></code> gives it the 103,818 features of the table against 6,820 for a
+one-element system, so a count measured elsewhere is no guide to the count
+here.</p>
+<p>None of the larger descriptors improves on the defaults here. At the smallest
+penalty the fit at 103,818 features reaches a training RMSE 25 times lower than
+the one at 8,283, and a test RMSE twice as high, which is the training set of
+184 structures rather than the descriptor limiting what can be determined.</p>
+<p>An SSCHA run evaluates the descriptor once per snapshot per iteration, so the
+evaluation time sets the cost of step 4. That time is dominated by <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code>
+rather than by the feature count, measured on a one-element system with
+pypolymlp 0.20.5: two descriptors differing in <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code> alone cost about
+four times more at <code class="docutils literal notranslate"><span class="pre">12</span> <span class="pre">12</span></code> than at <code class="docutils literal notranslate"><span class="pre">8</span> <span class="pre">8</span></code>, while raising <code class="docutils literal notranslate"><span class="pre">model_type</span></code> multiplied
+the feature count eighteen-fold for 1.4 times the time.</p>
+<p>How much training data a descriptor needs is a separate question. Fit with the
+default <code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code>, which scans five penalties from 1e-3 to 1e1, and
+see which one pypolymlp keeps. With too few structures the penalty with the
+smallest test RMSE sits at the large-penalty end of the range. As structures
+are added, that penalty moves towards smaller values, and it stops moving once
+there are enough structures. If that penalty is still at the large end, the
+training set is what limits the accuracy, and adding features will not help
+until more structures are added. Of the descriptors in the table,
+<code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code> is the one whose penalty moved off the small end, to 1e-1;
+the others kept 1e-3 or 1e-2.</p>
+<p><code class="docutils literal notranslate"><span class="pre">optimal</span> <span class="pre">=</span> <span class="pre">false</span></code> in <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> keeps every penalty of the ladder rather
+than the one with the smallest test RMSE. The MLPs are then written as
+<code class="docutils literal notranslate"><span class="pre">polymlp.yaml.v01</span></code>, <code class="docutils literal notranslate"><span class="pre">polymlp.yaml.v02</span></code> and so on, beside a <code class="docutils literal notranslate"><span class="pre">polymlp.log</span></code> naming
+each one’s penalty and test RMSE, so one fit gives the whole ladder to read.
+This needs pypolymlp 0.21.0 or newer.</p>
+<p>Repeat that fit at several training-set sizes. Plot the selected penalty
+against the size, with one line per descriptor. A line that is still falling at
+the largest size has not converged, and a line that has flattened has
+converged. Each point costs one fit, which is far less than the SSCHA runs of
+step 4, so make this plot first.</p>
+</section>
+<section id="validating-the-mlp">
+<span id="polymlp-sscha-validate"></span><h3>Validating the MLP<a class="headerlink" href="#validating-the-mlp" title="Link to this heading">#</a></h3>
+<p>The MLP is judged by its phonons rather than by the force RMSE. The RMSE
+includes large-amplitude structures that the harmonic quantities never visit,
+while the frequencies are what enter the free energy. The comparison below is
+still made on the forces, because it is cheap and it shows where the MLP is
+weak.</p>
+<p>The thermal supercells of step 2 already carry calculator forces. Evaluate the
+same supercells with the MLP and compare the two sets of forces. Nothing new
+has to be run with the calculator. Use the structures held out as the test set,
+since the MLP was fitted to the others.</p>
+<p>Compare one temperature at a time. Each temperature has its own displacement
+amplitudes, and one MLP is trained on all of them together, so its accuracy can
+differ from one temperature to the next.</p>
+<p>The finite displacements of step 1 can be compared in the same way, and there
+the force constants and the frequencies can be compared as well. Those
+displacements are one fixed distance, 0.03 Angstrom in the run here, which is
+usually smaller than the amplitudes of the 0 K draw. An MLP trained across a
+temperature range tends to be hard to make accurate at displacements that
+small, so a difference there need not mean the temperature-dependent run is
+wrong.</p>
+</section>
+</section>
+<section id="running-sscha">
+<h2>4. Running SSCHA<a class="headerlink" href="#running-sscha" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> reads the cell and the starting force constants from a
+phonopy.yaml-like file, and the potential from a pypolymlp file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mkdir<span class="w"> </span>sscha-300K<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sscha-300K
+%<span class="w"> </span>phonopy-mlpsscha<span class="w"> </span>../train/merged.yaml<span class="w"> </span>--mlp<span class="w"> </span>../mlp-default/polymlp.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>-t<span class="w"> </span><span class="m">300</span><span class="w"> </span>--snapshots<span class="w"> </span><span class="m">2000</span><span class="w"> </span>--iterations<span class="w"> </span><span class="m">11</span><span class="w"> </span>--mesh<span class="w"> </span><span class="m">200</span><span class="w"> </span>--random-seed<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>--all-force-constants<span class="w"> </span>--save-dataset<span class="w"> </span>-v
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Set</span> <span class="s2">"vasp"</span> <span class="n">mode</span><span class="o">.</span>
+<span class="n">NAC</span> <span class="n">parameters</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">"../train/merged.yaml"</span><span class="o">.</span>
+<span class="n">Displacement</span><span class="o">-</span><span class="n">force</span> <span class="n">dataset</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">"../train/merged.yaml"</span><span class="o">.</span>
+<span class="n">Type</span><span class="o">-</span><span class="n">II</span> <span class="n">dataset</span> <span class="n">was</span> <span class="n">found</span><span class="o">.</span> <span class="n">Symfc</span> <span class="ow">is</span> <span class="n">used</span> <span class="k">as</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">calculator</span><span class="o">.</span>
+<span class="o">--------------------------------</span> <span class="n">Symfc</span> <span class="n">start</span> <span class="o">-------------------------------</span>
+<span class="n">Symfc</span> <span class="n">version</span> <span class="mf">1.7.0</span> <span class="p">(</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">symfc</span><span class="o">/</span><span class="n">symfc</span><span class="p">)</span>
+<span class="n">Citation</span><span class="p">:</span> <span class="n">A</span><span class="o">.</span> <span class="n">Seko</span> <span class="ow">and</span> <span class="n">A</span><span class="o">.</span> <span class="n">Togo</span><span class="p">,</span> <span class="n">Phys</span><span class="o">.</span> <span class="n">Rev</span><span class="o">.</span> <span class="n">B</span><span class="p">,</span> <span class="mi">110</span><span class="p">,</span> <span class="mi">214302</span> <span class="p">(</span><span class="mi">2024</span><span class="p">)</span>
+<span class="n">Computing</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="n">order</span> <span class="n">force</span> <span class="n">constants</span><span class="o">.</span>
+<span class="n">Increase</span> <span class="n">log</span><span class="o">-</span><span class="n">level</span> <span class="n">to</span> <span class="n">watch</span> <span class="n">detailed</span> <span class="n">symfc</span> <span class="n">log</span><span class="o">.</span>
+<span class="o">---------------------------------</span> <span class="n">Symfc</span> <span class="n">end</span> <span class="o">--------------------------------</span>
+<span class="n">Max</span> <span class="n">drift</span> <span class="n">of</span> <span class="n">force</span> <span class="n">constants</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span> <span class="o">-</span><span class="mf">0.00000000</span> <span class="p">(</span><span class="n">yy</span><span class="p">)</span>
+<span class="n">Use</span> <span class="n">provided</span> <span class="n">force</span> <span class="n">constants</span><span class="o">.</span>
+
+<span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">11</span> <span class="p">]</span>
+<span class="n">Generate</span> <span class="mi">2000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
+  <span class="p">[</span><span class="mf">0.004</span><span class="p">,</span> <span class="mf">0.080</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.080</span><span class="p">,</span> <span class="mf">0.156</span><span class="p">]</span> <span class="o">******************</span>
+  <span class="p">[</span><span class="mf">0.156</span><span class="p">,</span> <span class="mf">0.232</span><span class="p">]</span> <span class="o">****************************</span>
+  <span class="p">[</span><span class="mf">0.232</span><span class="p">,</span> <span class="mf">0.308</span><span class="p">]</span> <span class="o">**************************</span>
+  <span class="p">[</span><span class="mf">0.308</span><span class="p">,</span> <span class="mf">0.384</span><span class="p">]</span> <span class="o">***************</span>
+  <span class="p">[</span><span class="mf">0.384</span><span class="p">,</span> <span class="mf">0.460</span><span class="p">]</span> <span class="o">******</span>
+  <span class="p">[</span><span class="mf">0.460</span><span class="p">,</span> <span class="mf">0.536</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.536</span><span class="p">,</span> <span class="mf">0.613</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.613</span><span class="p">,</span> <span class="mf">0.689</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.689</span><span class="p">,</span> <span class="mf">0.765</span><span class="p">]</span>
+<span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
+<span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
+
+<span class="p">(</span><span class="n">iterations</span> <span class="mi">2</span> <span class="n">to</span> <span class="mi">11</span> <span class="n">are</span> <span class="n">omitted</span> <span class="n">here</span><span class="p">)</span>
+
+<span class="n">Wrote</span> <span class="n">mlpsscha</span><span class="o">.</span><span class="n">hdf5</span>
+<span class="n">Wrote</span> <span class="n">phonopy_mlpsscha_dataset</span><span class="o">.</span><span class="n">yaml</span><span class="o">.</span><span class="n">xz</span>
+</pre></div>
+</div>
+<p>The run starts from the force constants symfc fits to the training set of
+step 2, which is what <code class="docutils literal notranslate"><span class="pre">Use</span> <span class="pre">provided</span> <span class="pre">force</span> <span class="pre">constants.</span></code> reports. The histogram
+is the distribution of the displacement magnitudes of that iteration’s 2000
+supercells, in Angstrom.</p>
+<p>The input file may carry the force constants themselves, or the displacements
+and forces they are fitted from, which is what the <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code> of step 2
+carries. Carrying neither is allowed as well, and the run then starts from
+force constants fitted to supercells displaced by <code class="docutils literal notranslate"><span class="pre">--distance</span></code> and evaluated by
+the potential. That initialization step is not an SSCHA iteration: its
+displacements are drawn at a fixed distance rather than from a canonical
+ensemble, so no free energy is defined for it and none is recorded.</p>
+<p>NAC parameters are read from the input file when they are there, and from a
+<code class="docutils literal notranslate"><span class="pre">BORN</span></code> file in the directory the command runs in otherwise. They are used in
+the mesh sampling of the harmonic part of the free energy.</p>
+<section id="the-options-of-a-run">
+<span id="polymlp-sscha-options"></span><h3>The options of a run<a class="headerlink" href="#the-options-of-a-run" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> is how many supercells each iteration draws, 1000 by default.
+Each one is an MLP evaluation, which makes it the main cost of the step.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--iterations</span></code> is how many iterations the run makes, 10 by default. The early
+ones drive the force constants to self-consistency, and they are the run’s
+transient.</p>
+<p>After the transient the iterations do not settle on a value. Each one refits
+the force constants from a fresh sample, so the step between iterations stops
+shrinking, and the free energies scatter about a fixed point instead of
+approaching one. Every iteration past the transient is an independent sample of
+the free energy, and averaging them improves the estimate.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--mesh</span></code> is the mesh the harmonic part of the free energy is sampled on, 100 by
+default. Two runs are comparable only when both were sampled on the same mesh.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--random-seed</span></code> fixes the whole run. Iteration <em>i</em> draws from
+<code class="docutils literal notranslate"><span class="pre">SeedSequence([seed,</span> <span class="pre">i])</span></code>, so the run is reproducible while its iterations stay
+independent of one another.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--transient</span></code> marks the listing alone, and the file holds every iteration
+whatever it is set to. Choosing another transient afterwards is arithmetic on
+that file and costs no sampling.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--distance</span></code> is the displacement distance of the initialization step, 0.01
+Angstrom by default, and is used only when the input file carries no force
+constants.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--all-force-constants</span></code> also writes the force constants of every iteration.
+Averaging the force constants over a transient needs them, and the refit made
+after the last iteration is written either way.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--save-dataset</span></code> writes the displacements of the last iteration, and the forces
+and energies the potential gave them, to <code class="docutils literal notranslate"><span class="pre">phonopy_mlpsscha_dataset.yaml.xz</span></code>.
+The name is fixed. The file holds one structure per snapshot, which is why it
+is compressed, and <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> reads it compressed. A fit made outside the
+run reads it as well, since it is a phonopy.yaml-like file. The supercells of
+the other iterations are not kept, the hdf5 file holding what was computed from
+them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-v</span></code> logs each iteration and prints the listing at the end. <code class="docutils literal notranslate"><span class="pre">-vv</span></code> adds the
+force-constant fit.</p>
+</section>
+</section>
+<section id="reading-the-run">
+<span id="polymlp-sscha-reading"></span><h2>5. Reading the run<a class="headerlink" href="#reading-the-run" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="nb">iter</span>       <span class="n">F</span> <span class="p">[</span><span class="n">meV</span><span class="p">]</span>   <span class="n">error</span> <span class="p">[</span><span class="n">meV</span><span class="p">]</span>   <span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">/</span><span class="n">error</span>
+     <span class="mi">1</span><span class="o">*</span>     <span class="o">-</span><span class="mf">97.6965</span>        <span class="mf">0.0481</span>               <span class="o">+</span><span class="mf">2.6</span>
+     <span class="mi">2</span>      <span class="o">-</span><span class="mf">97.8342</span>        <span class="mf">0.0496</span>               <span class="o">-</span><span class="mf">0.3</span>
+     <span class="mi">3</span>      <span class="o">-</span><span class="mf">97.8606</span>        <span class="mf">0.0501</span>               <span class="o">-</span><span class="mf">0.8</span>
+     <span class="mi">4</span>      <span class="o">-</span><span class="mf">97.8405</span>        <span class="mf">0.0495</span>               <span class="o">-</span><span class="mf">0.4</span>
+     <span class="mi">5</span>      <span class="o">-</span><span class="mf">97.7783</span>        <span class="mf">0.0498</span>               <span class="o">+</span><span class="mf">0.8</span>
+     <span class="mi">6</span>      <span class="o">-</span><span class="mf">97.8896</span>        <span class="mf">0.0488</span>               <span class="o">-</span><span class="mf">1.4</span>
+     <span class="mi">7</span>      <span class="o">-</span><span class="mf">97.8419</span>        <span class="mf">0.0504</span>               <span class="o">-</span><span class="mf">0.4</span>
+     <span class="mi">8</span>      <span class="o">-</span><span class="mf">97.8339</span>        <span class="mf">0.0498</span>               <span class="o">-</span><span class="mf">0.3</span>
+     <span class="mi">9</span>      <span class="o">-</span><span class="mf">97.7636</span>        <span class="mf">0.0498</span>               <span class="o">+</span><span class="mf">1.1</span>
+    <span class="mi">10</span>      <span class="o">-</span><span class="mf">97.7639</span>        <span class="mf">0.0489</span>               <span class="o">+</span><span class="mf">1.1</span>
+    <span class="mi">11</span>      <span class="o">-</span><span class="mf">97.7901</span>        <span class="mf">0.0510</span>               <span class="o">+</span><span class="mf">0.6</span>
+  <span class="o">*</span> <span class="n">left</span> <span class="n">out</span> <span class="k">as</span> <span class="n">the</span> <span class="n">transient</span><span class="o">.</span> <span class="n">Of</span> <span class="n">the</span> <span class="n">kept</span> <span class="n">iterations</span> <span class="n">the</span> <span class="n">furthest</span> <span class="kn">from</span><span class="w"> </span><span class="nn">the</span>
+    <span class="n">mean</span> <span class="ow">is</span> <span class="mi">6</span><span class="p">,</span> <span class="n">at</span> <span class="mf">1.4</span> <span class="n">sigma</span><span class="o">.</span>
+  <span class="n">A</span> <span class="n">kept</span> <span class="n">iteration</span> <span class="n">far</span> <span class="n">outside</span> <span class="n">the</span> <span class="n">scatter</span> <span class="n">of</span> <span class="n">the</span> <span class="n">rest</span> <span class="ow">is</span> <span class="n">still</span> <span class="ow">in</span> <span class="n">the</span>
+  <span class="n">transient</span><span class="p">:</span> <span class="k">raise</span> <span class="n">the</span> <span class="n">transient</span> <span class="ow">and</span> <span class="n">look</span> <span class="n">again</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The listing has one row per iteration. <code class="docutils literal notranslate"><span class="pre">F</span></code> is the SSCHA free energy of that
+iteration and <code class="docutils literal notranslate"><span class="pre">error</span></code> is its statistical error, both in meV per primitive cell.
+The last column is how far the iteration sits from the mean of the kept ones,
+in units of its own error.</p>
+<p>An iteration past the transient gives about 1 in that column, since it scatters
+about the fixed point by its own error. A larger value means the iteration was
+still approaching that point. The rows marked <code class="docutils literal notranslate"><span class="pre">*</span></code> are the ones the
+<code class="docutils literal notranslate"><span class="pre">--transient</span></code> given was already leaving out.</p>
+<p>Raise <code class="docutils literal notranslate"><span class="pre">--transient</span></code> and read the listing again when a kept iteration sits far
+outside the scatter of the rest. How long the transient is depends on the
+system. It lasts until the force constants reach self-consistency, and that
+takes longer the further the starting force constants sit from them, so the
+default of 1 is a floor rather than a measurement.</p>
+<section id="mlpsscha-hdf5">
+<h3><code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code><a class="headerlink" href="#mlpsscha-hdf5" title="Link to this heading">#</a></h3>
+<p>The file holds every iteration and no average. It records the temperature, the
+free energy and error of each iteration, the two ensemble averages the
+anharmonic part is the difference of, the energy of the undisplaced supercell
+that they are measured from, the lattice-vector lengths of the cell, and the
+force constants of the refit made after the last iteration.
+<code class="docutils literal notranslate"><span class="pre">--all-force-constants</span></code> adds the force constants of every iteration.</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">Script 3 – the listing and the average of a run</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""List the iterations of a run and average those after its transient."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_run_hdf5</span>
+
+<span class="n">RUN</span> <span class="o">=</span> <span class="s2">"mlpsscha.hdf5"</span>
+<span class="n">TRANSIENT</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># iterations left out of the average</span>
+
+<span class="n">run</span> <span class="o">=</span> <span class="n">read_sscha_run_hdf5</span><span class="p">(</span><span class="n">RUN</span><span class="p">)</span>
+<span class="n">run</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">TRANSIENT</span><span class="p">)</span>
+<span class="n">average</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">averaged</span><span class="p">(</span><span class="n">TRANSIENT</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">average</span><span class="o">.</span><span class="n">free_energy</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">average</span><span class="o">.</span><span class="n">error</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> meV"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">report</span></code> prints the listing the command printed, and <code class="docutils literal notranslate"><span class="pre">averaged</span></code> returns the
+mean over the iterations after the transient. Energies in the file are in eV
+per primitive cell, and the listing prints meV.</p>
+</section>
+<section id="the-force-constants">
+<h3>The force constants<a class="headerlink" href="#the-force-constants" title="Link to this heading">#</a></h3>
+<p>The force constants of the iterations after the transient are averaged, in the
+same way and for the same reason as their free energies. Each of them is fitted
+from that iteration’s own <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> supercells, so each carries the noise of
+one draw, and the mean of <span class="math notranslate nohighlight">\(K\)</span> of them carries <span class="math notranslate nohighlight">\(\sqrt{K}\)</span> less of it.
+<code class="docutils literal notranslate"><span class="pre">averaged_force_constants</span></code> needs the history that <code class="docutils literal notranslate"><span class="pre">--all-force-constants</span></code>
+writes.</p>
+<p>The average is taken over the compact form on one cell, and each iteration’s
+force constants are already symmetrized by symfc, so the average satisfies the
+symmetry and the sum rule as well. <code class="docutils literal notranslate"><span class="pre">p2s_map</span></code> is carried beside them, and
+comparing the two against the cell they are read with catches force constants
+read against another cell.</p>
+<p>Writing them as <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> gives the SSCHA phonons of the
+temperature the run was made at:</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">Script 4 – the force constants of a run as force_constants.hdf5</span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Write the force constants of a run for phonopy to read."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.file_IO</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_force_constants_to_hdf5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_run_hdf5</span>
+
+<span class="n">RUN</span> <span class="o">=</span> <span class="s2">"mlpsscha.hdf5"</span>
+<span class="n">TRANSIENT</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># iterations left out of the average</span>
+
+<span class="n">run</span> <span class="o">=</span> <span class="n">read_sscha_run_hdf5</span><span class="p">(</span><span class="n">RUN</span><span class="p">)</span>
+<span class="n">write_force_constants_to_hdf5</span><span class="p">(</span>
+    <span class="n">run</span><span class="o">.</span><span class="n">averaged_force_constants</span><span class="p">(</span><span class="n">TRANSIENT</span><span class="p">),</span>
+    <span class="n">p2s_map</span><span class="o">=</span><span class="n">run</span><span class="o">.</span><span class="n">p2s_map</span><span class="p">,</span>
+    <span class="n">physical_unit</span><span class="o">=</span><span class="s2">"eV/angstrom^2"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> reads <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> from the directory it runs in, and
+takes it over the force constants it would otherwise fit from a displacement-
+force dataset. So the cell can be given as <code class="docutils literal notranslate"><span class="pre">train/merged.yaml</span></code>, whose dataset
+is left unused, and the SSCHA force constants are the ones the phonons come
+from.</p>
+<p>A run made without <code class="docutils literal notranslate"><span class="pre">--all-force-constants</span></code> has no history to average. Its
+<code class="docutils literal notranslate"><span class="pre">force_constants</span></code> is the refit made after the last iteration, which is fitted
+from that one iteration’s supercells. Pass <code class="docutils literal notranslate"><span class="pre">run.force_constants</span></code> to Script 4 in
+that case, and read it as one sample rather than as the mean of several.</p>
+<p>The refit comes one step after the last iteration of the history, so it is a
+different quantity from the average rather than the same one computed twice.</p>
+</section>
+</section>
+<section id="the-sscha-free-energy">
+<h2>The SSCHA free energy<a class="headerlink" href="#the-sscha-free-energy" title="Link to this heading">#</a></h2>
+<p>The free energy reported for each iteration is defined for the force constants
+<span class="math notranslate nohighlight">\(\Phi\)</span> by</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{F}_\Phi = \tilde{F}_\Phi - \langle \tilde{V}_\Phi
+\rangle_{\tilde{\rho}_\Phi} + \langle V \rangle_{\tilde{\rho}_\Phi},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\tilde{F}_\Phi\)</span> and <span class="math notranslate nohighlight">\(\langle \tilde{V}_\Phi \rangle_{\tilde{\rho}_\Phi}\)</span> are the harmonic Helmholtz free energy and
+potential energy of <span class="math notranslate nohighlight">\(\Phi\)</span>, respectively, and <span class="math notranslate nohighlight">\(\langle V \rangle_{\tilde{\rho}_\Phi}\)</span> is the potential energy. The averages are taken
+over the harmonic density matrix <span class="math notranslate nohighlight">\(\tilde{\rho}_\Phi\)</span> at the temperature,
+which is sampled by the supercells with random displacements. <span class="math notranslate nohighlight">\(\langle V \rangle_{\tilde{\rho}_\Phi}\)</span> is obtained from the supercell energies evaluated
+by the MLP relative to the energy of the supercell without displacements, and
+the harmonic potential energy is evaluated from the displacements as</p>
+<div class="math notranslate nohighlight">
+\[\langle \tilde{V}_\Phi \rangle_{\tilde{\rho}_\Phi} = \frac{1}{2}
+\sum_{l\kappa j, l'\kappa' j'} \Phi_{l\kappa j, l'\kappa' j'} \langle u_{l\kappa
+j} u_{l'\kappa' j'} \rangle_{\tilde{\rho}_\Phi}.\]</div>
+<p>These terms are given per primitive cell. The notation and the description used
+here are those of equations (B1) and (B3) in appendix B of <u>A. Togo <em>et
+al.</em>, J. Phys.: Condens. Matter <strong>34</strong>, 365401 (2022)</u>
+[<a class="reference external" href="https://doi.org/10.1088/1361-648X/ac7b01">doi</a>], where it is also shown that
+evaluating <span class="math notranslate nohighlight">\(\langle \tilde{V}_\Phi \rangle_{\tilde{\rho}_\Phi}\)</span> from the
+displacements gives a more stable measure of the convergence than evaluating it
+from the phonon frequencies and eigenvectors.</p>
+<p>The free energy of an iteration is that of the force constants the iteration
+sampled, not of the ones it produced from that sample. Only then do the
+harmonic part and the ensemble averaged for the anharmonic part belong to the
+same force constants, which makes the value the SSCHA free energy of those
+force constants.</p>
+<section id="the-error-of-one-iteration">
+<h3>The error of one iteration<a class="headerlink" href="#the-error-of-one-iteration" title="Link to this heading">#</a></h3>
+<p>With <span class="math notranslate nohighlight">\(N\)</span> sampled supercells, which is the number given by <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>,
+the anharmonic part is the mean of</p>
+<div class="math notranslate nohighlight" id="equation-eq-polymlp-sscha-anharmonic">
+<span class="eqno">(1)<a class="headerlink" href="#equation-eq-polymlp-sscha-anharmonic" title="Link to this equation">#</a></span>\[E^\mathrm{anh}_i = \frac{1}{n_\mathrm{cell}} \left( E_i - E_0 - \frac{1}{2}
+\sum_{l\kappa j, l'\kappa' j'} \Phi_{l\kappa j, l'\kappa' j'}
+u^{(i)}_{l\kappa j} u^{(i)}_{l'\kappa' j'} \right),\]</div>
+<p>where <span class="math notranslate nohighlight">\(E_i\)</span> is the energy of the <span class="math notranslate nohighlight">\(i\)</span>-th supercell, <span class="math notranslate nohighlight">\(E_0\)</span> that
+of the supercell without displacements, <span class="math notranslate nohighlight">\(u^{(i)}\)</span> its displacements, and
+<span class="math notranslate nohighlight">\(n_\mathrm{cell}\)</span> the number of primitive cells in the supercell. The
+reported value and its error are then</p>
+<div class="math notranslate nohighlight">
+\[\hat{\mathcal{F}}_\Phi = \tilde{F}_\Phi + \bar{E}^\mathrm{anh},
+\qquad
+\bar{E}^\mathrm{anh} = \frac{1}{N} \sum_{i=1}^{N} E^\mathrm{anh}_i,
+\qquad
+\hat{\sigma} = \frac{\mathrm{std}(E^\mathrm{anh})}{\sqrt{N}},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathrm{std}\)</span> is the sample standard deviation,</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{std}(E^\mathrm{anh}) = \left[ \frac{1}{N - 1} \sum_{i=1}^{N}
+\left( E^\mathrm{anh}_i - \bar{E}^\mathrm{anh} \right)^2 \right]^{1/2}.\]</div>
+<p>The error in the listing is this <span class="math notranslate nohighlight">\(\hat{\sigma}\)</span>. The harmonic part is
+fixed by the force constants and carries no sampling noise, so the whole
+statistical error comes from the anharmonic term. This error holds <span class="math notranslate nohighlight">\(\Phi\)</span>
+fixed, and the uncertainty of <span class="math notranslate nohighlight">\(\Phi\)</span> itself, which was also determined
+from a stochastic sampling, is not included in it.</p>
+</section>
+<section id="the-error-of-the-average">
+<span id="polymlp-sscha-error"></span><h3>The error of the average<a class="headerlink" href="#the-error-of-the-average" title="Link to this heading">#</a></h3>
+<p>The iterations after the transient are independent draws, so the error of their
+mean is</p>
+<div class="math notranslate nohighlight">
+\[e = \frac{1}{m} \sqrt{\sum_{i=1}^{m} \hat{\sigma}_i^2}
+  = \frac{\hat{\sigma}}{\sqrt{mN}},\]</div>
+<p>where <span class="math notranslate nohighlight">\(m\)</span> is how many iterations come after the transient. The second
+form holds when the <span class="math notranslate nohighlight">\(\hat{\sigma}_i\)</span> are alike, with
+<span class="math notranslate nohighlight">\(\hat{\sigma}\)</span> their common value. <span class="math notranslate nohighlight">\(mN\)</span> is how many supercells the
+run evaluates, and <code class="docutils literal notranslate"><span class="pre">averaged</span></code> returns the first form.</p>
+<p>The error depends on that product <span class="math notranslate nohighlight">\(mN\)</span> alone, so it says nothing about
+how to split the cost between <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> and <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>. The split is
+settled by what each of the two does besides lowering the error.
+<code class="docutils literal notranslate"><span class="pre">--iterations</span></code> has to exceed the transient with samples left to average, and
+the listing shows how long the transient is. Each iteration fits its force
+constants from its own <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> supercells, so a small <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>
+leaves every iteration’s force constants noisy however many iterations follow.</p>
+<p>Give the budget to <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>, and raise <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> only until the
+transient is cleared with samples to spare. The two buy the same error, and
+only <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> improves the force constants that everything other than the
+free energy is computed from.</p>
+<p>Each <span class="math notranslate nohighlight">\(\hat{\sigma}_i\)</span> holds its own iteration’s force constants fixed, so
+<span class="math notranslate nohighlight">\(e\)</span> counts the sampling of the snapshots alone. The force constants were
+fitted from a sample as well, and that variation appears as scatter of the kept
+iterations about their mean, which is the column the listing prints. Iterations
+that scatter by about their own <span class="math notranslate nohighlight">\(\hat{\sigma}_i\)</span> say that <span class="math notranslate nohighlight">\(e\)</span> is
+the whole of the error.</p>
+</section>
+</section>
+<section id="convergence">
+<h2>Convergence<a class="headerlink" href="#convergence" title="Link to this heading">#</a></h2>
+<p>The listing of the KCl run is read as two numbers. Iteration 1 sits at 2.6
+sigma and is the transient, and the ten kept iterations sit within 1.4 sigma of
+their mean, which is the scatter of a converged run.</p>
+<p>Their mean is -97.8197 meV per primitive cell. Its error is 0.0157 meV by the
+quadrature above, against 0.0136 meV measured as the scatter of the ten values
+themselves. The two agree, so the iterations are stationary and independent,
+and either may be quoted. A scatter several times the quadrature would mean the
+force constants were still moving, and the transient has to be raised until the
+two agree.</p>
+<p>Averaging is worth having here. One iteration reports 0.05 meV, and the mean of
+ten reports 0.016 meV for no extra sampling.</p>
+<section id="the-phonons-of-the-run">
+<h3>The phonons of the run<a class="headerlink" href="#the-phonons-of-the-run" title="Link to this heading">#</a></h3>
+<p>The SSCHA force constants differ from the harmonic ones, and their band
+structures show by how much:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span><span class="c1"># in sscha-300K, beside the force_constants.hdf5 of Script 4</span>
+%<span class="w"> </span>phonopy-load<span class="w"> </span>../train/merged.yaml<span class="w"> </span>--band<span class="w"> </span>auto<span class="w"> </span>--band-points<span class="w"> </span><span class="m">101</span>
+%<span class="w"> </span>mv<span class="w"> </span>band.yaml<span class="w"> </span>band-sscha.yaml
+
+%<span class="w"> </span><span class="c1"># in the directory of step 1</span>
+%<span class="w"> </span>phonopy-load<span class="w"> </span>phonopy_params.yaml<span class="w"> </span>--band<span class="w"> </span>auto<span class="w"> </span>--band-points<span class="w"> </span><span class="m">101</span>
+%<span class="w"> </span>mv<span class="w"> </span>band.yaml<span class="w"> </span>band-harmonic.yaml
+
+%<span class="w"> </span>phonopy-bandplot<span class="w"> </span>band-harmonic.yaml<span class="w"> </span>sscha-300K/band-sscha.yaml<span class="w"> </span>--legend
+</pre></div>
+</div>
+<p>The two are run in different directories on purpose. <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code>
+takes precedence over any dataset, so the harmonic band computed beside it
+would be the SSCHA one.</p>
+<p>The harmonic cell needs the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file of step 1 beside it for the LO-TO
+splitting, and <code class="docutils literal notranslate"><span class="pre">train/merged.yaml</span></code> carries its own <code class="docutils literal notranslate"><span class="pre">nac</span></code> block.</p>
+<a class="reference internal image-reference" href="_images/polymlp-sscha-bands.png"><img alt="_images/polymlp-sscha-bands.png" src="_images/polymlp-sscha-bands.png" style="width: 70%;" />
+</a>
+<p>The red curves are the harmonic phonons and the blue ones the SSCHA phonons at
+300 K. The optical branches move up and the acoustic ones change little. The
+highest frequency of the whole band structure, the longitudinal optical mode at
+<span class="math notranslate nohighlight">\(\Gamma\)</span>, moves from 6.16 to 6.33 THz. That shift is the temperature
+dependence the run was made for, and its size says whether the harmonic
+approximation was good enough for the property being computed.</p>
+<p>Averaging the force constants matters less here than the shift itself. The band
+structure of the refit made after the last iteration differs from the averaged
+one above by at most 0.02 THz, against the 0.17 THz the SSCHA moves the mode at
+<span class="math notranslate nohighlight">\(\Gamma\)</span>.</p>
+</section>
+<section id="the-size-of-the-training-set">
+<h3>The size of the training set<a class="headerlink" href="#the-size-of-the-training-set" title="Link to this heading">#</a></h3>
+<p>In general, increasing the amount of data improves the accuracy of representing
+force constants. Therefore it is recommended to check the convergence of the
+target property with respect to the number of supercells in the training
+dataset. The SSCHA free energy is convenient to monitor, since it is a single
+number at each temperature.</p>
+<p>Vary the size of the training dataset while keeping the test dataset unchanged,
+and run each size in its own directory. <code class="docutils literal notranslate"><span class="pre">ntest</span></code> counts from the tail of the
+merged list, so holding it fixed while <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> grows tests every size on the
+same structures:</p>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">Script 5 – the free energy against the size of the training set</span><a class="headerlink" href="#id5" title="Link to this code">#</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1"># Convergence against the training-set size:  ./script5.sh</span>
+<span class="nb">set</span><span class="w"> </span>-e
+<span class="nv">MERGED</span><span class="o">=</span>train/merged.yaml
+<span class="nv">NTEST</span><span class="o">=</span><span class="m">40</span>
+<span class="nv">TEMPERATURE</span><span class="o">=</span><span class="m">300</span>
+
+<span class="k">for</span><span class="w"> </span>n<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">40</span><span class="w"> </span><span class="m">80</span><span class="w"> </span><span class="m">120</span><span class="w"> </span><span class="m">160</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="nv">dir</span><span class="o">=</span><span class="s2">"ntrain-</span><span class="nv">$n</span><span class="s2">"</span>
+<span class="w">    </span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">"</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span><span class="s2">"</span><span class="nv">$dir</span><span class="s2">"</span>
+<span class="w">    </span>phonopy<span class="w"> </span><span class="s2">"../</span><span class="nv">$MERGED</span><span class="s2">"</span><span class="w"> </span>--pypolymlp<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--mlp-params<span class="o">=</span><span class="s2">"ntrain=</span><span class="nv">$n</span><span class="s2">, ntest=</span><span class="nv">$NTEST</span><span class="s2">"</span><span class="w"> </span>-v<span class="w"> </span>&gt;<span class="w"> </span>train.log
+<span class="w">    </span>phonopy-mlpsscha<span class="w"> </span><span class="s2">"../</span><span class="nv">$MERGED</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--mlp<span class="w"> </span>polymlp.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-t<span class="w"> </span><span class="s2">"</span><span class="nv">$TEMPERATURE</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--snapshots<span class="w"> </span><span class="m">2000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--iterations<span class="w"> </span><span class="m">11</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--mesh<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--random-seed<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--all-force-constants<span class="w"> </span>-v<span class="w"> </span>&gt;<span class="w"> </span>sscha.log
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>..
+<span class="k">done</span>
+</pre></div>
+</div>
+</div>
+<p>The settings of the SSCHA runs are those of step 4, so the four free energies
+are comparable with each other and with the run above. Script 5 gives, for the
+KCl of this page:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>ntrain</p></th>
+<th class="head"><p>test force RMSE</p></th>
+<th class="head"><p>free energy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>40</p></td>
+<td><p>0.00337</p></td>
+<td><p>-97.8150</p></td>
+</tr>
+<tr class="row-odd"><td><p>80</p></td>
+<td><p>0.00118</p></td>
+<td><p>-97.8173</p></td>
+</tr>
+<tr class="row-even"><td><p>120</p></td>
+<td><p>0.00101</p></td>
+<td><p>-97.8182</p></td>
+</tr>
+<tr class="row-odd"><td><p>160</p></td>
+<td><p>0.00091</p></td>
+<td><p>-97.8200</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The RMSE is in eV/Angstrom and the free energy in meV per primitive cell, each
+averaged over the ten iterations after the transient and carrying an error of
+0.016 meV.</p>
+<p>The potential keeps improving over this range and the free energy does not
+move. The force RMSE falls by a factor of nearly four from 40 structures to
+160, while the four free energies span 0.005 meV, a third of the error of any
+one of them. For this quantity 40 structures are already enough.</p>
+<p>The band structures say the same. Writing <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> for each size
+with Script 4 and overlaying the five with <code class="docutils literal notranslate"><span class="pre">phonopy-bandplot</span></code> leaves one
+visible curve: no difference between 40, 80, 120, 160 and 184 structures can be
+seen by eye. Measured against the 184-structure band, the largest difference is
+0.0045 THz at 40 structures and 0.0002 THz at 160, against the 0.17 THz by
+which the SSCHA moves the mode at <span class="math notranslate nohighlight">\(\Gamma\)</span>. Make that plot for the system
+at hand rather than expecting the same of it.</p>
+<p>That is the reason to converge the quantity being reported rather than the
+force RMSE. The RMSE is dominated by the large-amplitude structures of the
+training set, and the free energy averages over the distribution the crystal
+actually visits at 300 K.</p>
+<p>A separate directory per size is necessary because an existing <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code>
+in the current directory is loaded and reused, by which the <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> setting
+would be silently ignored.</p>
+<p>Compare the sizes at the same <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> and the same <code class="docutils literal notranslate"><span class="pre">--mesh</span></code>, and compare
+the averages rather than single iterations, which sharpens the comparison at no
+extra cost. If it has not converged, compute another set of supercells and
+include it. With this procedure in mind, it may be convenient to draw a
+sufficiently large training set in advance, before starting the temperature
+dependent force constants calculation.</p>
+</section>
+</section>
+<section id="appendix-checking-the-training-displacements">
+<span id="polymlp-sscha-check-displacements"></span><h2>Appendix: checking the training displacements<a class="headerlink" href="#appendix-checking-the-training-displacements" title="Link to this heading">#</a></h2>
+<p>The draw and the check use the same force constants <span class="math notranslate nohighlight">\(\Phi\)</span>. The check
+therefore tests the temperature a set was drawn at, and tests nothing about
+<span class="math notranslate nohighlight">\(\Phi\)</span> itself. Force constants that are wrong change the draw and the
+reference by the same amount, and the ratio still comes out 1. Wrong force
+constants have to be caught at step 1, from the frequencies.</p>
+<p>One check compares the amplitude of a set against the temperature its directory
+is named after. Script 1 draws the supercells of a set from the harmonic
+density matrix <span class="math notranslate nohighlight">\(\tilde{\rho}_\Phi(T)\)</span>, the distribution the
+SSCHA free energy averages over. <code class="docutils literal notranslate"><span class="pre">run_correlation_matrix(T)</span></code> fills
+<code class="docutils literal notranslate"><span class="pre">RandomDisplacements.uu</span></code> with its second moment,</p>
+<div class="math notranslate nohighlight">
+\[\langle u_{l\kappa j} u_{l'\kappa' j'} \rangle_{\tilde{\rho}_\Phi(T)},\]</div>
+<p>in Angstrom squared, at the same commensurate points and with the same cutoff
+as the draw. Summing the diagonal over the supercell,</p>
+<div class="math notranslate nohighlight">
+\[\langle u^2 \rangle_{\tilde{\rho}_\Phi(T)} = \sum_{l\kappa j}
+\langle u_{l\kappa j} u_{l\kappa j} \rangle_{\tilde{\rho}_\Phi(T)},\]</div>
+<p>is <code class="docutils literal notranslate"><span class="pre">np.einsum(&quot;iiaa-&gt;&quot;,</span> <span class="pre">rd.uu)</span></code>.</p>
+<p>A set of <span class="math notranslate nohighlight">\(N\)</span> snapshots is a sample of <span class="math notranslate nohighlight">\(\tilde{\rho}_\Phi(T')\)</span>,
+where <span class="math notranslate nohighlight">\(T'\)</span> is the temperature it was drawn at. The same sum over the set,</p>
+<div class="math notranslate nohighlight">
+\[\overline{u^2} = \frac{1}{N} \sum_{n=1}^{N} \sum_{l\kappa j}
+\bigl( u_{l\kappa j}^{(n)} \bigr)^2,\]</div>
+<p>estimates <span class="math notranslate nohighlight">\(\langle u^2 \rangle_{\tilde{\rho}_\Phi(T')}\)</span>. The ratio
+<span class="math notranslate nohighlight">\(\overline{u^2} / \langle u^2 \rangle_{\tilde{\rho}_\Phi(T)}\)</span> is 1 when
+<span class="math notranslate nohighlight">\(T'\)</span> equals <span class="math notranslate nohighlight">\(T\)</span>, the temperature the directory is named after, and
+a set written under another temperature’s name gives a ratio far from 1.</p>
+<p>A set of a few dozen snapshots gives the ratio only to within its own sampling,
+so read it as a check on the label rather than as a measurement.</p>
+<p>The other check is on the merged set. Script 2 writes the structures of
+temperature <em>k</em> at the offsets <code class="docutils literal notranslate"><span class="pre">k::len(TEMPERATURES)</span></code>, so comparing the
+displacements at those offsets against the set they came from tells whether the
+interleaving is the one <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> are cut on.</p>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">Script 6 – checking the training sets</span><a class="headerlink" href="#id6" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Check the training sets against the distribution they were drawn from."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+
+<span class="n">PHONOPY_PARAMS</span> <span class="o">=</span> <span class="s2">"phonopy_params.yaml"</span>  <span class="c1"># harmonic force constants of step 1</span>
+<span class="n">TRAIN</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"train"</span><span class="p">)</span>
+<span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">300.0</span><span class="p">,</span> <span class="mf">500.0</span><span class="p">)</span>  <span class="c1"># the temperatures of Script 1</span>
+
+<span class="n">reference</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">PHONOPY_PARAMS</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">reference</span><span class="o">.</span><span class="n">init_random_displacements</span><span class="p">()</span>
+<span class="n">rd</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">random_displacements</span>
+
+<span class="n">sets</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"     T(K)   sample u2   reference u2   ratio"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">temperature</span> <span class="ow">in</span> <span class="n">TEMPERATURES</span><span class="p">:</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+        <span class="n">TRAIN</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"T</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="o">/</span> <span class="s2">"phonopy_disp.yaml"</span><span class="p">,</span>
+        <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">displacements</span><span class="p">)</span>
+    <span class="n">sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="n">sample_u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">rd</span><span class="o">.</span><span class="n">run_correlation_matrix</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+    <span class="n">reference_u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"iiaa-&gt;"</span><span class="p">,</span> <span class="n">rd</span><span class="o">.</span><span class="n">uu</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">temperature</span><span class="si">:</span><span class="s2">7.1f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">sample_u2</span><span class="si">:</span><span class="s2">11.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">reference_u2</span><span class="si">:</span><span class="s2">14.4f</span><span class="si">}</span><span class="s2"> "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sample_u2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">reference_u2</span><span class="si">:</span><span class="s2">7.3f</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">TRAIN</span> <span class="o">/</span> <span class="s2">"merged.yaml"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="s2">"  No merged.yaml yet; run Script 2 for the offset check."</span><span class="p">)</span>
+
+<span class="n">merged</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">TRAIN</span> <span class="o">/</span> <span class="s2">"merged.yaml"</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">u_merged</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">merged</span><span class="o">.</span><span class="n">displacements</span><span class="p">)</span>
+<span class="n">interleaved</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sets</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">u_merged</span><span class="p">[</span><span class="n">k</span> <span class="p">::</span> <span class="nb">len</span><span class="p">(</span><span class="n">TEMPERATURES</span><span class="p">)],</span> <span class="n">u</span><span class="p">):</span>
+        <span class="n">interleaved</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">TEMPERATURES</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> K is not at offset </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> of the merged set."</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">interleaved</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"  The merged set holds each temperature at its own offset."</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Run Script 6 before the calculator for the labels, and again after Script 2 for
+the offsets of the merged set. For the training sets of this page it prints</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     <span class="n">T</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>   <span class="n">sample</span> <span class="n">u2</span>   <span class="n">reference</span> <span class="n">u2</span>   <span class="n">ratio</span>
+       <span class="mf">0.0</span>      <span class="mf">0.8448</span>         <span class="mf">0.8518</span>   <span class="mf">0.992</span>
+     <span class="mf">100.0</span>      <span class="mf">1.5730</span>         <span class="mf">1.6180</span>   <span class="mf">0.972</span>
+     <span class="mf">300.0</span>      <span class="mf">4.3394</span>         <span class="mf">4.3336</span>   <span class="mf">1.001</span>
+     <span class="mf">500.0</span>      <span class="mf">6.9704</span>         <span class="mf">7.1502</span>   <span class="mf">0.975</span>
+  <span class="n">The</span> <span class="n">merged</span> <span class="nb">set</span> <span class="n">holds</span> <span class="n">each</span> <span class="n">temperature</span> <span class="n">at</span> <span class="n">its</span> <span class="n">own</span> <span class="n">offset</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\overline{u^2}\)</span> and <span class="math notranslate nohighlight">\(\langle u^2 \rangle\)</span> are in Angstrom
+squared and are summed over the 64 atoms of the supercell.</p>
+</section>
+<section id="appendix-what-a-rerun-reproduces">
+<span id="polymlp-sscha-reproducing"></span><h2>Appendix: what a rerun reproduces<a class="headerlink" href="#appendix-what-a-rerun-reproduces" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> displaces the supercells of an SSCHA iteration along the
+thermal distribution, and Script 1 draws its training structures from the
+thermal distribution of the harmonic force constants. Both draw through
+<code class="docutils literal notranslate"><span class="pre">RandomDisplacements</span></code>, which takes its random numbers from NumPy.</p>
+<p>NumPy does not promise the same random numbers from one release to the next
+(<a class="reference external" href="https://numpy.org/neps/nep-0019-rng-policy.html">NEP 19</a>). A machine carrying
+a different NumPy may therefore draw different supercells.</p>
+<p>The supercells of an SSCHA run are a way of averaging. Another draw of the same
+size returns a free energy differing by about the error the run reports.
+Nothing reads the draw a second time, so <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> writes no record of
+it.</p>
+<p>The MLP is fitted to the structures Script 1 drew, so another draw there gives
+another potential. <a class="reference internal" href="#polymlp-sscha-normals"><span class="std std-ref">Reproducing and extending the draw</span></a> says how to keep that draw.</p>
+<p>On one NumPy, the seed fixes what is drawn. <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> passes
+<code class="docutils literal notranslate"><span class="pre">--random-seed</span></code>, and iteration <em>i</em> of a run derives its own seed from that and
+<em>i</em>, as <code class="docutils literal notranslate"><span class="pre">SeedSequence([seed,</span> <span class="pre">i])</span></code>, so the iterations of one run draw
+independently of one another.</p>
+<p>A seeded run therefore draws the same supercells whenever it is made. The
+machine it runs on, when it runs and how many times it has run change nothing,
+so a sweep over temperatures is safe to spread over a cluster and safe to
+resubmit.</p>
+<p>A run made without <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code>, or an API call with <code class="docutils literal notranslate"><span class="pre">random_seed=None</span></code>,
+sets no seed. The draw is then a fresh sample every time.</p>
+<p>A rerun writing the same file name replaces that file. Give each temperature
+its own <code class="docutils literal notranslate"><span class="pre">-o</span></code> name, so that a sweep leaves one file per temperature.</p>
+</section>
+<section id="converting-phonopy-pmlp-to-polymlp-yaml">
+<h2>Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code><a class="headerlink" href="#converting-phonopy-pmlp-to-polymlp-yaml" title="Link to this heading">#</a></h2>
+<p>In older versions, polynomial MLPs were stored in <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code>. This file can
+be converted to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> using the following Python snippet.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pypolymlp.mlp_dev.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pypolymlp</span>
+
+<span class="n">polymlp</span> <span class="o">=</span> <span class="n">Pypolymlp</span><span class="p">()</span>
+<span class="n">polymlp</span><span class="o">.</span><span class="n">convert_to_yaml</span><span class="p">(</span><span class="n">filename_txt</span><span class="o">=</span><span class="s2">"phonopy.pmlp"</span><span class="p">,</span> <span class="n">filename_yaml</span><span class="o">=</span><span class="s2">"polymlp.yaml"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-cite">
+<h2>How to cite<a class="headerlink" href="#how-to-cite" title="Link to this heading">#</a></h2>
+<p>This feature relies on pypolymlp and symfc, and computes a quantity the SSCHA
+papers define. When it is used, please cite the papers of these two codes, and
+the papers on the SSCHA method given at the top of this page.</p>
+<section id="pypolymlp">
+<h3>pypolymlp<a class="headerlink" href="#pypolymlp" title="Link to this heading">#</a></h3>
+<p>“Tutorial: Systematic development of polynomial machine learning potentials for
+elemental and alloy systems”, A. Seko, J. Appl. Phys. <strong>133</strong>, 011101 (2023)
+[<a class="reference external" href="https://doi.org/10.1063/5.0129045">doi</a>].</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@article</span><span class="p">{</span><span class="n">pypolymlp</span><span class="p">,</span>
+  <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Seko</span><span class="p">,</span> <span class="n">Atsuto</span><span class="p">},</span>
+  <span class="n">title</span> <span class="o">=</span> <span class="s2">"{"</span><span class="n">Tutorial</span><span class="p">:</span> <span class="n">Systematic</span> <span class="n">development</span> <span class="n">of</span> <span class="n">polynomial</span> <span class="n">machine</span> <span class="n">learning</span> <span class="n">potentials</span> <span class="k">for</span> <span class="n">elemental</span> <span class="ow">and</span> <span class="n">alloy</span> <span class="n">systems</span><span class="s2">"}"</span><span class="p">,</span>
+  <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">J</span><span class="o">.</span> <span class="n">Appl</span><span class="o">.</span> <span class="n">Phys</span><span class="o">.</span><span class="p">},</span>
+  <span class="n">volume</span> <span class="o">=</span> <span class="p">{</span><span class="mi">133</span><span class="p">},</span>
+  <span class="n">number</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">},</span>
+  <span class="n">pages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">011101</span><span class="p">},</span>
+  <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2023</span><span class="p">},</span>
+  <span class="n">month</span> <span class="o">=</span> <span class="p">{</span><span class="mi">01</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="symfc">
+<h3>symfc<a class="headerlink" href="#symfc" title="Link to this heading">#</a></h3>
+<p>“Projector-based efficient estimation of force constants”,
+A. Seko and A. Togo, Phys. Rev. B, <strong>110</strong>, 214302 (2024)
+[<a class="reference external" href="https://doi.org/10.1103/PhysRevB.110.214302">doi</a>]
+[<a class="reference external" href="https://arxiv.org/abs/2403.03588">arxiv</a>].</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@article</span><span class="p">{</span><span class="n">PhysRevB</span><span class="mf">.110.214302</span><span class="p">,</span>
+  <span class="n">title</span> <span class="o">=</span> <span class="p">{</span><span class="n">Projector</span><span class="o">-</span><span class="n">based</span> <span class="n">efficient</span> <span class="n">estimation</span> <span class="n">of</span> <span class="n">force</span> <span class="n">constants</span><span class="p">},</span>
+  <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Seko</span><span class="p">,</span> <span class="n">Atsuto</span> <span class="ow">and</span> <span class="n">Togo</span><span class="p">,</span> <span class="n">Atsushi</span><span class="p">},</span>
+  <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">Phys</span><span class="o">.</span> <span class="n">Rev</span><span class="o">.</span> <span class="n">B</span><span class="p">},</span>
+  <span class="n">volume</span> <span class="o">=</span> <span class="p">{</span><span class="mi">110</span><span class="p">},</span>
+  <span class="n">issue</span> <span class="o">=</span> <span class="p">{</span><span class="mi">21</span><span class="p">},</span>
+  <span class="n">pages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">214302</span><span class="p">},</span>
+  <span class="n">numpages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">18</span><span class="p">},</span>
+  <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2024</span><span class="p">},</span>
+  <span class="n">month</span> <span class="o">=</span> <span class="p">{</span><span class="n">Dec</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="phonopy-init.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">phonopy-init command</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="formulation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Formulations</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#harmonic-force-constants">1. Harmonic force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-nac-parameters">The NAC parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-finite-displacements">The finite displacements</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-training-set">2. The training set</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-thermal-distribution">The thermal distribution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#drawing-the-displacements">Drawing the displacements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#merging-the-temperatures">Merging the temperatures</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-draw-leaves-at-its-defaults">What the draw leaves at its defaults</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducing-and-extending-the-draw">Reproducing and extending the draw</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-the-mlp">3. Training the MLP</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-parameters-of-the-mlp">The parameters of the MLP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-descriptor-and-the-amount-of-training-data">The descriptor and the amount of training data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validating-the-mlp">Validating the MLP</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-sscha">4. Running SSCHA</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-a-run">The options of a run</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-run">5. Reading the run</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mlpsscha-hdf5"><code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-force-constants">The force constants</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-sscha-free-energy">The SSCHA free energy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-one-iteration">The error of one iteration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-error-of-the-average">The error of the average</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence">Convergence</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-phonons-of-the-run">The phonons of the run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-size-of-the-training-set">The size of the training set</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-what-a-rerun-reproduces">Appendix: what a rerun reproduces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#converting-phonopy-pmlp-to-polymlp-yaml">Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-cite">How to cite</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pypolymlp">pypolymlp</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc">symfc</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

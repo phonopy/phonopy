@@ -596,7 +596,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mlp-sscha.html">Temperature dependent force constants calculation using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -1500,13 +1500,30 @@ run on one node.</p>
 consistently with <code class="docutils literal notranslate"><span class="pre">internal_energies</span></code>. <code class="docutils literal notranslate"><span class="pre">electronic_structures</span></code> and
 <code class="docutils literal notranslate"><span class="pre">electronic_free_energies</span></code> are two ways of giving the same term, so pass one
 or the other.</p>
-<p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> takes the same thing from a file. Write it with the
-temperatures it was computed on:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.electron</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_electronic_free_energies_hdf5</span>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> takes the same thing from a file. Write it as an
+<code class="docutils literal notranslate"><span class="pre">ElectronicFreeEnergies</span></code>, which carries the temperatures it was computed on:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.free_energy_io</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ElectronicFreeEnergies</span><span class="p">,</span>
+    <span class="n">write_free_energies_hdf5</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="n">write_electronic_free_energies_hdf5</span><span class="p">(</span><span class="n">temperatures</span><span class="p">,</span> <span class="n">fe_el</span><span class="p">,</span> <span class="s2">"fel.hdf5"</span><span class="p">)</span>
+<span class="n">write_free_energies_hdf5</span><span class="p">(</span>
+    <span class="n">ElectronicFreeEnergies</span><span class="p">(</span>
+        <span class="n">temperatures</span><span class="o">=</span><span class="n">temperatures</span><span class="p">,</span>
+        <span class="n">free_energies</span><span class="o">=</span><span class="n">fe_el</span><span class="p">,</span>
+        <span class="c1"># Optional, and what lets the command check the file against the grid</span>
+        <span class="c1"># it is used with.</span>
+        <span class="n">lattice_lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span><span class="p">]</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="s2">"fel.hdf5"</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">write_free_energies_hdf5</span></code> writes the phonon terms as well, and the file
+records which term it holds, so reading it back as another one is refused
+rather than silent.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-anisotropic-qha<span class="w"> </span>aniso_qha_dataset.hdf5<span class="w"> </span>--tmax<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--dt<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--electronic-free-energies<span class="w"> </span>fel.hdf5
 </pre></div>
@@ -1542,8 +1559,9 @@ training set.</p>
 <p>The MLP is then used, within the temperature range its training set covers. An
 MLP is an intermediate representation, convenient because it interpolates
 between the temperatures it was trained at. The self-consistent harmonic
-approximation (<a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">SSCHA</span></a>) runs with it at every grid point and
-every temperature, and returns force constants that change with temperature.
+approximation (<a class="reference internal" href="polymlp-sscha.html#polymlp-sscha"><span class="std std-ref">SSCHA</span></a>) runs with it at every grid point
+and every temperature, and returns force constants that change with
+temperature.
 The anharmonic free energies follow from those. The analysis takes them and
 minimizes <span class="math notranslate nohighlight">\(F(a, c; T)\)</span> over the lattice at each
 temperature. What comes out is <span class="math notranslate nohighlight">\(a(T)\)</span>, <span class="math notranslate nohighlight">\(c(T)\)</span> and the axial
@@ -1614,31 +1632,11 @@ actually visits at the temperature asked for.</p>
 iterates its own distribution to self-consistency with the anharmonic force
 constants; this draw does not. In practice that has been enough for a training
 set.</p>
-<p>Each mode <span class="math notranslate nohighlight">\((\mathbf{q}, \nu)\)</span> of the supercell is a harmonic oscillator
-in equilibrium at <span class="math notranslate nohighlight">\(T\)</span>, so its normal coordinate is normally distributed
-about zero with variance</p>
-<div class="math notranslate nohighlight">
-\[\sigma_{\mathbf{q}\nu}^2 = \langle |Q_{\mathbf{q}\nu}|^2 \rangle
-= \frac{\hbar}{2\omega_{\mathbf{q}\nu}}
-  \coth \frac{\hbar \omega_{\mathbf{q}\nu}}{2 k_\mathrm{B} T}.\]</div>
-<p>A <strong>snapshot</strong> is one supercell with every atom displaced at once, unlike
-the displacements of step 2, which move one atom at a time. Each snapshot
-draws one <span class="math notranslate nohighlight">\(\xi_{\mathbf{q}\nu}\)</span> per mode from the <strong>standard normal
-distribution</strong> – mean 0, variance 1 – so that
-<span class="math notranslate nohighlight">\(Q_{\mathbf{q}\nu} = \sigma_{\mathbf{q}\nu} \xi_{\mathbf{q}\nu}\)</span>, and
-the displacements follow from the eigenvectors,</p>
-<div class="math notranslate nohighlight">
-\[\mathbf{u}_{lj} = \frac{1}{\sqrt{N m_j}} \sum_{\mathbf{q}\nu}
-\sigma_{\mathbf{q}\nu}\, \xi_{\mathbf{q}\nu}\,
-\mathbf{e}^{j}_{\mathbf{q}\nu}\,
-e^{i \mathbf{q} \cdot \mathbf{r}_l},
-\qquad
-\xi_{\mathbf{q}\nu} \sim \mathcal{N}(0, 1).\]</div>
-<p>A grid point’s frequencies set the amplitudes <span class="math notranslate nohighlight">\(\sigma_{\mathbf{q}\nu}\)</span>,
-and its eigenvectors set the pattern of atomic motion each mode displaces
-along. Each <span class="math notranslate nohighlight">\(\xi_{\mathbf{q}\nu}\)</span> fixes how far its own mode is
-displaced in this snapshot, and the sum turns those into the displacement
-of every atom.</p>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-thermal-distribution"><span class="std std-ref">The thermal distribution</span></a> writes
+down the variance <span class="math notranslate nohighlight">\(\sigma_{\mathbf{q}\nu}^2\)</span> of each mode and the
+displacements that follow from one draw of standard normals
+<span class="math notranslate nohighlight">\(\xi_{\mathbf{q}\nu}\)</span>. A grid point’s own frequencies and eigenvectors
+enter there, which is what <a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">Sharing one draw of standard normals</span></a> below rests on.</p>
 </section>
 <section id="the-training-displacements">
 <h3>The training displacements<a class="headerlink" href="#the-training-displacements" title="Link to this heading">#</a></h3>
@@ -1729,12 +1727,8 @@ Run the calculator in every <code class="docutils literal notranslate"><span cla
 <p>A grid point has one such set per temperature, and its MLP is trained on all
 of them at once. The sets are merged by interleaving, so that the temperatures
 alternate through the merged list instead of following one another in blocks.</p>
-<p>The reason is how <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> cut the merged list. <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> takes that
-many structures from its <strong>head</strong> and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> takes that many from its
-<strong>tail</strong>; neither looks at what is in them. In blocks the head would be the
-coldest temperatures and the tail the hottest, so the MLP would be fitted to
-one part of the range and tested on another. Interleaved, any head and any
-tail hold the temperatures in equal parts:</p>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-merging"><span class="std std-ref">Merging the temperatures</span></a> gives the reason, which
+is how <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> cut the merged list:</p>
 <div class="literal-block-wrapper docutils container" id="id6">
 <div class="code-block-caption"><span class="caption-text">Script 6 – one training set per grid point, from its temperatures</span><a class="headerlink" href="#id6" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -1802,22 +1796,11 @@ differ, so compare the quantity you intend to report.</p>
 <section id="what-the-draw-leaves-at-its-defaults">
 <h3>What the draw leaves at its defaults<a class="headerlink" href="#what-the-draw-leaves-at-its-defaults" title="Link to this heading">#</a></h3>
 <p>Script 5 leaves the other parameters of <code class="docutils literal notranslate"><span class="pre">init_random_displacements</span></code> at their
-defaults. Three of these parameters change the displacements:
-<code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">dist_func</span></code> and <code class="docutils literal notranslate"><span class="pre">max_distance</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code> is 0.01 THz by default. A mode’s amplitude grows without
-bound as its <span class="math notranslate nohighlight">\(|\omega|\)</span> goes to zero, so the draw leaves out every mode
-below the cutoff. The acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> fall below it in any
-calculation, and a grid point close to an instability can have others that do.</p>
-<p>The draw takes <span class="math notranslate nohighlight">\(|\omega|\)</span>, so an imaginary mode is drawn as a real mode
-of the same magnitude. A quasi-harmonic grid can reach grid points that are
-dynamically unstable, so look at their frequencies before training on them.
-<code class="docutils literal notranslate"><span class="pre">RandomDisplacements.treat_imaginary_modes</span></code> is the explicit treatment. It takes
-<span class="math notranslate nohighlight">\(|\omega|\)</span> at the commensurate points, shifts the modes between
-<code class="docutils literal notranslate"><span class="pre">freq_from</span></code> and <code class="docutils literal notranslate"><span class="pre">freq_to</span></code> up by <code class="docutils literal notranslate"><span class="pre">freq_shift</span></code>, and rebuilds the force constants
-from the shifted modes.</p>
-<p><code class="docutils literal notranslate"><span class="pre">dist_func</span></code> chooses the occupation the draw uses, quantum by default or
-classical. <code class="docutils literal notranslate"><span class="pre">max_distance</span></code> shortens any displacement longer than the length
-given, which caps the tail of the distribution.</p>
+defaults, and <a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-draw-defaults"><span class="std std-ref">what the draw leaves at its defaults</span></a> says which of them change the displacements.</p>
+<p>A quasi-harmonic grid can reach grid points that are dynamically unstable, and
+the draw takes <span class="math notranslate nohighlight">\(|\omega|\)</span>, so an imaginary mode there is drawn as a real
+mode of the same magnitude. Look at the frequencies of step 2 before training
+on such a grid point.</p>
 </section>
 <section id="sharing-one-draw-of-standard-normals">
 <span id="anisotropic-qha-normals"></span><h3>Sharing one draw of standard normals<a class="headerlink" href="#sharing-one-draw-of-standard-normals" title="Link to this heading">#</a></h3>
@@ -1832,121 +1815,23 @@ this.</p>
 Each grid point scales them by its own frequencies and eigenvectors, which
 makes the draw thermal there. The displacement fields of neighboring grid
 points then resemble one another.</p>
-<p>Snapshot <em>i</em> is drawn from <code class="docutils literal notranslate"><span class="pre">SeedSequence([random_seed,</span> <span class="pre">i])</span></code>, so it depends on
-its index and on nothing else. Asking for snapshots 0 to 99 and later for 100
-to 199 gives the same 200 as asking for 0 to 199 at once. An ensemble can
-therefore be extended, or generated in blocks, with
-<code class="docutils literal notranslate"><span class="pre">draw_standard_normals(...,</span> <span class="pre">first_snapshot=N)</span></code>.</p>
-<p>A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
-not promise that <code class="docutils literal notranslate"><span class="pre">Generator</span></code> distribution methods give the same stream across
-its own versions
-(<a class="reference external" href="https://numpy.org/neps/nep-0019-rng-policy.html">NEP 19</a>). <strong>Save the
-<span class="math notranslate nohighlight">\(\xi\)</span> themselves.</strong> Script 5 does that, writing one <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> per
-temperature beside the training sets.</p>
-<p>Read one back with <code class="docutils literal notranslate"><span class="pre">np.load</span></code> and hand <code class="docutils literal notranslate"><span class="pre">(ii,</span> <span class="pre">ij)</span></code> to
-<code class="docutils literal notranslate"><span class="pre">run(standard_normals=...)</span></code>, or to
-<code class="docutils literal notranslate"><span class="pre">draw_standard_normals(...,</span> <span class="pre">first_snapshot=N)</span></code> as the block already drawn.</p>
-<p>The displacements in each <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> record the ensemble that was
-run, and the forces attach to those, so a lost <code class="docutils literal notranslate"><span class="pre">npz</span></code> costs the extension
-rather than the training set.</p>
+<p>Script 5 writes one <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> per temperature beside the training sets.
+<a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-normals"><span class="std std-ref">Reproducing and extending the draw</span></a> says what a
+seed fixes, what a NumPy upgrade does not, and how a saved draw is read back or
+extended.</p>
 </section>
 <section id="the-descriptor-and-the-amount-of-training-data">
 <span id="anisotropic-qha-validate"></span><h3>The descriptor and the amount of training data<a class="headerlink" href="#the-descriptor-and-the-amount-of-training-data" title="Link to this heading">#</a></h3>
-<p>There are two things to choose here: how big a descriptor to use, and how
-many structures to train it on. The ridge penalty is not a third choice. It is
-what the fit falls back on when the descriptor is too large for the training
-set, so the penalty pypolymlp selects indicates whether the two are matched.</p>
-<p><code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> also sets the descriptor. Example feature counts for a
-one-element system, with pypolymlp 0.20.5. The last column is the time to
-evaluate the descriptor once, relative to the first row, measured in one
-execution:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>features</p></th>
-<th class="head"><p>model parameters added to <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code></p></th>
-<th class="head"><p>relative time</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>781</p></td>
-<td><p>nothing; phonopy’s defaults</p></td>
-<td><p>1.0</p></td>
-</tr>
-<tr class="row-odd"><td><p>1,176</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
-<td><p>1.2</p></td>
-</tr>
-<tr class="row-even"><td><p>2,600</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
-<td><p>5.6</p></td>
-</tr>
-<tr class="row-odd"><td><p>3,848</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span></code></p></td>
-<td><p>7.1</p></td>
-</tr>
-<tr class="row-even"><td><p>6,820</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4</span></code></p></td>
-<td><p>1.4</p></td>
-</tr>
-<tr class="row-odd"><td><p>13,920</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
-<td><p>1.4</p></td>
-</tr>
-<tr class="row-even"><td><p>22,495</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
-<td><p>6.4</p></td>
-</tr>
-<tr class="row-odd"><td><p>27,664</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
-<td><p>5.9</p></td>
-</tr>
-<tr class="row-even"><td><p>45,680</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
-<td><p>7.7</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Phonopy’s defaults are <code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">max_p</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">3</span></code>,
-<code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">8</span> <span class="pre">8</span></code>, <code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">cutoff</span> <span class="pre">=</span> <span class="pre">8.0</span></code>. Phonopy
-passes them to pypolymlp itself. The other rows change one or two of them.</p>
-<p>The SSCHA of this step evaluates the descriptor once per snapshot per
-iteration, so the evaluation time sets the cost of the whole step. The last
-column is that time in one execution example, relative to the first row.</p>
-<p>The evaluation time is dominated by <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code> rather than by the feature
-count. The table holds two pairs that differ in <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code> alone, 1,176
-against 2,600 and 13,920 against 27,664, and both cost about four times more
-at <code class="docutils literal notranslate"><span class="pre">12</span> <span class="pre">12</span></code> than at <code class="docutils literal notranslate"><span class="pre">8</span> <span class="pre">8</span></code>. Raising <code class="docutils literal notranslate"><span class="pre">model_type</span></code> or the number of gaussians
-instead multiplies the feature count while adding a few tens of per cent to
-the time: 781 to 13,920 is eighteen times the features for 1.4 times the
-time. So a descriptor that gains its features that way can carry several
-times more of them for a fraction of the time.</p>
-<p>More evaluation time still usually buys a lower force RMSE, once there is
-enough training data to determine the extra features. The rule is only rough:
-a fast descriptor with many features can beat a slow one with few. A lower
-force RMSE also does not have to reach the thermal expansion, and the thermal
-expansion is what this step is for. The next section says what the MLPs are
-judged by instead.</p>
-<p>How much training data a descriptor needs is a separate question. Fit with the
-default <code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code>, which scans five penalties from 1e-3 to 1e1, and
-see which one pypolymlp keeps. With too few structures the penalty with the
-smallest test RMSE sits at the large-penalty end of the range. As structures
-are added, that penalty moves towards smaller values, and it stops moving once
-there are enough structures. If that penalty is still at the large end, the
-training set is what limits the accuracy, not the descriptor. Adding features
-will not help until more structures are added.</p>
-<p>Repeat that fit at several training-set sizes. Plot the selected penalty
-against the size, with one line per descriptor. A line that is still falling
-at the largest size has not converged. A line that has flattened has
-converged, and more structures will not improve that descriptor. Each point
-costs one fit. Running the SSCHA at every grid point and temperature, which is
-the next step, costs far more than that. Make this plot first.</p>
-<p>These two things are independent: how long a descriptor takes to evaluate, and
-how much training data it needs. A descriptor that is slow to evaluate may
-need only a few dozen structures, and a fast one may need many more. Use the
-last column to judge what a descriptor costs and what force RMSE it can reach.
-Use the selected penalty to judge whether the training set is large enough for
-it.</p>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-descriptor"><span class="std std-ref">The descriptor and the amount of training data</span></a> covers what <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> sets, what a descriptor
+costs to evaluate, and how the ridge penalty pypolymlp selects says whether the
+training set is large enough for the descriptor.</p>
+<p>The SSCHA evaluates the descriptor once per snapshot per iteration, and here
+that cost is paid at every grid point and every temperature. Choose the
+descriptor and the training-set size from fits made at one grid point, before
+the sweep is started.</p>
+<p>A lower force RMSE does not have to reach the thermal expansion, and the
+thermal expansion is what this step is for. “Validate the MLP” below says what
+to compare instead.</p>
 </section>
 <section id="pinning-the-ridge-penalty-across-the-grid">
 <h3>Pinning the ridge penalty across the grid<a class="headerlink" href="#pinning-the-ridge-penalty-across-the-grid" title="Link to this heading">#</a></h3>
@@ -1965,31 +1850,17 @@ to 1e1 in five steps.</p>
 </section>
 <section id="validate-the-mlp">
 <h3>Validate the MLP<a class="headerlink" href="#validate-the-mlp" title="Link to this heading">#</a></h3>
-<p>The MLPs are judged by their phonons rather than by the force RMSE. The RMSE
-includes large-amplitude structures that the harmonic and quasi-harmonic
-quantities never visit, while the frequencies are what enter
-<span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span>. The comparison below is still made on the forces,
-because it is cheap and it is what shows where an MLP is weak; the frequencies
-are what decides whether it is good enough.</p>
-<p>The thermal supercells of this step already carry calculator forces. Evaluate
-the same supercells with the MLP, and compare the two sets of forces. Nothing
-new has to be run with the calculator. Use the structures held out as the test
-set, since the MLP was fitted to the others.</p>
-<p>Compare one temperature at a time. Each temperature has its own displacement
-amplitudes, and one MLP is trained on all of them together, so its accuracy
-can differ from one temperature to the next.</p>
-<p>The phonon grid of step 2 can be compared in the same way, and there the force
-constants and the frequencies can be compared as well. Its displacements are
-one fixed distance, 0.03 Angstrom in the script there, which is usually
-smaller than the amplitudes of the 0 K draw. An MLP trained across a
-temperature range tends to be hard to make accurate at displacements that
-small. A difference there need not mean the temperature-dependent run is
-wrong.</p>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-validate"><span class="std std-ref">Validating the MLP</span></a> compares the MLP forces
+against the calculator forces on the structures held out as the test set, one
+temperature at a time. The thermal supercells of this step already carry
+calculator forces, so nothing new has to be run with the calculator.</p>
+<p>Make that comparison at a few grid points. The MLPs are fitted independently,
+so an MLP that is weak at one grid point says nothing about the others.</p>
 </section>
 <section id="computing-the-free-energies-with-sscha">
 <span id="anisotropic-qha-sscha"></span><h3>Computing the free energies with SSCHA<a class="headerlink" href="#computing-the-free-energies-with-sscha" title="Link to this heading">#</a></h3>
 <p><span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> is the SSCHA free energy defined in
-<a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">SSCHA</span></a>, computed from force constants that change with
+<a class="reference internal" href="polymlp-sscha.html#polymlp-sscha"><span class="std std-ref">SSCHA</span></a>, computed from force constants that change with
 temperature. It is no longer the
 harmonic expression of “The free energy” above.</p>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> computes the free energy at one (temperature, grid point)
@@ -2051,61 +1922,17 @@ arithmetic rather than the whole sweep.</p>
 </section>
 <section id="the-options-of-an-sscha-run-and-its-error">
 <h3>The options of an SSCHA run and its error<a class="headerlink" href="#the-options-of-an-sscha-run-and-its-error" title="Link to this heading">#</a></h3>
-<p>The options set what one SSCHA run samples and what its averaging leaves out.</p>
-<p><code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> is how many supercells each SSCHA iteration draws, 2000 in
-script 7 against phonopy’s own 1000. Each one is an MLP evaluation, which makes
-it the main cost of the step.</p>
-<p><code class="docutils literal notranslate"><span class="pre">--iterations</span></code> is how many iterations each run makes, 16 against phonopy’s 10.
-The early ones drive the force constants to self-consistency, and they are the
-run’s transient.</p>
-<p>After the transient the iterations do not settle on a value. Each one refits
-the force constants from a <strong>fresh sample</strong>, so the step between iterations
-stops shrinking, and the free energies scatter about a fixed point instead of
-approaching one. Every iteration past the transient is therefore an
-independent sample of the free energy, and averaging them is what improves the
-estimate.</p>
-<p><code class="docutils literal notranslate"><span class="pre">--mesh</span></code> is the mesh the harmonic part of the SSCHA free energy is sampled on,
-and matching it to the <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> of the analysis keeps one sampling through the
-calculation. <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code> fixes the whole run: iteration <em>i</em> draws from
-<code class="docutils literal notranslate"><span class="pre">SeedSequence([seed,</span> <span class="pre">i])</span></code>, so the run is reproducible while the iterations stay
-independent.</p>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-options"><span class="std std-ref">The options of a run</span></a> covers what each option
+sets, and <a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-error"><span class="std std-ref">the error of the average</span></a> covers how the
+error of the mean follows from <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> and the number of iterations kept.
+Script 7 draws 2000 supercells against phonopy’s own 1000, and makes 16
+iterations against its 10.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> of script 7 matches the <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> of the analysis, which keeps one
+sampling through the calculation.</p>
 <p>A run stores every iteration and averages none of them. Script 8 takes the mean
 over the iterations after the transient, one of them by default, and
 <code class="docutils literal notranslate"><span class="pre">--transient</span></code> sets how many. Choosing another is a second gather and costs no
 sampling, and <code class="docutils literal notranslate"><span class="pre">--transient</span></code> on a run marks its listing alone.</p>
-<p>The error of one iteration is the standard error of the mean of the anharmonic
-term over that iteration’s snapshots,</p>
-<div class="math notranslate nohighlight">
-\[e_i = \frac{\sigma_i}{\sqrt{N}}, \qquad
-\sigma_i^2 = \frac{1}{N - 1} \sum_{k=1}^{N}
-\left( E^\mathrm{anh}_k - \bar{E}^\mathrm{anh} \right)^2,\]</div>
-<p>where <span class="math notranslate nohighlight">\(E^\mathrm{anh}_k\)</span> is the anharmonic energy of the <span class="math notranslate nohighlight">\(k\)</span>-th
-displaced supercell of that iteration, per primitive cell, written out in
-Eq. <a class="reference internal" href="mlp-sscha.html#equation-eq-sscha-anharmonic">(1)</a> of <a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">SSCHA</span></a>.
-<span class="math notranslate nohighlight">\(\bar{E}^\mathrm{anh}\)</span> is the mean over the <span class="math notranslate nohighlight">\(N\)</span> snapshots, and
-<span class="math notranslate nohighlight">\(N\)</span> is <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>.</p>
-<p>The iterations are independent draws, so the error of their mean is</p>
-<div class="math notranslate nohighlight">
-\[e = \frac{1}{m} \sqrt{\sum_{i=1}^{m} e_i^2} = \frac{\sigma}{\sqrt{mN}},\]</div>
-<p>where <span class="math notranslate nohighlight">\(m\)</span> = <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> - <code class="docutils literal notranslate"><span class="pre">--transient</span></code>. The second form holds when
-the <span class="math notranslate nohighlight">\(\sigma_i\)</span> are alike, with <span class="math notranslate nohighlight">\(\sigma\)</span> their common value.
-<span class="math notranslate nohighlight">\(mN\)</span> is how many supercells the run evaluates.</p>
-<p>The error depends on that product (<span class="math notranslate nohighlight">\(mN\)</span>) alone, so it says nothing about
-how to split the cost between <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> and <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>. Two other
-things settle that split. <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> has to exceed the transient with
-samples left to average, and the listing shows how long the transient is. Each
-iteration fits its force constants from its own <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> supercells, so a
-small <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> leaves every iteration’s force constants noisy however many
-iterations follow.</p>
-<p>It is recommended to give the budget to <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code>, and to raise
-<code class="docutils literal notranslate"><span class="pre">--iterations</span></code> only until the transient is cleared with samples to spare. The
-two buy the same error, and only <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> improves the force constants
-that everything other than the free energy is computed from.</p>
-<p>Each <span class="math notranslate nohighlight">\(e_i\)</span> holds its own iteration’s force constants fixed, so <span class="math notranslate nohighlight">\(e\)</span>
-counts the sampling of the snapshots alone. The force constants were fitted
-from a sample as well, and that variation appears as scatter of the kept
-iterations about their mean, which is the column <code class="docutils literal notranslate"><span class="pre">-v</span></code> prints. Iterations that
-scatter by about their own <span class="math notranslate nohighlight">\(e_i\)</span> say that <span class="math notranslate nohighlight">\(e\)</span> is the whole of it.</p>
 </section>
 <section id="gathering-the-runs-into-fph-hdf5">
 <span id="anisotropic-qha-gather"></span><h3>Gathering the runs into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code><a class="headerlink" href="#gathering-the-runs-into-fph-hdf5" title="Link to this heading">#</a></h3>
@@ -2123,9 +1950,12 @@ Wrote<span class="w"> </span>sscha-g013-t10K.hdf5
 ...
 </pre></div>
 </div>
-<p>The gather places each run at the nearest of its <code class="docutils literal notranslate"><span class="pre">TEMPERATURES</span></code>. A submitting
-script can therefore carry its own temperatures, since one that is off by
-rounding still lands on the temperature the gather expects.</p>
+<p>The gather places each run at the one of its <code class="docutils literal notranslate"><span class="pre">TEMPERATURES</span></code> the run’s own
+temperature matches, to within 1e-3 K. A submitting script can therefore carry
+its own temperatures, since one that is off by rounding still lands on the
+temperature the gather expects. A run at a temperature that is on no such
+grid point is left out, so a sweep computed over a wider or a finer grid than
+<code class="docutils literal notranslate"><span class="pre">TEMPERATURES</span></code> gathers to <code class="docutils literal notranslate"><span class="pre">TEMPERATURES</span></code>.</p>
 <p>Sampling writes one <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code> per run. Averaging writes <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>,
 which is the file the analysis reads.</p>
 <p>The two are different types, not two spellings of one. A <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code>
@@ -2136,7 +1966,7 @@ a message about its type, rather than averaging it over iterations nobody
 chose.</p>
 <p>Script 8 gathers the <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code> files into <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script8.py
-Wrote<span class="w"> </span>fph.hdf5<span class="w"> </span>from<span class="w"> </span><span class="m">1025</span><span class="w"> </span>file<span class="o">(</span>s<span class="o">)</span>
+Wrote<span class="w"> </span>fph.hdf5,<span class="w"> </span><span class="m">41</span><span class="w"> </span>temperature<span class="o">(</span>s<span class="o">)</span><span class="w"> </span>x<span class="w"> </span><span class="m">25</span><span class="w"> </span>grid<span class="w"> </span>point<span class="o">(</span>s<span class="o">)</span>,<span class="w"> </span>from<span class="w"> </span><span class="m">1025</span><span class="w"> </span>file<span class="o">(</span>s<span class="o">)</span>
 </pre></div>
 </div>
 <p>Each file is placed by the lattice lengths and the temperature it carries
@@ -2148,30 +1978,11 @@ rather than by its name, so the order they are gathered in does not matter.</p>
 default is <code class="docutils literal notranslate"><span class="pre">DEFAULT_TRANSIENT</span></code>, 1. Iteration 1 uses the force constants fitted
 to <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>, so its free energy is that of those force constants and not
 of self-consistent ones.</p>
-<p>How long the transient is depends on the system. It lasts until the force
-constants reach self-consistency, and that takes longer the further the
-starting force constants sit from them. The default of 1 is a floor, not a
-measurement.</p>
-<p><code class="docutils literal notranslate"><span class="pre">-v</span></code> prints each iteration’s distance from the mean of the kept ones, divided
-by that iteration’s own error. An iteration past the transient gives about 1,
-since it scatters about the fixed point by its own error. A larger value means
-the iteration was still approaching that point.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="nb">iter</span>       <span class="n">F</span> <span class="p">[</span><span class="n">meV</span><span class="p">]</span>   <span class="n">error</span> <span class="p">[</span><span class="n">meV</span><span class="p">]</span>   <span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">/</span><span class="n">error</span>
-     <span class="mi">1</span><span class="o">*</span>      <span class="mf">98.5931</span>        <span class="mf">0.0121</span>              <span class="o">+</span><span class="mf">46.9</span>
-     <span class="mi">2</span>       <span class="mf">98.0729</span>        <span class="mf">0.0113</span>               <span class="o">+</span><span class="mf">4.1</span>
-     <span class="mi">3</span>       <span class="mf">98.0141</span>        <span class="mf">0.0108</span>               <span class="o">-</span><span class="mf">1.1</span>
-     <span class="mi">4</span>       <span class="mf">98.0166</span>        <span class="mf">0.0110</span>               <span class="o">-</span><span class="mf">0.9</span>
-     <span class="mi">5</span>       <span class="mf">98.0118</span>        <span class="mf">0.0112</span>               <span class="o">-</span><span class="mf">1.3</span>
-     <span class="mi">6</span>       <span class="mf">98.0153</span>        <span class="mf">0.0109</span>               <span class="o">-</span><span class="mf">1.0</span>
-  <span class="o">*</span> <span class="n">left</span> <span class="n">out</span> <span class="k">as</span> <span class="n">the</span> <span class="n">transient</span><span class="o">.</span> <span class="n">Of</span> <span class="n">the</span> <span class="n">kept</span> <span class="n">iterations</span> <span class="n">the</span> <span class="n">furthest</span> <span class="kn">from</span><span class="w"> </span><span class="nn">the</span>
-    <span class="n">mean</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">,</span> <span class="n">at</span> <span class="mf">4.1</span> <span class="n">sigma</span><span class="o">.</span>
-</pre></div>
-</div>
-<p>Iteration 2 above gives 4.1, so <code class="docutils literal notranslate"><span class="pre">--transient</span> <span class="pre">2</span></code> drops it. Raise <code class="docutils literal notranslate"><span class="pre">--transient</span></code>
-until every kept iteration is within a few units. Check the lowest temperature
-as well as the highest: the starting force constants are one fit over the whole
-training range, so they sit furthest from the self-consistent ones at its two
-ends.</p>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-reading"><span class="std std-ref">Reading the run</span></a> says how the listing <code class="docutils literal notranslate"><span class="pre">-v</span></code> prints
+is read and when to raise <code class="docutils literal notranslate"><span class="pre">--transient</span></code>.</p>
+<p>Check the lowest temperature as well as the highest. The starting force
+constants are one fit over the whole training range, so they sit furthest from
+the self-consistent ones at its two ends.</p>
 <p>The run files hold every iteration and no average. Script 8 computes the
 averages, leaving out the first <code class="docutils literal notranslate"><span class="pre">--transient</span></code> iterations of each run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>python<span class="w"> </span>script8.py<span class="w"> </span>--transient<span class="w"> </span><span class="m">2</span>
@@ -2293,6 +2104,20 @@ the data does. The fit therefore starts from a set of starting values, drops
 the curves whose shape disagrees with the data in those ways, and keeps the
 closest of what is left. If nothing is left, the command stops rather than
 returning a curve of the wrong shape.</p>
+<p>A fit is worth seeing against what it was fitted to. A smoothed run therefore
+keeps the surface minima as well, in <code class="docutils literal notranslate"><span class="pre">unsmoothed_lattice_parameters</span></code>, and
+writes them as three columns more in <code class="docutils literal notranslate"><span class="pre">lattice_parameters-temperature.dat</span></code>:
+temperature, the smoothed <span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, <span class="math notranslate nohighlight">\(c\)</span>, then the same three
+before the smoothing.</p>
+<p>It also writes <code class="docutils literal notranslate"><span class="pre">lattice_smoothing.png</span></code>, one column per free lattice DOF. The
+upper row is the fit as a line over the minima as dots, and the lower row is
+what is left over, fit minus minimum, in <span class="math notranslate nohighlight">\(10^{-4}\)</span> angstrom. The
+residuals are what the fit is judged on. Sampling scatter shows as a band
+around zero as wide as the scatter is, while a fit of the wrong shape shows as
+an excursion over a range of temperature, and that is the case to raise
+<code class="docutils literal notranslate"><span class="pre">--smooth-terms</span></code> for.</p>
+<p>An unsmoothed run has nothing to compare against, so <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">none</span></code>
+writes the four columns alone and no <code class="docutils literal notranslate"><span class="pre">lattice_smoothing.png</span></code>.</p>
 </section>
 </section>
 <section id="appendix-the-gather-script">
@@ -2340,7 +2165,12 @@ leave out of the averages.</p>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
     <span class="n">write_free_energies_hdf5</span><span class="p">(</span><span class="n">free_energies</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrote </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> file(s)"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">n_temperatures</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">free_energies</span><span class="o">.</span><span class="n">free_energies</span><span class="o">.</span><span class="n">shape</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Wrote </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">n_temperatures</span><span class="si">}</span><span class="s2"> temperature(s) x "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n_points</span><span class="si">}</span><span class="s2"> grid point(s), from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> file(s)"</span><span class="p">,</span>
+        <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
@@ -2376,37 +2206,17 @@ run them before the calculator. Script 6 merges the forces with the
 displacements, so the check on the merged sets has something to read only
 after the calculator, and before then it reports every grid point as having no
 <code class="docutils literal notranslate"><span class="pre">merged.yaml</span></code>.</p>
-<p>The draw and the reference use the same force constants <span class="math notranslate nohighlight">\(\Phi\)</span>. The
-check therefore tests the temperature a set was drawn at, and tests nothing
-about <span class="math notranslate nohighlight">\(\Phi\)</span> itself. Force constants that are wrong at a grid point
-change the draw and the reference by the same amount, and the ratio still
-comes out 1. Wrong force constants have to be caught at step 2, from the
-frequencies.</p>
 <section id="what-each-check-compares">
 <h3>What each check compares<a class="headerlink" href="#what-each-check-compares" title="Link to this heading">#</a></h3>
-<p>One check compares the amplitude of a set against the temperature its
-directory is named after. Script 5 draws the supercells of a set from the
-harmonic density matrix <span class="math notranslate nohighlight">\(\tilde{\rho}_\Phi(T)\)</span> of that grid point’s
-force constants <span class="math notranslate nohighlight">\(\Phi\)</span>, the distribution the SSCHA free energy of
-<a class="reference internal" href="mlp-sscha.html#mlp-sscha"><span class="std std-ref">SSCHA</span></a> averages over. <code class="docutils literal notranslate"><span class="pre">run_correlation_matrix(T)</span></code> fills
-<code class="docutils literal notranslate"><span class="pre">RandomDisplacements.uu</span></code> with its second moment,</p>
-<div class="math notranslate nohighlight">
-\[\langle u_{l\kappa j} u_{l'\kappa' j'} \rangle_{\tilde{\rho}_\Phi(T)},\]</div>
-<p>in Angstrom squared, at the same commensurate points and with the same cutoff
-as the draw. Summing the diagonal over the supercell,</p>
-<div class="math notranslate nohighlight">
-\[\langle u^2 \rangle_{\tilde{\rho}_\Phi(T)} = \sum_{l\kappa j}
-\langle u_{l\kappa j} u_{l\kappa j} \rangle_{\tilde{\rho}_\Phi(T)},\]</div>
-<p>is <code class="docutils literal notranslate"><span class="pre">np.einsum(&quot;iiaa-&gt;&quot;,</span> <span class="pre">rd.uu)</span></code> in <code class="docutils literal notranslate"><span class="pre">reference_u2</span></code>.</p>
-<p>A set of <span class="math notranslate nohighlight">\(N\)</span> snapshots is a sample of <span class="math notranslate nohighlight">\(\tilde{\rho}_\Phi(T')\)</span>,
-where <span class="math notranslate nohighlight">\(T'\)</span> is the temperature it was drawn at. The same sum over the
-set,</p>
-<div class="math notranslate nohighlight">
-\[\overline{u^2} = \frac{1}{N} \sum_{n=1}^{N} \sum_{l\kappa j}
-\bigl( u_{l\kappa j}^{(n)} \bigr)^2,\]</div>
-<p>is computed by <code class="docutils literal notranslate"><span class="pre">sample_u2</span></code> and estimates <span class="math notranslate nohighlight">\(\langle u^2 \rangle_{\tilde{\rho}_\Phi(T')}\)</span>. The ratio <span class="math notranslate nohighlight">\(\overline{u^2} / \langle u^2 \rangle_{\tilde{\rho}_\Phi(T)}\)</span> is 1 when <span class="math notranslate nohighlight">\(T'\)</span> equals <span class="math notranslate nohighlight">\(T\)</span>, the
-temperature the directory is named after. <code class="docutils literal notranslate"><span class="pre">check_amplitudes</span></code> prints it for
-every set, and a set with the wrong label gives a ratio far from 1.</p>
+<p>One check compares the amplitude of a set against the temperature its directory
+is named after. <a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-check-displacements"><span class="std std-ref">Checking the training displacements</span></a> writes down the ratio it prints, which
+<code class="docutils literal notranslate"><span class="pre">reference_u2</span></code> and <code class="docutils literal notranslate"><span class="pre">sample_u2</span></code> compute here from the force constants of the
+grid point the set belongs to. <code class="docutils literal notranslate"><span class="pre">check_amplitudes</span></code> prints the ratio for every
+set, and a set with the wrong label gives a ratio far from 1.</p>
+<p>Wrong force constants are not what this catches. The draw and the reference use
+the same <span class="math notranslate nohighlight">\(\Phi\)</span>, so force constants that are wrong at a grid point change
+both by the same amount and the ratio still comes out 1. Catch those at step 2,
+from the frequencies.</p>
 <p>The next check compares neighbouring grid points. Grid points <span class="math notranslate nohighlight">\(g\)</span> and
 <span class="math notranslate nohighlight">\(g'\)</span> draw from <span class="math notranslate nohighlight">\(\tilde{\rho}_{\Phi^{(g)}}(T)\)</span> and
 <span class="math notranslate nohighlight">\(\tilde{\rho}_{\Phi^{(g')}}(T)\)</span>, whose force constants differ only by
@@ -2629,32 +2439,17 @@ says why, and where that stops.</p>
 </section>
 <section id="appendix-what-a-rerun-reproduces">
 <span id="anisotropic-qha-reproducing"></span><h2>Appendix: what a rerun reproduces<a class="headerlink" href="#appendix-what-a-rerun-reproduces" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> displaces the supercells of an SSCHA iteration along the
-thermal distribution, and scripts 7 and 10 call it once per (grid point,
-temperature). Script 5 draws its training structures from the thermal
-distribution of the harmonic force constants. Both the command and script 5
-draw through <code class="docutils literal notranslate"><span class="pre">RandomDisplacements</span></code>, which takes its random numbers from NumPy.</p>
-<p>NumPy does not promise the same random numbers from one release to the next
-(<a class="reference external" href="https://numpy.org/neps/nep-0019-rng-policy.html">NEP 19</a>). A machine carrying
-a different NumPy may therefore draw different supercells.</p>
-<p>The supercells of an SSCHA run are a way of averaging. Another draw of the same
-size returns a free energy differing by about the error the run reports.
-Nothing reads the draw a second time, so <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> writes no record of
-it.</p>
-<p>The MLPs are fitted to the structures script 5 drew, so another draw there
-gives another potential. Script 5 writes its draw to <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> beside the
-training sets, and <a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">sharing one draw of standard normals</span></a> says how to read one back.</p>
-<p>On one NumPy, the seed fixes what is drawn. Script 5 passes
-<code class="docutils literal notranslate"><span class="pre">SEED</span> <span class="pre">+</span> <span class="pre">int(temperature)</span></code> to <code class="docutils literal notranslate"><span class="pre">draw_standard_normals</span></code>, so each of its
-temperatures is one reproducible draw. <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> passes
-<code class="docutils literal notranslate"><span class="pre">--random-seed</span></code>, and iteration <em>i</em> of an SSCHA run derives its own seed from
-that and <em>i</em>, as <code class="docutils literal notranslate"><span class="pre">SeedSequence([seed,</span> <span class="pre">i])</span></code>, so the iterations of one run draw
-independently of one another.</p>
-<p>A seeded run therefore draws the same supercells whenever it is made. The
-machine it runs on, when it runs and how many times it has run change nothing,
-so the sweep is safe to spread over a cluster and safe to resubmit.</p>
-<p>A run made without <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code>, or an API call with <code class="docutils literal notranslate"><span class="pre">random_seed=None</span></code>,
-sets no seed. The draw is then a fresh sample every time.</p>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-reproducing"><span class="std std-ref">What a rerun reproduces</span></a> says what a seed
+fixes, what a NumPy upgrade does not, and why an SSCHA run keeps no record of
+the supercells it drew. Scripts 7 and 10 call <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> once per (grid
+point, temperature), and each of those runs is seeded.</p>
+<p>Script 5 passes <code class="docutils literal notranslate"><span class="pre">SEED</span> <span class="pre">+</span> <span class="pre">int(temperature)</span></code> to <code class="docutils literal notranslate"><span class="pre">draw_standard_normals</span></code>, so each
+of its temperatures is one reproducible draw. The MLPs are fitted to the
+structures it drew, so another draw there gives another potential. Script 5
+writes its draw to <code class="docutils literal notranslate"><span class="pre">normals-*.npz</span></code> beside the training sets, and <a class="reference internal" href="#anisotropic-qha-normals"><span class="std std-ref">sharing one draw of standard normals</span></a> says how to read one
+back.</p>
+<p>A seeded run draws the same supercells whenever it is made, so the sweep is
+safe to spread over a cluster and safe to resubmit.</p>
 <p>A rerun writing the same file name replaces that file. A rerun writing another
 name leaves two run files at one (grid point, temperature). Script 8 then stops
 and prints which grid point and temperature has two.</p>

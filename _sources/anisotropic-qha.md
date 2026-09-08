@@ -773,14 +773,32 @@ consistently with `internal_energies`. `electronic_structures` and
 `electronic_free_energies` are two ways of giving the same term, so pass one
 or the other.
 
-`phonopy-anisotropic-qha` takes the same thing from a file. Write it with the
-temperatures it was computed on:
+`phonopy-anisotropic-qha` takes the same thing from a file. Write it as an
+`ElectronicFreeEnergies`, which carries the temperatures it was computed on:
 
 ```python
-from phonopy.qha.electron import write_electronic_free_energies_hdf5
+from phonopy.qha.free_energy_io import (
+    ElectronicFreeEnergies,
+    write_free_energies_hdf5,
+)
 
-write_electronic_free_energies_hdf5(temperatures, fe_el, "fel.hdf5")
+write_free_energies_hdf5(
+    ElectronicFreeEnergies(
+        temperatures=temperatures,
+        free_energies=fe_el,
+        # Optional, and what lets the command check the file against the grid
+        # it is used with.
+        lattice_lengths=np.array(
+            [np.linalg.norm(point.cell.cell, axis=1) for point in dataset.grid_points]
+        ),
+    ),
+    "fel.hdf5",
+)
 ```
+
+`write_free_energies_hdf5` writes the phonon terms as well, and the file
+records which term it holds, so reading it back as another one is refused
+rather than silent.
 
 ```bash
 % phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --tmax 1000 --dt 10 \
@@ -822,8 +840,9 @@ training set.
 The MLP is then used, within the temperature range its training set covers. An
 MLP is an intermediate representation, convenient because it interpolates
 between the temperatures it was trained at. The self-consistent harmonic
-approximation ({ref}`SSCHA <mlp-sscha>`) runs with it at every grid point and
-every temperature, and returns force constants that change with temperature.
+approximation ({ref}`SSCHA <polymlp-sscha>`) runs with it at every grid point
+and every temperature, and returns force constants that change with
+temperature.
 The anharmonic free energies follow from those. The analysis takes them and
 minimizes {math}`F(a, c; T)` over the lattice at each
 temperature. What comes out is {math}`a(T)`, {math}`c(T)` and the axial
@@ -907,37 +926,11 @@ iterates its own distribution to self-consistency with the anharmonic force
 constants; this draw does not. In practice that has been enough for a training
 set.
 
-Each mode {math}`(\mathbf{q}, \nu)` of the supercell is a harmonic oscillator
-in equilibrium at {math}`T`, so its normal coordinate is normally distributed
-about zero with variance
-
-```{math}
-\sigma_{\mathbf{q}\nu}^2 = \langle |Q_{\mathbf{q}\nu}|^2 \rangle
-= \frac{\hbar}{2\omega_{\mathbf{q}\nu}}
-  \coth \frac{\hbar \omega_{\mathbf{q}\nu}}{2 k_\mathrm{B} T}.
-```
-
-A **snapshot** is one supercell with every atom displaced at once, unlike
-the displacements of step 2, which move one atom at a time. Each snapshot
-draws one {math}`\xi_{\mathbf{q}\nu}` per mode from the **standard normal
-distribution** -- mean 0, variance 1 -- so that
-{math}`Q_{\mathbf{q}\nu} = \sigma_{\mathbf{q}\nu} \xi_{\mathbf{q}\nu}`, and
-the displacements follow from the eigenvectors,
-
-```{math}
-\mathbf{u}_{lj} = \frac{1}{\sqrt{N m_j}} \sum_{\mathbf{q}\nu}
-\sigma_{\mathbf{q}\nu}\, \xi_{\mathbf{q}\nu}\,
-\mathbf{e}^{j}_{\mathbf{q}\nu}\,
-e^{i \mathbf{q} \cdot \mathbf{r}_l},
-\qquad
-\xi_{\mathbf{q}\nu} \sim \mathcal{N}(0, 1).
-```
-
-A grid point's frequencies set the amplitudes {math}`\sigma_{\mathbf{q}\nu}`,
-and its eigenvectors set the pattern of atomic motion each mode displaces
-along. Each {math}`\xi_{\mathbf{q}\nu}` fixes how far its own mode is
-displaced in this snapshot, and the sum turns those into the displacement
-of every atom.
+{ref}`The thermal distribution <polymlp-sscha-thermal-distribution>` writes
+down the variance {math}`\sigma_{\mathbf{q}\nu}^2` of each mode and the
+displacements that follow from one draw of standard normals
+{math}`\xi_{\mathbf{q}\nu}`. A grid point's own frequencies and eigenvectors
+enter there, which is what {ref}`anisotropic-qha-normals` below rests on.
 
 ### The training displacements
 
@@ -1031,12 +1024,8 @@ A grid point has one such set per temperature, and its MLP is trained on all
 of them at once. The sets are merged by interleaving, so that the temperatures
 alternate through the merged list instead of following one another in blocks.
 
-The reason is how `ntrain` and `ntest` cut the merged list. `ntrain` takes that
-many structures from its **head** and `ntest` takes that many from its
-**tail**; neither looks at what is in them. In blocks the head would be the
-coldest temperatures and the tail the hottest, so the MLP would be fitted to
-one part of the range and tested on another. Interleaved, any head and any
-tail hold the temperatures in equal parts:
+{ref}`Merging the temperatures <polymlp-sscha-merging>` gives the reason, which
+is how `ntrain` and `ntest` cut the merged list:
 
 ```{code-block} python
 :caption: Script 6 -- one training set per grid point, from its temperatures
@@ -1110,25 +1099,13 @@ differ, so compare the quantity you intend to report.
 ### What the draw leaves at its defaults
 
 Script 5 leaves the other parameters of `init_random_displacements` at their
-defaults. Three of these parameters change the displacements:
-`cutoff_frequency`, `dist_func` and `max_distance`.
+defaults, and {ref}`what the draw leaves at its defaults
+<polymlp-sscha-draw-defaults>` says which of them change the displacements.
 
-`cutoff_frequency` is 0.01 THz by default. A mode's amplitude grows without
-bound as its {math}`|\omega|` goes to zero, so the draw leaves out every mode
-below the cutoff. The acoustic modes at {math}`\Gamma` fall below it in any
-calculation, and a grid point close to an instability can have others that do.
-
-The draw takes {math}`|\omega|`, so an imaginary mode is drawn as a real mode
-of the same magnitude. A quasi-harmonic grid can reach grid points that are
-dynamically unstable, so look at their frequencies before training on them.
-`RandomDisplacements.treat_imaginary_modes` is the explicit treatment. It takes
-{math}`|\omega|` at the commensurate points, shifts the modes between
-`freq_from` and `freq_to` up by `freq_shift`, and rebuilds the force constants
-from the shifted modes.
-
-`dist_func` chooses the occupation the draw uses, quantum by default or
-classical. `max_distance` shortens any displacement longer than the length
-given, which caps the tail of the distribution.
+A quasi-harmonic grid can reach grid points that are dynamically unstable, and
+the draw takes {math}`|\omega|`, so an imaginary mode there is drawn as a real
+mode of the same magnitude. Look at the frequencies of step 2 before training
+on such a grid point.
 
 (anisotropic-qha-normals)=
 ### Sharing one draw of standard normals
@@ -1147,98 +1124,27 @@ Each grid point scales them by its own frequencies and eigenvectors, which
 makes the draw thermal there. The displacement fields of neighboring grid
 points then resemble one another.
 
-Snapshot *i* is drawn from `SeedSequence([random_seed, i])`, so it depends on
-its index and on nothing else. Asking for snapshots 0 to 99 and later for 100
-to 199 gives the same 200 as asking for 0 to 199 at once. An ensemble can
-therefore be extended, or generated in blocks, with
-`draw_standard_normals(..., first_snapshot=N)`.
-
-A seed alone does not reproduce an ensemble after a NumPy upgrade. NumPy does
-not promise that `Generator` distribution methods give the same stream across
-its own versions
-([NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)). **Save the
-{math}`\xi` themselves.** Script 5 does that, writing one `normals-*.npz` per
-temperature beside the training sets.
-
-Read one back with `np.load` and hand `(ii, ij)` to
-`run(standard_normals=...)`, or to
-`draw_standard_normals(..., first_snapshot=N)` as the block already drawn.
-
-The displacements in each `phonopy_disp.yaml` record the ensemble that was
-run, and the forces attach to those, so a lost `npz` costs the extension
-rather than the training set.
+Script 5 writes one `normals-*.npz` per temperature beside the training sets.
+{ref}`Reproducing and extending the draw <polymlp-sscha-normals>` says what a
+seed fixes, what a NumPy upgrade does not, and how a saved draw is read back or
+extended.
 
 (anisotropic-qha-validate)=
 ### The descriptor and the amount of training data
 
-There are two things to choose here: how big a descriptor to use, and how
-many structures to train it on. The ridge penalty is not a third choice. It is
-what the fit falls back on when the descriptor is too large for the training
-set, so the penalty pypolymlp selects indicates whether the two are matched.
+{ref}`The descriptor and the amount of training data
+<polymlp-sscha-descriptor>` covers what `--mlp-params` sets, what a descriptor
+costs to evaluate, and how the ridge penalty pypolymlp selects says whether the
+training set is large enough for the descriptor.
 
-`--mlp-params` also sets the descriptor. Example feature counts for a
-one-element system, with pypolymlp 0.20.5. The last column is the time to
-evaluate the descriptor once, relative to the first row, measured in one
-execution:
+The SSCHA evaluates the descriptor once per snapshot per iteration, and here
+that cost is paid at every grid point and every temperature. Choose the
+descriptor and the training-set size from fits made at one grid point, before
+the sweep is started.
 
-| features | model parameters added to `--mlp-params` | relative time |
-|---|---|---|
-| 781 | nothing; phonopy's defaults | 1.0 |
-| 1,176 | `gaussian_params2 = 0 7 15` | 1.2 |
-| 2,600 | `gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.6 |
-| 3,848 | `gaussian_params2 = 0 7 15, gtinv_order = 4, gtinv_maxl = 16 12 4` | 7.1 |
-| 6,820 | `model_type = 4` | 1.4 |
-| 13,920 | `model_type = 4, gaussian_params2 = 0 7 15` | 1.4 |
-| 22,495 | `model_type = 4, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 6.4 |
-| 27,664 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.9 |
-| 45,680 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 7.7 |
-
-Phonopy's defaults are `model_type = 3`, `max_p = 2`, `gtinv_order = 3`,
-`gtinv_maxl = 8 8`, `gaussian_params2 = 0 7 10` and `cutoff = 8.0`. Phonopy
-passes them to pypolymlp itself. The other rows change one or two of them.
-
-The SSCHA of this step evaluates the descriptor once per snapshot per
-iteration, so the evaluation time sets the cost of the whole step. The last
-column is that time in one execution example, relative to the first row.
-
-The evaluation time is dominated by `gtinv_maxl` rather than by the feature
-count. The table holds two pairs that differ in `gtinv_maxl` alone, 1,176
-against 2,600 and 13,920 against 27,664, and both cost about four times more
-at `12 12` than at `8 8`. Raising `model_type` or the number of gaussians
-instead multiplies the feature count while adding a few tens of per cent to
-the time: 781 to 13,920 is eighteen times the features for 1.4 times the
-time. So a descriptor that gains its features that way can carry several
-times more of them for a fraction of the time.
-
-More evaluation time still usually buys a lower force RMSE, once there is
-enough training data to determine the extra features. The rule is only rough:
-a fast descriptor with many features can beat a slow one with few. A lower
-force RMSE also does not have to reach the thermal expansion, and the thermal
-expansion is what this step is for. The next section says what the MLPs are
-judged by instead.
-
-How much training data a descriptor needs is a separate question. Fit with the
-default `reg_alpha_params`, which scans five penalties from 1e-3 to 1e1, and
-see which one pypolymlp keeps. With too few structures the penalty with the
-smallest test RMSE sits at the large-penalty end of the range. As structures
-are added, that penalty moves towards smaller values, and it stops moving once
-there are enough structures. If that penalty is still at the large end, the
-training set is what limits the accuracy, not the descriptor. Adding features
-will not help until more structures are added.
-
-Repeat that fit at several training-set sizes. Plot the selected penalty
-against the size, with one line per descriptor. A line that is still falling
-at the largest size has not converged. A line that has flattened has
-converged, and more structures will not improve that descriptor. Each point
-costs one fit. Running the SSCHA at every grid point and temperature, which is
-the next step, costs far more than that. Make this plot first.
-
-These two things are independent: how long a descriptor takes to evaluate, and
-how much training data it needs. A descriptor that is slow to evaluate may
-need only a few dozen structures, and a fast one may need many more. Use the
-last column to judge what a descriptor costs and what force RMSE it can reach.
-Use the selected penalty to judge whether the training set is large enough for
-it.
+A lower force RMSE does not have to reach the thermal expansion, and the
+thermal expansion is what this step is for. "Validate the MLP" below says what
+to compare instead.
 
 ### Pinning the ridge penalty across the grid
 
@@ -1259,35 +1165,19 @@ to 1e1 in five steps.
 
 ### Validate the MLP
 
-The MLPs are judged by their phonons rather than by the force RMSE. The RMSE
-includes large-amplitude structures that the harmonic and quasi-harmonic
-quantities never visit, while the frequencies are what enter
-{math}`F_\mathrm{ph}`. The comparison below is still made on the forces,
-because it is cheap and it is what shows where an MLP is weak; the frequencies
-are what decides whether it is good enough.
+{ref}`Validating the MLP <polymlp-sscha-validate>` compares the MLP forces
+against the calculator forces on the structures held out as the test set, one
+temperature at a time. The thermal supercells of this step already carry
+calculator forces, so nothing new has to be run with the calculator.
 
-The thermal supercells of this step already carry calculator forces. Evaluate
-the same supercells with the MLP, and compare the two sets of forces. Nothing
-new has to be run with the calculator. Use the structures held out as the test
-set, since the MLP was fitted to the others.
-
-Compare one temperature at a time. Each temperature has its own displacement
-amplitudes, and one MLP is trained on all of them together, so its accuracy
-can differ from one temperature to the next.
-
-The phonon grid of step 2 can be compared in the same way, and there the force
-constants and the frequencies can be compared as well. Its displacements are
-one fixed distance, 0.03 Angstrom in the script there, which is usually
-smaller than the amplitudes of the 0 K draw. An MLP trained across a
-temperature range tends to be hard to make accurate at displacements that
-small. A difference there need not mean the temperature-dependent run is
-wrong.
+Make that comparison at a few grid points. The MLPs are fitted independently,
+so an MLP that is weak at one grid point says nothing about the others.
 
 (anisotropic-qha-sscha)=
 ### Computing the free energies with SSCHA
 
 {math}`F_\mathrm{ph}` is the SSCHA free energy defined in
-{ref}`SSCHA <mlp-sscha>`, computed from force constants that change with
+{ref}`SSCHA <polymlp-sscha>`, computed from force constants that change with
 temperature. It is no longer the
 harmonic expression of "The free energy" above.
 
@@ -1360,77 +1250,19 @@ arithmetic rather than the whole sweep.
 
 ### The options of an SSCHA run and its error
 
-The options set what one SSCHA run samples and what its averaging leaves out.
+{ref}`The options of a run <polymlp-sscha-options>` covers what each option
+sets, and {ref}`the error of the average <polymlp-sscha-error>` covers how the
+error of the mean follows from `--snapshots` and the number of iterations kept.
+Script 7 draws 2000 supercells against phonopy's own 1000, and makes 16
+iterations against its 10.
 
-`--snapshots` is how many supercells each SSCHA iteration draws, 2000 in
-script 7 against phonopy's own 1000. Each one is an MLP evaluation, which makes
-it the main cost of the step.
-
-`--iterations` is how many iterations each run makes, 16 against phonopy's 10.
-The early ones drive the force constants to self-consistency, and they are the
-run's transient.
-
-After the transient the iterations do not settle on a value. Each one refits
-the force constants from a **fresh sample**, so the step between iterations
-stops shrinking, and the free energies scatter about a fixed point instead of
-approaching one. Every iteration past the transient is therefore an
-independent sample of the free energy, and averaging them is what improves the
-estimate.
-
-`--mesh` is the mesh the harmonic part of the SSCHA free energy is sampled on,
-and matching it to the `--mesh` of the analysis keeps one sampling through the
-calculation. `--random-seed` fixes the whole run: iteration *i* draws from
-`SeedSequence([seed, i])`, so the run is reproducible while the iterations stay
-independent.
+The `--mesh` of script 7 matches the `--mesh` of the analysis, which keeps one
+sampling through the calculation.
 
 A run stores every iteration and averages none of them. Script 8 takes the mean
 over the iterations after the transient, one of them by default, and
 `--transient` sets how many. Choosing another is a second gather and costs no
 sampling, and `--transient` on a run marks its listing alone.
-
-The error of one iteration is the standard error of the mean of the anharmonic
-term over that iteration's snapshots,
-
-```{math}
-e_i = \frac{\sigma_i}{\sqrt{N}}, \qquad
-\sigma_i^2 = \frac{1}{N - 1} \sum_{k=1}^{N}
-\left( E^\mathrm{anh}_k - \bar{E}^\mathrm{anh} \right)^2,
-```
-
-where {math}`E^\mathrm{anh}_k` is the anharmonic energy of the {math}`k`-th
-displaced supercell of that iteration, per primitive cell, written out in
-Eq. {eq}`eq_sscha_anharmonic` of {ref}`SSCHA <mlp-sscha>`.
-{math}`\bar{E}^\mathrm{anh}` is the mean over the {math}`N` snapshots, and
-{math}`N` is `--snapshots`.
-
-The iterations are independent draws, so the error of their mean is
-
-```{math}
-e = \frac{1}{m} \sqrt{\sum_{i=1}^{m} e_i^2} = \frac{\sigma}{\sqrt{mN}},
-```
-
-where {math}`m` = `--iterations` - `--transient`. The second form holds when
-the {math}`\sigma_i` are alike, with {math}`\sigma` their common value.
-{math}`mN` is how many supercells the run evaluates.
-
-The error depends on that product ({math}`mN`) alone, so it says nothing about
-how to split the cost between `--iterations` and `--snapshots`. Two other
-things settle that split. `--iterations` has to exceed the transient with
-samples left to average, and the listing shows how long the transient is. Each
-iteration fits its force constants from its own `--snapshots` supercells, so a
-small `--snapshots` leaves every iteration's force constants noisy however many
-iterations follow.
-
-It is recommended to give the budget to `--snapshots`, and to raise
-`--iterations` only until the transient is cleared with samples to spare. The
-two buy the same error, and only `--snapshots` improves the force constants
-that everything other than the free energy is computed from.
-
-Each {math}`e_i` holds its own iteration's force constants fixed, so {math}`e`
-counts the sampling of the snapshots alone. The force constants were fitted
-from a sample as well, and that variation appears as scatter of the kept
-iterations about their mean, which is the column `-v` prints. Iterations that
-scatter by about their own {math}`e_i` say that {math}`e` is the whole of it.
 
 (anisotropic-qha-gather)=
 ### Gathering the runs into `fph.hdf5`
@@ -1451,9 +1283,12 @@ Wrote sscha-g013-t10K.hdf5
 ...
 ```
 
-The gather places each run at the nearest of its `TEMPERATURES`. A submitting
-script can therefore carry its own temperatures, since one that is off by
-rounding still lands on the temperature the gather expects.
+The gather places each run at the one of its `TEMPERATURES` the run's own
+temperature matches, to within 1e-3 K. A submitting script can therefore carry
+its own temperatures, since one that is off by rounding still lands on the
+temperature the gather expects. A run at a temperature that is on no such
+grid point is left out, so a sweep computed over a wider or a finer grid than
+`TEMPERATURES` gathers to `TEMPERATURES`.
 
 Sampling writes one `sscha-g*K.hdf5` per run. Averaging writes `fph.hdf5`,
 which is the file the analysis reads.
@@ -1469,7 +1304,7 @@ Script 8 gathers the `sscha-g*K.hdf5` files into `fph.hdf5`:
 
 ```bash
 % python script8.py
-Wrote fph.hdf5 from 1025 file(s)
+Wrote fph.hdf5, 41 temperature(s) x 25 grid point(s), from 1025 file(s)
 ```
 
 Each file is placed by the lattice lengths and the temperature it carries
@@ -1484,33 +1319,12 @@ default is `DEFAULT_TRANSIENT`, 1. Iteration 1 uses the force constants fitted
 to `merged.yaml`, so its free energy is that of those force constants and not
 of self-consistent ones.
 
-How long the transient is depends on the system. It lasts until the force
-constants reach self-consistency, and that takes longer the further the
-starting force constants sit from them. The default of 1 is a floor, not a
-measurement.
+{ref}`Reading the run <polymlp-sscha-reading>` says how the listing `-v` prints
+is read and when to raise `--transient`.
 
-`-v` prints each iteration's distance from the mean of the kept ones, divided
-by that iteration's own error. An iteration past the transient gives about 1,
-since it scatters about the fixed point by its own error. A larger value means
-the iteration was still approaching that point.
-
-```
-  iter       F [meV]   error [meV]   (F - mean)/error
-     1*      98.5931        0.0121              +46.9
-     2       98.0729        0.0113               +4.1
-     3       98.0141        0.0108               -1.1
-     4       98.0166        0.0110               -0.9
-     5       98.0118        0.0112               -1.3
-     6       98.0153        0.0109               -1.0
-  * left out as the transient. Of the kept iterations the furthest from the
-    mean is 2, at 4.1 sigma.
-```
-
-Iteration 2 above gives 4.1, so `--transient 2` drops it. Raise `--transient`
-until every kept iteration is within a few units. Check the lowest temperature
-as well as the highest: the starting force constants are one fit over the whole
-training range, so they sit furthest from the self-consistent ones at its two
-ends.
+Check the lowest temperature as well as the highest. The starting force
+constants are one fit over the whole training range, so they sit furthest from
+the self-consistent ones at its two ends.
 
 The run files hold every iteration and no average. Script 8 computes the
 averages, leaving out the first `--transient` iterations of each run:
@@ -1665,6 +1479,23 @@ the curves whose shape disagrees with the data in those ways, and keeps the
 closest of what is left. If nothing is left, the command stops rather than
 returning a curve of the wrong shape.
 
+A fit is worth seeing against what it was fitted to. A smoothed run therefore
+keeps the surface minima as well, in `unsmoothed_lattice_parameters`, and
+writes them as three columns more in `lattice_parameters-temperature.dat`:
+temperature, the smoothed {math}`a`, {math}`b`, {math}`c`, then the same three
+before the smoothing.
+
+It also writes `lattice_smoothing.png`, one column per free lattice DOF. The
+upper row is the fit as a line over the minima as dots, and the lower row is
+what is left over, fit minus minimum, in {math}`10^{-4}` angstrom. The
+residuals are what the fit is judged on. Sampling scatter shows as a band
+around zero as wide as the scatter is, while a fit of the wrong shape shows as
+an excursion over a range of temperature, and that is the case to raise
+`--smooth-terms` for.
+
+An unsmoothed run has nothing to compare against, so `--smooth-lattice none`
+writes the four columns alone and no `lattice_smoothing.png`.
+
 (anisotropic-qha-gather-script)=
 ## Appendix: the gather script
 
@@ -1713,7 +1544,12 @@ def assemble(
     except ValueError as error:
         raise SystemExit(str(error)) from error
     write_free_energies_hdf5(free_energies, filename)
-    print(f"Wrote {filename} from {len(paths)} file(s)", flush=True)
+    n_temperatures, n_points = free_energies.free_energies.shape
+    print(
+        f"Wrote {filename}, {n_temperatures} temperature(s) x "
+        f"{n_points} grid point(s), from {len(paths)} file(s)",
+        flush=True,
+    )
 
 
 def main():
@@ -1750,50 +1586,19 @@ displacements, so the check on the merged sets has something to read only
 after the calculator, and before then it reports every grid point as having no
 `merged.yaml`.
 
-The draw and the reference use the same force constants {math}`\Phi`. The
-check therefore tests the temperature a set was drawn at, and tests nothing
-about {math}`\Phi` itself. Force constants that are wrong at a grid point
-change the draw and the reference by the same amount, and the ratio still
-comes out 1. Wrong force constants have to be caught at step 2, from the
-frequencies.
-
 ### What each check compares
 
-One check compares the amplitude of a set against the temperature its
-directory is named after. Script 5 draws the supercells of a set from the
-harmonic density matrix {math}`\tilde{\rho}_\Phi(T)` of that grid point's
-force constants {math}`\Phi`, the distribution the SSCHA free energy of
-{ref}`SSCHA <mlp-sscha>` averages over. `run_correlation_matrix(T)` fills
-`RandomDisplacements.uu` with its second moment,
+One check compares the amplitude of a set against the temperature its directory
+is named after. {ref}`Checking the training displacements
+<polymlp-sscha-check-displacements>` writes down the ratio it prints, which
+`reference_u2` and `sample_u2` compute here from the force constants of the
+grid point the set belongs to. `check_amplitudes` prints the ratio for every
+set, and a set with the wrong label gives a ratio far from 1.
 
-```{math}
-\langle u_{l\kappa j} u_{l'\kappa' j'} \rangle_{\tilde{\rho}_\Phi(T)},
-```
-
-in Angstrom squared, at the same commensurate points and with the same cutoff
-as the draw. Summing the diagonal over the supercell,
-
-```{math}
-\langle u^2 \rangle_{\tilde{\rho}_\Phi(T)} = \sum_{l\kappa j}
-\langle u_{l\kappa j} u_{l\kappa j} \rangle_{\tilde{\rho}_\Phi(T)},
-```
-
-is `np.einsum("iiaa->", rd.uu)` in `reference_u2`.
-
-A set of {math}`N` snapshots is a sample of {math}`\tilde{\rho}_\Phi(T')`,
-where {math}`T'` is the temperature it was drawn at. The same sum over the
-set,
-
-```{math}
-\overline{u^2} = \frac{1}{N} \sum_{n=1}^{N} \sum_{l\kappa j}
-\bigl( u_{l\kappa j}^{(n)} \bigr)^2,
-```
-
-is computed by `sample_u2` and estimates {math}`\langle u^2
-\rangle_{\tilde{\rho}_\Phi(T')}`. The ratio {math}`\overline{u^2} / \langle
-u^2 \rangle_{\tilde{\rho}_\Phi(T)}` is 1 when {math}`T'` equals {math}`T`, the
-temperature the directory is named after. `check_amplitudes` prints it for
-every set, and a set with the wrong label gives a ratio far from 1.
+Wrong force constants are not what this catches. The draw and the reference use
+the same {math}`\Phi`, so force constants that are wrong at a grid point change
+both by the same amount and the ratio still comes out 1. Catch those at step 2,
+from the frequencies.
 
 The next check compares neighbouring grid points. Grid points {math}`g` and
 {math}`g'` draw from {math}`\tilde{\rho}_{\Phi^{(g)}}(T)` and
@@ -2030,39 +1835,20 @@ says why, and where that stops.
 (anisotropic-qha-reproducing)=
 ## Appendix: what a rerun reproduces
 
-`phonopy-mlpsscha` displaces the supercells of an SSCHA iteration along the
-thermal distribution, and scripts 7 and 10 call it once per (grid point,
-temperature). Script 5 draws its training structures from the thermal
-distribution of the harmonic force constants. Both the command and script 5
-draw through `RandomDisplacements`, which takes its random numbers from NumPy.
+{ref}`What a rerun reproduces <polymlp-sscha-reproducing>` says what a seed
+fixes, what a NumPy upgrade does not, and why an SSCHA run keeps no record of
+the supercells it drew. Scripts 7 and 10 call `phonopy-mlpsscha` once per (grid
+point, temperature), and each of those runs is seeded.
 
-NumPy does not promise the same random numbers from one release to the next
-([NEP 19](https://numpy.org/neps/nep-0019-rng-policy.html)). A machine carrying
-a different NumPy may therefore draw different supercells.
+Script 5 passes `SEED + int(temperature)` to `draw_standard_normals`, so each
+of its temperatures is one reproducible draw. The MLPs are fitted to the
+structures it drew, so another draw there gives another potential. Script 5
+writes its draw to `normals-*.npz` beside the training sets, and {ref}`sharing
+one draw of standard normals <anisotropic-qha-normals>` says how to read one
+back.
 
-The supercells of an SSCHA run are a way of averaging. Another draw of the same
-size returns a free energy differing by about the error the run reports.
-Nothing reads the draw a second time, so `phonopy-mlpsscha` writes no record of
-it.
-
-The MLPs are fitted to the structures script 5 drew, so another draw there
-gives another potential. Script 5 writes its draw to `normals-*.npz` beside the
-training sets, and {ref}`sharing one draw of standard normals
-<anisotropic-qha-normals>` says how to read one back.
-
-On one NumPy, the seed fixes what is drawn. Script 5 passes
-`SEED + int(temperature)` to `draw_standard_normals`, so each of its
-temperatures is one reproducible draw. `phonopy-mlpsscha` passes
-`--random-seed`, and iteration *i* of an SSCHA run derives its own seed from
-that and *i*, as `SeedSequence([seed, i])`, so the iterations of one run draw
-independently of one another.
-
-A seeded run therefore draws the same supercells whenever it is made. The
-machine it runs on, when it runs and how many times it has run change nothing,
-so the sweep is safe to spread over a cluster and safe to resubmit.
-
-A run made without `--random-seed`, or an API call with `random_seed=None`,
-sets no seed. The draw is then a fresh sample every time.
+A seeded run draws the same supercells whenever it is made, so the sweep is
+safe to spread over a cluster and safe to resubmit.
 
 A rerun writing the same file name replaces that file. A rerun writing another
 name leaves two run files at one (grid point, temperature). Script 8 then stops
