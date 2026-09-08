@@ -5,7 +5,10 @@ from __future__ import annotations
 
 import pytest
 
-from phonopy.physical_units import get_calculator_physical_units
+from phonopy.physical_units import (
+    CalculatorPhysicalUnits,
+    get_calculator_physical_units,
+)
 
 # e^2 / (4 pi eps0) = 14.3996454 eV.Angstrom (CODATA 2022 elementary charge and
 # vacuum electric permittivity), which is 1 hartree*bohr, 2 Ry*bohr and
@@ -23,8 +26,10 @@ EXPECTED_NAC_FACTOR = {
     "qe": 2.0,  # Ry/au^2, au
     "wien2k": 2000.0,  # mRy/au^2, au
     "elk": 1.0,  # hartree/au^2, au
+    "dftbp": 1.0,  # hartree/au^2, au
     "turbomole": 1.0,  # hartree/au^2, au
     "fleur": 1.0,  # hartree/au^2, au
+    "exciting": 1.0,  # hartree/au^2, au
     "octopus": 1.0,  # hartree/au^2, au
 }
 
@@ -38,21 +43,15 @@ def test_nac_factor(interface_mode: str):
     )
 
 
-def test_nac_factor_dftbp_unchanged():
-    """Test DFTB+ keeps the value it has had since 2021.
-
-    This pins current behaviour rather than deriving it; doc/interfaces.md
-    documents 14.399652 for DFTB+.
-    """
-    units = get_calculator_physical_units("dftbp")
-    assert units.nac_factor == pytest.approx(E2_OVER_4PIEPS0_EV_ANGSTROM, rel=1e-5)
-
-
-def test_nac_factor_agrees_across_identical_unit_systems():
-    """Test branches declaring the same units agree on nac_factor."""
+def test_units_agree_across_identical_unit_systems():
+    """Test interfaces in atomic units agree on every physical unit."""
     reference = get_calculator_physical_units("octopus")
-    for interface_mode in ("elk", "turbomole", "fleur"):
+    for interface_mode in ("elk", "dftbp", "turbomole", "fleur", "exciting"):
         units = get_calculator_physical_units(interface_mode)
-        assert units.force_constants_unit == reference.force_constants_unit
-        assert units.length_unit == reference.length_unit
-        assert units.nac_factor == reference.nac_factor
+        for name in CalculatorPhysicalUnits.field_names():
+            value = getattr(units, name)
+            expected = getattr(reference, name)
+            if isinstance(expected, float):
+                assert value == pytest.approx(expected, rel=1e-5), name
+            else:
+                assert value == expected, name

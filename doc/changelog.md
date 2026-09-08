@@ -11,11 +11,13 @@
   reported in. `sscha_free_energies.yaml` records the supercell energy beside
   the other settings, and each iteration now reports `potential_energy` and
   `harmonic_potential_energy`, the two terms `anharmonic` is the difference of.
-- Bug fix: the non-analytical term correction factor for Elk, TURBOMOLE and
-  Fleur is 1 again, the value {ref}`documented
-  <nac_default_value_interfaces>` for them. It became 14.399652 in v3.4.0,
-  when those three interfaces were folded into one branch with DFTB+, which
-  shifted LO frequencies for anyone running NAC through them.
+- Bug fix: the non-analytical term correction factor is 1 for every interface
+  that keeps cells in bohr and force constants in hartree/bohr^2, namely Elk,
+  DFTB+, TURBOMOLE, Fleur, exciting and Octopus. That is e^2/(4 pi eps0) in
+  those units, and it is what {ref}`the table <nac_default_value_interfaces>`
+  documents for all six. Elk, TURBOMOLE and Fleur had carried 14.399652, the
+  eV*angstrom value, since v3.4.0, DFTB+ since its interface was added, and
+  exciting since v4.4.0. Running NAC through them shifted the LO frequencies.
 - Behavior change: `phonopy-vasp-efe` integrates the electronic free energy by
   the linear tetrahedron method over the mesh each `vasprun.xml` describes,
   where it used to sum Fermi-Dirac occupations over the irreducible k-points.
