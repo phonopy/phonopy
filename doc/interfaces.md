@@ -57,6 +57,7 @@ ABINIT    | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
 SIESTA    | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
 Elk       | au (bohr)  AMU           hartree/au    hartree/au^2
 CRYSTAL   | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+DFTB+     | au (bohr)  AMU           hartree/au    hartree/au^2
 TURBOMOLE | au (bohr)  AMU           hartree/au    hartree/au^2
 CP2K      | Angstrom   AMU           hartree/au    hartree/Angstrom.au
 FHI-AIMS  | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
@@ -66,6 +67,7 @@ ABACUS    | au (bohr)  AMU           eV/angstrom   eV/angstrom.au
 LAMMPS    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
 QLM       | au (bohr)  AMU           Ry/au         Ry/au^2
 Octopus   | au (bohr)  AMU           hartree/au    hartree/au^2
+exciting  | au (bohr)  AMU           hartree/au    hartree/au^2
 ```
 
 For these sets of physical properties, phonon frequency is calculated in THz.
@@ -96,6 +98,7 @@ ABACUS    | STRU          | STRU.in
 LAMMPS    | unitcell      | supercell
 QLM       | site.lm       | supercell.lm
 Octopus   | POSCAR        | geometry-000
+exciting  | input.xml     | supercell.xml
 ```
 
 ### Default displacement distances
@@ -123,6 +126,7 @@ ABACUS    | 0.02 au (bohr)
 LAMMPS    | 0.01 Angstrom
 QLM       | 0.02 au (bohr)
 Octopus   | 0.02 au (bohr)
+exciting  | 0.02 au (bohr)
 ```
 
 (frequency_default_value_interfaces)=
@@ -147,6 +151,7 @@ ABACUS    | 21.49068
 LAMMPS    | 15.633302
 QLM       | 108.97077
 Octopus   | 154.10794
+exciting  | 154.10794
 ```
 
 (nac_default_value_interfaces)=
@@ -161,7 +166,7 @@ ABINIT    | 51.422090
 SIESTA    | 51.422090
 Elk       | 1
 CRYSTAL   | 14.399652
-DFTB+     | 14.399652
+DFTB+     | 1
 TURBOMOLE | 1
 CP2K      | None (N/A)
 FHI-AIMS  | 14.399652
@@ -171,4 +176,5 @@ ABACUS    | 51.422090
 LAMMPS    | 14.399652
 QLM       | N/A
 Octopus   | 1
+exciting  | 1
 ```
