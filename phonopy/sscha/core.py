@@ -19,7 +19,7 @@ from phonopy.harmonic.force_constants import (
 )
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.physical_units import get_physical_units
-from phonopy.sscha.run import SSCHARun, write_sscha_run_hdf5
+from phonopy.sscha.trace import SSCHATrace, write_sscha_trace_hdf5
 
 
 @dataclass(frozen=True)
@@ -463,15 +463,12 @@ class MLPSSCHA:
                 print("")
         return self
 
-    def to_sscha_run(self, all_force_constants: bool = False) -> SSCHARun:
+    def to_trace(self, all_force_constants: bool = False) -> SSCHATrace:
         """Return what this run sampled, one value per iteration.
 
         Every iteration is kept and none is averaged, so that which of them
-        to average over is chosen afterwards rather than here.
-
-        Parameters
-        ----------
-        The refit made after the last iteration is always carried.
+        to average over is chosen afterwards rather than here. The refit made
+        after the last iteration is always carried.
 
         Parameters
         ----------
@@ -490,7 +487,7 @@ class MLPSSCHA:
             force_constants_history = np.array(self._force_constants_history)
         else:
             force_constants_history = None
-        return SSCHARun(
+        return SSCHATrace(
             temperature=self.temperature,
             free_energies=np.array([h.free_energy for h in history]),
             errors=np.array([h.free_energy_error for h in history]),
@@ -513,7 +510,7 @@ class MLPSSCHA:
         all_force_constants: bool = False,
     ) -> None:
         """Write what this run sampled to an hdf5 file."""
-        write_sscha_run_hdf5(self.to_sscha_run(all_force_constants), filename)
+        write_sscha_trace_hdf5(self.to_trace(all_force_constants), filename)
 
     def __iter__(self) -> MLPSSCHA:
         """Iterate over force constants calculations."""

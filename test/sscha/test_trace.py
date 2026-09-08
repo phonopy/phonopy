@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-"""Tests for what one SSCHA run sampled."""
+"""Tests for SSCHATrace, what one SSCHA run sampled."""
 
 from __future__ import annotations
 
@@ -9,13 +9,17 @@ import pathlib
 import numpy as np
 import pytest
 
-from phonopy.sscha.run import SSCHARun, read_sscha_run_hdf5, write_sscha_run_hdf5
+from phonopy.sscha.trace import (
+    SSCHATrace,
+    read_sscha_trace_hdf5,
+    write_sscha_trace_hdf5,
+)
 
 
-def _run(iterations: int = 6) -> SSCHARun:
+def _run(iterations: int = 6) -> SSCHATrace:
     """Return a run with distinguishable values in every field."""
     rng = np.random.default_rng(0)
-    return SSCHARun(
+    return SSCHATrace(
         temperature=250.0,
         free_energies=0.1 + rng.normal(0.0, 1e-4, iterations),
         errors=rng.uniform(1e-6, 1e-5, iterations),
@@ -34,15 +38,15 @@ def test_sscha_run_round_trip(tmp_path: pathlib.Path) -> None:
     pytest.importorskip("h5py")
     run = _run()
     path = tmp_path / "sscha.hdf5"
-    write_sscha_run_hdf5(run, path)
+    write_sscha_trace_hdf5(run, path)
 
-    back = read_sscha_run_hdf5(path)
-    assert isinstance(back, SSCHARun)
+    back = read_sscha_trace_hdf5(path)
+    assert isinstance(back, SSCHATrace)
     assert back.temperature == 250.0
     assert isinstance(back.temperature, float)
     assert back.reference_energy == pytest.approx(-23.4)
     assert back.n_iterations == 6
-    for name in SSCHARun.PER_ITERATION:
+    for name in SSCHATrace.PER_ITERATION:
         np.testing.assert_allclose(getattr(back, name), getattr(run, name))
     np.testing.assert_allclose(back.lattice_lengths, run.lattice_lengths)
     np.testing.assert_allclose(back.force_constants, run.force_constants)
@@ -58,12 +62,12 @@ def test_sscha_run_without_force_constants(tmp_path: pathlib.Path) -> None:
     pytest.importorskip("h5py")
     fields = {
         name: getattr(_run(), name)
-        for name in ("temperature", "reference_energy", *SSCHARun.PER_ITERATION)
+        for name in ("temperature", "reference_energy", *SSCHATrace.PER_ITERATION)
     }
     path = tmp_path / "sscha.hdf5"
-    write_sscha_run_hdf5(SSCHARun(**fields), path)
+    write_sscha_trace_hdf5(SSCHATrace(**fields), path)
 
-    back = read_sscha_run_hdf5(path)
+    back = read_sscha_trace_hdf5(path)
     assert back.force_constants is None
     assert back.force_constants_history is None
     assert back.p2s_map is None
@@ -84,16 +88,16 @@ def test_sscha_run_is_not_a_free_energy(tmp_path: pathlib.Path) -> None:
     )
 
     sampled = tmp_path / "sscha.hdf5"
-    write_sscha_run_hdf5(_run(), sampled)
-    with pytest.raises(ValueError, match="free energy type 'SSCHARun'"):
+    write_sscha_trace_hdf5(_run(), sampled)
+    with pytest.raises(ValueError, match="free energy type 'SSCHATrace'"):
         read_free_energies_hdf5(sampled)
 
     averaged = tmp_path / "fph.hdf5"
     write_free_energies_hdf5(
         PhononFreeEnergies(np.arange(0.0, 31.0, 10.0), np.zeros((4, 2))), averaged
     )
-    with pytest.raises(ValueError, match="not SSCHARun"):
-        read_sscha_run_hdf5(averaged)
+    with pytest.raises(ValueError, match="not SSCHATrace"):
+        read_sscha_trace_hdf5(averaged)
 
 
 def test_sscha_run_shapes_are_checked() -> None:
@@ -101,16 +105,16 @@ def test_sscha_run_shapes_are_checked() -> None:
     run = _run()
     fields = {
         name: getattr(run, name)
-        for name in ("temperature", "reference_energy", *SSCHARun.PER_ITERATION)
+        for name in ("temperature", "reference_energy", *SSCHATrace.PER_ITERATION)
     }
-    SSCHARun(**fields)
+    SSCHATrace(**fields)
 
     with pytest.raises(ValueError, match="free_energies is one value per"):
-        SSCHARun(**{**fields, "free_energies": run.free_energies[:, None]})
+        SSCHATrace(**{**fields, "free_energies": run.free_energies[:, None]})
     with pytest.raises(ValueError, match="errors must have the shape"):
-        SSCHARun(**{**fields, "errors": run.errors[:3]})
+        SSCHATrace(**{**fields, "errors": run.errors[:3]})
     with pytest.raises(ValueError, match="lattice_lengths must have shape"):
-        SSCHARun(lattice_lengths=np.zeros(2), **fields)
+        SSCHATrace(lattice_lengths=np.zeros(2), **fields)
 
 
 def test_averaged_force_constants_takes_off_the_transient() -> None:

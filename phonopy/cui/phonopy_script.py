@@ -803,6 +803,12 @@ def _prepare_pypolymlp(phonon: Phonopy, settings: PhonopySettings, log_level: in
 
 
 def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
+    print("")
+    print("WARNING: '--sscha' is deprecated. Use 'phonopy-mlpsscha' instead,")
+    print("which takes the potential as a file: write it with 'phonopy")
+    print("--pypolymlp ...' first, then run 'phonopy-mlpsscha'.")
+    print("")
+
     if log_level:
         print(
             "------------------------------- SSCHA start "

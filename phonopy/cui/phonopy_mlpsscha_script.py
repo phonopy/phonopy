@@ -26,7 +26,7 @@ import phonopy
 from phonopy import Phonopy
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.sscha.core import MLPSSCHA
-from phonopy.sscha.run import write_sscha_run_hdf5
+from phonopy.sscha.trace import write_sscha_trace_hdf5
 
 # Phonopy.save appends the ".xz" of the compressed file it writes.
 DATASET_FILENAME = "phonopy_mlpsscha_dataset.yaml"
@@ -164,11 +164,11 @@ def main() -> None:
         random_seed=args.random_seed,
         log_level=args.verbose,
     )
-    sscha_run = sscha.run().to_sscha_run(args.all_force_constants)
+    trace = sscha.run().to_trace(args.all_force_constants)
     if args.verbose:
-        sscha_run.report(args.transient)
+        trace.report(args.transient)
 
-    write_sscha_run_hdf5(sscha_run, args.output)
+    write_sscha_trace_hdf5(trace, args.output)
     print(f"Wrote {args.output}")
 
     if args.save_dataset:
