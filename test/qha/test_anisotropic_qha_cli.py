@@ -407,8 +407,8 @@ def test_free_energy_terms_round_trip(tmp_path: pathlib.Path) -> None:
 
 
 def _sweep(temperatures, lengths, iterations=6):
-    """Return one SSCHARun per grid point and temperature."""
-    from phonopy.sscha.run import SSCHARun
+    """Return one SSCHATrace per grid point and temperature."""
+    from phonopy.sscha.trace import SSCHATrace
 
     rng = np.random.default_rng(0)
     runs = []
@@ -421,7 +421,7 @@ def _sweep(temperatures, lengths, iterations=6):
                 return v
 
             runs.append(
-                SSCHARun(
+                SSCHATrace(
                     temperature=float(t),
                     free_energies=series(0.1 + 0.001 * column - 1e-5 * t),
                     errors=rng.uniform(1e-6, 1e-5, iterations),
@@ -519,7 +519,7 @@ def test_assemble_sscha_free_energies_refuses_a_gap_and_a_clash() -> None:
 def test_transient_iterations_is_kept_as_a_label(tmp_path: pathlib.Path) -> None:
     """The averaged file records which iterations it was taken from.
 
-    The iterations themselves are in the SSCHARun files the averaging read,
+    The iterations themselves are in the SSCHATrace files the averaging read,
     so nothing here can check the count; it travels with the averages so that
     two of these files can be compared knowing how each was taken.
 

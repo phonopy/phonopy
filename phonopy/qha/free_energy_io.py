@@ -24,7 +24,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy import __version__
-from phonopy.sscha.run import SSCHARun
+from phonopy.sscha.trace import SSCHATrace
 
 
 @dataclasses.dataclass(frozen=True)
@@ -141,7 +141,7 @@ class SSCHAFreeEnergies(PhononFreeEnergies):
     transient_iterations : int, optional
         How many iterations at the start of each run were left out of the
         averages, or None. A count, not a position on the iteration axis.
-        The iterations themselves are in the SSCHARun files the averaging
+        The iterations themselves are in the SSCHATrace files the averaging
         read, so this is the record of what was taken from them.
 
     Notes
@@ -290,7 +290,7 @@ def read_free_energies_hdf5(
 
 
 def assemble_sscha_free_energies(
-    runs: Sequence[SSCHARun],
+    runs: Sequence[SSCHATrace],
     temperatures: NDArray[np.double],
     lattice_lengths: NDArray[np.double],
     transient: int = 1,
@@ -311,7 +311,7 @@ def assemble_sscha_free_energies(
 
     Parameters
     ----------
-    runs : Sequence[SSCHARun]
+    runs : Sequence[SSCHATrace]
         What the sweep sampled, one per grid point and temperature.
     temperatures : ndarray
         Temperatures of the grid in K. shape=(temperatures,)
@@ -322,7 +322,7 @@ def assemble_sscha_free_energies(
         How many iterations at the start of each run to leave out of its
         average. Default is 1, which drops the iteration that samples the
         starting force constants. How many more belong to the transient
-        depends on the system; SSCHARun.report shows it.
+        depends on the system; SSCHATrace.report shows it.
     atol : float, optional
         How far in K a run's temperature may sit from one of temperatures and
         still be that temperature. Default is 1e-3, which takes the rounding

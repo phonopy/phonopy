@@ -20,8 +20,6 @@ from numpy.typing import NDArray
 
 from phonopy import __version__
 
-TYPE = "SSCHARun"
-
 # Read back as integers rather than as the doubles everything else is.
 INTEGER_FIELDS = ("p2s_map",)
 
@@ -36,7 +34,7 @@ class SSCHAAverage(NamedTuple):
 
 
 @dataclasses.dataclass(frozen=True)
-class SSCHARun:
+class SSCHATrace:
     """What one SSCHA run sampled, before any averaging.
 
     Attributes
@@ -180,7 +178,7 @@ class SSCHARun:
         if fc is None:
             raise ValueError(
                 "averaged_force_constants needs force_constants_history, "
-                "which to_sscha_run writes with all_force_constants=True."
+                "which to_trace writes with all_force_constants=True."
             )
         return fc[self._kept(transient)].mean(axis=0)
 
@@ -225,8 +223,8 @@ class SSCHARun:
         )
 
 
-def write_sscha_run_hdf5(
-    run: SSCHARun, filename: str | os.PathLike = "mlpsscha.hdf5"
+def write_sscha_trace_hdf5(
+    trace: SSCHATrace, filename: str | os.PathLike = "mlpsscha.hdf5"
 ) -> None:
     """Write what one SSCHA run sampled.
 
@@ -234,30 +232,30 @@ def write_sscha_run_hdf5(
     rather than silent.
 
     """
-    if not isinstance(run, SSCHARun):
-        raise ValueError(f"{type(run).__name__} is not an {TYPE}.")
+    if not isinstance(trace, SSCHATrace):
+        raise ValueError(f"{type(trace).__name__} is not an {SSCHATrace.__name__}.")
     with h5py.File(filename, "w") as w:
         w.attrs["creator"] = "phonopy"
         w.attrs["phonopy_version"] = __version__
-        w.attrs["type"] = TYPE
+        w.attrs["type"] = SSCHATrace.__name__
         w.attrs["unit"] = "eV/primitive_cell"
-        for field in dataclasses.fields(run):
-            values = getattr(run, field.name)
+        for field in dataclasses.fields(trace):
+            values = getattr(trace, field.name)
             if values is not None:
                 w.create_dataset(field.name, data=values)
 
 
-def read_sscha_run_hdf5(filename: str | os.PathLike = "mlpsscha.hdf5") -> SSCHARun:
-    """Read what write_sscha_run_hdf5 wrote."""
+def read_sscha_trace_hdf5(filename: str | os.PathLike = "mlpsscha.hdf5") -> SSCHATrace:
+    """Read what write_sscha_trace_hdf5 wrote."""
     with h5py.File(filename, "r") as f:
         name = str(f.attrs["type"]) if "type" in f.attrs else ""
-        if name != TYPE:
+        if name != SSCHATrace.__name__:
             raise ValueError(
-                f"{filename} records the type {name!r}, not {TYPE}. The "
+                f"{filename} records the type {name!r}, not {SSCHATrace.__name__}. The "
                 "averages of a grid of runs are read with "
                 "read_free_energies_hdf5."
             )
-        declared = {field.name for field in dataclasses.fields(SSCHARun)}
+        declared = {field.name for field in dataclasses.fields(SSCHATrace)}
         stored: dict[str, Any] = {}
         for key in f:
             if key not in declared:
@@ -270,6 +268,8 @@ def read_sscha_run_hdf5(filename: str | os.PathLike = "mlpsscha.hdf5") -> SSCHAR
             else:
                 stored[key] = np.array(f[key][:], dtype="double")
         try:
-            return SSCHARun(**stored)
+            return SSCHATrace(**stored)
         except TypeError as error:
-            raise ValueError(f"{filename} is an {TYPE}, but {error}") from error
+            raise ValueError(
+                f"{filename} is an {SSCHATrace.__name__}, but {error}"
+            ) from error

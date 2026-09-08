@@ -13,7 +13,7 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy.cui.phonopy_mlpsscha_script import main
-from phonopy.sscha.run import SSCHARun, read_sscha_run_hdf5
+from phonopy.sscha.trace import SSCHATrace, read_sscha_trace_hdf5
 
 cwd = pathlib.Path(__file__).parent
 
@@ -23,7 +23,7 @@ TRANSIENT = 1
 
 
 @pytest.fixture(scope="module")
-def cli_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[SSCHARun, str]:
+def cli_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[SSCHATrace, str]:
     """Run the command once and return the file it wrote and what it printed.
 
     The run costs an MLP evaluation per snapshot and a force-constant fit per
@@ -58,10 +58,10 @@ def cli_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[SSCHARun, str]:
         monkeypatch.setattr(sys, "argv", argv)
         with contextlib.redirect_stdout(log):
             main()
-    return read_sscha_run_hdf5(output), log.getvalue()
+    return read_sscha_trace_hdf5(output), log.getvalue()
 
 
-def test_cli_writes_one_row_per_iteration(cli_run: tuple[SSCHARun, str]) -> None:
+def test_cli_writes_one_row_per_iteration(cli_run: tuple[SSCHATrace, str]) -> None:
     """The file holds every iteration and no average.
 
     phonopy_KCl.yaml carries no force constants, so the run opens with an
@@ -72,7 +72,7 @@ def test_cli_writes_one_row_per_iteration(cli_run: tuple[SSCHARun, str]) -> None
     """
     run, _ = cli_run
     assert run.n_iterations == ITERATIONS
-    for name in SSCHARun.PER_ITERATION:
+    for name in SSCHATrace.PER_ITERATION:
         values = getattr(run, name)
         assert values.shape == (ITERATIONS,)
         assert np.all(np.isfinite(values))
@@ -80,7 +80,7 @@ def test_cli_writes_one_row_per_iteration(cli_run: tuple[SSCHARun, str]) -> None
 
 
 def test_cli_records_the_temperature_and_the_cell(
-    cli_run: tuple[SSCHARun, str], ph_kcl: Phonopy
+    cli_run: tuple[SSCHATrace, str], ph_kcl: Phonopy
 ) -> None:
     """-t and the cell of the input file reach the file.
 
@@ -97,7 +97,7 @@ def test_cli_records_the_temperature_and_the_cell(
 
 
 def test_cli_lists_the_iterations_and_marks_the_transient(
-    cli_run: tuple[SSCHARun, str],
+    cli_run: tuple[SSCHATrace, str],
 ) -> None:
     """-v prints the listing the transient is chosen from.
 
