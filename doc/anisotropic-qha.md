@@ -1294,7 +1294,7 @@ Sampling writes one `sscha-g*K.hdf5` per run. Averaging writes `fph.hdf5`,
 which is the file the analysis reads.
 
 The two are different types, not two spellings of one. A `sscha-g*K.hdf5`
-file holds an `SSCHARun`, every iteration and no average, and is what another
+file holds an `SSCHATrace`, every iteration and no average, and is what another
 transient is taken from. `fph.hdf5` holds `SSCHAFreeEnergies`, the averages
 and the transient they were taken with. Handing the analysis a run stops with
 a message about its type, rather than averaging it over iterations nobody
@@ -1516,7 +1516,7 @@ from phonopy.qha.free_energy_io import (
     assemble_sscha_free_energies,
     write_free_energies_hdf5,
 )
-from phonopy.sscha.run import read_sscha_run_hdf5
+from phonopy.sscha.trace import read_sscha_trace_hdf5
 
 DATASET = "aniso_qha_dataset.hdf5"
 TEMPERATURES = np.arange(0, 410, 10.0)  # 0 to 400 K in 10 K steps
@@ -1536,7 +1536,7 @@ def assemble(
     points = dataset.grid_points
     try:
         free_energies = assemble_sscha_free_energies(
-            [read_sscha_run_hdf5(path) for path in paths],
+            [read_sscha_trace_hdf5(path) for path in paths],
             TEMPERATURES,
             np.array([np.linalg.norm(p.cell.cell, axis=1) for p in points]),
             transient,

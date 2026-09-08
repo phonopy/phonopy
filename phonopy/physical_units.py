@@ -387,44 +387,24 @@ def get_calculator_physical_units(
             force_unit="mRy/au",
             energy_unit="Ry",
         )
-    elif interface_mode in ("elk", "dftbp", "turbomole", "fleur", "exciting"):
+    elif interface_mode in (
+        "elk",
+        "dftbp",
+        "turbomole",
+        "fleur",
+        "exciting",
+        "octopus",
+    ):
         ElkToTHz = (
             sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
             / (physical_units.Bohr * 1e-10)
             / (2 * pi)
             / 1e12
         )  # [THz] 154.10794
-        # Cells stay in bohr and force constants in hartree/bohr^2, so
-        # e^2/(4*pi*eps0) is 1 hartree*bohr here. DFTB+ is left on the
-        # eV*angstrom value it has used since 2021.
-        nac_factor = (
-            physical_units.Hartree * physical_units.Bohr
-            if interface_mode in ("dftbp", "exciting")
-            else 1.0
-        )
         units = CalculatorPhysicalUnits(
             factor=ElkToTHz,
-            nac_factor=nac_factor,
-            distance_to_A=physical_units.Bohr,
-            force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
-            energy_to_eV=physical_units.Hartree,
-            force_constants_unit="hartree/au^2",
-            length_unit="au",
-            force_unit="hartree/au",
-            energy_unit="hartree",
-        )
-    elif interface_mode == "octopus":
-        OctopusToTHz = (
-            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-            / (physical_units.Bohr * 1e-10)
-            / (2 * pi)
-            / 1e12
-        )
-        units = CalculatorPhysicalUnits(
-            factor=OctopusToTHz,
-            # e^2/(4*pi*eps0) expressed in the Octopus force-constants unit
-            # times Bohr^3 (the cell volume unit), i.e. hartree*bohr = 1 in
-            # atomic units. Cf. qe (2 Ry*bohr) and wien2k (2000 mRy*bohr).
+            # e^2/(4*pi*eps0) in force_constants_unit * length_unit^3, i.e.
+            # 1 hartree*bohr. Cf. qe (2 Ry*bohr), wien2k (2000 mRy*bohr).
             nac_factor=1.0,
             distance_to_A=physical_units.Bohr,
             force_to_eVperA=physical_units.Hartree / physical_units.Bohr,
