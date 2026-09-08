@@ -2,8 +2,22 @@
 
 # Change Log
 
-## Unreleased (v4.5.0)
+## Sep-08-2026: Version 4.5.0
 
+- Added the Octopus code interface and {ref}`its documentation
+  <octopus_interface>`. `--octopus` runs the phonopy command through it, and
+  `phonopy-octopus-born` writes `BORN` from an Octopus calculation.
+- NEW `phonopy-mlpsscha` runs one SSCHA calculation, at one temperature, with a
+  pypolymlp potential, and writes its iterations to `mlpsscha.hdf5`, which
+  `phonopy.sscha.trace.read_sscha_trace_hdf5` reads back as an `SSCHATrace`.
+  `--all-force-constants` keeps the force constants of every iteration, so
+  that a transient can be dropped and the rest averaged afterwards.
+  {ref}`The SSCHA page <polymlp-sscha>` is rewritten around the command.
+- The `--sscha` option of the `phonopy` command is deprecated in favor of
+  `phonopy-mlpsscha` and warns when used. It still runs, and no page documents
+  it any more. `phonopy-mlpsscha` takes the potential as a file, so a run that
+  used to train it in the same call becomes two: `phonopy --pypolymlp ...` to
+  write `polymlp.yaml`, then `phonopy-mlpsscha`.
 - `MLPSSCHA.supercell_energy` reports the energy of the supercell without
   displacements, which the SSCHA free energy is measured from and which was
   computed and then discarded, and `MLPSSCHA.n_cell` the number of primitive
@@ -11,6 +25,16 @@
   reported in. `sscha_free_energies.yaml` records the supercell energy beside
   the other settings, and each iteration now reports `potential_energy` and
   `harmonic_potential_energy`, the two terms `anharmonic` is the difference of.
+- The SSCHA free energy of each iteration is reported with its statistical
+  error, as `free_energy_error`. The file holding it, `phonopy_sscha.yaml`, is
+  renamed `sscha_free_energies.yaml`, and each iteration draws its
+  displacements from a seed derived from the run's seed instead of reusing one
+  seed. `SSCHATrace` keeps every iteration so that the transient can be chosen
+  after the sampling, and `MLPSSCHA` accepts `fc_calculator_options`.
+- Two experimental commands take over parts of `phonopy-init`: `phonopy-collect`
+  creates `FORCE_SETS` (`phonopy_params.yaml` when given `--sp` option) from the
+  calculator output files given as its arguments, and `phonopy-symmetry` shows
+  the symmetry of a cell. Both are on trial and may change.
 - Bug fix: the non-analytical term correction factor is 1 for every interface
   that keeps cells in bohr and force constants in hartree/bohr^2, namely Elk,
   DFTB+, TURBOMOLE, Fleur, exciting and Octopus. That is e^2/(4 pi eps0) in
@@ -26,16 +50,10 @@
   of the temperature-dependent part at 1000 K. `--k-point-sum` restores the
   previous behavior, and a file whose k-points are not a mesh takes the sum as
   before. The first line of `fe-v.dat` now names the route that produced it.
-- `electronic_states.hdf5` stores the k-points, the mesh and the cell beside
-  the eigenvalues, so that `run_qha` can integrate by the tetrahedron method
-  too. Files written without them are read and integrated by the k-point sum
-  as before.
 - Behavior change: random displacements at finite temperature are drawn
-  differently. A fixed random seed now gives the same displacements whatever
-  LAPACK implementation is installed. Their distribution is unchanged, but the
-  random stream moves: a seeded run gives different displacements than in
-  phonopy 4.4 and earlier. `sampling_matrix="eigenvector"` recovers the
-  previous behavior.
+  differently. Their distribution is unchanged, but the random stream moves: a
+  seeded run gives different displacements than in phonopy 4.4 and earlier.
+  `sampling_matrix="eigenvector"` recovers the previous behavior.
 - Supercell file names are now zero-padded to a uniform number of digits. The
   padding grows when the largest displacement number needs more digits than the
   minimum of three, so 1000 supercells give `POSCAR-0001`, ..., `POSCAR-1000`
@@ -58,6 +76,19 @@
   the symfc projector. Add `--fc-calculator symfc` to recover the previous
   force constants. The choice of the force constants calculator now depends on
   the dataset type alone and is shared by the command line and `phonopy.load`.
+- The pypolymlp interface exposes the ridge penalties of the fit as
+  `reg_alpha_params`. With `optimal=False`, every potential pypolymlp fitted
+  over them is written as `filename`.v01, `filename`.v02, ..., beside a log of
+  their penalties and test errors, instead of only the one with the smallest
+  test error. The training data objects accept indexing, so that a dataset can
+  be sliced before it is fitted.
+- The thermal properties of QHA accept `is_gamma_center`, which keeps the
+  sampling mesh Gamma-centred.
+- Bug fix: `bose_einstein_dist` returns the T -> 0 limit at T=0, which is zero
+  for a positive frequency and -1 for a negative one, where it used to divide
+  by zero.
+- Speed up of the harmonic free energy and of the random structure generation
+  at finite temperature.
 
 ## Jul-17-2026: Version 4.4.0
 
