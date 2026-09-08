@@ -115,6 +115,7 @@ def get_cell_settings(
 def get_nac_params(
     primitive: PhonopyAtoms | None = None,
     nac_params: NacParams | None = None,
+    nac_params_source: str | os.PathLike | None = None,
     born_filename: str | os.PathLike | None = None,
     is_nac: bool = True,
     nac_factor: float | None = None,
@@ -129,6 +130,10 @@ def get_nac_params(
         Primitive cell.
     nac_params : NacParams
         NAC parameters. See :class:`NacParams` for the entries.
+    nac_params_source : str or os.PathLike
+        File ``nac_params`` was read from, named in the log. The parameters
+        are passed in as a value, so this is the only way of saying where
+        they came from. Default is None, which logs nothing.
     born_filename : str
         Filename of BORN file.
     is_nac : bool
@@ -161,6 +166,8 @@ def get_nac_params(
             print('NAC parameters were read from "%s".' % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
+        if log_level and nac_params_source is not None:
+            print(f'NAC parameters were read from "{nac_params_source}".')
     elif is_nac and pathlib.Path("BORN").exists():
         if primitive is None:
             raise ValueError(
@@ -168,7 +175,7 @@ def get_nac_params(
             )
         _nac_params = parse_BORN(primitive, filename="BORN", lang=lang)
         if log_level:
-            print('NAC params were read from "BORN".')
+            print('NAC parameters were read from "BORN".')
     else:
         _nac_params = None
 

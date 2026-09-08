@@ -362,6 +362,11 @@ class AnisotropicQHAResult:
     equilibrium_lattice_parameters : ndarray
         Equilibrium lattice-vector lengths (a, b, c) at temperatures in
         angstrom, from the per-temperature surface minima. shape=(N, 3)
+    unsmoothed_lattice_parameters : ndarray, optional
+        The same lengths as the surface minima gave them, before the
+        smoothing, in angstrom. None when lattice_smoothing is "none", where
+        equilibrium_lattice_parameters is already that. Carried so that the
+        smoothing can be seen against what it was fitted to. shape=(N, 3)
     equilibrium_volumes : ndarray
         Primitive cell volumes at the equilibrium lattice parameters in
         angstrom^3. shape=(N,)
@@ -431,6 +436,7 @@ class AnisotropicQHAResult:
     surface_fit_rank: int
     surface_n_terms: int
     minimum_extrapolated: NDArray[np.bool_]
+    unsmoothed_lattice_parameters: NDArray[np.double] | None = None
     mesh: float | Sequence[int] | NDArray[np.int64] | None = None
     primitive_volumes: NDArray[np.double] | None = None
     lattice_smoothing: SmoothingMethod = "none"
@@ -643,6 +649,11 @@ def run_anisotropic_qha(
         surface_degree=surface_degree,
         helmholtz_lattice=minima.helmholtz_lattice[:n_returned],
         equilibrium_lattice_parameters=equilibrium_lattice_parameters[:n_returned],
+        unsmoothed_lattice_parameters=(
+            None
+            if lattice_smoothing == "none"
+            else minima.equilibrium_lattice_parameters[:n_returned]
+        ),
         equilibrium_volumes=equilibrium_volumes[:n_returned],
         gibbs_free_energies=minima.gibbs_free_energies[:n_returned],
         thermal_expansion=thermal_expansion,

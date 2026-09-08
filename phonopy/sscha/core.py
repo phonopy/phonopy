@@ -13,7 +13,10 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy import Phonopy
-from phonopy.harmonic.force_constants import compact_fc_to_full_fc
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
+)
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.physical_units import get_physical_units
 from phonopy.sscha.run import SSCHARun, write_sscha_run_hdf5
@@ -134,6 +137,7 @@ class MLPSSCHA:
         self._harmonic_free_energy: float | None = None
         self._anharmonic_free_energy: float | None = None
         self._history: list[SSCHAIterationResult] = []
+        self._force_constants_history: list[NDArray[np.double]] = []
         self._initial_force_constants_provided = ph.force_constants is not None
 
         self._ph = ph.replicate()
@@ -459,16 +463,33 @@ class MLPSSCHA:
                 print("")
         return self
 
-    def to_sscha_run(self) -> SSCHARun:
+    def to_sscha_run(self, all_force_constants: bool = False) -> SSCHARun:
         """Return what this run sampled, one value per iteration.
 
         Every iteration is kept and none is averaged, so that which of them
         to average over is chosen afterwards rather than here.
 
+        Parameters
+        ----------
+        The refit made after the last iteration is always carried.
+
+        Parameters
+        ----------
+        all_force_constants : bool, optional
+            With True, the force constants each iteration's free energy was
+            calculated with are carried as well, which is what averaging over
+            a transient needs. They are a different quantity from the refit,
+            which comes one step after the last of them. Default is False.
+
         """
         history = self.history
         if not history:
             raise RuntimeError("The run has no iteration to report yet.")
+        p2s_map = self._ph.primitive.p2s_map
+        if all_force_constants:
+            force_constants_history = np.array(self._force_constants_history)
+        else:
+            force_constants_history = None
         return SSCHARun(
             temperature=self.temperature,
             free_energies=np.array([h.free_energy for h in history]),
@@ -479,11 +500,20 @@ class MLPSSCHA:
             ),
             reference_energy=self.supercell_energy / self.n_cell,
             lattice_lengths=np.linalg.norm(self._ph.unitcell.cell, axis=1),
+            force_constants=full_fc_to_compact_fc(
+                self._ph.primitive, self.force_constants
+            ),
+            force_constants_history=force_constants_history,
+            p2s_map=p2s_map,
         )
 
-    def write_hdf5(self, filename: str | os.PathLike = "mlpsscha.hdf5") -> None:
+    def write_hdf5(
+        self,
+        filename: str | os.PathLike = "mlpsscha.hdf5",
+        all_force_constants: bool = False,
+    ) -> None:
         """Write what this run sampled to an hdf5 file."""
-        write_sscha_run_hdf5(self.to_sscha_run(), filename)
+        write_sscha_run_hdf5(self.to_sscha_run(all_force_constants), filename)
 
     def __iter__(self) -> MLPSSCHA:
         """Iterate over force constants calculations."""
@@ -533,6 +563,9 @@ class MLPSSCHA:
             # displacements are drawn at a fixed distance rather than from a
             # canonical ensemble, so it has no free energy to record.
             self.calculate_free_energy()
+            self._force_constants_history.append(
+                full_fc_to_compact_fc(self._ph.primitive, self.force_constants)
+            )
             self._history.append(
                 SSCHAIterationResult(
                     iteration=self._iter_counter,

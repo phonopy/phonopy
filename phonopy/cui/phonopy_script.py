@@ -1037,10 +1037,9 @@ def store_nac_params(
     nac_params = get_nac_params(
         primitive=phonon.primitive,
         nac_params=phpy_yaml_nac_params,
+        nac_params_source=unitcell_filename,
         log_level=log_level,
     )
-    if phpy_yaml_nac_params is not None and log_level:
-        print(f'NAC parameters were read from "{unitcell_filename}".')
 
     if nac_params is not None:
         if "factor" not in nac_params or nac_params["factor"] is None:
