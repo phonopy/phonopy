@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Interfaces to calculators &#8212; Phonopy v.4.4.0</title>
+    <title>Interfaces to calculators &#8212; Phonopy v.4.5.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=e4428b72"></script>
+    <script src="_static/documentation_options.js?v=1898be9e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Random displacements" href="random-displacements.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.4" />
+  <meta name="docsearch:version" content="4.5" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.4.0</p>
+    <p class="title logo__title">Phonopy v.4.5.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -467,6 +467,7 @@ and how to invoke each of them at <a class="reference internal" href="command-op
 <span class="n">SIESTA</span>    <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
 <span class="n">Elk</span>       <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">CRYSTAL</span>   <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
 <span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
@@ -476,6 +477,7 @@ and how to invoke each of them at <a class="reference internal" href="command-op
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">Ry</span><span class="o">/</span><span class="n">au</span>         <span class="n">Ry</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">Octopus</span>   <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">exciting</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 </pre></div>
 </div>
 <p>For these sets of physical properties, phonon frequency is calculated in THz.</p>
@@ -504,6 +506,7 @@ the default supercell file names based on those shown below are used.</p>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="n">unitcell</span>      <span class="o">|</span> <span class="n">supercell</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="n">site</span><span class="o">.</span><span class="n">lm</span>       <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="n">lm</span>
 <span class="n">Octopus</span>   <span class="o">|</span> <span class="n">POSCAR</span>        <span class="o">|</span> <span class="n">geometry</span><span class="o">-</span><span class="mi">000</span>
+<span class="n">exciting</span>  <span class="o">|</span> <span class="nb">input</span><span class="o">.</span><span class="n">xml</span>     <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="n">xml</span>
 </pre></div>
 </div>
 </section>
@@ -530,6 +533,7 @@ on calculator, and the list is shown below:</p>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">Octopus</span>   <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">exciting</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -552,6 +556,7 @@ on calculator, and the list is shown below:</p>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">15.633302</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="mf">108.97077</span>
 <span class="n">Octopus</span>   <span class="o">|</span> <span class="mf">154.10794</span>
+<span class="n">exciting</span>  <span class="o">|</span> <span class="mf">154.10794</span>
 </pre></div>
 </div>
 </section>
@@ -564,7 +569,7 @@ on calculator, and the list is shown below:</p>
 <span class="n">SIESTA</span>    <span class="o">|</span> <span class="mf">51.422090</span>
 <span class="n">Elk</span>       <span class="o">|</span> <span class="mi">1</span>
 <span class="n">CRYSTAL</span>   <span class="o">|</span> <span class="mf">14.399652</span>
-<span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="mf">14.399652</span>
+<span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="mi">1</span>
 <span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="mi">1</span>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="kc">None</span> <span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="n">A</span><span class="p">)</span>
 <span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="mf">14.399652</span>
@@ -574,6 +579,7 @@ on calculator, and the list is shown below:</p>
 <span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">14.399652</span>
 <span class="n">QLM</span>       <span class="o">|</span> <span class="n">N</span><span class="o">/</span><span class="n">A</span>
 <span class="n">Octopus</span>   <span class="o">|</span> <span class="mi">1</span>
+<span class="n">exciting</span>  <span class="o">|</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>

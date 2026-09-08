@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.4.0</title>
+    <title>Change Log &#8212; Phonopy v.4.5.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=e4428b72"></script>
+    <script src="_static/documentation_options.js?v=1898be9e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Development" href="development.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.4" />
+  <meta name="docsearch:version" content="4.5" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -178,7 +178,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.4.0</p>
+    <p class="title logo__title">Phonopy v.4.5.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -395,7 +395,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased-v4-5-0">Unreleased (v4.5.0)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-01-2026-version-4-3-1">Jul-01-2026: Version 4.3.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-28-2026-version-4-3-0">Jun-28-2026: Version 4.3.0</a></li>
@@ -625,9 +625,22 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
-<section id="unreleased-v4-5-0">
-<h2>Unreleased (v4.5.0)<a class="headerlink" href="#unreleased-v4-5-0" title="Link to this heading">#</a></h2>
+<section id="sep-08-2026-version-4-5-0">
+<h2>Sep-08-2026: Version 4.5.0<a class="headerlink" href="#sep-08-2026-version-4-5-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
+<li><p>Added the Octopus code interface and <a class="reference internal" href="octopus.html#octopus-interface"><span class="std std-ref">its documentation</span></a>. <code class="docutils literal notranslate"><span class="pre">--octopus</span></code> runs the phonopy command through it, and
+<code class="docutils literal notranslate"><span class="pre">phonopy-octopus-born</span></code> writes <code class="docutils literal notranslate"><span class="pre">BORN</span></code> from an Octopus calculation.</p></li>
+<li><p>NEW <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> runs one SSCHA calculation, at one temperature, with a
+pypolymlp potential, and writes its iterations to <code class="docutils literal notranslate"><span class="pre">mlpsscha.hdf5</span></code>, which
+<code class="docutils literal notranslate"><span class="pre">phonopy.sscha.trace.read_sscha_trace_hdf5</span></code> reads back as an <code class="docutils literal notranslate"><span class="pre">SSCHATrace</span></code>.
+<code class="docutils literal notranslate"><span class="pre">--all-force-constants</span></code> keeps the force constants of every iteration, so
+that a transient can be dropped and the rest averaged afterwards.
+<a class="reference internal" href="polymlp-sscha.html#polymlp-sscha"><span class="std std-ref">The SSCHA page</span></a> is rewritten around the command.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">--sscha</span></code> option of the <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command is deprecated in favor of
+<code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> and warns when used. It still runs, and no page documents
+it any more. <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> takes the potential as a file, so a run that
+used to train it in the same call becomes two: <code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">--pypolymlp</span> <span class="pre">...</span></code> to
+write <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code>, then <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MLPSSCHA.supercell_energy</span></code> reports the energy of the supercell without
 displacements, which the SSCHA free energy is measured from and which was
 computed and then discarded, and <code class="docutils literal notranslate"><span class="pre">MLPSSCHA.n_cell</span></code> the number of primitive
@@ -635,10 +648,23 @@ cells in the supercell, which takes it to the unit the free energy is
 reported in. <code class="docutils literal notranslate"><span class="pre">sscha_free_energies.yaml</span></code> records the supercell energy beside
 the other settings, and each iteration now reports <code class="docutils literal notranslate"><span class="pre">potential_energy</span></code> and
 <code class="docutils literal notranslate"><span class="pre">harmonic_potential_energy</span></code>, the two terms <code class="docutils literal notranslate"><span class="pre">anharmonic</span></code> is the difference of.</p></li>
-<li><p>Bug fix: the non-analytical term correction factor for Elk, TURBOMOLE and
-Fleur is 1 again, the value <a class="reference internal" href="interfaces.html#nac-default-value-interfaces"><span class="std std-ref">documented</span></a> for them. It became 14.399652 in v3.4.0,
-when those three interfaces were folded into one branch with DFTB+, which
-shifted LO frequencies for anyone running NAC through them.</p></li>
+<li><p>The SSCHA free energy of each iteration is reported with its statistical
+error, as <code class="docutils literal notranslate"><span class="pre">free_energy_error</span></code>. The file holding it, <code class="docutils literal notranslate"><span class="pre">phonopy_sscha.yaml</span></code>, is
+renamed <code class="docutils literal notranslate"><span class="pre">sscha_free_energies.yaml</span></code>, and each iteration draws its
+displacements from a seed derived from the run’s seed instead of reusing one
+seed. <code class="docutils literal notranslate"><span class="pre">SSCHATrace</span></code> keeps every iteration so that the transient can be chosen
+after the sampling, and <code class="docutils literal notranslate"><span class="pre">MLPSSCHA</span></code> accepts <code class="docutils literal notranslate"><span class="pre">fc_calculator_options</span></code>.</p></li>
+<li><p>Two experimental commands take over parts of <code class="docutils literal notranslate"><span class="pre">phonopy-init</span></code>: <code class="docutils literal notranslate"><span class="pre">phonopy-collect</span></code>
+creates <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> (<code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> when given <code class="docutils literal notranslate"><span class="pre">--sp</span></code> option) from the
+calculator output files given as its arguments, and <code class="docutils literal notranslate"><span class="pre">phonopy-symmetry</span></code> shows
+the symmetry of a cell. Both are on trial and may change.</p></li>
+<li><p>Bug fix: the non-analytical term correction factor is 1 for every interface
+that keeps cells in bohr and force constants in hartree/bohr^2, namely Elk,
+DFTB+, TURBOMOLE, Fleur, exciting and Octopus. That is e^2/(4 pi eps0) in
+those units, and it is what <a class="reference internal" href="interfaces.html#nac-default-value-interfaces"><span class="std std-ref">the table</span></a>
+documents for all six. Elk, TURBOMOLE and Fleur had carried 14.399652, the
+eV*angstrom value, since v3.4.0, DFTB+ since its interface was added, and
+exciting since v4.4.0. Running NAC through them shifted the LO frequencies.</p></li>
 <li><p>Behavior change: <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> integrates the electronic free energy by
 the linear tetrahedron method over the mesh each <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes,
 where it used to sum Fermi-Dirac occupations over the irreducible k-points.
@@ -647,16 +673,10 @@ copper example, 120 irreducible k-points of a 16x16x16 mesh, by 11 per cent
 of the temperature-dependent part at 1000 K. <code class="docutils literal notranslate"><span class="pre">--k-point-sum</span></code> restores the
 previous behavior, and a file whose k-points are not a mesh takes the sum as
 before. The first line of <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> now names the route that produced it.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code> stores the k-points, the mesh and the cell beside
-the eigenvalues, so that <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> can integrate by the tetrahedron method
-too. Files written without them are read and integrated by the k-point sum
-as before.</p></li>
 <li><p>Behavior change: random displacements at finite temperature are drawn
-differently. A fixed random seed now gives the same displacements whatever
-LAPACK implementation is installed. Their distribution is unchanged, but the
-random stream moves: a seeded run gives different displacements than in
-phonopy 4.4 and earlier. <code class="docutils literal notranslate"><span class="pre">sampling_matrix=&quot;eigenvector&quot;</span></code> recovers the
-previous behavior.</p></li>
+differently. Their distribution is unchanged, but the random stream moves: a
+seeded run gives different displacements than in phonopy 4.4 and earlier.
+<code class="docutils literal notranslate"><span class="pre">sampling_matrix=&quot;eigenvector&quot;</span></code> recovers the previous behavior.</p></li>
 <li><p>Supercell file names are now zero-padded to a uniform number of digits. The
 padding grows when the largest displacement number needs more digits than the
 minimum of three, so 1000 supercells give <code class="docutils literal notranslate"><span class="pre">POSCAR-0001</span></code>, …, <code class="docutils literal notranslate"><span class="pre">POSCAR-1000</span></code>
@@ -679,6 +699,19 @@ finite-difference calculator is used again, followed by symmetrization with
 the symfc projector. Add <code class="docutils literal notranslate"><span class="pre">--fc-calculator</span> <span class="pre">symfc</span></code> to recover the previous
 force constants. The choice of the force constants calculator now depends on
 the dataset type alone and is shared by the command line and <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>.</p></li>
+<li><p>The pypolymlp interface exposes the ridge penalties of the fit as
+<code class="docutils literal notranslate"><span class="pre">reg_alpha_params</span></code>. With <code class="docutils literal notranslate"><span class="pre">optimal=False</span></code>, every potential pypolymlp fitted
+over them is written as <code class="docutils literal notranslate"><span class="pre">filename</span></code>.v01, <code class="docutils literal notranslate"><span class="pre">filename</span></code>.v02, …, beside a log of
+their penalties and test errors, instead of only the one with the smallest
+test error. The training data objects accept indexing, so that a dataset can
+be sliced before it is fitted.</p></li>
+<li><p>The thermal properties of QHA accept <code class="docutils literal notranslate"><span class="pre">is_gamma_center</span></code>, which keeps the
+sampling mesh Gamma-centred.</p></li>
+<li><p>Bug fix: <code class="docutils literal notranslate"><span class="pre">bose_einstein_dist</span></code> returns the T -&gt; 0 limit at T=0, which is zero
+for a positive frequency and -1 for a negative one, where it used to divide
+by zero.</p></li>
+<li><p>Speed up of the harmonic free energy and of the random structure generation
+at finite temperature.</p></li>
 </ul>
 </section>
 <section id="jul-17-2026-version-4-4-0">
@@ -2678,7 +2711,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased-v4-5-0">Unreleased (v4.5.0)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-01-2026-version-4-3-1">Jul-01-2026: Version 4.3.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jun-28-2026-version-4-3-0">Jun-28-2026: Version 4.3.0</a></li>

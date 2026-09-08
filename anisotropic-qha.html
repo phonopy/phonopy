@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Anisotropic QHA &#8212; Phonopy v.4.4.0</title>
+    <title>Anisotropic QHA &#8212; Phonopy v.4.5.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=e4428b72"></script>
+    <script src="_static/documentation_options.js?v=1898be9e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -412,7 +412,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.4" />
+  <meta name="docsearch:version" content="4.5" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -539,7 +539,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.4.0</p>
+    <p class="title logo__title">Phonopy v.4.5.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -1959,7 +1959,7 @@ grid point is left out, so a sweep computed over a wider or a finer grid than
 <p>Sampling writes one <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code> per run. Averaging writes <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code>,
 which is the file the analysis reads.</p>
 <p>The two are different types, not two spellings of one. A <code class="docutils literal notranslate"><span class="pre">sscha-g*K.hdf5</span></code>
-file holds an <code class="docutils literal notranslate"><span class="pre">SSCHARun</span></code>, every iteration and no average, and is what another
+file holds an <code class="docutils literal notranslate"><span class="pre">SSCHATrace</span></code>, every iteration and no average, and is what another
 transient is taken from. <code class="docutils literal notranslate"><span class="pre">fph.hdf5</span></code> holds <code class="docutils literal notranslate"><span class="pre">SSCHAFreeEnergies</span></code>, the averages
 and the transient they were taken with. Handing the analysis a run stops with
 a message about its type, rather than averaging it over iterations nobody
@@ -2137,7 +2137,7 @@ leave out of the averages.</p>
     <span class="n">assemble_sscha_free_energies</span><span class="p">,</span>
     <span class="n">write_free_energies_hdf5</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_run_hdf5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_trace_hdf5</span>
 
 <span class="n">DATASET</span> <span class="o">=</span> <span class="s2">"aniso_qha_dataset.hdf5"</span>
 <span class="n">TEMPERATURES</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">410</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># 0 to 400 K in 10 K steps</span>
@@ -2157,7 +2157,7 @@ leave out of the averages.</p>
     <span class="n">points</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">free_energies</span> <span class="o">=</span> <span class="n">assemble_sscha_free_energies</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">read_sscha_run_hdf5</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">read_sscha_trace_hdf5</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">],</span>
             <span class="n">TEMPERATURES</span><span class="p">,</span>
             <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]),</span>
             <span class="n">transient</span><span class="p">,</span>

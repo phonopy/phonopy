@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Temperature dependent force constants using pypolymlp and symfc &#8212; Phonopy v.4.4.0</title>
+    <title>Temperature dependent force constants using pypolymlp and symfc &#8212; Phonopy v.4.5.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=e4428b72"></script>
+    <script src="_static/documentation_options.js?v=1898be9e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -414,7 +414,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="prev" title="phonopy-init command" href="phonopy-init.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.4" />
+  <meta name="docsearch:version" content="4.5" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -539,7 +539,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.4.0</p>
+    <p class="title logo__title">Phonopy v.4.5.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -779,6 +779,7 @@ window.runMermaid = runMermaid;</script>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-sscha">4. Running SSCHA</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-a-run">The options of a run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-run-from-python">The same run from Python</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-run">5. Reading the run</a><ul class="nav section-nav flex-column">
@@ -889,7 +890,7 @@ holds the <code class="docutils literal notranslate"><span class="pre">phonopy_p
 stands, and the settings each one takes are the capitalized names at its top.</p>
 <pre  class="mermaid">
         flowchart TD
-    FD[&quot;finite displacements&quot;]
+    FD[&quot;small displacements&quot;]
     FD --&gt; FC([&quot;harmonic&lt;br/&gt;force constants&quot;])
     FC --&gt; TD[&quot;thermal displacements&lt;br/&gt;at several temperatures&quot;]
     TD --&gt; CALC{{&quot;calculator forces&quot;}}
@@ -1462,6 +1463,43 @@ them.</p>
 <p><code class="docutils literal notranslate"><span class="pre">-v</span></code> logs each iteration and prints the listing at the end. <code class="docutils literal notranslate"><span class="pre">-vv</span></code> adds the
 force-constant fit.</p>
 </section>
+<section id="the-same-run-from-python">
+<span id="polymlp-sscha-api"></span><h3>The same run from Python<a class="headerlink" href="#the-same-run-from-python" title="Link to this heading">#</a></h3>
+<p>The command is a thin wrapper around <code class="docutils literal notranslate"><span class="pre">MLPSSCHA</span></code>, which holds the iterations,
+and the two functions that write and read the hdf5 file. The script below
+does what the command above did:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.mlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhonopyMLP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPSSCHA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_sscha_trace_hdf5</span>
+
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"../train/merged.yaml"</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sscha</span> <span class="o">=</span> <span class="n">MLPSSCHA</span><span class="p">(</span>
+    <span class="n">ph</span><span class="p">,</span>
+    <span class="n">PhonopyMLP</span><span class="p">()</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"../mlp-default/polymlp.yaml"</span><span class="p">),</span>
+    <span class="n">temperature</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">number_of_snapshots</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+    <span class="n">mesh</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">random_seed</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">run</span> <span class="o">=</span> <span class="n">sscha</span><span class="o">.</span><span class="n">run</span><span class="p">()</span><span class="o">.</span><span class="n">to_trace</span><span class="p">(</span><span class="n">all_force_constants</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">write_sscha_trace_hdf5</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="s2">"mlpsscha.hdf5"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The options of the command are the arguments of <code class="docutils literal notranslate"><span class="pre">MLPSSCHA</span></code>: <code class="docutils literal notranslate"><span class="pre">-t</span></code> is
+<code class="docutils literal notranslate"><span class="pre">temperature</span></code>, <code class="docutils literal notranslate"><span class="pre">--snapshots</span></code> is <code class="docutils literal notranslate"><span class="pre">number_of_snapshots</span></code>, <code class="docutils literal notranslate"><span class="pre">--iterations</span></code> is
+<code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>, and <code class="docutils literal notranslate"><span class="pre">--mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">--random-seed</span></code> and <code class="docutils literal notranslate"><span class="pre">--distance</span></code> keep their
+names. <code class="docutils literal notranslate"><span class="pre">fc_calculator</span></code> and <code class="docutils literal notranslate"><span class="pre">fc_calculator_options</span></code>, which the command does not
+expose, choose the force constants calculator and pass options to it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MLPSSCHA.run()</span></code> runs every iteration and returns the instance itself.
+Iterating over it instead, <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">iter_num</span> <span class="pre">in</span> <span class="pre">sscha:</span></code>, gives the iteration
+number after each one, which is where the command writes its per-iteration
+files. <code class="docutils literal notranslate"><span class="pre">to_trace</span></code> then returns an <code class="docutils literal notranslate"><span class="pre">SSCHATrace</span></code>, one value per iteration,
+which <a class="reference internal" href="#polymlp-sscha-reading"><span class="std std-ref">step 5</span></a> reads back with
+<code class="docutils literal notranslate"><span class="pre">read_sscha_trace_hdf5</span></code>.</p>
+</section>
 </section>
 <section id="reading-the-run">
 <span id="polymlp-sscha-reading"></span><h2>5. Reading the run<a class="headerlink" href="#reading-the-run" title="Link to this heading">#</a></h2>
@@ -1508,12 +1546,12 @@ force constants of the refit made after the last iteration.
 <div class="code-block-caption"><span class="caption-text">Script 3 – the listing and the average of a run</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""List the iterations of a run and average those after its transient."""</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_run_hdf5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_trace_hdf5</span>
 
 <span class="n">RUN</span> <span class="o">=</span> <span class="s2">"mlpsscha.hdf5"</span>
 <span class="n">TRANSIENT</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># iterations left out of the average</span>
 
-<span class="n">run</span> <span class="o">=</span> <span class="n">read_sscha_run_hdf5</span><span class="p">(</span><span class="n">RUN</span><span class="p">)</span>
+<span class="n">run</span> <span class="o">=</span> <span class="n">read_sscha_trace_hdf5</span><span class="p">(</span><span class="n">RUN</span><span class="p">)</span>
 <span class="n">run</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">TRANSIENT</span><span class="p">)</span>
 <span class="n">average</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">averaged</span><span class="p">(</span><span class="n">TRANSIENT</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">average</span><span class="o">.</span><span class="n">free_energy</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">average</span><span class="o">.</span><span class="n">error</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> meV"</span><span class="p">)</span>
@@ -1544,12 +1582,12 @@ temperature the run was made at:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Write the force constants of a run for phonopy to read."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.file_IO</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_force_constants_to_hdf5</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_run_hdf5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.sscha.trace</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_sscha_trace_hdf5</span>
 
 <span class="n">RUN</span> <span class="o">=</span> <span class="s2">"mlpsscha.hdf5"</span>
 <span class="n">TRANSIENT</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># iterations left out of the average</span>
 
-<span class="n">run</span> <span class="o">=</span> <span class="n">read_sscha_run_hdf5</span><span class="p">(</span><span class="n">RUN</span><span class="p">)</span>
+<span class="n">run</span> <span class="o">=</span> <span class="n">read_sscha_trace_hdf5</span><span class="p">(</span><span class="n">RUN</span><span class="p">)</span>
 <span class="n">write_force_constants_to_hdf5</span><span class="p">(</span>
     <span class="n">run</span><span class="o">.</span><span class="n">averaged_force_constants</span><span class="p">(</span><span class="n">TRANSIENT</span><span class="p">),</span>
     <span class="n">p2s_map</span><span class="o">=</span><span class="n">run</span><span class="o">.</span><span class="n">p2s_map</span><span class="p">,</span>
@@ -2056,6 +2094,7 @@ A. Seko and A. Togo, Phys. Rev. B, <strong>110</strong>, 214302 (2024)
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-sscha">4. Running SSCHA</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-options-of-a-run">The options of a run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-run-from-python">The same run from Python</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-run">5. Reading the run</a><ul class="nav section-nav flex-column">
