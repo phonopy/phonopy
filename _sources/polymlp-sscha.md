@@ -48,7 +48,7 @@ MLP takes its place here.
 
 ## Requirements
 
-- [pypolymlp](https://github.com/sekocha/pypolymlp) >= 0.10.0
+- [pypolymlp](https://github.com/sekocha/pypolymlp) >= 0.21.3
 
   For linux (x86-64), a compiled package of pypolymlp can be installed via
   conda-forge (recommended). Otherwise, pypolymlp can be installed from
