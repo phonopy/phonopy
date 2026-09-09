@@ -1137,6 +1137,10 @@ extended.
 costs to evaluate, and how the ridge penalty pypolymlp selects says whether the
 training set is large enough for the descriptor.
 
+{ref}`One ladder of descriptors <anisotropic-qha-descriptor-example>` lists the
+feature counts and relative evaluation times of nine descriptors for a
+one-element system.
+
 The SSCHA evaluates the descriptor once per snapshot per iteration, and here
 that cost is paid at every grid point and every temperature. Choose the
 descriptor and the training-set size from fits made at one grid point, before
@@ -1495,6 +1499,43 @@ an excursion over a range of temperature, and that is the case to raise
 
 An unsmoothed run has nothing to compare against, so `--smooth-lattice none`
 writes the four columns alone and no `lattice_smoothing.png`.
+
+(anisotropic-qha-descriptor-example)=
+## Appendix: one ladder of descriptors
+
+{ref}`The descriptor and the amount of training data
+<polymlp-sscha-descriptor>` gives the method and a table for a two-element
+system. The table here is one example for a one-element system, measured with
+pypolymlp 0.20.5. The last column is the time to evaluate the descriptor once,
+relative to the first row, measured in one execution.
+
+| features | model parameters added to `--mlp-params` | relative time |
+|---|---|---|
+| 781 | nothing; phonopy's defaults | 1.0 |
+| 1,176 | `gaussian_params2 = 0 7 15` | 1.2 |
+| 2,600 | `gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.6 |
+| 3,848 | `gaussian_params2 = 0 7 15, gtinv_order = 4, gtinv_maxl = 16 12 4` | 7.1 |
+| 6,820 | `model_type = 4` | 1.4 |
+| 13,920 | `model_type = 4, gaussian_params2 = 0 7 15` | 1.4 |
+| 22,495 | `model_type = 4, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 6.4 |
+| 27,664 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.9 |
+| 45,680 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 7.7 |
+
+Phonopy's defaults are `model_type = 3`, `max_p = 2`, `gtinv_order = 3`,
+`gtinv_maxl = 8 8`, `gaussian_params2 = 0 7 10` and `cutoff = 8.0`. Phonopy
+passes them to pypolymlp itself. The other rows change one or two of them.
+
+The evaluation time follows `gtinv_maxl` rather than the feature count. Two
+pairs in the table differ in `gtinv_maxl` alone, 1,176 against 2,600 and 13,920
+against 27,664, and both cost about four times more at `12 12` than at `8 8`.
+Raising `model_type` or the number of gaussians multiplies the feature count
+instead, and adds a few tens of per cent to the time: 781 to 13,920 is eighteen
+times the features for 1.4 times the time.
+
+The SSCHA of step 5 evaluates the descriptor once per snapshot per iteration,
+at every grid point and every temperature. Read the last column as what a
+descriptor costs there, and pick the descriptor from fits made at one grid
+point before the sweep is started.
 
 (anisotropic-qha-gather-script)=
 ## Appendix: the gather script
