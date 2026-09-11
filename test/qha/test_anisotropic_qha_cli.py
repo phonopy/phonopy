@@ -19,6 +19,7 @@ from phonopy.cui.phonopy_anisotropic_qha_script import (
     suggest_eos_cells,
 )
 from phonopy.qha.anisotropic import AnisotropicQHAResult
+from phonopy.qha.lattice import LatticeGrid
 
 
 def _result_with_lattice(
@@ -33,7 +34,10 @@ def _result_with_lattice(
     empty = np.zeros(0, dtype="double")
     return AnisotropicQHAResult(
         temperatures=empty,
-        lattice_lengths=np.array(lattice_lengths, dtype="double"),
+        lattice_grid=LatticeGrid(
+            np.array([np.diag(row) for row in lattice_lengths], dtype="double"),
+            np.eye(3),
+        ),
         free_lattice_indices=np.array(free_lattice_indices, dtype="int64"),
         polynomial_degree=2,
         helmholtz_lattice=empty,

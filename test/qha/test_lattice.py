@@ -7,7 +7,11 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from phonopy.qha.lattice import LatticeParametersFit, compute_axial_thermal_expansion
+from phonopy.qha.lattice import (
+    LatticeGrid,
+    LatticeParametersFit,
+    compute_axial_thermal_expansion,
+)
 
 volumes_ref = np.linspace(140.0, 190.0, 11)
 
@@ -42,7 +46,7 @@ def test_round_trip_uniaxial(k: float) -> None:
 
     fit = LatticeParametersFit(volumes_ref, lattice_parameters)
 
-    np.testing.assert_allclose(fit.k, k, rtol=1e-12)
+    np.testing.assert_allclose(fit.primitive_volume_abc_ratio, k, rtol=1e-12)
     np.testing.assert_allclose(fit.evaluate(volumes_ref), lattice_parameters, rtol=1e-8)
 
 
@@ -66,7 +70,9 @@ def test_volume_consistency() -> None:
 
     v = np.linspace(volumes_ref[0], volumes_ref[-1], 23)
     abc = fit.evaluate(v)
-    np.testing.assert_allclose(fit.k * abc.prod(axis=1), v, rtol=1e-13)
+    np.testing.assert_allclose(
+        fit.primitive_volume_abc_ratio * abc.prod(axis=1), v, rtol=1e-13
+    )
 
 
 def test_isotropic() -> None:
@@ -91,6 +97,22 @@ def test_k_inconsistent() -> None:
 
     with pytest.raises(RuntimeError):
         LatticeParametersFit(volumes_ref, lattice_parameters)
+
+
+def test_lattice_grid_refuses_cells_of_differing_shape() -> None:
+    """A grid whose cells differ in more than their lengths is refused.
+
+    One ratio V / (a b c) then describes none of them, and the volume of
+    an interpolated cell would be wrong at every temperature.
+
+    """
+    lengths = np.array([[3.0, 3.0, 5.0], [3.1, 3.1, 5.1], [3.2, 3.2, 5.2]])
+    lattices = np.array([np.diag(row) for row in lengths])
+    LatticeGrid(lattices, np.eye(3))  # right angles throughout: accepted
+
+    lattices[1, 2, 0] = 0.5  # that cell alone is no longer orthogonal
+    with pytest.raises(RuntimeError, match="constant k"):
+        LatticeGrid(lattices, np.eye(3))
 
 
 def test_too_few_points() -> None:

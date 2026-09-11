@@ -262,8 +262,8 @@ def test_run_anisotropic_tetragonal(ph_nacl: Phonopy) -> None:
     np.testing.assert_allclose(elp[:, 0], elp[:, 1], rtol=1e-12)
 
     # The equilibrium stays inside the sampled grid (no extrapolation).
-    low = result.lattice_lengths.min(axis=0)
-    high = result.lattice_lengths.max(axis=0)
+    low = result.lattice_grid.lattice_lengths.min(axis=0)
+    high = result.lattice_grid.lattice_lengths.max(axis=0)
     assert (elp >= low - 1e-9).all() and (elp <= high + 1e-9).all()
 
     # Fit diagnostics: full rank, finite residuals, no extrapolation.
@@ -890,8 +890,8 @@ def test_lattice_smoothing_follows_the_lattice_dof() -> None:
     fit = _fit_lattice_smoothing("einstein", column_map, temperatures, lattice, 2)
 
     # One fit for the one free DOF a and b share, and one for c.
-    assert sorted(fit.fits) == [0, 2]
-    np.testing.assert_array_equal(fit.column_map, [0, 0, 2])
+    assert len(fit.free_axis_fits) == 2
+    assert fit.column_map == (0, 0, 2)
     assert fit.fit_of(1) is fit.fit_of(0)
     assert fit.fit_of(2) is not fit.fit_of(0)
 

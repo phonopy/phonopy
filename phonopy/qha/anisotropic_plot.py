@@ -72,9 +72,7 @@ def plot_lattice_smoothing(result: AnisotropicQHAResult) -> Any:
         ax.plot(t, fitted, "-", color=f"C{k}")
         ax.set_ylabel(rf"${name}$ $(\AA)$")
         ax.set_title(
-            f"{result.lattice_smoothing}, {smoothing_fit.n_terms} terms"
-            if k == 0
-            else ""
+            f"{smoothing_fit.method}, {smoothing_fit.n_terms} terms" if k == 0 else ""
         )
         ax.legend(loc="best")
 
@@ -163,7 +161,7 @@ def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) 
     """
     fi = result.free_lattice_indices
     i = int(np.argmin(np.abs(result.temperatures - temperature)))
-    free_axis_lengths = result.lattice_lengths[:, fi]
+    free_axis_lengths = result.lattice_grid.lattice_lengths[:, fi]
     fit = FreeEnergySurfaceFit(
         free_axis_lengths, result.helmholtz_lattice[i], degree=result.polynomial_degree
     )
@@ -302,7 +300,7 @@ def plot_component_contours(
         print(f"Skip component contours: {len(fi)} free lattice DOF (need 2).")
         return []
 
-    free_axis_lengths = result.lattice_lengths[:, fi]
+    free_axis_lengths = result.lattice_grid.lattice_lengths[:, fi]
     u_static = np.asarray(internal_energies, dtype="double")
     if electronic_free_energies is not None:
         fe_el_rel = np.asarray(electronic_free_energies, dtype="double")
@@ -310,7 +308,7 @@ def plot_component_contours(
         fe_el_rel, _ = compute_electronic_contributions_from_states(
             electronic_structures,
             result.temperatures,
-            primitive_volumes=result.primitive_volumes,
+            primitive_volumes=result.lattice_grid.primitive_volumes,
         )
     else:
         fe_el_rel = None

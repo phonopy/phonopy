@@ -23,15 +23,15 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
+from phonopy.qha.anisotropic_dataset import check_cells_are_one_crystal
 from phonopy.qha.calc import (
     compute_volumetric_thermal_expansion,
     generate_total_degree_exponents,
     polynomial_design_matrix,
 )
-from phonopy.qha.lattice import compute_axial_thermal_expansion
+from phonopy.qha.lattice import LatticeGrid, compute_axial_thermal_expansion
 from phonopy.qha.lattice_smoothing import (
     SMOOTHING_METHODS,
-    EinsteinFit,
     LatticeSmoothingFit,
     SmoothingMethod,
     fit_lattice_parameter,
@@ -77,8 +77,8 @@ class FreeEnergySurfaceFit:
         Parameters
         ----------
         points : array_like
-            Free lattice-vector lengths at each sample point in angstrom.
-            shape=(n_points, ndim)
+            Free lattice-vector lengths of the conventional unit cell at
+            each sample point in angstrom. shape=(n_points, ndim)
         values : array_like
             Free energy at each sample point in eV. shape=(n_points,)
         degree : int, optional
@@ -206,7 +206,8 @@ class FreeEnergySurfaceFit:
         Parameters
         ----------
         points : array_like
-            Lattice-vector lengths in angstrom. shape=(n_points, ndim)
+            Lattice-vector lengths of the conventional unit cell in
+            angstrom. shape=(n_points, ndim)
 
         Returns
         -------
@@ -231,7 +232,8 @@ class FreeEnergySurfaceFit:
         Parameters
         ----------
         points : array_like
-            Lattice-vector lengths in angstrom. shape=(n_points, ndim)
+            Lattice-vector lengths of the conventional unit cell in
+            angstrom. shape=(n_points, ndim)
 
         Returns
         -------
@@ -345,20 +347,21 @@ class AnisotropicQHAResult:
     by central differences (thermal_expansion,
     axial_thermal_expansions) carry a leading zero. Energies and volumes
     refer to the primitive cell, consistently with the phonon thermal
-    properties, while the lattice parameters are the unit-cell
-    lattice-vector lengths.
+    properties, while the lattice parameters are the lattice-vector
+    lengths of the conventional unit cell.
 
     Attributes
     ----------
     temperatures : ndarray
         Temperatures in K. shape=(N,)
-    lattice_lengths : ndarray
-        Unit-cell lattice-vector lengths (a, b, c) of the input sample
-        cells in angstrom. shape=(n_points, 3)
+    lattice_grid : LatticeGrid
+        The input sample cells: their lattice-vector lengths and the
+        primitive volume of each, from which the volume of any cell of the
+        same shape follows.
     free_lattice_indices : ndarray
-        Column indices of lattice_lengths that are the independent free
-        lattice degrees of freedom (e.g. [0, 2] for hexagonal a and c).
-        shape=(ndim,)
+        Column indices of the lattice lengths that are the independent
+        free lattice degrees of freedom (e.g. [0, 2] for hexagonal a and
+        c). shape=(ndim,)
     polynomial_degree : int
         Total degree of the polynomial fitted to F over the free lattice
         DOF at each temperature.
@@ -366,8 +369,9 @@ class AnisotropicQHAResult:
         Total free energies (electronic + phonon [+ pV]) at temperatures
         and input sample cells in eV. shape=(N, n_points)
     equilibrium_lattice_parameters : ndarray
-        Equilibrium lattice-vector lengths (a, b, c) at temperatures in
-        angstrom, from the per-temperature surface minima. shape=(N, 3)
+        Equilibrium lattice-vector lengths (a, b, c) of the conventional
+        unit cell at temperatures in angstrom, from the per-temperature
+        surface minima. shape=(N, 3)
     unsmoothed_lattice_parameters : ndarray
         The same lengths as the surface minima gave them, before any
         smoothing, in angstrom. Equal to equilibrium_lattice_parameters
@@ -413,11 +417,6 @@ class AnisotropicQHAResult:
         smoothing: whether there was any, how many Einstein terms it used,
         and what the *_at methods below evaluate between the temperatures of
         this result.
-    primitive_volumes : ndarray, optional
-        Primitive-cell volume at each lattice grid point, the volume every
-        free energy in this result is normalized per. Recorded so that a
-        later consumer can put a raw calculator quantity on the same
-        normalization. shape=(n_points,)
     with_electronic : bool
         Whether the electronic free energy F_el was included. Recorded for
         the same reason as mesh: it shifts the axial split substantially
@@ -429,7 +428,7 @@ class AnisotropicQHAResult:
     """
 
     temperatures: NDArray[np.double]
-    lattice_lengths: NDArray[np.double]
+    lattice_grid: LatticeGrid
     free_lattice_indices: NDArray[np.int64]
     polynomial_degree: int
     helmholtz_lattice: NDArray[np.double]
@@ -444,7 +443,6 @@ class AnisotropicQHAResult:
     polynomial_n_terms: int
     minimum_extrapolated: NDArray[np.bool_]
     mesh: float | Sequence[int] | NDArray[np.int64] | None = None
-    primitive_volumes: NDArray[np.double] | None = None
     lattice_smoothing_fit: LatticeSmoothingFit | None = None
     with_electronic: bool = False
     pressure: float | None = None
@@ -479,7 +477,7 @@ class AnisotropicQHAResult:
     def lattice_parameters_at(
         self, temperatures: float | Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Return the equilibrium (a, b, c) at the given temperatures in K.
+        """Return the conventional unit cell's (a, b, c) at temperatures in K.
 
         shape=(temperatures, 3), in angstrom. The temperatures need not be
         this result's, but must lie within their range: the fitted model
@@ -522,16 +520,9 @@ class AnisotropicQHAResult:
         it stays the volume of the cell those lengths describe.
 
         """
-        if self.primitive_volumes is None:
-            raise ValueError(
-                "The result carries no primitive volumes, so the cell volume "
-                "cannot be recovered from the lattice parameters."
-            )
-        # The same ratio at every sample cell; see run_anisotropic_qha.
-        volume_ratio = float(
-            (self.primitive_volumes / self.lattice_lengths.prod(axis=1)).mean()
+        return self.lattice_grid.abc_to_primitive_volume(
+            self.lattice_parameters_at(temperatures)
         )
-        return volume_ratio * self.lattice_parameters_at(temperatures).prod(axis=1)
 
 
 def run_anisotropic_qha(
@@ -684,12 +675,14 @@ def run_anisotropic_qha(
         phonon_free_energies,
         electronic_free_energies,
     )
-    lattice_lengths = np.array(
-        [np.linalg.norm(ph.unitcell.cell, axis=1) for ph in phonopys], dtype="double"
-    )
     # Phonon thermal properties are normalized per primitive cell, so the
-    # volumes (and the input internal energies) refer to the primitive cell.
-    volumes = np.array([ph.primitive.volume for ph in phonopys], dtype="double")
+    # volumes the grid derives (and the input internal energies) refer to it.
+    lattice_grid = LatticeGrid(
+        np.array([ph.unitcell.cell for ph in phonopys], dtype="double"),
+        np.array(phonopys[0].primitive_matrix, dtype="double"),
+    )
+    lattice_lengths = lattice_grid.lattice_lengths
+    volumes = lattice_grid.primitive_volumes
 
     column_map = _detect_lattice_dof(lattice_lengths)
     # dof_positions is the free DOF that each of a, b and c is read from:
@@ -747,18 +740,15 @@ def run_anisotropic_qha(
         equilibrium_lattice_parameters = smoothing_fit.lattice_parameters(temps_in)
         axial_slopes = smoothing_fit.slopes(temps_in)
 
-    # The primitive volume over the product of the three lengths depends on
-    # the cell angles and the primitive matrix alone, both of which this
-    # method holds fixed, so every sample cell gives the same ratio and the
-    # mean only averages the round-off.
-    volume_ratio = float((volumes / lattice_lengths.prod(axis=1)).mean())
-    equilibrium_volumes = volume_ratio * equilibrium_lattice_parameters.prod(axis=1)
+    equilibrium_volumes = lattice_grid.abc_to_primitive_volume(
+        equilibrium_lattice_parameters
+    )
     thermal_expansion, axial_thermal_expansions, n_returned = _thermal_expansions(
         temps_in, equilibrium_lattice_parameters, equilibrium_volumes, axial_slopes
     )
     return AnisotropicQHAResult(
         temperatures=temps_in[:n_returned],
-        lattice_lengths=lattice_lengths,
+        lattice_grid=lattice_grid,
         free_lattice_indices=free_axis_indices,
         polynomial_degree=polynomial_degree,
         helmholtz_lattice=minima.helmholtz_lattice[:n_returned],
@@ -775,7 +765,6 @@ def run_anisotropic_qha(
         polynomial_n_terms=n_terms,
         minimum_extrapolated=minima.minimum_extrapolated[:n_returned],
         mesh=mesh,
-        primitive_volumes=volumes,
         lattice_smoothing_fit=smoothing_fit,
         with_electronic=(
             electronic_structures is not None or electronic_free_energies is not None
@@ -909,21 +898,22 @@ def _fit_lattice_smoothing(
     temperatures : ndarray
         Temperatures in K. shape=(temperatures,)
     lattice_parameters : ndarray
-        The lengths (a, b, c) to fit, in angstrom.
-        shape=(temperatures, 3)
+        The conventional unit cell's lengths (a, b, c) to fit, in
+        angstrom. shape=(temperatures, 3)
     n_terms : int
         Number of Einstein terms in each fit.
 
     """
     if method != "einstein":
         raise ValueError(f"Lattice smoothing {method!r} is not implemented.")
-    fits: dict[int, EinsteinFit] = {}
-    for column in np.unique(column_map):
-        fits[int(column)] = fit_lattice_parameter(
+    fits = tuple(
+        fit_lattice_parameter(
             temperatures, lattice_parameters[:, column], n_terms=n_terms
         )
-
-    return LatticeSmoothingFit(fits=fits, column_map=column_map, method=method)
+        for column in np.unique(column_map)
+    )
+    a, b, c = (int(column) for column in column_map)
+    return LatticeSmoothingFit(free_axis_fits=fits, column_map=(a, b, c), method=method)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -936,8 +926,9 @@ class _FreeEnergySurfaceMinima:
         The fitted free energies at the input cells in eV.
         shape=(temperatures, n_points)
     equilibrium_lattice_parameters : ndarray
-        Lattice-vector lengths (a, b, c) at the surface minimum of each
-        temperature in angstrom. shape=(temperatures, 3)
+        Lattice-vector lengths (a, b, c) of the conventional unit cell at
+        the surface minimum of each temperature in angstrom.
+        shape=(temperatures, 3)
     gibbs_free_energies : ndarray
         The free energy at each minimum in eV. shape=(temperatures,)
     surface_fit_rms : ndarray
@@ -1093,6 +1084,11 @@ def _validate_anisotropic_inputs(
         raise ValueError("temperatures must be a 1D array with at least 3 points.")
     if not (np.diff(temps_in) > 0).all():
         raise ValueError("temperatures must be in strictly ascending order.")
+    check_cells_are_one_crystal(
+        [ph.primitive_matrix for ph in phonopys],
+        [ph.supercell_matrix for ph in phonopys],
+        [ph.unitcell.symbols for ph in phonopys],
+    )
     n_points = len(phonopys)
     if internal_energies is None:
         if electronic_structures is None:
@@ -1174,8 +1170,8 @@ def _detect_lattice_dof(
     Parameters
     ----------
     lattice_lengths : ndarray
-        Lattice-vector lengths (a, b, c) of the input cells in angstrom.
-        shape=(n_points, 3)
+        Lattice-vector lengths (a, b, c) of the conventional unit cell of
+        each input cell in angstrom. shape=(n_points, 3)
     tol : float, optional
         Relative tolerance on which columns are equal to one another and on
         which are constant over the cells. Default is 1e-6.

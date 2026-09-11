@@ -67,7 +67,7 @@ def suggest_eos_cells(result: AnisotropicQHAResult, indices: Sequence[int]) -> N
     sampled over equal fractional ranges has its main diagonal among them.
 
     """
-    lengths = result.lattice_lengths
+    lengths = result.lattice_grid.lattice_lengths
     order = np.argsort(lengths.prod(axis=1))
     ratios = np.round(lengths[:, 2] / lengths[:, 0], 4)
 
@@ -197,7 +197,7 @@ def compare_thermal_expansion_eos(
 
     print(f"# Vinet volume path over {len(selected)} diagonal cells")
     for k in selected:
-        a, b, c = result.lattice_lengths[k]
+        a, b, c = result.lattice_grid.lattice_lengths[k]
         print(f"  pos {k:3d}  a={a:.4f} c={c:.4f} c/a={c / a:.4f}")
 
     qha = run_qha(

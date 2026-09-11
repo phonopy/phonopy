@@ -122,10 +122,10 @@ class EinsteinFit:
     ----------
     y0 : float
         The T = 0 value of the fit.
-    amplitudes : ndarray
-        Term amplitudes, ordered by Einstein temperature.
-    thetas : ndarray
-        Einstein temperatures in K, ascending.
+    amplitudes : tuple of float
+        Term amplitudes, one per term, ordered by Einstein temperature.
+    thetas : tuple of float
+        Einstein temperatures in K, one per term, ascending.
     temperature_range : tuple of float
         Lowest and highest temperature fitted, in K. evaluate and slope
         refuse temperatures outside it.
@@ -139,8 +139,8 @@ class EinsteinFit:
     """
 
     y0: float
-    amplitudes: NDArray[np.double]
-    thetas: NDArray[np.double]
+    amplitudes: tuple[float, ...]
+    thetas: tuple[float, ...]
     temperature_range: tuple[float, float]
     rms: float
     n_converged: int
@@ -450,8 +450,8 @@ def fit_lattice_parameter(
     order = np.argsort(popt[2::2])
     return EinsteinFit(
         y0=float(popt[0]),
-        amplitudes=np.asarray(popt[1::2])[order],
-        thetas=np.asarray(popt[2::2])[order],
+        amplitudes=tuple(float(a) for a in np.asarray(popt[1::2])[order]),
+        thetas=tuple(float(th) for th in np.asarray(popt[2::2])[order]),
         temperature_range=(float(temps.min()), float(temps.max())),
         rms=rms,
         n_converged=n_converged,
@@ -473,21 +473,32 @@ class LatticeSmoothingFit:
 
     Attributes
     ----------
-    fits : dict
-        The fit of each free lattice DOF, keyed by the lattice-vector column
+    free_axis_fits : tuple of EinsteinFit
+        One fit per free lattice DOF, ordered by the lattice-vector column
         that represents it.
-    column_map : ndarray
-        The representative column each of a, b, c reads: [0, 0, 2] for a
-        hexagonal cell, whose b follows a. shape=(3,)
+    column_map : tuple of int
+        The representative column each of a, b, c reads: (0, 0, 2) for a
+        hexagonal cell, whose b follows a.
     method : Literal["none", "einstein"]
         The smoothing that produced these fits. Never "none", since
         carrying no fit at all is what "none" means.
 
     """
 
-    fits: dict[int, EinsteinFit]
-    column_map: NDArray[np.int64]
+    free_axis_fits: tuple[EinsteinFit, ...]
+    column_map: tuple[int, int, int]
     method: SmoothingMethod
+
+    @property
+    def _fit_positions(self) -> NDArray[np.int64]:
+        """Return the fit that each of a, b and c reads, as an index.
+
+        free_axis_fits is ordered by representative column, which is the
+        order np.unique puts column_map's distinct entries in, so the
+        inverse it returns is that index. shape=(3,)
+
+        """
+        return np.unique(self.column_map, return_inverse=True)[1]
 
     @property
     def temperature_range(self) -> tuple[float, float]:
@@ -499,23 +510,23 @@ class LatticeSmoothingFit:
 
         """
         lows, highs = zip(
-            *(fit.temperature_range for fit in self.fits.values()), strict=True
+            *(fit.temperature_range for fit in self.free_axis_fits), strict=True
         )
         return (max(lows), min(highs))
 
     @property
     def n_terms(self) -> int:
         """Return the number of Einstein terms each fit was made with."""
-        return len(next(iter(self.fits.values())).thetas)
+        return len(self.free_axis_fits[0].thetas)
 
-    def fit_of(self, column: int) -> EinsteinFit:
-        """Return the fit that a, b or c reads, by its column."""
-        return self.fits[int(self.column_map[column])]
+    def fit_of(self, axis: int) -> EinsteinFit:
+        """Return the fit that a, b or c reads, by its lattice-vector column."""
+        return self.free_axis_fits[self._fit_positions[axis]]
 
     def lattice_parameters(
         self, temperatures: float | Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Return (a, b, c) at the given temperatures in K.
+        """Return the conventional unit cell's (a, b, c) at temperatures in K.
 
         shape=(temperatures, 3). The temperatures need not be the ones
         fitted, but must lie within their range.
@@ -524,13 +535,13 @@ class LatticeSmoothingFit:
         temps = _as_temperatures(temperatures)
         _check_temperature_range(temps, self.temperature_range)
         return self._by_column(
-            temps, {column: fit.evaluate(temps) for column, fit in self.fits.items()}
+            temps, [fit.evaluate(temps) for fit in self.free_axis_fits]
         )
 
     def slopes(
         self, temperatures: float | Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Return d(a, b, c)/dT at the given temperatures in K, analytically.
+        """Return the conventional unit cell's d(a, b, c)/dT, analytically.
 
         shape=(temperatures, 3). Having committed to a model there is no
         reason to approximate its slope by finite differences of it again:
@@ -540,17 +551,20 @@ class LatticeSmoothingFit:
         """
         temps = _as_temperatures(temperatures)
         _check_temperature_range(temps, self.temperature_range)
-        return self._by_column(
-            temps, {column: fit.slope(temps) for column, fit in self.fits.items()}
-        )
+        return self._by_column(temps, [fit.slope(temps) for fit in self.free_axis_fits])
 
     def _by_column(
         self,
         temperatures: NDArray[np.double],
-        values: dict[int, NDArray[np.double]],
+        values: Sequence[NDArray[np.double]],
     ) -> NDArray[np.double]:
-        """Spread one value per free DOF over the three lattice lengths."""
+        """Spread one value per free DOF over the three lattice lengths.
+
+        values holds one series per fit, in the order free_axis_fits does.
+
+        """
+        positions = self._fit_positions
         out = np.zeros((len(temperatures), 3), dtype="double")
-        for column in range(3):
-            out[:, column] = values[int(self.column_map[column])]
+        for axis in range(3):
+            out[:, axis] = values[positions[axis]]
         return out

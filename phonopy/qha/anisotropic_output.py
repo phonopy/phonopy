@@ -81,12 +81,13 @@ def format_provenance(
         items.append(f"mesh={_format_mesh(result.mesh)}")
     items.append(f"polynomial_degree={result.polynomial_degree}")
     items.append(f"F_el={'on' if result.with_electronic else 'off'}")
-    if result.lattice_smoothing_fit is not None:
-        items.append(f"smooth_lattice={result.lattice_smoothing}")
-        items.append(f"smooth_terms={result.lattice_smoothing_fit.n_terms}")
+    smoothing_fit = result.lattice_smoothing_fit
+    if smoothing_fit is not None:
+        items.append(f"smooth_lattice={smoothing_fit.method}")
+        items.append(f"smooth_terms={smoothing_fit.n_terms}")
     if result.pressure is not None:
         items.append(f"pressure={result.pressure:g} GPa")
-    items.append(f"grid_points={result.lattice_lengths.shape[0]}")
+    items.append(f"grid_points={result.lattice_grid.n_points}")
     items.append(f"temperatures={_format_temperatures(result.temperatures)}")
     if provenance:
         items.extend(provenance)

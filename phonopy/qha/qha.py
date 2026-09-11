@@ -86,26 +86,16 @@ class QHALatticeData:
     Attributes
     ----------
     lattice_parameters : ndarray
-        Lattice-vector lengths (a, b, c) at temperatures in angstrom.
-        shape=(N, 3)
+        Lattice-vector lengths (a, b, c) of the conventional unit cell at
+        temperatures in angstrom. shape=(N, 3)
     axial_thermal_expansions : ndarray
         Linear thermal expansion coefficients (alpha_a, alpha_b, alpha_c)
         at temperatures in 1/K with a leading row of zeros. shape=(N, 3)
-    k : float
-        Geometric constant k = V / (a b c) determined from the input
-        cells, where V is the primitive cell volume and a, b, c are the
-        lattice-vector lengths of the unit cells; k therefore also
-        absorbs the unit-cell to primitive-cell volume ratio.
-    ratio_coefficients : ndarray
-        Polynomial coefficients of the axial ratios b/a and c/a vs V in
-        np.polyfit order. shape=(2, degree + 1)
 
     """
 
     lattice_parameters: NDArray[np.double]
     axial_thermal_expansions: NDArray[np.double]
-    k: float
-    ratio_coefficients: NDArray[np.double]
 
     def __post_init__(self) -> None:
         """Make ndarray fields read-only."""
@@ -563,6 +553,4 @@ def _make_lattice_data(
     return QHALatticeData(
         lattice_parameters=lattice_parameters[:n],
         axial_thermal_expansions=axial_thermal_expansions,
-        k=lattice_fit.k,
-        ratio_coefficients=lattice_fit.ratio_coefficients,
     )

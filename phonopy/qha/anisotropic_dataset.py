@@ -23,6 +23,7 @@ temperature-dependent force constants (SSCHA, TDEP) enter the workflow.
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
@@ -132,6 +133,63 @@ class AnisoQHAGridPoint:
         return phonon
 
 
+def check_cells_are_one_crystal(
+    primitive_matrices: Sequence[NDArray[np.double]],
+    supercell_matrices: Sequence[NDArray[np.int64]],
+    symbols: Sequence[Sequence[str]],
+) -> NDArray[np.double]:
+    """Check that the cells differ in their lattice lengths and nothing else.
+
+    The free energies of the grid points are compared with one another, so
+    they have to be the same crystal computed the same way: the same
+    primitive cell (the volume every energy is normalized per), the same
+    supercell (the reach of the force constants, hence how converged each
+    free energy is) and the same atoms.
+
+    Parameters
+    ----------
+    primitive_matrices : sequence of ndarray
+        Primitive matrix of each cell. shape=(3, 3) each
+    supercell_matrices : sequence of ndarray
+        Supercell matrix of each cell. shape=(3, 3) each
+    symbols : sequence of sequence of str
+        Chemical symbols of each cell, in their stored order.
+
+    Returns
+    -------
+    ndarray
+        The primitive matrix they share. shape=(3, 3)
+
+    Raises
+    ------
+    ValueError
+        When any of the three differs from cell to cell.
+
+    """
+    first = np.asarray(primitive_matrices[0], dtype="double")
+    for i, matrix in enumerate(primitive_matrices[1:], start=1):
+        if not np.allclose(matrix, first):
+            raise ValueError(
+                f"Cell {i} has a primitive matrix of its own; every cell must "
+                "share one, since it sets the volume the free energies are "
+                "normalized per."
+            )
+    for i, supercell_matrix in enumerate(supercell_matrices[1:], start=1):
+        if not np.array_equal(supercell_matrix, supercell_matrices[0]):
+            raise ValueError(
+                f"Cell {i} has a supercell matrix of its own; every cell must "
+                "share one, or their free energies differ in how converged "
+                "they are rather than in the lattice."
+            )
+    for i, cell_symbols in enumerate(symbols[1:], start=1):
+        if list(cell_symbols) != list(symbols[0]):
+            raise ValueError(
+                f"Cell {i} holds different atoms from the first one; every "
+                "cell must be the same crystal."
+            )
+    return first
+
+
 @dataclass(frozen=True)
 class AnisoQHADataset:
     """Self-contained dataset feeding the anisotropic QHA analysis.
@@ -169,6 +227,35 @@ class AnisoQHADataset:
     tie_description: str = ""
     grid_shape: tuple[int, ...] | None = None
     phonopy_version: str | None = None
+
+    def __post_init__(self) -> None:
+        """Check that the grid points can be compared with one another.
+
+        A dataset is read from a file that a run may have written point by
+        point, so what holds the points together is checked here rather
+        than assumed by every reader.
+
+        """
+        if not self.grid_points:
+            raise ValueError("A dataset needs at least one grid point.")
+        check_cells_are_one_crystal(
+            [point.primitive_matrix for point in self.grid_points],
+            [point.supercell_matrix for point in self.grid_points],
+            [point.cell.symbols for point in self.grid_points],
+        )
+        indices = [point.index for point in self.grid_points]
+        if len(set(indices)) != len(indices):
+            raise ValueError(
+                "Two grid points share an index; the indices are what a "
+                "sweep addresses its runs by."
+            )
+        if self.grid_shape is not None:
+            n_expected = int(np.prod(self.grid_shape))
+            if n_expected != len(self.grid_points):
+                raise ValueError(
+                    f"grid_shape {self.grid_shape} describes {n_expected} "
+                    f"cells, but the dataset holds {len(self.grid_points)}."
+                )
 
 
 def write_aniso_qha_dataset(

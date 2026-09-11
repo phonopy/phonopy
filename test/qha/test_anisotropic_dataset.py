@@ -96,10 +96,10 @@ def test_dataset_grid_shape_roundtrip(tmp_path):
 
     """
     points = (_grid_point(0, True), _grid_point(1, False))
-    with_shape = AnisoQHADataset(grid_points=points, grid_shape=(5, 5))
+    with_shape = AnisoQHADataset(grid_points=points, grid_shape=(2, 1))
     path = tmp_path / "with_shape.hdf5"
     write_aniso_qha_dataset(with_shape, path)
-    assert read_aniso_qha_dataset(path).grid_shape == (5, 5)
+    assert read_aniso_qha_dataset(path).grid_shape == (2, 1)
 
     without_shape = AnisoQHADataset(grid_points=points)
     path = tmp_path / "without_shape.hdf5"

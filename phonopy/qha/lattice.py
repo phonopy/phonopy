@@ -9,21 +9,156 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import NDArray
+
+from phonopy.qha.thermal import freeze_ndarray_fields
+
+PRIMITIVE_VOLUME_ABC_RATIO_TOL = 1e-4
+"""Relative spread of V / (a b c) over the input cells that is still accepted.
+
+Above it the cells do not share one shape, so no single ratio describes
+them and the lattice parameters cannot be recovered from a volume.
+
+"""
+
+
+def primitive_volume_abc_ratio(
+    primitive_volumes: NDArray[np.double], lattice_lengths: NDArray[np.double]
+) -> float:
+    """Return V / (a b c), the constant shared by cells of one shape.
+
+    V is the primitive cell volume and a, b, c are the lengths of the
+    conventional unit cell, so the ratio carries both the cell-angle factor
+    and the conventional-to-primitive one. Neither depends on the lengths,
+    so every cell gives the same ratio and the mean only averages
+    round-off.
+
+    Parameters
+    ----------
+    primitive_volumes : ndarray
+        Primitive cell volume of each cell in angstrom^3. shape=(n_cells,)
+    lattice_lengths : ndarray
+        Lattice-vector lengths (a, b, c) of the conventional unit cell of
+        each cell in angstrom. shape=(n_cells, 3)
+
+    Returns
+    -------
+    float
+        The ratio, averaged over the cells.
+
+    Raises
+    ------
+    RuntimeError
+        When the ratio varies over the cells by more than
+        PRIMITIVE_VOLUME_ABC_RATIO_TOL, i.e. the cells differ in more than
+        their lengths.
+
+    """
+    ratios = primitive_volumes / lattice_lengths.prod(axis=-1)
+    ratio = float(ratios.mean())
+    if np.abs(ratios / ratio - 1).max() >= PRIMITIVE_VOLUME_ABC_RATIO_TOL:
+        raise RuntimeError(
+            "Volumes are not consistent with V = k * a * b * c with a "
+            "constant k. Cell angles must not depend on volume."
+        )
+    return ratio
+
+
+@dataclass(frozen=True)
+class LatticeGrid:
+    """The sample cells an anisotropic QHA is run over.
+
+    What the input cells fix, as opposed to what a temperature fixes: the
+    basis vectors that were sampled and the primitive cell they are
+    reduced to. The lengths, the volumes and the volume of any other cell
+    of the same shape all follow from those two.
+
+    Attributes
+    ----------
+    lattices : ndarray
+        Basis vectors (a, b, c as row vectors) of the conventional unit
+        cell at each sample point in angstrom, as PhonopyAtoms.cell gives
+        them. shape=(n_points, 3, 3)
+    primitive_matrix : ndarray
+        Transformation matrix to the primitive cell from the conventional
+        unit cell, shared by every sample cell. shape=(3, 3)
+
+    """
+
+    lattices: NDArray[np.double]
+    primitive_matrix: NDArray[np.double]
+
+    def __post_init__(self) -> None:
+        """Make ndarray fields read-only and refuse cells of differing shape."""
+        freeze_ndarray_fields(self)
+        # Raises unless one ratio describes every sample cell.
+        primitive_volume_abc_ratio(self.primitive_volumes, self.lattice_lengths)
+
+    @property
+    def n_points(self) -> int:
+        """Return the number of sample cells."""
+        return self.lattices.shape[0]
+
+    @property
+    def lattice_lengths(self) -> NDArray[np.double]:
+        """Return the conventional unit cell's (a, b, c) at each sample point.
+
+        In angstrom. shape=(n_points, 3)
+
+        """
+        return np.linalg.norm(self.lattices, axis=2)
+
+    @property
+    def primitive_volumes(self) -> NDArray[np.double]:
+        """Return the primitive cell volume of each sample cell.
+
+        In angstrom^3. shape=(n_points,)
+
+        """
+        return np.abs(np.linalg.det(self.lattices)) * np.linalg.det(
+            self.primitive_matrix
+        )
+
+    @property
+    def primitive_volume_abc_ratio(self) -> float:
+        """Return V / (a b c), the constant shared by the sample cells."""
+        return primitive_volume_abc_ratio(self.primitive_volumes, self.lattice_lengths)
+
+    def abc_to_primitive_volume(
+        self, lattice_lengths: NDArray[np.double]
+    ) -> NDArray[np.double]:
+        """Return the primitive cell volume of cells with these lengths.
+
+        Parameters
+        ----------
+        lattice_lengths : ndarray
+            Lattice-vector lengths (a, b, c) of the conventional unit cell
+            in angstrom. shape=(n_cells, 3), or (3,) for one cell.
+
+        Returns
+        -------
+        ndarray
+            Primitive-cell volumes in angstrom^3. shape=(n_cells,), or a
+            scalar for one cell.
+
+        """
+        return self.primitive_volume_abc_ratio * lattice_lengths.prod(axis=-1)
 
 
 class LatticeParametersFit:
     """Fit of lattice parameters vs volume for fixed-angle crystals.
 
-    The cell volume is modeled as
+    The primitive cell volume is modeled as
 
         V = k * a * b * c = k * a^3 * r_b(V) * r_c(V)
 
-    where a, b, c are the lattice-vector lengths, r_b = b / a and
-    r_c = c / a are axial ratios fitted as polynomials of V, and k is a
-    geometric constant containing the cell-angle factor. k is determined
+    where a, b, c are the lattice-vector lengths of the conventional unit
+    cell, r_b = b / a and r_c = c / a are axial ratios fitted as
+    polynomials of V, and k is a geometric constant containing the
+    cell-angle factor and the conventional-to-primitive one. k is determined
     from the input data as mean(V_i / (a_i b_i c_i)) and must be constant
     over all volume points, which holds if and only if the cell angles do
     not depend on volume. Lattice parameters are recovered as
@@ -43,22 +178,20 @@ class LatticeParametersFit:
         volumes: Sequence[float] | NDArray[np.double],
         lattice_parameters: Sequence[Sequence[float]] | NDArray[np.double],
         degree: int = 2,
-        k_tol: float = 1e-4,
     ) -> None:
         """Init method.
 
         Parameters
         ----------
         volumes : array_like
-            Unit cell volumes (V) in angstrom^3. shape=(volumes,)
+            Primitive cell volumes (V) in angstrom^3. shape=(volumes,)
         lattice_parameters : array_like
-            Lattice-vector lengths (a, b, c) at each volume in angstrom.
-            shape=(volumes, 3)
+            Lattice-vector lengths (a, b, c) of the conventional unit cell
+            at each volume in angstrom. shape=(volumes, 3)
         degree : int, optional
             Degree of the polynomials fitted to the axial ratios vs V.
-        k_tol : float, optional
-            Maximum allowed relative deviation of V_i / (a_i b_i c_i)
-            from its mean.
+            The spread of V_i / (a_i b_i c_i) that is still accepted is
+            PRIMITIVE_VOLUME_ABC_RATIO_TOL.
 
         """
         self._volumes = np.array(volumes, dtype="double")
@@ -80,13 +213,9 @@ class LatticeParametersFit:
                 f"lattice parameter fitting with polynomials of degree {degree}."
             )
 
-        k_points = self._volumes / self._lattice_parameters.prod(axis=1)
-        self._k = float(k_points.mean())
-        if np.abs(k_points / self._k - 1).max() >= k_tol:
-            raise RuntimeError(
-                "Volumes are not consistent with V = k * a * b * c with a "
-                "constant k. Cell angles must not depend on volume."
-            )
+        self._primitive_volume_abc_ratio = primitive_volume_abc_ratio(
+            self._volumes, self._lattice_parameters
+        )
 
         a = self._lattice_parameters[:, 0]
         self._ratio_coefficients = np.array(
@@ -97,41 +226,38 @@ class LatticeParametersFit:
         )
 
     @property
-    def k(self) -> float:
-        """Return the geometric constant k = V / (a b c)."""
-        return self._k
+    def primitive_volume_abc_ratio(self) -> float:
+        """Return the geometric constant k = V / (a b c).
+
+        V is the primitive cell volume and a, b, c are the lengths of the
+        conventional unit cell, so it carries both the cell-angle factor
+        and the conventional-to-primitive one.
+
+        """
+        return self._primitive_volume_abc_ratio
 
     @property
     def degree(self) -> int:
         """Return the degree of the axial-ratio polynomials."""
         return self._degree
 
-    @property
-    def ratio_coefficients(self) -> NDArray[np.double]:
-        """Return polynomial coefficients of the axial ratios vs V.
-
-        Rows correspond to b/a and c/a; columns are in np.polyfit order
-        (highest degree first). shape=(2, degree + 1)
-
-        """
-        return self._ratio_coefficients
-
     def evaluate(
         self, volumes: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Return lattice parameters (a, b, c) at volumes.
+        """Return the conventional unit cell's (a, b, c) at volumes.
 
         Volumes outside the fitted range are extrapolated with a warning.
 
         Parameters
         ----------
         volumes : array_like
-            Unit cell volumes in angstrom^3. shape=(n,)
+            Primitive cell volumes in angstrom^3. shape=(n,)
 
         Returns
         -------
         ndarray
-            Lattice parameters in angstrom. shape=(n, 3)
+            Lattice parameters (a, b, c) of the conventional unit cell in
+            angstrom. shape=(n, 3)
 
         """
         v = np.array(volumes, dtype="double")
@@ -143,7 +269,7 @@ class LatticeParametersFit:
             )
         r_b = np.polyval(self._ratio_coefficients[0], v)
         r_c = np.polyval(self._ratio_coefficients[1], v)
-        a = (v / (self._k * r_b * r_c)) ** (1.0 / 3)
+        a = (v / (self._primitive_volume_abc_ratio * r_b * r_c)) ** (1.0 / 3)
         return np.array([a, r_b * a, r_c * a]).T
 
 
@@ -162,8 +288,8 @@ def compute_axial_thermal_expansion(
     temperatures : ndarray
         Temperatures in K. shape=(num_elems,)
     lattice_parameters : ndarray
-        Lattice-vector lengths (a, b, c) at temperatures in angstrom.
-        shape=(num_elems, 3)
+        Lattice-vector lengths (a, b, c) of the conventional unit cell at
+        temperatures in angstrom. shape=(num_elems, 3)
 
     """
     alpha = [np.zeros(3)]

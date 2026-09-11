@@ -12,6 +12,7 @@ import pytest
 from phonopy.qha import anisotropic_output as aniso_output
 from phonopy.qha import anisotropic_plot as aniso_plot
 from phonopy.qha.anisotropic import AnisotropicQHAResult
+from phonopy.qha.lattice import LatticeGrid
 from phonopy.qha.lattice_smoothing import EinsteinFit, LatticeSmoothingFit
 
 
@@ -30,7 +31,9 @@ def _synthetic_result(n: int = 6) -> AnisotropicQHAResult:
     n_points = 9
     return AnisotropicQHAResult(
         temperatures=temperatures,
-        lattice_lengths=np.tile([3.0, 3.0, 5.0], (n_points, 1)),
+        lattice_grid=LatticeGrid(
+            np.tile(np.diag([3.0, 3.0, 5.0]), (n_points, 1, 1)), np.eye(3)
+        ),
         free_lattice_indices=np.array([0, 2], dtype="int64"),
         polynomial_degree=2,
         helmholtz_lattice=np.zeros((n, n_points)),
@@ -51,16 +54,16 @@ def _smoothing_fit(n_terms: int = 2) -> LatticeSmoothingFit:
     """Build a stub smoothing fit, of which only the term count is read here."""
     fit = EinsteinFit(
         y0=3.0,
-        amplitudes=np.zeros(n_terms),
-        thetas=np.linspace(100.0, 300.0, n_terms),
+        amplitudes=(0.0,) * n_terms,
+        thetas=tuple(np.linspace(100.0, 300.0, n_terms)),
         temperature_range=(0.0, 500.0),
         rms=0.0,
         n_converged=1,
         n_accepted=1,
     )
     return LatticeSmoothingFit(
-        fits={0: fit, 2: fit},
-        column_map=np.array([0, 0, 2], dtype="int64"),
+        free_axis_fits=(fit, fit),
+        column_map=(0, 0, 2),
         method="einstein",
     )
 
@@ -265,7 +268,9 @@ def test_contour_plots_write_one_file_per_temperature(
     bowl = 3.0 * (a - 2.96) ** 2 + 2.0 * (c - 4.98) ** 2
     result = dataclasses.replace(
         result,
-        lattice_lengths=lattice_lengths,
+        lattice_grid=LatticeGrid(
+            np.array([np.diag(row) for row in lattice_lengths]), np.eye(3)
+        ),
         helmholtz_lattice=np.tile(bowl, (len(result.temperatures), 1)),
     )
 
