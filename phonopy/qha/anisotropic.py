@@ -724,6 +724,7 @@ def run_anisotropic_qha(
             temps_in,
             minima.equilibrium_lattice_parameters,
             smoothing_terms,
+            verbose=verbose,
         )
         equilibrium_lattice_parameters = lattice_grid.spread(
             smoothing_fit.equilibrium_free_axis_lengths(temps_in)
@@ -867,6 +868,7 @@ def _fit_lattice_smoothing(
     temperatures: NDArray[np.double],
     lattice_parameters: NDArray[np.double],
     n_terms: int,
+    verbose: bool = False,
 ) -> LatticeSmoothingFit:
     """Fit one lattice length per free lattice DOF along temperature.
 
@@ -888,17 +890,24 @@ def _fit_lattice_smoothing(
         angstrom. shape=(temperatures, 3)
     n_terms : int
         Number of Einstein terms in each fit.
+    verbose : bool, optional
+        Print one line per fit: its residual, how many starting guesses it
+        was chosen from, and the amplitude and Einstein temperature of each
+        term. Default is False.
 
     """
     if method != "einstein":
         raise ValueError(f"Lattice smoothing {method!r} is not implemented.")
-    fits = tuple(
-        fit_lattice_parameter(
+    axis_labels = ("a", "b", "c")
+    fits = []
+    for column in lattice_grid.free_axis_indices:
+        fit = fit_lattice_parameter(
             temperatures, lattice_parameters[:, column], n_terms=n_terms
         )
-        for column in lattice_grid.free_axis_indices
-    )
-    return LatticeSmoothingFit(free_axis_fits=fits, method=method)
+        if verbose:
+            print(f"Einstein fit of {axis_labels[column]}: {fit.describe()}")
+        fits.append(fit)
+    return LatticeSmoothingFit(free_axis_fits=tuple(fits), method=method)
 
 
 @dataclasses.dataclass(frozen=True)

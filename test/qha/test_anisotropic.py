@@ -857,6 +857,33 @@ def test_lattice_smoothing_follows_the_lattice_dof() -> None:
     assert fit.method == "einstein"
 
 
+def test_lattice_smoothing_reports_each_fit(capsys: pytest.CaptureFixture) -> None:
+    """Test that a verbose fit prints what each Einstein fit came out as.
+
+    The residual and the number of accepted starting guesses are recorded
+    nowhere else, so without this line a fit chosen from one guess out of
+    twelve looks like one chosen from all twelve.
+
+    """
+    from phonopy.qha.anisotropic import _fit_lattice_smoothing
+
+    lengths = np.array([[3.0 + d, 3.0 + d, 5.0 - d] for d in (-0.02, 0.0, 0.02)])
+    grid = LatticeGrid(np.array([np.diag(row) for row in lengths]), np.eye(3))
+    temperatures = np.arange(0.0, 401.0, 10.0)
+    series = _noisy_lattice(temperatures)
+    lattice = np.column_stack([series[:, 2], series[:, 2], series[:, 0] + 2.0])
+
+    _fit_lattice_smoothing("einstein", grid, temperatures, lattice, 2, verbose=True)
+
+    lines = [
+        line for line in capsys.readouterr().out.splitlines() if "Einstein fit" in line
+    ]
+    assert len(lines) == 2  # one per free DOF, not one per length
+    assert lines[0].startswith("Einstein fit of a:")
+    assert lines[1].startswith("Einstein fit of c:")
+    assert "accepted" in lines[0]
+
+
 def test_lattice_smoothing_refuses_a_method_it_does_not_fit() -> None:
     """Test that a named method that is not fitted raises, not falls back.
 

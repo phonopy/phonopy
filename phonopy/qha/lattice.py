@@ -84,7 +84,8 @@ def _detect_lattice_dof(
     ----------
     lattice_lengths : ndarray
         Lattice-vector lengths (a, b, c) of the conventional unit cell of
-        each input cell in angstrom. shape=(n_points, 3)
+        each input cell in angstrom, three columns in that order.
+        shape=(n_points, 3)
     tol : float, optional
         Relative tolerance on which columns are equal to one another and on
         which are constant over the cells. Default is 1e-6.
@@ -97,33 +98,32 @@ def _detect_lattice_dof(
         which is the order they are numbered in.
 
     """
-    n_col = lattice_lengths.shape[1]
-    group_of = np.full(n_col, -1, dtype="int64")
-    n_groups = 0
-    for col in range(n_col):
-        if group_of[col] >= 0:
-            continue
-        group_of[col] = n_groups
-        for other in range(col + 1, n_col):
-            if group_of[other] < 0 and np.allclose(
+    axis_labels = ("a", "b", "c")
+    if lattice_lengths.shape[1] != len(axis_labels):
+        raise ValueError(
+            f"lattice_lengths must have three columns, a, b and c, not "
+            f"{lattice_lengths.shape[1]}."
+        )
+
+    # Each length follows the first of the lengths it is equal to in every
+    # cell, which is itself when it follows none.
+    column_map = [0, 1, 2]
+    for col in (1, 2):
+        for other in range(col):
+            if np.allclose(
                 lattice_lengths[:, col], lattice_lengths[:, other], rtol=tol, atol=0.0
             ):
-                group_of[other] = n_groups
-        n_groups += 1
+                column_map[col] = column_map[other]
+                break
 
-    axis_labels = ("a", "b", "c")
-    column_map = [0] * n_col
-    for group in range(n_groups):
-        columns = [col for col in range(n_col) if group_of[col] == group]
-        column = lattice_lengths[:, columns[0]]
+    for col in sorted(set(column_map)):
+        column = lattice_lengths[:, col]
         if column.max() - column.min() <= tol * abs(column.mean()):
-            names = " = ".join(axis_labels[col] for col in columns)
+            names = " = ".join(axis_labels[i] for i in range(3) if column_map[i] == col)
             raise ValueError(
                 f"Lattice length {names} is the same in every input cell; the "
                 f"anisotropic QHA needs cells sampled over every lattice length."
             )
-        for col in columns:
-            column_map[col] = columns[0]
 
     a, b, c = column_map
     return (a, b, c)
