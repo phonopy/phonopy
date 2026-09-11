@@ -11,15 +11,12 @@ from numpy.typing import NDArray
 from qha_utils import MESH, internal_energies, scaled_phonopy
 
 from phonopy import Phonopy
-from phonopy.qha.anisotropic import (
-    FreeEnergySurfaceFit,
-    _detect_lattice_dof,
-    run_anisotropic_qha,
-)
+from phonopy.qha.anisotropic import FreeEnergySurfaceFit, run_anisotropic_qha
 from phonopy.qha.calc import (
     generate_total_degree_exponents,
     polynomial_design_matrix,
 )
+from phonopy.qha.lattice import LatticeGrid
 
 TEMPERATURES = np.arange(0.0, 1001.0, 200.0)
 
@@ -173,50 +170,6 @@ def test_invalid_shapes() -> None:
         FreeEnergySurfaceFit(points[:, 0], values)  # 1D points array
 
 
-# --- Free lattice DOF detection --------------------------------------------
-
-
-def test_detect_dof_hexagonal() -> None:
-    """A and b tied and c independent give two DOF with a mapped to b."""
-    a = np.array([3.0, 3.1, 3.2])
-    c = np.array([5.0, 4.9, 5.1])
-    lengths = np.stack([a, a, c], axis=1)
-    column_map = _detect_lattice_dof(lengths)
-    np.testing.assert_array_equal(column_map, [0, 0, 2])
-
-
-def test_detect_dof_orthorhombic() -> None:
-    """Three independently varying lengths give three DOF."""
-    lengths = np.array([[3.0, 4.0, 5.0], [3.1, 4.1, 4.9], [2.9, 3.9, 5.1]])
-    column_map = _detect_lattice_dof(lengths)
-    np.testing.assert_array_equal(column_map, [0, 1, 2])
-
-
-def test_detect_dof_cubic() -> None:
-    """A = b = c collapse to a single DOF shared by all three columns."""
-    a = np.array([3.0, 3.1, 3.2])
-    lengths = np.stack([a, a, a], axis=1)
-    column_map = _detect_lattice_dof(lengths)
-    np.testing.assert_array_equal(column_map, [0, 0, 0])
-
-
-def test_detect_dof_unsampled_column() -> None:
-    """A length that never varies is refused, not carried as a constant."""
-    a = np.array([3.0, 3.1, 3.2])
-    b = np.full(3, 4.0)
-    c = np.array([5.0, 5.1, 4.9])
-    lengths = np.stack([a, b, c], axis=1)
-    with pytest.raises(ValueError, match="Lattice length b is the same"):
-        _detect_lattice_dof(lengths)
-
-
-def test_detect_dof_no_variation() -> None:
-    """Cells with no varying lattice length raise ValueError."""
-    lengths = np.tile([3.0, 4.0, 5.0], (4, 1))
-    with pytest.raises(ValueError):
-        _detect_lattice_dof(lengths)
-
-
 # --- End-to-end driver over Phonopy instances ------------------------------
 
 
@@ -255,7 +208,7 @@ def test_run_anisotropic_tetragonal(ph_nacl: Phonopy) -> None:
     n = len(TEMPERATURES) - 1
     assert result.temperatures.shape == (n,)
     assert result.equilibrium_lattice_parameters.shape == (n, 3)
-    np.testing.assert_array_equal(result.free_lattice_indices, [0, 2])
+    np.testing.assert_array_equal(result.lattice_grid.free_axis_indices, [0, 2])
 
     elp = result.equilibrium_lattice_parameters
     # b is tied to a for a tetragonal cell.
@@ -303,7 +256,7 @@ def test_run_anisotropic_cubic_one_dof(ph_nacl: Phonopy) -> None:
         polynomial_degree=2,
     )
 
-    np.testing.assert_array_equal(result.free_lattice_indices, [0])
+    np.testing.assert_array_equal(result.lattice_grid.free_axis_indices, [0])
     elp = result.equilibrium_lattice_parameters
     np.testing.assert_allclose(elp[:, 0], elp[:, 1], rtol=1e-12)
     np.testing.assert_allclose(elp[:, 0], elp[:, 2], rtol=1e-12)
@@ -882,23 +835,20 @@ def test_lattice_smoothing_follows_the_lattice_dof() -> None:
     from phonopy.qha.anisotropic import _fit_lattice_smoothing
 
     lengths = np.array([[3.0 + d, 3.0 + d, 5.0 - d] for d in (-0.02, 0.0, 0.02)])
-    column_map = _detect_lattice_dof(lengths)
+    grid = LatticeGrid(np.array([np.diag(row) for row in lengths]), np.eye(3))
     temperatures = np.arange(0.0, 401.0, 10.0)
     series = _noisy_lattice(temperatures)
     lattice = np.column_stack([series[:, 2], series[:, 2], series[:, 0] + 2.0])
 
-    fit = _fit_lattice_smoothing("einstein", column_map, temperatures, lattice, 2)
+    fit = _fit_lattice_smoothing("einstein", grid, temperatures, lattice, 2)
 
     # One fit for the one free DOF a and b share, and one for c.
     assert len(fit.free_axis_fits) == 2
-    assert fit.column_map == (0, 0, 2)
-    assert fit.fit_of(1) is fit.fit_of(0)
-    assert fit.fit_of(2) is not fit.fit_of(0)
 
     probe = np.array([15.0, 155.0])
-    np.testing.assert_array_equal(
-        fit.lattice_parameters(probe)[:, 1], fit.lattice_parameters(probe)[:, 0]
-    )
+    spread = grid.spread(fit.equilibrium_free_axis_lengths(probe))
+    np.testing.assert_array_equal(spread[:, 1], spread[:, 0])
+    assert not np.allclose(spread[:, 2], spread[:, 0])
 
     # The method the fits were made with is carried, not inferred later.
     assert fit.method == "einstein"
@@ -915,10 +865,12 @@ def test_lattice_smoothing_refuses_a_method_it_does_not_fit() -> None:
 
     temperatures = np.arange(0.0, 401.0, 10.0)
     lattice = _noisy_lattice(temperatures)
+    lengths = np.array([[3.0 + d, 4.0 + d, 5.0 - d] for d in (-0.02, 0.0, 0.02)])
+    grid = LatticeGrid(np.array([np.diag(row) for row in lengths]), np.eye(3))
     with pytest.raises(ValueError, match="is not implemented"):
         _fit_lattice_smoothing(
             "spline",  # type: ignore[arg-type]
-            np.array([0, 1, 2], dtype="int64"),
+            grid,
             temperatures,
             lattice,
             2,

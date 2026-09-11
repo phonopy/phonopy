@@ -28,13 +28,14 @@ def _synthetic_result(n: int = 6) -> AnisotropicQHAResult:
     axial[1:, 0] = 1e-4 / a[1:]
     axial[1:, 1] = 1e-4 / a[1:]
     axial[1:, 2] = 2e-4 / c[1:]
-    n_points = 9
+    grid_a, grid_c = np.meshgrid([2.95, 3.0, 3.05], [4.95, 5.0, 5.05], indexing="ij")
+    grid_lengths = np.stack([grid_a.ravel(), grid_a.ravel(), grid_c.ravel()], axis=1)
+    n_points = len(grid_lengths)
     return AnisotropicQHAResult(
         temperatures=temperatures,
         lattice_grid=LatticeGrid(
-            np.tile(np.diag([3.0, 3.0, 5.0]), (n_points, 1, 1)), np.eye(3)
+            np.array([np.diag(row) for row in grid_lengths]), np.eye(3)
         ),
-        free_lattice_indices=np.array([0, 2], dtype="int64"),
         polynomial_degree=2,
         helmholtz_lattice=np.zeros((n, n_points)),
         equilibrium_lattice_parameters=elp,
@@ -61,11 +62,7 @@ def _smoothing_fit(n_terms: int = 2) -> LatticeSmoothingFit:
         n_converged=1,
         n_accepted=1,
     )
-    return LatticeSmoothingFit(
-        free_axis_fits=(fit, fit),
-        column_map=(0, 0, 2),
-        method="einstein",
-    )
+    return LatticeSmoothingFit(free_axis_fits=(fit, fit), method="einstein")
 
 
 @pytest.fixture

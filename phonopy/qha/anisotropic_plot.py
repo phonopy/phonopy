@@ -59,7 +59,7 @@ def plot_lattice_smoothing(result: AnisotropicQHAResult) -> Any:
     unsmoothed = result.unsmoothed_lattice_parameters
 
     t = result.temperatures
-    columns = [int(i) for i in result.free_lattice_indices]
+    columns = [int(i) for i in result.lattice_grid.free_axis_indices]
     names = ("a", "b", "c")
     fig, axs = plt.subplots(
         2, len(columns), figsize=(4.0 * len(columns), 6.0), sharex=True, squeeze=False
@@ -159,7 +159,7 @@ def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) 
     its own minimum (F - F_min) in eV, so that only the surface shape remains.
 
     """
-    fi = result.free_lattice_indices
+    fi = result.lattice_grid.free_axis_indices
     i = int(np.argmin(np.abs(result.temperatures - temperature)))
     free_axis_lengths = result.lattice_grid.lattice_lengths[:, fi]
     fit = FreeEnergySurfaceFit(
@@ -195,7 +195,7 @@ def plot_F_contours(
     written filenames, empty unless there are exactly 2 free lattice DOF.
 
     """
-    fi = result.free_lattice_indices
+    fi = result.lattice_grid.free_axis_indices
     if len(fi) != 2:
         print(f"Skip contour map: {len(fi)} free lattice DOF (need 2).")
         return []
@@ -295,7 +295,7 @@ def plot_component_contours(
     per temperature of the result; without either, the F_el panel is left out.
 
     """
-    fi = result.free_lattice_indices
+    fi = result.lattice_grid.free_axis_indices
     if len(fi) != 2:
         print(f"Skip component contours: {len(fi)} free lattice DOF (need 2).")
         return []

@@ -358,10 +358,8 @@ class AnisotropicQHAResult:
         The input sample cells: their lattice-vector lengths and the
         primitive volume of each, from which the volume of any cell of the
         same shape follows.
-    free_lattice_indices : ndarray
-        Column indices of the lattice lengths that are the independent
-        free lattice degrees of freedom (e.g. [0, 2] for hexagonal a and
-        c). shape=(ndim,)
+        Which lengths are the free lattice DOF is the grid's own
+        knowledge, in lattice_grid.free_axis_indices.
     polynomial_degree : int
         Total degree of the polynomial fitted to F over the free lattice
         DOF at each temperature.
@@ -429,7 +427,6 @@ class AnisotropicQHAResult:
 
     temperatures: NDArray[np.double]
     lattice_grid: LatticeGrid
-    free_lattice_indices: NDArray[np.int64]
     polynomial_degree: int
     helmholtz_lattice: NDArray[np.double]
     equilibrium_lattice_parameters: NDArray[np.double]
@@ -484,7 +481,8 @@ class AnisotropicQHAResult:
         interpolates and does not extrapolate.
 
         """
-        return self._require_smoothing_fit().lattice_parameters(temperatures)
+        fit = self._require_smoothing_fit()
+        return self.lattice_grid.spread(fit.equilibrium_free_axis_lengths(temperatures))
 
     def axial_thermal_expansions_at(
         self, temperatures: float | Sequence[float] | NDArray[np.double]
@@ -497,7 +495,10 @@ class AnisotropicQHAResult:
 
         """
         fit = self._require_smoothing_fit()
-        return fit.slopes(temperatures) / fit.lattice_parameters(temperatures)
+        slopes = self.lattice_grid.spread(
+            fit.equilibrium_free_axis_slopes(temperatures)
+        )
+        return slopes / self.lattice_parameters_at(temperatures)
 
     def thermal_expansion_at(
         self, temperatures: float | Sequence[float] | NDArray[np.double]
@@ -681,16 +682,10 @@ def run_anisotropic_qha(
         np.array([ph.unitcell.cell for ph in phonopys], dtype="double"),
         np.array(phonopys[0].primitive_matrix, dtype="double"),
     )
-    lattice_lengths = lattice_grid.lattice_lengths
     volumes = lattice_grid.primitive_volumes
-
-    column_map = _detect_lattice_dof(lattice_lengths)
-    # dof_positions is the free DOF that each of a, b and c is read from:
-    # [0, 0, 1] for a hexagonal cell, whose b follows a.
-    free_axis_indices, dof_positions = np.unique(column_map, return_inverse=True)
-    free_axis_lengths = lattice_lengths[:, free_axis_indices]
+    free_axis_lengths = lattice_grid.free_axis_lengths
     n_terms = _n_polynomial_terms(
-        len(free_axis_indices), polynomial_degree, len(phonopys)
+        free_axis_lengths.shape[1], polynomial_degree, len(phonopys)
     )
 
     total_free_energies = _total_free_energies(
@@ -708,17 +703,10 @@ def run_anisotropic_qha(
     )
 
     if verbose:
-        _print_polynomial_fit_setup(
-            free_axis_indices, free_axis_lengths, polynomial_degree, n_terms
-        )
+        _print_polynomial_fit_setup(lattice_grid, polynomial_degree, n_terms)
 
     minima = _minimize_free_energy_surfaces(
-        total_free_energies,
-        free_axis_lengths,
-        dof_positions,
-        temps_in,
-        polynomial_degree,
-        verbose,
+        total_free_energies, lattice_grid, temps_in, polynomial_degree, verbose
     )
     if lattice_smoothing is None:
         # phonon_free_energies usually comes from a sampled method, and the
@@ -732,13 +720,17 @@ def run_anisotropic_qha(
     else:
         smoothing_fit = _fit_lattice_smoothing(
             lattice_smoothing,
-            column_map,
+            lattice_grid,
             temps_in,
             minima.equilibrium_lattice_parameters,
             smoothing_terms,
         )
-        equilibrium_lattice_parameters = smoothing_fit.lattice_parameters(temps_in)
-        axial_slopes = smoothing_fit.slopes(temps_in)
+        equilibrium_lattice_parameters = lattice_grid.spread(
+            smoothing_fit.equilibrium_free_axis_lengths(temps_in)
+        )
+        axial_slopes = lattice_grid.spread(
+            smoothing_fit.equilibrium_free_axis_slopes(temps_in)
+        )
 
     equilibrium_volumes = lattice_grid.abc_to_primitive_volume(
         equilibrium_lattice_parameters
@@ -749,7 +741,6 @@ def run_anisotropic_qha(
     return AnisotropicQHAResult(
         temperatures=temps_in[:n_returned],
         lattice_grid=lattice_grid,
-        free_lattice_indices=free_axis_indices,
         polynomial_degree=polynomial_degree,
         helmholtz_lattice=minima.helmholtz_lattice[:n_returned],
         equilibrium_lattice_parameters=equilibrium_lattice_parameters[:n_returned],
@@ -838,8 +829,7 @@ def _total_free_energies(
 
 
 def _print_polynomial_fit_setup(
-    free_axis_indices: NDArray[np.int64],
-    free_axis_lengths: NDArray[np.double],
+    lattice_grid: LatticeGrid,
     polynomial_degree: int,
     n_terms: int,
 ) -> None:
@@ -847,12 +837,8 @@ def _print_polynomial_fit_setup(
 
     Parameters
     ----------
-    free_axis_indices : ndarray
-        Lattice-vector column of each free DOF, ascending.
-        shape=(n_free_dof,)
-    free_axis_lengths : ndarray
-        The input cells over the free lattice DOF alone in angstrom.
-        shape=(n_points, n_free_dof)
+    lattice_grid : LatticeGrid
+        The input sample cells.
     polynomial_degree : int
         Total degree of the polynomial fitted to F over the free DOF.
     n_terms : int
@@ -860,11 +846,13 @@ def _print_polynomial_fit_setup(
 
     """
     axis_labels = ("a", "b", "c")
+    free_axis_indices = lattice_grid.free_axis_indices
+    free_axis_lengths = lattice_grid.free_axis_lengths
     print("# Anisotropic free energy surface fitting")
     free_axes = ", ".join(axis_labels[col] for col in free_axis_indices)
     print(f"Free lattice DOF: {len(free_axis_indices)} ({free_axes})")
     print(
-        f"Sample cells: {len(free_axis_lengths)}, polynomial terms: {n_terms} "
+        f"Sample cells: {lattice_grid.n_points}, polynomial terms: {n_terms} "
         f"(total degree {polynomial_degree})"
     )
     for pos, col in enumerate(free_axis_indices):
@@ -875,26 +863,24 @@ def _print_polynomial_fit_setup(
 
 def _fit_lattice_smoothing(
     method: SmoothingMethod,
-    column_map: NDArray[np.int64],
+    lattice_grid: LatticeGrid,
     temperatures: NDArray[np.double],
     lattice_parameters: NDArray[np.double],
     n_terms: int,
 ) -> LatticeSmoothingFit:
-    """Fit a(T), b(T), c(T), one fit per free lattice DOF.
+    """Fit one lattice length per free lattice DOF along temperature.
 
-    The representative column of each free DOF is fitted, and column_map
-    goes into the result, so a length tied to another reads the same fit
-    rather than a second one of the same numbers.
+    Only the representative length of each free DOF is fitted, so a length
+    tied to another reads that fit through LatticeGrid.spread rather than a
+    second fit of the same numbers.
 
     Parameters
     ----------
     method : Literal["einstein"]
         The smoothing to apply. A method that is named but not fitted here
         raises, rather than being answered with an Einstein fit.
-    column_map : ndarray
-        The representative column each of a, b and c reads, from
-        _detect_lattice_dof; its distinct entries are the columns that
-        are fitted. shape=(3,)
+    lattice_grid : LatticeGrid
+        The input sample cells, which say which lengths are free.
     temperatures : ndarray
         Temperatures in K. shape=(temperatures,)
     lattice_parameters : ndarray
@@ -910,10 +896,9 @@ def _fit_lattice_smoothing(
         fit_lattice_parameter(
             temperatures, lattice_parameters[:, column], n_terms=n_terms
         )
-        for column in np.unique(column_map)
+        for column in lattice_grid.free_axis_indices
     )
-    a, b, c = (int(column) for column in column_map)
-    return LatticeSmoothingFit(free_axis_fits=fits, column_map=(a, b, c), method=method)
+    return LatticeSmoothingFit(free_axis_fits=fits, method=method)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -953,8 +938,7 @@ class _FreeEnergySurfaceMinima:
 
 def _minimize_free_energy_surfaces(
     free_energies: NDArray[np.double],
-    free_axis_lengths: NDArray[np.double],
-    dof_positions: NDArray[np.int64],
+    lattice_grid: LatticeGrid,
     temperatures: NDArray[np.double],
     polynomial_degree: int,
     verbose: bool,
@@ -966,12 +950,9 @@ def _minimize_free_energy_surfaces(
     free_energies : ndarray
         Total free energy of every input cell at every temperature in eV
         per primitive cell. shape=(temperatures, n_points)
-    free_axis_lengths : ndarray
-        The input cells over the free lattice DOF alone in angstrom, i.e.
-        lattice_lengths[:, free_axis_indices]. shape=(n_points, n_free_dof)
-    dof_positions : ndarray
-        The free DOF that each of a, b and c is read from, i.e. the
-        column of free_axis_lengths it follows. shape=(3,)
+    lattice_grid : LatticeGrid
+        The input sample cells: the surface is fitted over their free
+        lattice DOF, and its minimum is spread back onto a, b and c.
     temperatures : ndarray
         Temperatures in K. shape=(temperatures,)
     polynomial_degree : int
@@ -980,6 +961,7 @@ def _minimize_free_energy_surfaces(
         Print the fit rank and the minimum found at each temperature.
 
     """
+    free_axis_lengths = lattice_grid.free_axis_lengths
     n_temperatures, n_points = free_energies.shape
     helmholtz_lattice = np.zeros((n_temperatures, n_points), dtype="double")
     equilibrium_lattice_parameters = np.zeros((n_temperatures, 3), dtype="double")
@@ -1013,7 +995,7 @@ def _minimize_free_energy_surfaces(
         surface_fit_rms[i] = fit.rms_residual
         minimum_extrapolated[i] = bool(fit.minimum_extrapolated)
         gibbs_free_energies[i] = float(fit.evaluate(x_min[None, :])[0])
-        equilibrium_lattice_parameters[i] = x_min[dof_positions]
+        equilibrium_lattice_parameters[i] = lattice_grid.spread(x_min)
         if verbose:
             a, b, c = equilibrium_lattice_parameters[i]
             flag = "  [extrapolated]" if minimum_extrapolated[i] else ""
@@ -1152,63 +1134,3 @@ def _validate_anisotropic_inputs(
                 f"instances), but has {fe.shape}."
             )
     return temps_in, static_energies
-
-
-def _detect_lattice_dof(
-    lattice_lengths: NDArray[np.double], tol: float = 1e-6
-) -> NDArray[np.int64]:
-    """Determine the independent free lattice-length DOF from the input cells.
-
-    Columns of lattice_lengths that are equal across all cells (e.g. a and b
-    for hexagonal or tetragonal cells) are tied by symmetry and count as a
-    single degree of freedom, represented by the first column of the group.
-
-    Raises ValueError for a length that is the same in every input cell. The
-    free energy surface then has no direction for it, so it cannot be
-    minimized over and the cells have to be sampled over every length.
-
-    Parameters
-    ----------
-    lattice_lengths : ndarray
-        Lattice-vector lengths (a, b, c) of the conventional unit cell of
-        each input cell in angstrom. shape=(n_points, 3)
-    tol : float, optional
-        Relative tolerance on which columns are equal to one another and on
-        which are constant over the cells. Default is 1e-6.
-
-    Returns
-    -------
-    ndarray
-        The representative column each of a, b and c reads: [0, 0, 2] for a
-        hexagonal cell. The free DOF are the distinct entries, ascending,
-        which is the order they are numbered in. shape=(3,)
-
-    """
-    n_col = lattice_lengths.shape[1]
-    group_of = np.full(n_col, -1, dtype="int64")
-    n_groups = 0
-    for col in range(n_col):
-        if group_of[col] >= 0:
-            continue
-        group_of[col] = n_groups
-        for other in range(col + 1, n_col):
-            if group_of[other] < 0 and np.allclose(
-                lattice_lengths[:, col], lattice_lengths[:, other], rtol=tol, atol=0.0
-            ):
-                group_of[other] = n_groups
-        n_groups += 1
-
-    axis_labels = ("a", "b", "c")
-    column_map = np.zeros(n_col, dtype="int64")
-    for group in range(n_groups):
-        columns = [col for col in range(n_col) if group_of[col] == group]
-        column = lattice_lengths[:, columns[0]]
-        if column.max() - column.min() <= tol * abs(column.mean()):
-            names = " = ".join(axis_labels[col] for col in columns)
-            raise ValueError(
-                f"Lattice length {names} is the same in every input cell; the "
-                f"anisotropic QHA needs cells sampled over every lattice length."
-            )
-        column_map[columns] = columns[0]
-
-    return column_map

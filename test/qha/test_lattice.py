@@ -115,6 +115,60 @@ def test_lattice_grid_refuses_cells_of_differing_shape() -> None:
         LatticeGrid(lattices, np.eye(3))
 
 
+def _grid_of(lengths: NDArray[np.double]) -> LatticeGrid:
+    """Return a grid of orthogonal cells with these lengths."""
+    return LatticeGrid(np.array([np.diag(row) for row in lengths]), np.eye(3))
+
+
+def test_detect_dof_hexagonal() -> None:
+    """A and b tied and c independent give two DOF with a mapped to b."""
+    a = np.array([3.0, 3.1, 3.2])
+    c = np.array([5.0, 4.9, 5.1])
+    grid = _grid_of(np.stack([a, a, c], axis=1))
+    assert grid.column_map == (0, 0, 2)
+    np.testing.assert_array_equal(grid.free_axis_indices, [0, 2])
+
+
+def test_detect_dof_orthorhombic() -> None:
+    """Three independently varying lengths give three DOF."""
+    grid = _grid_of(np.array([[3.0, 4.0, 5.0], [3.1, 4.1, 4.9], [2.9, 3.9, 5.1]]))
+    assert grid.column_map == (0, 1, 2)
+
+
+def test_detect_dof_cubic() -> None:
+    """A = b = c collapse to a single DOF shared by all three columns."""
+    a = np.array([3.0, 3.1, 3.2])
+    grid = _grid_of(np.stack([a, a, a], axis=1))
+    assert grid.column_map == (0, 0, 0)
+    np.testing.assert_array_equal(grid.free_axis_indices, [0])
+
+
+def test_detect_dof_unsampled_column() -> None:
+    """A length that never varies is refused, not carried as a constant."""
+    a = np.array([3.0, 3.1, 3.2])
+    b = np.full(3, 4.0)
+    c = np.array([5.0, 5.1, 4.9])
+    with pytest.raises(ValueError, match="Lattice length b is the same"):
+        _grid_of(np.stack([a, b, c], axis=1))
+
+
+def test_detect_dof_no_variation() -> None:
+    """Cells with no varying lattice length raise ValueError."""
+    with pytest.raises(ValueError):
+        _grid_of(np.tile([3.0, 4.0, 5.0], (4, 1)))
+
+
+def test_spread_puts_one_value_per_dof_on_three_lengths() -> None:
+    """Every length reads the free DOF its representative column names."""
+    a = np.array([3.0, 3.1, 3.2])
+    c = np.array([5.0, 4.9, 5.1])
+    grid = _grid_of(np.stack([a, a, c], axis=1))
+
+    np.testing.assert_allclose(grid.spread(np.array([3.2, 5.1])), [3.2, 3.2, 5.1])
+    series = np.array([[3.0, 5.0], [3.1, 5.1]])
+    np.testing.assert_allclose(grid.spread(series), [[3.0, 3.0, 5.0], [3.1, 3.1, 5.1]])
+
+
 def test_too_few_points() -> None:
     """Fewer volume points than degree + 1 raise RuntimeError."""
     volumes = volumes_ref[:2]

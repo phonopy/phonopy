@@ -33,9 +33,10 @@ a term whose Einstein temperature is far above the fitted range is flat over
 it and costs the fit nothing, then turns on beyond it, so the model
 interpolates and does not extrapolate.
 
-One fit covers one lattice parameter. LatticeSmoothingFit gathers the fits of
-a, b and c, and the caller builds it: which lengths are tied to one another is
-the caller's knowledge, not something to be recovered from the numbers here.
+One fit covers one lattice parameter. LatticeSmoothingFit gathers one fit per
+free lattice DOF and evaluates them together, but stops there: which lengths
+are tied to one another, and which read which fit, belongs to the cells the
+run was given (LatticeGrid) and is not to be recovered from the numbers here.
 
 """
 
@@ -465,20 +466,19 @@ SMOOTHING_METHODS = get_args(SmoothingMethod)
 
 @dataclass(frozen=True)
 class LatticeSmoothingFit:
-    """The fitted models of a(T), b(T), c(T), evaluable at any temperature.
+    """The fitted model of each free lattice DOF along temperature.
 
     One fit per free lattice DOF, not per length: a and b tied by symmetry
-    are one DOF and one fit, and each fit is evaluated once however many
-    lengths read it.
+    are one DOF and one fit, evaluated once however many lengths read it.
+    Which lengths read which fit is the lattice grid's knowledge, so the
+    values here run over the free DOF and LatticeGrid.spread puts them on
+    a, b and c.
 
     Attributes
     ----------
     free_axis_fits : tuple of EinsteinFit
         One fit per free lattice DOF, ordered by the lattice-vector column
-        that represents it.
-    column_map : tuple of int
-        The representative column each of a, b, c reads: (0, 0, 2) for a
-        hexagonal cell, whose b follows a.
+        that represents it, as LatticeGrid.free_axis_indices names them.
     method : Literal["none", "einstein"]
         The smoothing that produced these fits. Never "none", since
         carrying no fit at all is what "none" means.
@@ -486,19 +486,7 @@ class LatticeSmoothingFit:
     """
 
     free_axis_fits: tuple[EinsteinFit, ...]
-    column_map: tuple[int, int, int]
     method: SmoothingMethod
-
-    @property
-    def _fit_positions(self) -> NDArray[np.int64]:
-        """Return the fit that each of a, b and c reads, as an index.
-
-        free_axis_fits is ordered by representative column, which is the
-        order np.unique puts column_map's distinct entries in, so the
-        inverse it returns is that index. shape=(3,)
-
-        """
-        return np.unique(self.column_map, return_inverse=True)[1]
 
     @property
     def temperature_range(self) -> tuple[float, float]:
@@ -519,52 +507,32 @@ class LatticeSmoothingFit:
         """Return the number of Einstein terms each fit was made with."""
         return len(self.free_axis_fits[0].thetas)
 
-    def fit_of(self, axis: int) -> EinsteinFit:
-        """Return the fit that a, b or c reads, by its lattice-vector column."""
-        return self.free_axis_fits[self._fit_positions[axis]]
-
-    def lattice_parameters(
+    def equilibrium_free_axis_lengths(
         self, temperatures: float | Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Return the conventional unit cell's (a, b, c) at temperatures in K.
+        """Return each free DOF's fitted length at temperatures in K.
 
-        shape=(temperatures, 3). The temperatures need not be the ones
-        fitted, but must lie within their range.
+        In angstrom, one column per fit. shape=(temperatures, n_free_dof).
+        The temperatures need not be the ones fitted, but must lie within
+        their range.
 
         """
         temps = _as_temperatures(temperatures)
         _check_temperature_range(temps, self.temperature_range)
-        return self._by_column(
-            temps, [fit.evaluate(temps) for fit in self.free_axis_fits]
-        )
+        return np.column_stack([fit.evaluate(temps) for fit in self.free_axis_fits])
 
-    def slopes(
+    def equilibrium_free_axis_slopes(
         self, temperatures: float | Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
-        """Return the conventional unit cell's d(a, b, c)/dT, analytically.
+        """Return each free DOF's dlength/dT at temperatures in K, analytically.
 
-        shape=(temperatures, 3). Having committed to a model there is no
-        reason to approximate its slope by finite differences of it again:
-        on a 10 K grid the two differ most where the curvature is, which is
-        where a lattice parameter turns from contraction to expansion.
+        In angstrom/K. shape=(temperatures, n_free_dof). Having committed
+        to a model there is no reason to approximate its slope by finite
+        differences of it again: on a 10 K grid the two differ most where
+        the curvature is, which is where a lattice parameter turns from
+        contraction to expansion.
 
         """
         temps = _as_temperatures(temperatures)
         _check_temperature_range(temps, self.temperature_range)
-        return self._by_column(temps, [fit.slope(temps) for fit in self.free_axis_fits])
-
-    def _by_column(
-        self,
-        temperatures: NDArray[np.double],
-        values: Sequence[NDArray[np.double]],
-    ) -> NDArray[np.double]:
-        """Spread one value per free DOF over the three lattice lengths.
-
-        values holds one series per fit, in the order free_axis_fits does.
-
-        """
-        positions = self._fit_positions
-        out = np.zeros((len(temperatures), 3), dtype="double")
-        for axis in range(3):
-            out[:, axis] = values[positions[axis]]
-        return out
+        return np.column_stack([fit.slope(temps) for fit in self.free_axis_fits])

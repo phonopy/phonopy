@@ -67,6 +67,68 @@ def primitive_volume_abc_ratio(
     return ratio
 
 
+def _detect_lattice_dof(
+    lattice_lengths: NDArray[np.double], tol: float = 1e-6
+) -> tuple[int, int, int]:
+    """Determine the independent free lattice-length DOF from the input cells.
+
+    Columns of lattice_lengths that are equal across all cells (e.g. a and b
+    for hexagonal or tetragonal cells) are tied by symmetry and count as a
+    single degree of freedom, represented by the first column of the group.
+
+    Raises ValueError for a length that is the same in every input cell. The
+    free energy surface then has no direction for it, so it cannot be
+    minimized over and the cells have to be sampled over every length.
+
+    Parameters
+    ----------
+    lattice_lengths : ndarray
+        Lattice-vector lengths (a, b, c) of the conventional unit cell of
+        each input cell in angstrom. shape=(n_points, 3)
+    tol : float, optional
+        Relative tolerance on which columns are equal to one another and on
+        which are constant over the cells. Default is 1e-6.
+
+    Returns
+    -------
+    tuple of int
+        The representative column each of a, b and c reads: (0, 0, 2) for a
+        hexagonal cell. The free DOF are the distinct entries, ascending,
+        which is the order they are numbered in.
+
+    """
+    n_col = lattice_lengths.shape[1]
+    group_of = np.full(n_col, -1, dtype="int64")
+    n_groups = 0
+    for col in range(n_col):
+        if group_of[col] >= 0:
+            continue
+        group_of[col] = n_groups
+        for other in range(col + 1, n_col):
+            if group_of[other] < 0 and np.allclose(
+                lattice_lengths[:, col], lattice_lengths[:, other], rtol=tol, atol=0.0
+            ):
+                group_of[other] = n_groups
+        n_groups += 1
+
+    axis_labels = ("a", "b", "c")
+    column_map = [0] * n_col
+    for group in range(n_groups):
+        columns = [col for col in range(n_col) if group_of[col] == group]
+        column = lattice_lengths[:, columns[0]]
+        if column.max() - column.min() <= tol * abs(column.mean()):
+            names = " = ".join(axis_labels[col] for col in columns)
+            raise ValueError(
+                f"Lattice length {names} is the same in every input cell; the "
+                f"anisotropic QHA needs cells sampled over every lattice length."
+            )
+        for col in columns:
+            column_map[col] = columns[0]
+
+    a, b, c = column_map
+    return (a, b, c)
+
+
 @dataclass(frozen=True)
 class LatticeGrid:
     """The sample cells an anisotropic QHA is run over.
@@ -92,10 +154,15 @@ class LatticeGrid:
     primitive_matrix: NDArray[np.double]
 
     def __post_init__(self) -> None:
-        """Make ndarray fields read-only and refuse cells of differing shape."""
+        """Make ndarray fields read-only and refuse cells this cannot describe.
+
+        Raises unless one volume ratio describes every sample cell, and
+        unless every lattice length is sampled.
+
+        """
         freeze_ndarray_fields(self)
-        # Raises unless one ratio describes every sample cell.
         primitive_volume_abc_ratio(self.primitive_volumes, self.lattice_lengths)
+        _detect_lattice_dof(self.lattice_lengths)
 
     @property
     def n_points(self) -> int:
@@ -126,6 +193,53 @@ class LatticeGrid:
     def primitive_volume_abc_ratio(self) -> float:
         """Return V / (a b c), the constant shared by the sample cells."""
         return primitive_volume_abc_ratio(self.primitive_volumes, self.lattice_lengths)
+
+    @property
+    def column_map(self) -> tuple[int, int, int]:
+        """Return the free DOF that each of a, b and c follows, as a column.
+
+        (0, 0, 2) for a hexagonal cell, whose b follows a: lengths that are
+        equal in every sample cell are tied by symmetry and move together.
+
+        """
+        return _detect_lattice_dof(self.lattice_lengths)
+
+    @property
+    def free_axis_indices(self) -> NDArray[np.int64]:
+        """Return the lattice-vector column of each free DOF, ascending.
+
+        [0, 2] for a hexagonal cell. shape=(n_free_dof,)
+
+        """
+        return np.unique(self.column_map)
+
+    @property
+    def free_axis_lengths(self) -> NDArray[np.double]:
+        """Return the sample cells over the free lattice DOF alone.
+
+        In angstrom. shape=(n_points, n_free_dof)
+
+        """
+        return self.lattice_lengths[:, self.free_axis_indices]
+
+    def spread(self, per_dof: NDArray[np.double]) -> NDArray[np.double]:
+        """Return one value per free DOF as one value per lattice length.
+
+        Parameters
+        ----------
+        per_dof : ndarray
+            A value for each free DOF, in the order free_axis_indices names
+            them. shape=(..., n_free_dof)
+
+        Returns
+        -------
+        ndarray
+            The same values over a, b and c, each length reading the DOF it
+            follows. shape=(..., 3)
+
+        """
+        _, positions = np.unique(self.column_map, return_inverse=True)
+        return per_dof[..., positions]
 
     def abc_to_primitive_volume(
         self, lattice_lengths: NDArray[np.double]
