@@ -85,10 +85,16 @@ class EinsteinFitFailure(RuntimeError):
 
 
 def _as_temperatures(
-    temperatures: float | Sequence[float] | NDArray[np.double],
+    temperatures: Sequence[float] | NDArray[np.double],
 ) -> NDArray[np.double]:
-    """Return temperatures as a 1D double array, so that a scalar is accepted."""
-    return np.atleast_1d(np.asarray(temperatures, dtype="double"))
+    """Return temperatures as a 1D double array, refusing anything else."""
+    temps = np.asarray(temperatures, dtype="double")
+    if temps.ndim != 1:
+        raise ValueError(
+            f"temperatures must be a 1D array of K, not {temps.ndim}D. One "
+            "temperature is a sequence of length one."
+        )
+    return temps
 
 
 def _check_temperature_range(
@@ -148,13 +154,12 @@ class EinsteinFit:
     n_accepted: int
 
     def evaluate(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return the fitted curve at the given temperatures, in K.
 
         The temperatures need not be the ones fitted, but must lie within
-        their range. A scalar is taken as a single temperature and gives an
-        array of length one.
+        their range. One temperature is a sequence of length one.
 
         """
         temps = _as_temperatures(temperatures)
@@ -165,7 +170,7 @@ class EinsteinFit:
         return out
 
     def slope(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return dy/dT of the fitted model, analytically.
 
@@ -508,7 +513,7 @@ class LatticeSmoothingFit:
         return len(self.free_axis_fits[0].thetas)
 
     def equilibrium_free_axis_lengths(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return each free DOF's fitted length at temperatures in K.
 
@@ -522,7 +527,7 @@ class LatticeSmoothingFit:
         return np.column_stack([fit.evaluate(temps) for fit in self.free_axis_fits])
 
     def equilibrium_free_axis_slopes(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return each free DOF's dlength/dT at temperatures in K, analytically.
 

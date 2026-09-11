@@ -472,7 +472,7 @@ class AnisotropicQHAResult:
         return self.lattice_smoothing_fit
 
     def lattice_parameters_at(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return the conventional unit cell's (a, b, c) at temperatures in K.
 
@@ -485,7 +485,7 @@ class AnisotropicQHAResult:
         return self.lattice_grid.spread(fit.equilibrium_free_axis_lengths(temperatures))
 
     def axial_thermal_expansions_at(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return (alpha_a, alpha_b, alpha_c) at the given temperatures in K.
 
@@ -501,7 +501,7 @@ class AnisotropicQHAResult:
         return slopes / self.lattice_parameters_at(temperatures)
 
     def thermal_expansion_at(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return the volumetric thermal expansion beta at temperatures in K.
 
@@ -512,7 +512,7 @@ class AnisotropicQHAResult:
         return self.axial_thermal_expansions_at(temperatures).sum(axis=1)
 
     def equilibrium_volumes_at(
-        self, temperatures: float | Sequence[float] | NDArray[np.double]
+        self, temperatures: Sequence[float] | NDArray[np.double]
     ) -> NDArray[np.double]:
         """Return the primitive cell volume at the given temperatures in K.
 

@@ -798,8 +798,11 @@ def test_lattice_fit_evaluates_between_the_fitted_temperatures() -> None:
     numerical = (fit.evaluate(midpoints + h) - fit.evaluate(midpoints - h)) / (2 * h)
     np.testing.assert_allclose(fit.slope(midpoints), numerical, rtol=1e-6, atol=1e-12)
 
-    # A scalar temperature is a temperature.
-    np.testing.assert_allclose(fit.evaluate(155.0), fit.evaluate(np.array([155.0])))
+    # One temperature is a sequence of length one; a scalar is refused, so
+    # that what comes back has the shape of what went in.
+    np.testing.assert_allclose(fit.evaluate([155.0]), fit.evaluate(np.array([155.0])))
+    with pytest.raises(ValueError, match="must be a 1D array"):
+        fit.evaluate(155.0)  # type: ignore[arg-type]
 
 
 def test_lattice_fit_refuses_to_extrapolate() -> None:
@@ -817,10 +820,10 @@ def test_lattice_fit_refuses_to_extrapolate() -> None:
 
     # The ends of the fitted range are inside it.
     np.testing.assert_allclose(
-        fit.evaluate(400.0)[0], fit.evaluate(temperatures)[-1], rtol=1e-12
+        fit.evaluate([400.0])[0], fit.evaluate(temperatures)[-1], rtol=1e-12
     )
     with pytest.raises(ValueError, match="does not extrapolate"):
-        fit.evaluate(500.0)
+        fit.evaluate([500.0])
     with pytest.raises(ValueError, match="does not extrapolate"):
         fit.slope(np.array([-10.0, 100.0]))
 
@@ -924,7 +927,7 @@ def test_result_evaluates_the_lattice_between_its_temperatures(
         atol=1e-12,
     )
     with pytest.raises(ValueError, match="does not extrapolate"):
-        result.lattice_parameters_at(t[-1] + 100.0)
+        result.lattice_parameters_at([t[-1] + 100.0])
 
 
 def test_result_without_smoothing_carries_no_model(ph_nacl: Phonopy) -> None:
@@ -941,9 +944,9 @@ def test_result_without_smoothing_carries_no_model(ph_nacl: Phonopy) -> None:
 
     assert result.lattice_smoothing_fit is None
     with pytest.raises(ValueError, match="were not smoothed"):
-        result.lattice_parameters_at(100.0)
+        result.lattice_parameters_at([100.0])
     with pytest.raises(ValueError, match="were not smoothed"):
-        result.axial_thermal_expansions_at(100.0)
+        result.axial_thermal_expansions_at([100.0])
 
 
 def test_internal_energy_folded_into_the_free_energies(ph_nacl: Phonopy) -> None:
