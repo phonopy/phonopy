@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import pathlib
 from math import comb
 
 import numpy as np
@@ -855,6 +856,43 @@ def test_lattice_smoothing_follows_the_lattice_dof() -> None:
 
     # The method the fits were made with is carried, not inferred later.
     assert fit.method == "einstein"
+
+
+def test_smoothing_terms_reach_the_output_header(
+    ph_nacl: Phonopy, tmp_path: pathlib.Path
+) -> None:
+    """Test that the run's smoothing settings are written with its numbers.
+
+    How many Einstein terms a(T) was fitted with changes the numbers in the
+    file, so the file says which run it is. The result reads the count off
+    the fits themselves, and the header off the result.
+
+    """
+    from phonopy.qha import anisotropic_output
+
+    phonopys = _tetragonal_phonopys(ph_nacl)
+    # A three-term fit has seven coefficients, so it needs more temperatures
+    # than the six of TEMPERATURES.
+    temperatures = np.arange(0.0, 1001.0, 100.0)
+    result = run_anisotropic_qha(
+        phonopys,
+        temperatures,
+        internal_energies=_tetragonal_internal_energies(phonopys),
+        mesh=MESH,
+        polynomial_degree=2,
+        lattice_smoothing="einstein",
+        smoothing_terms=3,
+    )
+
+    assert result.lattice_smoothing_fit is not None
+    assert result.lattice_smoothing_fit.n_terms == 3
+
+    filename = tmp_path / "lattice_parameters-temperature.dat"
+    anisotropic_output.write_lattice_parameters_temperature(result, filename)
+    header = filename.read_text().splitlines()[0]
+
+    assert "smooth_lattice=einstein" in header
+    assert "smooth_terms=3" in header
 
 
 def test_lattice_smoothing_reports_each_fit(capsys: pytest.CaptureFixture) -> None:
