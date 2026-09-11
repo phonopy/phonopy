@@ -461,7 +461,9 @@ class AnisotropicQHAResult:
         themselves, which is what carrying no fit means.
 
         """
-        return "none" if self.lattice_smoothing_fit is None else "einstein"
+        if self.lattice_smoothing_fit is None:
+            return "none"
+        return self.lattice_smoothing_fit.method
 
     def _require_smoothing_fit(self) -> LatticeSmoothingFit:
         """Return the lattice smoothing fit, or say why there is none."""
@@ -736,6 +738,7 @@ def run_anisotropic_qha(
         smoothing_fit = None
     else:
         smoothing_fit = _fit_lattice_smoothing(
+            lattice_smoothing,
             column_map,
             temps_in,
             minima.equilibrium_lattice_parameters,
@@ -882,6 +885,7 @@ def _print_polynomial_fit_setup(
 
 
 def _fit_lattice_smoothing(
+    method: SmoothingMethod,
     column_map: NDArray[np.int64],
     temperatures: NDArray[np.double],
     lattice_parameters: NDArray[np.double],
@@ -895,6 +899,9 @@ def _fit_lattice_smoothing(
 
     Parameters
     ----------
+    method : Literal["einstein"]
+        The smoothing to apply. A method that is named but not fitted here
+        raises, rather than being answered with an Einstein fit.
     column_map : ndarray
         The representative column each of a, b and c reads, from
         _detect_lattice_dof; its distinct entries are the columns that
@@ -908,13 +915,15 @@ def _fit_lattice_smoothing(
         Number of Einstein terms in each fit.
 
     """
+    if method != "einstein":
+        raise ValueError(f"Lattice smoothing {method!r} is not implemented.")
     fits: dict[int, EinsteinFit] = {}
     for column in np.unique(column_map):
         fits[int(column)] = fit_lattice_parameter(
             temperatures, lattice_parameters[:, column], n_terms=n_terms
         )
 
-    return LatticeSmoothingFit(fits=fits, column_map=column_map)
+    return LatticeSmoothingFit(fits=fits, column_map=column_map, method=method)
 
 
 @dataclasses.dataclass(frozen=True)

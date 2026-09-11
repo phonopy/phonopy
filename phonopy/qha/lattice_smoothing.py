@@ -479,11 +479,15 @@ class LatticeSmoothingFit:
     column_map : ndarray
         The representative column each of a, b, c reads: [0, 0, 2] for a
         hexagonal cell, whose b follows a. shape=(3,)
+    method : Literal["none", "einstein"]
+        The smoothing that produced these fits. Never "none", since
+        carrying no fit at all is what "none" means.
 
     """
 
     fits: dict[int, EinsteinFit]
     column_map: NDArray[np.int64]
+    method: SmoothingMethod
 
     @property
     def temperature_range(self) -> tuple[float, float]:

@@ -61,6 +61,7 @@ def _smoothing_fit(n_terms: int = 2) -> LatticeSmoothingFit:
     return LatticeSmoothingFit(
         fits={0: fit, 2: fit},
         column_map=np.array([0, 0, 2], dtype="int64"),
+        method="einstein",
     )
 
 

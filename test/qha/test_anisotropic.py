@@ -887,7 +887,7 @@ def test_lattice_smoothing_follows_the_lattice_dof() -> None:
     series = _noisy_lattice(temperatures)
     lattice = np.column_stack([series[:, 2], series[:, 2], series[:, 0] + 2.0])
 
-    fit = _fit_lattice_smoothing(column_map, temperatures, lattice, 2)
+    fit = _fit_lattice_smoothing("einstein", column_map, temperatures, lattice, 2)
 
     # One fit for the one free DOF a and b share, and one for c.
     assert sorted(fit.fits) == [0, 2]
@@ -899,6 +899,30 @@ def test_lattice_smoothing_follows_the_lattice_dof() -> None:
     np.testing.assert_array_equal(
         fit.lattice_parameters(probe)[:, 1], fit.lattice_parameters(probe)[:, 0]
     )
+
+    # The method the fits were made with is carried, not inferred later.
+    assert fit.method == "einstein"
+
+
+def test_lattice_smoothing_refuses_a_method_it_does_not_fit() -> None:
+    """Test that a named method that is not fitted raises, not falls back.
+
+    A method added to SMOOTHING_METHODS but not to the fitting must stop
+    here, rather than being answered with an Einstein fit under its name.
+
+    """
+    from phonopy.qha.anisotropic import _fit_lattice_smoothing
+
+    temperatures = np.arange(0.0, 401.0, 10.0)
+    lattice = _noisy_lattice(temperatures)
+    with pytest.raises(ValueError, match="is not implemented"):
+        _fit_lattice_smoothing(
+            "spline",  # type: ignore[arg-type]
+            np.array([0, 1, 2], dtype="int64"),
+            temperatures,
+            lattice,
+            2,
+        )
 
 
 def test_result_evaluates_the_lattice_between_its_temperatures(
