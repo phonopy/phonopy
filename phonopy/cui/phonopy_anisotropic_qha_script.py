@@ -67,7 +67,7 @@ def suggest_eos_cells(result: AnisotropicQHAResult, indices: Sequence[int]) -> N
     sampled over equal fractional ranges has its main diagonal among them.
 
     """
-    lengths = result.lattice_lengths
+    lengths = result.lattice_grid.lattice_lengths
     order = np.argsort(lengths.prod(axis=1))
     ratios = np.round(lengths[:, 2] / lengths[:, 0], 4)
 
@@ -197,7 +197,7 @@ def compare_thermal_expansion_eos(
 
     print(f"# Vinet volume path over {len(selected)} diagonal cells")
     for k in selected:
-        a, b, c = result.lattice_lengths[k]
+        a, b, c = result.lattice_grid.lattice_lengths[k]
         print(f"  pos {k:3d}  a={a:.4f} c={c:.4f} c/a={c / a:.4f}")
 
     qha = run_qha(
@@ -305,7 +305,7 @@ def get_options() -> Namespace:
         help="force-constant calculator (default: symfc)",
     )
     parser.add_argument(
-        "--surface-degree",
+        "--polynomial-degree",
         type=int,
         default=3,
         help="total degree of the F(a, c) surface polynomial (default: 3)",
@@ -519,7 +519,7 @@ def main() -> None:
         electronic_free_energies=electronic_free_energies,
         phonon_free_energies=phonon_free_energies,
         mesh=args.mesh,
-        surface_degree=args.surface_degree,
+        polynomial_degree=args.polynomial_degree,
         lattice_smoothing=args.smooth_lattice,
         smoothing_terms=args.smooth_terms,
         verbose=True,
@@ -547,8 +547,8 @@ def main() -> None:
         "volume-temperature.dat and anisotropic_qha.png"
     )
 
-    # Only a smoothed run has minima of its own to show the fit against.
-    if result.unsmoothed_lattice_parameters is not None:
+    # Only a smoothed run has a fit to show against the minima.
+    if result.lattice_smoothing_fit is not None:
         fig = anisotropic_plot.plot_lattice_smoothing(result)
         fig.savefig("lattice_smoothing.png")
         plt.close(fig)

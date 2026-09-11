@@ -116,11 +116,9 @@ def test_lattice_data(
     np.testing.assert_allclose(
         result.lattice.lattice_parameters, expected, rtol=0, atol=1e-12
     )
-    np.testing.assert_allclose(result.lattice.k, fit.k, rtol=1e-13)
-
     # Exact volume consistency: k * a * b * c == V_0(T)
     np.testing.assert_allclose(
-        result.lattice.k * result.lattice.lattice_parameters.prod(axis=1),
+        fit.primitive_volume_abc_ratio * result.lattice.lattice_parameters.prod(axis=1),
         result.equilibrium_volumes,
         rtol=1e-13,
     )

@@ -88,10 +88,10 @@ def _tensor_grid(a_values, c_values):
 
 def test_detect_grid_shape_of_a_tensor_grid():
     """A tensor grid is recognised, with one count per free DOF."""
-    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
+    from phonopy.qha.anisotropic_dataset import detect_grid_shape
 
-    assert _detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.0, 5.1])) == (3, 2)
-    assert _detect_grid_shape(np.array([[3.0], [3.1], [3.2]])) == (3,)
+    assert detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.0, 5.1])) == (3, 2)
+    assert detect_grid_shape(np.array([[3.0], [3.1], [3.2]])) == (3,)
 
 
 def test_detect_grid_shape_of_scattered_cells():
@@ -101,10 +101,10 @@ def test_detect_grid_shape_of_scattered_cells():
     the number of cells.
 
     """
-    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
+    from phonopy.qha.anisotropic_dataset import detect_grid_shape
 
     rng = np.random.default_rng(0)
-    assert _detect_grid_shape(rng.uniform(3.0, 3.5, size=(12, 2))) is None
+    assert detect_grid_shape(rng.uniform(3.0, 3.5, size=(12, 2))) is None
 
 
 def test_detect_grid_shape_rejects_a_reordered_grid():
@@ -115,26 +115,26 @@ def test_detect_grid_shape_rejects_a_reordered_grid():
     the shape would pick the wrong ones.
 
     """
-    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
+    from phonopy.qha.anisotropic_dataset import detect_grid_shape
 
     grid = _tensor_grid([3.0, 3.1, 3.2], [5.0, 5.1, 5.2])
-    assert _detect_grid_shape(grid) == (3, 3)
+    assert detect_grid_shape(grid) == (3, 3)
 
     shuffled = grid[np.random.default_rng(1).permutation(len(grid))]
-    assert _detect_grid_shape(shuffled) is None
+    assert detect_grid_shape(shuffled) is None
     # Column-major, the plausible mistake, is rejected too.
     assert (
-        _detect_grid_shape(grid.reshape(3, 3, 2).transpose(1, 0, 2).reshape(9, 2))
+        detect_grid_shape(grid.reshape(3, 3, 2).transpose(1, 0, 2).reshape(9, 2))
         is None
     )
 
 
 def test_detect_grid_shape_requires_ascending_axes():
     """Axes have to ascend so that the diagonal is a monotonic volume path."""
-    from phonopy.cui.phonopy_anisotropic_qha_dataset_script import _detect_grid_shape
+    from phonopy.qha.anisotropic_dataset import detect_grid_shape
 
-    assert _detect_grid_shape(_tensor_grid([3.2, 3.1, 3.0], [5.0, 5.1, 5.2])) is None
-    assert _detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.2, 5.1, 5.0])) is None
+    assert detect_grid_shape(_tensor_grid([3.2, 3.1, 3.0], [5.0, 5.1, 5.2])) is None
+    assert detect_grid_shape(_tensor_grid([3.0, 3.1, 3.2], [5.2, 5.1, 5.0])) is None
 
 
 def test_build_calculator_grid_point(tmp_path):

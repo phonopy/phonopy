@@ -51,7 +51,6 @@ import os
 from argparse import ArgumentParser, Namespace
 
 import numpy as np
-from numpy.typing import NDArray
 
 import phonopy
 from phonopy import Phonopy
@@ -62,12 +61,12 @@ from phonopy.interface.vasp import (
 )
 from phonopy.physical_units import get_calculator_physical_units
 from phonopy.qha.anisotropic_dataset import (
-    AnisoQHADataset,
     AnisoQHAGridPoint,
+    aniso_qha_dataset_from_points,
     write_aniso_qha_dataset,
 )
 from phonopy.qha.electron_states import ElectronicStates
-from phonopy.qha.lattice_sampling import get_free_lattice_dof
+from phonopy.qha.lattice_sampling import raise_when_triclinic_or_monoclinic
 from phonopy.structure.atoms import PhonopyAtoms
 
 
@@ -320,6 +319,30 @@ def build_calculator_grid_point(
     from the phonon grid point; U and the optional electronic states from the
     static single point.
 
+    Parameters
+    ----------
+    index : int
+        Grid-point index this point is stored under.
+    static_path : str
+        VASP output of the static single point (vaspout.h5 or vasprun.xml),
+        or the directory holding it.
+    phonon_path : str
+        The phonon grid point: a directory of phonopy_disp.yaml and its
+        disp-* subdirectories, or a phonopy_params.yaml-like file that
+        already carries the forces.
+    with_electronic : bool
+        Read the electronic states for F_el beside the static output. A
+        missing or eigenvalue-less vaspout.h5 leaves them out with a notice
+        rather than failing.
+
+    Returns
+    -------
+    AnisoQHAGridPoint
+        The grid point, its U already per primitive cell.
+    float
+        The primitive cell's share of the cell U was computed on, which the
+        caller reports so that the normalization is visible.
+
     """
     ph = load_phonon(phonon_path)
     dataset = ph.dataset
@@ -335,6 +358,8 @@ def build_calculator_grid_point(
     return AnisoQHAGridPoint(
         index=index,
         cell=ph.unitcell,
+        # Copied, so that a grid point does not share the arrays the Phonopy
+        # it came from keeps using.
         supercell_matrix=np.array(ph.supercell_matrix, dtype="int64"),
         primitive_matrix=np.array(ph.primitive_matrix, dtype="double"),
         dataset=dataset,
@@ -356,6 +381,29 @@ def build_static_grid_point(
     phonon_free_energies, as methods with temperature-dependent force
     constants must.
 
+    Parameters
+    ----------
+    index : int
+        Grid-point index this point is stored under.
+    static_path : str
+        VASP output of the static single point (vaspout.h5 or vasprun.xml),
+        or the directory holding it.
+    reference : Phonopy
+        The reference the run was set up from, which supplies the supercell
+        and primitive matrices the grid point records.
+    with_electronic : bool
+        Read the electronic states for F_el beside the static output. A
+        missing or eigenvalue-less vaspout.h5 leaves them out with a notice
+        rather than failing.
+
+    Returns
+    -------
+    AnisoQHAGridPoint
+        The grid point, its U already per primitive cell.
+    float
+        The primitive cell's share of the cell U was computed on, which the
+        caller reports so that the normalization is visible.
+
     """
     cell, energy, _, _ = read_vasprun_calculation(static_path)
     if len(cell) != len(reference.unitcell):
@@ -375,6 +423,8 @@ def build_static_grid_point(
     return AnisoQHAGridPoint(
         index=index,
         cell=cell,
+        # Copied, so that every grid point does not share the reference's
+        # own arrays.
         supercell_matrix=np.array(reference.supercell_matrix, dtype="int64"),
         primitive_matrix=np.array(reference.primitive_matrix, dtype="double"),
         dataset=None,
@@ -461,48 +511,6 @@ def get_options() -> Namespace:
     return parser.parse_args()
 
 
-def _detect_grid_shape(
-    free_lengths: NDArray[np.double],
-) -> tuple[int, ...] | None:
-    """Return the shape of the tensor grid the cells form, or None.
-
-    The analysis takes the main-diagonal volume path from this shape, so it is
-    recorded only when the cells really are a tensor grid laid out in
-    row-major order with ascending values along every axis. Anything else --
-    randomly sampled cells, or grid cells gathered in another order -- gives
-    None, and the analysis then declines to guess a diagonal.
-
-    Parameters
-    ----------
-    free_lengths : ndarray
-        Lattice-vector lengths of the free DOF of every grid point, in the
-        order the points are stored. shape=(n_points, n_free_dof).
-
-    """
-    n_points, ndof = free_lengths.shape
-    rounded = np.round(free_lengths, 6)
-
-    # A tensor grid samples n_j distinct values along axis j and visits every
-    # combination of them exactly once.
-    counts = [len(np.unique(rounded[:, j])) for j in range(ndof)]
-    if int(np.prod(counts)) != n_points:
-        return None
-
-    grid = rounded.reshape(*counts, ndof)
-    for j in range(ndof):
-        # Row-major order means the j-th length depends on the j-th index
-        # alone, so every slice taken at a fixed j-th index is one value.
-        slices = np.moveaxis(grid[..., j], j, 0).reshape(counts[j], -1)
-        if not np.allclose(slices, slices[:, :1]):
-            return None
-        # Ascending, so that the diagonal runs from the smallest cell to the
-        # largest and the volume path it forms is monotonic.
-        if not (np.diff(slices[:, 0]) > 0).all():
-            return None
-
-    return tuple(counts)
-
-
 def main() -> None:
     """Run the phonopy-anisotropic-qha-dataset command."""
     args = get_options()
@@ -518,7 +526,9 @@ def main() -> None:
             f"calculators yet."
         )
     length_unit = get_calculator_physical_units(calculator).length_unit
-    dof = get_free_lattice_dof(reference.unitcell)
+    # Fail before reading the grid points rather than after; the free DOF
+    # themselves are read off the cells when the dataset is built.
+    raise_when_triclinic_or_monoclinic(reference.symmetry.dataset.number)
 
     static_paths = resolve_static_paths(args)
     indices = [idx for idx, _ in static_paths]
@@ -563,21 +573,10 @@ def main() -> None:
             f"n_disp={point.n_displacements}"
         )
 
-    free_rows = [dof.rows[label][0] for label in dof.labels]
-    free_lengths = np.array(
-        [np.linalg.norm(point.cell.cell, axis=1)[free_rows] for point in points]
+    dataset = aniso_qha_dataset_from_points(
+        points, calculator=calculator, length_unit=length_unit
     )
-    grid_shape = _detect_grid_shape(free_lengths)
-    dataset = AnisoQHADataset(
-        grid_points=tuple(points),
-        calculator=calculator,
-        length_unit=length_unit,
-        free_dof=tuple(dof.labels),
-        crystal_system=dof.crystal_system,
-        tie_description=dof.tie_description,
-        grid_shape=grid_shape,
-        phonopy_version=phonopy.__version__,
-    )
+    grid_shape = dataset.grid_shape
     if grid_shape is None:
         print("The cells do not form an ordered tensor grid; no grid shape is stored.")
     else:

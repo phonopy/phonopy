@@ -23,6 +23,7 @@ temperature-dependent force constants (SSCHA, TDEP) enter the workflow.
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
@@ -132,6 +133,63 @@ class AnisoQHAGridPoint:
         return phonon
 
 
+def check_cells_are_one_crystal(
+    primitive_matrices: Sequence[NDArray[np.double]],
+    supercell_matrices: Sequence[NDArray[np.int64]],
+    symbols: Sequence[Sequence[str]],
+) -> NDArray[np.double]:
+    """Check that the cells differ in their lattice lengths and nothing else.
+
+    The free energies of the grid points are compared with one another, so
+    they have to be the same crystal computed the same way: the same
+    primitive cell (the volume every energy is normalized per), the same
+    supercell (the reach of the force constants, hence how converged each
+    free energy is) and the same atoms.
+
+    Parameters
+    ----------
+    primitive_matrices : sequence of ndarray
+        Primitive matrix of each cell. shape=(3, 3) each
+    supercell_matrices : sequence of ndarray
+        Supercell matrix of each cell. shape=(3, 3) each
+    symbols : sequence of sequence of str
+        Chemical symbols of each cell, in their stored order.
+
+    Returns
+    -------
+    ndarray
+        The primitive matrix they share. shape=(3, 3)
+
+    Raises
+    ------
+    ValueError
+        When any of the three differs from cell to cell.
+
+    """
+    first = np.asarray(primitive_matrices[0], dtype="double")
+    for i, matrix in enumerate(primitive_matrices[1:], start=1):
+        if not np.allclose(matrix, first):
+            raise ValueError(
+                f"Cell {i} has a primitive matrix of its own; every cell must "
+                "share one, since it sets the volume the free energies are "
+                "normalized per."
+            )
+    for i, supercell_matrix in enumerate(supercell_matrices[1:], start=1):
+        if not np.array_equal(supercell_matrix, supercell_matrices[0]):
+            raise ValueError(
+                f"Cell {i} has a supercell matrix of its own; every cell must "
+                "share one, or their free energies differ in how converged "
+                "they are rather than in the lattice."
+            )
+    for i, cell_symbols in enumerate(symbols[1:], start=1):
+        if list(cell_symbols) != list(symbols[0]):
+            raise ValueError(
+                f"Cell {i} holds different atoms from the first one; every "
+                "cell must be the same crystal."
+            )
+    return first
+
+
 @dataclass(frozen=True)
 class AnisoQHADataset:
     """Self-contained dataset feeding the anisotropic QHA analysis.
@@ -169,6 +227,224 @@ class AnisoQHADataset:
     tie_description: str = ""
     grid_shape: tuple[int, ...] | None = None
     phonopy_version: str | None = None
+
+    def __post_init__(self) -> None:
+        """Check that the grid points can be compared with one another.
+
+        A dataset is read from a file that a run may have written point by
+        point, so what holds the points together is checked here rather
+        than assumed by every reader.
+
+        """
+        if not self.grid_points:
+            raise ValueError("A dataset needs at least one grid point.")
+        check_cells_are_one_crystal(
+            [point.primitive_matrix for point in self.grid_points],
+            [point.supercell_matrix for point in self.grid_points],
+            [point.cell.symbols for point in self.grid_points],
+        )
+        indices = [point.index for point in self.grid_points]
+        if len(set(indices)) != len(indices):
+            raise ValueError(
+                "Two grid points share an index; the indices are what a "
+                "sweep addresses its runs by."
+            )
+        if self.grid_shape is not None:
+            n_expected = int(np.prod(self.grid_shape))
+            if n_expected != len(self.grid_points):
+                raise ValueError(
+                    f"grid_shape {self.grid_shape} describes {n_expected} "
+                    f"cells, but the dataset holds {len(self.grid_points)}."
+                )
+
+
+def detect_grid_shape(
+    free_lengths: NDArray[np.double],
+) -> tuple[int, ...] | None:
+    """Return the shape of the tensor grid the cells form, or None.
+
+    The analysis takes the main-diagonal volume path from this shape, so it is
+    recorded only when the cells really are a tensor grid laid out in
+    row-major order with ascending values along every axis. Anything else --
+    randomly sampled cells, or grid cells gathered in another order -- gives
+    None, and the analysis then declines to guess a diagonal.
+
+    Parameters
+    ----------
+    free_lengths : ndarray
+        Lattice-vector lengths of the conventional unit cell over the free
+        DOF of every grid point, in the order the points are stored.
+        shape=(n_points, n_free_dof)
+
+    """
+    n_points, ndof = free_lengths.shape
+    rounded = np.round(free_lengths, 6)
+
+    # A tensor grid samples n_j distinct values along axis j and visits every
+    # combination of them exactly once.
+    counts = [len(np.unique(rounded[:, j])) for j in range(ndof)]
+    if int(np.prod(counts)) != n_points:
+        return None
+
+    grid = rounded.reshape(*counts, ndof)
+    for j in range(ndof):
+        # Row-major order means the j-th length depends on the j-th index
+        # alone, so every slice taken at a fixed j-th index is one value.
+        slices = np.moveaxis(grid[..., j], j, 0).reshape(counts[j], -1)
+        if not np.allclose(slices, slices[:, :1]):
+            return None
+        # Ascending, so that the diagonal runs from the smallest cell to the
+        # largest and the volume path it forms is monotonic.
+        if not (np.diff(slices[:, 0]) > 0).all():
+            return None
+
+    return tuple(counts)
+
+
+def aniso_qha_dataset_from_points(
+    grid_points: Sequence[AnisoQHAGridPoint],
+    calculator: str = "vasp",
+    length_unit: str = "angstrom",
+) -> AnisoQHADataset:
+    """Return a dataset of these grid points, with its metadata derived.
+
+    The free lattice DOF come from the symmetry of the first point's cell,
+    and the grid shape from the lengths of every point; both describe the
+    points themselves, so they are read off rather than passed in.
+
+    Parameters
+    ----------
+    grid_points : sequence of AnisoQHAGridPoint
+        The grid points, in the order they are to be stored.
+    calculator : str, optional
+        Calculator name recorded with the dataset. Default is "vasp".
+    length_unit : str, optional
+        Native length unit of the cells. Default is "angstrom".
+
+    """
+    import phonopy
+    from phonopy.qha.lattice_sampling import get_free_lattice_dof
+
+    dof = get_free_lattice_dof(grid_points[0].cell)
+    free_rows = [dof.rows[label][0] for label in dof.labels]
+    free_lengths = np.array(
+        [np.linalg.norm(point.cell.cell, axis=1)[free_rows] for point in grid_points]
+    )
+    return AnisoQHADataset(
+        grid_points=tuple(grid_points),
+        calculator=calculator,
+        length_unit=length_unit,
+        free_dof=tuple(dof.labels),
+        crystal_system=dof.crystal_system,
+        tie_description=dof.tie_description,
+        grid_shape=detect_grid_shape(free_lengths),
+        phonopy_version=phonopy.__version__,
+    )
+
+
+def build_aniso_qha_dataset(
+    phonopys: Sequence[Phonopy],
+    internal_energies: Sequence[float],
+    electronic_structures: Sequence[ElectronicStates] | None = None,
+    indices: Sequence[int] | None = None,
+    calculator: str = "vasp",
+    length_unit: str = "angstrom",
+) -> AnisoQHADataset:
+    """Return the dataset of a lattice grid whose points are already computed.
+
+    The counterpart of run_anisotropic_qha for building the input it reads:
+    what a Phonopy carries (the cell, the matrices, the displacements and
+    forces) plus the static energy of each point, gathered into one file's
+    worth of dataset.
+
+    Parameters
+    ----------
+    phonopys : sequence of Phonopy
+        One per grid point, each holding that point's cell and, unless the
+        free energies are to be computed elsewhere, its displacement-force
+        dataset.
+    internal_energies : sequence of float
+        Static internal energy U of each grid point in eV, per primitive
+        cell, which is the normalization run_anisotropic_qha and the phonon
+        free energies use.
+    electronic_structures : sequence of ElectronicStates, optional
+        Electronic states of each point's static single point, for F_el.
+    indices : sequence of int, optional
+        Grid-point index of each point, which a sweep addresses its runs by.
+        Defaults to 0, 1, 2, ... in the order given.
+    calculator : str, optional
+        Calculator name recorded with the dataset. Default is "vasp".
+    length_unit : str, optional
+        Native length unit of the cells. Default is "angstrom".
+
+    """
+    if len(internal_energies) != len(phonopys):
+        raise ValueError(
+            f"internal_energies has {len(internal_energies)} entries for "
+            f"{len(phonopys)} grid points."
+        )
+    if indices is None:
+        indices = range(len(phonopys))
+    elif len(indices) != len(phonopys):
+        raise ValueError(
+            f"indices has {len(indices)} entries for {len(phonopys)} grid points."
+        )
+    if electronic_structures is not None:
+        if len(electronic_structures) != len(phonopys):
+            raise ValueError(
+                f"electronic_structures has {len(electronic_structures)} "
+                f"entries for {len(phonopys)} grid points."
+            )
+        _check_electronic_states_cells(phonopys, electronic_structures)
+
+    points = [
+        AnisoQHAGridPoint(
+            index=int(index),
+            cell=ph.unitcell,
+            # Copied, so that a grid point does not share the arrays the
+            # Phonopy it came from keeps using.
+            supercell_matrix=np.array(ph.supercell_matrix, dtype="int64"),
+            primitive_matrix=np.array(ph.primitive_matrix, dtype="double"),
+            dataset=ph.dataset,
+            internal_energy=float(energy),
+            electronic_states=(
+                None if electronic_structures is None else electronic_structures[i]
+            ),
+        )
+        for i, (index, ph, energy) in enumerate(
+            zip(indices, phonopys, internal_energies, strict=True)
+        )
+    ]
+    return aniso_qha_dataset_from_points(
+        points, calculator=calculator, length_unit=length_unit
+    )
+
+
+def _check_electronic_states_cells(
+    phonopys: Sequence[Phonopy],
+    electronic_structures: Sequence[ElectronicStates],
+    rtol: float = 1e-5,
+) -> None:
+    """Raise unless each states entry belongs to its grid point's cell.
+
+    The two sequences are paired by position, so a point missing from one of
+    them would put the states of one lattice with the forces of another and
+    go unnoticed. The single point may have been run on the unit cell or on
+    the primitive cell, so both volumes are accepted.
+
+    """
+    for i, (ph, states) in enumerate(zip(phonopys, electronic_structures, strict=True)):
+        if states.volume is None:
+            continue
+        accepted = (ph.unitcell.volume, ph.primitive.volume)
+        if not any(np.isclose(states.volume, v, rtol=rtol) for v in accepted):
+            raise ValueError(
+                f"Grid point {i}: the electronic states were computed at a "
+                f"volume of {states.volume:.6f} A^3, which is neither the "
+                f"unit cell's {accepted[0]:.6f} nor the primitive cell's "
+                f"{accepted[1]:.6f}. The sequences are paired by position; "
+                f"check that both enumerate the grid points in one order."
+            )
 
 
 def write_aniso_qha_dataset(
