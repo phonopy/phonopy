@@ -680,7 +680,7 @@ def run_anisotropic_qha(
     # volumes the grid derives (and the input internal energies) refer to it.
     lattice_grid = LatticeGrid(
         np.array([ph.unitcell.cell for ph in phonopys], dtype="double"),
-        np.array(phonopys[0].primitive_matrix, dtype="double"),
+        phonopys[0].primitive_matrix,
     )
     volumes = lattice_grid.primitive_volumes
     free_axis_lengths = lattice_grid.free_axis_lengths
