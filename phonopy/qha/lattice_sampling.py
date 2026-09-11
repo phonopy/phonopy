@@ -76,6 +76,28 @@ def _crystal_system(number: int) -> str:
     return "cubic"
 
 
+def raise_when_triclinic_or_monoclinic(spacegroup_number: int) -> None:
+    """Raise for crystals whose cell angles are degrees of freedom of their own.
+
+    The anisotropic QHA samples the lattice lengths at fixed angles, so a
+    crystal whose angles are free is out of scope. A caller that reads many
+    grid points calls this on the reference cell first, to fail before the
+    reading rather than after it.
+
+    Parameters
+    ----------
+    spacegroup_number : int
+        International space-group number, e.g. Phonopy.symmetry.dataset.number.
+
+    """
+    system = _crystal_system(spacegroup_number)
+    if system in ("triclinic", "monoclinic"):
+        raise ValueError(
+            f"{system} crystals are not supported: their cell angles are "
+            "additional degrees of freedom."
+        )
+
+
 def _check_conventional_cell(
     lengths: NDArray[np.double],
     std_lattice: NDArray[np.double],
@@ -148,13 +170,8 @@ def get_free_lattice_dof(cell: PhonopyAtoms, symprec: float = 1e-5) -> LatticeDO
     if dataset is None:
         raise RuntimeError("Space group could not be determined.")
     number = int(dataset.number)
+    raise_when_triclinic_or_monoclinic(number)
     system = _crystal_system(number)
-
-    if system in ("triclinic", "monoclinic"):
-        raise ValueError(
-            f"{system} crystals are not supported: their cell angles are "
-            "additional degrees of freedom."
-        )
 
     lengths = np.linalg.norm(cell.cell, axis=1)
     _check_conventional_cell(lengths, np.array(dataset.std_lattice), symprec)

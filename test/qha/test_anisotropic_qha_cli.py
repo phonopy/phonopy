@@ -19,10 +19,11 @@ from phonopy.cui.phonopy_anisotropic_qha_script import (
     suggest_eos_cells,
 )
 from phonopy.qha.anisotropic import AnisotropicQHAResult
+from phonopy.qha.lattice import LatticeGrid
 
 
 def _result_with_lattice(
-    lattice_lengths: NDArray[np.double], free_lattice_indices: list[int]
+    lattice_lengths: NDArray[np.double],
 ) -> AnisotropicQHAResult:
     """Return a result carrying only what the grid geometry helpers read.
 
@@ -33,18 +34,21 @@ def _result_with_lattice(
     empty = np.zeros(0, dtype="double")
     return AnisotropicQHAResult(
         temperatures=empty,
-        lattice_lengths=np.array(lattice_lengths, dtype="double"),
-        free_lattice_indices=np.array(free_lattice_indices, dtype="int64"),
-        surface_degree=2,
+        lattice_grid=LatticeGrid(
+            np.array([np.diag(row) for row in lattice_lengths], dtype="double"),
+            np.eye(3),
+        ),
+        polynomial_degree=2,
         helmholtz_lattice=empty,
         equilibrium_lattice_parameters=np.zeros((0, 3)),
+        unsmoothed_lattice_parameters=np.zeros((0, 3)),
         equilibrium_volumes=empty,
         gibbs_free_energies=empty,
         thermal_expansion=empty,
         axial_thermal_expansions=np.zeros((0, 3)),
         surface_fit_rms=empty,
         surface_fit_rank=6,
-        surface_n_terms=6,
+        polynomial_n_terms=6,
         minimum_extrapolated=np.zeros(0, dtype=bool),
     )
 
@@ -91,7 +95,7 @@ def test_compare_eos_skips_a_short_path(
 
     """
     monkeypatch.chdir(tmp_path)
-    result = _result_with_lattice(_grid([3.0, 3.1, 3.2], [5.0, 5.1, 5.2]), [0, 2])
+    result = _result_with_lattice(_grid([3.0, 3.1, 3.2], [5.0, 5.1, 5.2]))
 
     compare_thermal_expansion_eos(
         result, [], np.zeros(0), [], None, MESH, positions=[0, 4, 8]
@@ -114,7 +118,7 @@ def test_suggest_eos_cells_names_a_constant_shape_path(
     a_values = np.linspace(3.0, 3.4, 5)
     c_values = (5.0 / 3.0) * a_values
     lengths = np.array([[a, a, c] for a in a_values for c in c_values])
-    result = _result_with_lattice(lengths, [0, 2])
+    result = _result_with_lattice(lengths)
 
     suggest_eos_cells(result, indices=list(range(len(lengths))))
 
@@ -137,7 +141,7 @@ def test_suggest_eos_cells_without_a_constant_shape_path(
 ) -> None:
     """When no five cells share a shape, that is said rather than guessed."""
     rng = np.random.default_rng(0)
-    result = _result_with_lattice(rng.uniform(3.0, 3.5, size=(6, 3)), [0, 2])
+    result = _result_with_lattice(rng.uniform(3.0, 3.5, size=(6, 3)))
 
     suggest_eos_cells(result, indices=list(range(6)))
 
@@ -167,7 +171,7 @@ def test_compare_eos_writes_the_comparison(
         TEMPERATURES,
         internal_energies=energies,
         mesh=MESH,
-        surface_degree=2,
+        polynomial_degree=2,
     )
 
     compare_thermal_expansion_eos(
@@ -190,7 +194,7 @@ def test_compare_eos_writes_the_comparison(
 
     # The settings that produced the numbers travel with them.
     header = (tmp_path / "thermal_expansion_compare.dat").read_text()
-    assert "surface_degree=2" in header
+    assert "polynomial_degree=2" in header
     assert "alpha_c_vinet" in header
 
     # Cubic, so both methods must put the same number in the a and the c

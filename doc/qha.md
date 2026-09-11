@@ -461,9 +461,9 @@ strained along a conventional axis; give the unit cells in a fixed-angle
 setting such as the conventional cell in such cases.
 
 The results are stored in `result.lattice` (`QHALatticeData`):
-`lattice_parameters` with shape `(temperatures, 3)`,
-`axial_thermal_expansions` with shape `(temperatures, 3)`, `k`, and
-`ratio_coefficients`. The corresponding output files are
+`lattice_parameters` with shape `(temperatures, 3)` and
+`axial_thermal_expansions` with shape `(temperatures, 3)`. The
+corresponding output files are
 `lattice_parameters-temperature.dat` (columns {math}`T`, {math}`a`,
 {math}`b`, {math}`c`) by `write_lattice_parameters_temperature` and
 `axial_thermal_expansion.dat` (columns {math}`T`, {math}`\alpha_a`,

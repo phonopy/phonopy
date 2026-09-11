@@ -12,6 +12,8 @@ import pytest
 from phonopy.qha import anisotropic_output as aniso_output
 from phonopy.qha import anisotropic_plot as aniso_plot
 from phonopy.qha.anisotropic import AnisotropicQHAResult
+from phonopy.qha.lattice import LatticeGrid
+from phonopy.qha.lattice_smoothing import EinsteinFit, LatticeSmoothingFit
 
 
 def _synthetic_result(n: int = 6) -> AnisotropicQHAResult:
@@ -26,23 +28,41 @@ def _synthetic_result(n: int = 6) -> AnisotropicQHAResult:
     axial[1:, 0] = 1e-4 / a[1:]
     axial[1:, 1] = 1e-4 / a[1:]
     axial[1:, 2] = 2e-4 / c[1:]
-    n_points = 9
+    grid_a, grid_c = np.meshgrid([2.95, 3.0, 3.05], [4.95, 5.0, 5.05], indexing="ij")
+    grid_lengths = np.stack([grid_a.ravel(), grid_a.ravel(), grid_c.ravel()], axis=1)
+    n_points = len(grid_lengths)
     return AnisotropicQHAResult(
         temperatures=temperatures,
-        lattice_lengths=np.tile([3.0, 3.0, 5.0], (n_points, 1)),
-        free_lattice_indices=np.array([0, 2], dtype="int64"),
-        surface_degree=2,
+        lattice_grid=LatticeGrid(
+            np.array([np.diag(row) for row in grid_lengths]), np.eye(3)
+        ),
+        polynomial_degree=2,
         helmholtz_lattice=np.zeros((n, n_points)),
         equilibrium_lattice_parameters=elp,
+        unsmoothed_lattice_parameters=elp,
         equilibrium_volumes=volumes,
         gibbs_free_energies=-40.0 + 1e-3 * temperatures,
         thermal_expansion=beta,
         axial_thermal_expansions=axial,
         surface_fit_rms=np.zeros(n),
         surface_fit_rank=6,
-        surface_n_terms=6,
+        polynomial_n_terms=6,
         minimum_extrapolated=np.zeros(n, dtype=bool),
     )
+
+
+def _smoothing_fit(n_terms: int = 2) -> LatticeSmoothingFit:
+    """Build a stub smoothing fit, of which only the term count is read here."""
+    fit = EinsteinFit(
+        y0=3.0,
+        amplitudes=(0.0,) * n_terms,
+        thetas=tuple(np.linspace(100.0, 300.0, n_terms)),
+        temperature_range=(0.0, 500.0),
+        rms=0.0,
+        n_converged=1,
+        n_accepted=1,
+    )
+    return LatticeSmoothingFit(free_axis_fits=(fit, fit), method="einstein")
 
 
 @pytest.fixture
@@ -76,7 +96,7 @@ def test_write_lattice_parameters_of_a_smoothed_result(
     unsmoothed = result.equilibrium_lattice_parameters + 1e-3
     smoothed = dataclasses.replace(
         result,
-        lattice_smoothing="einstein",
+        lattice_smoothing_fit=_smoothing_fit(),
         unsmoothed_lattice_parameters=unsmoothed,
     )
     fn = tmp_path / "lp.dat"
@@ -130,7 +150,7 @@ def test_provenance_header(result: AnisotropicQHAResult, tmp_path: Path) -> None
     lines = fn.read_text().splitlines()
     for item in (
         "mesh=200",
-        "surface_degree=2",
+        "polynomial_degree=2",
         "F_el=on",
         "pressure=1.5 GPa",
         "grid_points=9",
@@ -211,7 +231,7 @@ def test_plot_lattice_smoothing(result: AnisotropicQHAResult) -> None:
 
     smoothed = dataclasses.replace(
         result,
-        lattice_smoothing="einstein",
+        lattice_smoothing_fit=_smoothing_fit(),
         unsmoothed_lattice_parameters=result.equilibrium_lattice_parameters + 1e-4,
     )
     fig = aniso_plot.plot_lattice_smoothing(smoothed)
@@ -245,7 +265,9 @@ def test_contour_plots_write_one_file_per_temperature(
     bowl = 3.0 * (a - 2.96) ** 2 + 2.0 * (c - 4.98) ** 2
     result = dataclasses.replace(
         result,
-        lattice_lengths=lattice_lengths,
+        lattice_grid=LatticeGrid(
+            np.array([np.diag(row) for row in lattice_lengths]), np.eye(3)
+        ),
         helmholtz_lattice=np.tile(bowl, (len(result.temperatures), 1)),
     )
 

@@ -79,14 +79,15 @@ def format_provenance(
     items = []
     if result.mesh is not None:
         items.append(f"mesh={_format_mesh(result.mesh)}")
-    items.append(f"surface_degree={result.surface_degree}")
+    items.append(f"polynomial_degree={result.polynomial_degree}")
     items.append(f"F_el={'on' if result.with_electronic else 'off'}")
-    if result.lattice_smoothing != "none":
-        items.append(f"smooth_lattice={result.lattice_smoothing}")
-        items.append(f"smooth_terms={result.smoothing_terms}")
+    smoothing_fit = result.lattice_smoothing_fit
+    if smoothing_fit is not None:
+        items.append(f"smooth_lattice={smoothing_fit.method}")
+        items.append(f"smooth_terms={smoothing_fit.n_terms}")
     if result.pressure is not None:
         items.append(f"pressure={result.pressure:g} GPa")
-    items.append(f"grid_points={result.lattice_lengths.shape[0]}")
+    items.append(f"grid_points={result.lattice_grid.n_points}")
     items.append(f"temperatures={_format_temperatures(result.temperatures)}")
     if provenance:
         items.extend(provenance)
@@ -116,9 +117,10 @@ def write_lattice_parameters_temperature(
     smoothing can be plotted against what it was fitted to.
 
     """
+    smoothed = result.lattice_smoothing_fit is not None
     unsmoothed = result.unsmoothed_lattice_parameters
     columns = "temperature (K), a, b, c (angstrom)"
-    if unsmoothed is not None:
+    if smoothed:
         columns += ", a, b, c before the smoothing (angstrom)"
     with open(filename, "w") as w:
         _write_header(w, result, columns, provenance)
@@ -126,7 +128,7 @@ def write_lattice_parameters_temperature(
             zip(result.temperatures, result.equilibrium_lattice_parameters, strict=True)
         ):
             w.write("%20.15f %25.15f %25.15f %25.15f" % (t, *abc))
-            if unsmoothed is not None:
+            if smoothed:
                 w.write("%25.15f %25.15f %25.15f" % tuple(unsmoothed[i]))
             w.write("\n")
 

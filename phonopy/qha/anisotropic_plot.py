@@ -50,15 +50,16 @@ def plot_lattice_smoothing(result: AnisotropicQHAResult) -> Any:
     """
     import matplotlib.pyplot as plt
 
-    unsmoothed = result.unsmoothed_lattice_parameters
-    if unsmoothed is None:
+    smoothing_fit = result.lattice_smoothing_fit
+    if smoothing_fit is None:
         raise ValueError(
             "The result was not smoothed, so its lattice parameters are the "
             "surface minima themselves and there is nothing to compare."
         )
+    unsmoothed = result.unsmoothed_lattice_parameters
 
     t = result.temperatures
-    columns = [int(i) for i in result.free_lattice_indices]
+    columns = [int(i) for i in result.lattice_grid.free_axis_indices]
     names = ("a", "b", "c")
     fig, axs = plt.subplots(
         2, len(columns), figsize=(4.0 * len(columns), 6.0), sharex=True, squeeze=False
@@ -71,9 +72,7 @@ def plot_lattice_smoothing(result: AnisotropicQHAResult) -> Any:
         ax.plot(t, fitted, "-", color=f"C{k}")
         ax.set_ylabel(rf"${name}$ $(\AA)$")
         ax.set_title(
-            f"{result.lattice_smoothing}, {result.smoothing_terms} terms"
-            if k == 0
-            else ""
+            f"{smoothing_fit.method}, {smoothing_fit.n_terms} terms" if k == 0 else ""
         )
         ax.legend(loc="best")
 
@@ -160,15 +159,15 @@ def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) 
     its own minimum (F - F_min) in eV, so that only the surface shape remains.
 
     """
-    fi = result.free_lattice_indices
+    fi = result.lattice_grid.free_axis_indices
     i = int(np.argmin(np.abs(result.temperatures - temperature)))
-    free_points = result.lattice_lengths[:, fi]
+    free_axis_lengths = result.lattice_grid.lattice_lengths[:, fi]
     fit = FreeEnergySurfaceFit(
-        free_points, result.helmholtz_lattice[i], degree=result.surface_degree
+        free_axis_lengths, result.helmholtz_lattice[i], degree=result.polynomial_degree
     )
 
-    lo0, lo1 = free_points.min(axis=0)
-    hi0, hi1 = free_points.max(axis=0)
+    lo0, lo1 = free_axis_lengths.min(axis=0)
+    hi0, hi1 = free_axis_lengths.max(axis=0)
     grid0, grid1 = np.meshgrid(np.linspace(lo0, hi0, n), np.linspace(lo1, hi1, n))
     mesh = np.column_stack([grid0.ravel(), grid1.ravel()])
     fe = fit.evaluate(mesh).reshape(grid0.shape)
@@ -176,7 +175,7 @@ def _evaluate_surface(result: AnisotropicQHAResult, temperature: float, n: int) 
     return {
         "i": i,
         "t": float(result.temperatures[i]),
-        "free_points": free_points,
+        "free_axis_lengths": free_axis_lengths,
         "grid0": grid0,
         "grid1": grid1,
         "fe": fe,
@@ -196,7 +195,7 @@ def plot_F_contours(
     written filenames, empty unless there are exactly 2 free lattice DOF.
 
     """
-    fi = result.free_lattice_indices
+    fi = result.lattice_grid.free_axis_indices
     if len(fi) != 2:
         print(f"Skip contour map: {len(fi)} free lattice DOF (need 2).")
         return []
@@ -223,8 +222,8 @@ def plot_F_contours(
         fig.colorbar(filled, label="F - F_min (meV)")
 
         ax.plot(
-            d["free_points"][:, 0],
-            d["free_points"][:, 1],
+            d["free_axis_lengths"][:, 0],
+            d["free_axis_lengths"][:, 1],
             "wo",
             ms=3,
             label="samples",
@@ -252,7 +251,7 @@ def plot_F_contours(
 
 
 def _fit_and_grid(
-    free_points: NDArray[np.double],
+    free_axis_lengths: NDArray[np.double],
     values: NDArray[np.double],
     degree: int,
     n: int,
@@ -263,9 +262,9 @@ def _fit_and_grid(
     surface shape and tilt remain (any additive constant drops out).
 
     """
-    fit = FreeEnergySurfaceFit(free_points, values, degree=degree)
-    lo0, lo1 = free_points.min(axis=0)
-    hi0, hi1 = free_points.max(axis=0)
+    fit = FreeEnergySurfaceFit(free_axis_lengths, values, degree=degree)
+    lo0, lo1 = free_axis_lengths.min(axis=0)
+    hi0, hi1 = free_axis_lengths.max(axis=0)
     grid0, grid1 = np.meshgrid(np.linspace(lo0, hi0, n), np.linspace(lo1, hi1, n))
     mesh = np.column_stack([grid0.ravel(), grid1.ravel()])
     fe = fit.evaluate(mesh).reshape(grid0.shape)
@@ -296,12 +295,12 @@ def plot_component_contours(
     per temperature of the result; without either, the F_el panel is left out.
 
     """
-    fi = result.free_lattice_indices
+    fi = result.lattice_grid.free_axis_indices
     if len(fi) != 2:
         print(f"Skip component contours: {len(fi)} free lattice DOF (need 2).")
         return []
 
-    free_points = result.lattice_lengths[:, fi]
+    free_axis_lengths = result.lattice_grid.lattice_lengths[:, fi]
     u_static = np.asarray(internal_energies, dtype="double")
     if electronic_free_energies is not None:
         fe_el_rel = np.asarray(electronic_free_energies, dtype="double")
@@ -309,13 +308,13 @@ def plot_component_contours(
         fe_el_rel, _ = compute_electronic_contributions_from_states(
             electronic_structures,
             result.temperatures,
-            primitive_volumes=result.primitive_volumes,
+            primitive_volumes=result.lattice_grid.primitive_volumes,
         )
     else:
         fe_el_rel = None
 
     axis = ("a", "b", "c")
-    degree = result.surface_degree
+    degree = result.polynomial_degree
 
     frames: list[dict[str, Any]] = []
     for t in temperatures:
@@ -335,7 +334,7 @@ def plot_component_contours(
     for fr in frames:
         row = []
         for p, (_, values) in enumerate(fr["panels"]):
-            g0, g1, fe = _fit_and_grid(free_points, values, degree, n)
+            g0, g1, fe = _fit_and_grid(free_axis_lengths, values, degree, n)
             fe = fe * _EV_TO_MEV
             row.append((g0, g1, fe))
             panel_vmax[p] = max(panel_vmax[p], float(fe.max()))
@@ -356,7 +355,7 @@ def plot_component_contours(
             filled = ax.contourf(g0, g1, fe, levels=levels, extend="max")
             ax.contour(g0, g1, fe, levels=levels[::2], colors="k", linewidths=0.3)
             fig.colorbar(filled, ax=ax, label=f"{name} - min (meV)")
-            ax.plot(free_points[:, 0], free_points[:, 1], "wo", ms=2)
+            ax.plot(free_axis_lengths[:, 0], free_axis_lengths[:, 1], "wo", ms=2)
             ax.plot(eq[fi[0]], eq[fi[1]], "r*", ms=12)
             ax.set_xlabel(f"{axis[fi[0]]} (A)")
             ax.set_ylabel(f"{axis[fi[1]]} (A)")
