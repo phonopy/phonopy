@@ -406,6 +406,33 @@ calculations were laid out by something other than Scripts 1 and 2:
 Any names work, and one list can mix directories and files. The `--static` and
 `--phonon` lists must have the same number of entries.
 
+The grid points must have the same primitive matrix, supercell matrix and
+chemical symbols.
+
+`build_aniso_qha_dataset` builds the same dataset from objects rather than
+from directories. Give it one `Phonopy` per grid point, each carrying that
+point's cell and its displacements and forces, and the static internal energy
+of each point:
+
+```{code-block} python
+:caption: Building the dataset through the API
+
+from phonopy.qha.anisotropic_dataset import (
+    build_aniso_qha_dataset,
+    write_aniso_qha_dataset,
+)
+
+dataset = build_aniso_qha_dataset(
+    phonopys,
+    internal_energies,  # eV per primitive cell
+    electronic_structures=electronic_structures,  # optional, for F_el
+)
+write_aniso_qha_dataset(dataset, "aniso_qha_dataset.hdf5")
+```
+
+Pass the internal energies per primitive cell, so that they match the phonon
+calculation.
+
 (anisotropic-qha-builder-reads)=
 ### What the builder reads
 
@@ -658,7 +685,7 @@ lattice DOF from the input cells, and then, at each temperature:
    {math}`F_\mathrm{el}(a_i, c_i; T)` when it is included and a
    {math}`pV_i` term when a pressure is given.
 2. Fit a polynomial of total degree {math}`n` in the free lattice
-   parameters to those {math}`F_i(T)`, by least squares. `--surface-degree`
+   parameters to those {math}`F_i(T)`, by least squares. `--polynomial-degree`
    sets {math}`n`, 3 by default. For {math}`d` free DOF the polynomial has
    {math}`\binom{n + d}{n}` terms -- 10 for two free DOF at degree 3 -- and
    the grid needs at least that many cells, or the fit is rank deficient
@@ -1137,6 +1164,10 @@ extended.
 costs to evaluate, and how the ridge penalty pypolymlp selects says whether the
 training set is large enough for the descriptor.
 
+{ref}`One ladder of descriptors <anisotropic-qha-descriptor-example>` lists the
+feature counts and relative evaluation times of nine descriptors for a
+one-element system.
+
 The SSCHA evaluates the descriptor once per snapshot per iteration, and here
 that cost is paid at every grid point and every temperature. Choose the
 descriptor and the training-set size from fits made at one grid point, before
@@ -1479,11 +1510,12 @@ the curves whose shape disagrees with the data in those ways, and keeps the
 closest of what is left. If nothing is left, the command stops rather than
 returning a curve of the wrong shape.
 
-A fit is worth seeing against what it was fitted to. A smoothed run therefore
-keeps the surface minima as well, in `unsmoothed_lattice_parameters`, and
-writes them as three columns more in `lattice_parameters-temperature.dat`:
-temperature, the smoothed {math}`a`, {math}`b`, {math}`c`, then the same three
-before the smoothing.
+A fit is worth seeing against what it was fitted to. The result therefore
+keeps the surface minima in `unsmoothed_lattice_parameters`, whether or not
+they were smoothed, and a smoothed run writes them as three columns more in
+`lattice_parameters-temperature.dat`: temperature, the smoothed {math}`a`,
+{math}`b`, {math}`c`, then the same three before the smoothing. With
+`--smooth-lattice none` the two are the same numbers.
 
 It also writes `lattice_smoothing.png`, one column per free lattice DOF. The
 upper row is the fit as a line over the minima as dots, and the lower row is
@@ -1495,6 +1527,62 @@ an excursion over a range of temperature, and that is the case to raise
 
 An unsmoothed run has nothing to compare against, so `--smooth-lattice none`
 writes the four columns alone and no `lattice_smoothing.png`.
+
+A smoothed result carries the fitted model itself, so it answers at
+temperatures the run did not visit. `lattice_parameters_at`,
+`axial_thermal_expansions_at`, `thermal_expansion_at` and
+`equilibrium_volumes_at` take one temperature or an array of them:
+
+```{code-block} python
+:caption: Evaluating the smoothed lattice between the temperatures of the run
+
+a, b, c = result.lattice_parameters_at([293.15])[0]
+alpha = result.axial_thermal_expansions_at([100.0, 200.0, 300.0])
+```
+
+The temperatures must lie within the range the run covered. A sum of Einstein
+terms models the data it was fitted to and nothing beyond it: a term of very
+high Einstein temperature is flat over the fitted range and turns on above it,
+so the model interpolates and refuses to extrapolate. A temperature outside
+the range raises `ValueError`, and a result from `--smooth-lattice none` has
+no model to evaluate and raises as well.
+
+(anisotropic-qha-descriptor-example)=
+## Appendix: one ladder of descriptors
+
+{ref}`The descriptor and the amount of training data
+<polymlp-sscha-descriptor>` gives the method and a table for a two-element
+system. The table here is one example for a one-element system, measured with
+pypolymlp 0.20.5. The last column is the time to evaluate the descriptor once,
+relative to the first row, measured in one execution.
+
+| features | model parameters added to `--mlp-params` | relative time |
+|---|---|---|
+| 781 | nothing; phonopy's defaults | 1.0 |
+| 1,176 | `gaussian_params2 = 0 7 15` | 1.2 |
+| 2,600 | `gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.6 |
+| 3,848 | `gaussian_params2 = 0 7 15, gtinv_order = 4, gtinv_maxl = 16 12 4` | 7.1 |
+| 6,820 | `model_type = 4` | 1.4 |
+| 13,920 | `model_type = 4, gaussian_params2 = 0 7 15` | 1.4 |
+| 22,495 | `model_type = 4, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 6.4 |
+| 27,664 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_maxl = 12 12` | 5.9 |
+| 45,680 | `model_type = 4, gaussian_params2 = 0 7 15, gtinv_order = 6, gtinv_maxl = 16 12 4 1 1` | 7.7 |
+
+Phonopy's defaults are `model_type = 3`, `max_p = 2`, `gtinv_order = 3`,
+`gtinv_maxl = 8 8`, `gaussian_params2 = 0 7 10` and `cutoff = 8.0`. Phonopy
+passes them to pypolymlp itself. The other rows change one or two of them.
+
+The evaluation time follows `gtinv_maxl` rather than the feature count. Two
+pairs in the table differ in `gtinv_maxl` alone, 1,176 against 2,600 and 13,920
+against 27,664, and both cost about four times more at `12 12` than at `8 8`.
+Raising `model_type` or the number of gaussians multiplies the feature count
+instead, and adds a few tens of per cent to the time: 781 to 13,920 is eighteen
+times the features for 1.4 times the time.
+
+The SSCHA of step 5 evaluates the descriptor once per snapshot per iteration,
+at every grid point and every temperature. Read the last column as what a
+descriptor costs there, and pick the descriptor from fits made at one grid
+point before the sweep is started.
 
 (anisotropic-qha-gather-script)=
 ## Appendix: the gather script

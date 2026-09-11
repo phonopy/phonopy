@@ -789,6 +789,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-one-ladder-of-descriptors">Appendix: one ladder of descriptors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-gather-script">Appendix: the gather script</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
@@ -1167,6 +1168,30 @@ calculations were laid out by something other than Scripts 1 and 2:</p>
 </div>
 <p>Any names work, and one list can mix directories and files. The <code class="docutils literal notranslate"><span class="pre">--static</span></code> and
 <code class="docutils literal notranslate"><span class="pre">--phonon</span></code> lists must have the same number of entries.</p>
+<p>The grid points must have the same primitive matrix, supercell matrix and
+chemical symbols.</p>
+<p><code class="docutils literal notranslate"><span class="pre">build_aniso_qha_dataset</span></code> builds the same dataset from objects rather than
+from directories. Give it one <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> per grid point, each carrying that
+point’s cell and its displacements and forces, and the static internal energy
+of each point:</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">Building the dataset through the API</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">build_aniso_qha_dataset</span><span class="p">,</span>
+    <span class="n">write_aniso_qha_dataset</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">build_aniso_qha_dataset</span><span class="p">(</span>
+    <span class="n">phonopys</span><span class="p">,</span>
+    <span class="n">internal_energies</span><span class="p">,</span>  <span class="c1"># eV per primitive cell</span>
+    <span class="n">electronic_structures</span><span class="o">=</span><span class="n">electronic_structures</span><span class="p">,</span>  <span class="c1"># optional, for F_el</span>
+<span class="p">)</span>
+<span class="n">write_aniso_qha_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Pass the internal energies per primitive cell, so that they match the phonon
+calculation.</p>
 <section id="what-the-builder-reads">
 <span id="anisotropic-qha-builder-reads"></span><h3>What the builder reads<a class="headerlink" href="#what-the-builder-reads" title="Link to this heading">#</a></h3>
 <p>For each grid point the builder reads:</p>
@@ -1339,8 +1364,8 @@ and still differ severalfold in <span class="math notranslate nohighlight">\(\al
 derivative of the free-energy surface and the error varies across the lattice
 grid.</p>
 <p>The same analysis, driven from the API:</p>
-<div class="literal-block-wrapper docutils container" id="id3">
-<div class="code-block-caption"><span class="caption-text">Script 3 – the analysis through <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code></span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">Script 3 – the analysis through <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code></span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha</span><span class="w"> </span><span class="kn">import</span> <span class="n">anisotropic_output</span><span class="p">,</span> <span class="n">anisotropic_plot</span>
@@ -1399,7 +1424,7 @@ lattice DOF from the input cells, and then, at each temperature:</p>
 <span class="math notranslate nohighlight">\(F_\mathrm{el}(a_i, c_i; T)\)</span> when it is included and a
 <span class="math notranslate nohighlight">\(pV_i\)</span> term when a pressure is given.</p></li>
 <li><p>Fit a polynomial of total degree <span class="math notranslate nohighlight">\(n\)</span> in the free lattice
-parameters to those <span class="math notranslate nohighlight">\(F_i(T)\)</span>, by least squares. <code class="docutils literal notranslate"><span class="pre">--surface-degree</span></code>
+parameters to those <span class="math notranslate nohighlight">\(F_i(T)\)</span>, by least squares. <code class="docutils literal notranslate"><span class="pre">--polynomial-degree</span></code>
 sets <span class="math notranslate nohighlight">\(n\)</span>, 3 by default. For <span class="math notranslate nohighlight">\(d\)</span> free DOF the polynomial has
 <span class="math notranslate nohighlight">\(\binom{n + d}{n}\)</span> terms – 10 for two free DOF at degree 3 – and
 the grid needs at least that many cells, or the fit is rank deficient
@@ -1464,8 +1489,8 @@ Computing <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> ou
 and lets the grid points be spread over processes or jobs. Pass it as
 <code class="docutils literal notranslate"><span class="pre">electronic_free_energies</span></code>, the counterpart of <code class="docutils literal notranslate"><span class="pre">phonon_free_energies</span></code> for the
 electronic term.</p>
-<div class="literal-block-wrapper docutils container" id="id4">
-<div class="code-block-caption"><span class="caption-text">Script 4 – <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> computed apart from the analysis</span><a class="headerlink" href="#id4" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">Script 4 – <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> computed apart from the analysis</span><a class="headerlink" href="#id5" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
@@ -1658,8 +1683,8 @@ supercell energies.</p></li>
 temperature, into a single training set, and train that grid point’s MLP
 on it.</p></li>
 </ol>
-<div class="literal-block-wrapper docutils container" id="id5">
-<div class="code-block-caption"><span class="caption-text">Script 5 – the thermal training displacements</span><a class="headerlink" href="#id5" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">Script 5 – the thermal training displacements</span><a class="headerlink" href="#id6" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1729,8 +1754,8 @@ of them at once. The sets are merged by interleaving, so that the temperatures
 alternate through the merged list instead of following one another in blocks.</p>
 <p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-merging"><span class="std std-ref">Merging the temperatures</span></a> gives the reason, which
 is how <code class="docutils literal notranslate"><span class="pre">ntrain</span></code> and <code class="docutils literal notranslate"><span class="pre">ntest</span></code> cut the merged list:</p>
-<div class="literal-block-wrapper docutils container" id="id6">
-<div class="code-block-caption"><span class="caption-text">Script 6 – one training set per grid point, from its temperatures</span><a class="headerlink" href="#id6" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">Script 6 – one training set per grid point, from its temperatures</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1825,6 +1850,9 @@ extended.</p>
 <p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-descriptor"><span class="std std-ref">The descriptor and the amount of training data</span></a> covers what <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code> sets, what a descriptor
 costs to evaluate, and how the ridge penalty pypolymlp selects says whether the
 training set is large enough for the descriptor.</p>
+<p><a class="reference internal" href="#anisotropic-qha-descriptor-example"><span class="std std-ref">One ladder of descriptors</span></a> lists the
+feature counts and relative evaluation times of nine descriptors for a
+one-element system.</p>
 <p>The SSCHA evaluates the descriptor once per snapshot per iteration, and here
 that cost is paid at every grid point and every temperature. Choose the
 descriptor and the training-set size from fits made at one grid point, before
@@ -1882,8 +1910,8 @@ report.</p>
 <code class="docutils literal notranslate"><span class="pre">train/grid-NNN/polymlp.yaml</span></code> for the forces, and writes what every iteration
 sampled to its own file. Script 7 is one grid point at every temperature, which
 is the unit a job usually gets:</p>
-<div class="literal-block-wrapper docutils container" id="id7">
-<div class="code-block-caption"><span class="caption-text">Script 7 – the SSCHA runs of one grid point</span><a class="headerlink" href="#id7" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-text">Script 7 – the SSCHA runs of one grid point</span><a class="headerlink" href="#id8" title="Link to this code">#</a></div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 <span class="c1"># One grid point at every temperature:  ./script7.sh 13</span>
 <span class="nb">set</span><span class="w"> </span>-e
@@ -2104,11 +2132,12 @@ the data does. The fit therefore starts from a set of starting values, drops
 the curves whose shape disagrees with the data in those ways, and keeps the
 closest of what is left. If nothing is left, the command stops rather than
 returning a curve of the wrong shape.</p>
-<p>A fit is worth seeing against what it was fitted to. A smoothed run therefore
-keeps the surface minima as well, in <code class="docutils literal notranslate"><span class="pre">unsmoothed_lattice_parameters</span></code>, and
-writes them as three columns more in <code class="docutils literal notranslate"><span class="pre">lattice_parameters-temperature.dat</span></code>:
-temperature, the smoothed <span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, <span class="math notranslate nohighlight">\(c\)</span>, then the same three
-before the smoothing.</p>
+<p>A fit is worth seeing against what it was fitted to. The result therefore
+keeps the surface minima in <code class="docutils literal notranslate"><span class="pre">unsmoothed_lattice_parameters</span></code>, whether or not
+they were smoothed, and a smoothed run writes them as three columns more in
+<code class="docutils literal notranslate"><span class="pre">lattice_parameters-temperature.dat</span></code>: temperature, the smoothed <span class="math notranslate nohighlight">\(a\)</span>,
+<span class="math notranslate nohighlight">\(b\)</span>, <span class="math notranslate nohighlight">\(c\)</span>, then the same three before the smoothing. With
+<code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">none</span></code> the two are the same numbers.</p>
 <p>It also writes <code class="docutils literal notranslate"><span class="pre">lattice_smoothing.png</span></code>, one column per free lattice DOF. The
 upper row is the fit as a line over the minima as dots, and the lower row is
 what is left over, fit minus minimum, in <span class="math notranslate nohighlight">\(10^{-4}\)</span> angstrom. The
@@ -2118,7 +2147,91 @@ an excursion over a range of temperature, and that is the case to raise
 <code class="docutils literal notranslate"><span class="pre">--smooth-terms</span></code> for.</p>
 <p>An unsmoothed run has nothing to compare against, so <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">none</span></code>
 writes the four columns alone and no <code class="docutils literal notranslate"><span class="pre">lattice_smoothing.png</span></code>.</p>
+<p>A smoothed result carries the fitted model itself, so it answers at
+temperatures the run did not visit. <code class="docutils literal notranslate"><span class="pre">lattice_parameters_at</span></code>,
+<code class="docutils literal notranslate"><span class="pre">axial_thermal_expansions_at</span></code>, <code class="docutils literal notranslate"><span class="pre">thermal_expansion_at</span></code> and
+<code class="docutils literal notranslate"><span class="pre">equilibrium_volumes_at</span></code> take one temperature or an array of them:</p>
+<div class="literal-block-wrapper docutils container" id="id9">
+<div class="code-block-caption"><span class="caption-text">Evaluating the smoothed lattice between the temperatures of the run</span><a class="headerlink" href="#id9" title="Link to this code">#</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">lattice_parameters_at</span><span class="p">([</span><span class="mf">293.15</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">axial_thermal_expansions_at</span><span class="p">([</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">200.0</span><span class="p">,</span> <span class="mf">300.0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<p>The temperatures must lie within the range the run covered. A sum of Einstein
+terms models the data it was fitted to and nothing beyond it: a term of very
+high Einstein temperature is flat over the fitted range and turns on above it,
+so the model interpolates and refuses to extrapolate. A temperature outside
+the range raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>, and a result from <code class="docutils literal notranslate"><span class="pre">--smooth-lattice</span> <span class="pre">none</span></code> has
+no model to evaluate and raises as well.</p>
 </section>
+</section>
+<section id="appendix-one-ladder-of-descriptors">
+<span id="anisotropic-qha-descriptor-example"></span><h2>Appendix: one ladder of descriptors<a class="headerlink" href="#appendix-one-ladder-of-descriptors" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="polymlp-sscha.html#polymlp-sscha-descriptor"><span class="std std-ref">The descriptor and the amount of training data</span></a> gives the method and a table for a two-element
+system. The table here is one example for a one-element system, measured with
+pypolymlp 0.20.5. The last column is the time to evaluate the descriptor once,
+relative to the first row, measured in one execution.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>features</p></th>
+<th class="head"><p>model parameters added to <code class="docutils literal notranslate"><span class="pre">--mlp-params</span></code></p></th>
+<th class="head"><p>relative time</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>781</p></td>
+<td><p>nothing; phonopy’s defaults</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>1,176</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
+<td><p>1.2</p></td>
+</tr>
+<tr class="row-even"><td><p>2,600</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
+<td><p>5.6</p></td>
+</tr>
+<tr class="row-odd"><td><p>3,848</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span></code></p></td>
+<td><p>7.1</p></td>
+</tr>
+<tr class="row-even"><td><p>6,820</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4</span></code></p></td>
+<td><p>1.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>13,920</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15</span></code></p></td>
+<td><p>1.4</p></td>
+</tr>
+<tr class="row-even"><td><p>22,495</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+<td><p>6.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>27,664</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">12</span> <span class="pre">12</span></code></p></td>
+<td><p>5.9</p></td>
+</tr>
+<tr class="row-even"><td><p>45,680</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">15,</span> <span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">16</span> <span class="pre">12</span> <span class="pre">4</span> <span class="pre">1</span> <span class="pre">1</span></code></p></td>
+<td><p>7.7</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Phonopy’s defaults are <code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">max_p</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">gtinv_order</span> <span class="pre">=</span> <span class="pre">3</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span> <span class="pre">=</span> <span class="pre">8</span> <span class="pre">8</span></code>, <code class="docutils literal notranslate"><span class="pre">gaussian_params2</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">7</span> <span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">cutoff</span> <span class="pre">=</span> <span class="pre">8.0</span></code>. Phonopy
+passes them to pypolymlp itself. The other rows change one or two of them.</p>
+<p>The evaluation time follows <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code> rather than the feature count. Two
+pairs in the table differ in <code class="docutils literal notranslate"><span class="pre">gtinv_maxl</span></code> alone, 1,176 against 2,600 and 13,920
+against 27,664, and both cost about four times more at <code class="docutils literal notranslate"><span class="pre">12</span> <span class="pre">12</span></code> than at <code class="docutils literal notranslate"><span class="pre">8</span> <span class="pre">8</span></code>.
+Raising <code class="docutils literal notranslate"><span class="pre">model_type</span></code> or the number of gaussians multiplies the feature count
+instead, and adds a few tens of per cent to the time: 781 to 13,920 is eighteen
+times the features for 1.4 times the time.</p>
+<p>The SSCHA of step 5 evaluates the descriptor once per snapshot per iteration,
+at every grid point and every temperature. Read the last column as what a
+descriptor costs there, and pick the descriptor from fits made at one grid
+point before the sweep is started.</p>
 </section>
 <section id="appendix-the-gather-script">
 <span id="anisotropic-qha-gather-script"></span><h2>Appendix: the gather script<a class="headerlink" href="#appendix-the-gather-script" title="Link to this heading">#</a></h2>
@@ -2126,8 +2239,8 @@ writes the four columns alone and no <code class="docutils literal notranslate">
 dataset of step 3 for the lattice lengths it places the runs by, and nothing
 else of it. <code class="docutils literal notranslate"><span class="pre">--transient</span></code> says how many iterations at the start of each run to
 leave out of the averages.</p>
-<div class="literal-block-wrapper docutils container" id="id8">
-<div class="code-block-caption"><span class="caption-text">Script 8 – the runs gathered into the free energies of the analysis</span><a class="headerlink" href="#id8" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id10">
+<div class="code-block-caption"><span class="caption-text">Script 8 – the runs gathered into the free energies of the analysis</span><a class="headerlink" href="#id10" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 
@@ -2250,8 +2363,8 @@ merged sets it read, and names the grid points that have no <code class="docutil
 </section>
 <section id="the-script">
 <h3>The script<a class="headerlink" href="#the-script" title="Link to this heading">#</a></h3>
-<div class="literal-block-wrapper docutils container" id="id9">
-<div class="code-block-caption"><span class="caption-text">Script 9 – checking the training displacements</span><a class="headerlink" href="#id9" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id11">
+<div class="code-block-caption"><span class="caption-text">Script 9 – checking the training displacements</span><a class="headerlink" href="#id11" title="Link to this code">#</a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -2399,8 +2512,8 @@ Two are usual.</p>
 jobs of 41 runs. One job per (grid point, temperature) is 1,025 jobs of one
 run, which suits a queue with a short time limit. The job is then a template
 with the grid point and the temperature left as placeholders:</p>
-<div class="literal-block-wrapper docutils container" id="id10">
-<div class="code-block-caption"><span class="caption-text">Script 10 – one job per grid point and temperature</span><a class="headerlink" href="#id10" title="Link to this code">#</a></div>
+<div class="literal-block-wrapper docutils container" id="id12">
+<div class="code-block-caption"><span class="caption-text">Script 10 – one job per grid point and temperature</span><a class="headerlink" href="#id12" title="Link to this code">#</a></div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 <span class="c1">#SBATCH --job-name=sscha-GRID-TEMP</span>
 <span class="c1">#SBATCH --output=sscha-gGRID-tTEMPK.log</span>
@@ -2521,6 +2634,7 @@ again is enough, since a rerun draws the supercells the lost run drew.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-analysis">Running the analysis</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-one-ladder-of-descriptors">Appendix: one ladder of descriptors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-the-gather-script">Appendix: the gather script</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#appendix-checking-the-training-displacements">Appendix: checking the training displacements</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-check-compares">What each check compares</a></li>
