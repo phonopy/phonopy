@@ -658,7 +658,7 @@ lattice DOF from the input cells, and then, at each temperature:
    {math}`F_\mathrm{el}(a_i, c_i; T)` when it is included and a
    {math}`pV_i` term when a pressure is given.
 2. Fit a polynomial of total degree {math}`n` in the free lattice
-   parameters to those {math}`F_i(T)`, by least squares. `--surface-degree`
+   parameters to those {math}`F_i(T)`, by least squares. `--polynomial-degree`
    sets {math}`n`, 3 by default. For {math}`d` free DOF the polynomial has
    {math}`\binom{n + d}{n}` terms -- 10 for two free DOF at degree 3 -- and
    the grid needs at least that many cells, or the fit is rank deficient

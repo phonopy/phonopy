@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Smooth lattice parameters along temperature before differentiating them.
 
-The axial thermal expansions are central differences of a(T), b(T), c(T), so
-whatever scatter those carry reaches them amplified. Lattice parameters from a
+The axial thermal expansions are a temperature derivative of a(T), b(T), c(T)
+-- central differences of them where they are not smoothed -- so whatever
+scatter those carry reaches them amplified. Lattice parameters from a
 sampled method -- SSCHA, or any other route whose free energy is a Monte Carlo
 average -- carry the scatter of that sampling, since every temperature is
 minimized on its own.
@@ -24,6 +25,17 @@ one where the data contracts, or a contraction several times deeper than the
 data shows -- is otherwise accepted silently, which is the failure this guards
 against. When no candidate passes, EinsteinFitFailure is raised rather than
 absorbed by a fallback.
+
+The fitted model is closed form, so fit_lattice_parameter hands it back as an
+EinsteinFit and the lattice parameter can be evaluated between the
+temperatures it was fitted on. Outside that range it refuses to be evaluated:
+a term whose Einstein temperature is far above the fitted range is flat over
+it and costs the fit nothing, then turns on beyond it, so the model
+interpolates and does not extrapolate.
+
+One fit covers one lattice parameter. LatticeSmoothingFit gathers the fits of
+a, b and c, and the caller builds it: which lengths are tied to one another is
+the caller's knowledge, not something to be recovered from the numbers here.
 
 """
 
@@ -71,20 +83,52 @@ class EinsteinFitFailure(RuntimeError):
     """
 
 
-@dataclass
-class _EinsteinFit:
+def _as_temperatures(
+    temperatures: float | Sequence[float] | NDArray[np.double],
+) -> NDArray[np.double]:
+    """Return temperatures as a 1D double array, so that a scalar is accepted."""
+    return np.atleast_1d(np.asarray(temperatures, dtype="double"))
+
+
+def _check_temperature_range(
+    temperatures: NDArray[np.double], temperature_range: tuple[float, float]
+) -> None:
+    """Raise unless every temperature lies within the fitted range.
+
+    A sum of Einstein terms is a model of the data it was fitted to and not
+    of anything beyond it: a term of very high Einstein temperature is flat
+    over the fitted range, so the residual does not constrain it, and it can
+    take over outside.
+
+    """
+    low, high = temperature_range
+    tol = 1e-8 * max(abs(high), 1.0)
+    if temperatures.size == 0:
+        return
+    if temperatures.min() < low - tol or temperatures.max() > high + tol:
+        raise ValueError(
+            f"The fit covers {low:.6g} to {high:.6g} K, and "
+            f"{temperatures.min():.6g} to {temperatures.max():.6g} K reaches "
+            f"outside it. The model interpolates between the temperatures it "
+            f"was fitted on; it does not extrapolate."
+        )
+
+
+@dataclass(frozen=True)
+class EinsteinFit:
     """A fitted sum of Einstein terms, with what it took to get there.
 
     Attributes
     ----------
-    model : ndarray
-        The fitted curve on the input temperatures. shape=(temperatures,)
     y0 : float
         The T = 0 value of the fit.
     amplitudes : ndarray
         Term amplitudes, ordered by Einstein temperature.
     thetas : ndarray
         Einstein temperatures in K, ascending.
+    temperature_range : tuple of float
+        Lowest and highest temperature fitted, in K. evaluate and slope
+        refuse temperatures outside it.
     rms : float
         Root mean square residual against the input values.
     n_converged : int
@@ -94,15 +138,34 @@ class _EinsteinFit:
 
     """
 
-    model: NDArray[np.double]
     y0: float
     amplitudes: NDArray[np.double]
     thetas: NDArray[np.double]
+    temperature_range: tuple[float, float]
     rms: float
     n_converged: int
     n_accepted: int
 
-    def slope(self, temperatures: NDArray[np.double]) -> NDArray[np.double]:
+    def evaluate(
+        self, temperatures: float | Sequence[float] | NDArray[np.double]
+    ) -> NDArray[np.double]:
+        """Return the fitted curve at the given temperatures, in K.
+
+        The temperatures need not be the ones fitted, but must lie within
+        their range. A scalar is taken as a single temperature and gives an
+        array of length one.
+
+        """
+        temps = _as_temperatures(temperatures)
+        _check_temperature_range(temps, self.temperature_range)
+        out = np.full_like(temps, self.y0)
+        for amp, theta in zip(self.amplitudes, self.thetas, strict=True):
+            out = out + amp * _einstein_term(temps, theta)
+        return out
+
+    def slope(
+        self, temperatures: float | Sequence[float] | NDArray[np.double]
+    ) -> NDArray[np.double]:
         """Return dy/dT of the fitted model, analytically.
 
         The model is differentiable in closed form, so a thermal expansion
@@ -110,10 +173,14 @@ class _EinsteinFit:
         separate question: finite differences are what a measured a(T), c(T)
         would be differentiated by.
 
+        Takes the same temperatures evaluate does, under the same range.
+
         """
-        out = np.zeros_like(temperatures, dtype="double")
+        temps = _as_temperatures(temperatures)
+        _check_temperature_range(temps, self.temperature_range)
+        out = np.zeros_like(temps)
         for amp, theta in zip(self.amplitudes, self.thetas, strict=True):
-            out = out + amp * _einstein_term_derivative(temperatures, theta)
+            out = out + amp * _einstein_term_derivative(temps, theta)
         return out
 
     def describe(self) -> str:
@@ -301,15 +368,15 @@ def _rejection(
     return None
 
 
-def _fit_einstein(
-    temperatures: NDArray[np.double],
+def fit_lattice_parameter(
+    temperatures: Sequence[float] | NDArray[np.double],
     values: NDArray[np.double],
     sigma: NDArray[np.double] | None = None,
     n_terms: int = 2,
     theta_pool: Sequence[float] = DEFAULT_THETA_POOL,
     dip_factors: tuple[float, float] = DEFAULT_DIP_FACTORS,
-) -> _EinsteinFit:
-    """Return the best acceptable n-term Einstein fit of values(temperatures).
+) -> EinsteinFit:
+    """Return the best acceptable n-term Einstein fit of one lattice parameter.
 
     Every starting guess is run and the one with the smallest residual among
     those that pass the checks is returned.
@@ -343,17 +410,19 @@ def _fit_einstein(
 
     if n_terms < 2:
         raise ValueError("an Einstein fit of a lattice parameter needs two terms")
+    temps = _as_temperatures(temperatures)
+    vals = np.asarray(values, dtype="double")
     # best holds the smallest residual seen and the popt that produced it.
     best: tuple[float, NDArray[np.double]] | None = None
     n_converged = 0
     n_accepted = 0
     reasons: dict[str, int] = {}
-    for guess in _starting_guesses(values, n_terms, theta_pool):
+    for guess in _starting_guesses(vals, n_terms, theta_pool):
         try:
             popt, _ = curve_fit(
                 _n_einstein,
-                temperatures,
-                values,
+                temps,
+                vals,
                 p0=guess,
                 sigma=sigma,
                 absolute_sigma=sigma is not None,
@@ -362,13 +431,13 @@ def _fit_einstein(
         except (RuntimeError, ValueError):
             continue
         n_converged += 1
-        reason = _rejection(temperatures, values, popt, dip_factors)
+        reason = _rejection(temps, vals, popt, dip_factors)
         if reason is not None:
             reasons[reason] = reasons.get(reason, 0) + 1
             continue
         n_accepted += 1
-        model = _n_einstein(temperatures, popt[0], *popt[1:])
-        rms = float(np.sqrt(np.mean(np.square(model - values))))
+        model = _n_einstein(temps, popt[0], *popt[1:])
+        rms = float(np.sqrt(np.mean(np.square(model - vals))))
         if best is None or rms < best[0]:
             best = (rms, popt)
     if best is None:
@@ -379,11 +448,11 @@ def _fit_einstein(
         )
     rms, popt = best
     order = np.argsort(popt[2::2])
-    return _EinsteinFit(
-        model=_n_einstein(temperatures, popt[0], *popt[1:]),
+    return EinsteinFit(
         y0=float(popt[0]),
         amplitudes=np.asarray(popt[1::2])[order],
         thetas=np.asarray(popt[2::2])[order],
+        temperature_range=(float(temps.min()), float(temps.max())),
         rms=rms,
         n_converged=n_converged,
         n_accepted=n_accepted,
@@ -394,60 +463,90 @@ SmoothingMethod = Literal["none", "einstein"]
 SMOOTHING_METHODS = get_args(SmoothingMethod)
 
 
-def smooth_lattice_parameters(
-    temperatures: NDArray[np.double],
-    lattice_parameters: NDArray[np.double],
-    method: SmoothingMethod = "einstein",
-    n_terms: int = 2,
-    sigma: NDArray[np.double] | None = None,
-) -> tuple[NDArray[np.double], NDArray[np.double]]:
-    """Return smoothed lattice parameters and their temperature derivatives.
+@dataclass(frozen=True)
+class LatticeSmoothingFit:
+    """The fitted models of a(T), b(T), c(T), evaluable at any temperature.
 
-    Each of a, b and c is smoothed on its own. A column that does not vary is
-    returned unchanged with a zero derivative, so a fixed lattice length is
-    never fitted.
+    One fit per free lattice DOF, not per length: a and b tied by symmetry
+    are one DOF and one fit, and each fit is evaluated once however many
+    lengths read it.
 
-    The derivatives are those of the fitted model, in closed form. Having
-    committed to a model there is no reason to approximate its slope by finite
-    differences again: on a 10 K grid the difference is largest where the
-    curvature is, which is where a lattice parameter turns from contraction to
-    expansion.
-
-    Parameters
+    Attributes
     ----------
-    temperatures : ndarray
-        Temperatures in K, ascending. shape=(temperatures,)
-    lattice_parameters : ndarray
-        (a, b, c) at those temperatures in angstrom.
-        shape=(temperatures, 3)
-    method : Literal["none", "einstein"], optional
-        "einstein" to fit a sum of Einstein terms (the default), or "none" to
-        return the lattice parameters unchanged with zero derivatives.
-    n_terms : int, optional
-        Number of Einstein terms, at least 2. Default is 2. More terms follow
-        a curve more closely, at the cost of more freedom to follow its noise.
-    sigma : ndarray, optional
-        Per-point uncertainties of each column, shape=(temperatures, 3).
+    fits : dict
+        The fit of each free lattice DOF, keyed by the lattice-vector column
+        that represents it.
+    column_map : ndarray
+        The representative column each of a, b, c reads: [0, 0, 2] for a
+        hexagonal cell, whose b follows a. shape=(3,)
 
     """
-    if method not in SMOOTHING_METHODS:
-        raise ValueError(f"method must be one of {SMOOTHING_METHODS}, not {method!r}.")
-    values = np.array(lattice_parameters, dtype="double")
-    if method == "none":
-        return values, np.zeros_like(values)
-    if values.ndim != 2 or values.shape[1] != 3:
-        raise ValueError(
-            f"lattice_parameters must have shape (temperatures, 3), not {values.shape}."
+
+    fits: dict[int, EinsteinFit]
+    column_map: NDArray[np.int64]
+
+    @property
+    def temperature_range(self) -> tuple[float, float]:
+        """Return the range that every fit covers, in K.
+
+        The fits of one run are made on one set of temperatures and cover
+        the same range; the common part is what this collection can be
+        evaluated over.
+
+        """
+        lows, highs = zip(
+            *(fit.temperature_range for fit in self.fits.values()), strict=True
+        )
+        return (max(lows), min(highs))
+
+    @property
+    def n_terms(self) -> int:
+        """Return the number of Einstein terms each fit was made with."""
+        return len(next(iter(self.fits.values())).thetas)
+
+    def fit_of(self, column: int) -> EinsteinFit:
+        """Return the fit that a, b or c reads, by its column."""
+        return self.fits[int(self.column_map[column])]
+
+    def lattice_parameters(
+        self, temperatures: float | Sequence[float] | NDArray[np.double]
+    ) -> NDArray[np.double]:
+        """Return (a, b, c) at the given temperatures in K.
+
+        shape=(temperatures, 3). The temperatures need not be the ones
+        fitted, but must lie within their range.
+
+        """
+        temps = _as_temperatures(temperatures)
+        _check_temperature_range(temps, self.temperature_range)
+        return self._by_column(
+            temps, {column: fit.evaluate(temps) for column, fit in self.fits.items()}
         )
 
-    out = values.copy()
-    slopes = np.zeros_like(values)
-    for column in range(3):
-        series = values[:, column]
-        if np.ptp(series) == 0.0:
-            continue
-        errors = None if sigma is None else np.asarray(sigma)[:, column]
-        fit = _fit_einstein(temperatures, series, errors, n_terms=n_terms)
-        out[:, column] = fit.model
-        slopes[:, column] = fit.slope(temperatures)
-    return out, slopes
+    def slopes(
+        self, temperatures: float | Sequence[float] | NDArray[np.double]
+    ) -> NDArray[np.double]:
+        """Return d(a, b, c)/dT at the given temperatures in K, analytically.
+
+        shape=(temperatures, 3). Having committed to a model there is no
+        reason to approximate its slope by finite differences of it again:
+        on a 10 K grid the two differ most where the curvature is, which is
+        where a lattice parameter turns from contraction to expansion.
+
+        """
+        temps = _as_temperatures(temperatures)
+        _check_temperature_range(temps, self.temperature_range)
+        return self._by_column(
+            temps, {column: fit.slope(temps) for column, fit in self.fits.items()}
+        )
+
+    def _by_column(
+        self,
+        temperatures: NDArray[np.double],
+        values: dict[int, NDArray[np.double]],
+    ) -> NDArray[np.double]:
+        """Spread one value per free DOF over the three lattice lengths."""
+        out = np.zeros((len(temperatures), 3), dtype="double")
+        for column in range(3):
+            out[:, column] = values[int(self.column_map[column])]
+        return out

@@ -35,16 +35,17 @@ def _result_with_lattice(
         temperatures=empty,
         lattice_lengths=np.array(lattice_lengths, dtype="double"),
         free_lattice_indices=np.array(free_lattice_indices, dtype="int64"),
-        surface_degree=2,
+        polynomial_degree=2,
         helmholtz_lattice=empty,
         equilibrium_lattice_parameters=np.zeros((0, 3)),
+        unsmoothed_lattice_parameters=np.zeros((0, 3)),
         equilibrium_volumes=empty,
         gibbs_free_energies=empty,
         thermal_expansion=empty,
         axial_thermal_expansions=np.zeros((0, 3)),
         surface_fit_rms=empty,
         surface_fit_rank=6,
-        surface_n_terms=6,
+        polynomial_n_terms=6,
         minimum_extrapolated=np.zeros(0, dtype=bool),
     )
 
@@ -167,7 +168,7 @@ def test_compare_eos_writes_the_comparison(
         TEMPERATURES,
         internal_energies=energies,
         mesh=MESH,
-        surface_degree=2,
+        polynomial_degree=2,
     )
 
     compare_thermal_expansion_eos(
@@ -190,7 +191,7 @@ def test_compare_eos_writes_the_comparison(
 
     # The settings that produced the numbers travel with them.
     header = (tmp_path / "thermal_expansion_compare.dat").read_text()
-    assert "surface_degree=2" in header
+    assert "polynomial_degree=2" in header
     assert "alpha_c_vinet" in header
 
     # Cubic, so both methods must put the same number in the a and the c
