@@ -21,6 +21,7 @@ from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
 from phonopy.qha.calc import (
+    compute_entropy_enthalpy_temperature,
     compute_gruneisen_parameters,
     compute_heat_capacity_p_polyfit,
     compute_volumetric_thermal_expansion,
@@ -133,6 +134,12 @@ class QHAResult:
         Equilibrium volumes V_0 at temperatures in angstrom^3. shape=(N,)
     gibbs_free_energies : ndarray
         Gibbs free energies at temperatures in eV. shape=(N,)
+    entropy_temperature : ndarray
+        System entropy at constant pressure in J/K/mol, S(T, V_eq(T, p))
+        from a degree-4 S(V) fit. shape=(N,)
+    enthalpy_temperature : ndarray
+        System enthalpy at constant pressure in eV, H = G + T S.
+        shape=(N,)
     bulk_moduli : ndarray
         Bulk moduli at temperatures in GPa. shape=(N,)
     thermal_expansion : ndarray
@@ -156,6 +163,8 @@ class QHAResult:
     eos_parameters: NDArray[np.double]
     equilibrium_volumes: NDArray[np.double]
     gibbs_free_energies: NDArray[np.double]
+    entropy_temperature: NDArray[np.double]
+    enthalpy_temperature: NDArray[np.double]
     bulk_moduli: NDArray[np.double]
     thermal_expansion: NDArray[np.double]
     gruneisen_parameters: NDArray[np.double]
@@ -295,6 +304,9 @@ def run_qha(
     heat_capacity_P = _make_heat_capacity_data(
         temps, volumes, equilibrium_volumes, cv_kept, entropy_kept
     )
+    entropy_enthalpy = compute_entropy_enthalpy_temperature(
+        temps, volumes, equilibrium_volumes, entropy_kept, gibbs_free_energies
+    )
 
     n = len(temps) - 1
     lattice: QHALatticeData | None = None
@@ -318,6 +330,8 @@ def run_qha(
         eos_parameters=eos_parameters[:n],
         equilibrium_volumes=equilibrium_volumes[:n],
         gibbs_free_energies=gibbs_free_energies[:n],
+        entropy_temperature=entropy_enthalpy.entropy[:n],
+        enthalpy_temperature=entropy_enthalpy.enthalpy[:n],
         bulk_moduli=bulk_moduli[:n],
         thermal_expansion=thermal_expansion,
         gruneisen_parameters=gruneisen_parameters,

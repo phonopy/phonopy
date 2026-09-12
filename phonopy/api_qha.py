@@ -187,6 +187,32 @@ class PhonopyQHA:
         return self._qha.gibbs_temperature
 
     @property
+    def entropy_temperature(self) -> NDArray[np.double]:
+        """Return entropy of the system at temperatures.
+
+        Returns
+        -------
+        ndarray
+            Entropy at constant pressure and temperatures in J/K/mol.
+            shape=(temperatures, ), dtype=float
+
+        """
+        return self._qha.entropy_temperature
+
+    @property
+    def enthalpy_temperature(self) -> NDArray[np.double]:
+        """Return enthalpy of the system at temperatures.
+
+        Returns
+        -------
+        ndarray
+            Enthalpy at constant pressure and temperatures in eV.
+            shape=(temperatures, ), dtype=float
+
+        """
+        return self._qha.enthalpy_temperature
+
+    @property
     def bulk_modulus_temperature(self) -> NDArray[np.double]:
         """Return bulk modulus at temperatures.
 
@@ -299,6 +325,18 @@ class PhonopyQHA:
     ) -> None:
         """Write Gibbs free energy vs temperature in file."""
         self._qha.write_gibbs_temperature(filename=filename)
+
+    def write_entropy_temperature(
+        self, filename: str | os.PathLike = "entropy-temperature.dat"
+    ) -> None:
+        """Write entropy vs temperature in file."""
+        self._qha.write_entropy_temperature(filename=filename)
+
+    def write_enthalpy_temperature(
+        self, filename: str | os.PathLike = "enthalpy-temperature.dat"
+    ) -> None:
+        """Write enthalpy vs temperature in file."""
+        self._qha.write_enthalpy_temperature(filename=filename)
 
     def write_bulk_modulus_temperature(
         self, filename: str | os.PathLike = "bulk_modulus-temperature.dat"

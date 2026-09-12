@@ -137,6 +137,24 @@ def write_gibbs_temperature(
             w.write("%20.15f %25.15f\n" % (t, g))
 
 
+def write_entropy_temperature(
+    result: QHAResult, filename: str | os.PathLike = "entropy-temperature.dat"
+) -> None:
+    """Write entropy vs temperature in file."""
+    with open(filename, "w") as w:
+        for t, s in zip(result.temperatures, result.entropy_temperature, strict=True):
+            w.write("%20.15f %25.15f\n" % (t, s))
+
+
+def write_enthalpy_temperature(
+    result: QHAResult, filename: str | os.PathLike = "enthalpy-temperature.dat"
+) -> None:
+    """Write enthalpy vs temperature in file."""
+    with open(filename, "w") as w:
+        for t, h in zip(result.temperatures, result.enthalpy_temperature, strict=True):
+            w.write("%20.15f %25.15f\n" % (t, h))
+
+
 def write_bulk_modulus_temperature(
     result: QHAResult, filename: str | os.PathLike = "bulk_modulus-temperature.dat"
 ) -> None:

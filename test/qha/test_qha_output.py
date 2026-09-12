@@ -19,6 +19,8 @@ SIMPLE_WRITER_NAMES = [
     "write_volume_temperature",
     "write_thermal_expansion",
     "write_gibbs_temperature",
+    "write_entropy_temperature",
+    "write_enthalpy_temperature",
     "write_bulk_modulus_temperature",
     "write_gruneisen_temperature",
 ]

@@ -88,6 +88,74 @@ def compute_heat_capacity_p_numerical(
     return np.array(cp, dtype="double")
 
 
+class EntropyEnthalpyArrays(NamedTuple):
+    """System entropy and enthalpy at constant pressure.
+
+    Both arrays have the same length as the input temperatures. Entropy is
+    in J/K/mol and enthalpy is in eV, so that G = H - T S holds after
+    converting S to eV/K.
+
+    """
+
+    entropy: NDArray[np.double]
+    enthalpy: NDArray[np.double]
+
+
+def compute_entropy_enthalpy_temperature(
+    temperatures: NDArray[np.double],
+    volumes: NDArray[np.double],
+    equilibrium_volumes: NDArray[np.double],
+    entropy: NDArray[np.double],
+    gibbs_free_energies: NDArray[np.double],
+) -> EntropyEnthalpyArrays:
+    """Evaluate S(T, p) and H(T, p) from S(V) fits at V_eq.
+
+    S(T, p) = S(T, V_eq(T, p)) where S(V) is a degree-4 polynomial at each
+    temperature, the same interpolation used for heat_capacity_P_polyfit.
+    G(T) is not differentiated. H = G + T S with S converted eV/K.
+
+    Parameters
+    ----------
+    temperatures : ndarray
+        Temperatures in K. shape=(num_elems,)
+    volumes : ndarray
+        Unit cell volumes of the input volume grid in angstrom^3.
+        shape=(volumes,)
+    equilibrium_volumes : ndarray
+        Equilibrium volumes at temperatures in angstrom^3.
+        shape=(num_elems,)
+    entropy : ndarray
+        Entropies at constant volume in J/K/mol, indexed consistently
+        with temperatures. shape=(>=num_elems, volumes)
+    gibbs_free_energies : ndarray
+        Gibbs free energies at temperatures in eV. shape=(num_elems,)
+
+    """
+    if len(volumes) < 5:
+        raise RuntimeError(
+            "At least 5 volume points are needed to fit S(V) to a "
+            "polynomial of degree 4."
+        )
+
+    ev_to_jmol = get_physical_units().EvTokJmol * 1000.0
+    n = len(temperatures)
+    entropies = np.empty(n, dtype="double")
+    for i in range(n):
+        try:
+            parameters = np.polyfit(volumes, entropy[i], 4)
+        except np.lib.polynomial.RankWarning as exc:  # type: ignore
+            msg = ["Failed to fit entropies to polynomial of degree 4."]
+            msg += ["At least 5 volume points are needed for the fitting."]
+            raise RuntimeError("\n".join(msg)) from exc
+        entropies[i] = float(np.polyval(parameters, equilibrium_volumes[i]))
+
+    enthalpies = gibbs_free_energies + temperatures * entropies / ev_to_jmol
+    return EntropyEnthalpyArrays(
+        entropy=np.array(entropies, dtype="double"),
+        enthalpy=np.array(enthalpies, dtype="double"),
+    )
+
+
 def compute_heat_capacity_p_polyfit(
     temperatures: NDArray[np.double],
     volumes: NDArray[np.double],

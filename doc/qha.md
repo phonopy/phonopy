@@ -324,6 +324,16 @@ Remarks:
   `result.heat_capacity_P.heat_capacities`. The
   {math}`-T\partial^2 G/\partial T^2` variant of the legacy API is not
   provided.
+- System entropy and enthalpy at constant pressure are
+  `result.entropy_temperature` (J/K/mol) and
+  `result.enthalpy_temperature` (eV). They are obtained from a
+  degree-4 polynomial fit of {math}`S(V)` evaluated at {math}`V_eq(T,p)`,
+  not from a numerical derivative of {math}`G(T)`. Then
+  {math}`H = G + TS`. The deprecated `PhonopyQHA` exposes the same
+  quantities as `entropy_temperature` and `enthalpy_temperature`; those
+  properties are unavailable when temperature-dependent electronic
+  free-energy arrays are supplied, because {math}`S_\mathrm{el}` is not
+  stored on that path.
 - The file formats written by `phonopy.qha.output` are identical to those of
   `phonopy-qha` for the shared quantities.
 
@@ -481,6 +491,8 @@ is:
 | ---------------------------- | ------------------------------------------ |
 | `volume_temperature`         | `QHAResult.equilibrium_volumes`            |
 | `gibbs_temperature`          | `QHAResult.gibbs_free_energies`            |
+| `entropy_temperature`        | `QHAResult.entropy_temperature`            |
+| `enthalpy_temperature`       | `QHAResult.enthalpy_temperature`           |
 | `bulk_modulus_temperature`   | `QHAResult.bulk_moduli`                    |
 | `thermal_expansion`          | `QHAResult.thermal_expansion`              |
 | `heat_capacity_P_polyfit`    | `QHAResult.heat_capacity_P.heat_capacities`|

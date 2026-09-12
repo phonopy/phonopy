@@ -140,6 +140,8 @@ lattice-parameter output.
 | `PhonopyQHA(volumes, ...)`   | `run_qha(phonopys, ...)` (`QHAResult`)     |
 | `volume_temperature`         | `QHAResult.equilibrium_volumes`            |
 | `gibbs_temperature`          | `QHAResult.gibbs_free_energies`            |
+| `entropy_temperature`        | `QHAResult.entropy_temperature`            |
+| `enthalpy_temperature`       | `QHAResult.enthalpy_temperature`           |
 | `bulk_modulus_temperature`   | `QHAResult.bulk_moduli`                    |
 | `thermal_expansion`          | `QHAResult.thermal_expansion`              |
 | `heat_capacity_P_polyfit`    | `QHAResult.heat_capacity_P.heat_capacities`|
