@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
 from phonopy.qha.calc import (
+    compute_entropy_enthalpy_temperature,
     compute_gruneisen_parameters,
     compute_heat_capacity_p_numerical,
     compute_heat_capacity_p_polyfit,
@@ -256,6 +257,8 @@ class QHA:
         self._volume_entropy: list[NDArray[np.double]] | None = None
         self._volume_cv: list[NDArray[np.double]] | None = None
         self._cp_polyfit: NDArray[np.double] | None = None
+        self._equiv_entropies: NDArray[np.double] | None = None
+        self._equiv_enthalpies: NDArray[np.double] | None = None
         self._dsdv: NDArray[np.double] | None = None
         self._gruneisen_parameters: NDArray[np.double] | None = None
         self._len: int | None = None
@@ -287,6 +290,49 @@ class QHA:
         if self._equiv_energies is None:
             raise RuntimeError("Run QHA.run() to compute Gibbs free energies.")
         return self._equiv_energies[: self._len]
+
+    @property
+    def entropy_temperature(self) -> NDArray[np.double]:
+        """Return entropy of the system at constant pressure and temperatures.
+
+        S(T, p) = S(T, V_eq(T, p)) from a degree-4 polynomial fit of S(V)
+        at each temperature, the same interpolation used for
+        heat_capacity_P_polyfit. G(T) is not differentiated.
+
+        Returns
+        -------
+        ndarray
+            Entropy at constant pressure in J/K/mol.
+            shape=(temperatures,)
+
+        """
+        if self._equiv_entropies is None:
+            raise RuntimeError(
+                "Entropy is unavailable. Run QHA.run(); note it is not "
+                "supported with temperature dependent electronic energies."
+            )
+        return self._equiv_entropies[: self._len]
+
+    @property
+    def enthalpy_temperature(self) -> NDArray[np.double]:
+        """Return enthalpy of the system at constant pressure and temperatures.
+
+        H(T, p) = G(T, p) + T S(T, p). G is the EOS-fit minimum
+        (gibbs_temperature) and is not differentiated.
+
+        Returns
+        -------
+        ndarray
+            Enthalpy at constant pressure in eV.
+            shape=(temperatures,)
+
+        """
+        if self._equiv_enthalpies is None:
+            raise RuntimeError(
+                "Enthalpy is unavailable. Run QHA.run(); note it is not "
+                "supported with temperature dependent electronic energies."
+            )
+        return self._equiv_enthalpies[: self._len]
 
     @property
     def bulk_modulus_temperature(self) -> NDArray[np.double]:
@@ -408,6 +454,7 @@ class QHA:
         self._set_thermal_expansion()
         self._set_heat_capacity_P_numerical()
         self._set_heat_capacity_P_polyfit()
+        self._set_entropy_and_enthalpy()
         self._set_gruneisen_parameter()  # To be run after thermal expansion.
 
         assert self._thermal_expansions is not None
@@ -726,6 +773,44 @@ class QHA:
                 w.write(
                     "%20.15f %25.15f\n"
                     % (self._temperatures[i], self._equiv_energies[i])
+                )
+
+    def get_entropy_temperature(self) -> NDArray[np.double]:
+        """Return entropy of the system at temperatures."""
+        return self.entropy_temperature
+
+    def write_entropy_temperature(
+        self, filename: str | os.PathLike = "entropy-temperature.dat"
+    ) -> None:
+        """Write entropy vs temperature in file."""
+        assert self._temperatures is not None
+        assert self._equiv_entropies is not None
+        assert self._len is not None
+
+        with open(filename, "w") as w:
+            for i in range(self._len):
+                w.write(
+                    "%20.15f %25.15f\n"
+                    % (self._temperatures[i], self._equiv_entropies[i])
+                )
+
+    def get_enthalpy_temperature(self) -> NDArray[np.double]:
+        """Return enthalpy of the system at temperatures."""
+        return self.enthalpy_temperature
+
+    def write_enthalpy_temperature(
+        self, filename: str | os.PathLike = "enthalpy-temperature.dat"
+    ) -> None:
+        """Write enthalpy vs temperature in file."""
+        assert self._temperatures is not None
+        assert self._equiv_enthalpies is not None
+        assert self._len is not None
+
+        with open(filename, "w") as w:
+            for i in range(self._len):
+                w.write(
+                    "%20.15f %25.15f\n"
+                    % (self._temperatures[i], self._equiv_enthalpies[i])
                 )
 
     def get_bulk_modulus_temperature(self) -> NDArray[np.double]:
@@ -1241,6 +1326,29 @@ class QHA:
             np.array([self._volumes, self._entropy[j]]).T
             for j in range(1, self._num_elems - 1)
         ]
+
+    def _set_entropy_and_enthalpy(self) -> None:
+        assert self._temperatures is not None
+        assert self._equiv_volumes is not None
+        assert self._equiv_energies is not None
+        assert self._entropy is not None
+
+        # S_el = -(dF_el/dT)_V is not stored on this path, so S and H
+        # from volume combinations are only exact for static U(V).
+        if self._electronic_energies.ndim != 1:
+            self._equiv_entropies = None
+            self._equiv_enthalpies = None
+            return
+
+        result = compute_entropy_enthalpy_temperature(
+            self._temperatures,
+            self._volumes,
+            self._equiv_volumes,
+            self._entropy,
+            self._equiv_energies,
+        )
+        self._equiv_entropies = result.entropy
+        self._equiv_enthalpies = result.enthalpy
 
     def _set_gruneisen_parameter(self) -> None:
         assert self._equiv_volumes is not None
