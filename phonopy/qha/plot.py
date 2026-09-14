@@ -5,6 +5,10 @@ All functions take a QHAResult as the first argument and return the
 matplotlib.pyplot module with the created figure active. matplotlib is
 imported inside the functions and no global rcParams are modified.
 
+QHAResult is in eV, angstrom and K throughout. Axes labelled in J/K/mol or
+GPa convert here, at the plotting boundary, as phonopy.qha.output does for
+the files.
+
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
+from phonopy.physical_units import get_physical_units
 from phonopy.qha.eos import get_eos
 
 if TYPE_CHECKING:
@@ -104,7 +109,13 @@ def plot_bulk_modulus_temperature(
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots()
-    _draw_temperature_curve(ax, result.temperatures, result.bulk_moduli, xlabel, ylabel)
+    _draw_temperature_curve(
+        ax,
+        result.temperatures,
+        result.bulk_moduli * get_physical_units().EVAngstromToGPa,
+        xlabel,
+        ylabel,
+    )
     return plt
 
 
@@ -116,11 +127,12 @@ def plot_heat_capacity_P(
     """Return pyplot of C_P vs temperature."""
     import matplotlib.pyplot as plt
 
+    ev_to_jmol = get_physical_units().EvTokJmol * 1000.0
     fig, ax = plt.subplots()
     _draw_temperature_curve(
         ax,
         result.temperatures,
-        result.heat_capacity_P.heat_capacities / Z,
+        result.heat_capacity_P.heat_capacities * ev_to_jmol / Z,
         "Temperature (K)",
         r"$C\mathrm{_P}$ $\mathrm{(J/mol\cdot K)}$",
     )

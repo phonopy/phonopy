@@ -21,6 +21,17 @@ from phonopy.qha.calc import (
 from phonopy.qha.eos import fit_to_eos, get_eos
 
 
+def _ev_to_jmol() -> float:
+    """Return the factor converting eV to J/mol.
+
+    phonopy.qha.calc works in eV, angstrom and K throughout, while this
+    module reports entropies and heat capacities in J/K/mol and bulk
+    moduli in GPa. The conversions sit at the calls into calc.
+
+    """
+    return get_physical_units().EvTokJmol * 1000.0
+
+
 class BulkModulus:
     """Bulk modulus class.
 
@@ -1296,8 +1307,10 @@ class QHA:
         assert self._temperatures is not None
         assert self._equiv_energies is not None
 
-        self._cp_numerical = compute_heat_capacity_p_numerical(
-            self._temperatures, self._equiv_energies
+        # phonopy.qha.calc works in eV/K; this class reports J/K/mol.
+        self._cp_numerical = (
+            compute_heat_capacity_p_numerical(self._temperatures, self._equiv_energies)
+            * _ev_to_jmol()
         )
 
     def _set_heat_capacity_P_polyfit(self) -> None:
@@ -1307,17 +1320,24 @@ class QHA:
         assert self._entropy is not None
         assert self._num_elems is not None
 
+        # The polynomial fits are linear in the fitted data, so scaling
+        # their coefficients converts them back to J/K/mol as well.
+        ev_to_jmol = _ev_to_jmol()
         result = compute_heat_capacity_p_polyfit(
             self._temperatures,
             self._volumes,
             self._equiv_volumes,
-            self._cv,
-            self._entropy,
+            self._cv / ev_to_jmol,
+            self._entropy / ev_to_jmol,
         )
-        self._cp_polyfit = result.cp
-        self._dsdv = result.dsdv
-        self._volume_cv_parameters = result.volume_cv_parameters
-        self._volume_entropy_parameters = result.volume_entropy_parameters
+        self._cp_polyfit = result.cp * ev_to_jmol
+        self._dsdv = result.dsdv * ev_to_jmol
+        self._volume_cv_parameters = [
+            p * ev_to_jmol for p in result.volume_cv_parameters
+        ]
+        self._volume_entropy_parameters = [
+            p * ev_to_jmol for p in result.volume_entropy_parameters
+        ]
         self._volume_cv = [
             np.array([self._volumes, self._cv[j]]).T
             for j in range(1, self._num_elems - 1)
@@ -1340,14 +1360,15 @@ class QHA:
             self._equiv_enthalpies = None
             return
 
+        ev_to_jmol = _ev_to_jmol()
         result = compute_entropy_enthalpy_temperature(
             self._temperatures,
             self._volumes,
             self._equiv_volumes,
-            self._entropy,
+            self._entropy / ev_to_jmol,
             self._equiv_energies,
         )
-        self._equiv_entropies = result.entropy
+        self._equiv_entropies = result.entropy * ev_to_jmol
         self._equiv_enthalpies = result.enthalpy
 
     def _set_gruneisen_parameter(self) -> None:
@@ -1359,9 +1380,9 @@ class QHA:
         self._gruneisen_parameters = compute_gruneisen_parameters(
             self._volumes,
             self._equiv_volumes,
-            self._equiv_bulk_modulus,
+            self._equiv_bulk_modulus / get_physical_units().EVAngstromToGPa,
             self._thermal_expansions,
-            self._cv,
+            self._cv / _ev_to_jmol(),
         )
 
     def _get_num_elems(self, temperatures: NDArray[np.double]) -> int:

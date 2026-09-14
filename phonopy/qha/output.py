@@ -4,6 +4,10 @@
 All functions take a QHAResult as the first argument. File formats of the
 quantities shared with the legacy QHA implementation are kept identical.
 
+QHAResult is in eV, angstrom and K throughout, while these files carry the
+J/K/mol, GPa and GPa/K that phonopy-qha has always written. This module is
+that boundary: the conversions live here and nowhere upstream.
+
 """
 
 from __future__ import annotations
@@ -18,6 +22,11 @@ from phonopy.qha.eos import get_eos
 
 if TYPE_CHECKING:
     from phonopy.qha.qha import QHAResult
+
+
+def _ev_to_jmol() -> float:
+    """Return the factor converting eV to J/mol."""
+    return get_physical_units().EvTokJmol * 1000.0
 
 
 def write_helmholtz_volume(
@@ -140,10 +149,11 @@ def write_gibbs_temperature(
 def write_entropy_temperature(
     result: QHAResult, filename: str | os.PathLike = "entropy-temperature.dat"
 ) -> None:
-    """Write entropy vs temperature in file."""
+    """Write entropy vs temperature in file in J/K/mol."""
+    ev_to_jmol = _ev_to_jmol()
     with open(filename, "w") as w:
         for t, s in zip(result.temperatures, result.entropy_temperature, strict=True):
-            w.write("%20.15f %25.15f\n" % (t, s))
+            w.write("%20.15f %25.15f\n" % (t, s * ev_to_jmol))
 
 
 def write_enthalpy_temperature(
@@ -158,10 +168,11 @@ def write_enthalpy_temperature(
 def write_bulk_modulus_temperature(
     result: QHAResult, filename: str | os.PathLike = "bulk_modulus-temperature.dat"
 ) -> None:
-    """Write bulk modulus vs temperature in file."""
+    """Write bulk modulus vs temperature in file in GPa."""
+    to_gpa = get_physical_units().EVAngstromToGPa
     with open(filename, "w") as w:
         for t, b in zip(result.temperatures, result.bulk_moduli, strict=True):
-            w.write("%20.15f %25.15f\n" % (t, b))
+            w.write("%20.15f %25.15f\n" % (t, b * to_gpa))
 
 
 def write_heat_capacity_P(
@@ -171,9 +182,16 @@ def write_heat_capacity_P(
     filename_cvv: str | os.PathLike = "Cv-volume.dat",
     filename_dsdvt: str | os.PathLike = "dsdv-temperature.dat",
 ) -> None:
-    """Write C_P and its polynomial-fit details in files."""
+    """Write C_P and its polynomial-fit details in files.
+
+    C_P, S and Cv are written in J/K/mol and dS/dV in GPa/K. The
+    polynomial fits are linear in the fitted data, so scaling their
+    coefficients converts them to the same units.
+
+    """
     cp_data = result.heat_capacity_P
     temperatures = result.temperatures
+    ev_to_jmol = _ev_to_jmol()
 
     with open(filename_ev, "w") as wve, open(filename_cvv, "w") as wvcv:
         for i in range(1, len(temperatures)):
@@ -181,30 +199,29 @@ def write_heat_capacity_P(
             wve.write("# temperature %20.15f\n" % t)
             wve.write(
                 "# %20.15f %20.15f %20.15f %20.15f %20.15f\n"
-                % tuple(cp_data.volume_entropy_parameters[i - 1])
+                % tuple(cp_data.volume_entropy_parameters[i - 1] * ev_to_jmol)
             )
             wvcv.write("# temperature %20.15f\n" % t)
             wvcv.write(
                 "# %20.15f %20.15f %20.15f %20.15f %20.15f\n"
-                % tuple(cp_data.volume_cv_parameters[i - 1])
+                % tuple(cp_data.volume_cv_parameters[i - 1] * ev_to_jmol)
             )
             for ve, vcv in zip(
                 cp_data.volume_entropy[i - 1], cp_data.volume_cv[i - 1], strict=True
             ):
-                wve.write("%20.15f %20.15f\n" % tuple(ve))
-                wvcv.write("%20.15f %20.15f\n" % tuple(vcv))
+                wve.write("%20.15f %20.15f\n" % (ve[0], ve[1] * ev_to_jmol))
+                wvcv.write("%20.15f %20.15f\n" % (vcv[0], vcv[1] * ev_to_jmol))
             wve.write("\n\n")
             wvcv.write("\n\n")
 
     with open(filename, "w") as w:
         for t, cp in zip(temperatures, cp_data.heat_capacities, strict=True):
-            w.write("%20.15f %20.15f\n" % (t, cp))
+            w.write("%20.15f %20.15f\n" % (t, cp * ev_to_jmol))
 
-    with open(filename_dsdvt, "w") as w:  # GPa
+    to_gpa = get_physical_units().EVAngstromToGPa
+    with open(filename_dsdvt, "w") as w:
         for t, dsdv in zip(temperatures, cp_data.dsdv, strict=True):
-            w.write(
-                "%20.15f %20.15f\n" % (t, dsdv * 1e21 / get_physical_units().Avogadro)
-            )
+            w.write("%20.15f %20.15f\n" % (t, dsdv * to_gpa))
 
 
 def write_gruneisen_temperature(
