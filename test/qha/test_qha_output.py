@@ -19,9 +19,47 @@ SIMPLE_WRITER_NAMES = [
     "write_volume_temperature",
     "write_thermal_expansion",
     "write_gibbs_temperature",
+    "write_entropy_temperature",
+    "write_enthalpy_temperature",
     "write_bulk_modulus_temperature",
     "write_gruneisen_temperature",
 ]
+
+
+def _is_number(token: str) -> bool:
+    try:
+        float(token)
+    except ValueError:
+        return False
+    return True
+
+
+def assert_files_match(fn_new: Path, fn_old: Path, rtol: float = 1e-14) -> None:
+    """Assert two data files agree in layout exactly and in value to rtol.
+
+    QHAResult carries the entropies and heat capacities in eV/K, so
+    write_heat_capacity_P multiplies by a factor that run_qha had divided
+    by, and a few values come out one bit away from the legacy ones. The
+    line count, the column count and every token that is not a number
+    still have to match exactly.
+
+    """
+    new_lines = fn_new.read_text().splitlines()
+    old_lines = fn_old.read_text().splitlines()
+    assert len(new_lines) == len(old_lines)
+    for i, (new_line, old_line) in enumerate(zip(new_lines, old_lines, strict=True)):
+        if new_line == old_line:
+            continue
+        new_tokens = new_line.split()
+        old_tokens = old_line.split()
+        assert len(new_tokens) == len(old_tokens), f"line {i + 1} has other columns"
+        for new, old in zip(new_tokens, old_tokens, strict=True):
+            if new == old:
+                continue
+            assert _is_number(new) and _is_number(old), (
+                f"line {i + 1}: {new!r} is not {old!r}"
+            )
+            np.testing.assert_allclose(float(new), float(old), rtol=rtol, atol=0)
 
 
 @pytest.mark.parametrize("writer_name", SIMPLE_WRITER_NAMES)
@@ -50,10 +88,16 @@ def test_write_helmholtz_volume_fitted_identical(
     assert fn_new.read_bytes() == fn_old.read_bytes()
 
 
-def test_write_heat_capacity_P_identical(
+def test_write_heat_capacity_P_matches_legacy(
     qha_result_nacl: QHAResult, qha_ref_nacl: PhonopyQHA, tmp_path: Path
 ) -> None:
-    """C_P writer produces byte-identical files to the legacy polyfit writer."""
+    """C_P writer reproduces the files of the legacy polyfit writer.
+
+    Cp-temperature.dat and dsdv-temperature.dat come out byte-identical.
+    In entropy-volume.dat and Cv-volume.dat a few of the tabulated S and
+    Cv values differ in the last bit, which assert_files_match allows.
+
+    """
     old_names = [tmp_path / f"old-{i}.dat" for i in range(4)]
     new_names = [tmp_path / f"new-{i}.dat" for i in range(4)]
     qha_ref_nacl.write_heat_capacity_P_polyfit(
@@ -70,7 +114,7 @@ def test_write_heat_capacity_P_identical(
         filename_dsdvt=new_names[3],
     )
     for fn_new, fn_old in zip(new_names, old_names, strict=True):
-        assert fn_new.read_bytes() == fn_old.read_bytes()
+        assert_files_match(fn_new, fn_old)
 
 
 def test_write_lattice_parameters_temperature(

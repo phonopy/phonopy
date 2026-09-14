@@ -4,6 +4,12 @@
 Functions in this module operate on plain arrays and have no I/O,
 plotting, or object state.
 
+One unit system runs through this module: eV, angstrom and K. Energies
+are in eV, volumes in angstrom^3, entropies and heat capacities in eV/K,
+and bulk moduli in eV/angstrom^3. Nothing here converts units, so the
+formulas are the textbook ones. A caller reporting J/K/mol or GPa
+converts at its own boundary.
+
 """
 
 from __future__ import annotations
@@ -13,15 +19,13 @@ from typing import NamedTuple
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.physical_units import get_physical_units
-
 
 class CpPolyfitArrays(NamedTuple):
     """Results of C_P computation via polynomial fits of Cv(V) and S(V).
 
-    cp and dsdv have the same length as the input temperatures with a
-    leading 0.0 element. The parameter lists have two fewer elements,
-    corresponding to temperatures[1:-1].
+    cp is in eV/K and dsdv in eV/K/angstrom^3. Both have the same length
+    as the input temperatures with a leading 0.0 element. The parameter
+    lists have two fewer elements, corresponding to temperatures[1:-1].
 
     """
 
@@ -75,9 +79,14 @@ def compute_heat_capacity_p_numerical(
     gibbs_free_energies : ndarray
         Gibbs free energies at temperatures in eV. shape=(num_elems,)
 
+    Returns
+    -------
+    ndarray
+        Heat capacities at constant pressure in eV/K. shape=(num_elems - 1,)
+
     """
     cp = []
-    g = np.array(gibbs_free_energies) * get_physical_units().EvTokJmol * 1000
+    g = np.array(gibbs_free_energies)
     cp.append(0.0)
 
     for i in range(1, len(temperatures) - 1):
@@ -86,6 +95,72 @@ def compute_heat_capacity_p_numerical(
         cp.append(-(2 * parameters[0]) * t)
 
     return np.array(cp, dtype="double")
+
+
+class EntropyEnthalpyArrays(NamedTuple):
+    """System entropy and enthalpy at constant pressure.
+
+    Both arrays have the same length as the input temperatures. Entropy is
+    in eV/K and enthalpy is in eV, so that G = H - T S holds directly.
+
+    """
+
+    entropy: NDArray[np.double]
+    enthalpy: NDArray[np.double]
+
+
+def compute_entropy_enthalpy_temperature(
+    temperatures: NDArray[np.double],
+    volumes: NDArray[np.double],
+    equilibrium_volumes: NDArray[np.double],
+    entropy: NDArray[np.double],
+    gibbs_free_energies: NDArray[np.double],
+) -> EntropyEnthalpyArrays:
+    """Evaluate S(T, p) and H(T, p) from S(V) fits at V_eq.
+
+    S(T, p) = S(T, V_eq(T, p)) where S(V) is a degree-4 polynomial at each
+    temperature, the same interpolation used for heat_capacity_P_polyfit.
+    G(T) is not differentiated. H = G + T S.
+
+    Parameters
+    ----------
+    temperatures : ndarray
+        Temperatures in K. shape=(num_elems,)
+    volumes : ndarray
+        Unit cell volumes of the input volume grid in angstrom^3.
+        shape=(volumes,)
+    equilibrium_volumes : ndarray
+        Equilibrium volumes at temperatures in angstrom^3.
+        shape=(num_elems,)
+    entropy : ndarray
+        Entropies at constant volume in eV/K, indexed consistently
+        with temperatures. shape=(>=num_elems, volumes)
+    gibbs_free_energies : ndarray
+        Gibbs free energies at temperatures in eV. shape=(num_elems,)
+
+    """
+    if len(volumes) < 5:
+        raise RuntimeError(
+            "At least 5 volume points are needed to fit S(V) to a "
+            "polynomial of degree 4."
+        )
+
+    n = len(temperatures)
+    entropies = np.empty(n, dtype="double")
+    for i in range(n):
+        try:
+            parameters = np.polyfit(volumes, entropy[i], 4)
+        except np.lib.polynomial.RankWarning as exc:  # type: ignore
+            msg = ["Failed to fit entropies to polynomial of degree 4."]
+            msg += ["At least 5 volume points are needed for the fitting."]
+            raise RuntimeError("\n".join(msg)) from exc
+        entropies[i] = float(np.polyval(parameters, equilibrium_volumes[i]))
+
+    enthalpies = gibbs_free_energies + temperatures * entropies
+    return EntropyEnthalpyArrays(
+        entropy=np.array(entropies, dtype="double"),
+        enthalpy=np.array(enthalpies, dtype="double"),
+    )
 
 
 def compute_heat_capacity_p_polyfit(
@@ -112,10 +187,10 @@ def compute_heat_capacity_p_polyfit(
         Equilibrium volumes at temperatures in angstrom^3.
         shape=(num_elems,)
     cv : ndarray
-        Heat capacities at constant volume in J/K/mol, indexed
+        Heat capacities at constant volume in eV/K, indexed
         consistently with temperatures. shape=(>=num_elems, volumes)
     entropy : ndarray
-        Entropies at constant volume in J/K/mol, indexed consistently
+        Entropies at constant volume in eV/K, indexed consistently
         with temperatures. shape=(>=num_elems, volumes)
 
     """
@@ -196,12 +271,12 @@ def compute_gruneisen_parameters(
         Equilibrium volumes at temperatures in angstrom^3.
         shape=(num_elems,)
     bulk_moduli : ndarray
-        Bulk moduli at temperatures in GPa. shape=(num_elems,)
+        Bulk moduli at temperatures in eV/angstrom^3. shape=(num_elems,)
     thermal_expansions : ndarray
         Volumetric thermal expansion coefficients at temperatures in 1/K.
         shape=(num_elems - 1,)
     cv : ndarray
-        Heat capacities at constant volume in J/K/mol, indexed
+        Heat capacities at constant volume in eV/K, indexed
         consistently with temperatures. shape=(>=num_elems, volumes)
 
     """
@@ -217,14 +292,9 @@ def compute_gruneisen_parameters(
             if len(volumes) < 5:
                 msg += ["At least 5 volume points are needed for the fitting."]
             raise RuntimeError("\n".join(msg)) from exc
-        cv_v = (
-            np.dot(parameters, [v**4, v**3, v**2, v, 1])
-            / v
-            / 1000
-            / get_physical_units().EvTokJmol
-            * get_physical_units().EVAngstromToGPa
-        )
-        if cv_v < 1e-10:
+        cv_v = np.dot(parameters, [v**4, v**3, v**2, v, 1]) / v
+        # Cv vanishes as T -> 0, where gamma is undefined.
+        if cv_v < 1e-12:
             gamma.append(0.0)
         else:
             gamma.append(beta * kt / cv_v)

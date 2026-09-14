@@ -10,6 +10,7 @@ import pytest
 from numpy.typing import NDArray
 
 from phonopy import PhonopyQHA
+from phonopy.physical_units import get_physical_units
 
 current_dir = Path(__file__).resolve().parent
 
@@ -407,6 +408,34 @@ def test_write_gibbs_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
     np.testing.assert_allclose(data[:, 1], qha_si.gibbs_temperature, atol=1e-10)
 
 
+def test_write_entropy_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_entropy_temperature."""
+    fn = tmp_path / "entropy-temperature.dat"
+    qha_si.write_entropy_temperature(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.entropy_temperature, atol=1e-10)
+
+
+def test_write_enthalpy_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
+    """Test write_enthalpy_temperature."""
+    fn = tmp_path / "enthalpy-temperature.dat"
+    qha_si.write_enthalpy_temperature(filename=fn)
+    data = np.loadtxt(fn)
+    np.testing.assert_allclose(data[:, 1], qha_si.enthalpy_temperature, atol=1e-10)
+
+
+def test_enthalpy_equals_g_plus_ts(qha_si: PhonopyQHA) -> None:
+    """H = G + T S with S converted from J/K/mol to eV/K."""
+    ev_to_jmol = get_physical_units().EvTokJmol * 1000.0
+    t = temperatures_Si[: len(qha_si.gibbs_temperature)]
+    np.testing.assert_allclose(
+        qha_si.enthalpy_temperature,
+        qha_si.gibbs_temperature + t * qha_si.entropy_temperature / ev_to_jmol,
+        rtol=0,
+        atol=1e-12,
+    )
+
+
 def test_write_bulk_modulus_temperature(qha_si: PhonopyQHA, tmp_path: Path) -> None:
     """Test write_bulk_modulus_temperature."""
     fn = tmp_path / "bulk_modulus-temperature.dat"
@@ -459,6 +488,8 @@ def test_qha_plot_units(qha_si: PhonopyQHA) -> None:
     plt.close("all")
 
     assert "eV" in PhonopyQHA.gibbs_temperature.__doc__
+    assert "J/K/mol" in PhonopyQHA.entropy_temperature.__doc__
+    assert "eV" in PhonopyQHA.enthalpy_temperature.__doc__
     assert "GPa" in PhonopyQHA.bulk_modulus_temperature.__doc__
 
 

@@ -18,6 +18,7 @@ from qha_utils import (
 )
 
 from phonopy import Phonopy, PhonopyQHA, run_qha
+from phonopy.physical_units import get_physical_units
 from phonopy.qha.electron import ElectronicStates, compute_free_energy_and_entropy
 from phonopy.qha.lattice import LatticeParametersFit
 from phonopy.qha.qha import QHAResult
@@ -76,8 +77,24 @@ def test_run_qha_matches_phonopy_qha(
     np.testing.assert_allclose(
         result.gibbs_free_energies, ref.gibbs_temperature, rtol=0, atol=1e-12
     )
+    # QHAResult is in eV, angstrom and K; PhonopyQHA reports J/K/mol and
+    # GPa, so the reference is brought into the new unit system here.
+    ev_to_jmol = get_physical_units().EvTokJmol * 1000.0
+    to_gpa = get_physical_units().EVAngstromToGPa
     np.testing.assert_allclose(
-        result.bulk_moduli, ref.bulk_modulus_temperature, rtol=0, atol=1e-12
+        result.entropy_temperature,
+        ref.entropy_temperature / ev_to_jmol,
+        rtol=0,
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(
+        result.enthalpy_temperature, ref.enthalpy_temperature, rtol=0, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        result.bulk_moduli,
+        ref.bulk_modulus_temperature / to_gpa,
+        rtol=0,
+        atol=1e-12,
     )
     np.testing.assert_allclose(
         result.thermal_expansion, ref.thermal_expansion, rtol=0, atol=1e-12
@@ -91,7 +108,7 @@ def test_run_qha_matches_phonopy_qha(
     assert result.heat_capacity_P is not None
     np.testing.assert_allclose(
         result.heat_capacity_P.heat_capacities,
-        ref.heat_capacity_P_polyfit,
+        np.array(ref.heat_capacity_P_polyfit) / ev_to_jmol,
         rtol=0,
         atol=1e-12,
     )
@@ -262,8 +279,21 @@ def test_run_qha_electronic_structures(nacl_qha_phonopys: list[Phonopy]) -> None
     np.testing.assert_allclose(
         result.gibbs_free_energies, ref.gibbs_temperature, rtol=0, atol=1e-12
     )
+    # Legacy PhonopyQHA does not store S_el, so S and H from V-combinations
+    # are refused there. run_qha already added S_el to the entropy grid.
+    with pytest.raises(RuntimeError, match="temperature dependent"):
+        _ = ref.entropy_temperature
+    # S is in eV/K alongside G in eV, so H = G + TS needs no conversion.
+    np.testing.assert_allclose(
+        result.enthalpy_temperature,
+        result.gibbs_free_energies + result.temperatures * result.entropy_temperature,
+        rtol=0,
+        atol=1e-12,
+    )
 
-    cp_new = result.heat_capacity_P.heat_capacities
+    # The tolerances below are in J/K/mol, so C_P is converted to compare.
+    ev_to_jmol = get_physical_units().EvTokJmol * 1000.0
+    cp_new = result.heat_capacity_P.heat_capacities * ev_to_jmol
     cp_ref = np.array(ref.heat_capacity_P_numerical)
     np.testing.assert_allclose(cp_new[2:], cp_ref[2:], atol=1.5)
     np.testing.assert_allclose(cp_new[6:], cp_ref[6:], atol=0.3)

@@ -21,6 +21,7 @@ from numpy.typing import NDArray
 
 from phonopy.physical_units import get_physical_units
 from phonopy.qha.calc import (
+    compute_entropy_enthalpy_temperature,
     compute_gruneisen_parameters,
     compute_heat_capacity_p_polyfit,
     compute_volumetric_thermal_expansion,
@@ -51,10 +52,10 @@ class QHACpPolyfitData:
     Attributes
     ----------
     heat_capacities : ndarray
-        Heat capacities at constant pressure in J/K/mol with a leading 0.0
+        Heat capacities at constant pressure in eV/K with a leading 0.0
         element. shape=(N,)
     dsdv : ndarray
-        dS/dV at temperatures in J/K/mol/angstrom^3 with a leading 0.0
+        dS/dV at temperatures in eV/K/angstrom^3 with a leading 0.0
         element. shape=(N,)
     volume_cv_parameters : ndarray
         Degree-4 polynomial coefficients of Cv(V) fits. shape=(N - 1, 5)
@@ -114,6 +115,13 @@ class QHAResult:
     volumes refer to the primitive cell, to which the phonon thermal
     properties are normalized.
 
+    Every quantity is in eV, angstrom and K: energies in eV, volumes in
+    angstrom^3, entropies and heat capacities in eV/K, and bulk moduli in
+    eV/angstrom^3. The J/K/mol and GPa of the phonopy-qha output files are
+    produced by the writers in phonopy.qha.output and the plotters in
+    phonopy.qha.plot. The deprecated PhonopyQHA keeps the older mixed
+    units on its own properties.
+
     Attributes
     ----------
     temperatures : ndarray
@@ -133,8 +141,15 @@ class QHAResult:
         Equilibrium volumes V_0 at temperatures in angstrom^3. shape=(N,)
     gibbs_free_energies : ndarray
         Gibbs free energies at temperatures in eV. shape=(N,)
+    entropy_temperature : ndarray
+        System entropy at constant pressure in eV/K, S(T, V_eq(T, p))
+        from a degree-4 S(V) fit. shape=(N,)
+    enthalpy_temperature : ndarray
+        System enthalpy at constant pressure in eV, H = G + T S.
+        shape=(N,)
     bulk_moduli : ndarray
-        Bulk moduli at temperatures in GPa. shape=(N,)
+        Bulk moduli at temperatures in eV/angstrom^3, the same B_0 as in
+        eos_parameters. shape=(N,)
     thermal_expansion : ndarray
         Volumetric thermal expansion coefficients beta at temperatures in
         1/K. shape=(N,)
@@ -156,6 +171,8 @@ class QHAResult:
     eos_parameters: NDArray[np.double]
     equilibrium_volumes: NDArray[np.double]
     gibbs_free_energies: NDArray[np.double]
+    entropy_temperature: NDArray[np.double]
+    enthalpy_temperature: NDArray[np.double]
     bulk_moduli: NDArray[np.double]
     thermal_expansion: NDArray[np.double]
     gruneisen_parameters: NDArray[np.double]
@@ -239,6 +256,7 @@ def run_qha(
     Returns
     -------
     QHAResult
+        Results in eV, angstrom and K throughout, per primitive cell.
 
     """
     temps_in, el = _validate_inputs(
@@ -261,19 +279,24 @@ def run_qha(
     )
 
     units = get_physical_units()
+    # Everything from here on is in eV, angstrom and K. The phonon thermal
+    # properties arrive in kJ/mol and J/K/mol and are converted once, here;
+    # the electronic terms are already in eV and eV/K. The J/K/mol and GPa
+    # of the output files are produced by phonopy.qha.output.
     fe_phonon_ev = fe_phonon / units.EvTokJmol
+    entropy = entropy / (units.EvTokJmol * 1000.0)
+    cv = cv / (units.EvTokJmol * 1000.0)
     if electronic_structures is not None:
-        # No conversion here: the volume check in _validate_inputs has
-        # already established that the states are on the same cell as the
-        # phonons, whichever cell ph.primitive is.
+        # No cell normalization here: the volume check in _validate_inputs
+        # has already established that the states are on the same cell as
+        # the phonons, whichever cell ph.primitive is.
         fe_el_rel, s_el = compute_electronic_contributions_from_states(
             electronic_structures, temps_in, primitive_volumes=None
         )
         el = el + fe_el_rel
         cv_el = temps_in[:, None] * np.gradient(s_el, temps_in, axis=0, edge_order=2)
-        to_j_mol = units.EvTokJmol * 1000
-        entropy = entropy + s_el * to_j_mol
-        cv = cv + cv_el * to_j_mol
+        entropy = entropy + s_el
+        cv = cv + cv_el
     if pressure is not None:
         el = el + volumes * pressure / units.EVAngstromToGPa
 
@@ -286,7 +309,7 @@ def run_qha(
     entropy_kept = entropy[kept]
     equilibrium_volumes = np.array(eos_parameters[:, 3])
     gibbs_free_energies = np.array(eos_parameters[:, 0])
-    bulk_moduli = np.array(eos_parameters[:, 1] * units.EVAngstromToGPa)
+    bulk_moduli = np.array(eos_parameters[:, 1])
 
     thermal_expansion = compute_volumetric_thermal_expansion(temps, equilibrium_volumes)
     gruneisen_parameters = compute_gruneisen_parameters(
@@ -294,6 +317,9 @@ def run_qha(
     )
     heat_capacity_P = _make_heat_capacity_data(
         temps, volumes, equilibrium_volumes, cv_kept, entropy_kept
+    )
+    entropy_enthalpy = compute_entropy_enthalpy_temperature(
+        temps, volumes, equilibrium_volumes, entropy_kept, gibbs_free_energies
     )
 
     n = len(temps) - 1
@@ -318,6 +344,8 @@ def run_qha(
         eos_parameters=eos_parameters[:n],
         equilibrium_volumes=equilibrium_volumes[:n],
         gibbs_free_energies=gibbs_free_energies[:n],
+        entropy_temperature=entropy_enthalpy.entropy[:n],
+        enthalpy_temperature=entropy_enthalpy.enthalpy[:n],
         bulk_moduli=bulk_moduli[:n],
         thermal_expansion=thermal_expansion,
         gruneisen_parameters=gruneisen_parameters,
@@ -454,8 +482,13 @@ def _fit_eos_at_temperatures(
     eos_func = get_eos(eos)
 
     if verbose:
+        # The log reports B_0 in GPa for reading; the returned parameters
+        # are in eV/angstrom^3 like the rest of QHAResult.
         print("# EOS fitting")
-        print(("#%11s" + "%14s" * 4) % ("T", "E_0", "B_0", "B'_0", "V_0"))
+        print(
+            ("#%11s" + "%14s" * 4)
+            % ("T (K)", "E_0 (eV)", "B_0 (GPa)", "B'_0", "V_0 (A^3)")
+        )
 
     kept: list[int] = []
     parameter_list: list[NDArray[np.double]] = []
