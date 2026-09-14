@@ -152,6 +152,13 @@ lattice-parameter output.
 | `plot_*` methods             | functions in `phonopy.qha.plot`            |
 | `bulk_modulus` (E-V fitting) | `phonopy.qha.core.BulkModulus`             |
 
+Three of these replacements change units. `QHAResult.entropy_temperature`
+and `QHAResult.heat_capacity_P.heat_capacities` are in eV/K where
+`PhonopyQHA` reported J/K/mol, and `QHAResult.bulk_moduli` is in
+eV/angstrom^3 where `bulk_modulus_temperature` reported GPa. `QHAResult` is
+in eV, angstrom and K throughout, and the writers in `phonopy.qha.output`
+convert back, so the output files are unchanged.
+
 **Deprecated:**
 
 ```python
