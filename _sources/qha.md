@@ -319,11 +319,28 @@ Remarks:
   free-energy arrays like `fe-v.dat` are not accepted.
 - `pressure` (GPa) and `eos` (`vinet`, `birch_murnaghan`, `murnaghan`) work
   as in `phonopy-qha`.
+- `QHAResult` is in eV, angstrom and K throughout. Entropies and heat
+  capacities are in eV/K and bulk moduli in eV/angstrom^3, where the
+  deprecated `PhonopyQHA` reported J/K/mol and GPa. The writers in
+  `phonopy.qha.output` convert back, so the files written by `phonopy-qha`
+  are unchanged. To read the arrays in the older units, multiply by
+  `EvTokJmol * 1000` or by `EVAngstromToGPa` from
+  `phonopy.physical_units.get_physical_units`.
 - {math}`C_p` is computed by the polynomial-fitting method (see
   {ref}`phonopy_qha_output_files`) and is available as
   `result.heat_capacity_P.heat_capacities`. The
   {math}`-T\partial^2 G/\partial T^2` variant of the legacy API is not
   provided.
+- System entropy and enthalpy at constant pressure are
+  `result.entropy_temperature` (eV/K) and
+  `result.enthalpy_temperature` (eV). They are obtained from a
+  degree-4 polynomial fit of {math}`S(V)` evaluated at {math}`V_eq(T,p)`,
+  not from a numerical derivative of {math}`G(T)`. Then
+  {math}`H = G + TS`. The deprecated `PhonopyQHA` exposes the same
+  quantities as `entropy_temperature` and `enthalpy_temperature`; those
+  properties are unavailable when temperature-dependent electronic
+  free-energy arrays are supplied, because {math}`S_\mathrm{el}` is not
+  stored on that path.
 - The file formats written by `phonopy.qha.output` are identical to those of
   `phonopy-qha` for the shared quantities.
 
@@ -481,6 +498,8 @@ is:
 | ---------------------------- | ------------------------------------------ |
 | `volume_temperature`         | `QHAResult.equilibrium_volumes`            |
 | `gibbs_temperature`          | `QHAResult.gibbs_free_energies`            |
+| `entropy_temperature`        | `QHAResult.entropy_temperature`            |
+| `enthalpy_temperature`       | `QHAResult.enthalpy_temperature`           |
 | `bulk_modulus_temperature`   | `QHAResult.bulk_moduli`                    |
 | `thermal_expansion`          | `QHAResult.thermal_expansion`              |
 | `heat_capacity_P_polyfit`    | `QHAResult.heat_capacity_P.heat_capacities`|
@@ -490,6 +509,12 @@ is:
 | `write_*` methods            | functions in `phonopy.qha.output`          |
 | `plot_*` methods             | functions in `phonopy.qha.plot`            |
 | `bulk_modulus` (E-V fitting) | `phonopy.qha.core.BulkModulus`             |
+
+Three of these replacements change units. `QHAResult.entropy_temperature`
+and `QHAResult.heat_capacity_P.heat_capacities` are in eV/K where
+`PhonopyQHA` reported J/K/mol, and `QHAResult.bulk_moduli` is in
+eV/angstrom^3 where `bulk_modulus_temperature` reported GPa. Code that
+prints or plots these values has to convert them.
 
 Behavioral differences: `run_qha` does not accept temperature-dependent
 electronic free-energy arrays (the `fe-v.dat` style input of the legacy

@@ -720,11 +720,28 @@ system is supported through <code class="docutils literal notranslate"><span cla
 free-energy arrays like <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> are not accepted.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pressure</span></code> (GPa) and <code class="docutils literal notranslate"><span class="pre">eos</span></code> (<code class="docutils literal notranslate"><span class="pre">vinet</span></code>, <code class="docutils literal notranslate"><span class="pre">birch_murnaghan</span></code>, <code class="docutils literal notranslate"><span class="pre">murnaghan</span></code>) work
 as in <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">QHAResult</span></code> is in eV, angstrom and K throughout. Entropies and heat
+capacities are in eV/K and bulk moduli in eV/angstrom^3, where the
+deprecated <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> reported J/K/mol and GPa. The writers in
+<code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code> convert back, so the files written by <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>
+are unchanged. To read the arrays in the older units, multiply by
+<code class="docutils literal notranslate"><span class="pre">EvTokJmol</span> <span class="pre">*</span> <span class="pre">1000</span></code> or by <code class="docutils literal notranslate"><span class="pre">EVAngstromToGPa</span></code> from
+<code class="docutils literal notranslate"><span class="pre">phonopy.physical_units.get_physical_units</span></code>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(C_p\)</span> is computed by the polynomial-fitting method (see
 <a class="reference internal" href="#phonopy-qha-output-files"><span class="std std-ref">Output files</span></a>) and is available as
 <code class="docutils literal notranslate"><span class="pre">result.heat_capacity_P.heat_capacities</span></code>. The
 <span class="math notranslate nohighlight">\(-T\partial^2 G/\partial T^2\)</span> variant of the legacy API is not
 provided.</p></li>
+<li><p>System entropy and enthalpy at constant pressure are
+<code class="docutils literal notranslate"><span class="pre">result.entropy_temperature</span></code> (eV/K) and
+<code class="docutils literal notranslate"><span class="pre">result.enthalpy_temperature</span></code> (eV). They are obtained from a
+degree-4 polynomial fit of <span class="math notranslate nohighlight">\(S(V)\)</span> evaluated at <span class="math notranslate nohighlight">\(V_eq(T,p)\)</span>,
+not from a numerical derivative of <span class="math notranslate nohighlight">\(G(T)\)</span>. Then
+<span class="math notranslate nohighlight">\(H = G + TS\)</span>. The deprecated <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> exposes the same
+quantities as <code class="docutils literal notranslate"><span class="pre">entropy_temperature</span></code> and <code class="docutils literal notranslate"><span class="pre">enthalpy_temperature</span></code>; those
+properties are unavailable when temperature-dependent electronic
+free-energy arrays are supplied, because <span class="math notranslate nohighlight">\(S_\mathrm{el}\)</span> is not
+stored on that path.</p></li>
 <li><p>The file formats written by <code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code> are identical to those of
 <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> for the shared quantities.</p></li>
 </ul>
@@ -875,6 +892,12 @@ is:</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gibbs_temperature</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.gibbs_free_energies</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entropy_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.entropy_temperature</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">enthalpy_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.enthalpy_temperature</span></code></p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bulk_modulus_temperature</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.bulk_moduli</span></code></p></td>
 </tr>
@@ -905,6 +928,11 @@ is:</p>
 </tbody>
 </table>
 </div>
+<p>Three of these replacements change units. <code class="docutils literal notranslate"><span class="pre">QHAResult.entropy_temperature</span></code>
+and <code class="docutils literal notranslate"><span class="pre">QHAResult.heat_capacity_P.heat_capacities</span></code> are in eV/K where
+<code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> reported J/K/mol, and <code class="docutils literal notranslate"><span class="pre">QHAResult.bulk_moduli</span></code> is in
+eV/angstrom^3 where <code class="docutils literal notranslate"><span class="pre">bulk_modulus_temperature</span></code> reported GPa. Code that
+prints or plots these values has to convert them.</p>
 <p>Behavioral differences: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> does not accept temperature-dependent
 electronic free-energy arrays (the <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> style input of the legacy
 API); supply <code class="docutils literal notranslate"><span class="pre">electronic_structures</span></code> instead (see

@@ -628,6 +628,12 @@ lattice-parameter output.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gibbs_temperature</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.gibbs_free_energies</span></code></p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">entropy_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.entropy_temperature</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enthalpy_temperature</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.enthalpy_temperature</span></code></p></td>
+</tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bulk_modulus_temperature</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">QHAResult.bulk_moduli</span></code></p></td>
 </tr>
@@ -658,6 +664,12 @@ lattice-parameter output.</p>
 </tbody>
 </table>
 </div>
+<p>Three of these replacements change units. <code class="docutils literal notranslate"><span class="pre">QHAResult.entropy_temperature</span></code>
+and <code class="docutils literal notranslate"><span class="pre">QHAResult.heat_capacity_P.heat_capacities</span></code> are in eV/K where
+<code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> reported J/K/mol, and <code class="docutils literal notranslate"><span class="pre">QHAResult.bulk_moduli</span></code> is in
+eV/angstrom^3 where <code class="docutils literal notranslate"><span class="pre">bulk_modulus_temperature</span></code> reported GPa. <code class="docutils literal notranslate"><span class="pre">QHAResult</span></code> is
+in eV, angstrom and K throughout, and the writers in <code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code>
+convert back, so the output files are unchanged.</p>
 <p><strong>Deprecated:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qha</span> <span class="o">=</span> <span class="n">PhonopyQHA</span><span class="p">(</span>
     <span class="n">volumes</span><span class="o">=</span><span class="n">volumes</span><span class="p">,</span>

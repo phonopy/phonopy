@@ -140,6 +140,8 @@ lattice-parameter output.
 | `PhonopyQHA(volumes, ...)`   | `run_qha(phonopys, ...)` (`QHAResult`)     |
 | `volume_temperature`         | `QHAResult.equilibrium_volumes`            |
 | `gibbs_temperature`          | `QHAResult.gibbs_free_energies`            |
+| `entropy_temperature`        | `QHAResult.entropy_temperature`            |
+| `enthalpy_temperature`       | `QHAResult.enthalpy_temperature`           |
 | `bulk_modulus_temperature`   | `QHAResult.bulk_moduli`                    |
 | `thermal_expansion`          | `QHAResult.thermal_expansion`              |
 | `heat_capacity_P_polyfit`    | `QHAResult.heat_capacity_P.heat_capacities`|
@@ -149,6 +151,13 @@ lattice-parameter output.
 | `write_*` methods            | functions in `phonopy.qha.output`          |
 | `plot_*` methods             | functions in `phonopy.qha.plot`            |
 | `bulk_modulus` (E-V fitting) | `phonopy.qha.core.BulkModulus`             |
+
+Three of these replacements change units. `QHAResult.entropy_temperature`
+and `QHAResult.heat_capacity_P.heat_capacities` are in eV/K where
+`PhonopyQHA` reported J/K/mol, and `QHAResult.bulk_moduli` is in
+eV/angstrom^3 where `bulk_modulus_temperature` reported GPa. `QHAResult` is
+in eV, angstrom and K throughout, and the writers in `phonopy.qha.output`
+convert back, so the output files are unchanged.
 
 **Deprecated:**
 
