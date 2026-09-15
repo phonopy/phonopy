@@ -382,6 +382,20 @@ def get_options() -> Namespace:
         help="also write U / F_ph / F_el / total contour panels",
     )
     parser.add_argument(
+        "--margin",
+        type=float,
+        default=1.5,
+        help="width of the contour window as a multiple of the range of the "
+        "sampled cells, centred on the minimum of U (default: 1.5). Above 1 "
+        "the fitted surface is drawn where nothing constrains it",
+    )
+    parser.add_argument(
+        "--plot-format",
+        choices=("png", "pdf"),
+        default="png",
+        help="image format of the figures written (default: png)",
+    )
+    parser.add_argument(
         "--compare-eos",
         action="store_true",
         help="also run a Vinet volume-path QHA on the main diagonal and "
@@ -540,25 +554,33 @@ def main() -> None:
     anisotropic_output.write_axial_thermal_expansion(result, provenance=provenance)
     anisotropic_output.write_volume_temperature(result, provenance=provenance)
     fig = anisotropic_plot.plot_anisotropic_qha(result)
-    fig.savefig("anisotropic_qha.png")
+    fig.savefig(f"anisotropic_qha.{args.plot_format}")
     plt.close(fig)
     print(
         "Wrote lattice_parameters-temperature.dat, axial_thermal_expansion.dat, "
-        "volume-temperature.dat and anisotropic_qha.png"
+        f"volume-temperature.dat and anisotropic_qha.{args.plot_format}"
     )
 
     # Only a smoothed run has a fit to show against the minima.
     if result.lattice_smoothing_fit is not None:
         fig = anisotropic_plot.plot_lattice_smoothing(result)
-        fig.savefig("lattice_smoothing.png")
+        fig.savefig(f"lattice_smoothing.{args.plot_format}")
         plt.close(fig)
-        print("Wrote lattice_smoothing.png")
+        print(f"Wrote lattice_smoothing.{args.plot_format}")
 
     # The highest temperature of the run, which --tmax need not have set.
     contour_temps = (
         args.contour_temp if args.contour_temp else [float(temperatures[-1])]
     )
-    written = anisotropic_plot.plot_F_contours(result, contour_temps)
+    written = anisotropic_plot.plot_F_contours(
+        result,
+        contour_temps,
+        image_format=args.plot_format,
+        # The static energy fixes the origin of the strain axes; it is the one
+        # reference the vibrational model does not move.
+        internal_energies=internal_energies,
+        margin=args.margin,
+    )
     if written:
         print("Wrote " + ", ".join(written))
 
@@ -573,6 +595,8 @@ def main() -> None:
                 if electronic_free_energies is None
                 else electronic_free_energies[: len(result.temperatures)]
             ),
+            image_format=args.plot_format,
+            margin=args.margin,
         )
         if written:
             print("Wrote " + ", ".join(written))

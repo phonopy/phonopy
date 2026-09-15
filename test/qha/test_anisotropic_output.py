@@ -272,16 +272,50 @@ def test_contour_plots_write_one_file_per_temperature(
     )
 
     temperatures = [0.0, 300.0]
+    # One figure and one .dat of the fit behind it, per temperature.
     written = aniso_plot.plot_F_contours(result, temperatures)
-    assert len(written) == len(temperatures)
+    assert len(written) == 2 * len(temperatures)
     assert all((tmp_path / name).exists() for name in written)
+    assert sum(name.endswith(".dat") for name in written) == len(temperatures)
 
     internal_energies = bowl * 0.5
     written = aniso_plot.plot_component_contours(
         result, internal_energies, None, temperatures
     )
-    assert len(written) == len(temperatures)
+    assert len(written) == 2 * len(temperatures)
     assert all((tmp_path / name).exists() for name in written)
+    assert sum(name.endswith(".dat") for name in written) == len(temperatures)
+
+    # The written fit has to be usable on its own: reading the coefficients
+    # back and evaluating them must reproduce the surface.
+    text = (tmp_path / f"F_contour_{int(temperatures[0])}K.dat").read_text()
+    origin = scale = None
+    exponents, coefficients, samples = [], [], []
+    section = None
+    for line in text.splitlines():
+        if line.startswith("# origin"):
+            origin = [float(v) for v in line.split()[2:4]]
+        elif line.startswith("# scale"):
+            scale = [float(v) for v in line.split()[2:4]]
+        elif line.startswith("# coefficients"):
+            section = "coefficients"
+        elif line.startswith("# sampled cells"):
+            section = "samples"
+        elif not line.startswith("#") and line.strip():
+            values = [float(v) for v in line.split()]
+            if section == "coefficients":
+                exponents.append(values[:2])
+                coefficients.append(values[2])
+            else:
+                samples.append(values)
+    assert origin is not None and scale is not None
+    u = (np.array(samples)[:, :2] - origin) / scale
+    evaluated = (
+        np.array(coefficients)
+        * np.prod(u[:, None, :] ** np.array(exponents)[None, :, :], axis=2)
+    ).sum(axis=1)
+    # The bowl is quadratic and the fit is cubic, so it is reproduced exactly.
+    assert np.allclose(evaluated - evaluated.min(), np.array(samples)[:, 2], atol=1e-6)
 
 
 def test_public_api_exports() -> None:
