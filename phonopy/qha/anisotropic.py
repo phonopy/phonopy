@@ -54,7 +54,7 @@ class FreeEnergySurfaceFit:
     The free energy F is fitted as a total-degree multivariate polynomial
     of the free lattice-vector lengths x (one component per independent
     lattice degree of freedom, 1 to 3). The fit variables are
-    non-dimensionalized as u = (x - center) / scale, where center is the
+    non-dimensionalized as u = (x - origin) / scale, where origin is the
     mean and scale the half-range of the sample points along each
     dimension, so the least-squares design matrix is well conditioned. The
     polynomial minimum, taken as the equilibrium lattice parameters at a
@@ -96,7 +96,7 @@ class FreeEnergySurfaceFit:
             raise ValueError("The number of lattice DOF (ndim) must be 1, 2 or 3.")
         self._degree = degree
 
-        self._center = self._points.mean(axis=0)
+        self._origin = self._points.mean(axis=0)
         half_range = 0.5 * (self._points.max(axis=0) - self._points.min(axis=0))
         if not (half_range > 0).all():
             raise ValueError(
@@ -127,8 +127,8 @@ class FreeEnergySurfaceFit:
         self._minimum_extrapolated: bool | None = None
 
     def _scaled(self, points: NDArray[np.double]) -> NDArray[np.double]:
-        """Non-dimensionalize points as (x - center) / scale."""
-        return (points - self._center) / self._scale
+        """Non-dimensionalize points as (x - origin) / scale."""
+        return (points - self._origin) / self._scale
 
     @property
     def ndim(self) -> int:
@@ -153,6 +153,42 @@ class FreeEnergySurfaceFit:
     def exponents(self) -> NDArray[np.int64]:
         """Return the monomial exponent tuples, shape (n_terms, ndim)."""
         return self._exponents
+
+    @property
+    def origin(self) -> NDArray[np.double]:
+        """Return the origin of the non-dimensionalization, u = (x - o)/s.
+
+        The mean of the sample points along each free lattice DOF. It is
+        named for the role it plays and not for where it sits: it is where u
+        vanishes, and for scattered points that is not the midpoint of the box
+        the points span. See scale.
+
+        Public because the coefficients are meaningless without it: anyone
+        re-evaluating the polynomial outside this class needs the same origin
+        and scale. shape=(ndim,)
+
+        """
+        return self._origin
+
+    @property
+    def scale(self) -> NDArray[np.double]:
+        """Return the scale of the non-dimensionalization, u = (x - o)/s.
+
+        Half the range of the sample points along each free lattice DOF,
+        i.e. half the width of the box they span.
+
+        The origin and the scale therefore come from different places, the
+        mean and the extremes. For points symmetric about their mean, a
+        regular grid among them, the two agree and u runs over [-1, 1]
+        exactly. For scattered points they do not: the mean is pulled towards
+        wherever the points crowd, and u reaches further than 1 on the side
+        away from the crowd. Nothing downstream requires u to lie in [-1, 1]
+        --- the scaling is there to condition the design matrix, and it does
+        that either way --- but a caller re-evaluating the polynomial should
+        not assume the bound. shape=(ndim,)
+
+        """
+        return self._scale
 
     @property
     def n_terms(self) -> int:
@@ -300,7 +336,7 @@ class FreeEnergySurfaceFit:
         except ModuleNotFoundError as exc:
             raise ModuleNotFoundError("You need to install python-scipy.") from exc
 
-        start = self._center if x0 is None else np.array(x0, dtype="double")
+        start = self._origin if x0 is None else np.array(x0, dtype="double")
 
         def fun(x: NDArray[np.double]) -> float:
             return float(self.evaluate(x[None, :])[0])

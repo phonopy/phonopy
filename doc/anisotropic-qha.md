@@ -592,7 +592,30 @@ stored displacements and forces, runs `run_anisotropic_qha`, and writes
 
 With exactly two free lattice DOF it also writes the `F(a, c)` contour maps.
 `--decompose-contours` adds the {math}`U` / {math}`F_\mathrm{ph}` /
-{math}`F_\mathrm{el}` / total panels.
+{math}`F_\mathrm{el}` / total panels, which say which term makes the valley
+and which one moves it: {math}`U` carries almost the whole curvature, while
+{math}`F_\mathrm{ph}` and {math}`F_\mathrm{el}` are nearly flat ramps whose
+tilt is what walks the minimum as the temperature rises.
+
+The contour axes are the strain from the lattice that minimizes {math}`U`
+rather than the lattice parameters themselves, so that two calculations can be
+put side by side. That origin is a property of the electronic-structure
+calculation alone, while the lattice located at {math}`T = 0` already carries
+the zero-point term and moves when the vibrational model does. The window is
+half again as wide as the sampled cells, `--margin`, so that the located
+minimum stays visible when it sits near the edge. Its size is fixed by the
+grid and not by where the reference falls, so two calculations drawn with the
+same margin come out at the same scale; a reference far from the centre of the
+grid can push some sampled cells out of view. The levels are chosen geometrically from the range of the
+data and rounded, so they read as 0.2, 0.5, 1, 2, 5 rather than as whatever
+the maximum happens to be divided into forty. `--plot-format pdf` writes the
+figures as PDF instead of PNG.
+
+Each contour figure is written with a `.dat` beside it holding the fit it
+draws: the polynomial coefficients, the centre and scale they are defined
+against, and the sampled cells with the value fitted at each. A contour map is
+a picture of ten numbers, and those ten numbers replot at any resolution and in
+any style, which a bitmap does not.
 
 `--compare-eos` adds a volume-path cross-check along the main diagonal of
 the grid. The diagonal comes from the grid shape the builder recorded, so the
