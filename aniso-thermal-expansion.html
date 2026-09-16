@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Anisotropic QHA &#8212; Phonopy v.4.5.0</title>
+    <title>Anisotropic thermal expansion from free-energy minimization &#8212; Phonopy v.4.5.0</title>
   
   
   
@@ -406,7 +406,7 @@ mermaid.initialize(
 
 window.addEventListener("load", load);
 window.runMermaid = runMermaid;</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'anisotropic-qha';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'aniso-thermal-expansion';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -663,7 +663,7 @@ window.runMermaid = runMermaid;</script>
       
       
       
-      <li><a href="_sources/anisotropic-qha.md" target="_blank"
+      <li><a href="_sources/aniso-thermal-expansion.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -746,7 +746,7 @@ window.runMermaid = runMermaid;</script>
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Anisotropic QHA</h1>
+    <h1>Anisotropic thermal expansion from free-energy minimization</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -809,22 +809,22 @@ window.runMermaid = runMermaid;</script>
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-qha">
-<h1>Anisotropic QHA<a class="headerlink" href="#anisotropic-qha" title="Link to this heading">#</a></h1>
-<p>This page computes the anisotropic thermal expansion of a crystal in the
-quasi-harmonic approximation (QHA): one expansion coefficient per crystal axis,
-rather than one for the volume. The ordinary QHA minimizes the free energy
-along a single path in volume. This one samples the lattice parameters on a
-grid and minimizes over them directly, so the axes are free to expand by
+  <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-thermal-expansion-from-free-energy-minimization">
+<h1>Anisotropic thermal expansion from free-energy minimization<a class="headerlink" href="#anisotropic-thermal-expansion-from-free-energy-minimization" title="Link to this heading">#</a></h1>
+<p>This page computes the anisotropic thermal expansion of a crystal, with one
+expansion coefficient per crystal axis rather than one for the volume. The
+ordinary quasi-harmonic approximation (QHA) minimizes the free energy along a
+single path in volume. This page samples the lattice parameters on a grid and
+minimizes the free energy over them directly, so the axes are free to expand by
 different amounts.</p>
-<p><strong>Steps 0 to 4 are the whole calculation.</strong> The phonons come from displaced
-supercells computed with the calculator, and no machine-learning potential
-(MLP) is involved.</p>
-<p><strong>Step 5 is a variant</strong>, for a crystal whose anharmonicity the harmonic
-approximation cannot carry. An MLP is trained at each grid point and gives
-force constants that change with temperature. The free energies from those
-force constants enter the analysis directly, in place of the force sets. Most
-calculations do not need this step.</p>
+<p>Steps 0 to 4 are a QHA calculation. The phonons come from displaced supercells
+computed with the calculator, and no machine-learning potential (MLP) is
+involved. Most calculations need only these steps.</p>
+<p>Step 5 replaces the harmonic free energies, for a crystal whose anharmonicity
+the harmonic approximation cannot carry. An MLP is trained at each grid point
+and gives force constants that change with temperature. The free energies from
+those force constants enter the same minimization in place of the force sets,
+so this step is no longer a QHA calculation.</p>
 <p><span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(b\)</span> and <span class="math notranslate nohighlight">\(c\)</span> on this page are the lattice parameters of
 the <strong>standardized conventional unit cell</strong>, never of the primitive cell.
 Step 0 explains why the recipe is built on that cell.</p>
@@ -1336,7 +1336,28 @@ stored displacements and forces, runs <code class="docutils literal notranslate"
 <code class="docutils literal notranslate"><span class="pre">volume-temperature.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">anisotropic_qha.png</span></code>.</p>
 <p>With exactly two free lattice DOF it also writes the <code class="docutils literal notranslate"><span class="pre">F(a,</span> <span class="pre">c)</span></code> contour maps.
 <code class="docutils literal notranslate"><span class="pre">--decompose-contours</span></code> adds the <span class="math notranslate nohighlight">\(U\)</span> / <span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> /
-<span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> / total panels.</p>
+<span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> / total panels, which say which term makes the valley
+and which one moves it: <span class="math notranslate nohighlight">\(U\)</span> carries almost the whole curvature, while
+<span class="math notranslate nohighlight">\(F_\mathrm{ph}\)</span> and <span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span> are nearly flat ramps whose
+tilt is what walks the minimum as the temperature rises.</p>
+<p>The contour axes are the strain from the lattice that minimizes <span class="math notranslate nohighlight">\(U\)</span>
+rather than the lattice parameters themselves, so that two calculations can be
+put side by side. That origin is a property of the electronic-structure
+calculation alone, while the lattice located at <span class="math notranslate nohighlight">\(T = 0\)</span> already carries
+the zero-point term and moves when the vibrational model does. The window is
+half again as wide as the sampled cells, <code class="docutils literal notranslate"><span class="pre">--margin</span></code>, so that the located
+minimum stays visible when it sits near the edge. Its size is fixed by the
+grid and not by where the reference falls, so two calculations drawn with the
+same margin come out at the same scale; a reference far from the centre of the
+grid can push some sampled cells out of view. The levels are chosen geometrically from the range of the
+data and rounded, so they read as 0.2, 0.5, 1, 2, 5 rather than as whatever
+the maximum happens to be divided into forty. <code class="docutils literal notranslate"><span class="pre">--plot-format</span> <span class="pre">pdf</span></code> writes the
+figures as PDF instead of PNG.</p>
+<p>Each contour figure is written with a <code class="docutils literal notranslate"><span class="pre">.dat</span></code> beside it holding the fit it
+draws: the polynomial coefficients, the centre and scale they are defined
+against, and the sampled cells with the value fitted at each. A contour map is
+a picture of ten numbers, and those ten numbers replot at any resolution and in
+any style, which a bitmap does not.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--compare-eos</span></code> adds a volume-path cross-check along the main diagonal of
 the grid. The diagonal comes from the grid shape the builder recorded, so the
 cross-check needs a <code class="docutils literal notranslate"><span class="pre">--grid</span></code> run in step 1 whose cells were gathered in order.
