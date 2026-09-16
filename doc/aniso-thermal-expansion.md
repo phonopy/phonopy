@@ -2,24 +2,24 @@
 orphan: true
 ---
 
-# Anisotropic QHA
+# Anisotropic thermal expansion from free-energy minimization
 
-This page computes the anisotropic thermal expansion of a crystal in the
-quasi-harmonic approximation (QHA): one expansion coefficient per crystal axis,
-rather than one for the volume. The ordinary QHA minimizes the free energy
-along a single path in volume. This one samples the lattice parameters on a
-grid and minimizes over them directly, so the axes are free to expand by
+This page computes the anisotropic thermal expansion of a crystal, with one
+expansion coefficient per crystal axis rather than one for the volume. The
+ordinary quasi-harmonic approximation (QHA) minimizes the free energy along a
+single path in volume. This page samples the lattice parameters on a grid and
+minimizes the free energy over them directly, so the axes are free to expand by
 different amounts.
 
-**Steps 0 to 4 are the whole calculation.** The phonons come from displaced
-supercells computed with the calculator, and no machine-learning potential
-(MLP) is involved.
+Steps 0 to 4 are a QHA calculation. The phonons come from displaced supercells
+computed with the calculator, and no machine-learning potential (MLP) is
+involved. Most calculations need only these steps.
 
-**Step 5 is a variant**, for a crystal whose anharmonicity the harmonic
-approximation cannot carry. An MLP is trained at each grid point and gives
-force constants that change with temperature. The free energies from those
-force constants enter the analysis directly, in place of the force sets. Most
-calculations do not need this step.
+Step 5 replaces the harmonic free energies, for a crystal whose anharmonicity
+the harmonic approximation cannot carry. An MLP is trained at each grid point
+and gives force constants that change with temperature. The free energies from
+those force constants enter the same minimization in place of the force sets,
+so this step is no longer a QHA calculation.
 
 {math}`a`, {math}`b` and {math}`c` on this page are the lattice parameters of
 the **standardized conventional unit cell**, never of the primitive cell.
@@ -592,7 +592,30 @@ stored displacements and forces, runs `run_anisotropic_qha`, and writes
 
 With exactly two free lattice DOF it also writes the `F(a, c)` contour maps.
 `--decompose-contours` adds the {math}`U` / {math}`F_\mathrm{ph}` /
-{math}`F_\mathrm{el}` / total panels.
+{math}`F_\mathrm{el}` / total panels, which say which term makes the valley
+and which one moves it: {math}`U` carries almost the whole curvature, while
+{math}`F_\mathrm{ph}` and {math}`F_\mathrm{el}` are nearly flat ramps whose
+tilt is what walks the minimum as the temperature rises.
+
+The contour axes are the strain from the lattice that minimizes {math}`U`
+rather than the lattice parameters themselves, so that two calculations can be
+put side by side. That origin is a property of the electronic-structure
+calculation alone, while the lattice located at {math}`T = 0` already carries
+the zero-point term and moves when the vibrational model does. The window is
+half again as wide as the sampled cells, `--margin`, so that the located
+minimum stays visible when it sits near the edge. Its size is fixed by the
+grid and not by where the reference falls, so two calculations drawn with the
+same margin come out at the same scale; a reference far from the centre of the
+grid can push some sampled cells out of view. The levels are chosen geometrically from the range of the
+data and rounded, so they read as 0.2, 0.5, 1, 2, 5 rather than as whatever
+the maximum happens to be divided into forty. `--plot-format pdf` writes the
+figures as PDF instead of PNG.
+
+Each contour figure is written with a `.dat` beside it holding the fit it
+draws: the polynomial coefficients, the centre and scale they are defined
+against, and the sampled cells with the value fitted at each. A contour map is
+a picture of ten numbers, and those ten numbers replot at any resolution and in
+any style, which a bitmap does not.
 
 `--compare-eos` adds a volume-path cross-check along the main diagonal of
 the grid. The diagonal comes from the grid shape the builder recorded, so the
