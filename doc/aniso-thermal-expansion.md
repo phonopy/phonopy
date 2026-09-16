@@ -2,24 +2,24 @@
 orphan: true
 ---
 
-# Anisotropic QHA
+# Anisotropic thermal expansion from free-energy minimization
 
-This page computes the anisotropic thermal expansion of a crystal in the
-quasi-harmonic approximation (QHA): one expansion coefficient per crystal axis,
-rather than one for the volume. The ordinary QHA minimizes the free energy
-along a single path in volume. This one samples the lattice parameters on a
-grid and minimizes over them directly, so the axes are free to expand by
+This page computes the anisotropic thermal expansion of a crystal, with one
+expansion coefficient per crystal axis rather than one for the volume. The
+ordinary quasi-harmonic approximation (QHA) minimizes the free energy along a
+single path in volume. This page samples the lattice parameters on a grid and
+minimizes the free energy over them directly, so the axes are free to expand by
 different amounts.
 
-**Steps 0 to 4 are the whole calculation.** The phonons come from displaced
-supercells computed with the calculator, and no machine-learning potential
-(MLP) is involved.
+Steps 0 to 4 are a QHA calculation. The phonons come from displaced supercells
+computed with the calculator, and no machine-learning potential (MLP) is
+involved. Most calculations need only these steps.
 
-**Step 5 is a variant**, for a crystal whose anharmonicity the harmonic
-approximation cannot carry. An MLP is trained at each grid point and gives
-force constants that change with temperature. The free energies from those
-force constants enter the analysis directly, in place of the force sets. Most
-calculations do not need this step.
+Step 5 replaces the harmonic free energies, for a crystal whose anharmonicity
+the harmonic approximation cannot carry. An MLP is trained at each grid point
+and gives force constants that change with temperature. The free energies from
+those force constants enter the same minimization in place of the force sets,
+so this step is no longer a QHA calculation.
 
 {math}`a`, {math}`b` and {math}`c` on this page are the lattice parameters of
 the **standardized conventional unit cell**, never of the primitive cell.
