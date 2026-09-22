@@ -33,6 +33,7 @@ class _StubSSCHA:
         self.max_iterations = 10
         self.mesh = [4, 4, 4]
         self.random_seed = 42
+        self.exclude_gamma_acoustic = True
         self.fc_calculator = "symfc"
         self.distance = 0.01
         self.supercell_energy = -1234.5
@@ -85,6 +86,7 @@ def test_write_sscha_yaml_settings(tmp_path: pathlib.Path) -> None:
         "max_iterations": 10,
         "mesh": [4, 4, 4],
         "random_seed": 42,
+        "exclude_gamma_acoustic": True,
         "fc_calculator": "symfc",
         "supercell_energy": -1234500.0,
         "initial_force_constants": "provided",

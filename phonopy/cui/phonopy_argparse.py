@@ -753,6 +753,13 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
         help="Same as PDOS tag",
     )
     parser.add_argument(
+        "--exclude-gamma-acoustic",
+        dest="exclude_gamma_acoustic",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Same as EXCLUDE_GAMMA_ACOUSTIC tag",
+    )
+    parser.add_argument(
         "--pr",
         "--pretend-real",
         dest="pretend_real",

@@ -310,7 +310,10 @@ def test_run_anisotropic_precomputed_free_energies(ph_nacl: Phonopy) -> None:
         polynomial_degree=2,
     )
 
-    fe_phonon, _, _ = compute_thermal_properties(phonopys, TEMPERATURES, MESH)
+    # run_anisotropic_qha excludes the acoustic modes at Gamma by default.
+    fe_phonon, _, _ = compute_thermal_properties(
+        phonopys, TEMPERATURES, MESH, exclude_gamma_acoustic=True
+    )
     fe_phonon_ev = fe_phonon / get_physical_units().EvTokJmol
     result = run_anisotropic_qha(
         phonopys,
@@ -651,7 +654,11 @@ def test_run_anisotropic_qha_passes_gamma_center(ph_nacl: Phonopy) -> None:
     )
 
     fe_phonon, _, _ = compute_thermal_properties(
-        phonopys, TEMPERATURES, even_mesh, is_gamma_center=True
+        phonopys,
+        TEMPERATURES,
+        even_mesh,
+        is_gamma_center=True,
+        exclude_gamma_acoustic=True,
     )
     reference = run_anisotropic_qha(
         phonopys,

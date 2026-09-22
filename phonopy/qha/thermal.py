@@ -44,6 +44,7 @@ def compute_thermal_properties(
     mesh: float | Sequence[int] | NDArray[np.int64],
     verbose: bool = False,
     is_gamma_center: bool = False,
+    exclude_gamma_acoustic: bool = False,
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Compute phonon thermal properties at each volume point.
 
@@ -74,6 +75,10 @@ def compute_thermal_properties(
         divisions to reproduce what the corresponding length would have
         sampled; the default False keeps phonopy's own default and gives
         a grid shifted by half a division. Default is False.
+    exclude_gamma_acoustic : bool, optional
+        Exclude the three acoustic modes at Gamma from the phonon thermal
+        properties. See :meth:`Phonopy.run_thermal_properties`. Default is
+        False.
 
     """
     nvol = len(phonopys)
@@ -90,7 +95,9 @@ def compute_thermal_properties(
                 f"(volume {i + 1}/{nvol}, V = {ph.primitive.volume:.4f} A^3)"
             )
         ph.run_mesh(mesh, is_gamma_center=is_gamma_center)
-        tp = ph.run_thermal_properties(temperatures=temperatures)
+        tp = ph.run_thermal_properties(
+            temperatures=temperatures, exclude_gamma_acoustic=exclude_gamma_acoustic
+        )
         fe_phonon[:, i] = tp.free_energy
         entropy[:, i] = tp.entropy
         cv[:, i] = tp.heat_capacity
