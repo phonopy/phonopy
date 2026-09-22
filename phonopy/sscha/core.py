@@ -65,6 +65,7 @@ class MLPSSCHA:
         fc_calculator_options: str | None = None,
         mesh: float | Sequence[int] | NDArray[np.int64] | None = None,
         random_seed: int | None = None,
+        exclude_gamma_acoustic: bool = True,
         log_level: int = 0,
     ) -> None:
         """Init method.
@@ -95,6 +96,10 @@ class MLPSSCHA:
             so that the run is reproducible while the iterations stay
             independent of each other. The default is None, which leaves the
             sampling unseeded.
+        exclude_gamma_acoustic : bool, optional
+            Exclude the three acoustic modes at Gamma from the harmonic part
+            of the free energy. See :meth:`Phonopy.run_thermal_properties`.
+            Default is True.
         log_level : int, optional
             Log level, by default 0.
 
@@ -130,6 +135,7 @@ class MLPSSCHA:
         else:
             self._mesh = mesh
         self._random_seed = random_seed
+        self._exclude_gamma_acoustic = exclude_gamma_acoustic
         self._log_level = log_level
 
         self._free_energy: float | None = None
@@ -243,6 +249,11 @@ class MLPSSCHA:
     def random_seed(self) -> int | None:
         """Return seed of the random number generator."""
         return self._random_seed
+
+    @property
+    def exclude_gamma_acoustic(self) -> bool:
+        """Return whether the acoustic modes at Gamma are excluded from F_harm."""
+        return self._exclude_gamma_acoustic
 
     @property
     def initial_force_constants_provided(self) -> bool:
@@ -438,7 +449,10 @@ class MLPSSCHA:
 
         """
         self._ph.run_mesh(mesh=self._mesh if mesh is None else mesh)
-        self._ph.run_thermal_properties(temperatures=[self._temperature])
+        self._ph.run_thermal_properties(
+            temperatures=[self._temperature],
+            exclude_gamma_acoustic=self._exclude_gamma_acoustic,
+        )
         hfe = (
             self._ph.thermal_properties.free_energy[0] / get_physical_units().EvTokJmol
         )

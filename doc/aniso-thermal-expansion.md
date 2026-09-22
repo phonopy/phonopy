@@ -585,6 +585,11 @@ the top temperature is consumed and the results stop one step below `--tmax`:
 `run_qha`'s 100. The axial thermal expansions need the denser mesh, while the
 volumetric expansion is already converged at 100.
 
+The command excludes the three acoustic modes at {math}`\Gamma` from the phonon
+thermal properties. `--no-exclude-gamma-acoustic` includes the ones whose
+frequencies are positive, as phonopy did before this option existed. See
+{ref}`exclude_gamma_acoustic_tag`.
+
 The command rebuilds one Phonopy per grid point, with force constants from the
 stored displacements and forces, runs `run_anisotropic_qha`, and writes
 `lattice_parameters-temperature.dat`, `axial_thermal_expansion.dat`,

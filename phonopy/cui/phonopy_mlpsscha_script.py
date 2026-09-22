@@ -20,7 +20,7 @@ forces the potential gave them, as a compressed phonopy.yaml-like file.
 
 from __future__ import annotations
 
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, BooleanOptionalAction, Namespace
 
 import phonopy
 from phonopy import Phonopy
@@ -83,6 +83,14 @@ def get_options() -> Namespace:
         type=float,
         default=100.0,
         help="mesh the harmonic part of the free energy is sampled on "
+        "(default: %(default)s)",
+    )
+    parser.add_argument(
+        "--exclude-gamma-acoustic",
+        action=BooleanOptionalAction,
+        default=True,
+        help="exclude the three acoustic modes at Gamma, whose frequencies are "
+        "nearly zero, from the harmonic part of the free energy "
         "(default: %(default)s)",
     )
     parser.add_argument(
@@ -162,6 +170,7 @@ def main() -> None:
         distance=args.distance,
         mesh=args.mesh,
         random_seed=args.random_seed,
+        exclude_gamma_acoustic=args.exclude_gamma_acoustic,
         log_level=args.verbose,
     )
     trace = sscha.run().to_trace(args.all_force_constants)

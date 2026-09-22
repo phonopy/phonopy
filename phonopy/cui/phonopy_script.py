@@ -1264,6 +1264,7 @@ def _run_thermal_properties(
         pretend_real=settings.pretend_real,
         band_indices=settings.band_indices,
         classical=settings.classical,
+        exclude_gamma_acoustic=settings.exclude_gamma_acoustic,
     )
     phonon.write_yaml_thermal_properties()
     if log_level:
@@ -1271,6 +1272,11 @@ def _run_thermal_properties(
         cutoff_freq = phonon.thermal_properties.cutoff_frequency
         cutoff_freq /= get_physical_units().THzToEv
         print("Cutoff frequency: %.5f" % cutoff_freq)
+        if phonon.thermal_properties.exclude_gamma_acoustic:
+            print(
+                "The three acoustic modes at Gamma are excluded from the sums "
+                "(EXCLUDE_GAMMA_ACOUSTIC)."
+            )
         num_ignored_modes = (
             phonon.thermal_properties.number_of_modes
             - phonon.thermal_properties.number_of_integrated_modes

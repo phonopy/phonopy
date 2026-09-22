@@ -866,6 +866,37 @@ shown as `num_modes:` and `num_integrated_modes:`, respectively.
 CUTOFF_FREQUENCY = 0.1
 ```
 
+(exclude_gamma_acoustic_tag)=
+### `EXCLUDE_GAMMA_ACOUSTIC`
+
+When this tag is `.TRUE.`, the three acoustic modes at {math}`\Gamma` are
+excluded from the sums of the thermal properties. The default is `.FALSE.`.
+
+The frequencies of the three acoustic modes at {math}`\Gamma` should be zero.
+The frequencies that phonopy computes for them are, however, small numbers of
+either sign, even after the force constants are symmetrized. Without this tag,
+these modes are treated like the other modes: a mode is included in the sums
+when its frequency is larger than `CUTOFF_FREQUENCY`. With the default
+`CUTOFF_FREQUENCY` of 0, which of the three acoustic modes are included depends
+on these small values, and so do the thermal properties.
+
+With this tag, phonopy takes the three modes at {math}`\Gamma` with the
+smallest {math}`|\nu|` as the acoustic modes and excludes them from the free
+energy, the entropy, the heat capacity and the zero-point energy. The
+frequencies written to `mesh.yaml` and used for the DOS stay as computed. A
+mesh that does not contain {math}`\Gamma` is not changed.
+
+Without this tag, phonopy prints a warning with the frequencies of the
+acoustic modes that entered the sums and their contribution to the free
+energy. When an acoustic frequency at {math}`\Gamma` is larger than 0.1 THz,
+phonopy prints a warning that the force constants do not satisfy
+translational invariance, whether or not this tag is set.
+
+```
+TPROP = .TRUE.
+EXCLUDE_GAMMA_ACOUSTIC = .TRUE.
+```
+
 (thermal_atomic_displacements_tags)=
 
 ## Thermal displacements

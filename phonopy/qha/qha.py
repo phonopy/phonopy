@@ -194,6 +194,7 @@ def run_qha(
     eos: str = "vinet",
     lattice_fit_degree: int = 2,
     verbose: bool = False,
+    exclude_gamma_acoustic: bool = False,
 ) -> QHAResult:
     """Run a quasi-harmonic approximation calculation.
 
@@ -252,6 +253,10 @@ def run_qha(
         Degree of the polynomials fitted to the axial ratios vs V.
     verbose : bool, optional
         Print fitted EOS parameters at each temperature.
+    exclude_gamma_acoustic : bool, optional
+        Exclude the three acoustic modes at Gamma from the phonon thermal
+        properties. See :meth:`Phonopy.run_thermal_properties`. Default is
+        False.
 
     Returns
     -------
@@ -275,7 +280,11 @@ def run_qha(
     )
 
     fe_phonon, entropy, cv = compute_thermal_properties(
-        phonopys, temps_in, mesh, verbose
+        phonopys,
+        temps_in,
+        mesh,
+        verbose,
+        exclude_gamma_acoustic=exclude_gamma_acoustic,
     )
 
     units = get_physical_units()

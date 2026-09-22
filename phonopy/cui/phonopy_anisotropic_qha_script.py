@@ -17,7 +17,7 @@ Usage::
 
 from __future__ import annotations
 
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, BooleanOptionalAction, Namespace
 from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
@@ -167,6 +167,7 @@ def compare_thermal_expansion_eos(
     mesh: float,
     positions: Sequence[int],
     verbose: bool = False,
+    exclude_gamma_acoustic: bool = False,
 ) -> None:
     """Compare thermal expansion: anisotropic 2D fit vs Vinet volume-path QHA.
 
@@ -208,6 +209,7 @@ def compare_thermal_expansion_eos(
         mesh=mesh,
         eos="vinet",
         verbose=verbose,
+        exclude_gamma_acoustic=exclude_gamma_acoustic,
     )
 
     t = result.temperatures
@@ -298,6 +300,14 @@ def get_options() -> Namespace:
         help="phonon sampling mesh (default: 200). The axial split needs a "
         "denser mesh than the volumetric expansion: 100 leaves alpha_c off by "
         "~20%% while beta is already converged",
+    )
+    parser.add_argument(
+        "--exclude-gamma-acoustic",
+        action=BooleanOptionalAction,
+        default=True,
+        help="exclude the three acoustic modes at Gamma, whose frequencies are "
+        "nearly zero, from the phonon thermal properties "
+        "(default: %(default)s)",
     )
     parser.add_argument(
         "--fc-calculator",
@@ -533,6 +543,7 @@ def main() -> None:
         electronic_free_energies=electronic_free_energies,
         phonon_free_energies=phonon_free_energies,
         mesh=args.mesh,
+        exclude_gamma_acoustic=args.exclude_gamma_acoustic,
         polynomial_degree=args.polynomial_degree,
         lattice_smoothing=args.smooth_lattice,
         smoothing_terms=args.smooth_terms,
@@ -548,6 +559,9 @@ def main() -> None:
         f"dataset={args.filename}",
         f"fc_calculator={args.fc_calculator}",
     ]
+    provenance.append(
+        f"exclude_gamma_acoustic={str(args.exclude_gamma_acoustic).lower()}"
+    )
     anisotropic_output.write_lattice_parameters_temperature(
         result, provenance=provenance
     )
@@ -631,6 +645,7 @@ def main() -> None:
                 args.mesh,
                 positions,
                 verbose=True,
+                exclude_gamma_acoustic=args.exclude_gamma_acoustic,
             )
 
 

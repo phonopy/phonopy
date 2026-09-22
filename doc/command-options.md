@@ -25,6 +25,9 @@ Some of command-line options are equivalent to respective setting tags:
 - `--dos` (`DOS = .TRUE.`) [{ref}`dos_tag`]
 - `--eigvecs`, `--eigenvectors` (`EIGENVECTORS = .TRUE.`)
   [{ref}`eigenvectors_tag`]
+- `--exclude-gamma-acoustic` (`EXCLUDE_GAMMA_ACOUSTIC = .TRUE.`),
+  `--no-exclude-gamma-acoustic` (`EXCLUDE_GAMMA_ACOUSTIC = .FALSE.`)
+  [{ref}`exclude_gamma_acoustic_tag`]
 - `--factor` (`FREQUENCY_CONVERSION_FACTOR`)
   [{ref}`frequency_conversion_factor_tag`] **Deprecated at v2.44**
 - `--fc-calc` (`FC_CALCULATOR`) [{ref}`fc_calculator_tag`]

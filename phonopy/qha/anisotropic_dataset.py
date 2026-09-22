@@ -96,11 +96,12 @@ class AnisoQHAGridPoint:
     def to_phonopy(self, fc_calculator: str = "symfc") -> Phonopy:
         """Return a Phonopy with force constants from the stored dataset.
 
-        For a type-1 dataset (one displaced atom per supercell) phonopy's
-        site-symmetry solver produces the force constants and ``fc_calculator``
-        is ignored, since that minimal data requires it. For a type-2
-        (dense/random) dataset the given ``fc_calculator`` (symfc by default)
-        is used. The origin of the forces (DFT or MLP) does not matter here.
+        For a type-1 dataset (one displaced atom per supercell) the finite
+        difference (traditional) solver produces the force constants and
+        ``fc_calculator`` is ignored. The force constants are then
+        symmetrized by the symfc projector. For a type-2 (dense/random)
+        dataset the given ``fc_calculator`` (symfc by default) is used. The
+        origin of the forces (DFT or MLP) does not matter here.
 
         Raises
         ------
@@ -127,6 +128,7 @@ class AnisoQHAGridPoint:
         phonon.dataset = self.dataset
         if "first_atoms" in self.dataset:
             phonon.produce_force_constants()
+            phonon.symmetrize_force_constants(use_symfc_projector=True)
         else:
             # fc_calculator is a user string; phonopy validates it at runtime.
             phonon.produce_force_constants(fc_calculator=fc_calculator)  # type: ignore[arg-type]

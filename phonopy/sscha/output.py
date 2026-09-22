@@ -106,6 +106,7 @@ def _settings_lines(sscha: MLPSSCHA) -> list[str]:
         f"  max_iterations: {sscha.max_iterations}",
         f"  mesh: {_yaml_value(sscha.mesh)}",
         f"  random_seed: {_yaml_value(sscha.random_seed)}",
+        f"  exclude_gamma_acoustic: {str(sscha.exclude_gamma_acoustic).lower()}",
         f"  fc_calculator: {sscha.fc_calculator}",
         f"  supercell_energy: {sscha.supercell_energy * _EV_TO_UNIT:.6f}",
     ]

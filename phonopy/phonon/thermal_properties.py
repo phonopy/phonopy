@@ -64,6 +64,40 @@ def mode_cv(
         return get_physical_units().KB * x**2 * expVal / (expVal - 1.0) ** 2
 
 
+class GammaAcousticWarning(UserWarning):
+    """Issued about the acoustic modes at Gamma in the thermal-property sums.
+
+    Two cases. The acoustic frequencies at Gamma are far from zero, which
+    means the force constants do not satisfy translational invariance. Or
+    ``exclude_gamma_acoustic`` is off and an acoustic mode at Gamma with a
+    frequency that should be zero is a small positive number, so it enters
+    the sums with a contribution that depends on that small value.
+
+    """
+
+
+# Acoustic frequencies at Gamma above this, in THz, are reported as a sign
+# that the force constants break translational invariance.
+GAMMA_ACOUSTIC_LARGE_FREQUENCY = 0.1
+
+
+def gamma_acoustic_bands(mesh: Mesh) -> tuple[int | None, NDArray[np.int64] | None]:
+    """Return the index of Gamma in the mesh and the band indices of its acoustic modes.
+
+    The acoustic modes are the three modes at Gamma with the smallest
+    absolute frequencies. An imaginary mode is stored as a negative frequency,
+    so a large imaginary mode is not taken for an acoustic one. The pair is
+    ``(None, None)`` when the mesh does not contain Gamma.
+
+    """
+    index = mesh.gamma_index
+    if index is None:
+        return None, None
+    abs_frequencies = np.abs(mesh.frequencies[index])
+    acoustic_bands = np.sort(np.argsort(abs_frequencies)[:3])
+    return index, acoustic_bands
+
+
 class ThermalPropertiesBase:
     """Base class of thermal property calculation."""
 
@@ -74,6 +108,7 @@ class ThermalPropertiesBase:
         pretend_real: bool = False,
         band_indices: Sequence[Sequence[int]] | None = None,
         classical: bool = False,
+        exclude_gamma_acoustic: bool = False,
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
@@ -116,6 +151,13 @@ class ThermalPropertiesBase:
         self._weights = mesh.weights
         self._num_modes = self._frequencies.shape[1] * self._weights.sum()
 
+        self._exclude_gamma_acoustic = exclude_gamma_acoustic
+        # Frequencies in eV of the acoustic modes at Gamma that enter the sums
+        # with exclude_gamma_acoustic off, and the weight of Gamma.
+        self._gamma_acoustic_included = np.zeros(0, dtype="double")
+        self._gamma_weight = 0
+        self._treat_gamma_acoustic(mesh)
+
         # Precompute masked (frequency, weight) pairs once. The cutoff mask
         # does not depend on temperature, so each thermal property reduces to a
         # single weighted sum over the surviving modes (see
@@ -143,6 +185,86 @@ class ThermalPropertiesBase:
         """Return cutoff frequency in eV."""
         return self._cutoff_frequency
 
+    @property
+    def exclude_gamma_acoustic(self) -> bool:
+        """Return whether the acoustic modes at Gamma are excluded from the sums."""
+        return self._exclude_gamma_acoustic
+
+    def _treat_gamma_acoustic(self, mesh: Mesh) -> None:
+        """Set the acoustic modes at Gamma to zero frequency, or record them.
+
+        The frequencies of the three acoustic modes at Gamma should be zero.
+        The computed frequencies are, however, small numbers of either sign,
+        even after the force constants are symmetrized. Like the other modes,
+        one enters the sums when its frequency is larger than the cutoff. With
+        the default cutoff of zero, the signs of these small values decide
+        which of them enter, and a mode that enters adds about
+        kT ln(h nu / kT) divided by the number of grid points. With
+        ``exclude_gamma_acoustic``, the three frequencies are set to zero
+        here, so that they fail the cutoff and the zero-point sum in every
+        implementation. Only the copy used for the sums is changed; the mesh
+        keeps the computed frequencies.
+
+        """
+        index, bands = gamma_acoustic_bands(mesh)
+        if index is None or bands is None:
+            return
+        frequencies_thz = mesh.frequencies[index, bands]
+        if np.abs(frequencies_thz).max() > GAMMA_ACOUSTIC_LARGE_FREQUENCY:
+            warnings.warn(
+                "The acoustic frequencies at Gamma are "
+                + ", ".join(f"{f:.3e}" for f in frequencies_thz)
+                + " THz, far from zero. The force constants do not satisfy "
+                "translational invariance. Symmetrize them, e.g., by "
+                "Phonopy.symmetrize_force_constants(use_symfc_projector=True).",
+                GammaAcousticWarning,
+                stacklevel=4,
+            )
+
+        if self._band_indices is None:
+            columns = bands
+        else:
+            columns = np.flatnonzero(np.isin(self._band_indices, bands))
+        if len(columns) == 0:
+            return
+
+        if self._exclude_gamma_acoustic:
+            self._frequencies[index, columns] = 0.0
+        else:
+            values = self._frequencies[index, columns]
+            self._gamma_acoustic_included = values[values > self._cutoff_frequency]
+            self._gamma_weight = int(self._weights[index])
+
+    def _warn_gamma_acoustic_included(
+        self, temperatures: NDArray[np.double] | None
+    ) -> None:
+        """Warn when acoustic modes at Gamma enter the sums, with what they add."""
+        if len(self._gamma_acoustic_included) == 0 or temperatures is None:
+            return
+        units = get_physical_units()
+        t_max = float(np.max(temperatures))
+        freqs = self._gamma_acoustic_included
+        if t_max > 0:
+            kt = units.KB * t_max
+            if self._classical:
+                fe_modes = kt * np.log(freqs / kt)
+            else:
+                fe_modes = kt * np.log(1 - np.exp(-freqs / kt)) + freqs / 2
+        else:
+            fe_modes = np.zeros_like(freqs) if self._classical else freqs / 2
+        added = fe_modes.sum() * self._gamma_weight / np.sum(self._weights)
+        warnings.warn(
+            f"{len(freqs)} acoustic mode(s) at Gamma, at "
+            + ", ".join(f"{f / units.THzToEv:.3e}" for f in freqs)
+            + " THz, entered the thermal-property sums. Their frequencies are "
+            "nearly zero, and they add "
+            f"{added:.3e} eV per unit cell to the free energy at {t_max:g} K. "
+            "Set exclude_gamma_acoustic=True (EXCLUDE_GAMMA_ACOUSTIC = .TRUE., "
+            "--exclude-gamma-acoustic) to exclude them.",
+            GammaAcousticWarning,
+            stacklevel=4,
+        )
+
 
 class ThermalProperties(ThermalPropertiesBase):
     """Phonon thermal property calculation."""
@@ -154,6 +276,7 @@ class ThermalProperties(ThermalPropertiesBase):
         pretend_real: bool = False,
         band_indices: Sequence[Sequence[int]] | None = None,
         classical: bool = False,
+        exclude_gamma_acoustic: bool = False,
         lang: Literal["C", "Rust"] = "Rust",
     ) -> None:
         """Init method.
@@ -175,6 +298,7 @@ class ThermalProperties(ThermalPropertiesBase):
             pretend_real=pretend_real,
             band_indices=band_indices,
             classical=classical,
+            exclude_gamma_acoustic=exclude_gamma_acoustic,
             lang=lang,
         )
         self._thermal_properties = None
@@ -409,6 +533,7 @@ class ThermalProperties(ThermalPropertiesBase):
             )
             self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 
+        self._warn_gamma_acoustic_included(self._temperatures)
         _lang = lang if lang is not None else self._lang
         if _lang == "C":
             self._run_c_thermal_properties()
@@ -514,6 +639,10 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append(
             "cutoff_frequency: %.5f"
             % (self._cutoff_frequency / get_physical_units().THzToEv)
+        )
+        lines.append(
+            "exclude_gamma_acoustic: %s"
+            % ("true" if self._exclude_gamma_acoustic else "false")
         )
         lines.append("num_modes: %d" % self._num_modes)
         lines.append("num_integrated_modes: %d" % self._num_integrated_modes)

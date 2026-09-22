@@ -2462,12 +2462,14 @@ class Phonopy:
         pretend_real: bool = False,
         band_indices: Sequence[Sequence[int]] | None = None,
         classical: bool = False,
+        exclude_gamma_acoustic: bool = False,
     ) -> ThermalProperties:
         """Run calculation of thermal properties at constant volume.
 
-        In phonopy, imaginary frequencies are represented as negative real
-        value. Under this situation, `cutoff_frequency` is used to ignore
-        phonon modes that have frequencies less than `cutoff_frequency`.
+        In phonopy, an imaginary frequency is represented as a negative real
+        value. A phonon mode is included in the thermal properties only when
+        its frequency is larger than ``cutoff_frequency``, so imaginary modes
+        are excluded.
 
         Parameters
         ----------
@@ -2478,8 +2480,11 @@ class Phonopy:
             Temperature points where thermal properties are calculated.
             When this is set, t_min, t_max, and t_step are ignored.
         cutoff_frequency : float, optional
-            Ignore phonon modes whose frequencies are smaller than this value.
-            Default is None, which gives cutoff frequency as zero.
+            Frequency in THz. Phonon modes whose frequencies are not larger
+            than this value are excluded from the thermal properties. The
+            ``zero_point_energy`` of the result is summed over the positive
+            frequencies and is not affected. Default is None, which means
+            zero.
         pretend_real : bool, optional
             Use absolute value of phonon frequency when True. Default is False.
         band_indices : array_like, optional
@@ -2491,6 +2496,23 @@ class Phonopy:
         classical : bool, optional
             If True, use classical statistics; if False, use quantum
             statistics. Default is False.
+        exclude_gamma_acoustic : bool, optional
+            If True, exclude the three acoustic modes at Gamma from the
+            thermal properties. These are taken as the three modes at Gamma
+            with the smallest absolute frequencies. Their frequencies should
+            be zero. The computed frequencies are, however, small numbers of
+            either sign, even after the force constants are symmetrized. If
+            False, the acoustic modes are treated like the other modes: a
+            mode is included when its frequency is larger than
+            ``cutoff_frequency``. With the default ``cutoff_frequency``,
+            which of the three acoustic modes are included then depends on
+            the signs of the computed frequencies. If False and an acoustic
+            mode is included, a ``GammaAcousticWarning`` is issued. The
+            frequencies stored in the mesh are not modified, and a mesh
+            without Gamma is not affected. Independently of this option, a
+            ``GammaAcousticWarning`` is issued when an acoustic frequency at
+            Gamma is larger than 0.1 THz, which means that the force constants
+            do not satisfy translational invariance. Default is False.
 
         Returns
         -------
@@ -2513,6 +2535,7 @@ class Phonopy:
             pretend_real=pretend_real,
             band_indices=band_indices,
             classical=classical,
+            exclude_gamma_acoustic=exclude_gamma_acoustic,
             lang=self._lang,
         )
         if temperatures is None:
