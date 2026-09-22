@@ -235,11 +235,13 @@ def test_type1_dataset_roundtrip_and_fc(tmp_path):
     """A type-1 grid point survives HDF5 I/O and yields identical FC.
 
     The stored dataset keeps its type-1 form, and force constants from
-    AnisoQHAGridPoint.to_phonopy match those computed directly.
+    AnisoQHAGridPoint.to_phonopy match those computed directly and
+    symmetrized by the symfc projector.
 
     """
     ph = _omega_ti_type1_phonon()
     ph.produce_force_constants()
+    ph.symmetrize_force_constants(use_symfc_projector=True)
     fc_direct = np.array(ph.force_constants)
 
     point = AnisoQHAGridPoint(
@@ -259,6 +261,31 @@ def test_type1_dataset_roundtrip_and_fc(tmp_path):
     assert out.n_displacements == 2
     fc_roundtrip = np.array(out.to_phonopy().force_constants)
     np.testing.assert_allclose(fc_direct, fc_roundtrip, atol=1e-12)
+
+
+def test_type1_to_phonopy_acoustic_modes_at_gamma():
+    """Force constants of a type-1 grid point give zero acoustic modes at Gamma.
+
+    Omega-Ti has two inequivalent sites, so the site-symmetry solver alone
+    leaves the index permutation symmetry and the sum over the first index
+    unimposed. The symfc projector applied in to_phonopy imposes both.
+
+    """
+    ph = _omega_ti_type1_phonon()
+    point = AnisoQHAGridPoint(
+        index=0,
+        cell=ph.unitcell,
+        supercell_matrix=np.array(ph.supercell_matrix, dtype="int64"),
+        primitive_matrix=np.array(ph.primitive_matrix, dtype="double"),
+        dataset=ph.dataset,
+        internal_energy=0.0,
+    )
+    out = point.to_phonopy()
+    fc = np.array(out.force_constants)
+    np.testing.assert_allclose(fc.sum(axis=0), 0, atol=1e-10)
+    out.run_qpoints([[0, 0, 0]])
+    acoustic = np.sort(np.abs(out.qpoints.frequencies[0]))[:3]
+    np.testing.assert_allclose(acoustic, 0, atol=1e-5)
 
 
 def test_type2_to_phonopy_fc(tmp_path):
