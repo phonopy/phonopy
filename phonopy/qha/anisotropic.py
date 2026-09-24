@@ -578,6 +578,7 @@ def run_anisotropic_qha(
     smoothing_terms: int = 2,
     verbose: bool = False,
     is_gamma_center: bool = False,
+    exclude_gamma_acoustic: bool = True,
 ) -> AnisotropicQHAResult:
     """Run an anisotropic quasi-harmonic approximation calculation.
 
@@ -664,6 +665,10 @@ def run_anisotropic_qha(
         Gamma-centred mesh, so this only takes effect together with
         explicit numbers of divisions. Default is False, phonopy's own
         default, which shifts the grid by half a division.
+    exclude_gamma_acoustic : bool, optional
+        Exclude the three acoustic modes at Gamma from the phonon thermal
+        properties. See :meth:`Phonopy.run_thermal_properties`. Default is
+        True.
     pressure : float, optional
         Pressure in GPa added to the free energy as a pV term, turning the
         minimized free energy into a Gibbs free energy.
@@ -735,6 +740,7 @@ def run_anisotropic_qha(
         mesh,
         pressure,
         is_gamma_center,
+        exclude_gamma_acoustic,
         verbose,
     )
 
@@ -828,6 +834,7 @@ def _total_free_energies(
     mesh: float | Sequence[int] | NDArray[np.int64],
     pressure: float | None,
     is_gamma_center: bool,
+    exclude_gamma_acoustic: bool,
     verbose: bool,
 ) -> NDArray[np.double]:
     """Return the total free energy of each sample cell at each temperature.
@@ -845,7 +852,12 @@ def _total_free_energies(
     """
     if phonon_free_energies is None:
         fe_phonon, _, _ = compute_thermal_properties(
-            phonopys, temperatures, mesh, verbose, is_gamma_center=is_gamma_center
+            phonopys,
+            temperatures,
+            mesh,
+            verbose,
+            is_gamma_center=is_gamma_center,
+            exclude_gamma_acoustic=exclude_gamma_acoustic,
         )
         total = fe_phonon / get_physical_units().EvTokJmol
     else:

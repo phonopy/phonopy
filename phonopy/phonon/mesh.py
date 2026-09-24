@@ -256,6 +256,16 @@ class _MeshGrid:
     def is_shift(self) -> list[int]:
         return self._is_shift
 
+    @property
+    def gamma_index(self) -> int | None:
+        gp_Gamma = self._bzgrid.gp_Gamma
+        if gp_Gamma is None:
+            return None
+        # ir_grid_points are GR-grid indices and gp_Gamma is a BZ-grid index.
+        # Gamma is mapped to itself by every operation, so it is irreducible.
+        gr_gp_Gamma = self._bzgrid.bzg2grg[gp_Gamma]
+        return int(np.flatnonzero(self._ir_grid_points == gr_gp_Gamma)[0])
+
 
 class MeshDict(TypedDict):
     """Return type of Phonopy.get_mesh_dict for Mesh."""
@@ -438,6 +448,16 @@ class MeshBase:
     def is_shift(self) -> list[int] | None:
         """Return half-grid shift flags per axis (0 or 1)."""
         return self._gp.is_shift
+
+    @property
+    def gamma_index(self) -> int | None:
+        """Return the index of Gamma in the irreducible q-points.
+
+        None when the mesh does not contain Gamma, which is the case for a
+        mesh shifted by half a grid spacing.
+
+        """
+        return self._gp.gamma_index
 
     @property
     def primitive(self) -> Primitive:

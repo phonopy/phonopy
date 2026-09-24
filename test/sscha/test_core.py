@@ -162,7 +162,8 @@ def test_MLPSSCHA_free_energy_of_sampled_force_constants(
     ph_ref = ph_kcl.replicate()
     ph_ref.force_constants = fc
     ph_ref.run_mesh(mesh=mesh)
-    ph_ref.run_thermal_properties(temperatures=[300])
+    # MLPSSCHA excludes the acoustic modes at Gamma from F_harm by default.
+    ph_ref.run_thermal_properties(temperatures=[300], exclude_gamma_acoustic=True)
     thermal_properties = ph_ref.thermal_properties
     assert thermal_properties is not None
     harmonic_free_energy = thermal_properties.free_energy

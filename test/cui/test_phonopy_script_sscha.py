@@ -74,6 +74,7 @@ class _FakeSSCHA:
         mesh = kwargs.get("mesh")
         self.mesh: float | list[int] = 100.0 if mesh is None else mesh
         self.random_seed: int | None = kwargs.get("random_seed")
+        self.exclude_gamma_acoustic: bool = kwargs.get("exclude_gamma_acoustic", True)
         self.fc_calculator = "symfc"
         self.distance = 0.01
         self.initial_force_constants_provided = True

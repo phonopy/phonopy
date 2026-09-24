@@ -209,7 +209,7 @@ class BZGrid:
     QDinv : ndarray
     grid_matrix : ndarray
     microzone_lattice : ndarray
-    gp_Gamma : int
+    gp_Gamma : int or None
 
     """
 
@@ -304,7 +304,7 @@ class BZGrid:
         self._rotations: NDArray[np.int64]
         self._reciprocal_operations: NDArray[np.int64]
         self._rotations_cartesian: NDArray[np.double]
-        self._gp_Gamma: int
+        self._gp_Gamma: int | None
         self._bzg2grg: NDArray[np.int64]
         self._grg2bzg: NDArray[np.int64]
 
@@ -425,8 +425,13 @@ class BZGrid:
         return self._gp_map
 
     @property
-    def gp_Gamma(self) -> int:
-        """Return grid point index of Gamma-point."""
+    def gp_Gamma(self) -> int | None:
+        """Return grid point index of Gamma-point.
+
+        None when the grid does not contain Gamma, which is the case for a
+        grid shifted by half a grid spacing.
+
+        """
         return self._gp_Gamma
 
     @property
@@ -582,11 +587,18 @@ class BZGrid:
         self._microzone_lattice = np.dot(
             self._reciprocal_lattice, np.dot(self._QDinv, self._P)
         )
-        self._gp_Gamma = int(
-            self._grg2bzg[
-                get_grid_point_from_address([0, 0, 0], self._D_diag, lang=self._lang)
-            ]
-        )
+        # q = Q (2 * address + PS) / (2 * D_diag), so Gamma is on the grid only
+        # when every component of PS is even, at address -PS / 2 (mod D_diag).
+        # A half-grid shift gives an odd component and no Gamma.
+        if np.any(self.PS % 2):
+            self._gp_Gamma = None
+        else:
+            address = (-self.PS // 2) % self._D_diag
+            self._gp_Gamma = int(
+                self._grg2bzg[
+                    get_grid_point_from_address(address, self._D_diag, lang=self._lang)
+                ]
+            )
 
     def _set_rotations(self) -> None:
         """Rotation matrices are transformed those for non-diagonal D matrix.
