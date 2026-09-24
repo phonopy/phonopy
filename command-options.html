@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Command options &#8212; Phonopy v.4.5.0</title>
+    <title>Command options &#8212; Phonopy v.4.6.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1898be9e"></script>
+    <script src="_static/documentation_options.js?v=c687e6eb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="How to watch animation" href="animation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.5" />
+  <meta name="docsearch:version" content="4.6" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.5.0</p>
+    <p class="title logo__title">Phonopy v.4.6.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -207,6 +207,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
@@ -489,6 +490,9 @@ by those with dashes <code class="docutils literal notranslate"><span class="pre
 <li><p><code class="docutils literal notranslate"><span class="pre">--dos</span></code> (<code class="docutils literal notranslate"><span class="pre">DOS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>) [<a class="reference internal" href="setting-tags.html#dos-tag"><span class="std std-ref">DOS</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--eigvecs</span></code>, <code class="docutils literal notranslate"><span class="pre">--eigenvectors</span></code> (<code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)
 [<a class="reference internal" href="setting-tags.html#eigenvectors-tag"><span class="std std-ref">EIGENVECTORS</span></a>]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--exclude-gamma-acoustic</span></code> (<code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>),
+<code class="docutils literal notranslate"><span class="pre">--no-exclude-gamma-acoustic</span></code> (<code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)
+[<a class="reference internal" href="setting-tags.html#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--factor</span></code> (<code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>)
 [<a class="reference internal" href="setting-tags.html#frequency-conversion-factor-tag"><span class="std std-ref">FREQUENCY_CONVERSION_FACTOR</span></a>] <strong>Deprecated at v2.44</strong></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--fc-calc</span></code> (<code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code>) [<a class="reference internal" href="setting-tags.html#fc-calculator-tag"><span class="std std-ref">FC_CALCULATOR</span></a>]</p></li>

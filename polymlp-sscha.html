@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Temperature dependent force constants using pypolymlp and symfc &#8212; Phonopy v.4.5.0</title>
+    <title>Temperature dependent force constants using pypolymlp and symfc &#8212; Phonopy v.4.6.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1898be9e"></script>
+    <script src="_static/documentation_options.js?v=c687e6eb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -414,7 +414,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="prev" title="phonopy-init command" href="phonopy-init.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.5" />
+  <meta name="docsearch:version" content="4.6" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -539,7 +539,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.5.0</p>
+    <p class="title logo__title">Phonopy v.4.6.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -567,6 +567,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
@@ -1441,6 +1442,11 @@ approaching one. Every iteration past the transient is an independent sample of
 the free energy, and averaging them improves the estimate.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--mesh</span></code> is the mesh the harmonic part of the free energy is sampled on, 100 by
 default. Two runs are comparable only when both were sampled on the same mesh.</p>
+<p>The harmonic part excludes the three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span>, as the
+draw of the displacements does. Their computed frequencies are small numbers of
+either sign, and without this the harmonic part would depend on those signs. See <a class="reference internal" href="setting-tags.html#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a>. <code class="docutils literal notranslate"><span class="pre">--no-exclude-gamma-acoustic</span></code>
+includes the ones whose frequencies are positive, as phonopy did before this
+option existed.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--random-seed</span></code> fixes the whole run. Iteration <em>i</em> draws from
 <code class="docutils literal notranslate"><span class="pre">SeedSequence([seed,</span> <span class="pre">i])</span></code>, so the run is reproducible while its iterations stay
 independent of one another.</p>

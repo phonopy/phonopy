@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quasi harmonic approximation &#8212; Phonopy v.4.5.0</title>
+    <title>Quasi harmonic approximation &#8212; Phonopy v.4.6.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1898be9e"></script>
+    <script src="_static/documentation_options.js?v=c687e6eb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,11 +52,11 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Random displacements" href="random-displacements.html" />
+    <link rel="next" title="Anisotropic thermal expansion from free-energy minimization" href="aniso-thermal-expansion.html" />
     <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.5" />
+  <meta name="docsearch:version" content="4.6" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.5.0</p>
+    <p class="title logo__title">Phonopy v.4.6.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -209,6 +209,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
@@ -830,7 +831,8 @@ fixed to the input shape and the phonon free energy optimizes the volume
 alone, i.e., the cell shape is a function of volume determined by the
 static total energy. An anisotropic QHA that minimizes
 <span class="math notranslate nohighlight">\(F(a, b, c;\,T)\)</span> in the full lattice-parameter space is a different
-calculation and is beyond the scope of this feature.</p>
+calculation and is beyond the scope of this feature. That calculation is
+described in <a class="reference internal" href="aniso-thermal-expansion.html#aniso-thermal-expansion"><span class="std std-ref">Anisotropic thermal expansion from free-energy minimization</span></a>.</p>
 </div>
 <p>Since each <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance carries its unit cell, the lattice parameters
 at each volume point are known. <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> propagates their volume
@@ -991,11 +993,11 @@ into the thermal properties at constant pressure.</p>
       </div>
     </a>
     <a class="right-next"
-       href="random-displacements.html"
+       href="aniso-thermal-expansion.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Random displacements</p>
+        <p class="prev-next-title">Anisotropic thermal expansion from free-energy minimization</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

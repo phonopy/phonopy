@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>phonopy.api_phonopy &#8212; Phonopy v.4.5.0</title>
+    <title>phonopy.api_phonopy &#8212; Phonopy v.4.6.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=1898be9e"></script>
+    <script src="../../_static/documentation_options.js?v=c687e6eb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -409,7 +409,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.5" />
+  <meta name="docsearch:version" content="4.6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -532,7 +532,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.5.0</p>
+    <p class="title logo__title">Phonopy v.4.6.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -560,6 +560,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../vasp.html">VASP &amp; phonopy calculation</a></li>
@@ -3292,12 +3293,14 @@ window.runMermaid = runMermaid;</script>
         <span class="n">pretend_real</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">band_indices</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">classical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">exclude_gamma_acoustic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalProperties</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Run calculation of thermal properties at constant volume.</span>
 
-<span class="sd">        In phonopy, imaginary frequencies are represented as negative real</span>
-<span class="sd">        value. Under this situation, `cutoff_frequency` is used to ignore</span>
-<span class="sd">        phonon modes that have frequencies less than `cutoff_frequency`.</span>
+<span class="sd">        In phonopy, an imaginary frequency is represented as a negative real</span>
+<span class="sd">        value. A phonon mode is included in the thermal properties only when</span>
+<span class="sd">        its frequency is larger than ``cutoff_frequency``, so imaginary modes</span>
+<span class="sd">        are excluded.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -3308,8 +3311,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Temperature points where thermal properties are calculated.</span>
 <span class="sd">            When this is set, t_min, t_max, and t_step are ignored.</span>
 <span class="sd">        cutoff_frequency : float, optional</span>
-<span class="sd">            Ignore phonon modes whose frequencies are smaller than this value.</span>
-<span class="sd">            Default is None, which gives cutoff frequency as zero.</span>
+<span class="sd">            Frequency in THz. Phonon modes whose frequencies are not larger</span>
+<span class="sd">            than this value are excluded from the thermal properties. The</span>
+<span class="sd">            ``zero_point_energy`` of the result is summed over the positive</span>
+<span class="sd">            frequencies and is not affected. Default is None, which means</span>
+<span class="sd">            zero.</span>
 <span class="sd">        pretend_real : bool, optional</span>
 <span class="sd">            Use absolute value of phonon frequency when True. Default is False.</span>
 <span class="sd">        band_indices : array_like, optional</span>
@@ -3321,6 +3327,23 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        classical : bool, optional</span>
 <span class="sd">            If True, use classical statistics; if False, use quantum</span>
 <span class="sd">            statistics. Default is False.</span>
+<span class="sd">        exclude_gamma_acoustic : bool, optional</span>
+<span class="sd">            If True, exclude the three acoustic modes at Gamma from the</span>
+<span class="sd">            thermal properties. These are taken as the three modes at Gamma</span>
+<span class="sd">            with the smallest absolute frequencies. Their frequencies should</span>
+<span class="sd">            be zero. The computed frequencies are, however, small numbers of</span>
+<span class="sd">            either sign, even after the force constants are symmetrized. If</span>
+<span class="sd">            False, the acoustic modes are treated like the other modes: a</span>
+<span class="sd">            mode is included when its frequency is larger than</span>
+<span class="sd">            ``cutoff_frequency``. With the default ``cutoff_frequency``,</span>
+<span class="sd">            which of the three acoustic modes are included then depends on</span>
+<span class="sd">            the signs of the computed frequencies. If False and an acoustic</span>
+<span class="sd">            mode is included, a ``GammaAcousticWarning`` is issued. The</span>
+<span class="sd">            frequencies stored in the mesh are not modified, and a mesh</span>
+<span class="sd">            without Gamma is not affected. Independently of this option, a</span>
+<span class="sd">            ``GammaAcousticWarning`` is issued when an acoustic frequency at</span>
+<span class="sd">            Gamma is larger than 0.1 THz, which means that the force constants</span>
+<span class="sd">            do not satisfy translational invariance. Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3343,6 +3366,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">pretend_real</span><span class="o">=</span><span class="n">pretend_real</span><span class="p">,</span>
             <span class="n">band_indices</span><span class="o">=</span><span class="n">band_indices</span><span class="p">,</span>
             <span class="n">classical</span><span class="o">=</span><span class="n">classical</span><span class="p">,</span>
+            <span class="n">exclude_gamma_acoustic</span><span class="o">=</span><span class="n">exclude_gamma_acoustic</span><span class="p">,</span>
             <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">temperatures</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

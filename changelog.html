@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.5.0</title>
+    <title>Change Log &#8212; Phonopy v.4.6.0</title>
   
   
   
@@ -40,12 +40,14 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1898be9e"></script>
+    <script src="_static/documentation_options.js?v=c687e6eb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=8b0727dd"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'changelog';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -53,7 +55,7 @@
     <link rel="prev" title="Development" href="development.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.5" />
+  <meta name="docsearch:version" content="4.6" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -178,7 +180,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.5.0</p>
+    <p class="title logo__title">Phonopy v.4.6.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -206,6 +208,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
@@ -395,6 +398,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-24-2026-version-4-6-0">Sep-24-2026: Version 4.6.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-01-2026-version-4-3-1">Jul-01-2026: Version 4.3.1</a></li>
@@ -625,6 +629,50 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="sep-24-2026-version-4-6-0">
+<h2>Sep-24-2026: Version 4.6.0<a class="headerlink" href="#sep-24-2026-version-4-6-0" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Experimental release of <a class="reference internal" href="aniso-thermal-expansion.html#aniso-thermal-expansion"><span class="std std-ref">the anisotropic thermal expansion</span></a>. The lattice parameters are sampled on a grid, and
+the free energy is minimized over them at each temperature, so that each
+crystal axis has its own thermal expansion coefficient. The commands are
+<code class="docutils literal notranslate"><span class="pre">phonopy-strain-cells</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha-dataset</span></code> and
+<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>. The command-line options, the
+<code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code> layout and the APIs may change between releases
+without a deprecation period. The details of the implementation are
+described in <a class="reference external" href="https://arxiv.org/abs/2609.24336">https://arxiv.org/abs/2609.24336</a>.</p></li>
+<li><p>NEW <a class="reference internal" href="setting-tags.html#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a> tag,
+<code class="docutils literal notranslate"><span class="pre">--exclude-gamma-acoustic</span></code> option and <code class="docutils literal notranslate"><span class="pre">exclude_gamma_acoustic</span></code> keyword of
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_properties</span></code>. They exclude the three acoustic modes at
+<span class="math notranslate nohighlight">\(\Gamma\)</span> from the free energy, the entropy, the heat capacity and the
+zero-point energy. The acoustic modes are taken to be the three modes at
+<span class="math notranslate nohighlight">\(\Gamma\)</span> with the smallest absolute frequencies <span class="math notranslate nohighlight">\(|\nu|\)</span>. An
+imaginary mode is stored as a negative frequency, so a large imaginary mode is
+not taken for an acoustic one. The default is off in this version. Phonopy prints a warning when an
+acoustic mode at <span class="math notranslate nohighlight">\(\Gamma\)</span> enters the sums, and the default will change
+to on in phonopy v5.</p></li>
+<li><p>Behavior change: <code class="docutils literal notranslate"><span class="pre">phonopy-mlpsscha</span></code> and <code class="docutils literal notranslate"><span class="pre">MLPSSCHA</span></code> exclude the three acoustic
+modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> from the harmonic part of the SSCHA free energy by
+default. The free energies therefore differ from those of phonopy 4.5.
+<code class="docutils literal notranslate"><span class="pre">--no-exclude-gamma-acoustic</span></code> (<code class="docutils literal notranslate"><span class="pre">exclude_gamma_acoustic=False</span></code>) recovers the
+previous behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">QHAResult.entropy_temperature</span></code> and <code class="docutils literal notranslate"><span class="pre">QHAResult.enthalpy_temperature</span></code> give the
+entropy and the enthalpy of the system at constant pressure. The entropy is
+taken from a polynomial fit of <span class="math notranslate nohighlight">\(S(V)\)</span> at the equilibrium volume, and
+the enthalpy is <span class="math notranslate nohighlight">\(H = G + TS\)</span>. The deprecated <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> has the same
+two properties. (PR #988 by &#64;shaneraphel)</p></li>
+<li><p>Behavior change: the arrays of <code class="docutils literal notranslate"><span class="pre">QHAResult</span></code> returned by <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> are in eV,
+angstrom and K. Entropies and heat capacities are in eV/K, and bulk moduli
+are in eV/angstrom^3. They were in J/K/mol and GPa before. The <code class="docutils literal notranslate"><span class="pre">pressure</span></code>
+argument of <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> stays in GPa. The files written by
+<code class="docutils literal notranslate"><span class="pre">phonopy.qha.output</span></code> are converted back and are unchanged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BZGrid.gp_Gamma</span></code> returns <code class="docutils literal notranslate"><span class="pre">None</span></code> for a grid that does not contain
+<span class="math notranslate nohighlight">\(\Gamma\)</span>, such as a mesh shifted by half a grid spacing. Before, it
+returned the grid point at address (0, 0, 0), which is not <span class="math notranslate nohighlight">\(\Gamma\)</span> on
+such a grid. <code class="docutils literal notranslate"><span class="pre">Mesh.gamma_index</span></code> gives the index of <span class="math notranslate nohighlight">\(\Gamma\)</span> among the
+irreducible q-points, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>The pypolymlp interface requires pypolymlp 0.21.3 or later.</p></li>
+</ul>
+</section>
 <section id="sep-08-2026-version-4-5-0">
 <h2>Sep-08-2026: Version 4.5.0<a class="headerlink" href="#sep-08-2026-version-4-5-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2711,6 +2759,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-24-2026-version-4-6-0">Sep-24-2026: Version 4.6.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-01-2026-version-4-3-1">Jul-01-2026: Version 4.3.1</a></li>

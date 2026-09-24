@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Anisotropic thermal expansion from free-energy minimization &#8212; Phonopy v.4.5.0</title>
+    <title>Anisotropic thermal expansion from free-energy minimization &#8212; Phonopy v.4.6.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1898be9e"></script>
+    <script src="_static/documentation_options.js?v=c687e6eb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -410,9 +410,11 @@ window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Random displacements" href="random-displacements.html" />
+    <link rel="prev" title="Quasi harmonic approximation" href="qha.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.5" />
+  <meta name="docsearch:version" content="4.6" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -511,8 +513,6 @@ window.runMermaid = runMermaid;</script>
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
@@ -539,7 +539,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.5.0</p>
+    <p class="title logo__title">Phonopy v.4.6.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -551,7 +551,7 @@ window.runMermaid = runMermaid;</script>
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
@@ -567,6 +567,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
@@ -810,7 +811,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="anisotropic-thermal-expansion-from-free-energy-minimization">
-<h1>Anisotropic thermal expansion from free-energy minimization<a class="headerlink" href="#anisotropic-thermal-expansion-from-free-energy-minimization" title="Link to this heading">#</a></h1>
+<span id="aniso-thermal-expansion"></span><h1>Anisotropic thermal expansion from free-energy minimization<a class="headerlink" href="#anisotropic-thermal-expansion-from-free-energy-minimization" title="Link to this heading">#</a></h1>
 <p>This page computes the anisotropic thermal expansion of a crystal, with one
 expansion coefficient per crystal axis rather than one for the volume. The
 ordinary quasi-harmonic approximation (QHA) minimizes the free energy along a
@@ -825,6 +826,8 @@ the harmonic approximation cannot carry. An MLP is trained at each grid point
 and gives force constants that change with temperature. The free energies from
 those force constants enter the same minimization in place of the force sets,
 so this step is no longer a QHA calculation.</p>
+<p>The details of the implementation are described in
+<a class="reference external" href="https://arxiv.org/abs/2609.24336">https://arxiv.org/abs/2609.24336</a>.</p>
 <p><span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(b\)</span> and <span class="math notranslate nohighlight">\(c\)</span> on this page are the lattice parameters of
 the <strong>standardized conventional unit cell</strong>, never of the primitive cell.
 Step 0 explains why the recipe is built on that cell.</p>
@@ -848,9 +851,7 @@ added and removed as the recipe was used on real systems.</p>
 <p>So rebuild the dataset from the calculator outputs rather than relying on an
 old file being readable, keep beside every result the commands that produced
 it, and pin the phonopy version whenever a campaign has to stay reproducible
-across releases. The page is not yet part of the documentation navigation for
-the same
-reason.</p>
+across releases.</p>
 </div>
 <p>Four commands do the work, one per step:</p>
 <ul class="simple">
@@ -1330,6 +1331,10 @@ the top temperature is consumed and the results stop one step below <code class=
 <p><code class="docutils literal notranslate"><span class="pre">--mesh</span></code> sets the phonon sampling mesh and defaults to 200, denser than
 <code class="docutils literal notranslate"><span class="pre">run_qha</span></code>’s 100. The axial thermal expansions need the denser mesh, while the
 volumetric expansion is already converged at 100.</p>
+<p>The command excludes the three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> from the phonon
+thermal properties. <code class="docutils literal notranslate"><span class="pre">--no-exclude-gamma-acoustic</span></code> includes the ones whose
+frequencies are positive, as phonopy did before this option existed. See
+<a class="reference internal" href="setting-tags.html#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a>.</p>
 <p>The command rebuilds one Phonopy per grid point, with force constants from the
 stored displacements and forces, runs <code class="docutils literal notranslate"><span class="pre">run_anisotropic_qha</span></code>, and writes
 <code class="docutils literal notranslate"><span class="pre">lattice_parameters-temperature.dat</span></code>, <code class="docutils literal notranslate"><span class="pre">axial_thermal_expansion.dat</span></code>,
@@ -2604,6 +2609,24 @@ again is enough, since a rerun draws the supercells the lost run drew.</p>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="qha.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quasi harmonic approximation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="random-displacements.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Random displacements</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               

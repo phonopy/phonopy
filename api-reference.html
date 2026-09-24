@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API reference &#8212; Phonopy v.4.5.0</title>
+    <title>API reference &#8212; Phonopy v.4.6.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=1898be9e"></script>
+    <script src="_static/documentation_options.js?v=c687e6eb"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Phonopy API for Python" href="phonopy-module.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.5" />
+  <meta name="docsearch:version" content="4.6" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.5.0</p>
+    <p class="title logo__title">Phonopy v.4.6.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -207,6 +207,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
@@ -2120,11 +2121,12 @@ When None, legend is not shown.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="phonopy.Phonopy.run_thermal_properties">
-<span class="sig-name descname"><span class="pre">run_thermal_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperatures</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretend_real</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.run_thermal_properties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.run_thermal_properties" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run_thermal_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperatures</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretend_real</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_gamma_acoustic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/api_phonopy.html#Phonopy.run_thermal_properties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.Phonopy.run_thermal_properties" title="Link to this definition">#</a></dt>
 <dd><p>Run calculation of thermal properties at constant volume.</p>
-<p>In phonopy, imaginary frequencies are represented as negative real
-value. Under this situation, <cite>cutoff_frequency</cite> is used to ignore
-phonon modes that have frequencies less than <cite>cutoff_frequency</cite>.</p>
+<p>In phonopy, an imaginary frequency is represented as a negative real
+value. A phonon mode is included in the thermal properties only when
+its frequency is larger than <code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code>, so imaginary modes
+are excluded.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2136,8 +2138,11 @@ temperature range. Default values are 0, 1000, and 10.</p></li>
 temperature range. Default values are 0, 1000, and 10.</p></li>
 <li><p><strong>temperatures</strong> (<em>array_like</em><em>, </em><em>optional</em>) – Temperature points where thermal properties are calculated.
 When this is set, t_min, t_max, and t_step are ignored.</p></li>
-<li><p><strong>cutoff_frequency</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>optional</em>) – Ignore phonon modes whose frequencies are smaller than this value.
-Default is None, which gives cutoff frequency as zero.</p></li>
+<li><p><strong>cutoff_frequency</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>optional</em>) – Frequency in THz. Phonon modes whose frequencies are not larger
+than this value are excluded from the thermal properties. The
+<code class="docutils literal notranslate"><span class="pre">zero_point_energy</span></code> of the result is summed over the positive
+frequencies and is not affected. Default is None, which means
+zero.</p></li>
 <li><p><strong>pretend_real</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – Use absolute value of phonon frequency when True. Default is False.</p></li>
 <li><p><strong>band_indices</strong> (<em>array_like</em><em>, </em><em>optional</em>) – Band indices starting with 0. Normally the numbers correspond to
 phonon bands in ascending order of phonon frequencies. Thermal
@@ -2146,6 +2151,22 @@ Note that use of this results in unphysical values, and it is not
 recommended to use this feature. Default is None.</p></li>
 <li><p><strong>classical</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, use classical statistics; if False, use quantum
 statistics. Default is False.</p></li>
+<li><p><strong>exclude_gamma_acoustic</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, exclude the three acoustic modes at Gamma from the
+thermal properties. These are taken as the three modes at Gamma
+with the smallest absolute frequencies. Their frequencies should
+be zero. The computed frequencies are, however, small numbers of
+either sign, even after the force constants are symmetrized. If
+False, the acoustic modes are treated like the other modes: a
+mode is included when its frequency is larger than
+<code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code>. With the default <code class="docutils literal notranslate"><span class="pre">cutoff_frequency</span></code>,
+which of the three acoustic modes are included then depends on
+the signs of the computed frequencies. If False and an acoustic
+mode is included, a <code class="docutils literal notranslate"><span class="pre">GammaAcousticWarning</span></code> is issued. The
+frequencies stored in the mesh are not modified, and a mesh
+without Gamma is not affected. Independently of this option, a
+<code class="docutils literal notranslate"><span class="pre">GammaAcousticWarning</span></code> is issued when an acoustic frequency at
+Gamma is larger than 0.1 THz, which means that the force constants
+do not satisfy translational invariance. Default is False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

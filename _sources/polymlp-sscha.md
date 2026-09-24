@@ -672,6 +672,12 @@ the free energy, and averaging them improves the estimate.
 `--mesh` is the mesh the harmonic part of the free energy is sampled on, 100 by
 default. Two runs are comparable only when both were sampled on the same mesh.
 
+The harmonic part excludes the three acoustic modes at {math}`\Gamma`, as the
+draw of the displacements does. Their computed frequencies are small numbers of
+either sign, and without this the harmonic part would depend on those signs. See {ref}`exclude_gamma_acoustic_tag`. `--no-exclude-gamma-acoustic`
+includes the ones whose frequencies are positive, as phonopy did before this
+option existed.
+
 `--random-seed` fixes the whole run. Iteration *i* draws from
 `SeedSequence([seed, i])`, so the run is reproducible while its iterations stay
 independent of one another.
