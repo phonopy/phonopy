@@ -49,6 +49,43 @@ def get_tetrahedra_relative_grid_address(
     return relative_grid_address
 
 
+def get_symmetrized_tetrahedra_relative_grid_address(
+    bz_grid: BZGrid,
+    lang: Literal["C", "Python", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return the 24 tetrahedra rotated by all point-group operations.
+
+    The 24 tetrahedra around a grid point are rotated by ``bz_grid.rotations``
+    and the distinct sets are concatenated. Integration weights averaged over
+    these sets are invariant under the point group.
+
+    Parameters
+    ----------
+    bz_grid : BZGrid
+        Grid information in reciprocal space.
+
+    Returns
+    -------
+    relative_grid_address : ndarray
+        Relative grid addresses in GR-grid coordinates, the central vertex
+        first in each tetrahedron.
+        shape=(24 * n, 4, 3), dtype='int64', order='C'
+
+    """
+    relative_grid_address = np.dot(
+        get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
+        bz_grid.P.T,
+    )
+    tetrahedra_sets: dict[frozenset, NDArray[np.int64]] = {}
+    for r in bz_grid.rotations:
+        rotated = relative_grid_address @ r.T
+        key = frozenset(frozenset(map(tuple, tetra)) for tetra in rotated.tolist())
+        tetrahedra_sets.setdefault(key, rotated)
+    return np.array(
+        np.concatenate(list(tetrahedra_sets.values())), dtype="int64", order="C"
+    )
+
+
 def get_integration_weights(
     sampling_points: NDArray[np.double],
     grid_values: NDArray[np.double],
@@ -57,6 +94,7 @@ def get_integration_weights(
     bzgp2irgp_map: NDArray[np.int64] | None = None,
     function: Literal["I", "J"] = "I",
     lang: Literal["C", "Rust"] = "Rust",
+    symmetrize_tetrahedra: bool = False,
 ) -> NDArray[np.double]:
     """Return tetrahedron method integration weights.
 
@@ -79,6 +117,9 @@ def get_integration_weights(
         `grid_values` array, i.e., usually irreducible grid point count.
     function : str, 'I' or 'J', optional, default='I'
         'J' is for intetration and 'I' is for its derivative.
+    symmetrize_tetrahedra : bool, optional, default=False
+        Average the weights over the tetrahedra rotated by the point group, see
+        ``get_symmetrized_tetrahedra_relative_grid_address``. Rust only.
 
     Returns
     -------
@@ -88,14 +129,23 @@ def get_integration_weights(
 
     """
     lang = resolve_lang(lang)
-    relative_grid_addresses = np.array(
-        np.dot(
-            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
-            bz_grid.P.T,
-        ),
-        dtype="int64",
-        order="C",
-    )
+    if symmetrize_tetrahedra:
+        if lang != "Rust":
+            raise RuntimeError("symmetrize_tetrahedra is implemented only in Rust.")
+        relative_grid_addresses = get_symmetrized_tetrahedra_relative_grid_address(
+            bz_grid, lang=lang
+        )
+    else:
+        relative_grid_addresses = np.array(
+            np.dot(
+                get_tetrahedra_relative_grid_address(
+                    bz_grid.microzone_lattice, lang=lang
+                ),
+                bz_grid.P.T,
+            ),
+            dtype="int64",
+            order="C",
+        )
     if grid_points is None:
         _grid_points = bz_grid.grg2bzg
     else:
