@@ -1,6 +1,4 @@
----
-orphan: true
----
+(aniso-thermal-expansion)=
 
 # Anisotropic thermal expansion from free-energy minimization
 
@@ -20,6 +18,9 @@ the harmonic approximation cannot carry. An MLP is trained at each grid point
 and gives force constants that change with temperature. The free energies from
 those force constants enter the same minimization in place of the force sets,
 so this step is no longer a QHA calculation.
+
+The details of the implementation are described in
+<https://arxiv.org/abs/2609.24336>.
 
 {math}`a`, {math}`b` and {math}`c` on this page are the lattice parameters of
 the **standardized conventional unit cell**, never of the primitive cell.
@@ -46,9 +47,7 @@ added and removed as the recipe was used on real systems.
 So rebuild the dataset from the calculator outputs rather than relying on an
 old file being readable, keep beside every result the commands that produced
 it, and pin the phonopy version whenever a campaign has to stay reproducible
-across releases. The page is not yet part of the documentation navigation for
-the same
-reason.
+across releases.
 ```
 
 Four commands do the work, one per step:

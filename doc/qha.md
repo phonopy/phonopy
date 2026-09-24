@@ -440,7 +440,8 @@ fixed to the input shape and the phonon free energy optimizes the volume
 alone, i.e., the cell shape is a function of volume determined by the
 static total energy. An anisotropic QHA that minimizes
 {math}`F(a, b, c;\,T)` in the full lattice-parameter space is a different
-calculation and is beyond the scope of this feature.
+calculation and is beyond the scope of this feature. That calculation is
+described in {ref}`aniso-thermal-expansion`.
 ```
 
 Since each `Phonopy` instance carries its unit cell, the lattice parameters

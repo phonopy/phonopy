@@ -2,6 +2,49 @@
 
 # Change Log
 
+## Sep-24-2026: Version 4.6.0
+
+- Experimental release of {ref}`the anisotropic thermal expansion
+  <aniso-thermal-expansion>`. The lattice parameters are sampled on a grid, and
+  the free energy is minimized over them at each temperature, so that each
+  crystal axis has its own thermal expansion coefficient. The commands are
+  `phonopy-strain-cells`, `phonopy-anisotropic-qha-dataset` and
+  `phonopy-anisotropic-qha`. The command-line options, the
+  `aniso_qha_dataset.hdf5` layout and the APIs may change between releases
+  without a deprecation period. The details of the implementation are
+  described in <https://arxiv.org/abs/2609.24336>.
+- NEW {ref}`EXCLUDE_GAMMA_ACOUSTIC <exclude_gamma_acoustic_tag>` tag,
+  `--exclude-gamma-acoustic` option and `exclude_gamma_acoustic` keyword of
+  `Phonopy.run_thermal_properties`. They exclude the three acoustic modes at
+  {math}`\Gamma` from the free energy, the entropy, the heat capacity and the
+  zero-point energy. The acoustic modes are taken to be the three modes at
+  {math}`\Gamma` with the smallest absolute frequencies {math}`|\nu|`. An
+  imaginary mode is stored as a negative frequency, so a large imaginary mode is
+  not taken for an acoustic one. The default is off in this version. Phonopy prints a warning when an
+  acoustic mode at {math}`\Gamma` enters the sums, and the default will change
+  to on in phonopy v5.
+- Behavior change: `phonopy-mlpsscha` and `MLPSSCHA` exclude the three acoustic
+  modes at {math}`\Gamma` from the harmonic part of the SSCHA free energy by
+  default. The free energies therefore differ from those of phonopy 4.5.
+  `--no-exclude-gamma-acoustic` (`exclude_gamma_acoustic=False`) recovers the
+  previous behavior.
+- `QHAResult.entropy_temperature` and `QHAResult.enthalpy_temperature` give the
+  entropy and the enthalpy of the system at constant pressure. The entropy is
+  taken from a polynomial fit of {math}`S(V)` at the equilibrium volume, and
+  the enthalpy is {math}`H = G + TS`. The deprecated `PhonopyQHA` has the same
+  two properties. (PR #988 by @shaneraphel)
+- Behavior change: the arrays of `QHAResult` returned by `run_qha` are in eV,
+  angstrom and K. Entropies and heat capacities are in eV/K, and bulk moduli
+  are in eV/angstrom^3. They were in J/K/mol and GPa before. The `pressure`
+  argument of `run_qha` stays in GPa. The files written by
+  `phonopy.qha.output` are converted back and are unchanged.
+- `BZGrid.gp_Gamma` returns `None` for a grid that does not contain
+  {math}`\Gamma`, such as a mesh shifted by half a grid spacing. Before, it
+  returned the grid point at address (0, 0, 0), which is not {math}`\Gamma` on
+  such a grid. `Mesh.gamma_index` gives the index of {math}`\Gamma` among the
+  irreducible q-points, or `None`.
+- The pypolymlp interface requires pypolymlp 0.21.3 or later.
+
 ## Sep-08-2026: Version 4.5.0
 
 - Added the Octopus code interface and {ref}`its documentation

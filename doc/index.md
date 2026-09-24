@@ -35,6 +35,9 @@ The following features of phonopy are highlighted:
 - {ref}`Mode Grüneisen parameters <phonopy_gruneisen>`
 - {ref}`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
   capacity at constant pressure (Cp)
+- {ref}`Anisotropic thermal expansion <aniso-thermal-expansion>`
+  (experimental): Lattice parameters and axial thermal expansions from the
+  free energy minimized over the lattice parameters
 - {ref}`Interfaces to calculators <calculator_interfaces>`: {ref}`VASP
 <vasp_interface>`, {ref}`VASP DFPT <vasp_dfpt_interface>`, {ref}`ABINIT
 <abinit_interface>`, {ref}`Quantum ESPRESSO <qe_interface>`, {ref}`SIESTA
@@ -62,6 +65,7 @@ command-options
 dynamic-structure-factor
 Mode Grüneisen parameters <gruneisen>
 qha
+aniso-thermal-expansion
 random-displacements
 interfaces
 auxiliary-tools
