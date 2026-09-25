@@ -7,10 +7,12 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from phonopy.phonon.grid import BZGrid, get_grid_point_from_address_py
+from phonopy.phonon.grid import BZGrid, get_grid_point_from_address
 from phonopy.phonon.tetrahedron_method import (
     get_integration_weights,
     get_symmetrized_tetrahedra_relative_grid_address,
+    get_tetrahedra_frequencies,
+    get_tetrahedra_relative_grid_address,
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
@@ -75,7 +77,9 @@ def _max_star_difference(bz_grid: BZGrid, weights: NDArray[np.double]) -> float:
     addresses = bz_grid.addresses[bz_grid.grg2bzg]
     diff = 0.0
     for r in bz_grid.rotations:
-        rotated = get_grid_point_from_address_py(addresses @ r.T, bz_grid.D_diag)
+        rotated = get_grid_point_from_address(
+            addresses @ r.T, bz_grid.D_diag, lang="Python"
+        )
         diff = max(diff, float(np.abs(weights[rotated] - weights).max()))
     return diff / float(np.abs(weights).max())
 
@@ -124,3 +128,33 @@ def test_integration_weights_symmetrized_fcc():
         sampling_points, band, bz_grid, lang="Rust", symmetrize_tetrahedra=True
     )
     np.testing.assert_allclose(weights_sym, weights, atol=1e-12)
+
+
+@pytest.mark.parametrize("name,mesh", [("bcc", [4, 4, 4]), ("hcp", [6, 6, 4])])
+def test_get_tetrahedra_frequencies(name: str, mesh: list[int]):
+    """Frequencies at the vertices, for 24 tetrahedra and for 24 * n."""
+    bz_grid = _bz_grid(name, mesh)
+    rng = np.random.default_rng(0)
+    frequencies = rng.random((len(bz_grid.addresses), 3))
+    D = bz_grid.D_diag
+    tables = (
+        np.dot(
+            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice),
+            bz_grid.P.T,
+        ),
+        get_symmetrized_tetrahedra_relative_grid_address(bz_grid),
+    )
+    for table in tables:
+        for gp in (0, 5, len(bz_grid.addresses) - 1):
+            vertex_frequencies = get_tetrahedra_frequencies(
+                gp, bz_grid, table, frequencies
+            )
+            assert vertex_frequencies.shape == (3, len(table), 4)
+            for i, tetra in enumerate(table):
+                for j, step in enumerate(tetra):
+                    address = (bz_grid.addresses[gp] + step) % D
+                    gr_gp = address @ [1, D[0], D[0] * D[1]]
+                    np.testing.assert_array_equal(
+                        vertex_frequencies[:, i, j],
+                        frequencies[bz_grid.grg2bzg[gr_gp]],
+                    )

@@ -10,7 +10,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy._lang import resolve_lang
-from phonopy.phonon.grid import BZGrid
+from phonopy.phonon.grid import BZGrid, get_grid_point_from_address
 
 
 def get_tetrahedra_relative_grid_address(
@@ -210,6 +210,45 @@ def get_integration_weights(
         phonoc.integration_weights_at_grid_points(*args)
 
     return integration_weights
+
+
+def get_tetrahedra_frequencies(
+    grid_point: int,
+    bz_grid: BZGrid,
+    relative_grid_address: NDArray[np.int64],
+    frequencies: NDArray[np.double],
+) -> NDArray[np.double]:
+    """Return the frequencies at the vertices of the tetrahedra around a point.
+
+    Parameters
+    ----------
+    grid_point : int
+        Grid point in BZ-grid.
+    bz_grid : BZGrid
+        Grid information in reciprocal space.
+    relative_grid_address : ndarray
+        Vertices of the tetrahedra as steps of GR-grid address from
+        ``grid_point``, e.g., ``np.dot(get_tetrahedra_relative_grid_address(
+        bz_grid.microzone_lattice), bz_grid.P.T)`` or
+        ``get_symmetrized_tetrahedra_relative_grid_address(bz_grid)``.
+        shape=(tetrahedra, 4, 3), dtype='int64'
+    frequencies : ndarray
+        Phonon frequencies on BZ-grid points. shape=(bz_grid_points, num_band),
+        dtype='double'
+
+    Returns
+    -------
+    ndarray
+        Frequencies at the vertices. shape=(num_band, tetrahedra, 4),
+        dtype='double', order='C'
+
+    """
+    addresses = bz_grid.addresses[grid_point] + np.asarray(relative_grid_address)
+    gr_grid_points = get_grid_point_from_address(
+        addresses.reshape(-1, 3), bz_grid.D_diag
+    ).reshape(addresses.shape[:-1])
+    vertex_frequencies = frequencies[bz_grid.grg2bzg[gr_grid_points]]
+    return np.array(np.moveaxis(vertex_frequencies, -1, 0), dtype="double", order="C")
 
 
 def get_all_tetrahedra_relative_grid_address(

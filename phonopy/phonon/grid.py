@@ -549,21 +549,10 @@ class BZGrid:
             Otherwise one integer value is returned.
 
         """
-        try:
-            len(addresses[0])
-        except TypeError:
-            return int(
-                self._grg2bzg[
-                    get_grid_point_from_address(
-                        addresses, self._D_diag, lang=self._lang
-                    )
-                ]
-            )
-
-        gps = [
-            get_grid_point_from_address(adrs, self._D_diag, lang=self._lang)
-            for adrs in addresses
-        ]
+        _addresses = np.asarray(addresses, dtype="int64")
+        gps = get_grid_point_from_address(_addresses, self._D_diag, lang=self._lang)
+        if _addresses.ndim == 1:
+            return int(self._grg2bzg[gps])
         return np.array(self._grg2bzg[gps], dtype="int64")
 
     def _set_bz_grid(self) -> None:
@@ -1056,37 +1045,45 @@ def get_grid_point_from_address_py(
 ) -> NDArray[np.int64]:
     """Return GR-grid point index from addresses.
 
-    Python version of get_grid_point_from_address.
-    X runs first in XYZ
-    In grid.c, Z first is possible with MACRO setting.
+    Kept for phono3py; use get_grid_point_from_address(..., lang="Python").
 
     addresses :
         shape=(..., 3)
 
     """
-    return np.dot(np.mod(addresses, D_diag), [1, D_diag[0], D_diag[0] * D_diag[1]])
+    return get_grid_point_from_address(addresses, D_diag, lang="Python")
 
 
 def get_grid_point_from_address(
     address: Sequence[int] | NDArray[np.int64],
     D_diag: Sequence[int] | NDArray[np.int64],
-    lang: Literal["C", "Rust"] = "Rust",
+    lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return GR grid-point indices of grid addresses.
+
+    Each component of the address ``m`` is first reduced to the range
+    ``0 <= r_i < D_diag[i]`` by ``r_i = m_i mod D_diag[i]``, taken
+    non-negative for a negative ``m_i``. The index is then
+
+        r_0 + r_1 * D_diag[0] + r_2 * D_diag[0] * D_diag[1],
+
+    so the left component of the address runs fastest.
 
     Parameters
     ----------
     address : array_like
         Grid address.
-        shape=(3, ) or (n, 3), dtype='int64'
+        shape=(3, ) or (n, 3), dtype='int64'. With lang="Python", any
+        shape=(..., 3).
     D_diag : array_like
         This corresponds to mesh numbers. More precisely, this gives
         diagonal elements of diagonal matrix of Smith normal form of
         grid generating matrix. See the detail in the docstring of BZGrid.
         shape=(3,), dtype='int64'
-    lang : {"C", "Rust"}
+    lang : {"C", "Python", "Rust"}
         Backend selector. "C" uses ``phonopy._recgrid``; "Rust" uses
-        ``phonors``. Default is "C".
+        ``phonors``, which fixes the index convention above. "Python" is a
+        reference implementation for tests. Default is "Rust".
 
     Returns
     -------
@@ -1099,6 +1096,9 @@ def get_grid_point_from_address(
         shape=(n, ), dtype='int64'
 
     """
+    if lang == "Python":
+        return np.dot(np.mod(address, D_diag), [1, D_diag[0], D_diag[0] * D_diag[1]])
+
     if resolve_lang(lang) == "Rust":
         import phonors as backend
     else:
