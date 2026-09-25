@@ -17,7 +17,6 @@ from phonopy.phonon.grid import (
     _get_grid_points_by_rotations,
     _relocate_BZ_grid_address,
     get_grid_point_from_address,
-    get_grid_point_from_address_py,
     get_ir_grid_points,
     length2mesh,
 )
@@ -48,7 +47,7 @@ def test_get_grid_point_from_address():
 
     for address in list(np.ndindex(mesh)):
         gp_spglib = get_grid_point_from_address(address, mesh)
-        gp_py = get_grid_point_from_address_py(address, mesh)
+        gp_py = get_grid_point_from_address(address, mesh, lang="Python")
         # print("%s %d %d" % (address, gp_spglib, gp_py))
         np.testing.assert_equal(gp_spglib, gp_py)
 
