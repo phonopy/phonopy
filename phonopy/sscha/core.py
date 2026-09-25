@@ -147,7 +147,9 @@ class MLPSSCHA:
         self._initial_force_constants_provided = ph.force_constants is not None
 
         self._ph = ph.replicate()
-        self._ph.mlp = PhonopyMLP(mlp=mlp.mlp)
+        # The caller's PhonopyMLP is used as it is, so a calculator it has
+        # built is reused rather than rebuilt.
+        self._ph.mlp = mlp
         self._ph.nac_params = copy.deepcopy(ph.nac_params)
 
         # Calculate supercell energy without displacements
