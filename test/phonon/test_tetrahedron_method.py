@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 
-from phonopy.phonon.tetrahedron_method import get_tetrahedra_relative_grid_address
+from phonopy.phonon.tetrahedron_method import _get_tetrahedra_relative_grid_address
 
 # The C/Rust parity check requires phonopy._phonopy.
 pytest.importorskip("phonopy._phonopy")
@@ -30,6 +30,6 @@ def test_get_tetrahedra_relative_grid_address_rust_matches_c(
 ) -> None:
     """phonors.tetrahedra_relative_grid_address must agree with the C kernel."""
     pytest.importorskip("phonors")
-    ga_c = get_tetrahedra_relative_grid_address(lat, lang="C")
-    ga_r = get_tetrahedra_relative_grid_address(lat, lang="Rust")
+    ga_c = _get_tetrahedra_relative_grid_address(lat, lang="C")
+    ga_r = _get_tetrahedra_relative_grid_address(lat, lang="Rust")
     np.testing.assert_array_equal(ga_c, ga_r)

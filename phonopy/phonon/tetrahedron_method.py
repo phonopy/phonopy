@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 from typing import Literal
 
@@ -18,6 +19,24 @@ _THM_EPSILON = 1e-10
 
 
 def get_tetrahedra_relative_grid_address(
+    microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
+    lang: Literal["C", "Python", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return the vertices of the 24 tetrahedra around a grid point.
+
+    Deprecated. Use get_tetrahedra_relative_gr_grid_address.
+
+    """
+    warnings.warn(
+        "get_tetrahedra_relative_grid_address is deprecated. "
+        "Use get_tetrahedra_relative_gr_grid_address instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _get_tetrahedra_relative_grid_address(microzone_lattice, lang=lang)
+
+
+def _get_tetrahedra_relative_grid_address(
     microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
     lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
@@ -101,10 +120,7 @@ def get_symmetrized_tetrahedra_relative_grid_address(
         shape=(24 * n, 4, 3), dtype='int64', order='C'
 
     """
-    relative_grid_address = np.dot(
-        get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
-        bz_grid.P.T,
-    )
+    relative_grid_address = get_tetrahedra_relative_gr_grid_address(bz_grid, lang=lang)
     tetrahedra_sets: dict[frozenset, NDArray[np.int64]] = {}
     for r in bz_grid.rotations:
         rotated = relative_grid_address @ r.T
@@ -112,6 +128,42 @@ def get_symmetrized_tetrahedra_relative_grid_address(
         tetrahedra_sets.setdefault(key, rotated)
     return np.array(
         np.concatenate(list(tetrahedra_sets.values())), dtype="int64", order="C"
+    )
+
+
+def get_tetrahedra_relative_gr_grid_address(
+    bz_grid: BZGrid,
+    symmetrize_tetrahedra: bool = False,
+    lang: Literal["C", "Python", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return the tetrahedra around a grid point in GR-grid coordinates.
+
+    Parameters
+    ----------
+    bz_grid : BZGrid
+        Grid information in reciprocal space.
+    symmetrize_tetrahedra : bool, optional, default=False
+        Return the 24 tetrahedra rotated by all the point-group operations,
+        see ``get_symmetrized_tetrahedra_relative_grid_address``, instead of
+        the 24 tetrahedra alone.
+
+    Returns
+    -------
+    relative_grid_address : ndarray
+        Relative grid addresses in GR-grid coordinates, the central vertex
+        first in each tetrahedron.
+        shape=(24 * n, 4, 3), dtype='int64', order='C'
+
+    """
+    if symmetrize_tetrahedra:
+        return get_symmetrized_tetrahedra_relative_grid_address(bz_grid, lang=lang)
+    return np.array(
+        np.dot(
+            _get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
+            bz_grid.P.T,
+        ),
+        dtype="int64",
+        order="C",
     )
 
 
@@ -158,23 +210,11 @@ def get_integration_weights(
 
     """
     lang = resolve_lang(lang)
-    if symmetrize_tetrahedra:
-        if lang != "Rust":
-            raise RuntimeError("symmetrize_tetrahedra is implemented only in Rust.")
-        relative_grid_addresses = get_symmetrized_tetrahedra_relative_grid_address(
-            bz_grid, lang=lang
-        )
-    else:
-        relative_grid_addresses = np.array(
-            np.dot(
-                get_tetrahedra_relative_grid_address(
-                    bz_grid.microzone_lattice, lang=lang
-                ),
-                bz_grid.P.T,
-            ),
-            dtype="int64",
-            order="C",
-        )
+    if symmetrize_tetrahedra and lang != "Rust":
+        raise RuntimeError("symmetrize_tetrahedra is implemented only in Rust.")
+    relative_grid_addresses = get_tetrahedra_relative_gr_grid_address(
+        bz_grid, symmetrize_tetrahedra=symmetrize_tetrahedra, lang=lang
+    )
     if grid_points is None:
         _grid_points = bz_grid.grg2bzg
     else:
@@ -232,9 +272,7 @@ def get_tetrahedra_frequencies(
         Grid information in reciprocal space.
     relative_grid_address : ndarray
         Vertices of the tetrahedra as steps of GR-grid address from
-        ``grid_point``, e.g., ``np.dot(get_tetrahedra_relative_grid_address(
-        bz_grid.microzone_lattice), bz_grid.P.T)`` or
-        ``get_symmetrized_tetrahedra_relative_grid_address(bz_grid)``.
+        ``grid_point``, e.g., ``get_tetrahedra_relative_gr_grid_address(bz_grid)``.
         shape=(tetrahedra, 4, 3), dtype='int64'
     frequencies : ndarray
         Phonon frequencies on BZ-grid points. shape=(bz_grid_points, num_band),
