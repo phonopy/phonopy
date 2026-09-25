@@ -702,12 +702,13 @@ def symmetrize_borns_and_epsilon(
     lattice = ucell.cell
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec, lang=lang)
     rotations = u_sym.symmetry_operations["rotations"]
-    translations = u_sym.symmetry_operations["translations"]
     ptg_ops = u_sym.pointgroup_operations
     epsilon_ = _symmetrize_2nd_rank_tensor(
         np.asarray(epsilon, dtype="double"), ptg_ops, lattice
     )
-    borns_ = _take_average_of_borns(borns, rotations, translations, ucell, symprec)
+    borns_ = _take_average_of_borns(
+        borns, rotations, u_sym.atomic_permutations, lattice
+    )
 
     if (abs(borns - borns_) > 0.1).any():
         lines = [
@@ -747,28 +748,35 @@ def symmetrize_borns_and_epsilon(
 def _take_average_of_borns(
     borns: Sequence[Sequence[Sequence[float]]] | NDArray[np.double],
     rotations: NDArray[np.int64],
-    translations: NDArray[np.double],
-    cell: PhonopyAtoms,
-    symprec: float,
+    permutations: NDArray[np.int64],
+    lattice: NDArray[np.double],
 ) -> NDArray[np.double]:
-    lattice = cell.cell
-    positions = cell.scaled_positions
-    # Per-atom species id, used to disambiguate co-located atoms of a site
-    # mixture (e.g. Ge and Sn sharing a site): the symmetry-operation
-    # pre-image of atom i must be the same species, which a position-only
-    # match cannot guarantee. Within one cell the species id is exact.
-    species_ids = cell.species_ids
+    """Return the Born charges averaged over the space group operations.
+
+    Operation k sends atom i onto atom j = permutations[k, i], and with it the
+    charge R Z_i R^-1, R being the Cartesian rotation of k. Every atom j
+    receives one such charge per operation, and their average is the
+    symmetrized charge of atom j.
+
+    Parameters
+    ----------
+    borns : array_like
+        Born effective charges. shape=(atoms, 3, 3)
+    rotations : ndarray
+        Rotation parts of the operations. shape=(operations, 3, 3)
+    permutations : ndarray
+        Symmetry.atomic_permutations of the cell: operation k sends atom i onto
+        atom permutations[k, i]. shape=(operations, atoms)
+    lattice : ndarray
+        Basis vectors in row vectors. shape=(3, 3)
+
+    """
+    borns = np.asarray(borns, dtype="double")
     borns_ = np.zeros_like(borns)
-    for i in range(len(borns)):
-        for r, t in zip(rotations, translations, strict=True):
-            diff = np.dot(positions, r.T) + t - positions[i]
-            diff -= np.rint(diff)
-            dist = np.linalg.norm(np.dot(diff, lattice), axis=1)
-            matches = np.nonzero((dist < symprec) & (species_ids == species_ids[i]))[0]
-            j = matches[0]
-            r_cart = similarity_transformation(lattice.T, r)
-            borns_[i] += similarity_transformation(r_cart, borns[j])
-        borns_[i] /= len(rotations)
+    for r, perm in zip(rotations, permutations, strict=True):
+        r_cart = similarity_transformation(lattice.T, r)
+        borns_[perm] += r_cart @ borns @ r_cart.T
+    borns_ /= len(rotations)
 
     sum_born = borns_.sum(axis=0) / len(borns_)
     borns_ -= sum_born
