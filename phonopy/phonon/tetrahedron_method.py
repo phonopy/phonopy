@@ -12,6 +12,10 @@ from numpy.typing import NDArray
 from phonopy._lang import resolve_lang
 from phonopy.phonon.grid import BZGrid, get_grid_point_from_address
 
+# Guard of the tetrahedron weights against vanishing denominators, as
+# THM_EPSILON in phonors.
+_THM_EPSILON = 1e-10
+
 
 def get_tetrahedra_relative_grid_address(
     microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
@@ -421,9 +425,10 @@ class TetrahedronMethod:
         return sum_value / (len(tetrahedra_omegas) / 4)
 
     def _f(self, n: int, m: int) -> float:
-        return (self._omega - self._vertices_omegas[m]) / (
-            self._vertices_omegas[n] - self._vertices_omegas[m]
-        )
+        delta = self._vertices_omegas[n] - self._vertices_omegas[m]
+        if abs(delta) < _THM_EPSILON:
+            return 0.0
+        return (self._omega - self._vertices_omegas[m]) / delta
 
     def _J(self, i: int, ci: int) -> float:
         if i == 0:
@@ -651,6 +656,9 @@ class TetrahedronMethod:
         return self._f(3, 0) / 4
 
     def _J_20(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1)
@@ -661,10 +669,13 @@ class TetrahedronMethod:
                 * (1.0 + self._f(0, 3) + self._f(0, 2))
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_21(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * (1.0 + self._f(1, 3) + self._f(1, 2))
@@ -675,10 +686,13 @@ class TetrahedronMethod:
                 + self._f(3, 0) * self._f(2, 0) * self._f(1, 2) * self._f(1, 2)
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_22(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * self._f(2, 1)
@@ -689,10 +703,13 @@ class TetrahedronMethod:
                 * (self._f(2, 1) + self._f(2, 0))
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_23(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * self._f(3, 1)
@@ -703,25 +720,31 @@ class TetrahedronMethod:
                 + self._f(3, 0) * self._f(2, 0) * self._f(1, 2) * self._f(3, 0)
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_30(self) -> float:
-        return (
-            (1.0 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) / 4 / self._n_3()
-        )
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
+        return (1.0 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) / 4 / n
 
     def _J_31(self) -> float:
-        return (
-            (1.0 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) / 4 / self._n_3()
-        )
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
+        return (1.0 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) / 4 / n
 
     def _J_32(self) -> float:
-        return (
-            (1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) / 4 / self._n_3()
-        )
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
+        return (1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) / 4 / n
 
     def _J_33(self) -> float:
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 1.0
@@ -731,7 +754,7 @@ class TetrahedronMethod:
                 * (1.0 + self._f(3, 0) + self._f(3, 1) + self._f(3, 2))
             )
             / 4
-            / self._n_3()
+            / n
         )
 
     def _J_4(self) -> float:
@@ -752,39 +775,32 @@ class TetrahedronMethod:
     def _I_13(self) -> float:
         return self._f(3, 0) / 3
 
+    def _g_2_denominator(self) -> float:
+        return self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3)
+
     def _I_20(self) -> float:
-        return (
-            self._f(0, 3)
-            + self._f(0, 2)
-            * self._f(2, 0)
-            * self._f(1, 2)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(0, 3) + self._f(0, 2) * self._f(2, 0) * self._f(1, 2) / g) / 3
 
     def _I_21(self) -> float:
-        return (
-            self._f(1, 2)
-            + self._f(1, 3) ** 2
-            * self._f(2, 1)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(1, 2) + self._f(1, 3) ** 2 * self._f(2, 1) / g) / 3
 
     def _I_22(self) -> float:
-        return (
-            self._f(2, 1)
-            + self._f(2, 0) ** 2
-            * self._f(1, 2)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(2, 1) + self._f(2, 0) ** 2 * self._f(1, 2) / g) / 3
 
     def _I_23(self) -> float:
-        return (
-            self._f(3, 0)
-            + self._f(3, 1)
-            * self._f(1, 3)
-            * self._f(2, 1)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(3, 0) + self._f(3, 1) * self._f(1, 3) * self._f(2, 1) / g) / 3
 
     def _I_30(self) -> float:
         return self._f(0, 3) / 3

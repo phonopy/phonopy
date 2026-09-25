@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 
 from phonopy.phonon.grid import BZGrid, get_grid_point_from_address
 from phonopy.phonon.tetrahedron_method import (
+    TetrahedronMethod,
     get_integration_weights,
     get_symmetrized_tetrahedra_relative_grid_address,
     get_tetrahedra_frequencies,
@@ -158,3 +159,47 @@ def test_get_tetrahedra_frequencies(name: str, mesh: list[int]):
                         vertex_frequencies[:, i, j],
                         frequencies[bz_grid.grg2bzg[gr_gp]],
                     )
+
+
+@pytest.mark.parametrize("function", ["I", "J"])
+@pytest.mark.parametrize("symmetrize", [False, True])
+def test_TetrahedronMethod_matches_rust(function: str, symmetrize: bool):
+    """The pure-Python weights equal the Rust ones, also where vertices nearly tie.
+
+    The band is rounded to integers and shifted by noise of 1e-12, so that many
+    vertex values differ by less than the guard of 1e-10 and the weights are
+    evaluated next to them. Both implementations drop the vanishing
+    denominators there; without that the weights diverge.
+
+    """
+    bz_grid = _bz_grid("hcp", [6, 6, 4])
+    rng = np.random.default_rng(0)
+    band = np.round(4 * _band("hcp", bz_grid))
+    sampling_points = np.unique(band)
+    # Noise per GR-grid point, so translationally equivalent BZ-grid points,
+    # which the two implementations may pick differently, keep equal values.
+    noise = 1e-12 * rng.standard_normal((np.prod(bz_grid.D_diag), 1))
+    band += noise[bz_grid.bzg2grg]
+    weights_rust = get_integration_weights(
+        sampling_points,
+        band,
+        bz_grid,
+        function=function,
+        lang="Rust",
+        symmetrize_tetrahedra=symmetrize,
+    )
+    if symmetrize:
+        table = get_symmetrized_tetrahedra_relative_grid_address(bz_grid)
+    else:
+        table = np.dot(
+            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice),
+            bz_grid.P.T,
+        )
+    thm = TetrahedronMethod(None, relative_grid_address=table)
+    for i, gp in enumerate(bz_grid.grg2bzg):
+        vertex_band = get_tetrahedra_frequencies(gp, bz_grid, table, band)
+        thm.set_tetrahedra_omegas(vertex_band[0])
+        thm.run(sampling_points, value=function)
+        np.testing.assert_allclose(
+            thm.get_integration_weight(), weights_rust[i, :, 0], atol=1e-12
+        )
