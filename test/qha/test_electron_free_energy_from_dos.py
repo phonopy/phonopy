@@ -228,6 +228,28 @@ def test_qha_integrates_by_tetrahedron_when_the_states_carry_the_grid():
     assert fe_el_rel[0, 0] == pytest.approx(tetrahedron[-1])
 
 
+def test_qha_passes_symmetrize_tetrahedra_on():
+    """Test that symmetrize_tetrahedra reaches the tetrahedron method.
+
+    On this simple cubic mesh the averaged tetrahedra move F_el, so the flag
+    being dropped on the way would show.
+
+    """
+    temperatures = np.array([300.0])
+    states = _half_filled_band([8, 8, 8])
+
+    fe_el_rel, _ = compute_electronic_contributions_from_states(
+        [states], temperatures, primitive_volumes=None, symmetrize_tetrahedra=True
+    )
+    averaged, _ = compute_free_energy_by_tetrahedron(
+        states, np.array([0.0, 300.0]), symmetrize_tetrahedra=True
+    )
+    fixed, _ = compute_free_energy_by_tetrahedron(states, np.array([0.0, 300.0]))
+
+    assert fe_el_rel[0, 0] == pytest.approx(averaged[-1])
+    assert fe_el_rel[0, 0] != pytest.approx(fixed[-1])
+
+
 def test_qha_falls_back_to_the_kpoint_sum_without_the_grid():
     """Test that states without the grid are summed over k points."""
     temperatures = np.array([300.0])

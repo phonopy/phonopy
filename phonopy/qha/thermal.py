@@ -126,26 +126,40 @@ def primitive_cell_fractions(
     electronic_structures: Sequence[ElectronicStates],
     primitive_volumes: Sequence[float] | NDArray[np.double] | None,
 ) -> NDArray[np.double]:
-    """Return the factor putting each states quantity per primitive cell.
+    """Return the factors that scale electronic quantities to the primitive cell.
 
-    Phonon thermal properties are per primitive cell, while a calculator
-    reports quantities for the cell it was run on. The two cells coincide for
-    a primitive lattice and differ by the centring multiplicity otherwise.
-    The factor is the ratio of the two volumes, so it is read off the data
-    rather than assumed: states computed on the primitive cell already give
-    1, and nothing is scaled twice.
+    Phonon thermal properties are given per primitive cell. An electronic
+    calculation gives its quantities for the cell it was run on, which can be
+    larger. For example, a calculation on the conventional cell of a
+    body-centred lattice holds two primitive cells, and its F_el has to be
+    halved before it is added to the phonon free energy.
 
-    It is 1 as well when primitive_volumes is None, or when the states record
-    no cell of their own.
+    The factor is the primitive-cell volume divided by the volume of the cell
+    the states were computed on. It is computed from the two volumes, not
+    from the lattice type. States computed on the primitive cell give 1, so
+    they are not scaled.
 
-    Not every driver needs this. run_qha requires the states to sit on the
-    same cell as the phonons and checks their volume, so whatever cell
-    ph.primitive is -- the unit cell included -- one normalization already
-    runs through its inputs. The anisotropic driver cannot ask for that: its
-    reference is the conventional cell, from which the free lattice DOF are
-    read, while primitive_matrix picks the primitive cell out of it, so a
-    centred lattice puts the calculator's cell and the phonon normalization
-    apart by construction.
+    The factor is also 1 when primitive_volumes is None, or when the states
+    do not record the cell they were computed on.
+
+    run_qha does not need this function. It checks that the states and the
+    phonons are on the same cell. phonopy-anisotropic-qha needs it. Its
+    states are computed on the conventional cell, because the free lattice
+    parameters are defined on that cell, while its phonons are per primitive
+    cell. For a centred lattice the two cells differ.
+
+    Parameters
+    ----------
+    electronic_structures : sequence of ElectronicStates
+        One set of states per volume.
+    primitive_volumes : array_like or None
+        Volumes of the primitive cells, in Angstrom^3. shape=(volumes,)
+
+    Returns
+    -------
+    ndarray
+        Factors to multiply the electronic quantities by.
+        shape=(volumes,), dtype='double'
 
     """
     fractions = np.ones(len(electronic_structures), dtype="double")
@@ -179,25 +193,52 @@ def compute_electronic_contributions_from_states(
     window: float | None = None,
     energy_spacing: float = 0.0005,
     require_tetrahedron: bool = False,
+    symmetrize_tetrahedra: bool = False,
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
-    """Compute relative band free energies and entropies at temperatures.
+    """Return the electronic free energy and entropy of each volume.
 
-    Returns (fe_el_rel, s_el) with shape (temperatures, volumes) in eV and
-    eV/K, respectively. fe_el_rel = fe(T) - fe(0) is anchored at T = 0,
-    which is evaluated explicitly so that the temperature grid does not
-    need to start at 0 K.
+    The free energy is returned relative to its value at 0 K, F_el(T) -
+    F_el(0). The value at 0 K is computed here, so the temperatures need
+    not include 0 K.
 
-    The states are integrated over the cell they were computed on. Given
-    primitive_volumes, the result is scaled to that normalization by
-    primitive_cell_fractions. primitive_volumes is keyword-only and has no
-    default, so that a caller adding phonon quantities to these has to say
-    which cell it normalizes to; pass None when the caller has already
-    established that the states and the phonons share one cell.
+    Each set of states is integrated by the linear tetrahedron method when it
+    carries the k-point grid it was computed on, and by the k-point sum
+    otherwise. The k-point sum converges far more slowly. The method used
+    for each set is printed, because the states decide it and the command
+    line does not show it.
 
-    States carrying the k-point grid they were computed on are integrated by
-    the linear tetrahedron method, the rest by the k-point sum, which
-    converges far more slowly. Which one ran is reported, since the states
-    decide it and nothing in the command line shows it.
+    Parameters
+    ----------
+    electronic_structures : sequence of ElectronicStates
+        One set of states per volume.
+    temperatures : ndarray
+        Temperatures in K. shape=(temperatures,)
+    primitive_volumes : array_like or None
+        Volumes of the primitive cells the phonons are computed on, in
+        Angstrom^3. shape=(volumes,). The states are integrated over the cell
+        they were computed on, and the results are scaled to the primitive
+        cell by primitive_cell_fractions. Pass None when the states are
+        already on the primitive cell of the phonons. This argument has no
+        default, so that every caller states which cell the result is for.
+    window : float, optional
+        Half-width of the energy window around the Fermi level, in eV. See
+        compute_free_energy_by_tetrahedron.
+    energy_spacing : float, optional
+        Spacing of the energy grid inside the window, in eV. Default is
+        0.0005.
+    require_tetrahedron : bool, optional
+        Raise ValueError when a set of states carries no k-point grid,
+        instead of using the k-point sum for it. Default is False.
+    symmetrize_tetrahedra : bool, optional
+        Average the tetrahedron weights over the point group. See
+        compute_free_energy_by_tetrahedron. Default is False.
+
+    Returns
+    -------
+    fe_el_rel : ndarray
+        F_el(T) - F_el(0) in eV. shape=(temperatures, volumes)
+    s_el : ndarray
+        Electronic entropy in eV/K. shape=(temperatures, volumes)
 
     """
     shape = (len(temperatures), len(electronic_structures))
@@ -237,6 +278,7 @@ def compute_electronic_contributions_from_states(
                 temps_with_anchor,
                 window=window,
                 energy_spacing=energy_spacing,
+                symmetrize_tetrahedra=symmetrize_tetrahedra,
             )
         # The k-point sum returns the whole band sum and the tetrahedron
         # returns it against 0 K, where fe[0] is zero; subtracting the anchor
