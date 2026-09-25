@@ -8,6 +8,7 @@ import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points
+from phonopy.phonon.spectrum import TetrahedronDOSAccumulator
 from phonopy.qha.electron import ElectronicStates, _TetrahedronSampler
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
@@ -177,6 +178,38 @@ def test_dos_does_not_depend_on_the_block_size(aln_cell: PhonopyAtoms):
             rtol=0.0,
             atol=0.0,
         )
+
+
+def test_symmetrized_tetrahedra_match_the_full_grid(aln_cell: PhonopyAtoms):
+    """Test that with symmetrized tetrahedra the ir sum is the full-grid sum.
+
+    The weights averaged over the point group are the same on every k-point of
+    a star, so the sum over irreducible k-points times their multiplicities
+    equals the sum over all k-points with the fixed tetrahedra. Without the
+    averaging the two differ on this hexagonal grid.
+
+    """
+    states = _states_on_grid(aln_cell, [6, 6, 4], n_bands=4)
+    energies = np.linspace(
+        float(states.eigenvalues.min()), float(states.eigenvalues.max()), 401
+    )
+    sampler = _TetrahedronSampler(states, symmetrize_tetrahedra=True)
+    dos, _ = sampler.sample(energies)
+
+    ir_grid_points, _, ir_grid_map = get_ir_grid_points(sampler._bz_grid)
+    position = {int(gp): i for i, gp in enumerate(ir_grid_points)}
+    ir_eigenvalues = states.eigenvalues[0][sampler._id_map]
+    full = ir_eigenvalues[[position[int(gp)] for gp in ir_grid_map]]
+    reference = (
+        TetrahedronDOSAccumulator(
+            full, sampler._bz_grid, sampling_points=energies
+        ).result.density[0, :, 0]
+        * sampler._degeneracy
+    )
+
+    np.testing.assert_allclose(dos, reference, atol=1e-10 * reference.max())
+    fixed, _ = _TetrahedronSampler(states).sample(energies)
+    assert np.abs(fixed - reference).max() > 1e-3 * reference.max()
 
 
 def test_tetrahedron_dos_needs_the_grid(aln_cell: PhonopyAtoms):

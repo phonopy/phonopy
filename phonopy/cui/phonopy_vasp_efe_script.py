@@ -44,6 +44,7 @@ class PhonopyVaspEfeMockArgs:
     tstep: float = 10.0
     quiet: bool = False
     k_point_sum: bool = False
+    symmetrize_tetrahedra: bool = False
     write_electronic_states: bool = False
     filenames: Sequence[os.PathLike | str] | None = None
 
@@ -98,6 +99,17 @@ def get_options() -> argparse.Namespace:
             "linear tetrahedron method, which is the default. The sum needs "
             "far more k-points to converge, and is what this command wrote "
             "before"
+        ),
+    )
+    parser.add_argument(
+        "--symmetrize-tetrahedra",
+        dest="symmetrize_tetrahedra",
+        action=argparse.BooleanOptionalAction,
+        default=default_vals.symmetrize_tetrahedra,
+        help=(
+            "Average the tetrahedron weights over the point group, so that "
+            "the sum over irreducible k-points equals the sum over all of "
+            "them (default: %(default)s)"
         ),
     )
     parser.add_argument(
@@ -248,6 +260,7 @@ def _free_energy_of_one_volume(
     electronic_states: ElectronicStates,
     temperatures: NDArray[np.double],
     by_sum: bool = False,
+    symmetrize_tetrahedra: bool = False,
 ) -> tuple[NDArray[np.double], str, str]:
     """Return F_el(T) - F_el(0) of one volume in eV, how it was integrated, and why.
 
@@ -266,7 +279,9 @@ def _free_energy_of_one_volume(
     else:
         try:
             free_energies, _ = compute_free_energy_by_tetrahedron(
-                electronic_states, anchored
+                electronic_states,
+                anchored,
+                symmetrize_tetrahedra=symmetrize_tetrahedra,
             )
             return free_energies[first:], "linear tetrahedron method", ""
         except (ValueError, RuntimeError) as exc:
@@ -335,6 +350,7 @@ def get_fe_ev_lines(
             electronic_states,
             temperatures,
             by_sum=getattr(args, "k_point_sum", False),
+            symmetrize_tetrahedra=getattr(args, "symmetrize_tetrahedra", False),
         )
         if verbose:
             told = method if not reason else "%s (%s)" % (method, reason)
