@@ -43,6 +43,7 @@ run was given (LatticeGrid) and is not to be recovered from the numbers here.
 from __future__ import annotations
 
 import itertools
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal, get_args
@@ -210,14 +211,18 @@ def _einstein_term(
     terms satisfies the third law: the thermal expansion vanishes at 0 K.
 
     """
-    out = np.zeros_like(temperatures, dtype="double")
-    if not np.isfinite(theta) or abs(theta) < 1e-6:
+    out = np.zeros(temperatures.shape, dtype="double")
+    if not math.isfinite(theta) or abs(theta) < 1e-6:
         # A vanishing Einstein temperature carries no temperature dependence,
         # and the expression would divide by zero. The optimizer does wander
         # there, so it is answered rather than avoided.
         return out
     warm = temperatures > 1e-8
-    x = np.clip(theta / temperatures[warm], -_MAX_EXP_ARG, _MAX_EXP_ARG)
+    # np.clip without its Python-level overhead: curve_fit calls this about
+    # a million times on arrays of a dozen temperatures.
+    x = theta / temperatures[warm]
+    np.maximum(x, -_MAX_EXP_ARG, out=x)
+    np.minimum(x, _MAX_EXP_ARG, out=x)
     out[warm] = theta / np.expm1(x)
     return out
 
