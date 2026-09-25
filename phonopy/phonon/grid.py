@@ -1039,21 +1039,6 @@ def get_qpoints_from_bz_grid_points(
     return bz_grid.addresses[gps] @ bz_grid.QDinv.T
 
 
-def get_grid_point_from_address_py(
-    addresses: Sequence[int] | NDArray[np.int64],
-    D_diag: NDArray[np.int64] | Sequence[int],
-) -> NDArray[np.int64]:
-    """Return GR-grid point index from addresses.
-
-    Kept for phono3py; use get_grid_point_from_address(..., lang="Python").
-
-    addresses :
-        shape=(..., 3)
-
-    """
-    return get_grid_point_from_address(addresses, D_diag, lang="Python")
-
-
 def get_grid_point_from_address(
     address: Sequence[int] | NDArray[np.int64],
     D_diag: Sequence[int] | NDArray[np.int64],
