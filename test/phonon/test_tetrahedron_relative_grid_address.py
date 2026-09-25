@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 
-from phonopy.phonon.tetrahedron_method import get_tetrahedra_relative_grid_address
+from phonopy.phonon.tetrahedron_method import _get_tetrahedra_relative_grid_address
 
 pytest.importorskip("phonors")
 
@@ -130,6 +130,6 @@ def test_get_tetrahedra_relative_grid_address(i: int):
     lengths = [np.linalg.norm(lattice @ d) for d in _MAIN_DIAGONALS]
     assert np.argmin(lengths) == i
     np.testing.assert_array_equal(
-        get_tetrahedra_relative_grid_address(lattice, lang="Rust"),
+        _get_tetrahedra_relative_grid_address(lattice, lang="Rust"),
         np.reshape(rel_ga_ref, (4, 24, 4, 3))[i],
     )

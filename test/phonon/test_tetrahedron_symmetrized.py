@@ -10,10 +10,11 @@ from numpy.typing import NDArray
 from phonopy.phonon.grid import BZGrid, get_grid_point_from_address
 from phonopy.phonon.tetrahedron_method import (
     TetrahedronMethod,
+    _get_tetrahedra_relative_grid_address,
     get_integration_weights,
     get_symmetrized_tetrahedra_relative_grid_address,
     get_tetrahedra_frequencies,
-    get_tetrahedra_relative_grid_address,
+    get_tetrahedra_relative_gr_grid_address,
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
@@ -104,6 +105,25 @@ def test_get_symmetrized_tetrahedra_relative_grid_address(
     np.testing.assert_array_equal(relative_grid_address[:, 0], 0)
 
 
+@pytest.mark.parametrize("symmetrize_tetrahedra", [False, True])
+def test_get_tetrahedra_relative_gr_grid_address(symmetrize_tetrahedra: bool):
+    """The 24 tetrahedra in GR-grid coordinates, or their point-group orbit."""
+    bz_grid = _bz_grid("hcp", [6, 6, 4])
+    if symmetrize_tetrahedra:
+        expected = get_symmetrized_tetrahedra_relative_grid_address(bz_grid)
+    else:
+        expected = np.dot(
+            _get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice),
+            bz_grid.P.T,
+        )
+    np.testing.assert_array_equal(
+        get_tetrahedra_relative_gr_grid_address(
+            bz_grid, symmetrize_tetrahedra=symmetrize_tetrahedra
+        ),
+        expected,
+    )
+
+
 @pytest.mark.parametrize("function", ["I", "J"])
 def test_integration_weights_symmetrized_hcp(function: str):
     """Symmetrized weights agree over the star; the default ones do not."""
@@ -139,11 +159,8 @@ def test_get_tetrahedra_frequencies(name: str, mesh: list[int]):
     frequencies = rng.random((len(bz_grid.addresses), 3))
     D = bz_grid.D_diag
     tables = (
-        np.dot(
-            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice),
-            bz_grid.P.T,
-        ),
-        get_symmetrized_tetrahedra_relative_grid_address(bz_grid),
+        get_tetrahedra_relative_gr_grid_address(bz_grid),
+        get_tetrahedra_relative_gr_grid_address(bz_grid, symmetrize_tetrahedra=True),
     )
     for table in tables:
         for gp in (0, 5, len(bz_grid.addresses) - 1):
@@ -188,13 +205,9 @@ def test_TetrahedronMethod_matches_rust(function: str, symmetrize: bool):
         lang="Rust",
         symmetrize_tetrahedra=symmetrize,
     )
-    if symmetrize:
-        table = get_symmetrized_tetrahedra_relative_grid_address(bz_grid)
-    else:
-        table = np.dot(
-            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice),
-            bz_grid.P.T,
-        )
+    table = get_tetrahedra_relative_gr_grid_address(
+        bz_grid, symmetrize_tetrahedra=symmetrize
+    )
     thm = TetrahedronMethod(None, relative_grid_address=table)
     for i, gp in enumerate(bz_grid.grg2bzg):
         vertex_band = get_tetrahedra_frequencies(gp, bz_grid, table, band)
