@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 from typing import Literal
 
@@ -577,6 +578,8 @@ def set_tensor_symmetry_PJ(
 ) -> None:
     """Full force constants are symmetrized using crystal symmetry.
 
+    Deprecated. Use symmetrize_force_constants_by_space_group.
+
     This method extracts symmetrically equivalent sets of atomic pairs and
     take sum of their force constants and average the sum.
 
@@ -595,6 +598,12 @@ def set_tensor_symmetry_PJ(
         Symmetry of the supercell.
 
     """
+    warnings.warn(
+        "set_tensor_symmetry_PJ is deprecated. "
+        "Use symmetrize_force_constants_by_space_group instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     rotations = symmetry.symmetry_operations["rotations"]
     translations = symmetry.symmetry_operations["translations"]
     symprec = symmetry.tolerance
@@ -618,6 +627,37 @@ def set_tensor_symmetry_PJ(
         (0, 2, 3, 1, 4),
     )
     force_constants[:] = np.array(np.average(s, axis=0), dtype="double", order="C")
+
+
+def symmetrize_force_constants_by_space_group(
+    force_constants: NDArray[np.double],
+    lattice: NDArray[np.double],
+    symmetry: Symmetry,
+) -> None:
+    """Symmetrize full force constants in place by the space group.
+
+    Operation k sends the atom pair (i, j) onto (perm[i], perm[j]), perm being
+    Symmetry.atomic_permutations[k], and with it the block R Phi_ij R^T, R
+    being the Cartesian rotation of k. Every pair receives one such block per
+    operation, and their average is the symmetrized force constants.
+
+    Parameters
+    ----------
+    force_constants : ndarray
+        Full force constants, overwritten.
+        shape=(atoms, atoms, 3, 3), dtype='double', order='C'
+    lattice : ndarray
+        Basis vectors in row vectors. shape=(3, 3), dtype='double'
+    symmetry : Symmetry
+        Symmetry of the supercell.
+
+    """
+    rotations = symmetry.symmetry_operations["rotations"]
+    fc = np.zeros_like(force_constants)
+    for r, perm in zip(rotations, symmetry.atomic_permutations, strict=True):
+        r_cart = similarity_transformation(lattice.T, r)
+        fc[np.ix_(perm, perm)] += r_cart @ force_constants @ r_cart.T
+    force_constants[:] = fc / len(rotations)
 
 
 def set_translational_invariance(force_constants: NDArray[np.double]) -> None:
