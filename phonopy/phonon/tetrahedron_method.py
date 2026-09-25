@@ -17,13 +17,38 @@ def get_tetrahedra_relative_grid_address(
     microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
     lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
-    """Return relative (differences of) grid addresses from the central.
+    """Return the vertices of the 24 tetrahedra around a grid point.
 
-    Parameter
-    ---------
-    microzone_lattice : ndarray or list of list
-        column vectors of parallel piped microzone lattice, i.e.,
-        microzone_lattice = np.linalg.inv(cell.cell) / mesh
+    Each vertex is given as an integer vector ``n``, the step from the central
+    grid point in the basis of ``microzone_lattice``. The central vertex comes
+    first in each tetrahedron. The cell of the grid is cut along its shortest
+    main diagonal.
+
+    On a generalized regular (GR) grid, ``n`` cannot be added to a grid
+    address directly. It has to be converted to the step ``m = P n`` of GR-grid
+    address, which for the (24, 4, 3) array is
+    ``np.dot(relative_grid_address, bz_grid.P.T)``. On a regular grid that is
+    not a GR grid, ``P`` is the identity and ``m = n``.
+
+    The conversion follows from the Smith normal form ``D = P M Q`` of the
+    grid matrix ``M``. With ``B`` the reciprocal lattice, the GR-grid address
+    ``m`` is the point ``q = B Q D^-1 m``, while ``microzone_lattice`` is
+    ``B Q D^-1 P``. The step ``n`` in the basis of ``microzone_lattice`` is
+    therefore the point ``B Q D^-1 P n``, which is the GR-grid address
+    ``m = P n``. The GR grid is described in A. Togo et al., J. Phys.:
+    Condens. Matter 35, 353001 (2023).
+
+    Parameters
+    ----------
+    microzone_lattice : array_like
+        Basis vectors of the grid in column vectors, ``bz_grid.microzone_lattice``.
+        For a regular mesh this is ``np.linalg.inv(cell.cell) / mesh``.
+        shape=(3, 3)
+
+    Returns
+    -------
+    relative_grid_address : ndarray
+        shape=(24, 4, 3), dtype='int64'
 
     """
     if lang == "Python":
