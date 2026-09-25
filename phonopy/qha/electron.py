@@ -44,17 +44,30 @@ _ZERO_TEMPERATURE = 1e-10
 
 
 class _TetrahedronSampler:
-    """The tetrahedron setup for one set of electronic states, kept for reuse.
+    """Tetrahedron-method integration of one set of electronic states.
 
-    Building the BZ grid and analysing the symmetry costs more than sampling a
-    handful of energies, so a caller that samples more than once -- solving for
-    the chemical potential, then building a density of states -- holds one of
-    these rather than starting over.
+    The sampler holds the BZ grid, its irreducible k-points and the eigenvalues
+    mapped onto them. Building these takes longer than integrating at a few
+    energies. compute_free_energy_by_tetrahedron integrates the same states
+    twice, first to find the chemical potential at 0 K and then to build the
+    density of states, so it builds one sampler and uses it for both.
+
+    Parameters
+    ----------
+    electronic_states : ElectronicStates
+        States carrying kpoints, mesh and cell.
+    symmetrize_tetrahedra : bool, optional
+        Average the tetrahedron weights over the point group. Default is False.
 
     """
 
-    def __init__(self, electronic_states: ElectronicStates) -> None:
+    def __init__(
+        self,
+        electronic_states: ElectronicStates,
+        symmetrize_tetrahedra: bool = False,
+    ) -> None:
         """Init method."""
+        self._symmetrize_tetrahedra = symmetrize_tetrahedra
         states = electronic_states
         if states.kpoints is None or states.mesh is None or states.cell is None:
             raise ValueError(
@@ -91,39 +104,40 @@ class _TetrahedronSampler:
         energies: Sequence[float] | NDArray[np.double],
         max_bytes: float = 2.0e8,
     ) -> tuple[NDArray[np.double], NDArray[np.double]]:
-        """Return the density of states and the number of states below each energy.
+        """Return the density of states and the number of states at the energies.
 
-        The density is in states/eV per cell, summed over spin channels, on the
-        given energies. The count is the tetrahedron method's own integral of
-        the same states, counted from -infinity and continuous in energy, which
-        is what makes it the thing to solve a chemical potential against.
+        The density of states is in states/eV per cell, summed over the spin
+        channels. The number of states counts the states below each energy,
+        from minus infinity, integrated by the same tetrahedra. It is
+        continuous in energy, so the chemical potential can be solved from it.
 
-        Summing the spin channels here is what lets a spin-polarized calculation
-        be treated no differently afterwards. The occupation depends on the
-        energy and the chemical potential alone, so the electron count, the band
-        energy and the entropy are all integrals of the summed density of states
-        against one chemical potential.
+        The spin channels are summed here because the occupation depends only
+        on the energy and the chemical potential. The electron count, the band
+        energy and the entropy are then integrals of the summed density of
+        states, and a spin-polarized calculation needs no other treatment.
 
-        The energies are processed in blocks. The tetrahedron integration
-        weights are built as one (ir points, sampling points, bands) array,
-        which a dense mesh and a fine energy grid make far too large to hold,
-        twice over. Sampling points are independent of one another, so
-        splitting them changes nothing but the peak allocation.
+        The energies are processed in blocks. The integration weights of a
+        block form an array of shape (ir points, energies in the block, bands),
+        one for the density of states and one for the number of states. On a
+        dense mesh with a fine energy grid, the arrays for all energies at once
+        do not fit in memory. The energies are independent of one another, so
+        the blocks give the same result as a single pass.
 
         Parameters
         ----------
         energies : array_like
-            Energies to sample the density of states at, in eV.
+            Energies at which the density of states and the number of states
+            are evaluated, in eV. shape=(energies,)
         max_bytes : float, optional
-            Rough ceiling on the integration-weight array of one block, in bytes.
-            Default is 2e8, i.e. 200 MB against the 400 MB that two of them take.
-            Raise it to trade memory for fewer passes over the eigenvalues.
+            Approximate upper limit of one integration-weight array of a block,
+            in bytes. Default is 2e8. A larger value uses more memory and
+            fewer blocks.
 
         Returns
         -------
         tuple of ndarray
-            The density of states and the count, each shape=(len(energies),),
-            dtype='double'
+            The density of states and the number of states, each
+            shape=(energies,), dtype='double'
 
         """
         sampling_points = np.asarray(energies, dtype="double")
@@ -163,6 +177,7 @@ class _TetrahedronSampler:
                     ir_grid_weights=self._ir_grid_weights,
                     ir_grid_map=self._ir_grid_map,
                     sampling_points=chunk,
+                    symmetrize_tetrahedra=self._symmetrize_tetrahedra,
                 ).result
                 dos[start : start + len(chunk)] += result.density[0, :, 0]
                 count[start : start + len(chunk)] += result.cumulative[0, :, 0]
@@ -219,6 +234,7 @@ def compute_free_energy_by_tetrahedron(
     temperatures: Sequence[float] | NDArray[np.double],
     window: float | None = None,
     energy_spacing: float = 0.0005,
+    symmetrize_tetrahedra: bool = False,
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return F(T) - F(0) and the entropy through the tetrahedron method.
 
@@ -242,6 +258,10 @@ def compute_free_energy_by_tetrahedron(
         Spacing of the energy grid inside the window in eV. Default is
         0.0005, which is fine enough that halving it leaves the free energy
         where it was.
+    symmetrize_tetrahedra : bool, optional
+        Average the tetrahedron weights over the tetrahedra rotated by the
+        point group, so that the sum over irreducible k-points equals the sum
+        over all of them. Default is False.
 
     Returns
     -------
@@ -254,7 +274,9 @@ def compute_free_energy_by_tetrahedron(
     if fermi is None:
         fermi = _fermi_level_by_counting(electronic_states)
     window = resolve_energy_window(window, temperatures)
-    sampler = _TetrahedronSampler(electronic_states)
+    sampler = _TetrahedronSampler(
+        electronic_states, symmetrize_tetrahedra=symmetrize_tetrahedra
+    )
     mu_0 = _solve_chemical_potential(
         sampler, electronic_states.n_electrons, fermi, window
     )
