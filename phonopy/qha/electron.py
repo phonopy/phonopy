@@ -43,14 +43,14 @@ from phonopy.structure.symmetry import Symmetry
 _ZERO_TEMPERATURE = 1e-10
 
 
-class _TetrahedronSampler:
-    """Tetrahedron-method integration of one set of electronic states.
+class _TetrahedronElectronicStates:
+    """One set of electronic states set up for the tetrahedron method.
 
-    The sampler holds the BZ grid, its irreducible k-points and the eigenvalues
-    mapped onto them. Building these takes longer than integrating at a few
-    energies. compute_free_energy_by_tetrahedron integrates the same states
-    twice, first to find the chemical potential at 0 K and then to build the
-    density of states, so it builds one sampler and uses it for both.
+    The instance holds the BZ grid, its irreducible k-points and the
+    eigenvalues mapped onto them. Building these takes longer than integrating
+    at a few energies. compute_free_energy_by_tetrahedron integrates the same
+    states twice, first to find the chemical potential at 0 K and then to build
+    the density of states, so it builds one instance and uses it for both.
 
     Parameters
     ----------
@@ -99,7 +99,7 @@ class _TetrahedronSampler:
         self._eigenvalues = np.asarray(states.eigenvalues, dtype="double")
         self._degeneracy = resolve_spin_degeneracy(states)
 
-    def sample(
+    def dos_and_count(
         self,
         energies: Sequence[float] | NDArray[np.double],
         max_bytes: float = 2.0e8,
@@ -185,7 +185,7 @@ class _TetrahedronSampler:
 
 
 def _solve_chemical_potential(
-    sampler: _TetrahedronSampler,
+    tetrahedron_states: _TetrahedronElectronicStates,
     n_electrons: float,
     centre: float,
     window: float,
@@ -200,7 +200,7 @@ def _solve_chemical_potential(
     from scipy.optimize import brentq
 
     def count(mu: float) -> float:
-        return float(sampler.sample(np.array([mu]))[1][0])
+        return float(tetrahedron_states.dos_and_count(np.array([mu]))[1][0])
 
     low, high = centre - window, centre + window
     n_low, n_high = count(low), count(high)
@@ -274,15 +274,15 @@ def compute_free_energy_by_tetrahedron(
     if fermi is None:
         fermi = _fermi_level_by_counting(electronic_states)
     window = resolve_energy_window(window, temperatures)
-    sampler = _TetrahedronSampler(
+    tetrahedron_states = _TetrahedronElectronicStates(
         electronic_states, symmetrize_tetrahedra=symmetrize_tetrahedra
     )
     mu_0 = _solve_chemical_potential(
-        sampler, electronic_states.n_electrons, fermi, window
+        tetrahedron_states, electronic_states.n_electrons, fermi, window
     )
     n_points = int(round(2 * window / energy_spacing)) + 1
     energies = np.linspace(fermi - window, fermi + window, n_points)
-    dos, _ = sampler.sample(energies)
+    dos, _ = tetrahedron_states.dos_and_count(energies)
     free_energy, entropy, _ = free_energy_from_dos(
         energies,
         dos,

@@ -9,7 +9,7 @@ import pytest
 from phonopy import Phonopy
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points
 from phonopy.phonon.spectrum import TetrahedronDOSAccumulator
-from phonopy.qha.electron import ElectronicStates, _TetrahedronSampler
+from phonopy.qha.electron import ElectronicStates, _TetrahedronElectronicStates
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -74,7 +74,9 @@ def _integral(states: ElectronicStates, n_points: int = 4001) -> float:
     high = float(states.eigenvalues.max()) + 1.0
     energies = np.linspace(low, high, n_points)
     return float(
-        np.trapezoid(_TetrahedronSampler(states).sample(energies)[0], energies)
+        np.trapezoid(
+            _TetrahedronElectronicStates(states).dos_and_count(energies)[0], energies
+        )
     )
 
 
@@ -116,8 +118,9 @@ def test_dos_normalization_spin_polarized(aln_cell: PhonopyAtoms):
 def test_dos_normalization_shifted_mesh(aln_cell: PhonopyAtoms):
     """Test a mesh shifted by half a division, as even Monkhorst-Pack is.
 
-    Nothing in the states says the mesh was shifted, so the sampler reads it
-    off the k-points and builds its grid with it. Without that the k-points
+    Nothing in the states says the mesh was shifted, so
+    _TetrahedronElectronicStates reads it off the k-points and builds its grid
+    with it. Without that the k-points
     would sit half a division from every grid point and the mapping would
     raise. AlN takes the shift along c, which its point group preserves.
 
@@ -135,7 +138,7 @@ def test_dos_normalization_shifted_mesh(aln_cell: PhonopyAtoms):
         float(states.eigenvalues.max()) + 1.0,
         401,
     )
-    _, count = _TetrahedronSampler(states).sample(energies)
+    _, count = _TetrahedronElectronicStates(states).dos_and_count(energies)
     assert count[-1] == pytest.approx(8.0, rel=1e-10)
 
 
@@ -151,7 +154,8 @@ def test_dos_is_non_negative(aln_cell: PhonopyAtoms):
     energies = np.linspace(
         float(states.eigenvalues.min()), float(states.eigenvalues.max()), 501
     )
-    assert (_TetrahedronSampler(states).sample(energies)[0] >= 0.0).all()
+    dos, _ = _TetrahedronElectronicStates(states).dos_and_count(energies)
+    assert (dos >= 0.0).all()
 
 
 def test_dos_does_not_depend_on_the_block_size(aln_cell: PhonopyAtoms):
@@ -169,11 +173,11 @@ def test_dos_does_not_depend_on_the_block_size(aln_cell: PhonopyAtoms):
         float(states.eigenvalues.min()), float(states.eigenvalues.max()), 401
     )
 
-    sampler = _TetrahedronSampler(states)
-    whole = sampler.sample(energies, max_bytes=np.inf)[0]
+    tetrahedron_states = _TetrahedronElectronicStates(states)
+    whole = tetrahedron_states.dos_and_count(energies, max_bytes=np.inf)[0]
     for max_bytes in (1.0, 1e4, 1e5):
         np.testing.assert_allclose(
-            sampler.sample(energies, max_bytes=max_bytes)[0],
+            tetrahedron_states.dos_and_count(energies, max_bytes=max_bytes)[0],
             whole,
             rtol=0.0,
             atol=0.0,
@@ -193,22 +197,25 @@ def test_symmetrized_tetrahedra_match_the_full_grid(aln_cell: PhonopyAtoms):
     energies = np.linspace(
         float(states.eigenvalues.min()), float(states.eigenvalues.max()), 401
     )
-    sampler = _TetrahedronSampler(states, symmetrize_tetrahedra=True)
-    dos, _ = sampler.sample(energies)
+    tetrahedron_states = _TetrahedronElectronicStates(
+        states, symmetrize_tetrahedra=True
+    )
+    dos, _ = tetrahedron_states.dos_and_count(energies)
 
-    ir_grid_points, _, ir_grid_map = get_ir_grid_points(sampler._bz_grid)
+    bz_grid = tetrahedron_states._bz_grid
+    ir_grid_points, _, ir_grid_map = get_ir_grid_points(bz_grid)
     position = {int(gp): i for i, gp in enumerate(ir_grid_points)}
-    ir_eigenvalues = states.eigenvalues[0][sampler._id_map]
+    ir_eigenvalues = states.eigenvalues[0][tetrahedron_states._id_map]
     full = ir_eigenvalues[[position[int(gp)] for gp in ir_grid_map]]
     reference = (
         TetrahedronDOSAccumulator(
-            full, sampler._bz_grid, sampling_points=energies
+            full, bz_grid, sampling_points=energies
         ).result.density[0, :, 0]
-        * sampler._degeneracy
+        * tetrahedron_states._degeneracy
     )
 
     np.testing.assert_allclose(dos, reference, atol=1e-10 * reference.max())
-    fixed, _ = _TetrahedronSampler(states).sample(energies)
+    fixed, _ = _TetrahedronElectronicStates(states).dos_and_count(energies)
     assert np.abs(fixed - reference).max() > 1e-3 * reference.max()
 
 
@@ -221,7 +228,7 @@ def test_tetrahedron_dos_needs_the_grid(aln_cell: PhonopyAtoms):
         n_electrons=states.n_electrons,
     )
     with pytest.raises(ValueError, match="needs kpoints, mesh and cell"):
-        _TetrahedronSampler(without)
+        _TetrahedronElectronicStates(without)
 
 
 def test_electronic_states_grid_fields_go_together(aln_cell: PhonopyAtoms):
