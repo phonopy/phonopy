@@ -7,7 +7,11 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from phonopy.phonon.grid import BZGrid, get_grid_point_from_address
+from phonopy.phonon.grid import (
+    BZGrid,
+    get_grid_point_from_address,
+    get_neighboring_grid_points,
+)
 from phonopy.phonon.tetrahedron_method import (
     TetrahedronMethod,
     _get_tetrahedra_relative_grid_address,
@@ -157,7 +161,6 @@ def test_get_tetrahedra_frequencies(name: str, mesh: list[int]):
     bz_grid = _bz_grid(name, mesh)
     rng = np.random.default_rng(0)
     frequencies = rng.random((len(bz_grid.addresses), 3))
-    D = bz_grid.D_diag
     tables = (
         get_tetrahedra_relative_gr_grid_address(bz_grid),
         get_tetrahedra_relative_gr_grid_address(bz_grid, symmetrize_tetrahedra=True),
@@ -168,14 +171,10 @@ def test_get_tetrahedra_frequencies(name: str, mesh: list[int]):
                 gp, bz_grid, table, frequencies
             )
             assert vertex_frequencies.shape == (3, len(table), 4)
-            for i, tetra in enumerate(table):
-                for j, step in enumerate(tetra):
-                    address = (bz_grid.addresses[gp] + step) % D
-                    gr_gp = address @ [1, D[0], D[0] * D[1]]
-                    np.testing.assert_array_equal(
-                        vertex_frequencies[:, i, j],
-                        frequencies[bz_grid.grg2bzg[gr_gp]],
-                    )
+            vertices = get_neighboring_grid_points(gp, table, bz_grid)
+            np.testing.assert_array_equal(
+                vertex_frequencies, np.moveaxis(frequencies[vertices], -1, 0)
+            )
 
 
 @pytest.mark.parametrize("function", ["I", "J"])

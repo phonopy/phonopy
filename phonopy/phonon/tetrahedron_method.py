@@ -11,7 +11,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy._lang import resolve_lang
-from phonopy.phonon.grid import BZGrid, get_grid_point_from_address
+from phonopy.phonon.grid import BZGrid, get_neighboring_grid_points
 
 # Guard of the tetrahedron weights against vanishing denominators, as
 # THM_EPSILON in phonors.
@@ -285,11 +285,10 @@ def get_tetrahedra_frequencies(
         dtype='double', order='C'
 
     """
-    addresses = bz_grid.addresses[grid_point] + np.asarray(relative_grid_address)
-    gr_grid_points = get_grid_point_from_address(
-        addresses.reshape(-1, 3), bz_grid.D_diag
-    ).reshape(addresses.shape[:-1])
-    vertex_frequencies = frequencies[bz_grid.grg2bzg[gr_grid_points]]
+    vertices = get_neighboring_grid_points(
+        grid_point, relative_grid_address, bz_grid, lang="Python"
+    )
+    vertex_frequencies = frequencies[vertices]
     return np.array(np.moveaxis(vertex_frequencies, -1, 0), dtype="double", order="C")
 
 
