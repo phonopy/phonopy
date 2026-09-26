@@ -215,3 +215,29 @@ def test_TetrahedronMethod_matches_rust(function: str, symmetrize: bool):
         np.testing.assert_allclose(
             thm.get_integration_weight(), weights_rust[i, :, 0], atol=1e-12
         )
+
+
+@pytest.mark.parametrize("function", ["I", "J"])
+def test_TetrahedronMethod_at_vertices(function: str):
+    """The pure-Python weights equal the Rust ones at sampling points on vertices.
+
+    The sampling points are the values of the band at grid points, as the
+    frequencies of the grid point itself are in the isotope scattering, so they
+    equal vertex values bitwise.
+
+    """
+    bz_grid = _bz_grid("hcp", [6, 6, 4])
+    band = _band("hcp", bz_grid)
+    sampling_points = band[bz_grid.grg2bzg[:10], 0]
+    weights = get_integration_weights(
+        sampling_points, band, bz_grid, function=function, lang="Rust"
+    )
+    table = get_tetrahedra_relative_gr_grid_address(bz_grid)
+    thm = TetrahedronMethod(None, relative_grid_address=table)
+    for i, gp in enumerate(bz_grid.grg2bzg):
+        vertex_band = get_tetrahedra_frequencies(gp, bz_grid, table, band)
+        thm.set_tetrahedra_omegas(vertex_band[0])
+        thm.run(sampling_points, value=function)
+        np.testing.assert_allclose(
+            thm.get_integration_weight(), weights[i, :, 0], atol=1e-12
+        )
