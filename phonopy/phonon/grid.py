@@ -1084,20 +1084,25 @@ def get_grid_point_from_address(
     if lang == "Python":
         return np.dot(np.mod(address, D_diag), [1, D_diag[0], D_diag[0] * D_diag[1]])
 
-    if resolve_lang(lang) == "Rust":
-        import phonors as backend
-    else:
-        import phonopy._recgrid as backend  # type: ignore[import-untyped,no-redef]
-
     adrs_array = np.ascontiguousarray(address, dtype="int64")
     mesh_array = np.ascontiguousarray(D_diag, dtype="int64")
 
+    if resolve_lang(lang) == "Rust":
+        import phonors
+
+        gps = phonors.grid_indices_from_addresses(adrs_array.reshape(-1, 3), mesh_array)
+        if adrs_array.ndim == 1:
+            return gps[0]
+        return gps
+
+    import phonopy._recgrid as recgrid  # type: ignore[import-untyped]
+
     if adrs_array.ndim == 1:
-        return backend.grid_index_from_address(adrs_array, mesh_array)
+        return recgrid.grid_index_from_address(adrs_array, mesh_array)
 
     gps = np.zeros(adrs_array.shape[0], dtype="int64")
     for i, adrs in enumerate(adrs_array):
-        gps[i] = backend.grid_index_from_address(np.ascontiguousarray(adrs), mesh_array)
+        gps[i] = recgrid.grid_index_from_address(np.ascontiguousarray(adrs), mesh_array)
     return gps
 
 
