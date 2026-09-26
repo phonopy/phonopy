@@ -42,6 +42,7 @@ class Settings:
         self.displacement_distance_max: float | None = None
         self.displacement_distance_sampling: Literal["supercell", "atom"] = "supercell"
         self.dm_decimals: int | None = None
+        self.exclude_gamma_acoustic: bool = False
         self.calculator: str | None = None
         self.create_displacements: bool = False
         self.fc_calculator: str | None = None
@@ -204,6 +205,15 @@ class ConfParser(Generic[TSettings]):
         if "calculator" in arg_list:
             if args.calculator:
                 self._confs["calculator"] = args.calculator
+
+        # None means neither --exclude-gamma-acoustic nor
+        # --no-exclude-gamma-acoustic was given, so that the tag or the
+        # default decides.
+        if "exclude_gamma_acoustic" in arg_list:
+            if args.exclude_gamma_acoustic is not None:
+                self._confs["exclude_gamma_acoustic"] = (
+                    ".true." if args.exclude_gamma_acoustic else ".false."
+                )
 
         if "fc_calculator" in arg_list:
             if args.fc_calculator:
@@ -600,6 +610,13 @@ class ConfParser(Generic[TSettings]):
                 elif confs["eigenvectors"].lower() == ".true.":
                     self._set_parameter("is_eigenvectors", True)
 
+            # Set the frequencies of the acoustic modes at Gamma to zero
+            if conf_key == "exclude_gamma_acoustic":
+                if confs["exclude_gamma_acoustic"].lower() == ".true.":
+                    self._set_parameter("exclude_gamma_acoustic", True)
+                elif confs["exclude_gamma_acoustic"].lower() == ".false.":
+                    self._set_parameter("exclude_gamma_acoustic", False)
+
             if conf_key == "fc_calculator":
                 self._set_parameter("fc_calculator", confs["fc_calculator"])
 
@@ -927,6 +944,10 @@ class ConfParser(Generic[TSettings]):
         if "dm_decimals" in params:
             settings.dm_decimals = int(params["dm_decimals"])
 
+        # Set the frequencies of the acoustic modes at Gamma to zero
+        if "exclude_gamma_acoustic" in params:
+            settings.exclude_gamma_acoustic = params["exclude_gamma_acoustic"]
+
         # Force constants calculator
         if "fc_calculator" in params:
             settings.fc_calculator = params["fc_calculator"]
@@ -1152,7 +1173,6 @@ class PhonopySettings(Settings):
         self.moment_order: int | None = None
         self.pdos_indices: list | None = None
         self.pretend_real: bool = False
-        self.exclude_gamma_acoustic: bool = False
         self.projection_direction: list[float] | None = None
         self.qpoints_format: str = "yaml"
         self.random_displacement_temperature: float | None = None
@@ -1271,15 +1291,6 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
         if "pretend_real" in arg_list:
             if args.pretend_real:
                 self._confs["pretend_real"] = ".true."
-
-        # None means neither --exclude-gamma-acoustic nor
-        # --no-exclude-gamma-acoustic was given, so that the tag or the
-        # default decides.
-        if "exclude_gamma_acoustic" in arg_list:
-            if args.exclude_gamma_acoustic is not None:
-                self._confs["exclude_gamma_acoustic"] = (
-                    ".true." if args.exclude_gamma_acoustic else ".false."
-                )
 
         if "is_thermal_displacements" in arg_list:
             if args.is_thermal_displacements:
@@ -1660,13 +1671,6 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
                 elif confs["pretend_real"].lower() == ".false.":
                     self._set_parameter("pretend_real", False)
 
-            # Exclude the acoustic modes at Gamma from the thermal properties
-            if conf_key == "exclude_gamma_acoustic":
-                if confs["exclude_gamma_acoustic"].lower() == ".true.":
-                    self._set_parameter("exclude_gamma_acoustic", True)
-                elif confs["exclude_gamma_acoustic"].lower() == ".false.":
-                    self._set_parameter("exclude_gamma_acoustic", False)
-
             # Thermal displacement
             if conf_key == "tdisp":
                 if confs["tdisp"].lower() == ".true.":
@@ -2006,10 +2010,6 @@ class PhonopyConfParser(ConfParser[PhonopySettings]):
         # Use imaginary frequency as real for thermal property calculation
         if "pretend_real" in params:
             settings.pretend_real = params["pretend_real"]
-
-        # Exclude the acoustic modes at Gamma from the thermal properties
-        if "exclude_gamma_acoustic" in params:
-            settings.exclude_gamma_acoustic = params["exclude_gamma_acoustic"]
 
         # Thermal displacements
         if "tdisp" in params and params["tdisp"]:
