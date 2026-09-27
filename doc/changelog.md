@@ -2,6 +2,31 @@
 
 # Change Log
 
+## Sep-27-2026: Version 4.7.0
+
+- Experimental `--symmetrize-tetrahedra` option of `phonopy-vasp-efe` and
+  `phonopy-anisotropic-qha`. It averages the tetrahedron weights of the
+  electronic free energy over the point group. See {ref}`migration_v5`.
+- Bug fix: the phonon DOS by the tetrahedron method used the wrong grid when a
+  sampling mesh given by a length was rebuilt as a generalized regular grid.
+  The frequencies were placed at q-points they did not belong to. This bug was
+  present since v4.0.0. The DOS is now computed on the grid of the mesh.
+- In the tetrahedron method, when a sampling frequency was exactly equal to the
+  frequency at a vertex of a tetrahedron, the tetrahedron gave zero weight. It
+  now gives the weight that the frequencies close to the vertex frequency give.
+  Results computed by the tetrahedron method may therefore change slightly.
+- `Phonopy.symmetrize_force_constants_by_space_group` and the averaging of the
+  Born effective charges run faster. `phonopy.harmonic.force_constants.set_tensor_symmetry_PJ` is
+  deprecated. Use `symmetrize_force_constants_by_space_group` instead.
+- Removed without a deprecation period: the module
+  `phonopy.phonon.tetrahedron_mesh` with `TetrahedronMesh`,
+  `get_all_tetrahedra_relative_grid_address` and
+  `get_tetrahedra_integration_weight` of `phonopy.phonon.tetrahedron_method`,
+  and `get_grid_point_from_address_py` of `phonopy.phonon.grid`.
+  `get_tetrahedra_frequencies` is now in `phonopy.phonon.tetrahedron_method`,
+  and `TetrahedronMethod` is written in pure Python.
+- Phonopy requires phonors 0.5.0 or later.
+
 ## Sep-24-2026: Version 4.6.0
 
 - Experimental release of {ref}`the anisotropic thermal expansion
