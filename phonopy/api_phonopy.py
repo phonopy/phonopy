@@ -2654,6 +2654,7 @@ class Phonopy:
         direction: Sequence[float] | NDArray[np.double] | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
+        exclude_gamma_acoustic: bool = False,
     ) -> ThermalDisplacements:
         """Run thermal displacements calculation.
 
@@ -2672,6 +2673,11 @@ class Phonopy:
         freq_min, freq_max : float, optional
             Only phonon frequencies between ``freq_min`` and
             ``freq_max`` are included. Default is None (all phonons).
+        exclude_gamma_acoustic : bool, optional
+            If True, exclude the three acoustic modes at Gamma, taken as the
+            three modes at Gamma with the smallest absolute frequencies. If
+            False, they are included when their frequencies are larger than
+            ``freq_min``. See ``run_thermal_properties``. Default is False.
 
         Returns
         -------
@@ -2703,9 +2709,15 @@ class Phonopy:
                 projection_direction=projection_direction,
                 freq_min=freq_min,
                 freq_max=freq_max,
+                exclude_gamma_acoustic=exclude_gamma_acoustic,
             )
         else:
-            td = ThermalDisplacements(self._mesh, freq_min=freq_min, freq_max=freq_max)
+            td = ThermalDisplacements(
+                self._mesh,
+                freq_min=freq_min,
+                freq_max=freq_max,
+                exclude_gamma_acoustic=exclude_gamma_acoustic,
+            )
 
         if temperatures is None:
             td.set_temperature_range(t_min, t_max, t_step)
@@ -2767,6 +2779,7 @@ class Phonopy:
         temperatures: Sequence[float] | NDArray[np.double] | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
+        exclude_gamma_acoustic: bool = False,
     ) -> ThermalDisplacementMatrices:
         """Run thermal displacement matrices calculation.
 
@@ -2782,6 +2795,11 @@ class Phonopy:
             Temperature points where thermal properties are calculated.
             When this is set, t_min, t_max, and t_step are ignored.
             Default is None.
+        exclude_gamma_acoustic : bool, optional
+            If True, exclude the three acoustic modes at Gamma, taken as the
+            three modes at Gamma with the smallest absolute frequencies. If
+            False, they are included when their frequencies are larger than
+            ``freq_min``. See ``run_thermal_properties``. Default is False.
 
         Returns
         -------
@@ -2811,6 +2829,7 @@ class Phonopy:
             freq_min=freq_min,
             freq_max=freq_max,
             lattice=self._primitive.cell.T,
+            exclude_gamma_acoustic=exclude_gamma_acoustic,
         )
 
         if temperatures is None:

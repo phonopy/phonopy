@@ -157,6 +157,38 @@ def test_compare_TD_and_TDM(ph_nacl: Phonopy, ph_sno2: Phonopy):
         np.testing.assert_allclose(td.thermal_displacements, td_from_tdm, atol=1e-8)
 
 
+@pytest.mark.parametrize("use_iter_mesh", [True, False])
+def test_exclude_gamma_acoustic(ph_sno2: Phonopy, use_iter_mesh: bool):
+    """Excluding the acoustic modes at Gamma equals cutting them by freq_min."""
+    ph_sno2.init_mesh(
+        [5, 5, 5],
+        with_eigenvectors=True,
+        is_mesh_symmetry=False,
+        use_iter_mesh=use_iter_mesh,
+    )
+    temperatures = [0, 300]
+    td = ph_sno2.run_thermal_displacements(
+        temperatures=temperatures, exclude_gamma_acoustic=True
+    )
+    tdm = ph_sno2.run_thermal_displacement_matrices(
+        temperatures=temperatures, exclude_gamma_acoustic=True
+    )
+    assert td.exclude_gamma_acoustic
+    assert tdm.exclude_gamma_acoustic
+    td_cut = ph_sno2.run_thermal_displacements(temperatures=temperatures, freq_min=1e-2)
+    tdm_cut = ph_sno2.run_thermal_displacement_matrices(
+        temperatures=temperatures, freq_min=1e-2
+    )
+    np.testing.assert_allclose(
+        td.thermal_displacements, td_cut.thermal_displacements, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        tdm.thermal_displacement_matrices,
+        tdm_cut.thermal_displacement_matrices,
+        atol=1e-12,
+    )
+
+
 # Reference displacements (ux, uy, uz) per atom for NaCl (Na, Cl).
 # Shape: (temperatures, atoms, 3).  Temperatures: [0, 300].
 _td_yaml_ref = np.array(
