@@ -446,8 +446,6 @@ class ThermalDisplacementMatrices(ThermalMotion):
                     mat_cif = np.dot(np.dot(self._ANinv, mat), self._ANinv.T)
                     self._disp_matrices_cif[i, j] = mat_cif
 
-        self._get_disp_matrices()
-
     def _get_disp_matrices(self) -> None:
         dtype_complex = np.cdouble
         assert self._temperatures is not None
