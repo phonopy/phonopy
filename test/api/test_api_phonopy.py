@@ -359,7 +359,10 @@ def test_run_methods_return_result_objects(ph_nacl: Phonopy):
     assert ph.run_modulations([2, 2, 2], [[[0.5, 0.5, 0.5], 3, 1, 0]]) is ph.modulation
     assert ph.run_irreps([0, 0, 0]) is ph.irreps
     dsf = ph.run_dynamic_structure_factor(
-        [[0.5, 0.5, 0.5]], 300, scattering_lengths={"Na": 3.63, "Cl": 9.5770}
+        [[0.5, 0.5, 0.5]],
+        300,
+        scattering_lengths={"Na": 3.63, "Cl": 9.5770},
+        freq_min=1e-2,
     )
     assert dsf is ph.dynamic_structure_factor
 

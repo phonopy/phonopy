@@ -1274,6 +1274,7 @@ class PhonopyMockArgs:
     fc_symmetry: bool | None = None
     fc_spg_symmetry: bool | None = None
     filename: Sequence[os.PathLike | str] | None = None
+    fmin: float | None = None
     frequency_conversion_factor: float | None = None
     hdf5_compression: str | None = None
     import_ase_masses_iupac2016: bool | None = None
