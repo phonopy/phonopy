@@ -257,6 +257,10 @@ class _MeshGrid:
         return self._is_shift
 
     @property
+    def bz_grid(self) -> BZGrid:
+        return self._bzgrid
+
+    @property
     def gamma_index(self) -> int | None:
         gp_Gamma = self._bzgrid.gp_Gamma
         if gp_Gamma is None:
@@ -448,6 +452,11 @@ class MeshBase:
     def is_shift(self) -> list[int] | None:
         """Return half-grid shift flags per axis (0 or 1)."""
         return self._gp.is_shift
+
+    @property
+    def bz_grid(self) -> BZGrid:
+        """Return the grid, a GR-grid when the regular mesh broke symmetry."""
+        return self._gp.bz_grid
 
     @property
     def gamma_index(self) -> int | None:

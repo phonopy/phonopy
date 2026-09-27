@@ -114,6 +114,26 @@ def test_phonopy_vasp_efe_fe_values_by_the_k_point_sum():
     np.testing.assert_allclose(row_last[3], -17.35625526, rtol=1e-6)
 
 
+def test_phonopy_vasp_efe_fe_values_with_symmetrized_tetrahedra():
+    """Test that --symmetrize-tetrahedra reaches the tetrahedron method.
+
+    Cu in its conventional cubic cell on a 16x16x16 mesh: averaging the
+    tetrahedra over the point group raises F_el(1000 K) by 0.56-0.63 meV,
+    about 5 per cent of the temperature-dependent part.
+
+    """
+    filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]
+    args = PhonopyVaspEfeMockArgs(filenames=filenames, symmetrize_tetrahedra=True)
+    lines_fe, _ = get_fe_ev_lines(args)
+
+    data_lines = [line for line in lines_fe if not line.startswith("#")]
+    row_last = [float(v) for v in data_lines[-1].split()]
+    np.testing.assert_allclose(row_last[0], 1000.0, atol=1e-5)
+    np.testing.assert_allclose(row_last[1], -17.29209851, rtol=1e-6)
+    np.testing.assert_allclose(row_last[2], -17.33573119, rtol=1e-6)
+    np.testing.assert_allclose(row_last[3], -17.35704345, rtol=1e-6)
+
+
 def test_phonopy_vasp_efe_temperature_range():
     """Test phonopy-vasp-efe with custom temperature range."""
     filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]

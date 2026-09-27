@@ -328,6 +328,22 @@ def test_mesh_grg_fallback_on_float_input(agno2_cell: PhonopyAtoms):
     assert int(ph.mesh.weights.sum()) == int(np.prod(ph.mesh.mesh_numbers))
 
 
+def test_mesh_bz_grid_on_grg_fallback(agno2_cell: PhonopyAtoms):
+    """Mesh.bz_grid is the GR-grid the ir q-points were taken from.
+
+    The tetrahedron DOS runs on this grid.
+
+    """
+    ph = _agno2_phonopy(agno2_cell)
+    with pytest.warns(MeshGRGridFallbackWarning):
+        ph.init_mesh(mesh=20.0)
+    bz_grid = ph.mesh.bz_grid
+    np.testing.assert_array_equal(bz_grid.D_diag, ph.mesh.mesh_numbers)
+    gps = bz_grid.grg2bzg[ph.mesh.ir_grid_points]
+    diff = bz_grid.addresses[gps] @ bz_grid.QDinv.T - ph.mesh.qpoints
+    np.testing.assert_allclose(diff, np.rint(diff), atol=1e-12)
+
+
 def test_mesh_tr_only_fallback_on_tuple_input(agno2_cell: PhonopyAtoms):
     """3-tuple input keeps the legacy time-reversal-only fallback."""
     ph = _agno2_phonopy(agno2_cell)

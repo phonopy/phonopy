@@ -17,6 +17,7 @@ from phonopy.interface.pypolymlp import (
     PypolymlpStructureData,
     develop_pypolymlp,
     evalulate_pypolymlp,
+    get_pypolymlp_properties,
     load_pypolymlp,
     parse_mlp_params,
     save_pypolymlp,
@@ -30,6 +31,8 @@ class PhonopyMLP:
     def __init__(self, mlp: Any | None = None, log_level: int = 0) -> None:
         self._mlp = mlp
         self._log_level = log_level
+        # Calculator of self._mlp, built at the first evaluation.
+        self._properties: Any | None = None
 
     @property
     def mlp(self) -> Any:
@@ -61,13 +64,20 @@ class PhonopyMLP:
         else:
             _filename = filename
         self._mlp = load_pypolymlp(_filename)
+        self._properties = None
         return self
 
     def evaluate(
         self, supercells_with_displacements: Sequence[PhonopyAtoms | None]
     ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
         """Evaluate MLP."""
-        return evalulate_pypolymlp(self._mlp, supercells_with_displacements)  # type: ignore[arg-type]
+        if self._properties is None:
+            self._properties = get_pypolymlp_properties(self._mlp)
+        return evalulate_pypolymlp(
+            self._mlp,
+            supercells_with_displacements,  # type: ignore[arg-type]
+            properties=self._properties,
+        )
 
     def develop(
         self,
@@ -83,6 +93,7 @@ class PhonopyMLP:
             test_size=test_size,
             verbose=self._log_level - 1 > 0,
         )
+        self._properties = None
 
     def develop_from_structures(
         self,
@@ -105,3 +116,4 @@ class PhonopyMLP:
             test_size=test_size,
             verbose=self._log_level > 0,
         )
+        self._properties = None

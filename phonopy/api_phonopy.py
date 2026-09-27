@@ -32,10 +32,10 @@ from phonopy.harmonic.dynamical_matrix import (
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.harmonic.force_constants import (
     cutoff_force_constants,
-    set_tensor_symmetry_PJ,
     show_drift_force_constants,
     symmetrize_compact_force_constants,
     symmetrize_force_constants,
+    symmetrize_force_constants_by_space_group,
 )
 from phonopy.interface.calculator import StructureInfo
 from phonopy.interface.fc_calculator import get_fc2
@@ -1178,11 +1178,8 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants have not been produced yet.")
 
-        set_tensor_symmetry_PJ(
-            self._force_constants,
-            self._supercell.cell.T,
-            self._supercell.scaled_positions,
-            self._symmetry,
+        symmetrize_force_constants_by_space_group(
+            self._force_constants, self._supercell.cell, self._symmetry
         )
 
         if show_drift and self._log_level:

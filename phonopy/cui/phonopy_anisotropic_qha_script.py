@@ -294,12 +294,7 @@ def get_options() -> Namespace:
         "--mesh",
         type=float,
         default=200.0,
-        # A literal percent has to be escaped: argparse expands help strings
-        # with the % operator, and Python 3.14 validates that at parser
-        # construction rather than only when --help is formatted.
-        help="phonon sampling mesh (default: 200). The axial split needs a "
-        "denser mesh than the volumetric expansion: 100 leaves alpha_c off by "
-        "~20%% while beta is already converged",
+        help="phonon sampling mesh (default: %(default)s)",
     )
     parser.add_argument(
         "--exclude-gamma-acoustic",
@@ -344,6 +339,14 @@ def get_options() -> Namespace:
         help="spacing of the energy grid inside that window (default: 0.0005)",
     )
     parser.add_argument(
+        "--symmetrize-tetrahedra",
+        action=BooleanOptionalAction,
+        default=False,
+        help="average the tetrahedron weights of F_el over the point group, so "
+        "that the sum over irreducible k-points equals the sum over all of "
+        "them (default: %(default)s)",
+    )
+    parser.add_argument(
         "--electronic-free-energies",
         metavar="FILE",
         help="add F_el(T) - F_el(0) read from an hdf5 written by "
@@ -355,8 +358,7 @@ def get_options() -> Namespace:
         default=None,
         choices=("none", "einstein"),
         help="smooth a(T), b(T), c(T) along temperature before differentiating "
-        "them. Default: einstein with --phonon-free-energies, whose scatter "
-        "the differences amplify, and none otherwise",
+        "them (default: einstein with --phonon-free-energies, none otherwise)",
     )
     parser.add_argument(
         "--smooth-terms",
@@ -369,16 +371,13 @@ def get_options() -> Namespace:
         "--phonon-free-energies",
         metavar="FILE",
         help="take F_ph(T) from an hdf5 written by write_free_energies_hdf5 "
-        "instead of computing it from the stored force constants; this is "
-        "the way in for a method whose force constants depend on temperature",
+        "instead of computing it from the stored force constants",
     )
     parser.add_argument(
         "--use-mlp-internal-energies",
         action="store_true",
         help="take the internal energy U from --phonon-free-energies instead "
-        "of from the dataset. The file has to carry the static energies of "
-        "the method that wrote it, and F is then assembled on that method's "
-        "own energy scale rather than on the calculator's",
+        "of from the dataset",
     )
     parser.add_argument(
         "--contour-temp",
@@ -396,8 +395,7 @@ def get_options() -> Namespace:
         type=float,
         default=1.5,
         help="width of the contour window as a multiple of the range of the "
-        "sampled cells, centred on the minimum of U (default: 1.5). Above 1 "
-        "the fitted surface is drawn where nothing constrains it",
+        "sampled cells, centred on the minimum of U (default: %(default)s)",
     )
     parser.add_argument(
         "--plot-format",
@@ -525,6 +523,7 @@ def main() -> None:
             window=args.electronic_window,
             energy_spacing=args.electronic_spacing,
             require_tetrahedron=True,
+            symmetrize_tetrahedra=args.symmetrize_tetrahedra,
         )
         write_free_energies_hdf5(
             ElectronicFreeEnergies(

@@ -866,7 +866,7 @@ def test_lattice_smoothing_follows_the_lattice_dof() -> None:
 
 
 def test_smoothing_terms_reach_the_output_header(
-    ph_nacl: Phonopy, tmp_path: pathlib.Path
+    ph_nacl: Phonopy, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test that the run's smoothing settings are written with its numbers.
 
@@ -874,9 +874,23 @@ def test_smoothing_terms_reach_the_output_header(
     file, so the file says which run it is. The result reads the count off
     the fits themselves, and the header off the result.
 
-    """
-    from phonopy.qha import anisotropic_output
+    To keep the test light, the fit starts from three Einstein temperatures
+    instead of the default pool of five, 6 starting guesses instead of 60 per
+    lattice parameter. The header is what is tested, not the quality of the
+    fit.
 
+    """
+    import functools
+
+    import phonopy.qha.anisotropic
+    from phonopy.qha import anisotropic_output
+    from phonopy.qha.lattice_smoothing import fit_lattice_parameter
+
+    monkeypatch.setattr(
+        phonopy.qha.anisotropic,
+        "fit_lattice_parameter",
+        functools.partial(fit_lattice_parameter, theta_pool=(80.0, 250.0, 500.0)),
+    )
     phonopys = _tetragonal_phonopys(ph_nacl)
     # A three-term fit has seven coefficients, so it needs more temperatures
     # than the six of TEMPERATURES.

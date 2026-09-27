@@ -585,9 +585,27 @@ def _structures_virial(data: PypolymlpStructureData) -> NDArray[np.double] | Non
     )
 
 
+def get_pypolymlp_properties(polymlp: Pypolymlp) -> Any:  # type: ignore
+    """Return the pypolymlp calculator of a potential.
+
+    Building it takes seconds while evaluating a few supercells takes a small
+    fraction of that, so a caller evaluating more than once keeps it.
+
+    """
+    try:
+        from pypolymlp.calculator.properties import (
+            Properties,  # type: ignore[import-untyped]
+        )
+    except ImportError as exc:
+        raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
+
+    return Properties(params=polymlp.parameters, coeffs=polymlp.coeffs)
+
+
 def evalulate_pypolymlp(
     polymlp: Pypolymlp,  # type: ignore
     supercells_with_displacements: list[PhonopyAtoms],
+    properties: Any | None = None,
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Run force calculation using pypolymlp.
 
@@ -597,6 +615,9 @@ def evalulate_pypolymlp(
         Pypolymlp object.
     supercells_with_displacements : Sequence[PhonopyAtoms]
         Sequence of supercells with displacements.
+    properties : pypolymlp Properties, optional
+        Calculator of ``polymlp`` from get_pypolymlp_properties. Built here when
+        None.
 
     Returns
     -------
@@ -609,17 +630,15 @@ def evalulate_pypolymlp(
 
     """
     try:
-        from pypolymlp.calculator.properties import (
-            Properties,  # type: ignore[import-untyped]
-        )
         from pypolymlp.utils.phonopy_utils import (
             phonopy_cell_to_structure,  # type: ignore[import-untyped]
         )
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
-    prop = Properties(params=polymlp.parameters, coeffs=polymlp.coeffs)
-    energies, forces, stresses = prop.eval_multiple(
+    if properties is None:
+        properties = get_pypolymlp_properties(polymlp)
+    energies, forces, stresses = properties.eval_multiple(
         [phonopy_cell_to_structure(scell) for scell in supercells_with_displacements]
     )
     energies = np.array(energies, dtype="double")

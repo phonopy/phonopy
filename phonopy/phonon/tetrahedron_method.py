@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 from typing import Literal
 
@@ -10,20 +11,67 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy._lang import resolve_lang
-from phonopy.phonon.grid import BZGrid
+from phonopy.phonon.grid import BZGrid, get_neighboring_grid_points
+
+# Guard of the tetrahedron weights against vanishing denominators, as
+# THM_EPSILON in phonors.
+_THM_EPSILON = 1e-10
 
 
 def get_tetrahedra_relative_grid_address(
     microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
     lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
-    """Return relative (differences of) grid addresses from the central.
+    """Return the vertices of the 24 tetrahedra around a grid point.
 
-    Parameter
-    ---------
-    microzone_lattice : ndarray or list of list
-        column vectors of parallel piped microzone lattice, i.e.,
-        microzone_lattice = np.linalg.inv(cell.cell) / mesh
+    Deprecated. Use get_tetrahedra_relative_gr_grid_address.
+
+    """
+    warnings.warn(
+        "get_tetrahedra_relative_grid_address is deprecated. "
+        "Use get_tetrahedra_relative_gr_grid_address instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _get_tetrahedra_relative_grid_address(microzone_lattice, lang=lang)
+
+
+def _get_tetrahedra_relative_grid_address(
+    microzone_lattice: Sequence[Sequence[float]] | NDArray[np.double],
+    lang: Literal["C", "Python", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return the vertices of the 24 tetrahedra around a grid point.
+
+    Each vertex is given as an integer vector ``n``, the step from the central
+    grid point in the basis of ``microzone_lattice``. The central vertex comes
+    first in each tetrahedron. The cell of the grid is cut along its shortest
+    main diagonal.
+
+    On a generalized regular (GR) grid, ``n`` cannot be added to a grid
+    address directly. It has to be converted to the step ``m = P n`` of GR-grid
+    address, which for the (24, 4, 3) array is
+    ``np.dot(relative_grid_address, bz_grid.P.T)``. On a regular grid that is
+    not a GR grid, ``P`` is the identity and ``m = n``.
+
+    The conversion follows from the Smith normal form ``D = P M Q`` of the
+    grid matrix ``M``. With ``B`` the reciprocal lattice, the GR-grid address
+    ``m`` is the point ``q = B Q D^-1 m``, while ``microzone_lattice`` is
+    ``B Q D^-1 P``. The step ``n`` in the basis of ``microzone_lattice`` is
+    therefore the point ``B Q D^-1 P n``, which is the GR-grid address
+    ``m = P n``. The GR grid is described in A. Togo et al., J. Phys.:
+    Condens. Matter 35, 353001 (2023).
+
+    Parameters
+    ----------
+    microzone_lattice : array_like
+        Basis vectors of the grid in column vectors, ``bz_grid.microzone_lattice``.
+        For a regular mesh this is ``np.linalg.inv(cell.cell) / mesh``.
+        shape=(3, 3)
+
+    Returns
+    -------
+    relative_grid_address : ndarray
+        shape=(24, 4, 3), dtype='int64'
 
     """
     if lang == "Python":
@@ -49,6 +97,76 @@ def get_tetrahedra_relative_grid_address(
     return relative_grid_address
 
 
+def get_symmetrized_tetrahedra_relative_grid_address(
+    bz_grid: BZGrid,
+    lang: Literal["C", "Python", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return the 24 tetrahedra rotated by all point-group operations.
+
+    The 24 tetrahedra around a grid point are rotated by ``bz_grid.rotations``
+    and the distinct sets are concatenated. Integration weights averaged over
+    these sets are invariant under the point group.
+
+    Parameters
+    ----------
+    bz_grid : BZGrid
+        Grid information in reciprocal space.
+
+    Returns
+    -------
+    relative_grid_address : ndarray
+        Relative grid addresses in GR-grid coordinates, the central vertex
+        first in each tetrahedron.
+        shape=(24 * n, 4, 3), dtype='int64', order='C'
+
+    """
+    relative_grid_address = get_tetrahedra_relative_gr_grid_address(bz_grid, lang=lang)
+    tetrahedra_sets: dict[frozenset, NDArray[np.int64]] = {}
+    for r in bz_grid.rotations:
+        rotated = relative_grid_address @ r.T
+        key = frozenset(frozenset(map(tuple, tetra)) for tetra in rotated.tolist())
+        tetrahedra_sets.setdefault(key, rotated)
+    return np.array(
+        np.concatenate(list(tetrahedra_sets.values())), dtype="int64", order="C"
+    )
+
+
+def get_tetrahedra_relative_gr_grid_address(
+    bz_grid: BZGrid,
+    symmetrize_tetrahedra: bool = False,
+    lang: Literal["C", "Python", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return the tetrahedra around a grid point in GR-grid coordinates.
+
+    Parameters
+    ----------
+    bz_grid : BZGrid
+        Grid information in reciprocal space.
+    symmetrize_tetrahedra : bool, optional, default=False
+        Return the 24 tetrahedra rotated by all the point-group operations,
+        see ``get_symmetrized_tetrahedra_relative_grid_address``, instead of
+        the 24 tetrahedra alone.
+
+    Returns
+    -------
+    relative_grid_address : ndarray
+        Relative grid addresses in GR-grid coordinates, the central vertex
+        first in each tetrahedron.
+        shape=(24 * n, 4, 3), dtype='int64', order='C'
+
+    """
+    if symmetrize_tetrahedra:
+        return get_symmetrized_tetrahedra_relative_grid_address(bz_grid, lang=lang)
+    return np.array(
+        np.dot(
+            _get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
+            bz_grid.P.T,
+        ),
+        dtype="int64",
+        order="C",
+    )
+
+
 def get_integration_weights(
     sampling_points: NDArray[np.double],
     grid_values: NDArray[np.double],
@@ -57,6 +175,7 @@ def get_integration_weights(
     bzgp2irgp_map: NDArray[np.int64] | None = None,
     function: Literal["I", "J"] = "I",
     lang: Literal["C", "Rust"] = "Rust",
+    symmetrize_tetrahedra: bool = False,
 ) -> NDArray[np.double]:
     """Return tetrahedron method integration weights.
 
@@ -79,6 +198,9 @@ def get_integration_weights(
         `grid_values` array, i.e., usually irreducible grid point count.
     function : str, 'I' or 'J', optional, default='I'
         'J' is for intetration and 'I' is for its derivative.
+    symmetrize_tetrahedra : bool, optional, default=False
+        Average the weights over the tetrahedra rotated by the point group, see
+        ``get_symmetrized_tetrahedra_relative_grid_address``. Rust only.
 
     Returns
     -------
@@ -88,13 +210,10 @@ def get_integration_weights(
 
     """
     lang = resolve_lang(lang)
-    relative_grid_addresses = np.array(
-        np.dot(
-            get_tetrahedra_relative_grid_address(bz_grid.microzone_lattice, lang=lang),
-            bz_grid.P.T,
-        ),
-        dtype="int64",
-        order="C",
+    if symmetrize_tetrahedra and lang != "Rust":
+        raise RuntimeError("symmetrize_tetrahedra is implemented only in Rust.")
+    relative_grid_addresses = get_tetrahedra_relative_gr_grid_address(
+        bz_grid, symmetrize_tetrahedra=symmetrize_tetrahedra, lang=lang
     )
     if grid_points is None:
         _grid_points = bz_grid.grg2bzg
@@ -137,86 +256,54 @@ def get_integration_weights(
     return integration_weights
 
 
-def get_all_tetrahedra_relative_grid_address(
-    lang: Literal["C", "Python"] = "C",
-) -> NDArray[np.int64]:
-    """Return relative grid addresses dataset.
-
-    This exists only for the test.
-
-    """
-    try:
-        import phonopy._phonopy as phonoc  # type: ignore
-    except ImportError:
-        import sys
-
-        print("Phonopy C-extension has to be built properly.")
-        sys.exit(1)
-
-    relative_grid_address = np.zeros((4, 24, 4, 3), dtype="int64", order="C")
-    if lang == "C":
-        phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
-    else:
-        for i in range(4):
-            relative_grid_address[i] = _get_relative_grid_addresses_from_main_diagonal(
-                i
-            )[0]
-
-    return relative_grid_address
-
-
-def get_tetrahedra_integration_weight(
-    omegas: float | Sequence[float] | NDArray[np.double],
-    tetrahedra_omegas: Sequence[Sequence[float]] | NDArray[np.double],
-    function: str = "I",
-) -> float | NDArray[np.double]:
-    """Return integration weights.
+def get_tetrahedra_frequencies(
+    grid_point: int,
+    bz_grid: BZGrid,
+    relative_grid_address: NDArray[np.int64],
+    frequencies: NDArray[np.double],
+) -> NDArray[np.double]:
+    """Return the frequencies at the vertices of the tetrahedra around a point.
 
     Parameters
     ----------
-    omegas : float or list of float values
-        Energy(s) at which the integration weight(s) are computed.
-    tetrahedra_omegas : ndarray of list of list
-        Energies at vertices of 24 tetrahedra
-        shape=(24, 4)
-        dytpe='double'
-    function : str, 'I' or 'J'
-        'J' is for intetration and 'I' is for its derivative.
+    grid_point : int
+        Grid point in BZ-grid.
+    bz_grid : BZGrid
+        Grid information in reciprocal space.
+    relative_grid_address : ndarray
+        Vertices of the tetrahedra as steps of GR-grid address from
+        ``grid_point``, e.g., ``get_tetrahedra_relative_gr_grid_address(bz_grid)``.
+        shape=(tetrahedra, 4, 3), dtype='int64'
+    frequencies : ndarray
+        Phonon frequencies on BZ-grid points. shape=(bz_grid_points, num_band),
+        dtype='double'
+
+    Returns
+    -------
+    ndarray
+        Frequencies at the vertices. shape=(num_band, tetrahedra, 4),
+        dtype='double', order='C'
 
     """
-    try:
-        import phonopy._phonopy as phonoc  # type: ignore
-    except ImportError:
-        import sys
-
-        print("Phonopy C-extension has to be built properly.")
-        sys.exit(1)
-
-    if isinstance(omegas, (float, int, np.generic)):
-        return phonoc.tetrahedra_integration_weight(
-            float(omegas),
-            np.array(tetrahedra_omegas, dtype="double", order="C"),
-            function,
-        )
-    else:
-        integration_weights = np.zeros(len(omegas), dtype="double")
-        phonoc.tetrahedra_integration_weight_at_omegas(
-            integration_weights,
-            np.array(omegas, dtype="double"),
-            np.array(tetrahedra_omegas, dtype="double", order="C"),
-            function,
-        )
-        return integration_weights
+    vertices = get_neighboring_grid_points(
+        grid_point, relative_grid_address, bz_grid, lang="Python"
+    )
+    vertex_frequencies = frequencies[vertices]
+    return np.array(np.moveaxis(vertex_frequencies, -1, 0), dtype="double", order="C")
 
 
 class TetrahedronMethod:
-    """Class to perform linear tetrahedron method on regular grid locally."""
+    """Linear tetrahedron method around one grid point, in pure Python.
+
+    This is the reference implementation of the kernels in phonors.
+
+    """
 
     def __init__(
         self,
         primitive_vectors: Sequence[Sequence[float]] | NDArray[np.double] | None,
         mesh: Sequence[int] | NDArray[np.int64] | None = None,
-        lang: Literal["C", "Python", "Rust"] = "Rust",
+        relative_grid_address: NDArray[np.int64] | None = None,
     ) -> None:
         """Init method.
 
@@ -229,6 +316,12 @@ class TetrahedronMethod:
             shape=(3, 3)
         mesh : array_like
             Mesh numbers.
+        relative_grid_address : ndarray, optional
+            Vertices of the tetrahedra to use instead of the 24 built from
+            ``primitive_vectors``, e.g., those of
+            ``get_symmetrized_tetrahedra_relative_grid_address``. Each
+            tetrahedron has the vertex [0, 0, 0] at the central grid point.
+            shape=(tetrahedra, 4, 3), dtype='int64'
 
         """
         if mesh is None:
@@ -239,19 +332,16 @@ class TetrahedronMethod:
             self._primitive_vectors = (
                 np.array(primitive_vectors, dtype="double", order="C") / mesh
             )
-        if lang in ("C", "Rust"):
-            lang = resolve_lang(lang)
-        self._lang: Literal["C", "Python", "Rust"] = lang
         self._vertices: NDArray[np.int64] | None = None
         self._relative_grid_addresses: NDArray[np.int64]
-        self._central_indices: NDArray[np.int64] | None = None
+        self._central_indices: NDArray[np.int64]
         self._tetrahedra_omegas: (
             Sequence[Sequence[float]] | NDArray[np.double] | None
         ) = None
         self._sort_indices: NDArray[np.intp] | None = None
         self._omegas: float | NDArray[np.double] | None = None
         self._integration_weight: float | NDArray[np.double] | None = None
-        self._set_relative_grid_addresses(lang=self._lang)
+        self._set_relative_grid_addresses(relative_grid_address)
 
     def run(
         self,
@@ -266,16 +356,14 @@ class TetrahedronMethod:
             "I": Imaginary part (delta function). "J": Integral function of
             imaginary part.
 
-        Note
-        ----
-        "C" or "Py" here has to be consistent with that of
-        self._set_relative_grid_addresses().
-
         """
-        if self._lang in ("C", "Rust"):
-            self._run_c(omegas, value=value)
+        if isinstance(omegas, (float, int, np.generic)):
+            self._integration_weight = self._get_integration_weight(omegas, value=value)
         else:
-            self._run_py(omegas, value=value)
+            iw = np.zeros(len(omegas), dtype="double")
+            for i, omega in enumerate(omegas):
+                iw[i] = self._get_integration_weight(omega, value=value)
+            self._integration_weight = iw
 
     @property
     def tetrahedra(self) -> NDArray[np.int64]:
@@ -300,64 +388,39 @@ class TetrahedronMethod:
     ) -> None:
         """Set values on vertices of tetrahedra.
 
-        tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
+        tetrahedra_omegas: (tetrahedra, 4) omegas at self._relative_grid_addresses
 
         """
-        self._tetrahedra_omegas = tetrahedra_omegas
+        self._tetrahedra_omegas = np.asarray(tetrahedra_omegas, dtype="double")
 
     def get_integration_weight(self) -> float | NDArray[np.double] | None:
         """Return integration weights."""
         return self._integration_weight
 
     def _set_relative_grid_addresses(
-        self, lang: Literal["C", "Python", "Rust"] = "Rust"
+        self, relative_grid_address: NDArray[np.int64] | None
     ) -> None:
-        """Set dataset of relative grid addresses."""
-        if self._primitive_vectors is None:
-            (
-                self._relative_grid_addresses,
-                self._central_indices,
-            ) = _get_relative_grid_addresses_from_main_diagonal(0)
-            return
-
-        if lang in ("C", "Rust"):
-            self._relative_grid_addresses = get_tetrahedra_relative_grid_address(
-                self._primitive_vectors, lang=lang
+        """Set the vertices of the tetrahedra and where the central one is."""
+        if relative_grid_address is not None:
+            self._relative_grid_addresses = np.array(
+                relative_grid_address, dtype="int64", order="C"
+            )
+        elif self._primitive_vectors is None:
+            self._relative_grid_addresses = (
+                _get_relative_grid_addresses_from_main_diagonal(0)[0]
             )
         else:
-            (
-                self._relative_grid_addresses,
-                self._central_indices,
-            ) = _get_relative_grid_addresses_from_microzone_lattice(
-                self._primitive_vectors
+            self._relative_grid_addresses = (
+                _get_relative_grid_addresses_from_microzone_lattice(
+                    self._primitive_vectors
+                )[0]
             )
-
-    def _run_c(
-        self,
-        omegas: float | Sequence[float] | NDArray[np.double],
-        value: str = "I",
-    ) -> None:
-        assert self._tetrahedra_omegas is not None
-        self._integration_weight = get_tetrahedra_integration_weight(
-            omegas, self._tetrahedra_omegas, function=value
+        # Position of the vertex [0, 0, 0] in each tetrahedron.
+        self._central_indices = np.argmax(
+            (self._relative_grid_addresses == 0).all(axis=2), axis=1
         )
 
-    def _run_py(
-        self,
-        omegas: float | Sequence[float] | NDArray[np.double],
-        value: str = "I",
-    ) -> None:
-        if isinstance(omegas, (float, int, np.generic)):
-            self._integration_weight = self._get_integration_weight_py(
-                omegas, value=value
-            )
-        else:
-            iw = np.zeros(len(omegas), dtype="double")
-            for i, omega in enumerate(omegas):
-                iw[i] = self._get_integration_weight_py(omega, value=value)
-            self._integration_weight = iw
-
-    def _get_integration_weight_py(self, omega: float, value: str = "I") -> float:
+    def _get_integration_weight(self, omega: float, value: str = "I") -> float:
         if value == "I":
             IJ = self._I
             gn = self._g
@@ -366,7 +429,6 @@ class TetrahedronMethod:
             gn = self._n
 
         assert self._tetrahedra_omegas is not None
-        assert self._central_indices is not None
         tetrahedra_omegas = self._tetrahedra_omegas
         central_indices = self._central_indices
         self._sort_indices = np.argsort(tetrahedra_omegas, axis=1)
@@ -385,23 +447,27 @@ class TetrahedronMethod:
             # else:
             #     i = 4
             v = self._vertices_omegas
+            # omega equal to a vertex goes to the branch above it, as in
+            # phonors.
             if omega < v[0]:
                 sum_value += IJ(0, np.where(indices == ci)[0][0]) * gn(0)
-            elif v[0] < omega and omega < v[1]:
+            elif omega < v[1]:
                 sum_value += IJ(1, np.where(indices == ci)[0][0]) * gn(1)
-            elif v[1] < omega and omega < v[2]:
+            elif omega < v[2]:
                 sum_value += IJ(2, np.where(indices == ci)[0][0]) * gn(2)
-            elif v[2] < omega and omega < v[3]:
+            elif omega < v[3]:
                 sum_value += IJ(3, np.where(indices == ci)[0][0]) * gn(3)
-            elif v[3] < omega:
+            else:
                 sum_value += IJ(4, np.where(indices == ci)[0][0]) * gn(4)
 
-        return sum_value / 6
+        # 6 for 24 tetrahedra; sets of 24 are averaged.
+        return sum_value / (len(tetrahedra_omegas) / 4)
 
     def _f(self, n: int, m: int) -> float:
-        return (self._omega - self._vertices_omegas[m]) / (
-            self._vertices_omegas[n] - self._vertices_omegas[m]
-        )
+        delta = self._vertices_omegas[n] - self._vertices_omegas[m]
+        if abs(delta) < _THM_EPSILON:
+            return 0.0
+        return (self._omega - self._vertices_omegas[m]) / delta
 
     def _J(self, i: int, ci: int) -> float:
         if i == 0:
@@ -629,6 +695,9 @@ class TetrahedronMethod:
         return self._f(3, 0) / 4
 
     def _J_20(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1)
@@ -639,10 +708,13 @@ class TetrahedronMethod:
                 * (1.0 + self._f(0, 3) + self._f(0, 2))
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_21(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * (1.0 + self._f(1, 3) + self._f(1, 2))
@@ -653,10 +725,13 @@ class TetrahedronMethod:
                 + self._f(3, 0) * self._f(2, 0) * self._f(1, 2) * self._f(1, 2)
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_22(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * self._f(2, 1)
@@ -667,10 +742,13 @@ class TetrahedronMethod:
                 * (self._f(2, 1) + self._f(2, 0))
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_23(self) -> float:
+        n = self._n_2()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 self._f(3, 1) * self._f(2, 1) * self._f(3, 1)
@@ -681,25 +759,31 @@ class TetrahedronMethod:
                 + self._f(3, 0) * self._f(2, 0) * self._f(1, 2) * self._f(3, 0)
             )
             / 4
-            / self._n_2()
+            / n
         )
 
     def _J_30(self) -> float:
-        return (
-            (1.0 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) / 4 / self._n_3()
-        )
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
+        return (1.0 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) / 4 / n
 
     def _J_31(self) -> float:
-        return (
-            (1.0 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) / 4 / self._n_3()
-        )
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
+        return (1.0 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) / 4 / n
 
     def _J_32(self) -> float:
-        return (
-            (1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) / 4 / self._n_3()
-        )
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
+        return (1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) / 4 / n
 
     def _J_33(self) -> float:
+        n = self._n_3()
+        if n < _THM_EPSILON:
+            return 0.0
         return (
             (
                 1.0
@@ -709,7 +793,7 @@ class TetrahedronMethod:
                 * (1.0 + self._f(3, 0) + self._f(3, 1) + self._f(3, 2))
             )
             / 4
-            / self._n_3()
+            / n
         )
 
     def _J_4(self) -> float:
@@ -730,39 +814,32 @@ class TetrahedronMethod:
     def _I_13(self) -> float:
         return self._f(3, 0) / 3
 
+    def _g_2_denominator(self) -> float:
+        return self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3)
+
     def _I_20(self) -> float:
-        return (
-            self._f(0, 3)
-            + self._f(0, 2)
-            * self._f(2, 0)
-            * self._f(1, 2)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(0, 3) + self._f(0, 2) * self._f(2, 0) * self._f(1, 2) / g) / 3
 
     def _I_21(self) -> float:
-        return (
-            self._f(1, 2)
-            + self._f(1, 3) ** 2
-            * self._f(2, 1)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(1, 2) + self._f(1, 3) ** 2 * self._f(2, 1) / g) / 3
 
     def _I_22(self) -> float:
-        return (
-            self._f(2, 1)
-            + self._f(2, 0) ** 2
-            * self._f(1, 2)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(2, 1) + self._f(2, 0) ** 2 * self._f(1, 2) / g) / 3
 
     def _I_23(self) -> float:
-        return (
-            self._f(3, 0)
-            + self._f(3, 1)
-            * self._f(1, 3)
-            * self._f(2, 1)
-            / (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
-        ) / 3
+        g = self._g_2_denominator()
+        if g < _THM_EPSILON:
+            return 0.0
+        return (self._f(3, 0) + self._f(3, 1) * self._f(1, 3) * self._f(2, 1) / g) / 3
 
     def _I_30(self) -> float:
         return self._f(0, 3) / 3

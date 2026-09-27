@@ -17,11 +17,10 @@ from phonopy.phonon.grid import (
     _get_grid_points_by_rotations,
     _relocate_BZ_grid_address,
     get_grid_point_from_address,
-    get_grid_point_from_address_py,
     get_ir_grid_points,
     length2mesh,
 )
-from phonopy.phonon.tetrahedron_method import get_tetrahedra_relative_grid_address
+from phonopy.phonon.tetrahedron_method import _get_tetrahedra_relative_grid_address
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -48,7 +47,7 @@ def test_get_grid_point_from_address():
 
     for address in list(np.ndindex(mesh)):
         gp_spglib = get_grid_point_from_address(address, mesh)
-        gp_py = get_grid_point_from_address_py(address, mesh)
+        gp_py = get_grid_point_from_address(address, mesh, lang="Python")
         # print("%s %d %d" % (address, gp_spglib, gp_py))
         np.testing.assert_equal(gp_spglib, gp_py)
 
@@ -914,7 +913,7 @@ def test_SNF_tetrahedra_relative_grid(aln_cell):
 
         plat = np.linalg.inv(aln_cell.cell)
         mlat = bzgrid.microzone_lattice
-        tetrahedra = get_tetrahedra_relative_grid_address(mlat)
+        tetrahedra = _get_tetrahedra_relative_grid_address(mlat)
         snf_tetrahedra = np.dot(tetrahedra, bzgrid.P.T)
 
         for mtet, ptet in zip(tetrahedra, snf_tetrahedra, strict=True):

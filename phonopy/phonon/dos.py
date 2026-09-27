@@ -10,7 +10,6 @@ from typing import Literal, TypedDict
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.phonon.grid import BZGrid
 from phonopy.phonon.mesh import Mesh
 from phonopy.phonon.spectrum import TetrahedronDOSAccumulator
 
@@ -149,38 +148,6 @@ class Dos:
         return sigma
 
 
-def _bzgrid_and_full_grid_frequencies(
-    mesh_object: Mesh,
-    lang: Literal["C", "Rust"] = "Rust",
-) -> tuple[BZGrid, NDArray[np.double]]:
-    """Return a BZGrid covering every regular-grid point with frequencies on it.
-
-    The Mesh stores ``frequencies`` only at ir-grid points but the Mesh's
-    symmetry resolution may differ from BZGrid's (e.g. NAC, slightly different
-    rotation reduction).  To avoid an alignment headache the BZGrid here is
-    built without point-group reduction; the per-mode frequencies are
-    replicated from the Mesh's ir-grid via ``grid_mapping_table`` so every GR
-    grid point gets its symmetry-equivalent frequency.  Numerically equivalent
-    to the legacy ``tetrahedron_method_dos`` C kernel which also iterated over
-    all grid points.
-
-    """
-    bzgrid = BZGrid(
-        mesh_object.mesh_numbers,
-        lattice=mesh_object.dynamical_matrix.primitive.cell,
-        is_shift=mesh_object.is_shift,
-        is_time_reversal=False,
-        lang=lang,
-    )
-    ir_position = {int(gp): i for i, gp in enumerate(mesh_object.ir_grid_points)}
-    positions = np.array(
-        [ir_position[int(gp)] for gp in mesh_object.grid_mapping_table],
-        dtype="int64",
-    )
-    frequencies_full = mesh_object.frequencies[positions]
-    return bzgrid, frequencies_full
-
-
 class TotalDos(Dos):
     """Class to calculate total DOS."""
 
@@ -305,12 +272,12 @@ class TotalDos(Dos):
         )
 
     def _run_tetrahedron_method_dos(self) -> None:
-        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(
-            self._mesh_object, lang=self._lang
-        )
         res = TetrahedronDOSAccumulator(
-            freqs_full,
-            bzgrid,
+            self._mesh_object.frequencies,
+            self._mesh_object.bz_grid,
+            ir_grid_points=self._mesh_object.ir_grid_points,
+            ir_grid_weights=self._mesh_object.weights,
+            ir_grid_map=self._mesh_object.grid_mapping_table,
             sampling_points=self._frequency_points,
             lang=self._lang,
         ).result
@@ -471,27 +438,19 @@ class ProjectedDos(Dos):
                 ).sum()
 
     def _run_tetrahedron_method_dos(self) -> None:
-        bzgrid, freqs_full = _bzgrid_and_full_grid_frequencies(
-            self._mesh_object, lang=self._lang
-        )
-        # Replicate per-mode eigvecs2 to every grid point via the same ir
-        # mapping that _bzgrid_and_full_grid_frequencies uses.
-        ir_position = {
-            int(gp): i for i, gp in enumerate(self._mesh_object.ir_grid_points)
-        }
-        positions = np.array(
-            [ir_position[int(gp)] for gp in self._mesh_object.grid_mapping_table],
-            dtype="int64",
-        )
-        # eigvecs2 shape: (n_ir, num_pdos, n_band).  Replicate to (n_grid,
-        # num_pdos, n_band) then reshape to (1, n_grid, n_band, num_pdos)
-        # for TetrahedronDOSAccumulator.
-        mode_property = np.ascontiguousarray(
-            self._eigvecs2[positions].transpose(0, 2, 1)[None]
-        )
+        # Projections cannot be copied over a star, so the mesh has to hold
+        # every grid point.
+        num_grid_points = int(np.prod(self._mesh_object.mesh_numbers))
+        if not np.array_equal(
+            self._mesh_object.ir_grid_points, np.arange(num_grid_points)
+        ):
+            raise RuntimeError("Mesh has to be run with is_mesh_symmetry=False.")
+        # eigvecs2 shape: (n_grid, num_pdos, n_band) -> (1, n_grid, n_band,
+        # num_pdos) for TetrahedronDOSAccumulator.
+        mode_property = self._eigvecs2.transpose(0, 2, 1)[None]
         res = TetrahedronDOSAccumulator(
-            freqs_full,
-            bzgrid,
+            self._mesh_object.frequencies,
+            self._mesh_object.bz_grid,
             mode_property=mode_property,
             sampling_points=self._frequency_points,
             lang=self._lang,

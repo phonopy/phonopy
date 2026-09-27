@@ -105,6 +105,7 @@ class TetrahedronDOSAccumulator:
         sampling_points: NDArray[np.double] | Sequence[float] | None = None,
         num_sampling_points: int = 100,
         lang: Literal["C", "Rust"] = "Rust",
+        symmetrize_tetrahedra: bool = False,
     ) -> None:
         """Init method.
 
@@ -146,9 +147,13 @@ class TetrahedronDOSAccumulator:
             ``sampling_points`` is None).
         lang : {"C", "Rust"}, optional
             Backend for the tetrahedron-weight kernel.
+        symmetrize_tetrahedra : bool, optional
+            Average the weights over the tetrahedra rotated by
+            ``bz_grid.rotations``. See ``get_integration_weights``.
 
         """
         lang = resolve_lang(lang)
+        self._symmetrize_tetrahedra = symmetrize_tetrahedra
         bin_values_arr = np.asarray(bin_values, dtype="double")
         if bin_values_arr.ndim == 2:
             shared_bins = True
@@ -283,6 +288,7 @@ class TetrahedronDOSAccumulator:
                 bzgp2irgp_map=bzgp2irgp_map,
                 function=func,
                 lang=lang,
+                symmetrize_tetrahedra=self._symmetrize_tetrahedra,
             )
             for i, iw in enumerate(iweights):
                 target += np.transpose(
@@ -326,6 +332,7 @@ class TetrahedronDOSAccumulator:
                     bzgp2irgp_map=bzgp2irgp_map,
                     function=func,
                     lang=lang,
+                    symmetrize_tetrahedra=self._symmetrize_tetrahedra,
                 )
                 for i, iw in enumerate(iweights):
                     target += np.dot(iw, mode_property_arr[b, i] * ir_grid_weights[i])

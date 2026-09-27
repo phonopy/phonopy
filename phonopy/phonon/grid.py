@@ -549,21 +549,10 @@ class BZGrid:
             Otherwise one integer value is returned.
 
         """
-        try:
-            len(addresses[0])
-        except TypeError:
-            return int(
-                self._grg2bzg[
-                    get_grid_point_from_address(
-                        addresses, self._D_diag, lang=self._lang
-                    )
-                ]
-            )
-
-        gps = [
-            get_grid_point_from_address(adrs, self._D_diag, lang=self._lang)
-            for adrs in addresses
-        ]
+        _addresses = np.asarray(addresses, dtype="int64")
+        gps = get_grid_point_from_address(_addresses, self._D_diag, lang=self._lang)
+        if _addresses.ndim == 1:
+            return int(self._grg2bzg[gps])
         return np.array(self._grg2bzg[gps], dtype="int64")
 
     def _set_bz_grid(self) -> None:
@@ -1050,43 +1039,36 @@ def get_qpoints_from_bz_grid_points(
     return bz_grid.addresses[gps] @ bz_grid.QDinv.T
 
 
-def get_grid_point_from_address_py(
-    addresses: Sequence[int] | NDArray[np.int64],
-    D_diag: NDArray[np.int64] | Sequence[int],
-) -> NDArray[np.int64]:
-    """Return GR-grid point index from addresses.
-
-    Python version of get_grid_point_from_address.
-    X runs first in XYZ
-    In grid.c, Z first is possible with MACRO setting.
-
-    addresses :
-        shape=(..., 3)
-
-    """
-    return np.dot(np.mod(addresses, D_diag), [1, D_diag[0], D_diag[0] * D_diag[1]])
-
-
 def get_grid_point_from_address(
     address: Sequence[int] | NDArray[np.int64],
     D_diag: Sequence[int] | NDArray[np.int64],
-    lang: Literal["C", "Rust"] = "Rust",
+    lang: Literal["C", "Python", "Rust"] = "Rust",
 ) -> NDArray[np.int64]:
     """Return GR grid-point indices of grid addresses.
+
+    Each component of the address ``m`` is first reduced to the range
+    ``0 <= r_i < D_diag[i]`` by ``r_i = m_i mod D_diag[i]``, taken
+    non-negative for a negative ``m_i``. The index is then
+
+        r_0 + r_1 * D_diag[0] + r_2 * D_diag[0] * D_diag[1],
+
+    so the left component of the address runs fastest.
 
     Parameters
     ----------
     address : array_like
         Grid address.
-        shape=(3, ) or (n, 3), dtype='int64'
+        shape=(3, ) or (n, 3), dtype='int64'. With lang="Python", any
+        shape=(..., 3).
     D_diag : array_like
         This corresponds to mesh numbers. More precisely, this gives
         diagonal elements of diagonal matrix of Smith normal form of
         grid generating matrix. See the detail in the docstring of BZGrid.
         shape=(3,), dtype='int64'
-    lang : {"C", "Rust"}
+    lang : {"C", "Python", "Rust"}
         Backend selector. "C" uses ``phonopy._recgrid``; "Rust" uses
-        ``phonors``. Default is "C".
+        ``phonors``, which fixes the index convention above. "Python" is a
+        reference implementation for tests. Default is "Rust".
 
     Returns
     -------
@@ -1099,21 +1081,94 @@ def get_grid_point_from_address(
         shape=(n, ), dtype='int64'
 
     """
-    if resolve_lang(lang) == "Rust":
-        import phonors as backend
-    else:
-        import phonopy._recgrid as backend  # type: ignore[import-untyped,no-redef]
+    if lang == "Python":
+        return np.dot(np.mod(address, D_diag), [1, D_diag[0], D_diag[0] * D_diag[1]])
 
     adrs_array = np.ascontiguousarray(address, dtype="int64")
     mesh_array = np.ascontiguousarray(D_diag, dtype="int64")
 
+    if resolve_lang(lang) == "Rust":
+        import phonors
+
+        gps = phonors.grid_indices_from_addresses(adrs_array.reshape(-1, 3), mesh_array)
+        if adrs_array.ndim == 1:
+            return gps[0]
+        return gps
+
+    import phonopy._recgrid as recgrid  # type: ignore[import-untyped]
+
     if adrs_array.ndim == 1:
-        return backend.grid_index_from_address(adrs_array, mesh_array)
+        return recgrid.grid_index_from_address(adrs_array, mesh_array)
 
     gps = np.zeros(adrs_array.shape[0], dtype="int64")
     for i, adrs in enumerate(adrs_array):
-        gps[i] = backend.grid_index_from_address(np.ascontiguousarray(adrs), mesh_array)
+        gps[i] = recgrid.grid_index_from_address(np.ascontiguousarray(adrs), mesh_array)
     return gps
+
+
+def get_neighboring_grid_points(
+    grid_point: int,
+    relative_grid_address: NDArray[np.int64],
+    bz_grid: BZGrid,
+    lang: Literal["Python", "Rust"] = "Rust",
+) -> NDArray[np.int64]:
+    """Return BZ-grid points at grid addresses relative to a grid point.
+
+    The address ``bz_grid.addresses[grid_point] + relative_grid_address`` is
+    reduced to its GR-grid point. When that point has several images on the BZ
+    surface, the image whose BZ-grid address equals the address itself is
+    chosen, otherwise the first image.
+
+    Parameters
+    ----------
+    grid_point : int
+        Grid point in BZ-grid.
+    relative_grid_address : ndarray
+        Steps of GR-grid address from ``grid_point``.
+        shape=(..., 3), dtype='int64'
+    bz_grid : BZGrid
+        Grid information in reciprocal space.
+    lang : {"Python", "Rust"}
+        Backend selector. "Python" is a reference implementation of phonors
+        for tests, and supports only ``bz_grid.store_dense_gp_map=True``.
+        Default is "Rust".
+
+    Returns
+    -------
+    ndarray
+        BZ-grid points. shape=relative_grid_address.shape[:-1], dtype='int64'
+
+    """
+    relative_grid_address = np.asarray(relative_grid_address, dtype="int64")
+    if lang == "Python":
+        if not bz_grid.store_dense_gp_map:
+            raise NotImplementedError("Only store_dense_gp_map=True is supported.")
+        addresses = bz_grid.addresses[grid_point] + relative_grid_address.reshape(-1, 3)
+        gr_grid_points = get_grid_point_from_address(
+            addresses, bz_grid.D_diag, lang="Python"
+        )
+        bz_grid_points = bz_grid.gp_map[gr_grid_points]
+        for i, gr_gp in enumerate(gr_grid_points):
+            for j in range(bz_grid.gp_map[gr_gp], bz_grid.gp_map[gr_gp + 1]):
+                if (bz_grid.addresses[j] == addresses[i]).all():
+                    bz_grid_points[i] = j
+                    break
+        return bz_grid_points.reshape(relative_grid_address.shape[:-1])
+
+    import phonors  # type: ignore[import-untyped]
+
+    rga = np.ascontiguousarray(relative_grid_address.reshape(-1, 3))
+    bz_grid_points = np.zeros(len(rga), dtype="int64")
+    phonors.neighboring_grid_points(
+        bz_grid_points,
+        np.array([grid_point], dtype="int64"),
+        rga,
+        bz_grid.D_diag,
+        bz_grid.addresses,
+        bz_grid.gp_map,
+        bz_grid.store_dense_gp_map * 1 + 1,
+    )
+    return bz_grid_points.reshape(relative_grid_address.shape[:-1])
 
 
 def get_ir_grid_points(

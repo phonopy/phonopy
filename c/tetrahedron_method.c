@@ -768,24 +768,18 @@ static double get_integration_weight(
             v[j] = tetrahedra_omegas[i][j];
         }
         ci = sort_omegas(v);
+        /* omega equal to a vertex goes to the branch above it, as in
+         * phonors. */
         if (omega < v[0]) {
             sum += IJ(0, ci, omega, v) * gn(0, omega, v);
+        } else if (omega < v[1]) {
+            sum += IJ(1, ci, omega, v) * gn(1, omega, v);
+        } else if (omega < v[2]) {
+            sum += IJ(2, ci, omega, v) * gn(2, omega, v);
+        } else if (omega < v[3]) {
+            sum += IJ(3, ci, omega, v) * gn(3, omega, v);
         } else {
-            if (v[0] < omega && omega < v[1]) {
-                sum += IJ(1, ci, omega, v) * gn(1, omega, v);
-            } else {
-                if (v[1] < omega && omega < v[2]) {
-                    sum += IJ(2, ci, omega, v) * gn(2, omega, v);
-                } else {
-                    if (v[2] < omega && omega < v[3]) {
-                        sum += IJ(3, ci, omega, v) * gn(3, omega, v);
-                    } else {
-                        if (v[3] < omega) {
-                            sum += IJ(4, ci, omega, v) * gn(4, omega, v);
-                        }
-                    }
-                }
-            }
+            sum += IJ(4, ci, omega, v) * gn(4, omega, v);
         }
     }
     return sum / 6;
