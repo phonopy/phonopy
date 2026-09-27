@@ -991,6 +991,48 @@ def test_thermal_displacements():
             os.chdir(original_cwd)
 
 
+@pytest.mark.parametrize(
+    "tag,output_filename",
+    [
+        ("TDISP", "thermal_displacements.yaml"),
+        ("TDISPMAT", "thermal_displacement_matrices.yaml"),
+    ],
+)
+def test_thermal_displacements_exclude_gamma_acoustic(
+    tag: str, output_filename: str, capsys: pytest.CaptureFixture[str]
+):
+    """Test EXCLUDE_GAMMA_ACOUSTIC with TDISP and TDISPMAT."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            conf_file = pathlib.Path("td.conf")
+            conf_file.write_text(
+                f"{tag} = .TRUE.\nEXCLUDE_GAMMA_ACOUSTIC = .TRUE.\nMESH = 5 5 5\n"
+                "TMIN = 100\nTMAX = 100\nTSTEP = 100\n"
+            )
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=conf_file,
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+            assert "EXCLUDE_GAMMA_ACOUSTIC" in capsys.readouterr().out
+
+            for created_filename in ("phonopy.yaml", output_filename, "td.conf"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists(), f"{created_filename} was not created"
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_band_mesh():
     """Test phonopy band+mesh (band_mesh) mode."""
     with tempfile.TemporaryDirectory() as temp_dir:

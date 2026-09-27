@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Tests for thermal displacement calculations."""
 
+import warnings
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 from phonopy import Phonopy
+from phonopy.phonon.thermal_properties import GammaAcousticWarning
 
 temps = [
     0.000000,
@@ -155,6 +157,65 @@ def test_compare_TD_and_TDM(ph_nacl: Phonopy, ph_sno2: Phonopy):
                 td_from_tdm[i, j * 3 : (j + 1) * 3] = np.diag(tdm_t_n)
 
         np.testing.assert_allclose(td.thermal_displacements, td_from_tdm, atol=1e-8)
+
+
+@pytest.mark.parametrize("use_iter_mesh", [True, False])
+def test_exclude_gamma_acoustic(ph_sno2: Phonopy, use_iter_mesh: bool):
+    """Excluding the acoustic modes at Gamma equals cutting them by freq_min."""
+    ph_sno2.init_mesh(
+        [5, 5, 5],
+        with_eigenvectors=True,
+        is_mesh_symmetry=False,
+        use_iter_mesh=use_iter_mesh,
+    )
+    temperatures = [0, 300]
+    td = ph_sno2.run_thermal_displacements(
+        temperatures=temperatures, exclude_gamma_acoustic=True
+    )
+    tdm = ph_sno2.run_thermal_displacement_matrices(
+        temperatures=temperatures, exclude_gamma_acoustic=True
+    )
+    assert td.exclude_gamma_acoustic
+    assert tdm.exclude_gamma_acoustic
+    td_cut = ph_sno2.run_thermal_displacements(temperatures=temperatures, freq_min=1e-2)
+    tdm_cut = ph_sno2.run_thermal_displacement_matrices(
+        temperatures=temperatures, freq_min=1e-2
+    )
+    np.testing.assert_allclose(
+        td.thermal_displacements, td_cut.thermal_displacements, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        tdm.thermal_displacement_matrices,
+        tdm_cut.thermal_displacement_matrices,
+        atol=1e-12,
+    )
+
+
+def test_warning_when_acoustic_modes_enter(ph_sno2: Phonopy):
+    """Without the option, a positive acoustic mode at Gamma is reported."""
+    ph_sno2.init_mesh([5, 5, 5], with_eigenvectors=True, is_mesh_symmetry=False)
+    index = ph_sno2.mesh.gamma_index
+    assert index is not None
+    ph_sno2.mesh.frequencies[index, :3] = [-1e-7, 1e-7, 2e-7]
+    temperatures = [0, 300]
+    with pytest.warns(GammaAcousticWarning, match="2 acoustic mode"):
+        ph_sno2.run_thermal_displacements(temperatures=temperatures)
+    # The warning comes before the check of the imaginary part, which the
+    # acoustic modes fail.
+    with (
+        pytest.warns(GammaAcousticWarning, match="2 acoustic mode"),
+        pytest.raises(AssertionError),
+    ):
+        ph_sno2.run_thermal_displacement_matrices(temperatures=temperatures)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", GammaAcousticWarning)
+        ph_sno2.run_thermal_displacements(
+            temperatures=temperatures, exclude_gamma_acoustic=True
+        )
+        ph_sno2.run_thermal_displacement_matrices(
+            temperatures=temperatures, exclude_gamma_acoustic=True
+        )
+        ph_sno2.run_thermal_displacements(temperatures=temperatures, freq_min=1e-2)
 
 
 # Reference displacements (ux, uy, uz) per atom for NaCl (Na, Cl).

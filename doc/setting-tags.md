@@ -897,6 +897,21 @@ TPROP = .TRUE.
 EXCLUDE_GAMMA_ACOUSTIC = .TRUE.
 ```
 
+This tag also applies to the thermal displacements (`TDISP`) and the thermal
+displacement matrices (`TDISPMAT`). In these sums, a mode is included when its
+frequency is larger than `FMIN`, whose default is also 0. The contribution of a
+mode increases as {math}`1/\nu^2` at temperatures where {math}`k_\text{B}T` is
+much larger than {math}`h\nu`. An acoustic mode at {math}`\Gamma` with a small
+positive frequency therefore makes the thermal displacements meaningless. The
+two warnings described above are printed only for the thermal properties. With
+this tag, the three acoustic modes at {math}`\Gamma` are excluded from the sums
+of the thermal displacements by the same rule as from the thermal properties.
+
+```
+TDISPMAT = .TRUE.
+EXCLUDE_GAMMA_ACOUSTIC = .TRUE.
+```
+
 (thermal_atomic_displacements_tags)=
 
 ## Thermal displacements
@@ -920,6 +935,11 @@ using very dense sampling mesh) are sampled to avoid divergence. `FMAX` tag
 where the phonons are considered in the summation. The projection is applied
 along arbitrary direction using `PROJECTION_DIRECTION` tag
 ({ref}`projection_direction_tag`).
+
+The three acoustic modes at {math}`\Gamma` can be excluded by
+`EXCLUDE_GAMMA_ACOUSTIC` ({ref}`exclude_gamma_acoustic_tag`) instead of `FMIN`.
+This tag excludes only these three modes. The modes with low frequencies at the
+other q-points stay in the summation.
 
 `TMAX`, `TMIN`, `TSTEP` tags are used to control temperature points at which the
 thermal displacements are calculated.
@@ -950,6 +970,11 @@ set when q-points at {math}`\Gamma` point or near {math}`\Gamma` point (e.g.
 using very dense sampling mesh) are sampled to avoid divergence. `FMAX` tag
 (`--fmax` option) can be used to specify an upper bound of phonon frequencies
 where the phonons are considered in the summation.
+
+The three acoustic modes at {math}`\Gamma` can be excluded by
+`EXCLUDE_GAMMA_ACOUSTIC` ({ref}`exclude_gamma_acoustic_tag`) instead of `FMIN`.
+This tag excludes only these three modes. The modes with low frequencies at the
+other q-points stay in the summation.
 
 The 3x3 matrix restricts distribution of each atom around the equilibrium
 position to be ellipsoid. But the distribution is not necessarily to be so.

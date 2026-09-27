@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from collections.abc import Sequence
 from typing import Any, Literal, TypedDict
 
@@ -12,6 +13,7 @@ from numpy.typing import NDArray
 
 from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
+from phonopy.phonon.thermal_properties import GammaAcousticWarning
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -32,9 +34,11 @@ class ThermalMotion:
         iter_mesh: IterMesh | Mesh,
         freq_min: float | None = None,
         freq_max: float | None = None,
+        exclude_gamma_acoustic: bool = False,
     ) -> None:
         """Init method."""
         self._iter_mesh = iter_mesh
+        self._exclude_gamma_acoustic = exclude_gamma_acoustic
         if freq_min is None:
             self._fmin: float = 0.0
         else:
@@ -51,6 +55,82 @@ class ThermalMotion:
             np.array([[m] * 3 for m in masses]).ravel() * get_physical_units().AMU
         )
         self._temperatures: NDArray[np.double] | None = None
+        # Frequencies, shape=(modes,), and eigenvectors, shape=(bands, modes),
+        # of the acoustic modes at Gamma that entered the sums.
+        self._gamma_acoustic_included: (
+            tuple[NDArray[np.double], NDArray[np.cdouble]] | None
+        ) = None
+
+    @property
+    def exclude_gamma_acoustic(self) -> bool:
+        """Return whether the acoustic modes at Gamma are excluded."""
+        return self._exclude_gamma_acoustic
+
+    def _get_valid_bands(
+        self, i_q: int, freqs: NDArray[np.double], eigvecs: NDArray[np.cdouble]
+    ) -> NDArray[np.bool_]:
+        """Return the mask of the bands included at the i_q-th q-point.
+
+        At Gamma, the acoustic modes that enter the sums are recorded for
+        the warning.
+
+        Parameters
+        ----------
+        i_q : int
+            Index of the q-point in the mesh.
+        freqs : ndarray
+            Frequencies at the q-point. shape=(bands,), dtype='double'
+        eigvecs : ndarray
+            Eigenvectors at the q-point in columns.
+            shape=(bands, bands), dtype='cdouble'
+
+        Returns
+        -------
+        ndarray
+            shape=(bands,), dtype=bool
+
+        """
+        valid = freqs > self._fmin
+        if self._fmax is not None:
+            valid &= freqs < self._fmax
+        if i_q == self._iter_mesh.gamma_index:
+            acoustic = np.argsort(np.abs(freqs))[:3]
+            if self._exclude_gamma_acoustic:
+                valid[acoustic] = False
+            else:
+                included = acoustic[valid[acoustic]]
+                self._gamma_acoustic_included = (
+                    freqs[included],
+                    eigvecs[:, included],
+                )
+        return valid
+
+    def _warn_gamma_acoustic_included(self, stacklevel: int = 4) -> None:
+        """Warn when acoustic modes at Gamma enter the sums, with what they add."""
+        included = self._gamma_acoustic_included
+        self._gamma_acoustic_included = None
+        if included is None or len(included[0]) == 0:
+            return
+        assert self._temperatures is not None
+        freqs, eigvecs = included
+        t_max = float(np.max(self._temperatures))
+        added = np.zeros(len(self._masses3), dtype="double")
+        for f, vec in zip(freqs, eigvecs.T, strict=True):
+            Q2 = self._get_Q2(f, np.array([t_max], dtype="double"))[0]
+            added += Q2 * np.abs(vec) ** 2 / self._masses3
+        added /= np.prod(self._iter_mesh.mesh_numbers)
+        warnings.warn(
+            f"{len(freqs)} acoustic mode(s) at Gamma, at "
+            + ", ".join(f"{f:.3e}" for f in freqs)
+            + " THz, entered the thermal-displacement sums. Their frequencies "
+            "are nearly zero, and they add up to "
+            f"{added.max():.3e} Angstrom^2 to a mean square displacement at "
+            f"{t_max:g} K. Set exclude_gamma_acoustic=True "
+            "(EXCLUDE_GAMMA_ACOUSTIC = .TRUE., --exclude-gamma-acoustic) to "
+            "exclude them.",
+            GammaAcousticWarning,
+            stacklevel=stacklevel,
+        )
 
     def _get_Q2(
         self, freq: float, t: NDArray[np.double]
@@ -144,6 +224,7 @@ class ThermalDisplacements(ThermalMotion):
         projection_direction: NDArray[np.double] | Sequence[float] | None = None,
         freq_min: float | None = None,
         freq_max: float | None = None,
+        exclude_gamma_acoustic: bool = False,
     ) -> None:
         """Init method.
 
@@ -160,9 +241,17 @@ class ThermalDisplacements(ThermalMotion):
             Minimum phonon frequency to determine whether include or not.
         freq_max:
             Maximum phonon frequency to determine whether include or not.
+        exclude_gamma_acoustic:
+            If True, exclude the three modes at Gamma with the smallest
+            absolute frequencies.
 
         """
-        super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
+        super().__init__(
+            iter_mesh,
+            freq_min=freq_min,
+            freq_max=freq_max,
+            exclude_gamma_acoustic=exclude_gamma_acoustic,
+        )
         if projection_direction is None:
             self._projection_direction = None
         else:
@@ -200,15 +289,14 @@ class ThermalDisplacements(ThermalMotion):
             else:
                 vecs2 = (abs(vecs) ** 2).T / masses
 
-            valid_indices = fs > self._fmin
-            if self._fmax is not None:
-                valid_indices *= fs < self._fmax
+            valid_indices = self._get_valid_bands(count, fs, vecs)
 
             for f, v2 in zip(fs[valid_indices], vecs2[valid_indices], strict=True):
                 disps += np.outer(self._get_Q2(f, temps), v2)
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._displacements = disps / (count + 1)
+        self._warn_gamma_acoustic_included()
 
     def write_yaml(
         self, filename: str | os.PathLike = "thermal_displacements.yaml"
@@ -282,6 +370,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
         freq_min: float | None = None,
         freq_max: float | None = None,
         lattice: NDArray[np.double] | None = None,
+        exclude_gamma_acoustic: bool = False,
     ) -> None:
         """Init method.
 
@@ -298,9 +387,17 @@ class ThermalDisplacementMatrices(ThermalMotion):
         lattice: array_like
             Lattice parameters (column vectors) in real space
             dtype='double', shape=(3, 3)
+        exclude_gamma_acoustic: bool
+            If True, exclude the three modes at Gamma with the smallest
+            absolute frequencies.
 
         """
-        super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
+        super().__init__(
+            iter_mesh,
+            freq_min=freq_min,
+            freq_max=freq_max,
+            exclude_gamma_acoustic=exclude_gamma_acoustic,
+        )
         self._disp_matrices: NDArray[np.double] | None = None
         self._disp_matrices_cif: NDArray[np.double] | None = None
 
@@ -349,8 +446,6 @@ class ThermalDisplacementMatrices(ThermalMotion):
                     mat_cif = np.dot(np.dot(self._ANinv, mat), self._ANinv.T)
                     self._disp_matrices_cif[i, j] = mat_cif
 
-        self._get_disp_matrices()
-
     def _get_disp_matrices(self) -> None:
         dtype_complex = np.cdouble
         assert self._temperatures is not None
@@ -360,9 +455,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
         count = 0
         for count, (freqs, eigvecs) in enumerate(self._iter_mesh):  # noqa B007
             assert eigvecs is not None
-            valid_indices = freqs > self._fmin
-            if self._fmax is not None:
-                valid_indices *= freqs < self._fmax
+            valid_indices = self._get_valid_bands(count, freqs, eigvecs)
             for i_band, (f, vec) in enumerate(
                 zip(freqs[valid_indices], (eigvecs.T)[valid_indices], strict=True)
             ):
@@ -387,6 +480,8 @@ class ThermalDisplacementMatrices(ThermalMotion):
                     print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
+        # Before the check, which a part of the acoustic modes at Gamma fails.
+        self._warn_gamma_acoustic_included(stacklevel=5)
         assert (abs(disps.imag) < 1e-10).all()
         self._disp_matrices = disps.real / (count + 1)
 
