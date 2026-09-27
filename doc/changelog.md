@@ -2,6 +2,12 @@
 
 # Change Log
 
+## Sep-27-2026: Version 4.7.2
+
+- Fix two tests that failed on Windows when acoustic modes at Gamma entered
+  the thermal displacement matrices. The tests now set `FMIN`. No change in
+  the calculations.
+
 ## Sep-27-2026: Version 4.7.1
 
 - `exclude_gamma_acoustic` (`EXCLUDE_GAMMA_ACOUSTIC`, `--exclude-gamma-acoustic`)
