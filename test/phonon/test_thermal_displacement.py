@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Tests for thermal displacement calculations."""
 
+import warnings
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 from phonopy import Phonopy
+from phonopy.phonon.thermal_properties import GammaAcousticWarning
 
 temps = [
     0.000000,
@@ -187,6 +189,33 @@ def test_exclude_gamma_acoustic(ph_sno2: Phonopy, use_iter_mesh: bool):
         tdm_cut.thermal_displacement_matrices,
         atol=1e-12,
     )
+
+
+def test_warning_when_acoustic_modes_enter(ph_sno2: Phonopy):
+    """Without the option, a positive acoustic mode at Gamma is reported."""
+    ph_sno2.init_mesh([5, 5, 5], with_eigenvectors=True, is_mesh_symmetry=False)
+    index = ph_sno2.mesh.gamma_index
+    assert index is not None
+    ph_sno2.mesh.frequencies[index, :3] = [-1e-7, 1e-7, 2e-7]
+    temperatures = [0, 300]
+    with pytest.warns(GammaAcousticWarning, match="2 acoustic mode"):
+        ph_sno2.run_thermal_displacements(temperatures=temperatures)
+    # The warning comes before the check of the imaginary part, which the
+    # acoustic modes fail.
+    with (
+        pytest.warns(GammaAcousticWarning, match="2 acoustic mode"),
+        pytest.raises(AssertionError),
+    ):
+        ph_sno2.run_thermal_displacement_matrices(temperatures=temperatures)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", GammaAcousticWarning)
+        ph_sno2.run_thermal_displacements(
+            temperatures=temperatures, exclude_gamma_acoustic=True
+        )
+        ph_sno2.run_thermal_displacement_matrices(
+            temperatures=temperatures, exclude_gamma_acoustic=True
+        )
+        ph_sno2.run_thermal_displacements(temperatures=temperatures, freq_min=1e-2)
 
 
 # Reference displacements (ux, uy, uz) per atom for NaCl (Na, Cl).
