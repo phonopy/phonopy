@@ -219,6 +219,68 @@ ph = Phonopy(unitcell, supercell_matrix)
 ph.unit_conversion_factor = 521.471
 ```
 
+## Changed default: acoustic modes at Gamma in the thermal properties
+
+The frequencies of the three acoustic modes at {math}`\Gamma` should be
+zero, but phonopy computes them as small numbers of either sign. With
+the default `CUTOFF_FREQUENCY` of 0, a mode with a small positive
+frequency enters the sums of the thermal properties and a mode with a
+small negative one does not. The thermal properties therefore depend on
+these small values.
+
+The option `exclude_gamma_acoustic` removes the three acoustic modes at
+{math}`\Gamma` from the free energy, the entropy, the heat capacity and
+the zero-point energy. It is described under
+{ref}`EXCLUDE_GAMMA_ACOUSTIC <exclude_gamma_acoustic_tag>`. It is off
+by default in v4.x for `phonopy -t`, `Phonopy.run_thermal_properties`
+and `run_qha`, and will be on by default in v5.0. `phonopy-mlpsscha`
+and `phonopy-anisotropic-qha` have it on already.
+
+Tests that compare thermal properties with reference values made by
+v4.x will need new reference values, or the option turned off.
+
+To get the v5.0 result now, add `--exclude-gamma-acoustic` to the
+command, or `EXCLUDE_GAMMA_ACOUSTIC = .TRUE.` to the configuration
+file:
+
+```bash
+% phonopy --mesh 31 31 31 -t --exclude-gamma-acoustic
+```
+
+From Python, pass `exclude_gamma_acoustic=True` to
+`Phonopy.run_thermal_properties`. Until then, phonopy prints a warning
+when an acoustic mode at {math}`\Gamma` enters the sums. To keep the
+v4.x result after v5.0, use `--no-exclude-gamma-acoustic`,
+`EXCLUDE_GAMMA_ACOUSTIC = .FALSE.` or `exclude_gamma_acoustic=False`.
+
+## Changed default: averaged tetrahedra for the electronic free energy
+
+`phonopy-vasp-efe` and `phonopy-anisotropic-qha` integrate the
+electronic free energy F_el by the linear tetrahedron method. The
+method cuts each cell of the k-point grid into tetrahedra along one of
+its four diagonals, and this cut does not have the point-group symmetry
+of the crystal. F_el is summed over the irreducible k-points only, so
+the result depends slightly on which diagonal was cut.
+
+The option `symmetrize_tetrahedra` averages the tetrahedron weights
+over the cuts rotated by the point group. With the option on, the sum
+over the irreducible k-points gives the same F_el as a sum over all
+k-points. The option is off by default in v4.x and will be on by
+default in v5.0.
+
+To get the v5.0 result now, add `--symmetrize-tetrahedra` to either
+command:
+
+```bash
+% phonopy-vasp-efe --symmetrize-tetrahedra vasprun.xml-{00..10}
+% phonopy-anisotropic-qha aniso_qha_dataset.hdf5 --symmetrize-tetrahedra
+```
+
+From Python, pass `symmetrize_tetrahedra=True` to
+`phonopy.qha.electron.compute_free_energy_by_tetrahedron`. To keep the
+v4.x result after v5.0, use `--no-symmetrize-tetrahedra` or
+`symmetrize_tetrahedra=False`.
+
 ## Surfacing the warnings in existing code
 
 Python hides `DeprecationWarning` by default in many contexts. To see

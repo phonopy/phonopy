@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>phonopy.api_phonopy &#8212; Phonopy v.4.6.0</title>
+    <title>phonopy.api_phonopy &#8212; Phonopy v.4.7.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=c687e6eb"></script>
+    <script src="../../_static/documentation_options.js?v=3a5dd307"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -409,7 +409,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.6" />
+  <meta name="docsearch:version" content="4.7" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -532,7 +532,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.6.0</p>
+    <p class="title logo__title">Phonopy v.4.7.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -739,10 +739,10 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.dynmat_to_fc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DynmatToForceConstants</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.harmonic.force_constants</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">cutoff_force_constants</span><span class="p">,</span>
-    <span class="n">set_tensor_symmetry_PJ</span><span class="p">,</span>
     <span class="n">show_drift_force_constants</span><span class="p">,</span>
     <span class="n">symmetrize_compact_force_constants</span><span class="p">,</span>
     <span class="n">symmetrize_force_constants</span><span class="p">,</span>
+    <span class="n">symmetrize_force_constants_by_space_group</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">StructureInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.fc_calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_fc2</span>
@@ -1901,11 +1901,8 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Force constants have not been produced yet."</span><span class="p">)</span>
 
-        <span class="n">set_tensor_symmetry_PJ</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">scaled_positions</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_symmetry</span><span class="p">,</span>
+        <span class="n">symmetrize_force_constants_by_space_group</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symmetry</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">show_drift</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_level</span><span class="p">:</span>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.6.0</title>
+    <title>Change Log &#8212; Phonopy v.4.7.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=c687e6eb"></script>
+    <script src="_static/documentation_options.js?v=3a5dd307"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Development" href="development.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.6" />
+  <meta name="docsearch:version" content="4.7" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -180,7 +180,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.6.0</p>
+    <p class="title logo__title">Phonopy v.4.7.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -398,6 +398,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-0">Sep-27-2026: Version 4.7.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-24-2026-version-4-6-0">Sep-24-2026: Version 4.6.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
@@ -629,6 +630,33 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="sep-27-2026-version-4-7-0">
+<h2>Sep-27-2026: Version 4.7.0<a class="headerlink" href="#sep-27-2026-version-4-7-0" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Experimental <code class="docutils literal notranslate"><span class="pre">--symmetrize-tetrahedra</span></code> option of <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> and
+<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code>. It averages the tetrahedron weights of the
+electronic free energy over the point group. See <a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a>.</p></li>
+<li><p>Bug fix: the phonon DOS by the tetrahedron method used the wrong grid when a
+sampling mesh given by a length was rebuilt as a generalized regular grid.
+The frequencies were placed at q-points they did not belong to. This bug was
+present since v4.0.0. The DOS is now computed on the grid of the mesh.</p></li>
+<li><p>In the tetrahedron method, when a sampling frequency was exactly equal to the
+frequency at a vertex of a tetrahedron, the tetrahedron gave zero weight. It
+now gives the weight that the frequencies close to the vertex frequency give.
+Results computed by the tetrahedron method may therefore change slightly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Phonopy.symmetrize_force_constants_by_space_group</span></code> and the averaging of the
+Born effective charges run faster. <code class="docutils literal notranslate"><span class="pre">phonopy.harmonic.force_constants.set_tensor_symmetry_PJ</span></code> is
+deprecated. Use <code class="docutils literal notranslate"><span class="pre">symmetrize_force_constants_by_space_group</span></code> instead.</p></li>
+<li><p>Removed without a deprecation period: the module
+<code class="docutils literal notranslate"><span class="pre">phonopy.phonon.tetrahedron_mesh</span></code> with <code class="docutils literal notranslate"><span class="pre">TetrahedronMesh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">get_all_tetrahedra_relative_grid_address</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_tetrahedra_integration_weight</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.tetrahedron_method</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">get_grid_point_from_address_py</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.grid</span></code>.
+<code class="docutils literal notranslate"><span class="pre">get_tetrahedra_frequencies</span></code> is now in <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.tetrahedron_method</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">TetrahedronMethod</span></code> is written in pure Python.</p></li>
+<li><p>Phonopy requires phonors 0.5.0 or later.</p></li>
+</ul>
+</section>
 <section id="sep-24-2026-version-4-6-0">
 <h2>Sep-24-2026: Version 4.6.0<a class="headerlink" href="#sep-24-2026-version-4-6-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2759,6 +2787,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-0">Sep-27-2026: Version 4.7.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-24-2026-version-4-6-0">Sep-24-2026: Version 4.6.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jul-17-2026-version-4-4-0">Jul-17-2026: Version 4.4.0</a></li>
