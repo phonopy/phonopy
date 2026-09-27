@@ -636,6 +636,7 @@ def test_tdm_cif():
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 thermal_displacement_matrices_cif=1000,
                 mesh_numbers="5 5 5",
+                fmin=1e-2,
                 load_phonopy_yaml=True,
             )
             with pytest.raises(SystemExit) as excinfo:
@@ -1877,6 +1878,7 @@ def _get_phonopy_args(
     create_force_sets_zero: list[str | os.PathLike] | None = None,
     fc_spg_symmetry: bool | None = None,
     filename: str | os.PathLike | None = None,
+    fmin: float | None = None,
     frequency_conversion_factor: float | None = None,
     hdf5_compression: str | None = None,
     import_ase_masses_iupac2016: bool | None = None,
@@ -1915,6 +1917,7 @@ def _get_phonopy_args(
         create_force_sets_zero=create_force_sets_zero,
         fc_spg_symmetry=fc_spg_symmetry,
         filename=_filename,
+        fmin=fmin,
         frequency_conversion_factor=frequency_conversion_factor,
         hdf5_compression=hdf5_compression,
         import_ase_masses_iupac2016=import_ase_masses_iupac2016,
