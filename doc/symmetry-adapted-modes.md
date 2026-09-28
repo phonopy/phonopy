@@ -1,16 +1,16 @@
----
-orphan: true
----
-
 (symmetry_adapted_modes)=
 # Symmetry-adapted phonon modes
 
 This page gives the equations that `phonopy/phonon/symmetry_adapted_modes.py`
-implements. The
-module takes the dynamical matrix at one q-point and returns the phonon
-frequencies, the eigenvectors and the degenerate sets. The degenerate sets are
-decided by the symmetry of the q-point, including time reversal. Closeness of
-frequencies is not used.
+implements. The module takes the dynamical matrix at one q-point and returns the
+phonon frequencies, the eigenvectors and the degenerate sets. The degenerate
+sets are decided by the symmetry of the q-point, including time reversal.
+Closeness of frequencies is not used.
+
+The module is used by the irreducible-representation calculation when the
+`IRREPS_SYMMETRY_ADAPTED` tag ({ref}`irreps_symmetry_adapted_tag`) is `.TRUE.`,
+the `--irreps-symmetry-adapted` option is given, or `Phonopy.run_irreps` is
+called with `symmetry_adapted=True`.
 
 Frequencies are a poor guide to degeneracy. The three acoustic modes at
 {math}`\Gamma` of a crystal with space group P2 have frequencies that differ by
