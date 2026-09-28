@@ -146,6 +146,12 @@ class LittleGroupOperation:
 
         A C-type dynamical matrix at q is left unchanged by this map.
 
+        With T = (P (x) I_3)(I_N (x) R_cart), where P is the N x N permutation
+        matrix with the phases, the computation is done in two stages.  First
+        every block is rotated, R_cart M[j', k'] R_cart^T, by one matrix
+        product from the right and one batched product from the left.  Then
+        the phases are multiplied and the blocks are moved by one gather.
+
         Parameters
         ----------
         mat : ndarray
@@ -160,18 +166,19 @@ class LittleGroupOperation:
 
         """
         num_atom = len(self.permutation)
-        m = mat.conj() if self.is_antiunitary else mat
-        m = m.reshape(num_atom, 3, num_atom, 3)
         r = self.rotation_cartesian
-        rotated = np.einsum("ab,ibkd,cd->iakc", r, m, r)
+        m = mat.conj() if self.is_antiunitary else mat
+        # M[j', k'] R^T for all blocks, then R (...) for each row atom j'
+        right = (m.reshape(-1, 3) @ r.T).reshape(num_atom, 3, -1)
+        rotated = (r @ right).reshape(num_atom, 3, num_atom, 3)
         rotated *= (
             self.phases[:, None, None, None] * self.phases.conj()[None, None, :, None]
         )
-        out = np.empty_like(rotated)
-        out[self.permutation] = rotated
-        out2 = np.empty_like(out)
-        out2[:, :, self.permutation] = out
-        return out2.reshape(mat.shape)
+        # Block (j', k') goes to (permutation[j'], permutation[k'])
+        inverse = np.empty_like(self.permutation)
+        inverse[self.permutation] = np.arange(num_atom)
+        cart = np.arange(3)
+        return rotated[np.ix_(inverse, cart, inverse, cart)].reshape(mat.shape)
 
 
 def get_little_group_operations(
