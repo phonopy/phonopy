@@ -2,10 +2,11 @@
 orphan: true
 ---
 
-(spacegroup_reps)=
-# Space-group representations of phonon modes
+(symmetry_adapted_modes)=
+# Symmetry-adapted phonon modes
 
-This page gives the equations that `phonopy/phonon/spgreps.py` implements. The
+This page gives the equations that `phonopy/phonon/symmetry_adapted_modes.py`
+implements. The
 module takes the dynamical matrix at one q-point and returns the phonon
 frequencies, the eigenvectors and the degenerate sets. The degenerate sets are
 decided by the symmetry of the q-point, including time reversal. Closeness of
@@ -72,7 +73,7 @@ The eigenvectors {math}`\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})` satisfy
 {math}`D^{\mathrm{C}}(\mathbf{q})\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})=\omega_\nu^2\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})`,
 and the atomic displacements are proportional to
 {math}`e^{\mathrm{C}}_\alpha(j,\mathbf{q})\exp(i\mathbf{q}\cdot\mathbf{r}(jl))`.
-`spgreps.py` expects a C-type dynamical matrix and returns C-type eigenvectors.
+`symmetry_adapted_modes.py` expects a C-type dynamical matrix and returns C-type eigenvectors.
 
 The other common convention puts only the lattice vectors in the phase. It is
 called D-type:
@@ -83,9 +84,9 @@ D^{\mathrm{D}}_{\alpha\beta}(jj',\mathbf{q})=\frac{1}{\sqrt{m_jm_{j'}}}
 \exp\bigl(i\mathbf{q}\cdot[\mathbf{r}(l')-\mathbf{r}(0)]\bigr).
 ```
 
-`spgreps.py` does not use the D-type matrix. The D-type matrix is defined here
+`symmetry_adapted_modes.py` does not use the D-type matrix. The D-type matrix is defined here
 because `RandomDisplacements` uses it internally, and a D-type matrix must not
-be passed to `spgreps.py`.
+be passed to `symmetry_adapted_modes.py`.
 
 Let {math}`V(\mathbf{q})` be the {math}`3N\times3N` diagonal matrix
 
@@ -115,7 +116,7 @@ Writing the same displacement pattern with the label
 {math}`\mathbf{q}+\mathbf{G}` or with the label {math}`\mathbf{q}` gives
 
 ```{math}
-:label: spgreps_ec_shift
+:label: symmodes_ec_shift
 \mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})
 =V(\mathbf{G})\,\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q}+\mathbf{G}),
 \qquad
@@ -129,14 +130,14 @@ so it is not an overall phase.
 The force constants are real. Therefore the dynamical matrix satisfies
 
 ```{math}
-:label: spgreps_dc_tr
+:label: symmodes_dc_tr
 D^{\mathrm{C}}(\mathbf{q})^*=D^{\mathrm{C}}(-\mathbf{q}),
 ```
 
 and the complex conjugate of an eigenvector at {math}`\mathbf{q}` is an
 eigenvector at {math}`-\mathbf{q}`. This is time-reversal symmetry.
 
-(spgreps_little_group_of_q)=
+(symmodes_little_group_of_q)=
 ## Little group of q
 
 The little group of {math}`\mathbf{q}` is the set of space-group operations
@@ -156,7 +157,7 @@ operation and {math}`\eta=-1` for an antiunitary one. An operation belongs to th
 little group when
 
 ```{math}
-:label: spgreps_little_group
+:label: symmodes_little_group
 \mathrm{R}(\eta\mathbf{q})=\mathbf{q}+\mathbf{G}_{\mathrm{S}},
 \qquad\text{or}\qquad
 \eta\,\tilde q\tilde R^{-1}-\tilde q\in\mathbb{Z}^3.
@@ -189,7 +190,7 @@ therefore in {math}`G_{\mathbf{q}}`. When no such {math}`\mathrm{S}_0` exists,
 - In a crystal without inversion, at a q-point where {math}`\mathbf{q}` and
   {math}`-\mathbf{q}` are not equivalent, {math}`A_{\mathbf{q}}` is empty.
 
-The table lists values from the structures in `test/phonon/test_spgreps.py`.
+The table lists values from the structures in `test/phonon/test_symmetry_adapted_modes.py`.
 
 | Space group | q-point                         | {math}`\|G_{\mathbf{q}}\|` | {math}`\|A_{\mathbf{q}}\|` |
 | ----------- | ------------------------------- | -------------------------- | -------------------------- |
@@ -211,7 +212,7 @@ A space-group operation sends a C-type eigenvector at {math}`\mathbf{q}` to an
 eigenvector at {math}`\mathrm{R}\mathbf{q}` by the {math}`3N\times3N` matrix
 
 ```{math}
-:label: spgreps_gamma
+:label: symmodes_gamma
 \Gamma^{\mathrm{C},\mathbf{q}}_{j\alpha,j'\beta}(\mathrm{S})
 =\mathrm{R}_{\alpha\beta}\exp(-i\,\mathrm{R}\mathbf{q}\cdot\tau)\,
 \Delta(\mathbf{r}_{j0}-\mathrm{S}\mathbf{r}_{j'0}),
@@ -228,12 +229,12 @@ diagonalization at {math}`\mathrm{R}\mathbf{q}` returns by an overall phase, or
 by a unitary rotation inside a degenerate subspace.
 
 For an operation of the little group, {math}`\mathrm{R}(\eta\mathbf{q})` is
-{math}`\mathbf{q}+\mathbf{G}_{\mathrm{S}}`, and Eq. {eq}`spgreps_ec_shift`
+{math}`\mathbf{q}+\mathbf{G}_{\mathrm{S}}`, and Eq. {eq}`symmodes_ec_shift`
 brings the label back to {math}`\mathbf{q}`. The representation matrix used in
 the module is
 
 ```{math}
-:label: spgreps_t
+:label: symmodes_t
 T(\mathrm{S})=V(\mathbf{G}_{\mathrm{S}})\,\Gamma^{\mathrm{C},\eta\mathbf{q}}(\mathrm{S}).
 ```
 
@@ -245,7 +246,7 @@ It acts on eigenvectors and on matrices as follows.
 | Antiunitary | {math}`\mathbf{e}\mapsto T\mathbf{e}^*`               | {math}`M\mapsto TM^*T^\dagger`  |
 
 For an antiunitary operation, the complex conjugate moves the eigenvector from
-{math}`\mathbf{q}` to {math}`-\mathbf{q}` by Eq. {eq}`spgreps_dc_tr`,
+{math}`\mathbf{q}` to {math}`-\mathbf{q}` by Eq. {eq}`symmodes_dc_tr`,
 {math}`\Gamma^{\mathrm{C},-\mathbf{q}}(\mathrm{S})` moves it to
 {math}`\mathbf{q}+\mathbf{G}_{\mathrm{S}}`, and {math}`V(\mathbf{G}_{\mathrm{S}})`
 brings the label back to {math}`\mathbf{q}`. In both cases the dynamical matrix
@@ -267,7 +268,7 @@ and the phase of the element that moves atom {math}`j'` to atom
 {math}`j=\pi_{\mathrm{S}}(j')` is
 
 ```{math}
-:label: spgreps_phase
+:label: symmodes_phase
 \exp\bigl(2\pi i\,[(\tilde q'-\tilde q)\,x_j-\tilde q'\,t]\bigr).
 ```
 
@@ -291,7 +292,7 @@ lattice vector.
 | Field                | Content                                                         |
 | -------------------- | --------------------------------------------------------------- |
 | `permutation[j']`    | {math}`\pi_{\mathrm{S}}(j')`                                    |
-| `phases[j']`         | Eq. {eq}`spgreps_phase`                                         |
+| `phases[j']`         | Eq. {eq}`symmodes_phase`                                         |
 | `rotation_cartesian` | {math}`\mathrm{R}`                                              |
 | `rotation`           | {math}`\tilde R`                                                |
 | `translation`        | {math}`t`                                                       |
@@ -367,7 +368,7 @@ The group average of a {math}`3N\times3N` matrix {math}`M` is
 ```
 
 Since {math}`|A_{\mathbf{q}}|` is either {math}`|G_{\mathbf{q}}|` or zero (see
-{ref}`spgreps_little_group_of_q`), the denominator
+{ref}`symmodes_little_group_of_q`), the denominator
 {math}`|G_{\mathbf{q}}|+|A_{\mathbf{q}}|` is {math}`2|G_{\mathbf{q}}|` or
 {math}`|G_{\mathbf{q}}|`. When {math}`A_{\mathbf{q}}` is empty, the second sum is
 absent and time reversal adds no condition.
@@ -390,7 +391,7 @@ steps are listed below.
    so each subspace is invariant under them. For a random {math}`Y`, each
    subspace carries one irreducible representation of the little group, or one
    pair of representations joined by time reversal. The reason is given in
-   {ref}`spgreps_why_irreducible`.
+   {ref}`symmodes_why_irreducible`.
 3. The character of subspace {math}`k` is computed for the unitary operations,
    {math}`\chi_k(\mathrm{S})=\operatorname{Tr}(U_k^\dagger T(\mathrm{S})U_k)`.
    Subspaces with the same dimension and the same characters carry the same
@@ -405,7 +406,7 @@ steps are listed below.
    {math}`\operatorname{sgn}(\omega^2)\sqrt{|\omega^2|}` times the unit
    conversion factor.
 
-(spgreps_why_irreducible)=
+(symmodes_why_irreducible)=
 ### Why the eigenspaces of X are irreducible
 
 The goal of steps 1 and 2 is to split the {math}`3N`-dimensional space of
@@ -469,7 +470,7 @@ found as one subspace in this way.
 
 Schur's lemma covers the unitary operations. For the antiunitary ones, the
 statement that each eigenspace carries one pair was checked for the structures
-in `test/phonon/test_spgreps.py` and is not proven here.
+in `test/phonon/test_symmetry_adapted_modes.py` and is not proven here.
 
 ### Remarks
 

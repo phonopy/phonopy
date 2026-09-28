@@ -9,7 +9,7 @@ contains atomic positions (C-type).  Eigenvectors are returned in the same
 convention.
 
 The equations and symbols used in the docstrings of this module are given
-in doc/spacegroup-reps.md.  In short:
+in doc/symmetry-adapted-modes.md.  In short:
 
 - x_j: position of atom j in crystallographic coordinates.
 - q: q-point in crystallographic coordinates (row vector).
@@ -51,7 +51,7 @@ class LittleGroupOperation:
 
         T[3j + a, 3j' + b] = R_cart[a, b] * phases[j'] * delta(j, permutation[j'])
 
-    with T(S) = V(G) Gamma^{C, eta q}(S) in doc/spacegroup-reps.md.  It acts
+    with T(S) = V(G) Gamma^{C, eta q}(S) in doc/symmetry-adapted-modes.md.  It acts
     on a C-type eigenvector e at q as
 
         e -> T e        (unitary, eta = +1)
@@ -427,7 +427,7 @@ class SymmetryAdaptedModes:
     5. The sets of all types are sorted by eigenvalue.
 
     The size of a degenerate set is the subspace dimension d_mu, so no
-    frequency tolerance is used.  See doc/spacegroup-reps.md.
+    frequency tolerance is used.  See doc/symmetry-adapted-modes.md.
 
     Attributes
     ----------

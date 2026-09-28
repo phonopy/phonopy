@@ -12,7 +12,7 @@ import pytest
 import phonopy
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
-from phonopy.phonon.spgreps import (
+from phonopy.phonon.symmetry_adapted_modes import (
     SymmetryAdaptedModes,
     _get_symmetrized_lattice,
     _get_symmetrized_positions,
