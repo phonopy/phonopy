@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import itertools
 import pathlib
 
 import numpy as np
@@ -11,7 +12,12 @@ import pytest
 import phonopy
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
-from phonopy.phonon.spgreps import SymmetryAdaptedModes
+from phonopy.phonon.spgreps import (
+    SymmetryAdaptedModes,
+    _get_symmetrized_lattice,
+    _get_symmetrized_positions,
+    get_little_group_operations,
+)
 
 data_dir = pathlib.Path(__file__).parent
 
@@ -73,6 +79,58 @@ def test_operations_leave_dynamical_matrix_invariant(case):
         for op in modes.operations:
             np.testing.assert_allclose(
                 op.transform_matrix(dm), dm, atol=1e-6 * scale, err_msg=f"q={q}"
+            )
+
+
+def test_operations_rotate_complex_displacements(case):
+    """Test T(S) against the rotation of a displacement field in real space.
+
+    A complex displacement field u(j', n) = e_j' exp(2 pi i q . (x_j' + n)),
+    i.e., a plane wave with wave vector q modulated by e over the atoms, is
+    built from a random vector e over lattice vectors n.  The operation
+    sends the displacement of atom j' in cell n to the image
+    R (x_j' + n) + t as R_cart u.  For S Theta the field is complex
+    conjugated first, which gives the same form with -q.  The rotated field
+    must equal the field of the same form with q built from T e (or
+    T conj(e)).  Unlike T D T^dagger, this comparison is sensitive to the
+    overall phase exp(-i Rq . tau) of T.
+
+    """
+    phonon, qpoints = case
+    primitive = phonon.primitive
+    symmetry = phonon.primitive_symmetry
+    rotations = symmetry.symmetry_operations["rotations"]
+    translations = symmetry.symmetry_operations["translations"]
+    lattice = _get_symmetrized_lattice(primitive.cell, rotations)
+    positions = _get_symmetrized_positions(
+        primitive.scaled_positions, lattice, rotations, translations, symmetry.tolerance
+    )
+    num_atom = len(positions)
+    rng = np.random.default_rng(0)
+    e = rng.standard_normal((3 * num_atom, 1)) + 1j * rng.standard_normal(
+        (3 * num_atom, 1)
+    )
+    cells = np.array(list(itertools.product((-1, 0, 1), repeat=3)), dtype="double")
+    for q in qpoints:
+        q = np.array(q, dtype="double")
+        for op in get_little_group_operations(q, primitive, symmetry):
+            eta = -1 if op.is_antiunitary else 1
+            e_src = (e.conj() if op.is_antiunitary else e).reshape(num_atom, 3)
+            te = op.transform_vectors(e).reshape(num_atom, 3)
+            # x[j', n]: positions of atom j' in cell n, shape (num_atom, 27, 3)
+            x = positions[:, None, :] + cells[None, :, :]
+            u = e_src[:, None, :] * np.exp(2j * np.pi * eta * (x @ q))[:, :, None]
+            u_rot = u @ op.rotation_cartesian.T
+            images = x @ op.rotation.T + op.translation
+            x_dst = positions[op.permutation][:, None, :]
+            shifts = images - x_dst
+            np.testing.assert_allclose(shifts, np.rint(shifts), atol=1e-8)
+            expected = (
+                te[op.permutation][:, None, :]
+                * np.exp(2j * np.pi * ((x_dst + np.rint(shifts)) @ q))[:, :, None]
+            )
+            np.testing.assert_allclose(
+                u_rot, expected, atol=1e-10, err_msg=f"q={q}, rot={op.rotation}"
             )
 
 
