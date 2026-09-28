@@ -965,6 +965,36 @@ def test_irreps():
             os.chdir(original_cwd)
 
 
+def test_irreps_symmetry_adapted(capsys: pytest.CaptureFixture[str]):
+    """Test IRREPS with IRREPS_SYMMETRY_ADAPTED."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            conf_file = pathlib.Path("irreps.conf")
+            conf_file.write_text("IRREPS = 0 0 0\nIRREPS_SYMMETRY_ADAPTED = .TRUE.\n")
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=conf_file,
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+            assert "IRREPS_SYMMETRY_ADAPTED" in capsys.readouterr().out
+
+            for created_filename in ("phonopy.yaml", "irreps.yaml", "irreps.conf"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists(), f"{created_filename} was not created"
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_thermal_displacements():
     """Test phonopy --thermal-displacements command."""
     with tempfile.TemporaryDirectory() as temp_dir:

@@ -633,6 +633,13 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
         help="Legacy style band structure pl",
     )
     parser.add_argument(
+        "--irreps-symmetry-adapted",
+        dest="irreps_symmetry_adapted",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Same as IRREPS_SYMMETRY_ADAPTED tag",
+    )
+    parser.add_argument(
         "--lcg",
         "--little-cogroup",
         dest="is_little_cogroup",

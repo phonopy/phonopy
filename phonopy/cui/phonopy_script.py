@@ -1623,7 +1623,13 @@ def _run_irreps(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> N
         is_little_cogroup=settings.is_little_cogroup,
         nac_q_direction=settings.nac_q_direction,
         degeneracy_tolerance=settings.irreps_tolerance,
+        symmetry_adapted=settings.irreps_symmetry_adapted,
     )
+    if log_level and settings.irreps_symmetry_adapted:
+        print(
+            "Degenerate bands are determined from the representation of the "
+            "little group of q (IRREPS_SYMMETRY_ADAPTED)."
+        )
     phonon.show_irreps(settings.show_irreps)
     phonon.write_yaml_irreps(settings.show_irreps)
 
