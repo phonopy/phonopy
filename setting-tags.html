@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.4.7.0</title>
+    <title>Setting tags &#8212; Phonopy v.4.7.2</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=3a5dd307"></script>
+    <script src="_static/documentation_options.js?v=96d5d17c"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.7.0</p>
+    <p class="title logo__title">Phonopy v.4.7.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -241,6 +241,7 @@
 <li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
@@ -523,6 +524,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#characters-of-irreducible-representations">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-symmetry-adapted"><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
 </ul>
 </li>
@@ -1291,6 +1293,19 @@ translational invariance, whether or not this tag is set.</p>
 <span class="n">EXCLUDE_GAMMA_ACOUSTIC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
+<p>This tag also applies to the thermal displacements (<code class="docutils literal notranslate"><span class="pre">TDISP</span></code>) and the thermal
+displacement matrices (<code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code>). In these sums, a mode is included when its
+frequency is larger than <code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, whose default is also 0. The contribution of a
+mode increases as <span class="math notranslate nohighlight">\(1/\nu^2\)</span> at temperatures where <span class="math notranslate nohighlight">\(k_\text{B}T\)</span> is
+much larger than <span class="math notranslate nohighlight">\(h\nu\)</span>. An acoustic mode at <span class="math notranslate nohighlight">\(\Gamma\)</span> with a small
+positive frequency therefore makes the thermal displacements meaningless. The
+two warnings described above are printed only for the thermal properties. With
+this tag, the three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> are excluded from the sums
+of the thermal displacements by the same rule as from the thermal properties.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TDISPMAT</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+<span class="n">EXCLUDE_GAMMA_ACOUSTIC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="thermal-displacements">
@@ -1312,6 +1327,10 @@ using very dense sampling mesh) are sampled to avoid divergence. <code class="do
 where the phonons are considered in the summation. The projection is applied
 along arbitrary direction using <code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code> tag
 (<a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>).</p>
+<p>The three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> can be excluded by
+<code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code> (<a class="reference internal" href="#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a>) instead of <code class="docutils literal notranslate"><span class="pre">FMIN</span></code>.
+This tag excludes only these three modes. The modes with low frequencies at the
+other q-points stay in the summation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code> tags are used to control temperature points at which the
 thermal displacements are calculated.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code> is not written out from phonopy-1.11.14.</p>
@@ -1337,6 +1356,10 @@ set when q-points at <span class="math notranslate nohighlight">\(\Gamma\)</span
 using very dense sampling mesh) are sampled to avoid divergence. <code class="docutils literal notranslate"><span class="pre">FMAX</span></code> tag
 (<code class="docutils literal notranslate"><span class="pre">--fmax</span></code> option) can be used to specify an upper bound of phonon frequencies
 where the phonons are considered in the summation.</p>
+<p>The three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> can be excluded by
+<code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code> (<a class="reference internal" href="#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a>) instead of <code class="docutils literal notranslate"><span class="pre">FMIN</span></code>.
+This tag excludes only these three modes. The modes with low frequencies at the
+other q-points stay in the summation.</p>
 <p>The 3x3 matrix restricts distribution of each atom around the equilibrium
 position to be ellipsoid. But the distribution is not necessarily to be so.</p>
 <p><code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code> tags are used to control temperature points at which the
@@ -1770,6 +1793,31 @@ shown but not at non-<span class="math notranslate nohighlight">\(\Gamma\)</span
 </pre></div>
 </div>
 </section>
+<section id="irreps-symmetry-adapted">
+<span id="irreps-symmetry-adapted-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code><a class="headerlink" href="#irreps-symmetry-adapted" title="Link to this heading">#</a></h3>
+<p>When this tag is <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code>, the degenerate bands in the <code class="docutils literal notranslate"><span class="pre">IRREPS</span></code> calculation are
+found from the symmetry of the <em>q</em>-point, and not from how close their
+frequencies are. The default is <code class="docutils literal notranslate"><span class="pre">.FALSE.</span></code>.</p>
+<p>By default, bands whose frequencies differ by less than the tolerance given as
+the fourth value of <code class="docutils literal notranslate"><span class="pre">IRREPS</span></code> are taken as degenerate. Small numerical errors in
+the force constants can split bands that must be degenerate by symmetry, and
+two bands of different irreducible representations can have nearly the same
+frequency near a band crossing. In both cases the characters of the bands are
+wrong. The three acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> are a common example, because
+their frequencies are small numbers of either sign.</p>
+<p>With this tag, phonopy decomposes the eigenvector space by the representation
+of the little group of <em>q</em>, including time reversal, and the size of each
+degenerate set is the dimension of an irreducible representation. The fourth
+value of <code class="docutils literal notranslate"><span class="pre">IRREPS</span></code> is not used. Bands that are degenerate only together with time
+reversal, as on the Brillouin-zone boundary of some nonsymmorphic space groups,
+are found as one set. The equations are given in <a class="reference internal" href="symmetry-adapted-modes.html#symmetry-adapted-modes"><span class="std std-ref">Symmetry-adapted phonon modes</span></a>.</p>
+<p>This tag cannot be used together with <code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code> (<a class="reference internal" href="#q-direction-tag"><span class="std std-ref">Q_DIRECTION</span></a>)
+at <span class="math notranslate nohighlight">\(\Gamma\)</span>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>
+<span class="n">IRREPS_SYMMETRY_ADAPTED</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
 <section id="little-cogroup">
 <span id="little-cogroup-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code><a class="headerlink" href="#little-cogroup" title="Link to this heading">#</a></h3>
 <p>Show irreps of little co-group (point-group of wavevector) instead of little
@@ -2079,6 +2127,7 @@ file.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#characters-of-irreducible-representations">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps-symmetry-adapted"><code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
 </ul>
 </li>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>phonopy.api_phonopy &#8212; Phonopy v.4.7.0</title>
+    <title>phonopy.api_phonopy &#8212; Phonopy v.4.7.2</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=3a5dd307"></script>
+    <script src="../../_static/documentation_options.js?v=96d5d17c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -532,7 +532,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.7.0</p>
+    <p class="title logo__title">Phonopy v.4.7.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -592,6 +592,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../migration-v4.html">Migrating from phonopy v3 to v4</a></li>
@@ -3497,6 +3498,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">exclude_gamma_acoustic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalDisplacements</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Run thermal displacements calculation.</span>
 
@@ -3515,6 +3517,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        freq_min, freq_max : float, optional</span>
 <span class="sd">            Only phonon frequencies between ``freq_min`` and</span>
 <span class="sd">            ``freq_max`` are included. Default is None (all phonons).</span>
+<span class="sd">        exclude_gamma_acoustic : bool, optional</span>
+<span class="sd">            If True, exclude the three acoustic modes at Gamma, taken as the</span>
+<span class="sd">            three modes at Gamma with the smallest absolute frequencies. If</span>
+<span class="sd">            False, they are included when their frequencies are larger than</span>
+<span class="sd">            ``freq_min``. See ``run_thermal_properties``. Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3546,9 +3553,15 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">projection_direction</span><span class="o">=</span><span class="n">projection_direction</span><span class="p">,</span>
                 <span class="n">freq_min</span><span class="o">=</span><span class="n">freq_min</span><span class="p">,</span>
                 <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">,</span>
+                <span class="n">exclude_gamma_acoustic</span><span class="o">=</span><span class="n">exclude_gamma_acoustic</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">td</span> <span class="o">=</span> <span class="n">ThermalDisplacements</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="p">,</span> <span class="n">freq_min</span><span class="o">=</span><span class="n">freq_min</span><span class="p">,</span> <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">)</span>
+            <span class="n">td</span> <span class="o">=</span> <span class="n">ThermalDisplacements</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="p">,</span>
+                <span class="n">freq_min</span><span class="o">=</span><span class="n">freq_min</span><span class="p">,</span>
+                <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">,</span>
+                <span class="n">exclude_gamma_acoustic</span><span class="o">=</span><span class="n">exclude_gamma_acoustic</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">temperatures</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">td</span><span class="o">.</span><span class="n">set_temperature_range</span><span class="p">(</span><span class="n">t_min</span><span class="p">,</span> <span class="n">t_max</span><span class="p">,</span> <span class="n">t_step</span><span class="p">)</span>
@@ -3622,6 +3635,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">temperatures</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">freq_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">exclude_gamma_acoustic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ThermalDisplacementMatrices</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Run thermal displacement matrices calculation.</span>
 
@@ -3637,6 +3651,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Temperature points where thermal properties are calculated.</span>
 <span class="sd">            When this is set, t_min, t_max, and t_step are ignored.</span>
 <span class="sd">            Default is None.</span>
+<span class="sd">        exclude_gamma_acoustic : bool, optional</span>
+<span class="sd">            If True, exclude the three acoustic modes at Gamma, taken as the</span>
+<span class="sd">            three modes at Gamma with the smallest absolute frequencies. If</span>
+<span class="sd">            False, they are included when their frequencies are larger than</span>
+<span class="sd">            ``freq_min``. See ``run_thermal_properties``. Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3666,6 +3685,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">freq_min</span><span class="o">=</span><span class="n">freq_min</span><span class="p">,</span>
             <span class="n">freq_max</span><span class="o">=</span><span class="n">freq_max</span><span class="p">,</span>
             <span class="n">lattice</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">exclude_gamma_acoustic</span><span class="o">=</span><span class="n">exclude_gamma_acoustic</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">temperatures</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -3926,6 +3946,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">is_little_cogroup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">nac_q_direction</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">degeneracy_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">symmetry_adapted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IrReps</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Identify ir-reps of phonon modes.</span>
 
@@ -3941,6 +3962,14 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            ``q_direction / norm(q_direction)`` is computed and used. This</span>
 <span class="sd">            parameter is activated only at q=(0, 0, 0).</span>
 <span class="sd">            ``shape=(3,)``, ``dtype='double'``.</span>
+<span class="sd">        degeneracy_tolerance : float, optional</span>
+<span class="sd">            Frequency difference within which bands are taken as degenerate.</span>
+<span class="sd">            Not used when ``symmetry_adapted`` is True.</span>
+<span class="sd">        symmetry_adapted : bool, optional</span>
+<span class="sd">            When True, degenerate bands are determined from the</span>
+<span class="sd">            representation of the little group of q with time reversal by</span>
+<span class="sd">            ``SymmetryAdaptedModes``, instead of from the closeness of</span>
+<span class="sd">            frequencies.  Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3961,6 +3990,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">nac_q_direction</span><span class="o">=</span><span class="n">nac_q_direction</span><span class="p">,</span>
             <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span><span class="p">,</span>
             <span class="n">degeneracy_tolerance</span><span class="o">=</span><span class="n">degeneracy_tolerance</span><span class="p">,</span>
+            <span class="n">symmetry_adapted</span><span class="o">=</span><span class="n">symmetry_adapted</span><span class="p">,</span>
             <span class="n">log_level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_level</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_irreps</span></div>

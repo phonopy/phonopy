@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Migrating toward phonopy v5 &#8212; Phonopy v.4.7.0</title>
+    <title>Migrating toward phonopy v5 &#8212; Phonopy v.4.7.2</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=3a5dd307"></script>
+    <script src="_static/documentation_options.js?v=96d5d17c"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.7.0</p>
+    <p class="title logo__title">Phonopy v.4.7.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -241,6 +241,7 @@
 <li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
@@ -766,6 +767,18 @@ file:</p>
 when an acoustic mode at <span class="math notranslate nohighlight">\(\Gamma\)</span> enters the sums. To keep the
 v4.x result after v5.0, use <code class="docutils literal notranslate"><span class="pre">--no-exclude-gamma-acoustic</span></code>,
 <code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> or <code class="docutils literal notranslate"><span class="pre">exclude_gamma_acoustic=False</span></code>.</p>
+<p>The same option applies to the thermal displacements and the thermal
+displacement matrices: <code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">--td</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">--tdm</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_displacements</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_displacement_matrices</span></code>. It is off by default in
+v4.x for them too, and will be on by default in v5.0. With the
+default <code class="docutils literal notranslate"><span class="pre">FMIN</span></code> of 0, an acoustic mode at <span class="math notranslate nohighlight">\(\Gamma\)</span> with a small
+positive frequency enters these sums and makes the result meaningless.
+The warning described above is not printed for them.</p>
+<p>A calculation that sets <code class="docutils literal notranslate"><span class="pre">FMIN</span></code> to a small value, such as 0.01 THz,
+already leaves out the acoustic modes at <span class="math notranslate nohighlight">\(\Gamma\)</span> when their
+frequencies are smaller than <code class="docutils literal notranslate"><span class="pre">FMIN</span></code>. The option on gives the same result
+for such a calculation.</p>
 </section>
 <section id="changed-default-averaged-tetrahedra-for-the-electronic-free-energy">
 <h2><a class="toc-backref" href="#id10" role="doc-backlink">Changed default: averaged tetrahedra for the electronic free energy</a><a class="headerlink" href="#changed-default-averaged-tetrahedra-for-the-electronic-free-energy" title="Link to this heading">#</a></h2>

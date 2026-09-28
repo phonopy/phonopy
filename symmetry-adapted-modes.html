@@ -1,0 +1,1001 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Symmetry-adapted phonon modes &#8212; Phonopy v.4.7.2</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="_static/documentation_options.js?v=96d5d17c"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=8b0727dd"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'symmetry-adapted-modes';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="How to cite phonopy" href="citation.html" />
+    <link rel="prev" title="Formulations" href="formulation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.7" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.7.2</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Symmetry-adapted phonon modes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v5.html">Migrating toward phonopy v5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/symmetry-adapted-modes.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Symmetry-adapted phonon modes</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notation">Notation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phase-convention-of-the-dynamical-matrix">Phase convention of the dynamical matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#little-group-of-q">Little group of q</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#representation-matrix">Representation matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetrized-geometry">Symmetrized geometry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#decomposition-into-degenerate-sets">Decomposition into degenerate sets</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-eigenspaces-of-x-are-irreducible">Why the eigenspaces of X are irreducible</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remarks">Remarks</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="symmetry-adapted-phonon-modes">
+<span id="symmetry-adapted-modes"></span><h1>Symmetry-adapted phonon modes<a class="headerlink" href="#symmetry-adapted-phonon-modes" title="Link to this heading">#</a></h1>
+<p>This page gives the equations that <code class="docutils literal notranslate"><span class="pre">phonopy/phonon/symmetry_adapted_modes.py</span></code>
+implements. The module takes the dynamical matrix at one q-point and returns the
+phonon frequencies, the eigenvectors and the degenerate sets. The degenerate
+sets are decided by the symmetry of the q-point, including time reversal.
+Closeness of frequencies is not used.</p>
+<p>The module is used by the irreducible-representation calculation when the
+<code class="docutils literal notranslate"><span class="pre">IRREPS_SYMMETRY_ADAPTED</span></code> tag (<a class="reference internal" href="setting-tags.html#irreps-symmetry-adapted-tag"><span class="std std-ref">IRREPS_SYMMETRY_ADAPTED</span></a>) is <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code>,
+the <code class="docutils literal notranslate"><span class="pre">--irreps-symmetry-adapted</span></code> option is given, or <code class="docutils literal notranslate"><span class="pre">Phonopy.run_irreps</span></code> is
+called with <code class="docutils literal notranslate"><span class="pre">symmetry_adapted=True</span></code>.</p>
+<p>Frequencies are a poor guide to degeneracy. The three acoustic modes at
+<span class="math notranslate nohighlight">\(\Gamma\)</span> of a crystal with space group P2 have frequencies that differ by
+a small amount after the force constants are symmetrized, and a frequency
+tolerance can either merge them or split a two-dimensional representation. The
+representation of the little group of q separates the two cases, because modes
+that belong to different representations never mix under the symmetry
+operations.</p>
+<section id="notation">
+<h2>Notation<a class="headerlink" href="#notation" title="Link to this heading">#</a></h2>
+<p>The symbols on this page are defined here and are used only here.</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(N\)</span> is the number of atoms in the primitive cell. The dynamical matrix
+is a <span class="math notranslate nohighlight">\(3N\times3N\)</span> matrix.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{r}(jl)=\mathbf{r}(l)+\mathbf{r}_{j0}\)</span> is the position of atom
+<span class="math notranslate nohighlight">\(j\)</span> in unit cell <span class="math notranslate nohighlight">\(l\)</span>. <span class="math notranslate nohighlight">\(\mathbf{r}(l)\)</span> is the lattice point
+and <span class="math notranslate nohighlight">\(\mathbf{r}_{j0}\)</span> is the position of the atom relative to the lattice
+point.</p></li>
+<li><p><span class="math notranslate nohighlight">\(L=(\mathbf{a}_1\ \mathbf{a}_2\ \mathbf{a}_3)\)</span> is the matrix whose
+columns are the basis vectors. In phonopy, <code class="docutils literal notranslate"><span class="pre">primitive.cell</span></code> stores the basis
+vectors as rows, so <span class="math notranslate nohighlight">\(L\)</span> is <code class="docutils literal notranslate"><span class="pre">primitive.cell.T</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(x_j\)</span> is the position of atom <span class="math notranslate nohighlight">\(j\)</span> in crystallographic coordinates
+(a column vector), so that <span class="math notranslate nohighlight">\(\mathbf{r}_{j0}=Lx_j\)</span>. It is row
+<span class="math notranslate nohighlight">\(j\)</span> of <code class="docutils literal notranslate"><span class="pre">primitive.scaled_positions</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tilde q\)</span> is the q-point in crystallographic coordinates of the
+reciprocal basis vectors (a row vector). It is the <code class="docutils literal notranslate"><span class="pre">qpoint</span></code> argument. The
+reciprocal basis vectors <span class="math notranslate nohighlight">\(\mathbf{b}_k\)</span> satisfy
+<span class="math notranslate nohighlight">\(\mathbf{a}_i\cdot\mathbf{b}_k=2\pi\delta_{ik}\)</span>, and
+<span class="math notranslate nohighlight">\(\mathbf{q}\cdot\mathbf{r}_{j0}=2\pi\,\tilde q\,x_j\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{G}\)</span> is a reciprocal lattice vector. Its crystallographic
+coordinates <span class="math notranslate nohighlight">\(\tilde G\)</span> are integers.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathrm{S}=\{\mathrm{R}|\tau\}\)</span> is a space-group operation,
+<span class="math notranslate nohighlight">\(\mathbf{r}\mapsto\mathrm{R}\mathbf{r}+\tau\)</span>, with the rotation
+<span class="math notranslate nohighlight">\(\mathrm{R}\)</span> and the translation <span class="math notranslate nohighlight">\(\tau\)</span> in Cartesian coordinates.
+spglib returns the integer matrix <span class="math notranslate nohighlight">\(\tilde R\)</span> and the translation
+<span class="math notranslate nohighlight">\(t\)</span> in crystallographic coordinates. They are related by
+<span class="math notranslate nohighlight">\(\mathrm{R}=L\tilde RL^{-1}\)</span> and <span class="math notranslate nohighlight">\(\tau=Lt\)</span>.</p></li>
+<li><p>The rotated q-point <span class="math notranslate nohighlight">\(\mathrm{R}\mathbf{q}\)</span> has the crystallographic
+coordinates <span class="math notranslate nohighlight">\(\tilde q\tilde R^{-1}\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Delta(\mathbf{L})\)</span> is 1 when <span class="math notranslate nohighlight">\(\mathbf{L}\)</span> is a lattice vector
+and 0 otherwise.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_{\mathrm{S}}(j')=j\)</span> is the atom to which <span class="math notranslate nohighlight">\(\mathrm{S}\)</span> sends
+atom <span class="math notranslate nohighlight">\(j'\)</span>, defined by
+<span class="math notranslate nohighlight">\(\Delta(\mathbf{r}_{j0}-\mathrm{S}\mathbf{r}_{j'0})=1\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Theta\)</span> is complex conjugation.</p></li>
+</ul>
+</section>
+<section id="phase-convention-of-the-dynamical-matrix">
+<h2>Phase convention of the dynamical matrix<a class="headerlink" href="#phase-convention-of-the-dynamical-matrix" title="Link to this heading">#</a></h2>
+<p>phonopy builds the dynamical matrix with a phase that contains the atomic
+positions. This convention is called C-type:</p>
+<div class="math notranslate nohighlight">
+\[D^{\mathrm{C}}_{\alpha\beta}(jj',\mathbf{q})=\frac{1}{\sqrt{m_jm_{j'}}}
+\sum_{l'}\Phi_{\alpha\beta}(j0,j'l')
+\exp\bigl(i\mathbf{q}\cdot[\mathbf{r}(j'l')-\mathbf{r}(j0)]\bigr).\]</div>
+<p>The eigenvectors <span class="math notranslate nohighlight">\(\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})\)</span> satisfy
+<span class="math notranslate nohighlight">\(D^{\mathrm{C}}(\mathbf{q})\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})=\omega_\nu^2\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})\)</span>,
+and the atomic displacements are proportional to
+<span class="math notranslate nohighlight">\(e^{\mathrm{C}}_\alpha(j,\mathbf{q})\exp(i\mathbf{q}\cdot\mathbf{r}(jl))\)</span>.
+<code class="docutils literal notranslate"><span class="pre">symmetry_adapted_modes.py</span></code> expects a C-type dynamical matrix and returns C-type eigenvectors.</p>
+<p>The other common convention puts only the lattice vectors in the phase. It is
+called D-type:</p>
+<div class="math notranslate nohighlight">
+\[D^{\mathrm{D}}_{\alpha\beta}(jj',\mathbf{q})=\frac{1}{\sqrt{m_jm_{j'}}}
+\sum_{l'}\Phi_{\alpha\beta}(j0,j'l')
+\exp\bigl(i\mathbf{q}\cdot[\mathbf{r}(l')-\mathbf{r}(0)]\bigr).\]</div>
+<p><code class="docutils literal notranslate"><span class="pre">symmetry_adapted_modes.py</span></code> does not use the D-type matrix. The D-type matrix is defined here
+because <code class="docutils literal notranslate"><span class="pre">RandomDisplacements</span></code> uses it internally, and a D-type matrix must not
+be passed to <code class="docutils literal notranslate"><span class="pre">symmetry_adapted_modes.py</span></code>.</p>
+<p>Let <span class="math notranslate nohighlight">\(V(\mathbf{q})\)</span> be the <span class="math notranslate nohighlight">\(3N\times3N\)</span> diagonal matrix</p>
+<div class="math notranslate nohighlight">
+\[V(\mathbf{q})=\operatorname{diag}\bigl(
+e^{i\mathbf{q}\cdot\mathbf{r}_{10}},e^{i\mathbf{q}\cdot\mathbf{r}_{10}},e^{i\mathbf{q}\cdot\mathbf{r}_{10}},
+\ldots,
+e^{i\mathbf{q}\cdot\mathbf{r}_{N0}},e^{i\mathbf{q}\cdot\mathbf{r}_{N0}},e^{i\mathbf{q}\cdot\mathbf{r}_{N0}}
+\bigr),
+\qquad
+V_{j\alpha,j'\beta}(\mathbf{q})=e^{i\mathbf{q}\cdot\mathbf{r}_{j0}}\,\delta_{jj'}\delta_{\alpha\beta}.\]</div>
+<p>Each atom <span class="math notranslate nohighlight">\(j\)</span> has the same factor on its three Cartesian components. The
+two types are related by</p>
+<div class="math notranslate nohighlight">
+\[D^{\mathrm{C}}(\mathbf{q})=V^\dagger(\mathbf{q})\,D^{\mathrm{D}}(\mathbf{q})\,V(\mathbf{q}),
+\qquad
+\mathbf{e}^{\mathrm{D}}_\nu(\mathbf{q})=V(\mathbf{q})\,\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q}).\]</div>
+<p>The D-type matrix is periodic in <span class="math notranslate nohighlight">\(\mathbf{q}\)</span>,
+<span class="math notranslate nohighlight">\(D^{\mathrm{D}}(\mathbf{q}+\mathbf{G})=D^{\mathrm{D}}(\mathbf{q})\)</span>, because
+<span class="math notranslate nohighlight">\(e^{i\mathbf{G}\cdot\mathbf{r}(l')}=1\)</span>. The C-type matrix is not periodic.
+Writing the same displacement pattern with the label
+<span class="math notranslate nohighlight">\(\mathbf{q}+\mathbf{G}\)</span> or with the label <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> gives</p>
+<div class="math notranslate nohighlight" id="equation-symmodes-ec-shift">
+<span class="eqno">(1)<a class="headerlink" href="#equation-symmodes-ec-shift" title="Link to this equation">#</a></span>\[\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})
+=V(\mathbf{G})\,\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q}+\mathbf{G}),
+\qquad
+D^{\mathrm{C}}(\mathbf{q})
+=V(\mathbf{G})\,D^{\mathrm{C}}(\mathbf{q}+\mathbf{G})\,V^\dagger(\mathbf{G}).\]</div>
+<p>The factor <span class="math notranslate nohighlight">\(e^{i\mathbf{G}\cdot\mathbf{r}_{j0}}\)</span> differs from atom to atom,
+so it is not an overall phase.</p>
+<p>The force constants are real. Therefore the dynamical matrix satisfies</p>
+<div class="math notranslate nohighlight" id="equation-symmodes-dc-tr">
+<span class="eqno">(2)<a class="headerlink" href="#equation-symmodes-dc-tr" title="Link to this equation">#</a></span>\[D^{\mathrm{C}}(\mathbf{q})^*=D^{\mathrm{C}}(-\mathbf{q}),\]</div>
+<p>and the complex conjugate of an eigenvector at <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is an
+eigenvector at <span class="math notranslate nohighlight">\(-\mathbf{q}\)</span>. This is time-reversal symmetry.</p>
+</section>
+<section id="little-group-of-q">
+<span id="symmodes-little-group-of-q"></span><h2>Little group of q<a class="headerlink" href="#little-group-of-q" title="Link to this heading">#</a></h2>
+<p>The little group of <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is the set of space-group operations
+<span class="math notranslate nohighlight">\(\mathrm{S}\)</span> with <span class="math notranslate nohighlight">\(\mathrm{R}\mathbf{q}=\mathbf{q}+\mathbf{G}\)</span>. The
+module keeps one operation for each rotation, as spglib returns them for the
+primitive cell. Lattice translations act on an eigenvector only as an overall
+phase, so these representative operations are enough.</p>
+<p>Time reversal adds operations. When
+<span class="math notranslate nohighlight">\(\mathrm{R}(-\mathbf{q})=\mathbf{q}+\mathbf{G}\)</span>, the product
+<span class="math notranslate nohighlight">\(\mathrm{S}\Theta\)</span> also leaves <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> unchanged.
+<span class="math notranslate nohighlight">\(\mathrm{S}\Theta\)</span> is antiunitary: it acts on an eigenvector as a matrix
+times the complex conjugate.</p>
+<p>Both kinds are written with a sign <span class="math notranslate nohighlight">\(\eta\)</span>. <span class="math notranslate nohighlight">\(\eta=+1\)</span> for a unitary
+operation and <span class="math notranslate nohighlight">\(\eta=-1\)</span> for an antiunitary one. An operation belongs to the
+little group when</p>
+<div class="math notranslate nohighlight" id="equation-symmodes-little-group">
+<span class="eqno">(3)<a class="headerlink" href="#equation-symmodes-little-group" title="Link to this equation">#</a></span>\[\mathrm{R}(\eta\mathbf{q})=\mathbf{q}+\mathbf{G}_{\mathrm{S}},
+\qquad\text{or}\qquad
+\eta\,\tilde q\tilde R^{-1}-\tilde q\in\mathbb{Z}^3.\]</div>
+<p><span class="math notranslate nohighlight">\(G_{\mathbf{q}}\)</span> denotes the unitary operations and
+<span class="math notranslate nohighlight">\(A_{\mathbf{q}}\)</span> the antiunitary ones.
+<code class="docutils literal notranslate"><span class="pre">get_little_group_operations</span></code> returns <span class="math notranslate nohighlight">\(G_{\mathbf{q}}\)</span> first and then
+<span class="math notranslate nohighlight">\(A_{\mathbf{q}}\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(G_{\mathbf{q}}\)</span> has one operation per rotation, so
+<span class="math notranslate nohighlight">\(|G_{\mathbf{q}}|\)</span> is the order of the point group of the little group.
+It divides the order of the point group of the crystal, which is at most 48.
+At a general q-point, <span class="math notranslate nohighlight">\(G_{\mathbf{q}}\)</span> has only the identity.</p>
+<p><span class="math notranslate nohighlight">\(|A_{\mathbf{q}}|\)</span> is either zero or <span class="math notranslate nohighlight">\(|G_{\mathbf{q}}|\)</span>. When one
+operation <span class="math notranslate nohighlight">\(\mathrm{S}_0\)</span> sends <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> to
+<span class="math notranslate nohighlight">\(-\mathbf{q}+\mathbf{G}\)</span>, the antiunitary operations are exactly
+<span class="math notranslate nohighlight">\(\mathrm{S}_0\mathrm{S}\Theta\)</span> with <span class="math notranslate nohighlight">\(\mathrm{S}\in G_{\mathbf{q}}\)</span>.
+For any <span class="math notranslate nohighlight">\(\mathrm{S}'\Theta\)</span> in <span class="math notranslate nohighlight">\(A_{\mathbf{q}}\)</span>, the product
+<span class="math notranslate nohighlight">\(\mathrm{S}_0^{-1}\mathrm{S}'\)</span> leaves <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> unchanged and is
+therefore in <span class="math notranslate nohighlight">\(G_{\mathbf{q}}\)</span>. When no such <span class="math notranslate nohighlight">\(\mathrm{S}_0\)</span> exists,
+<span class="math notranslate nohighlight">\(A_{\mathbf{q}}\)</span> is empty.</p>
+<ul class="simple">
+<li><p>In a crystal with inversion, the inversion is such an <span class="math notranslate nohighlight">\(\mathrm{S}_0\)</span>
+at every q-point, and <span class="math notranslate nohighlight">\(|A_{\mathbf{q}}|=|G_{\mathbf{q}}|\)</span>.</p></li>
+<li><p>At a q-point with <span class="math notranslate nohighlight">\(-\mathbf{q}=\mathbf{q}+\mathbf{G}\)</span>, such as
+<span class="math notranslate nohighlight">\(\Gamma\)</span> and the points with half-integer coordinates, the identity is
+such an <span class="math notranslate nohighlight">\(\mathrm{S}_0\)</span>, and <span class="math notranslate nohighlight">\(|A_{\mathbf{q}}|=|G_{\mathbf{q}}|\)</span>.</p></li>
+<li><p>In a crystal without inversion, at a q-point where <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> and
+<span class="math notranslate nohighlight">\(-\mathbf{q}\)</span> are not equivalent, <span class="math notranslate nohighlight">\(A_{\mathbf{q}}\)</span> is empty.</p></li>
+</ul>
+<p>The table lists values from the structures in <code class="docutils literal notranslate"><span class="pre">test/phonon/test_symmetry_adapted_modes.py</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Space group</p></th>
+<th class="head"><p>q-point</p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(|G_{\mathbf{q}}|\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(|A_{\mathbf{q}}|\)</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>P-43m</p></td>
+<td><p><span class="math notranslate nohighlight">\(\Gamma\)</span></p></td>
+<td><p>24</p></td>
+<td><p>24</p></td>
+</tr>
+<tr class="row-odd"><td><p>P-43m</p></td>
+<td><p>(0.1, 0.1, 0.1)</p></td>
+<td><p>6</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>Pa-3</p></td>
+<td><p><span class="math notranslate nohighlight">\(\Gamma\)</span></p></td>
+<td><p>24</p></td>
+<td><p>24</p></td>
+</tr>
+<tr class="row-odd"><td><p>P-3m1</p></td>
+<td><p>(1/3, 1/3, 0)</p></td>
+<td><p>6</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-even"><td><p>P222_1</p></td>
+<td><p>(0.2, 0.3, 0.5)</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>P222_1</p></td>
+<td><p>(0.2, 0.3, 0.4)</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>P-43m has no inversion, and along (0.1, 0.1, 0.1) the directions
+<span class="math notranslate nohighlight">\([111]\)</span> and <span class="math notranslate nohighlight">\([\bar1\bar1\bar1]\)</span> are not equivalent under its point
+group. At (0.2, 0.3, 0.5) of P222_1, the only unitary operation is the identity,
+and the one antiunitary operation makes every band doubly degenerate.</p>
+</section>
+<section id="representation-matrix">
+<h2>Representation matrix<a class="headerlink" href="#representation-matrix" title="Link to this heading">#</a></h2>
+<p>A space-group operation sends a C-type eigenvector at <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> to an
+eigenvector at <span class="math notranslate nohighlight">\(\mathrm{R}\mathbf{q}\)</span> by the <span class="math notranslate nohighlight">\(3N\times3N\)</span> matrix</p>
+<div class="math notranslate nohighlight" id="equation-symmodes-gamma">
+<span class="eqno">(4)<a class="headerlink" href="#equation-symmodes-gamma" title="Link to this equation">#</a></span>\[\Gamma^{\mathrm{C},\mathbf{q}}_{j\alpha,j'\beta}(\mathrm{S})
+=\mathrm{R}_{\alpha\beta}\exp(-i\,\mathrm{R}\mathbf{q}\cdot\tau)\,
+\Delta(\mathbf{r}_{j0}-\mathrm{S}\mathbf{r}_{j'0}),
+\qquad
+D^{\mathrm{C}}(\mathrm{R}\mathbf{q})
+=\Gamma^{\mathrm{C},\mathbf{q}}(\mathrm{S})\,D^{\mathrm{C}}(\mathbf{q})\,
+\Gamma^{\mathrm{C},\mathbf{q}}(\mathrm{S})^\dagger.\]</div>
+<p>The vector <span class="math notranslate nohighlight">\(\Gamma^{\mathrm{C},\mathbf{q}}(\mathrm{S})\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q})\)</span>
+is an eigenvector of <span class="math notranslate nohighlight">\(D^{\mathrm{C}}(\mathrm{R}\mathbf{q})\)</span> with the same
+eigenvalue <span class="math notranslate nohighlight">\(\omega_\nu^2\)</span>. It can differ from the eigenvector that a
+diagonalization at <span class="math notranslate nohighlight">\(\mathrm{R}\mathbf{q}\)</span> returns by an overall phase, or
+by a unitary rotation inside a degenerate subspace.</p>
+<p>For an operation of the little group, <span class="math notranslate nohighlight">\(\mathrm{R}(\eta\mathbf{q})\)</span> is
+<span class="math notranslate nohighlight">\(\mathbf{q}+\mathbf{G}_{\mathrm{S}}\)</span>, and Eq. <a class="reference internal" href="#equation-symmodes-ec-shift">(1)</a>
+brings the label back to <span class="math notranslate nohighlight">\(\mathbf{q}\)</span>. The representation matrix used in
+the module is</p>
+<div class="math notranslate nohighlight" id="equation-symmodes-t">
+<span class="eqno">(5)<a class="headerlink" href="#equation-symmodes-t" title="Link to this equation">#</a></span>\[T(\mathrm{S})=V(\mathbf{G}_{\mathrm{S}})\,\Gamma^{\mathrm{C},\eta\mathbf{q}}(\mathrm{S}).\]</div>
+<p>It acts on eigenvectors and on matrices as follows.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Operation</p></th>
+<th class="head"><p>Eigenvector</p></th>
+<th class="head"><p>Matrix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Unitary</p></td>
+<td><p><span class="math notranslate nohighlight">\(\mathbf{e}\mapsto T\mathbf{e}\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(M\mapsto TMT^\dagger\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Antiunitary</p></td>
+<td><p><span class="math notranslate nohighlight">\(\mathbf{e}\mapsto T\mathbf{e}^*\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(M\mapsto TM^*T^\dagger\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For an antiunitary operation, the complex conjugate moves the eigenvector from
+<span class="math notranslate nohighlight">\(\mathbf{q}\)</span> to <span class="math notranslate nohighlight">\(-\mathbf{q}\)</span> by Eq. <a class="reference internal" href="#equation-symmodes-dc-tr">(2)</a>,
+<span class="math notranslate nohighlight">\(\Gamma^{\mathrm{C},-\mathbf{q}}(\mathrm{S})\)</span> moves it to
+<span class="math notranslate nohighlight">\(\mathbf{q}+\mathbf{G}_{\mathrm{S}}\)</span>, and <span class="math notranslate nohighlight">\(V(\mathbf{G}_{\mathrm{S}})\)</span>
+brings the label back to <span class="math notranslate nohighlight">\(\mathbf{q}\)</span>. In both cases the dynamical matrix
+is unchanged:
+<span class="math notranslate nohighlight">\(D^{\mathrm{C}}(\mathbf{q})=TD^{\mathrm{C}}(\mathbf{q})T^\dagger\)</span> or
+<span class="math notranslate nohighlight">\(D^{\mathrm{C}}(\mathbf{q})=TD^{\mathrm{C}}(\mathbf{q})^*T^\dagger\)</span>.</p>
+<p>The matrix elements of <span class="math notranslate nohighlight">\(T\)</span> are</p>
+<div class="math notranslate nohighlight">
+\[T_{j\alpha,j'\beta}=\mathrm{R}_{\alpha\beta}\,
+\exp\bigl(i\,[\mathbf{G}_{\mathrm{S}}\cdot\mathbf{r}_{j0}-\mathbf{q}'\cdot\tau]\bigr)\,
+\Delta(\mathbf{r}_{j0}-\mathrm{S}\mathbf{r}_{j'0}),
+\qquad \mathbf{q}'=\mathrm{R}(\eta\mathbf{q})=\mathbf{q}+\mathbf{G}_{\mathrm{S}}.\]</div>
+<p>In crystallographic coordinates, <span class="math notranslate nohighlight">\(\tilde q'=\eta\,\tilde q\tilde R^{-1}\)</span>,
+and the phase of the element that moves atom <span class="math notranslate nohighlight">\(j'\)</span> to atom
+<span class="math notranslate nohighlight">\(j=\pi_{\mathrm{S}}(j')\)</span> is</p>
+<div class="math notranslate nohighlight" id="equation-symmodes-phase">
+<span class="eqno">(6)<a class="headerlink" href="#equation-symmodes-phase" title="Link to this equation">#</a></span>\[\exp\bigl(2\pi i\,[(\tilde q'-\tilde q)\,x_j-\tilde q'\,t]\bigr).\]</div>
+<p>This is <code class="docutils literal notranslate"><span class="pre">LittleGroupOperation.phases[j']</span></code>. The same phase can be written without
+<span class="math notranslate nohighlight">\(\tau\)</span>. With <span class="math notranslate nohighlight">\(\mathrm{S}\mathbf{r}_{j'0}=\mathbf{r}_{j0}+\mathbf{L}\)</span>,
+where <span class="math notranslate nohighlight">\(\mathbf{L}\)</span> is the lattice vector that brings the image back into
+the unit cell,</p>
+<div class="math notranslate nohighlight">
+\[T_{j\alpha,j'\beta}=\mathrm{R}_{\alpha\beta}\,
+\exp\bigl(-i\,\mathbf{q}\cdot(\mathrm{S}\mathbf{r}_{j'0}-\eta\,\mathbf{r}_{j'0})\bigr)\,
+\Delta(\mathbf{r}_{j0}-\mathrm{S}\mathbf{r}_{j'0}).\]</div>
+<p>For a unitary operation, <span class="math notranslate nohighlight">\(\mathrm{S}\mathbf{r}_{j'0}-\mathbf{r}_{j'0}\)</span> is
+the whole vector by which <span class="math notranslate nohighlight">\(\mathrm{S}\)</span> moves atom <span class="math notranslate nohighlight">\(j'\)</span>, including the
+lattice vector.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LittleGroupOperation</span></code> stores <span class="math notranslate nohighlight">\(T\)</span> without building the dense matrix.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Content</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">permutation[j']</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(\pi_{\mathrm{S}}(j')\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phases[j']</span></code></p></td>
+<td><p>Eq. <a class="reference internal" href="#equation-symmodes-phase">(6)</a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rotation_cartesian</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(\mathrm{R}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rotation</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(\tilde R\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">translation</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(t\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">is_antiunitary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> for <span class="math notranslate nohighlight">\(\eta=-1\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="symmetrized-geometry">
+<h2>Symmetrized geometry<a class="headerlink" href="#symmetrized-geometry" title="Link to this heading">#</a></h2>
+<p>The matrices <span class="math notranslate nohighlight">\(T\)</span> must form a group to round-off. Positions in an input
+file are rounded, for example a coordinate of one third written with eight
+digits, and the rounding breaks the group closure by a small amount. That amount
+can exceed the tolerance used to find degenerate eigenvalues in the next
+section, so the lattice and the positions are symmetrized before <span class="math notranslate nohighlight">\(T\)</span> is
+built. The sums below run over all <span class="math notranslate nohighlight">\(n_{\mathrm{op}}\)</span> operations of the
+space group, not only over the little group.</p>
+<p>The lattice is symmetrized through its metric tensor
+<span class="math notranslate nohighlight">\(g=L^{\mathsf{T}}L\)</span>, whose elements are
+<span class="math notranslate nohighlight">\(g_{ik}=\mathbf{a}_i\cdot\mathbf{a}_k\)</span>. The Cartesian rotation
+<span class="math notranslate nohighlight">\(\mathrm{R}=L\tilde RL^{-1}\)</span> is orthogonal exactly when
+<span class="math notranslate nohighlight">\(\tilde R^{\mathsf{T}}g\tilde R=g\)</span>, so the metric tensor is averaged over
+the rotations:</p>
+<div class="math notranslate nohighlight">
+\[g_{\mathrm{sym}}=\frac{1}{n_{\mathrm{op}}}\sum_s\tilde R_s^{\mathsf{T}}\,g\,\tilde R_s.\]</div>
+<p>The basis vectors are then changed through the polar decomposition of
+<span class="math notranslate nohighlight">\(L\)</span>. The polar decomposition writes <span class="math notranslate nohighlight">\(L=QP\)</span> with an orthogonal matrix
+<span class="math notranslate nohighlight">\(Q\)</span> and the symmetric positive-definite matrix
+<span class="math notranslate nohighlight">\(P=(L^{\mathsf{T}}L)^{1/2}=g^{1/2}\)</span>, so <span class="math notranslate nohighlight">\(Q=Lg^{-1/2}\)</span>. The rotation
+part <span class="math notranslate nohighlight">\(Q\)</span> is kept, and the stretch part <span class="math notranslate nohighlight">\(g^{1/2}\)</span> is replaced by
+<span class="math notranslate nohighlight">\(g_{\mathrm{sym}}^{1/2}\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[L_{\mathrm{sym}}=Q\,g_{\mathrm{sym}}^{1/2}=L\,g^{-1/2}\,g_{\mathrm{sym}}^{1/2}.\]</div>
+<p>The metric tensor of <span class="math notranslate nohighlight">\(L_{\mathrm{sym}}\)</span> is <span class="math notranslate nohighlight">\(g_{\mathrm{sym}}\)</span>, and
+<span class="math notranslate nohighlight">\(L_{\mathrm{sym}}\)</span> differs from <span class="math notranslate nohighlight">\(L\)</span> by an amount of the order of
+<span class="math notranslate nohighlight">\(g_{\mathrm{sym}}-g\)</span>. It is not in general the basis closest to <span class="math notranslate nohighlight">\(L\)</span>
+among those with the metric tensor <span class="math notranslate nohighlight">\(g_{\mathrm{sym}}\)</span>; that basis is given by the
+orthogonal Procrustes problem and differs from <span class="math notranslate nohighlight">\(L_{\mathrm{sym}}\)</span> when
+<span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(g_{\mathrm{sym}}\)</span> do not commute. The difference does not
+matter here, because only the orthogonality of the rotations is needed. With
+<span class="math notranslate nohighlight">\(L_{\mathrm{sym}}\)</span>, the Cartesian rotation
+<span class="math notranslate nohighlight">\(\mathrm{R}=L_{\mathrm{sym}}\tilde RL_{\mathrm{sym}}^{-1}\)</span> is orthogonal to
+round-off.</p>
+<p>Each position is replaced by the average of its images over the space group,
+which is the projection onto the totally symmetric part:</p>
+<div class="math notranslate nohighlight">
+\[\bar x_j=\frac{1}{n_{\mathrm{op}}}\sum_s
+\bigl[\tilde R_sx_{j'}+t_s+n_s\bigr],\qquad j'=\pi_s^{-1}(j),\]</div>
+<p>where the integer vector <span class="math notranslate nohighlight">\(n_s=\operatorname{rint}(x_j-\tilde R_sx_{j'}-t_s)\)</span>
+moves each image next to <span class="math notranslate nohighlight">\(x_j\)</span>. The translations <span class="math notranslate nohighlight">\(t_s\)</span> returned by
+spglib are used as they are. The dynamical matrix is computed from the original
+structure, and the difference is removed by the symmetrization of the dynamical
+matrix described below.</p>
+</section>
+<section id="decomposition-into-degenerate-sets">
+<h2>Decomposition into degenerate sets<a class="headerlink" href="#decomposition-into-degenerate-sets" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SymmetryAdaptedModes</span></code> finds the degenerate sets from the representation, then
+diagonalizes the dynamical matrix inside each of them.</p>
+<p>The group average of a <span class="math notranslate nohighlight">\(3N\times3N\)</span> matrix <span class="math notranslate nohighlight">\(M\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[\langle M\rangle=\frac{1}{|G_{\mathbf{q}}|+|A_{\mathbf{q}}|}
+\Bigl(\sum_{G_{\mathbf{q}}}T\,M\,T^\dagger+\sum_{A_{\mathbf{q}}}T\,M^*\,T^\dagger\Bigr).\]</div>
+<p>Since <span class="math notranslate nohighlight">\(|A_{\mathbf{q}}|\)</span> is either <span class="math notranslate nohighlight">\(|G_{\mathbf{q}}|\)</span> or zero (see
+<a class="reference internal" href="#symmodes-little-group-of-q"><span class="std std-ref">Little group of q</span></a>), the denominator
+<span class="math notranslate nohighlight">\(|G_{\mathbf{q}}|+|A_{\mathbf{q}}|\)</span> is <span class="math notranslate nohighlight">\(2|G_{\mathbf{q}}|\)</span> or
+<span class="math notranslate nohighlight">\(|G_{\mathbf{q}}|\)</span>. When <span class="math notranslate nohighlight">\(A_{\mathbf{q}}\)</span> is empty, the second sum is
+absent and time reversal adds no condition.</p>
+<p><span class="math notranslate nohighlight">\(\langle M\rangle\)</span> is the projection of <span class="math notranslate nohighlight">\(M\)</span> onto its totally
+symmetric part, that is, the Wigner projection operator for the totally
+symmetric irreducible representation, whose characters are 1 for all
+operations. This group average is also called the Reynolds operator. Unlike the
+projection operators for other irreducible representations, it needs no
+character table, and it can include the antiunitary operations.
+<span class="math notranslate nohighlight">\(\langle M\rangle\)</span> commutes with every operation of the little group. The
+steps are listed below.</p>
+<ol class="arabic simple">
+<li><p>A random Hermitian matrix <span class="math notranslate nohighlight">\(Y\)</span> is drawn with a fixed seed, and
+<span class="math notranslate nohighlight">\(X=\langle Y\rangle\)</span> is formed. The dynamical matrix is averaged in the
+same way, <span class="math notranslate nohighlight">\(D_{\mathrm{sym}}=\langle D^{\mathrm{C}}(\mathbf{q})\rangle\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(X\)</span> is diagonalized. Eigenvalues that differ by less than a relative
+tolerance are grouped, and each group of eigenvectors spans one subspace
+<span class="math notranslate nohighlight">\(U_k\)</span> (<span class="math notranslate nohighlight">\(3N\times d_k\)</span>). <span class="math notranslate nohighlight">\(X\)</span> commutes with the operations,
+so each subspace is invariant under them. For a random <span class="math notranslate nohighlight">\(Y\)</span>, each
+subspace carries one irreducible representation of the little group, or one
+pair of representations joined by time reversal. The reason is given in
+<a class="reference internal" href="#symmodes-why-irreducible"><span class="std std-ref">Why the eigenspaces of X are irreducible</span></a>.</p></li>
+<li><p>The character of subspace <span class="math notranslate nohighlight">\(k\)</span> is computed for the unitary operations,
+<span class="math notranslate nohighlight">\(\chi_k(\mathrm{S})=\operatorname{Tr}(U_k^\dagger T(\mathrm{S})U_k)\)</span>.
+Subspaces with the same dimension and the same characters carry the same
+representation and are collected into one type <span class="math notranslate nohighlight">\(\mu\)</span>. The type has
+<span class="math notranslate nohighlight">\(m_\mu\)</span> subspaces of dimension <span class="math notranslate nohighlight">\(d_\mu\)</span>.</p></li>
+<li><p>For each type, the subspaces are joined into
+<span class="math notranslate nohighlight">\(B_\mu=(U_{k_1},\ldots,U_{k_{m_\mu}})\)</span> (<span class="math notranslate nohighlight">\(3N\times m_\mu d_\mu\)</span>), and
+<span class="math notranslate nohighlight">\(B_\mu^\dagger D_{\mathrm{sym}}B_\mu\)</span> is diagonalized. Its eigenvalues
+come in runs of <span class="math notranslate nohighlight">\(d_\mu\)</span> equal values. Each run of <span class="math notranslate nohighlight">\(d_\mu\)</span>
+consecutive eigenvalues is one degenerate set.</p></li>
+<li><p>The sets of all types are sorted by eigenvalue, and the frequencies are
+<span class="math notranslate nohighlight">\(\operatorname{sgn}(\omega^2)\sqrt{|\omega^2|}\)</span> times the unit
+conversion factor.</p></li>
+</ol>
+<section id="why-the-eigenspaces-of-x-are-irreducible">
+<span id="symmodes-why-irreducible"></span><h3>Why the eigenspaces of X are irreducible<a class="headerlink" href="#why-the-eigenspaces-of-x-are-irreducible" title="Link to this heading">#</a></h3>
+<p>The goal of steps 1 and 2 is to split the <span class="math notranslate nohighlight">\(3N\)</span>-dimensional space of
+eigenvectors into subspaces that each carry one irreducible representation. A
+projection operator for each irreducible representation would do this, but it
+needs the character table of the little group. The random matrix
+<span class="math notranslate nohighlight">\(X\)</span> does the same without a character table.</p>
+<p><span class="math notranslate nohighlight">\(X\)</span> commutes with every operation, <span class="math notranslate nohighlight">\(TXT^\dagger=X\)</span>. If
+<span class="math notranslate nohighlight">\(X\mathbf{u}=\lambda\mathbf{u}\)</span>, then</p>
+<div class="math notranslate nohighlight">
+\[X(T\mathbf{u})=TX\mathbf{u}=\lambda\,T\mathbf{u},\]</div>
+<p>so <span class="math notranslate nohighlight">\(T\mathbf{u}\)</span> is an eigenvector with the same eigenvalue. Each
+eigenspace of <span class="math notranslate nohighlight">\(X\)</span> is therefore closed under all the operations.</p>
+<p>The eigenspaces are also irreducible when <span class="math notranslate nohighlight">\(X\)</span> is generic. By Schur’s
+lemma, a matrix that commutes with a unitary representation has the block form</p>
+<div class="math notranslate nohighlight">
+\[X=\bigoplus_\mu X_\mu\otimes I_{d_\mu},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu\)</span> runs over the irreducible representations, <span class="math notranslate nohighlight">\(d_\mu\)</span> is
+the dimension of <span class="math notranslate nohighlight">\(\mu\)</span>, and <span class="math notranslate nohighlight">\(X_\mu\)</span> is a Hermitian
+<span class="math notranslate nohighlight">\(m_\mu\times m_\mu\)</span> matrix, with <span class="math notranslate nohighlight">\(m_\mu\)</span> the number of times
+<span class="math notranslate nohighlight">\(\mu\)</span> appears in the <span class="math notranslate nohighlight">\(3N\)</span>-dimensional space. Each eigenvalue of
+<span class="math notranslate nohighlight">\(X_\mu\)</span> appears <span class="math notranslate nohighlight">\(d_\mu\)</span> times in <span class="math notranslate nohighlight">\(X\)</span>, and its eigenspace is one
+copy of <span class="math notranslate nohighlight">\(\mu\)</span>. Two copies merge into one eigenspace only when two
+eigenvalues coincide, either inside one <span class="math notranslate nohighlight">\(X_\mu\)</span> or between <span class="math notranslate nohighlight">\(X_\mu\)</span>
+and <span class="math notranslate nohighlight">\(X_\nu\)</span>. For a random <span class="math notranslate nohighlight">\(X\)</span> this happens with probability zero.</p>
+<p>The group average makes a random <span class="math notranslate nohighlight">\(X\)</span> of this form. Every matrix
+<span class="math notranslate nohighlight">\(X'\)</span> that commutes with the operations satisfies
+<span class="math notranslate nohighlight">\(\langle X'\rangle=X'\)</span>, so the average maps a random Hermitian
+<span class="math notranslate nohighlight">\(Y\)</span> onto a random element among all the commuting matrices.</p>
+<p>A small case shows the result. Two atoms on a line are exchanged by inversion,
+and <span class="math notranslate nohighlight">\(T\)</span> is the matrix that swaps them. The Hermitian matrices that commute
+with the swap have the form <span class="math notranslate nohighlight">\(\begin{pmatrix}a&amp;b\\b&amp;a\end{pmatrix}\)</span>. For any
+<span class="math notranslate nohighlight">\(a\)</span> and any <span class="math notranslate nohighlight">\(b\neq0\)</span>, the eigenvectors are
+<span class="math notranslate nohighlight">\((1,1)/\sqrt2\)</span> and <span class="math notranslate nohighlight">\((1,-1)/\sqrt2\)</span>, the mode symmetric under
+inversion and the mode antisymmetric under it. Each of them carries one
+irreducible representation.</p>
+<p>The dynamical matrix also commutes with the operations, but it is not generic.
+Accidental degeneracies, near-degeneracies close to a band crossing, and the
+small symmetry breaking from numerical noise in the force constants all make
+coincidences in its eigenvalues. The random <span class="math notranslate nohighlight">\(X\)</span> has none of these, so the
+subspaces are taken from <span class="math notranslate nohighlight">\(X\)</span>, and the dynamical matrix is diagonalized
+inside them in step 4.</p>
+<p><span class="math notranslate nohighlight">\(X\)</span> also commutes with the antiunitary operations,
+<span class="math notranslate nohighlight">\(TX^*T^\dagger=X\)</span>. When time reversal joins two unitary irreducible
+representations into one pair, <span class="math notranslate nohighlight">\(X\)</span> has equal eigenvalues on the two, and
+both lie in one eigenspace of dimension <span class="math notranslate nohighlight">\(2d_\mu\)</span>. The two bands that stick
+together on a Brillouin-zone boundary plane of a nonsymmorphic space group are
+found as one subspace in this way.</p>
+<p>Schur’s lemma covers the unitary operations. For the antiunitary ones, the
+statement that each eigenspace carries one pair was checked for the structures
+in <code class="docutils literal notranslate"><span class="pre">test/phonon/test_symmetry_adapted_modes.py</span></code> and is not proven here.</p>
+</section>
+<section id="remarks">
+<h3>Remarks<a class="headerlink" href="#remarks" title="Link to this heading">#</a></h3>
+<p>The size of a degenerate set is the dimension of a subspace, so no frequency
+tolerance enters. Characters are computed for the unitary operations only. An
+antiunitary operation multiplies a scalar by its complex conjugate, so the trace
+of its matrix depends on the basis and is not a character.</p>
+<p>The dynamical matrix must be C-type. A D-type matrix, as used internally by
+<code class="docutils literal notranslate"><span class="pre">RandomDisplacements</span></code>, is in general not left unchanged by <span class="math notranslate nohighlight">\(T\)</span> at a
+q-point other than <span class="math notranslate nohighlight">\(\Gamma\)</span>, and the module does not check this. Pass the matrix
+that <code class="docutils literal notranslate"><span class="pre">DynamicalMatrix.run</span></code> produces.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="formulation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Formulations</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="citation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How to cite phonopy</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notation">Notation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phase-convention-of-the-dynamical-matrix">Phase convention of the dynamical matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#little-group-of-q">Little group of q</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#representation-matrix">Representation matrix</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetrized-geometry">Symmetrized geometry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#decomposition-into-degenerate-sets">Decomposition into degenerate sets</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-eigenspaces-of-x-are-irreducible">Why the eigenspaces of X are irreducible</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remarks">Remarks</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

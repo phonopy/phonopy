@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.7.0</title>
+    <title>Change Log &#8212; Phonopy v.4.7.2</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=3a5dd307"></script>
+    <script src="_static/documentation_options.js?v=96d5d17c"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -180,7 +180,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.7.0</p>
+    <p class="title logo__title">Phonopy v.4.7.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -240,6 +240,7 @@
 <li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
@@ -398,6 +399,8 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-2">Sep-27-2026: Version 4.7.2</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-1">Sep-27-2026: Version 4.7.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-0">Sep-27-2026: Version 4.7.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-24-2026-version-4-6-0">Sep-24-2026: Version 4.6.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>
@@ -630,6 +633,27 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="sep-27-2026-version-4-7-2">
+<h2>Sep-27-2026: Version 4.7.2<a class="headerlink" href="#sep-27-2026-version-4-7-2" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Fix two tests that failed on Windows when acoustic modes at Gamma entered
+the thermal displacement matrices. The tests now set <code class="docutils literal notranslate"><span class="pre">FMIN</span></code>. No change in
+the calculations.</p></li>
+</ul>
+</section>
+<section id="sep-27-2026-version-4-7-1">
+<h2>Sep-27-2026: Version 4.7.1<a class="headerlink" href="#sep-27-2026-version-4-7-1" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">exclude_gamma_acoustic</span></code> (<code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code>, <code class="docutils literal notranslate"><span class="pre">--exclude-gamma-acoustic</span></code>)
+now also applies to the thermal displacements and the thermal displacement
+matrices (<code class="docutils literal notranslate"><span class="pre">TDISP</span></code>, <code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_displacements</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_displacement_matrices</span></code>). It is off by default in v4.x and
+will be on by default in v5.0. See <a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a>.</p></li>
+<li><p>Without this option, a <code class="docutils literal notranslate"><span class="pre">GammaAcousticWarning</span></code> is issued when an acoustic mode
+at Gamma enters the sums of the thermal displacements. With the default
+<code class="docutils literal notranslate"><span class="pre">FMIN</span></code> of 0, such a mode makes the thermal displacements meaningless.</p></li>
+</ul>
+</section>
 <section id="sep-27-2026-version-4-7-0">
 <h2>Sep-27-2026: Version 4.7.0<a class="headerlink" href="#sep-27-2026-version-4-7-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2787,6 +2811,8 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-2">Sep-27-2026: Version 4.7.2</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-1">Sep-27-2026: Version 4.7.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-0">Sep-27-2026: Version 4.7.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-24-2026-version-4-6-0">Sep-24-2026: Version 4.6.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-08-2026-version-4-5-0">Sep-08-2026: Version 4.5.0</a></li>

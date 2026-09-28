@@ -77,6 +77,7 @@ phonopy
 phonopy-init
 polymlp-sscha
 formulation
+symmetry-adapted-modes
 citation
 reference
 migration-v4
