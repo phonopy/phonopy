@@ -633,6 +633,13 @@ def _add_run_options(parser: argparse.ArgumentParser) -> None:
         help="Legacy style band structure pl",
     )
     parser.add_argument(
+        "--irreps-symmetry-adapted",
+        dest="irreps_symmetry_adapted",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Same as IRREPS_SYMMETRY_ADAPTED tag",
+    )
+    parser.add_argument(
         "--lcg",
         "--little-cogroup",
         dest="is_little_cogroup",
@@ -1274,6 +1281,7 @@ class PhonopyMockArgs:
     fc_symmetry: bool | None = None
     fc_spg_symmetry: bool | None = None
     filename: Sequence[os.PathLike | str] | None = None
+    fmin: float | None = None
     frequency_conversion_factor: float | None = None
     hdf5_compression: str | None = None
     import_ase_masses_iupac2016: bool | None = None

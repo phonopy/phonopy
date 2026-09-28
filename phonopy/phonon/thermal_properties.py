@@ -67,6 +67,9 @@ def mode_cv(
 class GammaAcousticWarning(UserWarning):
     """Issued about the acoustic modes at Gamma in the thermal-property sums.
 
+    Also issued for the sums of the thermal displacements, for the second
+    case only.
+
     Two cases. The acoustic frequencies at Gamma are far from zero, which
     means the force constants do not satisfy translational invariance. Or
     ``exclude_gamma_acoustic`` is off and an acoustic mode at Gamma with a

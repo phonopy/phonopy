@@ -253,6 +253,20 @@ when an acoustic mode at {math}`\Gamma` enters the sums. To keep the
 v4.x result after v5.0, use `--no-exclude-gamma-acoustic`,
 `EXCLUDE_GAMMA_ACOUSTIC = .FALSE.` or `exclude_gamma_acoustic=False`.
 
+The same option applies to the thermal displacements and the thermal
+displacement matrices: `phonopy --td`, `phonopy --tdm`,
+`Phonopy.run_thermal_displacements` and
+`Phonopy.run_thermal_displacement_matrices`. It is off by default in
+v4.x for them too, and will be on by default in v5.0. With the
+default `FMIN` of 0, an acoustic mode at {math}`\Gamma` with a small
+positive frequency enters these sums and makes the result meaningless.
+The warning described above is not printed for them.
+
+A calculation that sets `FMIN` to a small value, such as 0.01 THz,
+already leaves out the acoustic modes at {math}`\Gamma` when their
+frequencies are smaller than `FMIN`. The option on gives the same result
+for such a calculation.
+
 ## Changed default: averaged tetrahedra for the electronic free energy
 
 `phonopy-vasp-efe` and `phonopy-anisotropic-qha` integrate the

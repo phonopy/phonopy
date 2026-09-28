@@ -351,13 +351,18 @@ def test_run_methods_return_result_objects(ph_nacl: Phonopy):
     assert ph.run_total_dos() is ph.total_dos
     assert ph.run_projected_dos() is ph.projected_dos
     assert ph.run_thermal_properties() is ph.thermal_properties
-    assert ph.run_thermal_displacements() is ph.thermal_displacements
-    assert ph.run_thermal_displacement_matrices() is ph.thermal_displacement_matrices
+    td = ph.run_thermal_displacements(freq_min=1e-2)
+    assert td is ph.thermal_displacements
+    tdm = ph.run_thermal_displacement_matrices(freq_min=1e-2)
+    assert tdm is ph.thermal_displacement_matrices
     assert ph.run_moment() is ph.moment
     assert ph.run_modulations([2, 2, 2], [[[0.5, 0.5, 0.5], 3, 1, 0]]) is ph.modulation
     assert ph.run_irreps([0, 0, 0]) is ph.irreps
     dsf = ph.run_dynamic_structure_factor(
-        [[0.5, 0.5, 0.5]], 300, scattering_lengths={"Na": 3.63, "Cl": 9.5770}
+        [[0.5, 0.5, 0.5]],
+        300,
+        scattering_lengths={"Na": 3.63, "Cl": 9.5770},
+        freq_min=1e-2,
     )
     assert dsf is ph.dynamic_structure_factor
 

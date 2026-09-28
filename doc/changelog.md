@@ -2,6 +2,23 @@
 
 # Change Log
 
+## Sep-27-2026: Version 4.7.2
+
+- Fix two tests that failed on Windows when acoustic modes at Gamma entered
+  the thermal displacement matrices. The tests now set `FMIN`. No change in
+  the calculations.
+
+## Sep-27-2026: Version 4.7.1
+
+- `exclude_gamma_acoustic` (`EXCLUDE_GAMMA_ACOUSTIC`, `--exclude-gamma-acoustic`)
+  now also applies to the thermal displacements and the thermal displacement
+  matrices (`TDISP`, `TDISPMAT`, `Phonopy.run_thermal_displacements` and
+  `Phonopy.run_thermal_displacement_matrices`). It is off by default in v4.x and
+  will be on by default in v5.0. See {ref}`migration_v5`.
+- Without this option, a `GammaAcousticWarning` is issued when an acoustic mode
+  at Gamma enters the sums of the thermal displacements. With the default
+  `FMIN` of 0, such a mode makes the thermal displacements meaningless.
+
 ## Sep-27-2026: Version 4.7.0
 
 - Experimental `--symmetrize-tetrahedra` option of `phonopy-vasp-efe` and

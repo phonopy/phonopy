@@ -1332,7 +1332,13 @@ def _run_thermal_displacements(
         direction=p_direction,
         freq_min=settings.min_frequency,
         freq_max=settings.max_frequency,
+        exclude_gamma_acoustic=settings.exclude_gamma_acoustic,
     )
+    if log_level and settings.exclude_gamma_acoustic:
+        print(
+            "The three acoustic modes at Gamma are excluded from the sums "
+            "(EXCLUDE_GAMMA_ACOUSTIC)."
+        )
     phonon.write_yaml_thermal_displacements()
     if plot_conf["plot_graph"]:
         plot = phonon.plot_thermal_displacements(plot_conf["with_legend"])
@@ -1359,7 +1365,13 @@ def _run_thermal_displacement_matrices(
         temperatures=temperatures,
         freq_min=settings.min_frequency,
         freq_max=settings.max_frequency,
+        exclude_gamma_acoustic=settings.exclude_gamma_acoustic,
     )
+    if log_level and settings.exclude_gamma_acoustic:
+        print(
+            "The three acoustic modes at Gamma are excluded from the sums "
+            "(EXCLUDE_GAMMA_ACOUSTIC)."
+        )
     phonon.write_yaml_thermal_displacement_matrices()
     if t_cif is not None:
         phonon.write_thermal_displacement_matrix_to_cif(0)
@@ -1611,7 +1623,13 @@ def _run_irreps(phonon: Phonopy, settings: PhonopySettings, log_level: int) -> N
         is_little_cogroup=settings.is_little_cogroup,
         nac_q_direction=settings.nac_q_direction,
         degeneracy_tolerance=settings.irreps_tolerance,
+        symmetry_adapted=settings.irreps_symmetry_adapted,
     )
+    if log_level and settings.irreps_symmetry_adapted:
+        print(
+            "Degenerate bands are determined from the representation of the "
+            "little group of q (IRREPS_SYMMETRY_ADAPTED)."
+        )
     phonon.show_irreps(settings.show_irreps)
     phonon.write_yaml_irreps(settings.show_irreps)
 

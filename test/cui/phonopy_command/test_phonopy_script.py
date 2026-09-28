@@ -636,6 +636,7 @@ def test_tdm_cif():
                 filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
                 thermal_displacement_matrices_cif=1000,
                 mesh_numbers="5 5 5",
+                fmin=1e-2,
                 load_phonopy_yaml=True,
             )
             with pytest.raises(SystemExit) as excinfo:
@@ -964,6 +965,36 @@ def test_irreps():
             os.chdir(original_cwd)
 
 
+def test_irreps_symmetry_adapted(capsys: pytest.CaptureFixture[str]):
+    """Test IRREPS with IRREPS_SYMMETRY_ADAPTED."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            conf_file = pathlib.Path("irreps.conf")
+            conf_file.write_text("IRREPS = 0 0 0\nIRREPS_SYMMETRY_ADAPTED = .TRUE.\n")
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=conf_file,
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+            assert "IRREPS_SYMMETRY_ADAPTED" in capsys.readouterr().out
+
+            for created_filename in ("phonopy.yaml", "irreps.yaml", "irreps.conf"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists(), f"{created_filename} was not created"
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_thermal_displacements():
     """Test phonopy --thermal-displacements command."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -981,6 +1012,48 @@ def test_thermal_displacements():
             assert excinfo.value.code == 0
 
             for created_filename in ("phonopy.yaml", "thermal_displacements.yaml"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists(), f"{created_filename} was not created"
+                file_path.unlink()
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize(
+    "tag,output_filename",
+    [
+        ("TDISP", "thermal_displacements.yaml"),
+        ("TDISPMAT", "thermal_displacement_matrices.yaml"),
+    ],
+)
+def test_thermal_displacements_exclude_gamma_acoustic(
+    tag: str, output_filename: str, capsys: pytest.CaptureFixture[str]
+):
+    """Test EXCLUDE_GAMMA_ACOUSTIC with TDISP and TDISPMAT."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            conf_file = pathlib.Path("td.conf")
+            conf_file.write_text(
+                f"{tag} = .TRUE.\nEXCLUDE_GAMMA_ACOUSTIC = .TRUE.\nMESH = 5 5 5\n"
+                "TMIN = 100\nTMAX = 100\nTSTEP = 100\n"
+            )
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=conf_file,
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+            assert "EXCLUDE_GAMMA_ACOUSTIC" in capsys.readouterr().out
+
+            for created_filename in ("phonopy.yaml", output_filename, "td.conf"):
                 file_path = pathlib.Path(created_filename)
                 assert file_path.exists(), f"{created_filename} was not created"
                 file_path.unlink()
@@ -1835,6 +1908,7 @@ def _get_phonopy_args(
     create_force_sets_zero: list[str | os.PathLike] | None = None,
     fc_spg_symmetry: bool | None = None,
     filename: str | os.PathLike | None = None,
+    fmin: float | None = None,
     frequency_conversion_factor: float | None = None,
     hdf5_compression: str | None = None,
     import_ase_masses_iupac2016: bool | None = None,
@@ -1873,6 +1947,7 @@ def _get_phonopy_args(
         create_force_sets_zero=create_force_sets_zero,
         fc_spg_symmetry=fc_spg_symmetry,
         filename=_filename,
+        fmin=fmin,
         frequency_conversion_factor=frequency_conversion_factor,
         hdf5_compression=hdf5_compression,
         import_ase_masses_iupac2016=import_ase_masses_iupac2016,
