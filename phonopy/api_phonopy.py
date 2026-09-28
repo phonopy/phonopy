@@ -3060,6 +3060,7 @@ class Phonopy:
         is_little_cogroup: bool = False,
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
         degeneracy_tolerance: float | None = None,
+        symmetry_adapted: bool = False,
     ) -> IrReps:
         """Identify ir-reps of phonon modes.
 
@@ -3075,6 +3076,14 @@ class Phonopy:
             ``q_direction / norm(q_direction)`` is computed and used. This
             parameter is activated only at q=(0, 0, 0).
             ``shape=(3,)``, ``dtype='double'``.
+        degeneracy_tolerance : float, optional
+            Frequency difference within which bands are taken as degenerate.
+            Not used when ``symmetry_adapted`` is True.
+        symmetry_adapted : bool, optional
+            When True, degenerate bands are determined from the
+            representation of the little group of q with time reversal by
+            ``SymmetryAdaptedModes``, instead of from the closeness of
+            frequencies.  Default is False.
 
         Returns
         -------
@@ -3095,6 +3104,7 @@ class Phonopy:
             nac_q_direction=nac_q_direction,
             factor=self._unit_conversion_factor,
             degeneracy_tolerance=degeneracy_tolerance,
+            symmetry_adapted=symmetry_adapted,
             log_level=self._log_level,
         )
         return self._irreps

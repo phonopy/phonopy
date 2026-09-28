@@ -54,6 +54,7 @@ class Settings:
         self.frequency_scale_factor: float | None = None
         self.group_velocity_delta_q: float | None = None
         self.hdf5_compression: Literal["gzip", "lzf"] | int | None = "gzip"
+        self.irreps_symmetry_adapted: bool = False
         self.is_band_const_interval: bool = False
         self.is_diagonal_displacement: bool = True
         self.is_eigenvectors: bool = False
@@ -213,6 +214,12 @@ class ConfParser(Generic[TSettings]):
             if args.exclude_gamma_acoustic is not None:
                 self._confs["exclude_gamma_acoustic"] = (
                     ".true." if args.exclude_gamma_acoustic else ".false."
+                )
+
+        if "irreps_symmetry_adapted" in arg_list:
+            if args.irreps_symmetry_adapted is not None:
+                self._confs["irreps_symmetry_adapted"] = (
+                    ".true." if args.irreps_symmetry_adapted else ".false."
                 )
 
         if "fc_calculator" in arg_list:
@@ -617,6 +624,13 @@ class ConfParser(Generic[TSettings]):
                 elif confs["exclude_gamma_acoustic"].lower() == ".false.":
                     self._set_parameter("exclude_gamma_acoustic", False)
 
+            # Determine degenerate bands of irreps from the little group of q
+            if conf_key == "irreps_symmetry_adapted":
+                if confs["irreps_symmetry_adapted"].lower() == ".true.":
+                    self._set_parameter("irreps_symmetry_adapted", True)
+                elif confs["irreps_symmetry_adapted"].lower() == ".false.":
+                    self._set_parameter("irreps_symmetry_adapted", False)
+
             if conf_key == "fc_calculator":
                 self._set_parameter("fc_calculator", confs["fc_calculator"])
 
@@ -947,6 +961,10 @@ class ConfParser(Generic[TSettings]):
         # Set the frequencies of the acoustic modes at Gamma to zero
         if "exclude_gamma_acoustic" in params:
             settings.exclude_gamma_acoustic = params["exclude_gamma_acoustic"]
+
+        # Determine degenerate bands of irreps from the little group of q
+        if "irreps_symmetry_adapted" in params:
+            settings.irreps_symmetry_adapted = params["irreps_symmetry_adapted"]
 
         # Force constants calculator
         if "fc_calculator" in params:

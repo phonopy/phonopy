@@ -44,6 +44,9 @@ Some of command-line options are equivalent to respective setting tags:
 - `--gv-delta-q` (`GV_DELTA_Q`) [{ref}`gv_delta_q_tag`]
 - `--hdf5` (`HDF5 = .TRUE.`) [{ref}`hdf5_tag`]
 - `--irreps` (`IRREPS`) [{ref}`irreps_tag`]
+- `--irreps-symmetry-adapted` (`IRREPS_SYMMETRY_ADAPTED = .TRUE.`),
+  `--no-irreps-symmetry-adapted` (`IRREPS_SYMMETRY_ADAPTED = .FALSE.`)
+  [{ref}`irreps_symmetry_adapted_tag`]
 - `--include-fc` (`INCLUDE_FC = .TRUE.`) [{ref}`include_fc_tag`]
 - `--include-fs` (`INCLUDE_FS = .TRUE.`) [{ref}`include_fs_tag`]
 - `--include-disp` (`INCLUDE_DISP = .TRUE.`) [{ref}`include_disp_tag`]

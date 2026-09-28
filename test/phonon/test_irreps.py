@@ -8,9 +8,12 @@ import pathlib
 
 import numpy as np
 import pathlib
+import pytest
+
 import phonopy
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
+from phonopy.phonon.symmetry_adapted_modes import SymmetryAdaptedModes
 
 data_dir = pathlib.Path(__file__).parent
 
@@ -1230,6 +1233,48 @@ def test_pt31_Pbar43m_Gamma():
 #     phonon = _get_phonon("P6", [2, 2, 1], np.eye(3), symmetrize_fc=True)
 #     qpoints = [[0, 0, 0]]
 #     _check_char_sum(phonon, qpoints)
+
+
+@pytest.mark.parametrize(
+    "spgtype,dim,qpoints",
+    [
+        ("P2", [3, 2, 2], [[0, 0, 0], [0, 0, 0.5]]),
+        ("P4_1", [2, 2, 1], [[0, 0, 0], [0, 0, 0.5]]),
+        ("Pa-3", [2, 2, 2], [[0, 0, 0], [0.5, 0.5, 0.5]]),
+        ("P6_222", [2, 2, 2], [[0, 0, 0], [1 / 3, 1 / 3, 0.5]]),
+    ],
+)
+def test_irreps_symmetry_adapted(spgtype, dim, qpoints):
+    """Test run_irreps with symmetry_adapted=True.
+
+    Degenerate sets and characters must be those of SymmetryAdaptedModes, and
+    every set must satisfy sum |chi|^2 / order in (1, 2, 4).  IrReps computes
+    the phases from the input positions, which are rounded in the POSCARs,
+    while SymmetryAdaptedModes symmetrizes them; the characters therefore
+    differ at the 1e-8 level.
+
+    """
+    phonon = _get_phonon(spgtype, dim, np.eye(3))
+    assert phonon.dynamical_matrix is not None
+    for q in qpoints:
+        irreps = phonon.run_irreps(q, symmetry_adapted=True)
+        modes = SymmetryAdaptedModes(
+            phonon.dynamical_matrix, q, phonon.primitive_symmetry
+        )
+        assert irreps.band_indices == modes.degenerate_sets
+        np.testing.assert_allclose(irreps.characters, modes.characters, atol=1e-6)
+        order = len(irreps.conventional_rotations)
+        for chars in irreps.characters:
+            ratio = np.vdot(chars, chars).real / order
+            assert int(np.rint(ratio)) in (1, 2, 4)
+            assert abs(ratio - np.rint(ratio)) < 1e-6
+
+
+def test_irreps_symmetry_adapted_rejects_nac_direction_at_gamma():
+    """Test that nac_q_direction at Gamma is not accepted with symmetry_adapted."""
+    phonon = _get_phonon("P2", [3, 2, 2], np.eye(3))
+    with pytest.raises(NotImplementedError):
+        phonon.run_irreps([0, 0, 0], nac_q_direction=[1, 0, 0], symmetry_adapted=True)
 
 
 def _get_phonon(spgtype, dim, pmat, symmetrize_fc=False):

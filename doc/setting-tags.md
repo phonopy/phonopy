@@ -1496,6 +1496,36 @@ IRREPS = 1/3 1/3 0
 SHOW_IRREPS = .TRUE.
 ```
 
+(irreps_symmetry_adapted_tag)=
+### `IRREPS_SYMMETRY_ADAPTED`
+
+When this tag is `.TRUE.`, the degenerate bands in the `IRREPS` calculation are
+found from the symmetry of the _q_-point, and not from how close their
+frequencies are. The default is `.FALSE.`.
+
+By default, bands whose frequencies differ by less than the tolerance given as
+the fourth value of `IRREPS` are taken as degenerate. Small numerical errors in
+the force constants can split bands that must be degenerate by symmetry, and
+two bands of different irreducible representations can have nearly the same
+frequency near a band crossing. In both cases the characters of the bands are
+wrong. The three acoustic modes at {math}`\Gamma` are a common example, because
+their frequencies are small numbers of either sign.
+
+With this tag, phonopy decomposes the eigenvector space by the representation
+of the little group of _q_, including time reversal, and the size of each
+degenerate set is the dimension of an irreducible representation. The fourth
+value of `IRREPS` is not used. Bands that are degenerate only together with time
+reversal, as on the Brillouin-zone boundary of some nonsymmorphic space groups,
+are found as one set. The equations are given in {ref}`symmetry_adapted_modes`.
+
+This tag cannot be used together with `Q_DIRECTION` ({ref}`q_direction_tag`)
+at {math}`\Gamma`.
+
+```
+IRREPS = 0 0 0
+IRREPS_SYMMETRY_ADAPTED = .TRUE.
+```
+
 (little_cogroup_tag)=
 ### `LITTLE_COGROUP`
 

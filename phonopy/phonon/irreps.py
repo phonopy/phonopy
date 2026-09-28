@@ -15,6 +15,7 @@ from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.character_table import CharTableEntry, RotationRep, character_table
 from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
+from phonopy.phonon.symmetry_adapted_modes import SymmetryAdaptedModes
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.cells import is_primitive_cell
 from phonopy.structure.symmetry import Symmetry
@@ -42,9 +43,17 @@ class IrReps:
         nac_q_direction: Sequence[float] | NDArray[np.double] | None = None,
         factor: float | None = None,
         degeneracy_tolerance: float | None = None,
+        symmetry_adapted: bool = False,
         log_level: int = 0,
     ):
-        """Init method."""
+        """Init method.
+
+        With ``symmetry_adapted=True``, frequencies, eigenvectors and
+        degenerate sets are taken from ``SymmetryAdaptedModes``, which finds
+        degenerate sets from the representation of the little group of q with
+        time reversal.  ``degeneracy_tolerance`` is then not used.
+
+        """
         self._is_little_cogroup = is_little_cogroup
         self._log_level = log_level
 
@@ -75,18 +84,34 @@ class IrReps:
             _factor = get_physical_units().DefaultToTHz
         else:
             _factor = factor
-        self._freqs, self._eig_vecs = self._get_eigenvectors(
-            dynamical_matrix, _nac_q_direction, _factor
-        )
-        # Degeneracy for irreps has to be determined considering character tables, too.
-        # But currently only similarity of phonon frequencies is used to judge it.
-        if degeneracy_tolerance is None:
-            _degeneracy_tolerance = 1e-5
+        if symmetry_adapted:
+            # Degenerate sets from the representation of the little group of q
+            is_gamma = (
+                np.abs(self._qpoint - np.rint(self._qpoint)) < self._symprec
+            ).all()
+            if _nac_q_direction is not None and is_gamma:
+                raise NotImplementedError(
+                    "symmetry_adapted=True does not support nac_q_direction at "
+                    "the Gamma point."
+                )
+            modes = SymmetryAdaptedModes(
+                dynamical_matrix, self._qpoint, primitive_symmetry, factor=_factor
+            )
+            self._freqs = modes.frequencies
+            self._eig_vecs = modes.eigenvectors
+            self._degenerate_sets = modes.degenerate_sets
         else:
-            _degeneracy_tolerance = degeneracy_tolerance
-        self._degenerate_sets = get_degenerate_sets(
-            self._freqs, cutoff=_degeneracy_tolerance
-        )
+            # Degenerate sets from the closeness of frequencies only
+            self._freqs, self._eig_vecs = self._get_eigenvectors(
+                dynamical_matrix, _nac_q_direction, _factor
+            )
+            if degeneracy_tolerance is None:
+                _degeneracy_tolerance = 1e-5
+            else:
+                _degeneracy_tolerance = degeneracy_tolerance
+            self._degenerate_sets = get_degenerate_sets(
+                self._freqs, cutoff=_degeneracy_tolerance
+            )
         self._ddm = DerivativeOfDynamicalMatrix(
             dynamical_matrix, lang=dynamical_matrix.lang
         )
