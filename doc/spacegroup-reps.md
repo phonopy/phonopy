@@ -74,10 +74,44 @@ and the atomic displacements are proportional to
 {math}`e^{\mathrm{C}}_\alpha(j,\mathbf{q})\exp(i\mathbf{q}\cdot\mathbf{r}(jl))`.
 `spgreps.py` expects a C-type dynamical matrix and returns C-type eigenvectors.
 
-The C-type dynamical matrix is not periodic in {math}`\mathbf{q}`. Let
-{math}`V(\mathbf{q})` be the diagonal matrix with
-{math}`e^{i\mathbf{q}\cdot\mathbf{r}_{j0}}` repeated three times for each atom
-{math}`j`. Writing the same displacement pattern with the label
+The other common convention puts only the lattice vectors in the phase. It is
+called D-type:
+
+```{math}
+D^{\mathrm{D}}_{\alpha\beta}(jj',\mathbf{q})=\frac{1}{\sqrt{m_jm_{j'}}}
+\sum_{l'}\Phi_{\alpha\beta}(j0,j'l')
+\exp\bigl(i\mathbf{q}\cdot[\mathbf{r}(l')-\mathbf{r}(0)]\bigr).
+```
+
+`spgreps.py` does not use the D-type matrix. The D-type matrix is defined here
+because `RandomDisplacements` uses it internally, and a D-type matrix must not
+be passed to `spgreps.py`.
+
+Let {math}`V(\mathbf{q})` be the {math}`3N\times3N` diagonal matrix
+
+```{math}
+V(\mathbf{q})=\operatorname{diag}\bigl(
+e^{i\mathbf{q}\cdot\mathbf{r}_{10}},e^{i\mathbf{q}\cdot\mathbf{r}_{10}},e^{i\mathbf{q}\cdot\mathbf{r}_{10}},
+\ldots,
+e^{i\mathbf{q}\cdot\mathbf{r}_{N0}},e^{i\mathbf{q}\cdot\mathbf{r}_{N0}},e^{i\mathbf{q}\cdot\mathbf{r}_{N0}}
+\bigr),
+\qquad
+V_{j\alpha,j'\beta}(\mathbf{q})=e^{i\mathbf{q}\cdot\mathbf{r}_{j0}}\,\delta_{jj'}\delta_{\alpha\beta}.
+```
+
+Each atom {math}`j` has the same factor on its three Cartesian components. The
+two types are related by
+
+```{math}
+D^{\mathrm{C}}(\mathbf{q})=V^\dagger(\mathbf{q})\,D^{\mathrm{D}}(\mathbf{q})\,V(\mathbf{q}),
+\qquad
+\mathbf{e}^{\mathrm{D}}_\nu(\mathbf{q})=V(\mathbf{q})\,\mathbf{e}^{\mathrm{C}}_\nu(\mathbf{q}).
+```
+
+The D-type matrix is periodic in {math}`\mathbf{q}`,
+{math}`D^{\mathrm{D}}(\mathbf{q}+\mathbf{G})=D^{\mathrm{D}}(\mathbf{q})`, because
+{math}`e^{i\mathbf{G}\cdot\mathbf{r}(l')}=1`. The C-type matrix is not periodic.
+Writing the same displacement pattern with the label
 {math}`\mathbf{q}+\mathbf{G}` or with the label {math}`\mathbf{q}` gives
 
 ```{math}
@@ -102,6 +136,7 @@ D^{\mathrm{C}}(\mathbf{q})^*=D^{\mathrm{C}}(-\mathbf{q}),
 and the complex conjugate of an eigenvector at {math}`\mathbf{q}` is an
 eigenvector at {math}`-\mathbf{q}`. This is time-reversal symmetry.
 
+(spgreps_little_group_of_q)=
 ## Little group of q
 
 The little group of {math}`\mathbf{q}` is the set of space-group operations
@@ -131,6 +166,44 @@ little group when
 {math}`A_{\mathbf{q}}` the antiunitary ones.
 `get_little_group_operations` returns {math}`G_{\mathbf{q}}` first and then
 {math}`A_{\mathbf{q}}`.
+
+{math}`G_{\mathbf{q}}` has one operation per rotation, so
+{math}`|G_{\mathbf{q}}|` is the order of the point group of the little group.
+It divides the order of the point group of the crystal, which is at most 48.
+At a general q-point, {math}`G_{\mathbf{q}}` has only the identity.
+
+{math}`|A_{\mathbf{q}}|` is either zero or {math}`|G_{\mathbf{q}}|`. When one
+operation {math}`\mathrm{S}_0` sends {math}`\mathbf{q}` to
+{math}`-\mathbf{q}+\mathbf{G}`, the antiunitary operations are exactly
+{math}`\mathrm{S}_0\mathrm{S}\Theta` with {math}`\mathrm{S}\in G_{\mathbf{q}}`.
+For any {math}`\mathrm{S}'\Theta` in {math}`A_{\mathbf{q}}`, the product
+{math}`\mathrm{S}_0^{-1}\mathrm{S}'` leaves {math}`\mathbf{q}` unchanged and is
+therefore in {math}`G_{\mathbf{q}}`. When no such {math}`\mathrm{S}_0` exists,
+{math}`A_{\mathbf{q}}` is empty.
+
+- In a crystal with inversion, the inversion is such an {math}`\mathrm{S}_0`
+  at every q-point, and {math}`|A_{\mathbf{q}}|=|G_{\mathbf{q}}|`.
+- At a q-point with {math}`-\mathbf{q}=\mathbf{q}+\mathbf{G}`, such as
+  {math}`\Gamma` and the points with half-integer coordinates, the identity is
+  such an {math}`\mathrm{S}_0`, and {math}`|A_{\mathbf{q}}|=|G_{\mathbf{q}}|`.
+- In a crystal without inversion, at a q-point where {math}`\mathbf{q}` and
+  {math}`-\mathbf{q}` are not equivalent, {math}`A_{\mathbf{q}}` is empty.
+
+The table lists values from the structures in `test/phonon/test_spgreps.py`.
+
+| Space group | q-point                         | {math}`\|G_{\mathbf{q}}\|` | {math}`\|A_{\mathbf{q}}\|` |
+| ----------- | ------------------------------- | -------------------------- | -------------------------- |
+| P-43m       | {math}`\Gamma`                  | 24                         | 24                         |
+| P-43m       | (0.1, 0.1, 0.1)                 | 6                          | 0                          |
+| Pa-3        | {math}`\Gamma`                  | 24                         | 24                         |
+| P-3m1       | (1/3, 1/3, 0)                   | 6                          | 6                          |
+| P222_1      | (0.2, 0.3, 0.5)                 | 1                          | 1                          |
+| P222_1      | (0.2, 0.3, 0.4)                 | 1                          | 0                          |
+
+P-43m has no inversion, and along (0.1, 0.1, 0.1) the directions
+{math}`[111]` and {math}`[\bar1\bar1\bar1]` are not equivalent under its point
+group. At (0.2, 0.3, 0.5) of P222_1, the only unitary operation is the identity,
+and the one antiunitary operation makes every band doubly degenerate.
 
 ## Representation matrix
 
@@ -234,20 +307,41 @@ section, so the lattice and the positions are symmetrized before {math}`T` is
 built. The sums below run over all {math}`n_{\mathrm{op}}` operations of the
 space group, not only over the little group.
 
-The metric {math}`g=L^{\mathsf{T}}L` is averaged, and the basis vectors are
-replaced by the nearest ones with the averaged metric:
+The lattice is symmetrized through its metric tensor
+{math}`g=L^{\mathsf{T}}L`, whose elements are
+{math}`g_{ik}=\mathbf{a}_i\cdot\mathbf{a}_k`. The Cartesian rotation
+{math}`\mathrm{R}=L\tilde RL^{-1}` is orthogonal exactly when
+{math}`\tilde R^{\mathsf{T}}g\tilde R=g`, so the metric tensor is averaged over
+the rotations:
 
 ```{math}
-g_{\mathrm{sym}}=\frac{1}{n_{\mathrm{op}}}\sum_s\tilde R_s^{\mathsf{T}}\,g\,\tilde R_s,
-\qquad
-L_{\mathrm{sym}}=L\,g^{-1/2}\,g_{\mathrm{sym}}^{1/2}.
+g_{\mathrm{sym}}=\frac{1}{n_{\mathrm{op}}}\sum_s\tilde R_s^{\mathsf{T}}\,g\,\tilde R_s.
 ```
 
-With {math}`L_{\mathrm{sym}}`, the Cartesian rotation
+The basis vectors are then changed through the polar decomposition of
+{math}`L`. The polar decomposition writes {math}`L=QP` with an orthogonal matrix
+{math}`Q` and the symmetric positive-definite matrix
+{math}`P=(L^{\mathsf{T}}L)^{1/2}=g^{1/2}`, so {math}`Q=Lg^{-1/2}`. The rotation
+part {math}`Q` is kept, and the stretch part {math}`g^{1/2}` is replaced by
+{math}`g_{\mathrm{sym}}^{1/2}`:
+
+```{math}
+L_{\mathrm{sym}}=Q\,g_{\mathrm{sym}}^{1/2}=L\,g^{-1/2}\,g_{\mathrm{sym}}^{1/2}.
+```
+
+The metric tensor of {math}`L_{\mathrm{sym}}` is {math}`g_{\mathrm{sym}}`, and
+{math}`L_{\mathrm{sym}}` differs from {math}`L` by an amount of the order of
+{math}`g_{\mathrm{sym}}-g`. It is not in general the basis closest to {math}`L`
+among those with the metric tensor {math}`g_{\mathrm{sym}}`; that basis is given by the
+orthogonal Procrustes problem and differs from {math}`L_{\mathrm{sym}}` when
+{math}`g` and {math}`g_{\mathrm{sym}}` do not commute. The difference does not
+matter here, because only the orthogonality of the rotations is needed. With
+{math}`L_{\mathrm{sym}}`, the Cartesian rotation
 {math}`\mathrm{R}=L_{\mathrm{sym}}\tilde RL_{\mathrm{sym}}^{-1}` is orthogonal to
 round-off.
 
-Each position is replaced by the average of its images:
+Each position is replaced by the average of its images over the space group,
+which is the projection onto the totally symmetric part:
 
 ```{math}
 \bar x_j=\frac{1}{n_{\mathrm{op}}}\sum_s
@@ -272,6 +366,18 @@ The group average of a {math}`3N\times3N` matrix {math}`M` is
 \Bigl(\sum_{G_{\mathbf{q}}}T\,M\,T^\dagger+\sum_{A_{\mathbf{q}}}T\,M^*\,T^\dagger\Bigr).
 ```
 
+Since {math}`|A_{\mathbf{q}}|` is either {math}`|G_{\mathbf{q}}|` or zero (see
+{ref}`spgreps_little_group_of_q`), the denominator
+{math}`|G_{\mathbf{q}}|+|A_{\mathbf{q}}|` is {math}`2|G_{\mathbf{q}}|` or
+{math}`|G_{\mathbf{q}}|`. When {math}`A_{\mathbf{q}}` is empty, the second sum is
+absent and time reversal adds no condition.
+
+{math}`\langle M\rangle` is the projection of {math}`M` onto its totally
+symmetric part, that is, the Wigner projection operator for the totally
+symmetric irreducible representation, whose characters are 1 for all
+operations. This group average is also called the Reynolds operator. Unlike the
+projection operators for other irreducible representations, it needs no
+character table, and it can include the antiunitary operations.
 {math}`\langle M\rangle` commutes with every operation of the little group. The
 steps are listed below.
 
@@ -282,10 +388,9 @@ steps are listed below.
    tolerance are grouped, and each group of eigenvectors spans one subspace
    {math}`U_k` ({math}`3N\times d_k`). {math}`X` commutes with the operations,
    so each subspace is invariant under them. For a random {math}`Y`, each
-   subspace is expected to carry one irreducible representation of the little
-   group, or one pair of representations joined by time reversal. This was
-   checked for the structures in `test/phonon/test_spgreps.py`; it is not proven
-   in general.
+   subspace carries one irreducible representation of the little group, or one
+   pair of representations joined by time reversal. The reason is given in
+   {ref}`spgreps_why_irreducible`.
 3. The character of subspace {math}`k` is computed for the unitary operations,
    {math}`\chi_k(\mathrm{S})=\operatorname{Tr}(U_k^\dagger T(\mathrm{S})U_k)`.
    Subspaces with the same dimension and the same characters carry the same
@@ -299,6 +404,74 @@ steps are listed below.
 5. The sets of all types are sorted by eigenvalue, and the frequencies are
    {math}`\operatorname{sgn}(\omega^2)\sqrt{|\omega^2|}` times the unit
    conversion factor.
+
+(spgreps_why_irreducible)=
+### Why the eigenspaces of X are irreducible
+
+The goal of steps 1 and 2 is to split the {math}`3N`-dimensional space of
+eigenvectors into subspaces that each carry one irreducible representation. A
+projection operator for each irreducible representation would do this, but it
+needs the character table of the little group. The random matrix
+{math}`X` does the same without a character table.
+
+{math}`X` commutes with every operation, {math}`TXT^\dagger=X`. If
+{math}`X\mathbf{u}=\lambda\mathbf{u}`, then
+
+```{math}
+X(T\mathbf{u})=TX\mathbf{u}=\lambda\,T\mathbf{u},
+```
+
+so {math}`T\mathbf{u}` is an eigenvector with the same eigenvalue. Each
+eigenspace of {math}`X` is therefore closed under all the operations.
+
+The eigenspaces are also irreducible when {math}`X` is generic. By Schur's
+lemma, a matrix that commutes with a unitary representation has the block form
+
+```{math}
+X=\bigoplus_\mu X_\mu\otimes I_{d_\mu},
+```
+
+where {math}`\mu` runs over the irreducible representations, {math}`d_\mu` is
+the dimension of {math}`\mu`, and {math}`X_\mu` is a Hermitian
+{math}`m_\mu\times m_\mu` matrix, with {math}`m_\mu` the number of times
+{math}`\mu` appears in the {math}`3N`-dimensional space. Each eigenvalue of
+{math}`X_\mu` appears {math}`d_\mu` times in {math}`X`, and its eigenspace is one
+copy of {math}`\mu`. Two copies merge into one eigenspace only when two
+eigenvalues coincide, either inside one {math}`X_\mu` or between {math}`X_\mu`
+and {math}`X_\nu`. For a random {math}`X` this happens with probability zero.
+
+The group average makes a random {math}`X` of this form. Every matrix
+{math}`X'` that commutes with the operations satisfies
+{math}`\langle X'\rangle=X'`, so the average maps a random Hermitian
+{math}`Y` onto a random element among all the commuting matrices.
+
+A small case shows the result. Two atoms on a line are exchanged by inversion,
+and {math}`T` is the matrix that swaps them. The Hermitian matrices that commute
+with the swap have the form {math}`\begin{pmatrix}a&b\\b&a\end{pmatrix}`. For any
+{math}`a` and any {math}`b\neq0`, the eigenvectors are
+{math}`(1,1)/\sqrt2` and {math}`(1,-1)/\sqrt2`, the mode symmetric under
+inversion and the mode antisymmetric under it. Each of them carries one
+irreducible representation.
+
+The dynamical matrix also commutes with the operations, but it is not generic.
+Accidental degeneracies, near-degeneracies close to a band crossing, and the
+small symmetry breaking from numerical noise in the force constants all make
+coincidences in its eigenvalues. The random {math}`X` has none of these, so the
+subspaces are taken from {math}`X`, and the dynamical matrix is diagonalized
+inside them in step 4.
+
+{math}`X` also commutes with the antiunitary operations,
+{math}`TX^*T^\dagger=X`. When time reversal joins two unitary irreducible
+representations into one pair, {math}`X` has equal eigenvalues on the two, and
+both lie in one eigenspace of dimension {math}`2d_\mu`. The two bands that stick
+together on a Brillouin-zone boundary plane of a nonsymmorphic space group are
+found as one subspace in this way.
+
+Schur's lemma covers the unitary operations. For the antiunitary ones, the
+statement that each eigenspace carries one pair was checked for the structures
+in `test/phonon/test_spgreps.py` and is not proven here.
+
+### Remarks
 
 The size of a degenerate set is the dimension of a subspace, so no frequency
 tolerance enters. Characters are computed for the unitary operations only. An

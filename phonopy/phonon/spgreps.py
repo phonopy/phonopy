@@ -206,10 +206,9 @@ def get_little_group_operations(
 
     """
     q = np.array(qpoint, dtype="double")
-    dataset = primitive_symmetry.dataset
     symprec = primitive_symmetry.tolerance
-    rotations = np.array(dataset.rotations, dtype="int64")
-    translations = np.array(dataset.translations, dtype="double")
+    rotations = primitive_symmetry.symmetry_operations["rotations"]
+    translations = primitive_symmetry.symmetry_operations["translations"]
     lattice = _get_symmetrized_lattice(primitive.cell, rotations)
     positions = _get_symmetrized_positions(
         primitive.scaled_positions, lattice, rotations, translations, symprec
@@ -284,20 +283,27 @@ def _get_atom_permutation(
 def _get_symmetrized_lattice(
     lattice: NDArray[np.double], rotations: NDArray[np.int64]
 ) -> NDArray[np.double]:
-    """Return basis vectors whose metric is exactly invariant by rotations.
+    """Return basis vectors whose metric tensor is exactly invariant by rotations.
 
     With the basis vectors in rows (lattice = L^T, L having them in
-    columns), the metric g = lattice lattice^T = L^T L is averaged as
+    columns), the metric tensor g = lattice lattice^T = L^T L, with
+    g[i, k] = a_i . a_k, is averaged as
 
-        g_sym = mean over R of R^T g R,
+        g_sym = mean over R of R^T g R.
 
-    and the basis vectors are replaced by the nearest ones with that metric,
+    The basis vectors are then changed through the polar decomposition
+    L = Q g^(1/2) with Q = L g^(-1/2) orthogonal: Q is kept and g^(1/2) is
+    replaced by g_sym^(1/2),
 
-        lattice_sym = g_sym^(1/2) g^(-1/2) lattice,
+        L_sym = Q g_sym^(1/2) = L g^(-1/2) g_sym^(1/2),
+        lattice_sym = L_sym^T = g_sym^(1/2) g^(-1/2) lattice.
 
-    which is L_sym = L g^(-1/2) g_sym^(1/2) in doc/spacegroup-reps.md.
-    Rotation matrices in Cartesian coordinates then become orthogonal to
-    round-off, which the representation needs to close as a group.
+    The metric tensor of L_sym is g_sym.  L_sym is not in general the basis
+    closest to L among those with metric tensor g_sym (that one solves the
+    orthogonal Procrustes problem), but it differs from L only by the order
+    of g_sym - g.  Rotation matrices in Cartesian coordinates then become
+    orthogonal to round-off, which the representation needs to close as a
+    group.
 
     Parameters
     ----------
@@ -315,20 +321,42 @@ def _get_symmetrized_lattice(
     """
     metric = lattice @ lattice.T
     metric_sym = np.mean([r.T @ metric @ r for r in rotations], axis=0)
-    return _sqrtm(metric_sym) @ np.linalg.inv(_sqrtm(metric)) @ lattice
+    return _sqrtm(metric_sym) @ _sqrtm(metric, inv=True) @ lattice
 
 
-def _sqrtm(mat: NDArray[np.double]) -> NDArray[np.double]:
-    """Return square root of a symmetric positive-definite matrix.
+def _sqrtm(mat: NDArray[np.double], inv: bool = False) -> NDArray[np.double]:
+    """Return the symmetric square root of a symmetric positive-definite matrix.
+
+    With the eigenvalue decomposition mat = U diag(lambda) U^T, where U is
+    orthogonal, the result is
+
+        S = U diag(sqrt(lambda)) U^T,
+
+    which is symmetric and positive definite and satisfies S^2 = mat.  This
+    is the unique such square root.  With inv=True, the inverse
+
+        S^-1 = U diag(1 / sqrt(lambda)) U^T
+
+    is returned instead.  The eigenvalues must be positive; this is not
+    checked.
 
     Parameters
     ----------
     mat : ndarray
-        shape=(3, 3), dtype=double
+        Symmetric positive-definite matrix.
+        shape=(n, n), dtype=double
+    inv : bool, optional
+        Return the inverse of the square root.  Default is False.
+
+    Returns
+    -------
+    ndarray
+        shape=(n, n), dtype=double
 
     """
     vals, vecs = np.linalg.eigh(mat)
-    return (vecs * np.sqrt(vals)) @ vecs.T
+    diag = 1 / np.sqrt(vals) if inv else np.sqrt(vals)
+    return (vecs * diag) @ vecs.T
 
 
 def _get_symmetrized_positions(
@@ -565,9 +593,23 @@ class SymmetryAdaptedModes:
     def _get_irreducible_subspaces(self) -> list[NDArray[np.cdouble]]:
         """Return orthonormal bases U_k of irreducible invariant subspaces.
 
-        X = <(Y + Y^dagger) / 2> with Y drawn with RANDOM_SEED.  Neighbouring
-        eigenvalues of X with lambda_(i+1) - lambda_i <= SUBSPACE_TOLERANCE *
-        max(max|lambda|, 1) are put in the same subspace.
+        X = <(Y + Y^dagger) / 2> with Y a complex Gaussian random matrix
+        drawn with RANDOM_SEED.  X commutes with every T(S), so for
+        X u = lambda u also X (T u) = lambda (T u): each eigenspace of X is
+        closed under the operations.  By Schur's lemma a commuting matrix is
+        X = sum over irreps mu of X_mu (x) I_(d_mu), so for a generic X each
+        eigenspace is one copy of one irrep mu (or one pair of irreps joined
+        by time reversal, since X also commutes with the antiunitary
+        operations).  Two copies share an eigenspace only when eigenvalues
+        of X coincide, which has probability zero for a random Y.  The
+        dynamical matrix is not used here because its eigenvalues can
+        coincide or nearly coincide for physical reasons.
+
+        Neighbouring eigenvalues of X with lambda_(i+1) - lambda_i <=
+        SUBSPACE_TOLERANCE * max(max|lambda|, 1) are put in the same
+        subspace.  Within one copy the eigenvalues are equal to round-off;
+        between copies they are separated by the typical spacing of the
+        eigenvalues of a random matrix.
 
         Each basis has shape=(num_band, dim), dtype=cdouble.
 
