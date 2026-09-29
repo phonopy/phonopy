@@ -614,18 +614,20 @@ class SymmetryAdaptedModes:
         X u = lambda u also X (T u) = lambda (T u): each eigenspace of X is
         closed under the operations.  By Schur's lemma a commuting matrix is
         X = sum over irreps mu of X_mu (x) I_(d_mu), so for a generic X each
-        eigenspace is one copy of one irrep mu (or one pair of irreps joined
-        by time reversal, since X also commutes with the antiunitary
-        operations).  Two copies share an eigenspace only when eigenvalues
-        of X coincide, which has probability zero for a random Y.  The
+        eigenspace is one irreducible component of one irrep mu (or of one
+        pair of irreps joined by time reversal, since X also commutes with
+        the antiunitary operations).  An irrep can appear several times, and
+        each appearance is a separate irreducible component.  Two components
+        share an eigenspace only when eigenvalues of X coincide, which has
+        probability zero for a random Y.  The
         dynamical matrix is not used here because its eigenvalues can
         coincide or nearly coincide for physical reasons.
 
         Neighbouring eigenvalues of X with lambda_(i+1) - lambda_i <=
         SUBSPACE_TOLERANCE * max(max|lambda|, 1) are put in the same
-        subspace.  Within one copy the eigenvalues are equal to round-off;
-        between copies they are separated by the typical spacing of the
-        eigenvalues of a random matrix.
+        subspace.  Within one irreducible component the eigenvalues are equal
+        to round-off; between components they are separated by the typical
+        spacing of the eigenvalues of a random matrix.
 
         Each basis has shape=(num_band, dim), dtype=cdouble.
 
