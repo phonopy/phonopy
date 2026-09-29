@@ -435,11 +435,18 @@ X=\bigoplus_\mu X_\mu\otimes I_{d_\mu},
 where {math}`\mu` runs over the irreducible representations, {math}`d_\mu` is
 the dimension of {math}`\mu`, and {math}`X_\mu` is a Hermitian
 {math}`m_\mu\times m_\mu` matrix, with {math}`m_\mu` the number of times
-{math}`\mu` appears in the {math}`3N`-dimensional space. Each eigenvalue of
-{math}`X_\mu` appears {math}`d_\mu` times in {math}`X`, and its eigenspace is one
-copy of {math}`\mu`. Two copies merge into one eigenspace only when two
-eigenvalues coincide, either inside one {math}`X_\mu` or between {math}`X_\mu`
-and {math}`X_\nu`. For a random {math}`X` this happens with probability zero.
+{math}`\mu` appears in the {math}`3N`-dimensional space. Each appearance of
+{math}`\mu` is one irreducible component of the representation. At
+{math}`\Gamma` of NaCl, for example, the six-dimensional representation is
+{math}`T_{1u}\oplus T_{1u}`: the three acoustic modes and the three optical
+modes are two irreducible components of the same irreducible representation
+{math}`T_{1u}`.
+
+Each eigenvalue of {math}`X_\mu` appears {math}`d_\mu` times in {math}`X`, and
+its eigenspace is one irreducible component of {math}`\mu`. Two components merge
+into one eigenspace only when two eigenvalues coincide, either inside one
+{math}`X_\mu` or between {math}`X_\mu` and {math}`X_\nu`. For a random
+{math}`X` this happens with probability zero.
 
 The group average makes a random {math}`X` of this form. Every matrix
 {math}`X'` that commutes with the operations satisfies

@@ -129,8 +129,8 @@ class LittleGroupOperation:
         """
         num_atom = len(self.permutation)
         v = vecs.conj() if self.is_antiunitary else vecs
-        v = v.reshape(num_atom, 3, -1)
-        rotated = np.einsum("ab,ibn->ian", self.rotation_cartesian, v)
+        # R_cart applied to the three components of each atom j'
+        rotated = self.rotation_cartesian @ v.reshape(num_atom, 3, -1)
         rotated *= self.phases[:, None, None]
         out = np.empty_like(rotated)
         out[self.permutation] = rotated
@@ -210,6 +210,15 @@ def get_little_group_operations(
         Symmetry of the primitive cell.
     with_time_reversal : bool, optional
         Include antiunitary operations.  Default is True.
+
+    Returns
+    -------
+    list of LittleGroupOperation
+        The unitary operations (is_antiunitary=False) followed by the
+        antiunitary ones (is_antiunitary=True).  Within each part, the
+        operations are in the order of primitive_symmetry.symmetry_operations.
+        The length is |G_q| + |A_q|, where |A_q| is either 0 or |G_q|; it is
+        |G_q| when with_time_reversal is False.
 
     """
     q = np.array(qpoint, dtype="double")
@@ -545,13 +554,13 @@ class SymmetryAdaptedModes:
 
         """
         subspaces = self._get_irreducible_subspaces()
-        types = self._group_by_characters(subspaces)
+        irrep_types = self._group_by_characters(subspaces)
         dm_sym = self._symmetrize(self._dynamical_matrix)
 
         eigvals = []
         eigvecs = []
         chars = []
-        for members, type_chars in types:
+        for members, type_chars in irrep_types:
             dim = subspaces[members[0]].shape[1]
             basis = np.hstack([subspaces[k] for k in members])
             vals, vecs = np.linalg.eigh(basis.conj().T @ dm_sym @ basis)
@@ -605,18 +614,20 @@ class SymmetryAdaptedModes:
         X u = lambda u also X (T u) = lambda (T u): each eigenspace of X is
         closed under the operations.  By Schur's lemma a commuting matrix is
         X = sum over irreps mu of X_mu (x) I_(d_mu), so for a generic X each
-        eigenspace is one copy of one irrep mu (or one pair of irreps joined
-        by time reversal, since X also commutes with the antiunitary
-        operations).  Two copies share an eigenspace only when eigenvalues
-        of X coincide, which has probability zero for a random Y.  The
+        eigenspace is one irreducible component of one irrep mu (or of one
+        pair of irreps joined by time reversal, since X also commutes with
+        the antiunitary operations).  An irrep can appear several times, and
+        each appearance is a separate irreducible component.  Two components
+        share an eigenspace only when eigenvalues of X coincide, which has
+        probability zero for a random Y.  The
         dynamical matrix is not used here because its eigenvalues can
         coincide or nearly coincide for physical reasons.
 
         Neighbouring eigenvalues of X with lambda_(i+1) - lambda_i <=
         SUBSPACE_TOLERANCE * max(max|lambda|, 1) are put in the same
-        subspace.  Within one copy the eigenvalues are equal to round-off;
-        between copies they are separated by the typical spacing of the
-        eigenvalues of a random matrix.
+        subspace.  Within one irreducible component the eigenvalues are equal
+        to round-off; between components they are separated by the typical
+        spacing of the eigenvalues of a random matrix.
 
         Each basis has shape=(num_band, dim), dtype=cdouble.
 
@@ -628,15 +639,15 @@ class SymmetryAdaptedModes:
             dtype="cdouble",
         )
         x = self._symmetrize((y + y.conj().T) / 2)
+        # eigh returns the eigenvalues in ascending order, so degenerate ones
+        # are adjacent
         vals, vecs = np.linalg.eigh(x)
-        scale = max(np.abs(vals).max(), 1.0)
-        subspaces = []
-        start = 0
-        for i in range(1, n + 1):
-            if i == n or vals[i] - vals[i - 1] > SUBSPACE_TOLERANCE * scale:
-                subspaces.append(vecs[:, start:i])
-                start = i
-        return subspaces
+        tolerance = SUBSPACE_TOLERANCE * max(np.abs(vals).max(), 1.0)
+        # A new subspace starts at column i when vals[i] is apart from vals[i - 1]
+        starts = [i for i in range(1, n) if vals[i] - vals[i - 1] > tolerance]
+        # Columns bounds[k]:bounds[k + 1] of vecs span the k-th subspace
+        bounds = [0] + starts + [n]
+        return [vecs[:, bounds[k] : bounds[k + 1]] for k in range(len(bounds) - 1)]
 
     def _group_by_characters(
         self, subspaces: list[NDArray[np.cdouble]]
@@ -647,29 +658,60 @@ class SymmetryAdaptedModes:
         Subspaces k and k' belong to the same type when d_k = d_k' and
         max over S of |chi_k(S) - chi_k'(S)| < CHARACTER_TOLERANCE.
 
+        The characters of all subspaces are computed together.  With the bases
+        side by side in U = (U_1, U_2, ...), each operation is applied once,
+        the diagonal element of U^dagger T(S) U for column i is
+        sum over a of conj(U[a, i]) (T(S) U)[a, i], and chi_k(S) is the sum of
+        these over the columns of U_k.
+
+        Parameters
+        ----------
+        subspaces : list of ndarray
+            Orthonormal bases U_k of the irreducible invariant subspaces, in
+            the order returned by _get_irreducible_subspaces.  Each has
+            shape=(num_band, d_k), dtype=cdouble.
+
         Returns
         -------
-        list of (member subspace indices, characters)
-            characters has shape=(num_unitary_operations,), dtype=cdouble.
+        list of tuple (members, characters)
+            One tuple per type mu, in the order in which the first subspace of
+            each type appears in ``subspaces``.
+
+            members : list of int
+                Indices of the subspaces in ``subspaces`` that belong to the
+                type, in increasing order.  The first one, members[0], is the
+                subspace whose characters define the type.
+            characters : ndarray
+                chi_(members[0])(S) for the unitary operations S, in the order
+                of self._operations.
+                shape=(num_unitary_operations,), dtype=cdouble
 
         """
         unitary_ops = self._operations[: self._num_unitary]
-        types: list[tuple[list[int], NDArray[np.cdouble]]] = []
-        for k, basis in enumerate(subspaces):
-            chars = np.array(
-                [
-                    np.trace(basis.conj().T @ op.transform_vectors(basis))
-                    for op in unitary_ops
-                ],
-                dtype="cdouble",
-            )
-            for members, type_chars in types:
+        bases = np.hstack(subspaces)
+        # Columns bounds[k]:bounds[k + 1] of bases are U_k
+        bounds = np.cumsum([0] + [basis.shape[1] for basis in subspaces])
+        # diags[s, i] = (U^dagger T(S_s) U)[i, i] for every column i of U
+        diags = np.array(
+            [
+                np.einsum("ai,ai->i", bases.conj(), op.transform_vectors(bases))
+                for op in unitary_ops
+            ],
+            dtype="cdouble",
+        )
+
+        irrep_types: list[tuple[list[int], NDArray[np.cdouble]]] = []
+        for k in range(len(subspaces)):
+            dim = bounds[k + 1] - bounds[k]
+            chars = diags[:, bounds[k] : bounds[k + 1]].sum(axis=1)
+            for members, type_chars in irrep_types:
+                first = members[0]
                 if (
-                    subspaces[members[0]].shape[1] == basis.shape[1]
+                    bounds[first + 1] - bounds[first] == dim
                     and np.abs(type_chars - chars).max() < CHARACTER_TOLERANCE
                 ):
                     members.append(k)
                     break
-            else:
-                types.append(([k], chars))
-        return types
+            else:  # no existing type matches
+                irrep_types.append(([k], chars))
+        return irrep_types
