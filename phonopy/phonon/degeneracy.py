@@ -56,6 +56,43 @@ def degenerate_sets(
     return indices
 
 
+def get_degenerate_ids(
+    freqs: NDArray[np.double], cutoff: float = DEFAULT_CUTOFF
+) -> NDArray[np.int64]:
+    """Return degenerate sets of bands as the smallest band index of each set.
+
+    The frequencies at each q-point have to be in ascending order, as returned
+    by the eigenvalue solver. A new set starts at a band whose frequency is
+    higher than that of the band below by cutoff or more. For frequencies in
+    ascending order, the sets are those of degenerate_sets.
+
+    Parameters
+    ----------
+    freqs : ndarray
+        Phonon frequencies. shape=(qpoints, num_band), dtype='double'
+    cutoff : float, optional
+        Frequency difference below which two bands are degenerate. Default is
+        1e-4.
+
+    Returns
+    -------
+    ndarray
+        Smallest band index in the degenerate set of each band.
+        shape=(qpoints, num_band), dtype='int64'
+
+    Example
+    -------
+    In : get_degenerate_ids(np.array([[1.5, 2.1, 2.1, 3.4, 8]]))
+    Out: array([[0, 1, 1, 3, 4]])
+
+    """
+    num_band = freqs.shape[1]
+    is_first = np.ones(freqs.shape, dtype=bool)
+    is_first[:, 1:] = np.diff(freqs, axis=1) >= cutoff
+    first_bands = np.where(is_first, np.arange(num_band, dtype="int64"), 0)
+    return np.maximum.accumulate(first_bands, axis=1)
+
+
 def lift_degeneracy(
     freqs: NDArray[np.double],
     eigvecs: NDArray[np.cdouble],
