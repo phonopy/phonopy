@@ -402,7 +402,10 @@ steps are listed below.
    {math}`B_\mu^\dagger D_{\mathrm{sym}}B_\mu` is diagonalized. Its eigenvalues
    come in runs of {math}`d_\mu` equal values. Each run of {math}`d_\mu`
    consecutive eigenvalues is one degenerate set.
-5. The sets of all types are sorted by eigenvalue, and the frequencies are
+5. Within each type, the eigenvectors of every set except the first are
+   rotated inside the set, so that all sets of the type are transformed by the
+   same matrices. The procedure is given in {ref}`symmodes_aligning_sets`.
+6. The sets of all types are sorted by eigenvalue, and the frequencies are
    {math}`\operatorname{sgn}(\omega^2)\sqrt{|\omega^2|}` times the unit
    conversion factor.
 
@@ -478,6 +481,59 @@ found as one subspace in this way.
 Schur's lemma covers the unitary operations. For the antiunitary ones, the
 statement that each eigenspace carries one pair was checked for the structures
 in `test/phonon/test_symmetry_adapted_modes.py` and is not proven here.
+
+(symmodes_aligning_sets)=
+### Aligning the sets of one type
+
+At {math}`\Gamma` of NaCl, the acoustic set and the optical set both carry
+{math}`T_{1u}`. After step 4, each set has the basis that `numpy.linalg.eigh`
+returns for it. The two sets are therefore transformed by two different
+{math}`3\times3` matrices, although the two representations are the same. Step
+5 rotates the basis of the optical set so that both sets are transformed by the
+same matrices.
+
+For a set with eigenvectors {math}`E` ({math}`3N\times d_\mu`), the matrix of an
+operation {math}`g` of the little group is
+
+```{math}
+\Gamma_E(g)=E^\dagger\,T(g)\,E^{(*)},
+```
+
+where {math}`E^{(*)}` is {math}`E^*` for an antiunitary operation and {math}`E`
+otherwise. Let {math}`E_0` be the first set of a type and {math}`E_c` another
+set of the same type. The {math}`d_\mu\times d_\mu` matrix
+
+```{math}
+J=\sum_{g}\Gamma_{E_c}(g)\,R\,\Gamma_{E_0}(g)^\dagger
+```
+
+is summed over all operations, the antiunitary ones included. {math}`R` is a
+{math}`d_\mu\times d_\mu` matrix with a single element equal to one, and among
+these {math}`d_\mu^2` choices the one that gives {math}`J` of the largest norm
+is used.
+By Schur's lemma, {math}`J` is a multiple of a unitary matrix. With the singular
+value decomposition {math}`J=W\Sigma V^\dagger`, the set is rotated to
+{math}`E_cWV^\dagger`, and after the rotation
+{math}`\Gamma_{E_c}(g)=\Gamma_{E_0}(g)` for every operation.
+
+The rotation mixes eigenvectors of one set only. All of them have the same
+eigenvalue, so the frequencies, the degenerate sets and the characters do not
+change. `get_representation_matrices` returns the same matrices for all sets of
+one type.
+
+The antiunitary operations are included in the sum because the unitary ones
+alone leave a phase undetermined. With the unitary operations only,
+{math}`J` is a multiple of a unitary matrix by a complex number, and after the
+rotation the matrices of the antiunitary operations can still differ by a
+phase between the two sets. That {math}`J` is a multiple of a unitary matrix
+when the antiunitary operations are included was checked for the structures in
+`test/phonon/test_symmetry_adapted_modes.py`.
+
+The common matrices {math}`\Gamma_{E_0}(g)` are not a standard form of the
+irreducible representation. They depend on {math}`X` and on the basis that
+`numpy.linalg.eigh` returns for the first set, so they cannot be compared with
+the matrices in a table or with the matrices at another q-point. Only the
+statement that all sets of one type are transformed by the same matrices holds.
 
 ### Remarks
 
