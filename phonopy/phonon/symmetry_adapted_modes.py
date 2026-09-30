@@ -440,7 +440,11 @@ class SymmetryAdaptedModes:
     4. For each type, B_mu = (U_k1, ..., U_k(m_mu)) (3N x m_mu d_mu), and
        B_mu^dagger D_sym B_mu is diagonalized.  Its eigenvalues come in runs
        of d_mu equal values, and each run is one degenerate set.
-    5. The sets of all types are sorted by eigenvalue.
+    5. Within each type, the basis of every set is rotated so that the set
+       transforms by the same matrices as the first set of the type.  These
+       matrices depend on X and on the basis eigh returns for the first set,
+       so they are not a standard form of the irrep.
+    6. The sets of all types are sorted by eigenvalue.
 
     The size of a degenerate set is the subspace dimension d_mu, so no
     frequency tolerance is used.  See doc/symmetry-adapted-modes.md.
@@ -528,7 +532,7 @@ class SymmetryAdaptedModes:
 
         For the eigenvectors E (3N x dim) of the set, the matrix of a
         unitary operation S is E^dagger T(S) E.  Its trace is the character
-        in ``characters``.
+        in ``characters``.  Sets of the same type give the same matrices.
 
         Returns
         -------
@@ -546,31 +550,50 @@ class SymmetryAdaptedModes:
         )
 
     def _run(self) -> None:
-        """Run steps 1-5 of the class docstring.
+        """Run steps 1-6 of the class docstring.
 
         Within a type mu, the eigenvalues of B_mu^dagger D_sym B_mu are taken
         in consecutive chunks of d_mu.  The eigenvalue of a set is the mean
         of its chunk, and frequencies are sgn(w2) sqrt(|w2|) * factor.
 
         """
+        # Steps 1 and 2
         subspaces = self._get_irreducible_subspaces()
-        irrep_types = self._group_by_characters(subspaces)
         dm_sym = self._symmetrize(self._dynamical_matrix)
 
-        eigvals = []
-        eigvecs = []
-        chars = []
+        # Step 3
+        irrep_types = self._group_by_characters(subspaces)
+
+        # Step 4
+        eigvals: list[float] = []
+        eigvecs: list[NDArray[np.cdouble]] = []
+        chars: list[NDArray[np.cdouble]] = []
+        # Indices in eigvecs of the sets of each type with two or more sets
+        sets_of_types: list[list[int]] = []
         for members, type_chars in irrep_types:
             dim = subspaces[members[0]].shape[1]
             basis = np.hstack([subspaces[k] for k in members])
             vals, vecs = np.linalg.eigh(basis.conj().T @ dm_sym @ basis)
             vecs = basis @ vecs
+            if len(members) > 1:
+                sets_of_types.append(
+                    list(range(len(eigvecs), len(eigvecs) + len(members)))
+                )
             for k in range(len(members)):
                 chunk = slice(k * dim, (k + 1) * dim)
                 eigvals.append(vals[chunk].mean())
                 eigvecs.append(vecs[:, chunk])
                 chars.append(type_chars)
 
+        # Step 5
+        to_align = [i for indices in sets_of_types for i in indices]
+        matrices = self._get_representation_matrices([eigvecs[i] for i in to_align])
+        gammas = dict(zip(to_align, matrices, strict=True))
+        for reference, *others in sets_of_types:
+            for i in others:
+                eigvecs[i] = self._align(eigvecs[i], gammas[i], gammas[reference])
+
+        # Step 6
         order = np.argsort(eigvals, kind="stable")
         self._eigenvectors = np.hstack([eigvecs[k] for k in order])
         self._characters = np.array([chars[k] for k in order], dtype="cdouble")
@@ -586,6 +609,91 @@ class SymmetryAdaptedModes:
         self._frequencies = (
             np.sqrt(np.abs(vals_band_arr)) * np.sign(vals_band_arr) * self._factor
         )
+
+    def _get_representation_matrices(
+        self, sets: list[NDArray[np.cdouble]]
+    ) -> list[NDArray[np.cdouble]]:
+        """Return Gamma_E(g) = E^dagger T(g) E^(*) of sets for all operations g.
+
+        E^(*) is conj(E) for antiunitary g.  With the sets side by side in
+        E = (E_1, E_2, ...), each operation is applied once, and Gamma_(E_c)(g)
+        is E_c^dagger times the columns of T(g) E^(*) that belong to E_c.  Only
+        these diagonal blocks of E^dagger T(g) E^(*) are computed.
+
+        Parameters
+        ----------
+        sets : list of ndarray
+            Eigenvectors E_c of degenerate sets.  Each has
+            shape=(num_band, dim_c), dtype=cdouble.
+
+        Returns
+        -------
+        list of ndarray
+            Gamma_(E_c)(g) for each set, in the order of ``sets``.  Each has
+            shape=(num_operations, dim_c, dim_c), dtype=cdouble.
+
+        """
+        if not sets:
+            return []
+        vecs = np.hstack(sets)
+        # Columns bounds[c]:bounds[c + 1] of vecs are E_c
+        bounds = np.cumsum([0] + [e.shape[1] for e in sets])
+        gammas = [
+            np.empty((len(self._operations), e.shape[1], e.shape[1]), dtype="cdouble")
+            for e in sets
+        ]
+        for i, op in enumerate(self._operations):
+            rotated = op.transform_vectors(vecs)
+            for c, gamma in enumerate(gammas):
+                block = slice(bounds[c], bounds[c + 1])
+                gamma[i] = vecs[:, block].conj().T @ rotated[:, block]
+        return gammas
+
+    def _align(
+        self,
+        vecs: NDArray[np.cdouble],
+        gammas_vecs: NDArray[np.cdouble],
+        gammas_ref: NDArray[np.cdouble],
+    ) -> NDArray[np.cdouble]:
+        """Rotate a degenerate set to transform like a reference set.
+
+        With Gamma_E(g) = E^dagger T(g) E^(*) over all operations g (E^(*) is
+        conj(E) for antiunitary g), the matrix
+
+            J = sum over g of Gamma_vecs(g) R Gamma_reference(g)^dagger
+
+        satisfies Gamma_vecs(g) J^(*) = J Gamma_reference(g), and by Schur's
+        lemma it is a multiple of a unitary matrix.  R runs over the matrix
+        units E_ab, and the J of largest norm is used.  With J = W S V^dagger,
+        vecs W V^dagger transforms by Gamma_reference.
+
+        Parameters
+        ----------
+        vecs : ndarray
+            Eigenvectors of the set to rotate.
+            shape=(num_band, dim), dtype=cdouble
+        gammas_vecs : ndarray
+            Gamma_vecs(g) from _get_representation_matrices.
+            shape=(num_operations, dim, dim), dtype=cdouble
+        gammas_ref : ndarray
+            Gamma_reference(g) of the first set of the same type, from
+            _get_representation_matrices.
+            shape=(num_operations, dim, dim), dtype=cdouble
+
+        Returns
+        -------
+        ndarray
+            shape=(num_band, dim), dtype=cdouble
+
+        """
+        # With R = E_ab, J[a, b] = sum over g of outer(Gamma_vecs(g)[:, a],
+        # conj(Gamma_reference(g)[:, b]))
+        js = np.einsum("gia,gjb->abij", gammas_vecs, gammas_ref.conj())
+        dim = vecs.shape[1]
+        norms = np.linalg.norm(js.reshape(dim * dim, -1), axis=1)
+        a, b = divmod(int(np.argmax(norms)), dim)
+        w, _, vh = np.linalg.svd(js[a, b])
+        return vecs @ (w @ vh)
 
     def _symmetrize(self, mat: NDArray[np.cdouble]) -> NDArray[np.cdouble]:
         """Return <M>, the average of M over the little group.
