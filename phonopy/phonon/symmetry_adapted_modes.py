@@ -129,8 +129,8 @@ class LittleGroupOperation:
         """
         num_atom = len(self.permutation)
         v = vecs.conj() if self.is_antiunitary else vecs
-        v = v.reshape(num_atom, 3, -1)
-        rotated = np.einsum("ab,ibn->ian", self.rotation_cartesian, v)
+        # R_cart applied to the three components of each atom j'
+        rotated = self.rotation_cartesian @ v.reshape(num_atom, 3, -1)
         rotated *= self.phases[:, None, None]
         out = np.empty_like(rotated)
         out[self.permutation] = rotated
@@ -210,6 +210,15 @@ def get_little_group_operations(
         Symmetry of the primitive cell.
     with_time_reversal : bool, optional
         Include antiunitary operations.  Default is True.
+
+    Returns
+    -------
+    list of LittleGroupOperation
+        The unitary operations (is_antiunitary=False) followed by the
+        antiunitary ones (is_antiunitary=True).  Within each part, the
+        operations are in the order of primitive_symmetry.symmetry_operations.
+        The length is |G_q| + |A_q|, where |A_q| is either 0 or |G_q|; it is
+        |G_q| when with_time_reversal is False.
 
     """
     q = np.array(qpoint, dtype="double")
@@ -431,7 +440,11 @@ class SymmetryAdaptedModes:
     4. For each type, B_mu = (U_k1, ..., U_k(m_mu)) (3N x m_mu d_mu), and
        B_mu^dagger D_sym B_mu is diagonalized.  Its eigenvalues come in runs
        of d_mu equal values, and each run is one degenerate set.
-    5. The sets of all types are sorted by eigenvalue.
+    5. Within each type, the basis of every set is rotated so that the set
+       transforms by the same matrices as the first set of the type.  These
+       matrices depend on X and on the basis eigh returns for the first set,
+       so they are not a standard form of the irrep.
+    6. The sets of all types are sorted by eigenvalue.
 
     The size of a degenerate set is the subspace dimension d_mu, so no
     frequency tolerance is used.  See doc/symmetry-adapted-modes.md.
@@ -519,7 +532,7 @@ class SymmetryAdaptedModes:
 
         For the eigenvectors E (3N x dim) of the set, the matrix of a
         unitary operation S is E^dagger T(S) E.  Its trace is the character
-        in ``characters``.
+        in ``characters``.  Sets of the same type give the same matrices.
 
         Returns
         -------
@@ -537,31 +550,50 @@ class SymmetryAdaptedModes:
         )
 
     def _run(self) -> None:
-        """Run steps 1-5 of the class docstring.
+        """Run steps 1-6 of the class docstring.
 
         Within a type mu, the eigenvalues of B_mu^dagger D_sym B_mu are taken
         in consecutive chunks of d_mu.  The eigenvalue of a set is the mean
         of its chunk, and frequencies are sgn(w2) sqrt(|w2|) * factor.
 
         """
+        # Steps 1 and 2
         subspaces = self._get_irreducible_subspaces()
-        types = self._group_by_characters(subspaces)
         dm_sym = self._symmetrize(self._dynamical_matrix)
 
-        eigvals = []
-        eigvecs = []
-        chars = []
-        for members, type_chars in types:
+        # Step 3
+        irrep_types = self._group_by_characters(subspaces)
+
+        # Step 4
+        eigvals: list[float] = []
+        eigvecs: list[NDArray[np.cdouble]] = []
+        chars: list[NDArray[np.cdouble]] = []
+        # Indices in eigvecs of the sets of each type with two or more sets
+        sets_of_types: list[list[int]] = []
+        for members, type_chars in irrep_types:
             dim = subspaces[members[0]].shape[1]
             basis = np.hstack([subspaces[k] for k in members])
             vals, vecs = np.linalg.eigh(basis.conj().T @ dm_sym @ basis)
             vecs = basis @ vecs
+            if len(members) > 1:
+                sets_of_types.append(
+                    list(range(len(eigvecs), len(eigvecs) + len(members)))
+                )
             for k in range(len(members)):
                 chunk = slice(k * dim, (k + 1) * dim)
                 eigvals.append(vals[chunk].mean())
                 eigvecs.append(vecs[:, chunk])
                 chars.append(type_chars)
 
+        # Step 5
+        to_align = [i for indices in sets_of_types for i in indices]
+        matrices = self._get_representation_matrices([eigvecs[i] for i in to_align])
+        gammas = dict(zip(to_align, matrices, strict=True))
+        for reference, *others in sets_of_types:
+            for i in others:
+                eigvecs[i] = self._align(eigvecs[i], gammas[i], gammas[reference])
+
+        # Step 6
         order = np.argsort(eigvals, kind="stable")
         self._eigenvectors = np.hstack([eigvecs[k] for k in order])
         self._characters = np.array([chars[k] for k in order], dtype="cdouble")
@@ -577,6 +609,91 @@ class SymmetryAdaptedModes:
         self._frequencies = (
             np.sqrt(np.abs(vals_band_arr)) * np.sign(vals_band_arr) * self._factor
         )
+
+    def _get_representation_matrices(
+        self, sets: list[NDArray[np.cdouble]]
+    ) -> list[NDArray[np.cdouble]]:
+        """Return Gamma_E(g) = E^dagger T(g) E^(*) of sets for all operations g.
+
+        E^(*) is conj(E) for antiunitary g.  With the sets side by side in
+        E = (E_1, E_2, ...), each operation is applied once, and Gamma_(E_c)(g)
+        is E_c^dagger times the columns of T(g) E^(*) that belong to E_c.  Only
+        these diagonal blocks of E^dagger T(g) E^(*) are computed.
+
+        Parameters
+        ----------
+        sets : list of ndarray
+            Eigenvectors E_c of degenerate sets.  Each has
+            shape=(num_band, dim_c), dtype=cdouble.
+
+        Returns
+        -------
+        list of ndarray
+            Gamma_(E_c)(g) for each set, in the order of ``sets``.  Each has
+            shape=(num_operations, dim_c, dim_c), dtype=cdouble.
+
+        """
+        if not sets:
+            return []
+        vecs = np.hstack(sets)
+        # Columns bounds[c]:bounds[c + 1] of vecs are E_c
+        bounds = np.cumsum([0] + [e.shape[1] for e in sets])
+        gammas = [
+            np.empty((len(self._operations), e.shape[1], e.shape[1]), dtype="cdouble")
+            for e in sets
+        ]
+        for i, op in enumerate(self._operations):
+            rotated = op.transform_vectors(vecs)
+            for c, gamma in enumerate(gammas):
+                block = slice(bounds[c], bounds[c + 1])
+                gamma[i] = vecs[:, block].conj().T @ rotated[:, block]
+        return gammas
+
+    def _align(
+        self,
+        vecs: NDArray[np.cdouble],
+        gammas_vecs: NDArray[np.cdouble],
+        gammas_ref: NDArray[np.cdouble],
+    ) -> NDArray[np.cdouble]:
+        """Rotate a degenerate set to transform like a reference set.
+
+        With Gamma_E(g) = E^dagger T(g) E^(*) over all operations g (E^(*) is
+        conj(E) for antiunitary g), the matrix
+
+            J = sum over g of Gamma_vecs(g) R Gamma_reference(g)^dagger
+
+        satisfies Gamma_vecs(g) J^(*) = J Gamma_reference(g), and by Schur's
+        lemma it is a multiple of a unitary matrix.  R runs over the matrix
+        units E_ab, and the J of largest norm is used.  With J = W S V^dagger,
+        vecs W V^dagger transforms by Gamma_reference.
+
+        Parameters
+        ----------
+        vecs : ndarray
+            Eigenvectors of the set to rotate.
+            shape=(num_band, dim), dtype=cdouble
+        gammas_vecs : ndarray
+            Gamma_vecs(g) from _get_representation_matrices.
+            shape=(num_operations, dim, dim), dtype=cdouble
+        gammas_ref : ndarray
+            Gamma_reference(g) of the first set of the same type, from
+            _get_representation_matrices.
+            shape=(num_operations, dim, dim), dtype=cdouble
+
+        Returns
+        -------
+        ndarray
+            shape=(num_band, dim), dtype=cdouble
+
+        """
+        # With R = E_ab, J[a, b] = sum over g of outer(Gamma_vecs(g)[:, a],
+        # conj(Gamma_reference(g)[:, b]))
+        js = np.einsum("gia,gjb->abij", gammas_vecs, gammas_ref.conj())
+        dim = vecs.shape[1]
+        norms = np.linalg.norm(js.reshape(dim * dim, -1), axis=1)
+        a, b = divmod(int(np.argmax(norms)), dim)
+        w, _, vh = np.linalg.svd(js[a, b])
+        return vecs @ (w @ vh)
 
     def _symmetrize(self, mat: NDArray[np.cdouble]) -> NDArray[np.cdouble]:
         """Return <M>, the average of M over the little group.
@@ -605,18 +722,20 @@ class SymmetryAdaptedModes:
         X u = lambda u also X (T u) = lambda (T u): each eigenspace of X is
         closed under the operations.  By Schur's lemma a commuting matrix is
         X = sum over irreps mu of X_mu (x) I_(d_mu), so for a generic X each
-        eigenspace is one copy of one irrep mu (or one pair of irreps joined
-        by time reversal, since X also commutes with the antiunitary
-        operations).  Two copies share an eigenspace only when eigenvalues
-        of X coincide, which has probability zero for a random Y.  The
+        eigenspace is one irreducible component of one irrep mu (or of one
+        pair of irreps joined by time reversal, since X also commutes with
+        the antiunitary operations).  An irrep can appear several times, and
+        each appearance is a separate irreducible component.  Two components
+        share an eigenspace only when eigenvalues of X coincide, which has
+        probability zero for a random Y.  The
         dynamical matrix is not used here because its eigenvalues can
         coincide or nearly coincide for physical reasons.
 
         Neighbouring eigenvalues of X with lambda_(i+1) - lambda_i <=
         SUBSPACE_TOLERANCE * max(max|lambda|, 1) are put in the same
-        subspace.  Within one copy the eigenvalues are equal to round-off;
-        between copies they are separated by the typical spacing of the
-        eigenvalues of a random matrix.
+        subspace.  Within one irreducible component the eigenvalues are equal
+        to round-off; between components they are separated by the typical
+        spacing of the eigenvalues of a random matrix.
 
         Each basis has shape=(num_band, dim), dtype=cdouble.
 
@@ -628,15 +747,15 @@ class SymmetryAdaptedModes:
             dtype="cdouble",
         )
         x = self._symmetrize((y + y.conj().T) / 2)
+        # eigh returns the eigenvalues in ascending order, so degenerate ones
+        # are adjacent
         vals, vecs = np.linalg.eigh(x)
-        scale = max(np.abs(vals).max(), 1.0)
-        subspaces = []
-        start = 0
-        for i in range(1, n + 1):
-            if i == n or vals[i] - vals[i - 1] > SUBSPACE_TOLERANCE * scale:
-                subspaces.append(vecs[:, start:i])
-                start = i
-        return subspaces
+        tolerance = SUBSPACE_TOLERANCE * max(np.abs(vals).max(), 1.0)
+        # A new subspace starts at column i when vals[i] is apart from vals[i - 1]
+        starts = [i for i in range(1, n) if vals[i] - vals[i - 1] > tolerance]
+        # Columns bounds[k]:bounds[k + 1] of vecs span the k-th subspace
+        bounds = [0] + starts + [n]
+        return [vecs[:, bounds[k] : bounds[k + 1]] for k in range(len(bounds) - 1)]
 
     def _group_by_characters(
         self, subspaces: list[NDArray[np.cdouble]]
@@ -647,29 +766,60 @@ class SymmetryAdaptedModes:
         Subspaces k and k' belong to the same type when d_k = d_k' and
         max over S of |chi_k(S) - chi_k'(S)| < CHARACTER_TOLERANCE.
 
+        The characters of all subspaces are computed together.  With the bases
+        side by side in U = (U_1, U_2, ...), each operation is applied once,
+        the diagonal element of U^dagger T(S) U for column i is
+        sum over a of conj(U[a, i]) (T(S) U)[a, i], and chi_k(S) is the sum of
+        these over the columns of U_k.
+
+        Parameters
+        ----------
+        subspaces : list of ndarray
+            Orthonormal bases U_k of the irreducible invariant subspaces, in
+            the order returned by _get_irreducible_subspaces.  Each has
+            shape=(num_band, d_k), dtype=cdouble.
+
         Returns
         -------
-        list of (member subspace indices, characters)
-            characters has shape=(num_unitary_operations,), dtype=cdouble.
+        list of tuple (members, characters)
+            One tuple per type mu, in the order in which the first subspace of
+            each type appears in ``subspaces``.
+
+            members : list of int
+                Indices of the subspaces in ``subspaces`` that belong to the
+                type, in increasing order.  The first one, members[0], is the
+                subspace whose characters define the type.
+            characters : ndarray
+                chi_(members[0])(S) for the unitary operations S, in the order
+                of self._operations.
+                shape=(num_unitary_operations,), dtype=cdouble
 
         """
         unitary_ops = self._operations[: self._num_unitary]
-        types: list[tuple[list[int], NDArray[np.cdouble]]] = []
-        for k, basis in enumerate(subspaces):
-            chars = np.array(
-                [
-                    np.trace(basis.conj().T @ op.transform_vectors(basis))
-                    for op in unitary_ops
-                ],
-                dtype="cdouble",
-            )
-            for members, type_chars in types:
+        bases = np.hstack(subspaces)
+        # Columns bounds[k]:bounds[k + 1] of bases are U_k
+        bounds = np.cumsum([0] + [basis.shape[1] for basis in subspaces])
+        # diags[s, i] = (U^dagger T(S_s) U)[i, i] for every column i of U
+        diags = np.array(
+            [
+                np.einsum("ai,ai->i", bases.conj(), op.transform_vectors(bases))
+                for op in unitary_ops
+            ],
+            dtype="cdouble",
+        )
+
+        irrep_types: list[tuple[list[int], NDArray[np.cdouble]]] = []
+        for k in range(len(subspaces)):
+            dim = bounds[k + 1] - bounds[k]
+            chars = diags[:, bounds[k] : bounds[k + 1]].sum(axis=1)
+            for members, type_chars in irrep_types:
+                first = members[0]
                 if (
-                    subspaces[members[0]].shape[1] == basis.shape[1]
+                    bounds[first + 1] - bounds[first] == dim
                     and np.abs(type_chars - chars).max() < CHARACTER_TOLERANCE
                 ):
                     members.append(k)
                     break
-            else:
-                types.append(([k], chars))
-        return types
+            else:  # no existing type matches
+                irrep_types.append(([k], chars))
+        return irrep_types

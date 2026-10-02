@@ -196,6 +196,33 @@ def test_characters_match_irreps_at_gamma(case):
     assert num_compared > 0
 
 
+def test_sets_of_same_type_are_aligned(case):
+    """Test sets of the same type transform by the same matrices.
+
+    The matrices of all operations, antiunitary ones included, are compared.
+
+    """
+    phonon, qpoints = case
+    for q in qpoints:
+        modes = _get_modes(phonon, q)
+        gammas = []
+        for bands in modes.degenerate_sets:
+            e = modes.eigenvectors[:, bands]
+            gamma = [e.conj().T @ op.transform_vectors(e) for op in modes.operations]
+            gammas.append(np.array(gamma))
+        num_compared = 0
+        for i, j in itertools.combinations(range(len(gammas)), 2):
+            if gammas[i].shape != gammas[j].shape:
+                continue
+            if np.abs(modes.characters[i] - modes.characters[j]).max() > 1e-5:
+                continue
+            np.testing.assert_allclose(
+                gammas[i], gammas[j], atol=1e-8, err_msg=f"q={q}"
+            )
+            num_compared += 1
+        assert num_compared > 0
+
+
 def test_result_is_reproducible(case):
     """Test two runs give identical results."""
     phonon, qpoints = case
