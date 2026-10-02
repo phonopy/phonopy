@@ -1143,6 +1143,21 @@ def test_get_born_vaspout(tmp_path):
     np.testing.assert_array_equal(atom_indices, [0, 1])
 
 
+def test_get_born_vaspout_matches_vasprunxml(tmp_path):
+    """Born charges from vaspout.h5 and vasprun.xml agree for monoclinic MgP4."""
+    pytest.importorskip("h5py")
+    path = tmp_path / "vaspout.h5"
+    with lzma.open(cwd / "MgP4-vaspout-born.h5.xz", "rb") as fp:
+        path.write_bytes(fp.read())
+    borns_h5, epsilon_h5, indices_h5 = get_born_vaspout(path)
+    borns_xml, epsilon_xml, indices_xml = get_born_vasprunxml(
+        cwd / "MgP4-vasprun-born.xml.xz"
+    )
+    np.testing.assert_allclose(borns_h5, borns_xml, atol=1e-7)
+    np.testing.assert_allclose(epsilon_h5, epsilon_xml, atol=1e-7)
+    np.testing.assert_array_equal(indices_h5, indices_xml)
+
+
 def test_get_born_vasprunxml_dispatches_h5(tmp_path):
     """get_born_vasprunxml routes .h5 files to get_born_vaspout."""
     pytest.importorskip("h5py")
