@@ -2,6 +2,20 @@
 
 # Change Log
 
+## Oct-02-2026: Version 4.8.0
+
+- Bug fix: the Born effective charges that `phonopy-vasp-born` read from
+  `vaspout.h5` were transposed. `vaspout.h5` stores the Born effective charge
+  tensor of each atom transposed relative to `vasprun.xml`, and phonopy did
+  not transpose it back. The NAC parameters were wrong when a tensor is not
+  symmetric. This bug was present since v4.4.0.
+- `IRREPS_SYMMETRY_ADAPTED` tag (`--irreps-symmetry-adapted`, and
+  `symmetry_adapted` of `Phonopy.run_irreps`). When it is on, the degenerate
+  bands in the `IRREPS` calculation are found from the representation of the
+  little group of _q_, and not from how close their frequencies are. The
+  default is off. See {ref}`symmetry_adapted_modes`.
+- phonors 0.6.0 or later is required.
+
 ## Sep-27-2026: Version 4.7.2
 
 - Fix two tests that failed on Windows when acoustic modes at Gamma entered

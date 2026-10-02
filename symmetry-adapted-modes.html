@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Symmetry-adapted phonon modes &#8212; Phonopy v.4.7.2</title>
+    <title>Symmetry-adapted phonon modes &#8212; Phonopy v.4.8.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=96d5d17c"></script>
+    <script src="_static/documentation_options.js?v=2adde624"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Formulations" href="formulation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.7" />
+  <meta name="docsearch:version" content="4.8" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.7.2</p>
+    <p class="title logo__title">Phonopy v.4.8.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -407,6 +407,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetrized-geometry">Symmetrized geometry</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#decomposition-into-degenerate-sets">Decomposition into degenerate sets</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-eigenspaces-of-x-are-irreducible">Why the eigenspaces of X are irreducible</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aligning-the-sets-of-one-type">Aligning the sets of one type</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remarks">Remarks</a></li>
 </ul>
 </li>
@@ -817,6 +818,9 @@ representation and are collected into one type <span class="math notranslate noh
 <span class="math notranslate nohighlight">\(B_\mu^\dagger D_{\mathrm{sym}}B_\mu\)</span> is diagonalized. Its eigenvalues
 come in runs of <span class="math notranslate nohighlight">\(d_\mu\)</span> equal values. Each run of <span class="math notranslate nohighlight">\(d_\mu\)</span>
 consecutive eigenvalues is one degenerate set.</p></li>
+<li><p>Within each type, the eigenvectors of every set except the first are
+rotated inside the set, so that all sets of the type are transformed by the
+same matrices. The procedure is given in <a class="reference internal" href="#symmodes-aligning-sets"><span class="std std-ref">Aligning the sets of one type</span></a>.</p></li>
 <li><p>The sets of all types are sorted by eigenvalue, and the frequencies are
 <span class="math notranslate nohighlight">\(\operatorname{sgn}(\omega^2)\sqrt{|\omega^2|}\)</span> times the unit
 conversion factor.</p></li>
@@ -841,11 +845,17 @@ lemma, a matrix that commutes with a unitary representation has the block form</
 <p>where <span class="math notranslate nohighlight">\(\mu\)</span> runs over the irreducible representations, <span class="math notranslate nohighlight">\(d_\mu\)</span> is
 the dimension of <span class="math notranslate nohighlight">\(\mu\)</span>, and <span class="math notranslate nohighlight">\(X_\mu\)</span> is a Hermitian
 <span class="math notranslate nohighlight">\(m_\mu\times m_\mu\)</span> matrix, with <span class="math notranslate nohighlight">\(m_\mu\)</span> the number of times
-<span class="math notranslate nohighlight">\(\mu\)</span> appears in the <span class="math notranslate nohighlight">\(3N\)</span>-dimensional space. Each eigenvalue of
-<span class="math notranslate nohighlight">\(X_\mu\)</span> appears <span class="math notranslate nohighlight">\(d_\mu\)</span> times in <span class="math notranslate nohighlight">\(X\)</span>, and its eigenspace is one
-copy of <span class="math notranslate nohighlight">\(\mu\)</span>. Two copies merge into one eigenspace only when two
-eigenvalues coincide, either inside one <span class="math notranslate nohighlight">\(X_\mu\)</span> or between <span class="math notranslate nohighlight">\(X_\mu\)</span>
-and <span class="math notranslate nohighlight">\(X_\nu\)</span>. For a random <span class="math notranslate nohighlight">\(X\)</span> this happens with probability zero.</p>
+<span class="math notranslate nohighlight">\(\mu\)</span> appears in the <span class="math notranslate nohighlight">\(3N\)</span>-dimensional space. Each appearance of
+<span class="math notranslate nohighlight">\(\mu\)</span> is one irreducible component of the representation. At
+<span class="math notranslate nohighlight">\(\Gamma\)</span> of NaCl, for example, the six-dimensional representation is
+<span class="math notranslate nohighlight">\(T_{1u}\oplus T_{1u}\)</span>: the three acoustic modes and the three optical
+modes are two irreducible components of the same irreducible representation
+<span class="math notranslate nohighlight">\(T_{1u}\)</span>.</p>
+<p>Each eigenvalue of <span class="math notranslate nohighlight">\(X_\mu\)</span> appears <span class="math notranslate nohighlight">\(d_\mu\)</span> times in <span class="math notranslate nohighlight">\(X\)</span>, and
+its eigenspace is one irreducible component of <span class="math notranslate nohighlight">\(\mu\)</span>. Two components merge
+into one eigenspace only when two eigenvalues coincide, either inside one
+<span class="math notranslate nohighlight">\(X_\mu\)</span> or between <span class="math notranslate nohighlight">\(X_\mu\)</span> and <span class="math notranslate nohighlight">\(X_\nu\)</span>. For a random
+<span class="math notranslate nohighlight">\(X\)</span> this happens with probability zero.</p>
 <p>The group average makes a random <span class="math notranslate nohighlight">\(X\)</span> of this form. Every matrix
 <span class="math notranslate nohighlight">\(X'\)</span> that commutes with the operations satisfies
 <span class="math notranslate nohighlight">\(\langle X'\rangle=X'\)</span>, so the average maps a random Hermitian
@@ -872,6 +882,48 @@ found as one subspace in this way.</p>
 <p>Schur’s lemma covers the unitary operations. For the antiunitary ones, the
 statement that each eigenspace carries one pair was checked for the structures
 in <code class="docutils literal notranslate"><span class="pre">test/phonon/test_symmetry_adapted_modes.py</span></code> and is not proven here.</p>
+</section>
+<section id="aligning-the-sets-of-one-type">
+<span id="symmodes-aligning-sets"></span><h3>Aligning the sets of one type<a class="headerlink" href="#aligning-the-sets-of-one-type" title="Link to this heading">#</a></h3>
+<p>At <span class="math notranslate nohighlight">\(\Gamma\)</span> of NaCl, the acoustic set and the optical set both carry
+<span class="math notranslate nohighlight">\(T_{1u}\)</span>. After step 4, each set has the basis that <code class="docutils literal notranslate"><span class="pre">numpy.linalg.eigh</span></code>
+returns for it. The two sets are therefore transformed by two different
+<span class="math notranslate nohighlight">\(3\times3\)</span> matrices, although the two representations are the same. Step
+5 rotates the basis of the optical set so that both sets are transformed by the
+same matrices.</p>
+<p>For a set with eigenvectors <span class="math notranslate nohighlight">\(E\)</span> (<span class="math notranslate nohighlight">\(3N\times d_\mu\)</span>), the matrix of an
+operation <span class="math notranslate nohighlight">\(g\)</span> of the little group is</p>
+<div class="math notranslate nohighlight">
+\[\Gamma_E(g)=E^\dagger\,T(g)\,E^{(*)},\]</div>
+<p>where <span class="math notranslate nohighlight">\(E^{(*)}\)</span> is <span class="math notranslate nohighlight">\(E^*\)</span> for an antiunitary operation and <span class="math notranslate nohighlight">\(E\)</span>
+otherwise. Let <span class="math notranslate nohighlight">\(E_0\)</span> be the first set of a type and <span class="math notranslate nohighlight">\(E_c\)</span> another
+set of the same type. The <span class="math notranslate nohighlight">\(d_\mu\times d_\mu\)</span> matrix</p>
+<div class="math notranslate nohighlight">
+\[J=\sum_{g}\Gamma_{E_c}(g)\,R\,\Gamma_{E_0}(g)^\dagger\]</div>
+<p>is summed over all operations, the antiunitary ones included. <span class="math notranslate nohighlight">\(R\)</span> is a
+<span class="math notranslate nohighlight">\(d_\mu\times d_\mu\)</span> matrix with a single element equal to one, and among
+these <span class="math notranslate nohighlight">\(d_\mu^2\)</span> choices the one that gives <span class="math notranslate nohighlight">\(J\)</span> of the largest norm
+is used.
+By Schur’s lemma, <span class="math notranslate nohighlight">\(J\)</span> is a multiple of a unitary matrix. With the singular
+value decomposition <span class="math notranslate nohighlight">\(J=W\Sigma V^\dagger\)</span>, the set is rotated to
+<span class="math notranslate nohighlight">\(E_cWV^\dagger\)</span>, and after the rotation
+<span class="math notranslate nohighlight">\(\Gamma_{E_c}(g)=\Gamma_{E_0}(g)\)</span> for every operation.</p>
+<p>The rotation mixes eigenvectors of one set only. All of them have the same
+eigenvalue, so the frequencies, the degenerate sets and the characters do not
+change. <code class="docutils literal notranslate"><span class="pre">get_representation_matrices</span></code> returns the same matrices for all sets of
+one type.</p>
+<p>The antiunitary operations are included in the sum because the unitary ones
+alone leave a phase undetermined. With the unitary operations only,
+<span class="math notranslate nohighlight">\(J\)</span> is a multiple of a unitary matrix by a complex number, and after the
+rotation the matrices of the antiunitary operations can still differ by a
+phase between the two sets. That <span class="math notranslate nohighlight">\(J\)</span> is a multiple of a unitary matrix
+when the antiunitary operations are included was checked for the structures in
+<code class="docutils literal notranslate"><span class="pre">test/phonon/test_symmetry_adapted_modes.py</span></code>.</p>
+<p>The common matrices <span class="math notranslate nohighlight">\(\Gamma_{E_0}(g)\)</span> are not a standard form of the
+irreducible representation. They depend on <span class="math notranslate nohighlight">\(X\)</span> and on the basis that
+<code class="docutils literal notranslate"><span class="pre">numpy.linalg.eigh</span></code> returns for the first set, so they cannot be compared with
+the matrices in a table or with the matrices at another q-point. Only the
+statement that all sets of one type are transformed by the same matrices holds.</p>
 </section>
 <section id="remarks">
 <h3>Remarks<a class="headerlink" href="#remarks" title="Link to this heading">#</a></h3>
@@ -941,6 +993,7 @@ that <code class="docutils literal notranslate"><span class="pre">DynamicalMatri
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetrized-geometry">Symmetrized geometry</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#decomposition-into-degenerate-sets">Decomposition into degenerate sets</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-eigenspaces-of-x-are-irreducible">Why the eigenspaces of X are irreducible</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aligning-the-sets-of-one-type">Aligning the sets of one type</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remarks">Remarks</a></li>
 </ul>
 </li>
