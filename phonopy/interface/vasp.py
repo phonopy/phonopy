@@ -654,7 +654,10 @@ def get_born_vaspout(
                 f'"{filename}" does not contain Born effective charges and a '
                 "dielectric tensor. Run VASP with LEPSILON = .TRUE."
             )
-        borns = np.array(f[lr]["born_charges"][:], dtype="double", order="C")
+        # Stored transposed relative to vasprun.xml.
+        borns = np.array(
+            f[lr]["born_charges"][:].transpose(0, 2, 1), dtype="double", order="C"
+        )
         epsilon = np.array(
             f[lr]["electron_dielectric_tensor"][:], dtype="double", order="C"
         )
