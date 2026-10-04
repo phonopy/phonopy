@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 import pytest
 
@@ -23,11 +25,6 @@ from phonopy.phonon.grid import (
 from phonopy.phonon.tetrahedron_method import _get_tetrahedra_relative_grid_address
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
-
-# Most tests poke the C kernels (`phonopy._recgrid` / `phonopy._phonopy`)
-# directly with default ``lang="C"`` -- skip the whole module without C.
-pytest.importorskip("phonopy._recgrid")
-pytest.importorskip("phonopy._phonopy")
 
 
 def _get_qpoints(adrs, bzgrid):
@@ -2526,3 +2523,80 @@ def test_length2mesh(ph_nacl: Phonopy):
         ph_nacl.primitive_symmetry.pointgroup_operations,
     )
     np.testing.assert_array_equal(mesh_numbers, [15, 15, 15])
+
+
+@pytest.mark.parametrize("rounding,mesh_number", [("nearest", 14), ("ceiling", 15)])
+def test_length2mesh_rounding(
+    ph_nacl: Phonopy, rounding: Literal["nearest", "ceiling"], mesh_number: int
+):
+    """Test of rounding in length2mesh.
+
+    |a*| * length is 14.31 for the primitive cell of NaCl with length=47.
+
+    """
+    mesh_numbers = length2mesh(47.0, ph_nacl.primitive.cell, rounding=rounding)
+    np.testing.assert_array_equal(mesh_numbers, [mesh_number] * 3)
+
+
+def test_length2mesh_rounding_invalid(ph_nacl: Phonopy):
+    """Test that an unknown rounding is an error."""
+    with pytest.raises(ValueError, match="rounding"):
+        length2mesh(47.0, ph_nacl.primitive.cell, rounding="floor")  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "rounding,mesh_number,conv_mesh_number",
+    [("nearest", 14, 8), ("ceiling", 15, 9)],
+)
+def test_GridMatrix_rounding(
+    ph_nacl: Phonopy,
+    rounding: Literal["nearest", "ceiling"],
+    mesh_number: int,
+    conv_mesh_number: int,
+):
+    """Test of rounding in GridMatrix for regular grid and GR-grid.
+
+    With length=47, |a*| * length is 14.31 for the primitive cell and 8.26 for
+    the conventional unit cell, which is used for GR-grid.
+
+    """
+    gm = GridMatrix(
+        47.0,
+        ph_nacl.primitive.cell,
+        symmetry_dataset=ph_nacl.primitive_symmetry.dataset,
+        use_grg=False,
+        rounding=rounding,
+    )
+    assert gm.grid_matrix is None
+    np.testing.assert_array_equal(gm.D_diag, [mesh_number] * 3)
+
+    tmat = np.array(
+        ph_nacl.primitive_symmetry.dataset.transformation_matrix, dtype="double"
+    )
+    gm = GridMatrix(
+        47.0,
+        ph_nacl.primitive.cell,
+        transformation_matrix=tmat,
+        rounding=rounding,
+    )
+    np.testing.assert_array_equal(
+        gm.grid_matrix,
+        np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]]) * conv_mesh_number,
+    )
+    np.testing.assert_array_equal(
+        gm.D_diag, [conv_mesh_number, conv_mesh_number * 2, conv_mesh_number * 2]
+    )
+
+
+@pytest.mark.parametrize("rounding,mesh_number", [("nearest", 14), ("ceiling", 15)])
+def test_BZGrid_rounding(
+    ph_nacl: Phonopy, rounding: Literal["nearest", "ceiling"], mesh_number: int
+):
+    """Test that rounding of BZGrid is passed to GridMatrix."""
+    bzgrid = BZGrid(
+        47.0,
+        lattice=ph_nacl.primitive.cell,
+        symmetry_dataset=ph_nacl.primitive_symmetry.dataset,
+        rounding=rounding,
+    )
+    np.testing.assert_array_equal(bzgrid.D_diag, [mesh_number] * 3)
