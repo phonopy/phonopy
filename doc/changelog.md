@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Oct-04-2026: Version 4.8.1
+
+- `rounding` option (`"nearest"` or `"ceiling"`) of `length2mesh`,
+  `GridMatrix`, and `BZGrid`. The default `"nearest"` is unchanged.
+
 ## Oct-02-2026: Version 4.8.0
 
 - Bug fix: the Born effective charges that `phonopy-vasp-born` read from

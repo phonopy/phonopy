@@ -28,12 +28,21 @@ def length2mesh(
     length: float,
     lattice: Sequence[Sequence[float]] | NDArray[np.double],
     rotations: NDArray[np.int64] | None = None,
+    rounding: Literal["nearest", "ceiling"] = "nearest",
 ) -> NDArray[np.int64]:
     """Convert length to mesh for q-point sampling.
 
-    This conversion for each reciprocal axis follows VASP convention by
-        N = max(1, int(l * |a|^* + 0.5))
-    'int' means rounding down, not rounding to nearest integer.
+    For each reciprocal basis vector a*_i, the mesh number is l * |a*_i|
+    converted to an integer, and it is at least 1. ``rounding`` chooses the
+    conversion:
+
+        "nearest" (default): N = max(1, rint(l * |a*_i|)). This follows the
+            automatic k-point mesh of the VASP KPOINTS file,
+            N = int(max(1, l * |a*_i| + 0.5)), except that numpy.rint rounds a
+            value exactly halfway between two integers to the even one.
+        "ceiling": N = max(1, ceiling(l * |a*_i|)). This is the rule of the
+            VASP INCAR tag KSPACING. To get the mesh of KSPACING, give
+            l = 2 * pi / KSPACING and rounding="ceiling".
 
     Parameters
     ----------
@@ -46,6 +55,8 @@ def length2mesh(
         Rotation matrices in real space. When given, mesh numbers that are
         symmetrically reasonable are returned. Default is None.
         dtype='int64', shape=(rotations, 3, 3)
+    rounding : {"nearest", "ceiling"}, optional
+        Conversion of l * |a*_i| to an integer. Default is "nearest".
 
     Returns
     -------
@@ -55,7 +66,14 @@ def length2mesh(
     """
     rec_lattice = np.array(np.linalg.inv(lattice), dtype="double")
     rec_lat_lengths = get_cell_parameters(rec_lattice.T)
-    mesh_numbers = np.rint(rec_lat_lengths * length).astype(int)
+    if rounding == "nearest":
+        mesh_numbers = np.rint(rec_lat_lengths * length).astype(int)
+    elif rounding == "ceiling":
+        mesh_numbers = np.ceil(rec_lat_lengths * length).astype(int)
+    else:
+        raise ValueError(
+            f'rounding has to be "nearest" or "ceiling", not "{rounding}".'
+        )
 
     if rotations is not None:
         reclat_equiv = get_lattice_vector_equivalence(
@@ -238,6 +256,7 @@ class BZGrid:
         SNF_coordinates: Literal["reciprocal", "direct"] = "reciprocal",
         store_dense_gp_map: bool = True,
         lang: Literal["C", "Rust"] = "Rust",
+        rounding: Literal["nearest", "ceiling"] = "nearest",
     ):
         """Init method.
 
@@ -281,6 +300,9 @@ class BZGrid:
             Backend selector for grid-related native routines. "C" uses
             ``phonopy._recgrid``; "Rust" uses ``phonors``. Default is
             "C".
+        rounding : {"nearest", "ceiling"}, optional
+            Conversion of length to mesh numbers when ``mesh`` is a length. See
+            ``length2mesh``. Default is "nearest".
 
         """
         lang = resolve_lang(lang)
@@ -332,6 +354,7 @@ class BZGrid:
             force_SNF=force_SNF,
             SNF_coordinates=SNF_coordinates,
             lang=lang,
+            rounding=rounding,
         )
         self._symmetry_dataset = gm.grid_symmetry_dataset
         self._grid_matrix = gm.grid_matrix
@@ -677,6 +700,7 @@ class GridMatrix:
         force_SNF: bool = False,
         SNF_coordinates: Literal["reciprocal", "direct"] = "reciprocal",
         lang: Literal["C", "Rust"] = "Rust",
+        rounding: Literal["nearest", "ceiling"] = "nearest",
     ) -> None:
         """Init method.
 
@@ -708,11 +732,15 @@ class GridMatrix:
         lang : {"C", "Rust"}, optional
             Backend selector for SNF. "C" uses ``phonopy._recgrid``; "Rust"
             uses ``phonors``. Default is "C".
+        rounding : {"nearest", "ceiling"}, optional
+            Conversion of length to mesh numbers when ``mesh`` is a length. See
+            ``length2mesh``. Default is "nearest".
 
         """
         log_dispatch(lang, "GridMatrix.__init__")
 
         self._lang: Literal["C", "Rust"] = lang
+        self._rounding: Literal["nearest", "ceiling"] = rounding
         self._mesh = mesh
         self._lattice = np.asarray(lattice, dtype="double", order="C")
         self._grid_matrix: NDArray[np.int64] | None = None
@@ -835,6 +863,7 @@ class GridMatrix:
                     length,
                     self._lattice,
                     rotations=self._mock_symmetry_dataset.rotations,  # type: ignore[arg-type]
+                    rounding=self._rounding,
                 )
                 self._D_diag = np.array(mesh_numbers, dtype="int64")
         else:
@@ -965,7 +994,9 @@ class GridMatrix:
             tmat = np.dot(self._lattice, np.linalg.inv(conv_lat)).T
 
         if coordinates == "direct":
-            num_cells = int(np.prod(length2mesh(length, conv_lat)))
+            num_cells = int(
+                np.prod(length2mesh(length, conv_lat, rounding=self._rounding))
+            )
             max_num_atoms = num_cells * len(self._mock_symmetry_dataset.std_types)
             conv_mesh_numbers = estimate_supercell_matrix(
                 cast(SpglibDataset, self._mock_symmetry_dataset),
@@ -973,7 +1004,9 @@ class GridMatrix:
                 max_iter=200,
             )
         elif coordinates == "reciprocal":
-            conv_mesh_numbers = length2mesh(length, conv_lat)  # type: ignore[assignment]
+            conv_mesh_numbers = length2mesh(  # type: ignore[assignment]
+                length, conv_lat, rounding=self._rounding
+            )
         else:
             raise TypeError('Expect "direct" or "reciprocal" for coordinates.')
 
