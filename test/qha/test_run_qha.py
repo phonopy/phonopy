@@ -18,7 +18,7 @@ from qha_utils import (
 )
 
 from phonopy import Phonopy, PhonopyQHA, run_qha
-from phonopy.electron.kpoint_sum import compute_free_energy_by_kpoint_sum
+from phonopy.electron.kpoint_sum import compute_thermal_properties_by_kpoint_sum
 from phonopy.electron.states import ElectronicStates
 from phonopy.physical_units import get_physical_units
 from phonopy.qha.lattice import LatticeParametersFit
@@ -254,12 +254,12 @@ def test_run_qha_electronic_structures(nacl_qha_phonopys: list[Phonopy]) -> None
         mesh=MESH,
     )
 
-    temps_with_anchor = np.concatenate([[0.0], TEMPERATURES])
     el2d = np.zeros((len(TEMPERATURES), len(volumes)))
     for i, electronic_states in enumerate(states):
-        fe, _ = compute_free_energy_by_kpoint_sum(electronic_states, temps_with_anchor)
-        # Parenthesized to match the operation order of run_qha bitwise.
-        el2d[:, i] = el_static[i] + (fe[1:] - fe[0])
+        fe = compute_thermal_properties_by_kpoint_sum(
+            electronic_states, TEMPERATURES
+        ).free_energy
+        el2d[:, i] = el_static[i] + fe
 
     fe_phonon, entropy, cv = thermal_properties(nacl_qha_phonopys)
     ref = PhonopyQHA(

@@ -795,7 +795,7 @@ electronic term.
 import numpy as np
 
 from phonopy import run_anisotropic_qha
-from phonopy.electron.tetrahedron import compute_free_energy_by_tetrahedron
+from phonopy.electron.tetrahedron import compute_thermal_properties_by_tetrahedron
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
 
 dataset = read_aniso_qha_dataset("aniso_qha_dataset.hdf5")
@@ -804,7 +804,9 @@ temperatures = np.arange(0, 1001, 10.0)  # one extra point for finite diff
 fe_el = np.column_stack(
     [
         # F_el(T) - F_el(0) in eV per primitive cell, one grid point at a time.
-        compute_free_energy_by_tetrahedron(point.electronic_states, temperatures)[0]
+        compute_thermal_properties_by_tetrahedron(
+            point.electronic_states, temperatures
+        ).free_energy
         for point in dataset.grid_points
     ]
 )

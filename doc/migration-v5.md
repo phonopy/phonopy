@@ -209,7 +209,43 @@ extend the notice period.
 
 The old modules import the same names from the new ones and warn when
 they are imported. v5.0 removes them. `compute_free_energy_and_entropy`
-is removed with them; use `compute_free_energy_by_kpoint_sum`.
+is removed with them; use `compute_thermal_properties_by_kpoint_sum`.
+
+## Deprecated functions: electronic free energies as tuples
+
+| Deprecated function | Replacement |
+|---------------------|-------------|
+| `phonopy.electron.tetrahedron.free_energy_from_dos` | `thermal_properties_from_dos` |
+| `phonopy.electron.tetrahedron.compute_free_energy_by_tetrahedron` | `compute_thermal_properties_by_tetrahedron` |
+| `phonopy.electron.kpoint_sum.compute_free_energy_by_kpoint_sum` | `compute_thermal_properties_by_kpoint_sum` |
+| `phonopy.electron.kpoint_sum.get_free_energy_at_T` | `compute_thermal_properties_by_kpoint_sum` |
+| `phonopy.qha.thermal.compute_electronic_contributions_from_states` | `compute_electronic_thermal_properties_from_states` |
+
+The deprecated functions return tuples of arrays. The replacements return
+`ElectronicThermalProperties`, whose fields are read by name and include
+the heat capacity. Two differences change values:
+
+- The free energy is F(T) - F(0) in every replacement.
+  `compute_free_energy_by_kpoint_sum` and `get_free_energy_at_T` returned
+  the band sum itself.
+- `compute_electronic_thermal_properties_from_states` returns one
+  `ElectronicThermalProperties` per volume, where
+  `compute_electronic_contributions_from_states` returned arrays of shape
+  (temperatures, volumes).
+
+**Deprecated:**
+
+```python
+free_energy, entropy = compute_free_energy_by_tetrahedron(states, temperatures)
+```
+
+**Replacement:**
+
+```python
+properties = compute_thermal_properties_by_tetrahedron(states, temperatures)
+free_energy = properties.free_energy
+entropy = properties.entropy
+```
 
 ## Removed: the `factor` argument
 
@@ -303,7 +339,7 @@ command:
 ```
 
 From Python, pass `symmetrize_tetrahedra=True` to
-`phonopy.electron.tetrahedron.compute_free_energy_by_tetrahedron`. To
+`phonopy.electron.tetrahedron.compute_thermal_properties_by_tetrahedron`. To
 keep the v4.x result after v5.0, use `--no-symmetrize-tetrahedra` or
 `symmetrize_tetrahedra=False`.
 
