@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Unreleased
+
+- Python 3.10 is no longer supported. Python 3.11 or later is required.
+
 ## Oct-04-2026: Version 4.8.1
 
 - `rounding` option (`"nearest"` or `"ceiling"`) of `length2mesh`,
