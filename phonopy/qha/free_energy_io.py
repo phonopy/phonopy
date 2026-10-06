@@ -360,12 +360,11 @@ def assemble_sscha_free_energies(
             raise ValueError(
                 f"Two runs cover grid point {column + 1} at {temperatures[row]:g} K."
             )
-        (
-            free_energies[row, column],
-            errors[row, column],
-            potential[row, column],
-            harmonic_potential[row, column],
-        ) = run.averaged(transient)
+        average = run.averaged(transient)
+        free_energies[row, column] = average.free_energy
+        errors[row, column] = average.error
+        potential[row, column] = average.potential_energy
+        harmonic_potential[row, column] = average.harmonic_potential_energy
         reference[column] = run.reference_energy
 
     missing = np.argwhere(np.isnan(free_energies))
