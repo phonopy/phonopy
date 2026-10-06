@@ -35,6 +35,8 @@ The following features of phonopy are highlighted:
 - {ref}`Mode Grüneisen parameters <phonopy_gruneisen>`
 - {ref}`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
   capacity at constant pressure (Cp)
+- {ref}`Electronic thermal properties <electronic_thermal_properties>`: Free
+  energy, entropy and heat capacity of the electrons in metals
 - {ref}`Anisotropic thermal expansion <aniso-thermal-expansion>`
   (experimental): Lattice parameters and axial thermal expansions from the
   free energy minimized over the lattice parameters
@@ -65,6 +67,7 @@ command-options
 dynamic-structure-factor
 Mode Grüneisen parameters <gruneisen>
 qha
+electronic-thermal-properties
 aniso-thermal-expansion
 random-displacements
 interfaces
