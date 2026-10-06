@@ -4,8 +4,8 @@
 These helpers are used by both the volume-path driver (phonopy.qha.qha
 run_qha) and the anisotropic driver (phonopy.qha.anisotropic
 run_anisotropic_qha): phonon thermal-property sampling over a set of
-Phonopy instances, the relative electronic free energy and entropy from
-electronic states, and the read-only freezing of ndarray fields of the
+Phonopy instances, the electronic thermal properties from electronic
+states, and the read-only freezing of ndarray fields of the
 immutable result dataclasses.
 
 """
@@ -20,10 +20,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.api_phonopy import Phonopy
-from phonopy.electron.kpoint_sum import compute_free_energy_by_kpoint_sum
-from phonopy.electron.states import ElectronicStates
+from phonopy.electron.kpoint_sum import compute_thermal_properties_by_kpoint_sum
+from phonopy.electron.states import (
+    ElectronicStates,
+    ElectronicThermalProperties,
+    prepend_zero_kelvin,
+)
 from phonopy.electron.tetrahedron import (
-    compute_free_energy_by_tetrahedron,
+    compute_thermal_properties_by_tetrahedron,
     resolve_energy_window,
 )
 
@@ -197,9 +201,47 @@ def compute_electronic_contributions_from_states(
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return the electronic free energy and entropy of each volume.
 
-    The free energy is returned relative to its value at 0 K, F_el(T) -
-    F_el(0). The value at 0 K is computed here, so the temperatures need
-    not include 0 K.
+    The tuple form of compute_electronic_thermal_properties_from_states,
+    which takes the same parameters.
+
+    Returns
+    -------
+    fe_el_rel : ndarray
+        F_el(T) - F_el(0) in eV. shape=(temperatures, volumes)
+    s_el : ndarray
+        Electronic entropy in eV/K. shape=(temperatures, volumes)
+
+    """
+    properties = compute_electronic_thermal_properties_from_states(
+        electronic_structures,
+        temperatures,
+        primitive_volumes=primitive_volumes,
+        window=window,
+        energy_spacing=energy_spacing,
+        require_tetrahedron=require_tetrahedron,
+        symmetrize_tetrahedra=symmetrize_tetrahedra,
+    )
+    return (
+        np.column_stack([p.free_energy for p in properties]),
+        np.column_stack([p.entropy for p in properties]),
+    )
+
+
+def compute_electronic_thermal_properties_from_states(
+    electronic_structures: Sequence[ElectronicStates],
+    temperatures: NDArray[np.double],
+    *,
+    primitive_volumes: Sequence[float] | NDArray[np.double] | None,
+    window: float | None = None,
+    energy_spacing: float = 0.0005,
+    require_tetrahedron: bool = False,
+    symmetrize_tetrahedra: bool = False,
+) -> list[ElectronicThermalProperties]:
+    """Return the electronic thermal properties of each volume.
+
+    The free energy is F_el(T) - F_el(0), and the free energy, entropy and
+    heat capacity are per primitive cell of the phonons. The chemical
+    potential is not scaled.
 
     Each set of states is integrated by the linear tetrahedron method when it
     carries the k-point grid it was computed on, and by the k-point sum
@@ -222,7 +264,7 @@ def compute_electronic_contributions_from_states(
         default, so that every caller states which cell the result is for.
     window : float, optional
         Half-width of the energy window around the Fermi level, in eV. See
-        compute_free_energy_by_tetrahedron.
+        compute_thermal_properties_by_tetrahedron.
     energy_spacing : float, optional
         Spacing of the energy grid inside the window, in eV. Default is
         0.0005.
@@ -231,20 +273,14 @@ def compute_electronic_contributions_from_states(
         instead of using the k-point sum for it. Default is False.
     symmetrize_tetrahedra : bool, optional
         Average the tetrahedron weights over the point group. See
-        compute_free_energy_by_tetrahedron. Default is False.
+        compute_thermal_properties_by_tetrahedron. Default is False.
 
     Returns
     -------
-    fe_el_rel : ndarray
-        F_el(T) - F_el(0) in eV. shape=(temperatures, volumes)
-    s_el : ndarray
-        Electronic entropy in eV/K. shape=(temperatures, volumes)
+    list of ElectronicThermalProperties
+        One per volume. len=volumes
 
     """
-    shape = (len(temperatures), len(electronic_structures))
-    fe_el_rel = np.zeros(shape, dtype="double")
-    s_el = np.zeros(shape, dtype="double")
-    temps_with_anchor = np.concatenate([[0.0], temperatures])
     without_grid = [
         i
         for i, states in enumerate(electronic_structures)
@@ -264,31 +300,34 @@ def compute_electronic_contributions_from_states(
     _report_electronic_integration(
         len(electronic_structures) - len(without_grid),
         len(without_grid),
-        resolve_energy_window(window, temps_with_anchor),
+        resolve_energy_window(window, prepend_zero_kelvin(temperatures)[0]),
         energy_spacing,
     )
+    fractions = primitive_cell_fractions(electronic_structures, primitive_volumes)
+    properties = []
     for i, electronic_states in enumerate(electronic_structures):
         if i in set(without_grid):
-            fe, s = compute_free_energy_by_kpoint_sum(
-                electronic_states, temps_with_anchor
+            p = compute_thermal_properties_by_kpoint_sum(
+                electronic_states, temperatures
             )
         else:
-            fe, s = compute_free_energy_by_tetrahedron(
+            p = compute_thermal_properties_by_tetrahedron(
                 electronic_states,
-                temps_with_anchor,
+                temperatures,
                 window=window,
                 energy_spacing=energy_spacing,
                 symmetrize_tetrahedra=symmetrize_tetrahedra,
             )
-        # The k-point sum returns the whole band sum and the tetrahedron
-        # returns it against 0 K, where fe[0] is zero; subtracting the anchor
-        # covers both.
-        fe_el_rel[:, i] = fe[1:] - fe[0]
-        s_el[:, i] = s[1:]
-
-    fractions = primitive_cell_fractions(electronic_structures, primitive_volumes)
+        properties.append(
+            dataclasses.replace(
+                p,
+                free_energy=p.free_energy * fractions[i],
+                entropy=p.entropy * fractions[i],
+                heat_capacity=p.heat_capacity * fractions[i],
+            )
+        )
     _report_primitive_cell_scaling(fractions)
-    return fe_el_rel * fractions, s_el * fractions
+    return properties
 
 
 def _report_electronic_integration(

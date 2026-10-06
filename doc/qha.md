@@ -386,9 +386,9 @@ are computed within the fixed density-of-states (Mermin) approximation with
 the temperature-dependent chemical potential conserving the number of
 electrons (see {ref}`phonopy_qha_efe_option` for the equations). This is
 intended for metals, i.e., the chemical potential is assumed not to lie in
-a band gap. The electronic entropies are obtained analytically and the
-electronic heat capacities by a single numerical differentiation; both
-enter {math}`C_p` and the Grüneisen parameters. Note that the deprecated
+a band gap. The electronic entropies and heat capacities are obtained
+analytically; both enter {math}`C_p` and the Grüneisen parameters. Note that
+the deprecated
 `PhonopyQHA` computed the Grüneisen parameters with the phonon-only
 {math}`C_V` and {math}`C_p` was unavailable in this case, so these
 quantities differ from the legacy values where the electronic heat capacity

@@ -30,7 +30,7 @@ from phonopy.qha.calc import (
 from phonopy.qha.eos import fit_to_eos, get_eos
 from phonopy.qha.lattice import LatticeParametersFit, compute_axial_thermal_expansion
 from phonopy.qha.thermal import (
-    compute_electronic_contributions_from_states,
+    compute_electronic_thermal_properties_from_states,
     compute_thermal_properties,
     freeze_ndarray_fields,
 )
@@ -239,9 +239,8 @@ def run_qha(
         computed internally within the fixed density-of-states (Mermin)
         approximation, which is intended for metals (see
         phonopy.electron.kpoint_sum.ElectronFreeEnergy). The electronic
-        entropies are obtained analytically and the heat capacities by a
-        single numerical differentiation; both enter C_P and the
-        Gruneisen parameters.
+        entropies and heat capacities are obtained analytically; both
+        enter C_P and the Gruneisen parameters.
     mesh : float or array_like, optional
         Mesh numbers passed to Phonopy.run_mesh.
     pressure : float, optional
@@ -299,13 +298,12 @@ def run_qha(
         # No cell normalization here: the volume check in _validate_inputs
         # has already established that the states are on the same cell as
         # the phonons, whichever cell ph.primitive is.
-        fe_el_rel, s_el = compute_electronic_contributions_from_states(
+        electronic = compute_electronic_thermal_properties_from_states(
             electronic_structures, temps_in, primitive_volumes=None
         )
-        el = el + fe_el_rel
-        cv_el = temps_in[:, None] * np.gradient(s_el, temps_in, axis=0, edge_order=2)
-        entropy = entropy + s_el
-        cv = cv + cv_el
+        el = el + np.column_stack([p.free_energy for p in electronic])
+        entropy = entropy + np.column_stack([p.entropy for p in electronic])
+        cv = cv + np.column_stack([p.heat_capacity for p in electronic])
     if pressure is not None:
         el = el + volumes * pressure / units.EVAngstromToGPa
 
