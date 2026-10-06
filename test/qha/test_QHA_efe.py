@@ -2,7 +2,6 @@
 """Tests for QHA calculations."""
 
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pytest
@@ -288,7 +287,7 @@ gruneisen_temperature_Cu = np.array(
 
 
 @pytest.mark.parametrize("pressure,index", [(None, 0), (5, 1)])
-def test_QHA_Cu(pressure: Optional[float], index: int):
+def test_QHA_Cu(pressure: float | None, index: int):
     """Test of QHA calculation by Cu."""
     indices = list(range(11))
     volumes = ev_vs_v_Cu[indices, 0]

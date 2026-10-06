@@ -6,7 +6,8 @@ from __future__ import annotations
 import gzip
 import lzma
 import os
-from typing import IO, Any, Literal, Sequence, TypedDict
+from collections.abc import Sequence
+from typing import IO, Any, Literal, TypedDict
 
 import h5py
 import numpy as np

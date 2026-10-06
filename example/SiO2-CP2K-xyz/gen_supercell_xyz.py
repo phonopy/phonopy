@@ -19,7 +19,7 @@ def genxyz(fn, atnum, basis, species, cart, desc=""):
     print("Generating file %s" % fn)
     try:
         fh = open(fn, "w")
-    except IOError:
+    except OSError:
         print("ERROR Couldn't open output file %s for writing" % fn)
         return -1
     fh.write("%d\n" % len(species))

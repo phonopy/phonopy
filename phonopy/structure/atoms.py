@@ -45,7 +45,7 @@ class CellDict(_CellDictBase, total=False):
     points: list[_PointEntry]
 
 
-def Atoms(*args, **kwargs) -> "PhonopyAtoms":
+def Atoms(*args, **kwargs) -> PhonopyAtoms:
     """Atoms class that is same as PhonopyAtoms class.
 
     This exists backward compatibility.

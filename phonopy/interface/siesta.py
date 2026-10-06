@@ -176,7 +176,7 @@ class SiestaIn:
                 elif unit == "bohr":
                     self._tags[tag] = float(value)
                 else:
-                    raise ValueError("Unknown LatticeConstant unit: {}".format(unit))
+                    raise ValueError(f"Unknown LatticeConstant unit: {unit}")
 
         for tag, value in re.findall(r"([\.A-Za-z]+)[ \t]+([a-zA-Z]+)", lines):
             tag = tag.replace("_", "").lower()

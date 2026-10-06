@@ -132,7 +132,7 @@ class QlmFl:
         """Fill internal variables from site file."""
         self._filename = filename
         self._ext = os.path.splitext(filename)[1]
-        self._content = open(filename, "r").read()
+        self._content = open(filename).read()
 
         lines = self._content.splitlines()
         header = lines[0]

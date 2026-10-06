@@ -707,7 +707,7 @@ class RandomDisplacements:
         V = np.repeat(np.exp(2j * np.pi * np.dot(self._ppos, q)), 3)
         dm_D = (V * (V.conj() * dm).T).T
         dm_real: NDArray[np.double] = dm_D.real  # C-type to D-type
-        assert np.abs((dm_D - dm_real)).max() < 1e-8
+        assert np.abs(dm_D - dm_real).max() < 1e-8
 
         return dm_real
 
