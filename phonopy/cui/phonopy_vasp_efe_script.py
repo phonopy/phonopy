@@ -24,13 +24,13 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.interface.vasp import parse_vasprunxml
-from phonopy.qha.electron import compute_free_energy_by_tetrahedron
-from phonopy.qha.electron_kpoint_sum import compute_free_energy_by_kpoint_sum
-from phonopy.qha.electron_states import (
+from phonopy.electron.kpoint_sum import compute_free_energy_by_kpoint_sum
+from phonopy.electron.states import (
     ElectronicStates,
     write_electronic_states_hdf5,
 )
+from phonopy.electron.tetrahedron import compute_free_energy_by_tetrahedron
+from phonopy.interface.vasp import parse_vasprunxml
 from phonopy.structure.atoms import PhonopyAtoms
 
 

@@ -18,13 +18,13 @@ from typing import Literal, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.electron.states import ElectronicStates
 from phonopy.file_IO import (
     get_io_module_to_decompress,
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
 )
 from phonopy.physical_units import get_physical_units
-from phonopy.qha.electron_states import ElectronicStates
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import group_by_key

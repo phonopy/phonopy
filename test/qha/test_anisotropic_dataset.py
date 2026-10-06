@@ -9,13 +9,13 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
+from phonopy.electron.states import ElectronicStates
 from phonopy.qha.anisotropic_dataset import (
     AnisoQHADataset,
     AnisoQHAGridPoint,
     read_aniso_qha_dataset,
     write_aniso_qha_dataset,
 )
-from phonopy.qha.electron import ElectronicStates
 from phonopy.structure.atoms import PhonopyAtoms
 
 

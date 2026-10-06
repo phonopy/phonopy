@@ -8,15 +8,17 @@ import dataclasses
 import numpy as np
 import pytest
 
-from phonopy.phonon.grid import BZGrid, get_ir_grid_points
-from phonopy.physical_units import get_physical_units
-from phonopy.qha.electron import (
+from phonopy.electron.kpoint_sum import (
     ElectronFreeEnergy,
-    ElectronicStates,
-    compute_free_energy_and_entropy,
+    compute_free_energy_by_kpoint_sum,
+)
+from phonopy.electron.states import ElectronicStates
+from phonopy.electron.tetrahedron import (
     compute_free_energy_by_tetrahedron,
     free_energy_from_dos,
 )
+from phonopy.phonon.grid import BZGrid, get_ir_grid_points
+from phonopy.physical_units import get_physical_units
 from phonopy.qha.thermal import compute_electronic_contributions_from_states
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
@@ -187,7 +189,7 @@ def test_tetrahedron_agrees_with_the_kpoint_sum_at_a_converged_mesh():
     states = _half_filled_band([48, 48, 48])
 
     tetrahedron, _ = compute_free_energy_by_tetrahedron(states, temperatures)
-    k_sum, _ = compute_free_energy_and_entropy(states, temperatures)
+    k_sum, _ = compute_free_energy_by_kpoint_sum(states, temperatures)
 
     assert tetrahedron[-1] == pytest.approx(k_sum[-1] - k_sum[0], abs=2e-5)
 
@@ -201,7 +203,7 @@ def test_tetrahedron_converges_faster_than_the_kpoint_sum():
     coarse, _ = compute_free_energy_by_tetrahedron(
         _half_filled_band([8, 8, 8]), temperatures
     )
-    coarse_k_sum, _ = compute_free_energy_and_entropy(
+    coarse_k_sum, _ = compute_free_energy_by_kpoint_sum(
         _half_filled_band([8, 8, 8]), temperatures
     )
 
@@ -260,7 +262,7 @@ def test_qha_falls_back_to_the_kpoint_sum_without_the_grid():
     fe_el_rel, _ = compute_electronic_contributions_from_states(
         [states], temperatures, primitive_volumes=None
     )
-    k_sum, _ = compute_free_energy_and_entropy(states, np.array([0.0, 300.0]))
+    k_sum, _ = compute_free_energy_by_kpoint_sum(states, np.array([0.0, 300.0]))
 
     assert fe_el_rel[0, 0] == pytest.approx(k_sum[-1] - k_sum[0])
 

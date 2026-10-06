@@ -160,11 +160,9 @@ def test_phonopy_vasp_efe_uses_kpoints_opt():
     the kpoints_opt mesh.
 
     """
+    from phonopy.electron.states import ElectronicStates
+    from phonopy.electron.tetrahedron import compute_free_energy_by_tetrahedron
     from phonopy.interface.vasp import parse_vasprunxml
-    from phonopy.qha.electron import (
-        ElectronicStates,
-        compute_free_energy_by_tetrahedron,
-    )
     from phonopy.structure.atoms import PhonopyAtoms
 
     filename = cwd.parents[1] / "interface" / "vasprun_kpoints_opt.xml.xz"
@@ -313,10 +311,8 @@ def test_phonopy_vasp_efe_write_electronic_states(tmp_path):
     energies are recomputed from them.
 
     """
-    from phonopy.qha.electron import (
-        compute_free_energy_by_tetrahedron,
-        read_electronic_states_hdf5,
-    )
+    from phonopy.electron.states import read_electronic_states_hdf5
+    from phonopy.electron.tetrahedron import compute_free_energy_by_tetrahedron
 
     filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]
     original_cwd = pathlib.Path.cwd()
@@ -390,7 +386,7 @@ def test_written_electronic_states_keep_the_sampling_grid(tmp_path):
     the calculation was.
 
     """
-    from phonopy.qha.electron import (
+    from phonopy.electron.states import (
         read_electronic_states_hdf5,
         write_electronic_states_hdf5,
     )

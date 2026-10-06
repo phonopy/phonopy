@@ -87,7 +87,7 @@ lint.select = [
 lint.extend-ignore = ["D417", "D100", "UP031"]
 exclude = [
     "test/phonon/test_irreps.py",
-    "test/qha/test_electron.py",
+    "test/electron/test_electron.py",
     "phonopy/interface/cp2k.py",
     "cmake-format.py"
 ]
