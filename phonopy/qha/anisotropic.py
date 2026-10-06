@@ -38,7 +38,7 @@ from phonopy.qha.lattice_smoothing import (
     fit_lattice_parameter,
 )
 from phonopy.qha.thermal import (
-    compute_electronic_contributions_from_states,
+    compute_electronic_thermal_properties_from_states,
     compute_thermal_properties,
     freeze_ndarray_fields,
     primitive_cell_fractions,
@@ -864,10 +864,10 @@ def _total_free_energies(
     if electronic_free_energies is not None:
         total = total + np.array(electronic_free_energies, dtype="double")
     elif electronic_structures is not None:
-        fe_electronic, _ = compute_electronic_contributions_from_states(
+        electronic = compute_electronic_thermal_properties_from_states(
             electronic_structures, temperatures, primitive_volumes=volumes
         )
-        total = total + fe_electronic
+        total = total + np.column_stack([p.free_energy for p in electronic])
 
     if pressure is not None:
         total = total + volumes * pressure / get_physical_units().EVAngstromToGPa

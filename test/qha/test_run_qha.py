@@ -23,6 +23,7 @@ from phonopy.electron.states import ElectronicStates
 from phonopy.physical_units import get_physical_units
 from phonopy.qha.lattice import LatticeParametersFit
 from phonopy.qha.qha import QHAResult
+from phonopy.qha.thermal import compute_electronic_thermal_properties_from_states
 from phonopy.structure.atoms import PhonopyAtoms
 
 
@@ -298,6 +299,31 @@ def test_run_qha_electronic_structures(nacl_qha_phonopys: list[Phonopy]) -> None
     cp_ref = np.array(ref.heat_capacity_P_numerical)
     np.testing.assert_allclose(cp_new[2:], cp_ref[2:], atol=1.5)
     np.testing.assert_allclose(cp_new[6:], cp_ref[6:], atol=0.3)
+
+
+def test_run_qha_adds_the_electronic_heat_capacity(
+    nacl_qha_phonopys: list[Phonopy], qha_result_nacl: QHAResult
+) -> None:
+    """The C_V that run_qha fits is the phonon one plus the analytic C_el."""
+    volumes = np.array([ph.primitive.volume for ph in nacl_qha_phonopys])
+    states = _electronic_structures(volumes)
+    result = run_qha(
+        nacl_qha_phonopys,
+        TEMPERATURES,
+        internal_energies=internal_energies(volumes),
+        electronic_structures=states,
+        mesh=MESH,
+    )
+    electronic = compute_electronic_thermal_properties_from_states(
+        states, TEMPERATURES, primitive_volumes=None
+    )
+    c_el = np.column_stack([p.heat_capacity for p in electronic])
+
+    # volume_cv holds C_V at temperatures[1:-1], one (V, C_V) row per volume.
+    cv_with = result.heat_capacity_P.volume_cv[:, :, 1]
+    cv_without = qha_result_nacl.heat_capacity_P.volume_cv[:, :, 1]
+    assert np.all(c_el[1:-1] > 0)
+    np.testing.assert_allclose(cv_with - cv_without, c_el[1:-1], rtol=1e-10)
 
 
 def test_run_qha_electronic_structures_validation(

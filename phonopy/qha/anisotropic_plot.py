@@ -21,7 +21,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.qha.anisotropic import AnisotropicQHAResult, FreeEnergySurfaceFit
-from phonopy.qha.thermal import compute_electronic_contributions_from_states
+from phonopy.qha.thermal import compute_electronic_thermal_properties_from_states
 
 # Free energies are handled in eV throughout and converted only for plotting.
 _EV_TO_MEV = 1000.0
@@ -588,11 +588,12 @@ def plot_component_contours(
     if electronic_free_energies is not None:
         fe_el_rel = np.asarray(electronic_free_energies, dtype="double")
     elif electronic_structures is not None:
-        fe_el_rel, _ = compute_electronic_contributions_from_states(
+        electronic = compute_electronic_thermal_properties_from_states(
             electronic_structures,
             result.temperatures,
             primitive_volumes=result.lattice_grid.primitive_volumes,
         )
+        fe_el_rel = np.column_stack([p.free_energy for p in electronic])
     else:
         fe_el_rel = None
 
