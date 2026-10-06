@@ -199,6 +199,18 @@ init parameters; neither carries over internal state such as force
 constants or NAC parameters. `copy()` is deprecated already in v4.x to
 extend the notice period.
 
+## Moved modules: electronic states and free energies
+
+| Deprecated module | Replacement |
+|-------------------|-------------|
+| `phonopy.qha.electron_states` | `phonopy.electron.states` |
+| `phonopy.qha.electron_kpoint_sum` | `phonopy.electron.kpoint_sum` |
+| `phonopy.qha.electron` | `phonopy.electron.states`, `phonopy.electron.tetrahedron` and `phonopy.electron.kpoint_sum` |
+
+The old modules import the same names from the new ones and warn when
+they are imported. v5.0 removes them. `compute_free_energy_and_entropy`
+is removed with them; use `compute_free_energy_by_kpoint_sum`.
+
 ## Removed: the `factor` argument
 
 The `factor` argument of `Phonopy(...)` and `phonopy.load(...)` has
@@ -291,8 +303,8 @@ command:
 ```
 
 From Python, pass `symmetrize_tetrahedra=True` to
-`phonopy.qha.electron.compute_free_energy_by_tetrahedron`. To keep the
-v4.x result after v5.0, use `--no-symmetrize-tetrahedra` or
+`phonopy.electron.tetrahedron.compute_free_energy_by_tetrahedron`. To
+keep the v4.x result after v5.0, use `--no-symmetrize-tetrahedra` or
 `symmetrize_tetrahedra=False`.
 
 ## Surfacing the warnings in existing code

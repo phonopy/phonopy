@@ -7,9 +7,10 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
+from phonopy.electron.states import ElectronicStates
+from phonopy.electron.tetrahedron import _TetrahedronElectronicStates
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points
 from phonopy.phonon.spectrum import TetrahedronDOSAccumulator
-from phonopy.qha.electron import ElectronicStates, _TetrahedronElectronicStates
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 

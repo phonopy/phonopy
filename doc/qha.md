@@ -356,8 +356,8 @@ point as `ElectronicStates` (eigenvalues in eV with shape
 electrons per unit cell):
 
 ```python
+from phonopy.electron.states import ElectronicStates
 from phonopy.interface.vasp import parse_vasprunxml
-from phonopy.qha.electron import ElectronicStates
 
 electronic_structures = []
 for i in range(11):
@@ -417,7 +417,7 @@ states are checked against the primitive cell volumes of `phonopys` by
 with `read_electronic_states_hdf5`:
 
 ```python
-from phonopy.qha.electron import read_electronic_states_hdf5
+from phonopy.electron.states import read_electronic_states_hdf5
 
 electronic_structures = read_electronic_states_hdf5("electronic_states.hdf5")
 result = run_qha(phonopys, temperatures, electronic_structures=electronic_structures)

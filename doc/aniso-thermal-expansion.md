@@ -795,8 +795,8 @@ electronic term.
 import numpy as np
 
 from phonopy import run_anisotropic_qha
+from phonopy.electron.tetrahedron import compute_free_energy_by_tetrahedron
 from phonopy.qha.anisotropic_dataset import read_aniso_qha_dataset
-from phonopy.qha.electron import compute_free_energy_by_tetrahedron
 
 dataset = read_aniso_qha_dataset("aniso_qha_dataset.hdf5")
 temperatures = np.arange(0, 1001, 10.0)  # one extra point for finite diff

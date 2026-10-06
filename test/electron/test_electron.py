@@ -4,12 +4,12 @@
 import numpy as np
 import pytest
 
-from phonopy.qha.electron_kpoint_sum import (
+from phonopy.electron.kpoint_sum import (
     ElectronFreeEnergy,
     compute_free_energy_by_kpoint_sum,
     get_free_energy_at_T,
 )
-from phonopy.qha.electron_states import (
+from phonopy.electron.states import (
     ElectronicStates,
     read_electronic_states_hdf5,
     write_electronic_states_hdf5,
@@ -623,24 +623,46 @@ def test_fermi_energy_survives_hdf5_round_trip(tmp_path):
     assert read_back[1].fermi_energy is None
 
 
-def test_the_names_electron_py_used_to_hold_still_import():
-    """Test that splitting the module left every old import working.
+def test_the_old_qha_modules_still_import():
+    """Test that the modules left in phonopy.qha re-export every old name.
 
-    ElectronFreeEnergy and its helpers moved to electron_kpoint_sum and the
-    states to electron_states, but phonopy.qha.electron is what the
-    documentation and existing scripts name.
+    The electronic states and free energies moved to phonopy.electron, but
+    phonopy.qha.electron is what existing scripts name. Importing the old
+    modules warns.
 
     """
-    from phonopy.qha import electron
-    from phonopy.qha.electron_kpoint_sum import compute_free_energy_by_kpoint_sum
+    import importlib
+    import sys
 
-    for name in (
-        "ElectronicStates",
-        "ElectronFreeEnergy",
-        "get_free_energy_at_T",
-        "read_electronic_states_hdf5",
-        "write_electronic_states_hdf5",
-    ):
-        assert hasattr(electron, name), name
-    # The name the k-point sum carried while it was the only route.
-    assert electron.compute_free_energy_and_entropy is compute_free_energy_by_kpoint_sum
+    old_names = {
+        "phonopy.qha.electron": (
+            "ElectronicStates",
+            "ElectronFreeEnergy",
+            "compute_free_energy_by_tetrahedron",
+            "free_energy_from_dos",
+            "get_free_energy_at_T",
+            "read_electronic_states_hdf5",
+            "write_electronic_states_hdf5",
+        ),
+        "phonopy.qha.electron_states": (
+            "ElectronicStates",
+            "read_electronic_states_hdf5",
+            "write_electronic_states_hdf5",
+        ),
+        "phonopy.qha.electron_kpoint_sum": (
+            "ElectronFreeEnergy",
+            "compute_free_energy_by_kpoint_sum",
+        ),
+    }
+    for module_name, names in old_names.items():
+        sys.modules.pop(module_name, None)
+        with pytest.warns(DeprecationWarning, match=module_name):
+            module = importlib.import_module(module_name)
+        for name in names:
+            assert hasattr(module, name), f"{module_name}.{name}"
+        # The name the k-point sum carried while it was the only route.
+        if module_name != "phonopy.qha.electron_states":
+            assert (
+                module.compute_free_energy_and_entropy
+                is compute_free_energy_by_kpoint_sum
+            )

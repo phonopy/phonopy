@@ -5,6 +5,12 @@
 ## Unreleased
 
 - Python 3.10 is no longer supported. Python 3.11 or later is required.
+- The electronic states and free energies moved from `phonopy.qha` to the
+  new package `phonopy.electron`: `phonopy.electron.states`,
+  `phonopy.electron.tetrahedron` and `phonopy.electron.kpoint_sum`. The
+  old modules `phonopy.qha.electron`, `phonopy.qha.electron_states` and
+  `phonopy.qha.electron_kpoint_sum` still work and are deprecated. See
+  {ref}`migration_v5`.
 - `CpPolyfitArrays` and `EntropyEnthalpyArrays` of `phonopy.qha.calc` and
   `SSCHAAverage` of `phonopy.sscha.trace` are frozen dataclasses instead of
   named tuples. Their fields are read by name; unpacking them or indexing

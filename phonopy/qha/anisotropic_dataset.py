@@ -30,13 +30,13 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.electron.states import ElectronicStates
 from phonopy.harmonic.displacement import (
     DisplacementDataset,
     FirstAtomDisplacementWithForces,
     Type1DisplacementDataset,
     Type2DisplacementDataset,
 )
-from phonopy.qha.electron_states import ElectronicStates
 from phonopy.structure.atoms import PhonopyAtoms
 
 if TYPE_CHECKING:

@@ -17,11 +17,12 @@ from __future__ import annotations
 import dataclasses
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.api_phonopy import Phonopy
+from phonopy.electron.states import ElectronicStates
 from phonopy.physical_units import get_physical_units
 from phonopy.qha.anisotropic_dataset import check_cells_are_one_crystal
 from phonopy.qha.calc import (
@@ -42,10 +43,6 @@ from phonopy.qha.thermal import (
     freeze_ndarray_fields,
     primitive_cell_fractions,
 )
-
-if TYPE_CHECKING:
-    from phonopy.api_phonopy import Phonopy
-    from phonopy.qha.electron_states import ElectronicStates
 
 
 class FreeEnergySurfaceFit:
