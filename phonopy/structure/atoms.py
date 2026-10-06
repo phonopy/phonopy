@@ -965,54 +965,39 @@ class PhonopyAtoms:
             )
 
     def get_yaml_lines(self) -> list[str]:
-        """Return the crystal structure as a list of yaml text lines."""
-        _atom_data = get_atomic_data().atom_data
+        """Return the crystal structure as a list of yaml text lines.
+
+        The content is given by get_cell_dict.
+
+        """
+        cell_dict = get_cell_dict(self)
         lines = ["lattice:"]
-        for pos, a in zip(self._cell, ("a", "b", "c"), strict=True):
+        for pos, a in zip(cell_dict["lattice"], ("a", "b", "c"), strict=True):
             lines.append(
                 "- [ %21.15f, %21.15f, %21.15f ] # %s" % (pos[0], pos[1], pos[2], a)
             )
         lines.append("points:")
-        if self.magnetic_moments is None:
-            magmoms = [None] * len(self)
-        else:
-            magmoms = self.magnetic_moments
-        for i, (sid, pos, mass, mag) in enumerate(
-            zip(
-                self._species_ids,
-                self.scaled_positions,
-                self.masses,
-                magmoms,
-                strict=True,
-            )
-        ):
-            sp = self._species[sid]
-            if sp.mixture is not None:
-                lines.append(f"- symbol: {sp.symbol} # {i + 1}")
-                mix_str = ", ".join(f"[{s}, {w}]" for s, w in sp.mixture)
+        for i, point in enumerate(cell_dict.get("points", [])):
+            lines.append(f"- symbol: {point['symbol']} # {i + 1}")
+            if "mixture" in point:
+                mix_str = ", ".join(f"[{s}, {w}]" for s, w in point["mixture"])
                 lines.append(f"  mixture: [ {mix_str} ]")
-            else:
-                assert sp.atomic_number is not None
-                formal_s = _atom_data[sp.atomic_number][1]
-                if sp.symbol == formal_s:
-                    lines.append(f"- symbol: {sp.symbol} # {i + 1}")
-                else:
-                    lines.append(f"- symbol: {formal_s} # {i + 1}")
-                    lines.append(f"  extended_symbol: {sp.symbol}")
-            lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(pos))
-            if mass is not None:
-                lines.append("  mass: %f" % mass)
-            if self.has_weighted_species:
-                # In a non-merge site-mixture cell every atom carries an
-                # explicit weight so the yaml is self-describing; a pure
-                # site (weight=None in the model) is shown as 1.0.
-                w = sp.weight if sp.weight is not None else 1.0
-                lines.append(f"  weight: {w}")
-            if mag is not None:
-                if mag.ndim == 0:
-                    mag_str = f"{mag:.8f}"
-                else:
+            if "extended_symbol" in point:
+                lines.append(f"  extended_symbol: {point['extended_symbol']}")
+            lines.append(
+                "  coordinates: [ %18.15f, %18.15f, %18.15f ]"
+                % tuple(point["coordinates"])
+            )
+            if "mass" in point:
+                lines.append("  mass: %f" % point["mass"])
+            if "weight" in point:
+                lines.append(f"  weight: {point['weight']}")
+            if "magnetic_moment" in point:
+                mag = point["magnetic_moment"]
+                if isinstance(mag, list):
                     mag_str = f"[{mag[0]:.8f}, {mag[1]:.8f}, {mag[2]:.8f}]"
+                else:
+                    mag_str = f"{mag:.8f}"
                 lines.append(f"  magnetic_moment: {mag_str}")
         return lines
 
@@ -1112,6 +1097,51 @@ class PhonopyAtoms:
             formula_parts.append(f"{element}{count:.3}")
 
         return "".join(formula_parts)
+
+
+def get_cell_dict(cell: PhonopyAtoms) -> CellDict:
+    """Return dict representation of a cell, which parse_cell_dict reads back.
+
+    This is the content written by PhonopyAtoms.get_yaml_lines. A merged
+    mixed-species site has "mixture", a species whose symbol differs from the
+    element symbol (e.g. "Fe1") has "extended_symbol", and in a cell with
+    weighted species (see apply_site_mixture) every atom has "weight", which is
+    1.0 for a pure site.
+
+    """
+    atom_data = get_atomic_data().atom_data
+    if cell.magnetic_moments is None:
+        magmoms: list | NDArray = [None] * len(cell)
+    else:
+        magmoms = cell.magnetic_moments
+    has_weighted_species = cell.has_weighted_species
+    points: list[_PointEntry] = []
+    for sid, pos, mass, mag in zip(
+        cell._species_ids, cell.scaled_positions, cell.masses, magmoms, strict=True
+    ):
+        sp = cell._species[sid]
+        point: _PointEntry = {}
+        if sp.mixture is not None:
+            point["symbol"] = sp.symbol
+            point["mixture"] = [[s, w] for s, w in sp.mixture]
+        else:
+            assert sp.atomic_number is not None
+            formal_s = atom_data[sp.atomic_number][1]
+            point["symbol"] = formal_s
+            if sp.symbol != formal_s:
+                point["extended_symbol"] = sp.symbol
+        point["coordinates"] = [float(x) for x in pos]
+        if mass is not None:
+            point["mass"] = float(mass)
+        if has_weighted_species:
+            point["weight"] = sp.weight if sp.weight is not None else 1.0
+        if mag is not None:
+            if np.ndim(mag) == 0:
+                point["magnetic_moment"] = float(mag)
+            else:
+                point["magnetic_moment"] = [float(x) for x in mag]
+        points.append(point)
+    return {"lattice": [[float(x) for x in v] for v in cell.cell], "points": points}
 
 
 def parse_cell_dict(cell_dict: CellDict) -> PhonopyAtoms | None:
