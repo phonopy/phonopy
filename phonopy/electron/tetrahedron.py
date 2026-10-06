@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-"""Electronic free energy by the linear tetrahedron method.
+"""Electronic thermal properties by the linear tetrahedron method.
 
 The electronic states themselves and their file format are in
 phonopy.electron.states, and the sum over irreducible k-points, which is
@@ -16,8 +16,11 @@ from numpy.typing import NDArray
 
 from phonopy.electron.states import (
     ElectronicStates,
+    ElectronicThermalProperties,
     entropy_terms,
     fermi_dirac_occupation,
+    heat_capacity_from_moments,
+    prepend_zero_kelvin,
     resolve_spin_degeneracy,
 )
 from phonopy.phonon.grid import (
@@ -208,16 +211,17 @@ def resolve_energy_window(
 ) -> float:
     """Return the half-width of the energy window around the Fermi level in eV.
 
-    None takes 12 k_B T of the highest temperature and at least 0.5 eV. Both
-    numbers are empirical. Beyond 12 k_B T the Fermi factor is within 1e-5 of
-    0 or 1; the floor is what acts at low temperatures, where 12 k_B T is a
-    few tens of meV.
+    None takes 16 k_B T of the highest temperature and at least 0.5 eV. Both
+    numbers are empirical. The width is set by the heat capacity, whose
+    integrand f (1 - f) (E - mu)^2 has the heaviest tails; the free energy
+    and the entropy would do with less. The floor is what acts at low
+    temperatures, where 16 k_B T is a few tens of meV.
 
     """
     if window is not None:
         return float(window)
     t_max = float(np.max(np.asarray(temperatures, dtype="double")))
-    return max(0.5, 12.0 * get_physical_units().KB * t_max)
+    return max(0.5, 16.0 * get_physical_units().KB * t_max)
 
 
 def compute_free_energy_by_tetrahedron(
@@ -229,7 +233,36 @@ def compute_free_energy_by_tetrahedron(
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return F(T) - F(0) and the entropy through the tetrahedron method.
 
-    The counterpart of compute_free_energy_by_kpoint_sum, which sums
+    The tuple form of compute_thermal_properties_by_tetrahedron, which takes
+    the same parameters.
+
+    Returns
+    -------
+    tuple of ndarray
+        (F(T) - F(0) in eV, S(T) in eV/K), each of shape
+        (len(temperatures),).
+
+    """
+    properties = compute_thermal_properties_by_tetrahedron(
+        electronic_states,
+        temperatures,
+        window=window,
+        energy_spacing=energy_spacing,
+        symmetrize_tetrahedra=symmetrize_tetrahedra,
+    )
+    return properties.free_energy, properties.entropy
+
+
+def compute_thermal_properties_by_tetrahedron(
+    electronic_states: ElectronicStates,
+    temperatures: Sequence[float] | NDArray[np.double],
+    window: float | None = None,
+    energy_spacing: float = 0.0005,
+    symmetrize_tetrahedra: bool = False,
+) -> ElectronicThermalProperties:
+    """Return the electronic thermal properties by the tetrahedron method.
+
+    The counterpart of compute_thermal_properties_by_kpoint_sum, which sums
     Fermi-Dirac occupations over irreducible k-points. Which one runs is the
     caller's choice rather than an inference from the data: this one needs
     kpoints, mesh and cell on the states and raises without them.
@@ -239,10 +272,10 @@ def compute_free_energy_by_tetrahedron(
     electronic_states : ElectronicStates
         States carrying kpoints, mesh, cell and fermi_energy.
     temperatures : array_like
-        Temperatures in K, the first of them 0.
+        Temperatures in K. shape=(temperatures,)
     window : float, optional
         Half-width of the energy window around the Fermi level in eV. None,
-        the default, takes 12 k_B T of the highest temperature and at least
+        the default, takes 16 k_B T of the highest temperature and at least
         0.5 eV; see resolve_energy_window. A wider window costs time without
         moving the answer, since nothing outside it depends on temperature.
     energy_spacing : float, optional
@@ -254,17 +287,11 @@ def compute_free_energy_by_tetrahedron(
         point group, so that the sum over irreducible k-points equals the sum
         over all of them. Default is False.
 
-    Returns
-    -------
-    tuple of ndarray
-        (F(T) - F(0) in eV, S(T) in eV/K), each of shape
-        (len(temperatures),).
-
     """
     fermi = electronic_states.fermi_energy
     if fermi is None:
         fermi = _fermi_level_by_counting(electronic_states)
-    window = resolve_energy_window(window, temperatures)
+    window = resolve_energy_window(window, prepend_zero_kelvin(temperatures)[0])
     tetrahedron_states = _TetrahedronElectronicStates(
         electronic_states, symmetrize_tetrahedra=symmetrize_tetrahedra
     )
@@ -274,7 +301,7 @@ def compute_free_energy_by_tetrahedron(
     n_points = int(round(2 * window / energy_spacing)) + 1
     energies = np.linspace(fermi - window, fermi + window, n_points)
     dos, _ = tetrahedron_states.dos_and_count(energies)
-    free_energy, entropy, _ = free_energy_from_dos(
+    return thermal_properties_from_dos(
         energies,
         dos,
         electronic_states.n_electrons,
@@ -282,7 +309,6 @@ def compute_free_energy_by_tetrahedron(
         fermi,
         mu_0=mu_0,
     )
-    return free_energy, entropy
 
 
 def free_energy_from_dos(
@@ -296,10 +322,59 @@ def free_energy_from_dos(
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Return F(T) - F(0), the entropy and mu(T) from a density of states.
 
+    The tuple form of thermal_properties_from_dos, which takes the same
+    parameters. Unlike it, the first temperature has to be 0 K.
+
+    Returns
+    -------
+    tuple of ndarray
+        (F(T) - F(0) in eV, S(T) in eV/K, mu(T) in eV), each of shape
+        (len(temperatures),).
+
+    """
+    temps = np.asarray(temperatures, dtype="double")
+    if len(temps) == 0 or temps[0] != 0.0:
+        given = temps[0] if len(temps) else "an empty list"
+        raise ValueError(
+            "The first temperature has to be 0 K, since the free energies are "
+            f"reported against it, but {given} was given."
+        )
+    properties = thermal_properties_from_dos(
+        energies,
+        dos,
+        n_electrons,
+        temps,
+        fermi_energy,
+        window=window,
+        mu_0=mu_0,
+    )
+    return (
+        properties.free_energy,
+        properties.entropy,
+        properties.chemical_potential,
+    )
+
+
+def thermal_properties_from_dos(
+    energies: NDArray[np.double],
+    dos: NDArray[np.double],
+    n_electrons: float,
+    temperatures: Sequence[float] | NDArray[np.double],
+    fermi_energy: float,
+    window: float | None = None,
+    mu_0: float | None = None,
+) -> ElectronicThermalProperties:
+    """Return the electronic thermal properties from a density of states.
+
         N(mu, T) = n_below + int_window g(E) f(E) dE = n_electrons
         E(T)     = int_window g(E) E f(E) dE
         T S(T)   = -k T int_window g(E) [f ln f + (1-f) ln(1-f)] dE
         F(T)     = E(T) - T S(T)
+        C_V(T)   = [A_2 - A_1^2 / A_0] / (k T^2),
+        A_n      = int_window g(E) f (1-f) (E - mu)^n dE
+
+    The A_1^2 / A_0 term of C_V is the change of mu with T; see
+    heat_capacity_from_moments.
 
     **Every integral is restricted to a window around the Fermi level, and
     that is a matter of correctness rather than speed.** Taking the difference
@@ -327,9 +402,10 @@ def free_energy_from_dos(
     n_electrons : float
         Number of electrons in the cell.
     temperatures : array_like
-        Temperatures in K. The first has to be 0, since it is the reference
-        the free energies are reported against and the one temperature at
-        which mu is mu_0 rather than solved for.
+        Temperatures in K. shape=(temperatures,) 0 K is computed whether
+        given or not, since it is the reference the free energies are
+        reported against and the one temperature at which mu is mu_0 rather
+        than solved for.
     fermi_energy : float
         Fermi energy in eV, used as the anchor described above.
     window : float, optional
@@ -346,23 +422,11 @@ def free_energy_from_dos(
         F(T) - F(0) by of order a ueV; the caller is expected to have it from
         the tetrahedron count, which is continuous in energy.
 
-    Returns
-    -------
-    tuple of ndarray
-        (F(T) - F(0) in eV, S(T) in eV/K, mu(T) in eV), each of shape
-        (len(temperatures),).
-
     """
     from scipy.optimize import brentq
 
     kb = get_physical_units().KB
-    temps = np.asarray(temperatures, dtype="double")
-    if len(temps) == 0 or temps[0] != 0.0:
-        given = temps[0] if len(temps) else "an empty list"
-        raise ValueError(
-            "The first temperature has to be 0 K, since the free energies are "
-            f"reported against it, but {given} was given."
-        )
+    temps, start = prepend_zero_kelvin(temperatures)
     if window is None:
         e_win = np.asarray(energies, dtype="double")
         g_win = np.asarray(dos, dtype="double")
@@ -397,6 +461,7 @@ def free_energy_from_dos(
 
     free_energies = np.zeros(len(temps), dtype="double")
     entropies = np.zeros(len(temps), dtype="double")
+    heat_capacities = np.zeros(len(temps), dtype="double")
     mus = np.zeros(len(temps), dtype="double")
     for i, temperature in enumerate(temps):
         kt = max(kb * float(temperature), kt_zero)
@@ -415,10 +480,23 @@ def free_energy_from_dos(
             entropies[i] = -kb * float(
                 np.trapezoid(g_win * entropy_terms(occupation), e_win)
             )
+            spread = g_win * occupation * (1.0 - occupation)
+            a0, a1, a2 = (
+                float(np.trapezoid(spread * (e_win - mu) ** n, e_win)) for n in range(3)
+            )
+            heat_capacities[i] = heat_capacity_from_moments(
+                a0, a1, a2, float(temperature)
+            )
         free_energies[i] = band_energy - float(temperature) * entropies[i]
         mus[i] = mu
 
-    return free_energies - free_energies[0], entropies, mus
+    return ElectronicThermalProperties(
+        temperatures=temps[start:],
+        free_energy=(free_energies - free_energies[0])[start:],
+        entropy=entropies[start:],
+        heat_capacity=heat_capacities[start:],
+        chemical_potential=mus[start:],
+    )
 
 
 def _fermi_level_by_counting(electronic_states: ElectronicStates) -> float:

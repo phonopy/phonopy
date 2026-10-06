@@ -22,8 +22,11 @@ from numpy.typing import NDArray
 
 from phonopy.electron.states import (
     ElectronicStates,
+    ElectronicThermalProperties,
     entropy_terms,
     fermi_dirac_occupation,
+    heat_capacity_from_moments,
+    prepend_zero_kelvin,
 )
 from phonopy.physical_units import get_physical_units
 
@@ -80,6 +83,51 @@ def compute_free_energy_by_kpoint_sum(
     return (
         np.array(free_energies, dtype="double"),
         np.array(entropies, dtype="double"),
+    )
+
+
+def compute_thermal_properties_by_kpoint_sum(
+    electronic_states: ElectronicStates,
+    temperatures: Sequence[float] | NDArray[np.double],
+) -> ElectronicThermalProperties:
+    """Return the electronic thermal properties by the k-point sum.
+
+    Unlike compute_free_energy_by_kpoint_sum, the free energy is F(T) - F(0),
+    as compute_thermal_properties_by_tetrahedron returns it.
+
+    Parameters
+    ----------
+    electronic_states : ElectronicStates
+        Electronic states at a volume point.
+    temperatures : array_like
+        Temperatures in K. shape=(temperatures,)
+
+    """
+    efe = ElectronFreeEnergy(
+        electronic_states.eigenvalues,
+        electronic_states.weights,
+        electronic_states.n_electrons,
+        spin_degeneracy=electronic_states.spin_degeneracy,
+    )
+    temps, start = prepend_zero_kelvin(temperatures)
+    free_energies = np.zeros(len(temps), dtype="double")
+    entropies = np.zeros(len(temps), dtype="double")
+    heat_capacities = np.zeros(len(temps), dtype="double")
+    mus = np.zeros(len(temps), dtype="double")
+    for i, temp in enumerate(temps):
+        efe.run(float(temp))
+        free_energies[i] = efe.free_energy
+        # ElectronFreeEnergy.entropy returns T * S in eV.
+        if temp > _ZERO_TEMPERATURE:
+            entropies[i] = efe.entropy / temp
+        heat_capacities[i] = efe.heat_capacity
+        mus[i] = efe.mu
+    return ElectronicThermalProperties(
+        temperatures=temps[start:],
+        free_energy=(free_energies - free_energies[0])[start:],
+        entropy=entropies[start:],
+        heat_capacity=heat_capacities[start:],
+        chemical_potential=mus[start:],
     )
 
 
@@ -158,10 +206,22 @@ class ElectronFreeEnergy:
     - Fermi-Dirac (thermal) smearing of width sigma against mu at
       T = sigma / k_B.
 
+    Heat capacity
+    -------------
+
+    .. math::
+
+       C_V = \frac{A_2 - A_1^2 / A_0}{k_{\mathrm{B}} T^2}, \quad
+       A_n = \frac{g}{\sum_k w_k} \sum_k w_k \sum_i
+       f_{ki} (1 - f_{ki}) (\epsilon_{ki} - \mu)^n
+
     Attributes
     ----------
     entropy: float
         Entropy in eV (T * S).
+    heat_capacity: float
+        Heat capacity at constant volume in eV/K. Unlike entropy, not
+        multiplied by T.
     energy: float
         Energy in eV.
     free_energy: float
@@ -224,9 +284,11 @@ class ElectronFreeEnergy:
             raise ValueError(f"spin_degeneracy must be 1 or 2, not {spin_degeneracy}.")
 
         self._T: float
+        self._temperature: float  # in K, 0 where self._T stands in for 0 K
         self._f: NDArray[np.double]  # occupation numbers, shape=(kpoints, spin, bands)
         self._mu: float | None = None
         self._entropy: float | None = None
+        self._heat_capacity: float | None = None
         self._energy: float | None = None
 
     def run(self, temp: float) -> None:
@@ -240,12 +302,15 @@ class ElectronFreeEnergy:
         """
         if temp < _ZERO_TEMPERATURE:
             self._T = _ZERO_KT
+            self._temperature = 0.0
         else:
             self._T = temp * get_physical_units().KB
+            self._temperature = temp
         mu = self._chemical_potential()
         self._mu = mu
         self._f = self._occupation_number(self._eigenvalues, mu)
         self._entropy = self._get_entropy()
+        self._heat_capacity = self._get_heat_capacity()
         self._energy = self._get_energy()
 
     @property
@@ -268,6 +333,13 @@ class ElectronFreeEnergy:
         return self._entropy
 
     @property
+    def heat_capacity(self) -> float:
+        """Return heat capacity."""
+        if self._heat_capacity is None:
+            raise RuntimeError("Run method has not been called yet.")
+        return self._heat_capacity
+
+    @property
     def mu(self) -> float:
         """Return chemical potential."""
         if self._mu is None:
@@ -280,6 +352,21 @@ class ElectronFreeEnergy:
         f = self._f.reshape(len(self._weights), -1)
         entropy = -(entropy_terms(f).sum(axis=1) * self._weights).sum()
         return float(entropy * self._g * self._T / self._weights.sum())
+
+    def _get_heat_capacity(self) -> float:
+        # Both shape=(kpoints, spin*bands), as in _get_entropy.
+        assert self._mu is not None
+        spread = (self._f * (1.0 - self._f)).reshape(len(self._weights), -1)
+        de = (self._eigenvalues - self._mu).reshape(len(self._weights), -1)
+        a0, a1, a2 = (
+            float(
+                np.dot((spread * de**n).sum(axis=1), self._weights)
+                * self._g
+                / self._weights.sum()
+            )
+            for n in range(3)
+        )
+        return heat_capacity_from_moments(a0, a1, a2, self._temperature)
 
     def _get_energy(self) -> float:
         # occ_eigvals: shape=(kpoints, spin, bands), same as self._eigenvalues.
