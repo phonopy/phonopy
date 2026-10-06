@@ -329,7 +329,7 @@ def get_options() -> Namespace:
         default=None,
         metavar="EV",
         help="half-width of the energy window F_el is integrated over "
-        "(default: 12 k_B T of the highest temperature, at least 0.5 eV)",
+        "(default: 16 k_B T of the highest temperature, at least 0.5 eV)",
     )
     parser.add_argument(
         "--electronic-spacing",

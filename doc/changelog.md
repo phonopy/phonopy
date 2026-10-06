@@ -15,6 +15,15 @@
   `SSCHAAverage` of `phonopy.sscha.trace` are frozen dataclasses instead of
   named tuples. Their fields are read by name; unpacking them or indexing
   them by position no longer works.
+- Electronic heat capacity. `compute_thermal_properties_by_tetrahedron`
+  and `compute_thermal_properties_by_kpoint_sum` of `phonopy.electron`
+  return the free energy, entropy, heat capacity and chemical potential as
+  `ElectronicThermalProperties`. `ElectronFreeEnergy` has
+  `heat_capacity`.
+- The default energy window of the electronic free energy by the linear
+  tetrahedron method is 16 k_B T of the highest temperature instead of
+  12 k_B T, at least 0.5 eV as before. The electronic free energies change
+  slightly.
 
 ## Oct-04-2026: Version 4.8.1
 

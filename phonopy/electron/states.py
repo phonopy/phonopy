@@ -3,8 +3,8 @@
 
 What the two integration routes of the electronic free energy share: the
 container the eigenvalues arrive in, the hdf5 format that carries it between
-machines, and the Fermi-Dirac occupation and entropy integrand both are built
-on.
+machines, the Fermi-Dirac occupation and entropy integrand both are built
+on, and the container of what they return.
 
 """
 
@@ -17,7 +17,34 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
+
+
+@dataclasses.dataclass(frozen=True)
+class ElectronicThermalProperties:
+    """Electronic thermal properties at one volume point.
+
+    Attributes
+    ----------
+    temperatures : ndarray
+        Temperatures in K. shape=(temperatures,)
+    free_energy : ndarray
+        F(T) - F(0) in eV. shape=(temperatures,)
+    entropy : ndarray
+        Entropy in eV/K. shape=(temperatures,)
+    heat_capacity : ndarray
+        Heat capacity at constant volume in eV/K. shape=(temperatures,)
+    chemical_potential : ndarray
+        Chemical potential in eV. shape=(temperatures,)
+
+    """
+
+    temperatures: NDArray[np.double]
+    free_energy: NDArray[np.double]
+    entropy: NDArray[np.double]
+    heat_capacity: NDArray[np.double]
+    chemical_potential: NDArray[np.double]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -168,6 +195,44 @@ def entropy_terms(occupations: NDArray[np.double]) -> NDArray[np.double]:
     mask = (occupations > 1e-12) & (occupations < 1.0 - 1e-12)
     safe = np.where(mask, occupations, 0.5)
     return np.where(mask, safe * np.log(safe) + (1.0 - safe) * np.log1p(-safe), 0.0)
+
+
+def heat_capacity_from_moments(
+    a0: float, a1: float, a2: float, temperature: float
+) -> float:
+    """Return the heat capacity in eV/K from the moments of f(1 - f).
+
+        A_n = int g(E) f (1 - f) (E - mu)^n dE
+        C_V = [A_2 - A_1^2 / A_0] / (k_B T^2)
+
+    The A_1^2 / A_0 term is the change of mu with T that keeps the electron
+    count. The heat capacity is zero at 0 K, and where A_0 vanishes, which
+    is mu in a gap so wide that no state is partially occupied.
+
+    """
+    if temperature == 0.0 or a0 <= 0.0:
+        return 0.0
+    kb = get_physical_units().KB
+    return (a2 - a1 * a1 / a0) / (kb * temperature**2)
+
+
+def prepend_zero_kelvin(
+    temperatures: Sequence[float] | NDArray[np.double],
+) -> tuple[NDArray[np.double], int]:
+    """Return the temperatures with 0 K in front, and where the given ones start.
+
+    Returns
+    -------
+    tuple
+        (temperatures, start). temperatures is the given ones, with 0 K
+        prepended unless the first already is, shape=(temperatures,); the
+        given ones are temperatures[start:].
+
+    """
+    temps = np.asarray(temperatures, dtype="double")
+    if len(temps) > 0 and temps[0] == 0.0:
+        return temps, 0
+    return np.concatenate([[0.0], temps]), 1
 
 
 def write_electronic_states_hdf5(
