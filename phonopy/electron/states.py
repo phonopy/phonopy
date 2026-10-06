@@ -79,7 +79,7 @@ class ElectronicStates:
     fermi_energy : float, optional
         Fermi energy in eV as reported by the calculation the eigenvalues
         come from. Used to anchor the electron count when the free energy is
-        computed from a density of states; see free_energy_from_dos.
+        computed from a density of states; see thermal_properties_from_dos.
     kpoints : ndarray, optional
         The irreducible k-points the eigenvalues sit on, in fractional
         coordinates of the reciprocal basis vectors.

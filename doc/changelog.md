@@ -5,6 +5,11 @@
 ## Unreleased
 
 - Python 3.10 is no longer supported. Python 3.11 or later is required.
+- `free_energy_from_dos`, `compute_free_energy_by_tetrahedron`,
+  `compute_free_energy_by_kpoint_sum`, `get_free_energy_at_T` and
+  `compute_electronic_contributions_from_states` are deprecated in favour of
+  the functions that return `ElectronicThermalProperties`. See
+  {ref}`migration_v5`.
 - The electronic states and free energies moved from `phonopy.qha` to the
   new package `phonopy.electron`: `phonopy.electron.states`,
   `phonopy.electron.tetrahedron` and `phonopy.electron.kpoint_sum`. The

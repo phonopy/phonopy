@@ -9,6 +9,7 @@ what runs where there is no sampling grid, in phonopy.electron.kpoint_sum.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 
 import numpy as np
@@ -42,9 +43,10 @@ class _TetrahedronElectronicStates:
 
     The instance holds the BZ grid, its irreducible k-points and the
     eigenvalues mapped onto them. Building these takes longer than integrating
-    at a few energies. compute_free_energy_by_tetrahedron integrates the same
-    states twice, first to find the chemical potential at 0 K and then to build
-    the density of states, so it builds one instance and uses it for both.
+    at a few energies. compute_thermal_properties_by_tetrahedron integrates
+    the same states twice, first to find the chemical potential at 0 K and
+    then to build the density of states, so it builds one instance and uses
+    it for both.
 
     Parameters
     ----------
@@ -233,8 +235,9 @@ def compute_free_energy_by_tetrahedron(
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return F(T) - F(0) and the entropy through the tetrahedron method.
 
-    The tuple form of compute_thermal_properties_by_tetrahedron, which takes
-    the same parameters.
+    .. deprecated::
+        Use compute_thermal_properties_by_tetrahedron, which takes the same
+        parameters and returns ElectronicThermalProperties.
 
     Returns
     -------
@@ -243,6 +246,13 @@ def compute_free_energy_by_tetrahedron(
         (len(temperatures),).
 
     """
+    warnings.warn(
+        "compute_free_energy_by_tetrahedron() is deprecated. Use "
+        "compute_thermal_properties_by_tetrahedron(), whose free_energy and "
+        "entropy fields hold the same values.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     properties = compute_thermal_properties_by_tetrahedron(
         electronic_states,
         temperatures,
@@ -322,8 +332,10 @@ def free_energy_from_dos(
 ) -> tuple[NDArray[np.double], NDArray[np.double], NDArray[np.double]]:
     """Return F(T) - F(0), the entropy and mu(T) from a density of states.
 
-    The tuple form of thermal_properties_from_dos, which takes the same
-    parameters. Unlike it, the first temperature has to be 0 K.
+    .. deprecated::
+        Use thermal_properties_from_dos, which takes the same parameters and
+        returns ElectronicThermalProperties. Unlike it, this function needs
+        the first temperature to be 0 K.
 
     Returns
     -------
@@ -332,6 +344,13 @@ def free_energy_from_dos(
         (len(temperatures),).
 
     """
+    warnings.warn(
+        "free_energy_from_dos() is deprecated. Use thermal_properties_from_dos(), "
+        "whose free_energy, entropy and chemical_potential fields hold the same "
+        "values.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     temps = np.asarray(temperatures, dtype="double")
     if len(temps) == 0 or temps[0] != 0.0:
         given = temps[0] if len(temps) else "an empty list"

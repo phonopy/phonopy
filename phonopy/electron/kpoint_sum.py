@@ -15,6 +15,7 @@ needs many more irreducible k-points.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
 
 import numpy as np
@@ -50,6 +51,10 @@ def compute_free_energy_by_kpoint_sum(
     difference from 0 K, which is what compute_free_energy_by_tetrahedron
     returns instead.
 
+    .. deprecated::
+        Use compute_thermal_properties_by_kpoint_sum, which returns
+        ElectronicThermalProperties with the free energy as F(T) - F(0).
+
     Parameters
     ----------
     electronic_states : ElectronicStates
@@ -64,6 +69,13 @@ def compute_free_energy_by_kpoint_sum(
         temperatures. shape=(temperatures,) each.
 
     """
+    warnings.warn(
+        "compute_free_energy_by_kpoint_sum() is deprecated. Use "
+        "compute_thermal_properties_by_kpoint_sum(), whose free_energy field "
+        "is F(T) - F(0) rather than the band sum.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     efe = ElectronFreeEnergy(
         electronic_states.eigenvalues,
         electronic_states.weights,
@@ -139,7 +151,19 @@ def get_free_energy_at_T(
     weights: NDArray[np.int64] | NDArray[np.double],
     n_electrons: float,
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
-    """Return free energies at given temperatures."""
+    """Return free energies at given temperatures.
+
+    .. deprecated::
+        Use compute_thermal_properties_by_kpoint_sum with the states in an
+        ElectronicStates and the temperatures as an array.
+
+    """
+    warnings.warn(
+        "get_free_energy_at_T() is deprecated. Use "
+        "compute_thermal_properties_by_kpoint_sum().",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     free_energies = []
     efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
     temperatures = np.arange(tmin, tmax + 1e-8, tstep, dtype="double")

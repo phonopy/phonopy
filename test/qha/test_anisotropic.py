@@ -494,7 +494,7 @@ def test_electronic_states_are_scaled_to_the_primitive_cell(ph_nacl: Phonopy) ->
     scaled, has to give the same answer.
 
     """
-    from phonopy.qha.thermal import compute_electronic_contributions_from_states
+    from phonopy.qha.thermal import compute_electronic_thermal_properties_from_states
 
     phonopys = _tetragonal_phonopys(ph_nacl)
     energies = _tetragonal_internal_energies(phonopys)
@@ -506,8 +506,13 @@ def test_electronic_states_are_scaled_to_the_primitive_cell(ph_nacl: Phonopy) ->
         _dummy_states(ph.unitcell, scale=1.0 + 0.05 * i)
         for i, ph in enumerate(phonopys)
     ]
-    fe_raw, _ = compute_electronic_contributions_from_states(
-        states, TEMPERATURES, primitive_volumes=None
+    fe_raw = np.column_stack(
+        [
+            p.free_energy
+            for p in compute_electronic_thermal_properties_from_states(
+                states, TEMPERATURES, primitive_volumes=None
+            )
+        ]
     )
 
     from_states = run_anisotropic_qha(

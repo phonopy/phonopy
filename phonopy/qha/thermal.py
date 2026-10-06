@@ -13,6 +13,7 @@ immutable result dataclasses.
 from __future__ import annotations
 
 import dataclasses
+import warnings
 from collections.abc import Sequence
 from typing import Any
 
@@ -201,8 +202,10 @@ def compute_electronic_contributions_from_states(
 ) -> tuple[NDArray[np.double], NDArray[np.double]]:
     """Return the electronic free energy and entropy of each volume.
 
-    The tuple form of compute_electronic_thermal_properties_from_states,
-    which takes the same parameters.
+    .. deprecated::
+        Use compute_electronic_thermal_properties_from_states, which takes
+        the same parameters and returns ElectronicThermalProperties per
+        volume.
 
     Returns
     -------
@@ -212,6 +215,13 @@ def compute_electronic_contributions_from_states(
         Electronic entropy in eV/K. shape=(temperatures, volumes)
 
     """
+    warnings.warn(
+        "compute_electronic_contributions_from_states() is deprecated. Use "
+        "compute_electronic_thermal_properties_from_states(), which returns "
+        "the free energy and entropy of each volume as fields.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     properties = compute_electronic_thermal_properties_from_states(
         electronic_structures,
         temperatures,
