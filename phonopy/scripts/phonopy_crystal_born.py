@@ -49,14 +49,10 @@ def run():
 
     # Read in the output file
     try:
-        with open(crystal_filename, "r") as crystal_file:
+        with open(crystal_filename) as crystal_file:
             lines = crystal_file.readlines()
     except OSError:
-        print(
-            "CRYSTAL output file {} cannot be opened for reading".format(
-                crystal_filename
-            )
-        )
+        print(f"CRYSTAL output file {crystal_filename} cannot be opened for reading")
         sys.exit(1)
 
     # Recommended CRYSTAL calculation type:

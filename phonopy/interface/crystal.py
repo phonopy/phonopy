@@ -139,7 +139,7 @@ def write_crystal(
         f_template = open(template_file)
         lines += f_template.read()
         f_template.close()
-    except IOError:
+    except OSError:
         lines += "***** Insert basis sets and parameters here *****\n"
     lines += "TOLDEE\n"
     lines += "10\n"
@@ -187,7 +187,7 @@ def write_supercells_with_displacements(
         f = open("CRY_SYM")
         use_symmetry = True
         f.close()
-    except IOError:
+    except OSError:
         use_symmetry = False
 
     if use_symmetry:

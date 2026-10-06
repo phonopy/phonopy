@@ -2,7 +2,7 @@
 """Tests for displacements."""
 
 import itertools
-from typing import Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -68,8 +68,8 @@ def test_tio2(ph_tio2: Phonopy):
 def test_tio2_random_disp(
     ph_tio2: Phonopy,
     is_plusminus: bool,
-    distance: Optional[float],
-    number_of_snapshots: Union[int, Literal["auto"]],
+    distance: float | None,
+    number_of_snapshots: int | Literal["auto"],
 ):
     """Test random displacements of TiO2.
 
@@ -122,7 +122,7 @@ def test_tio2_random_disp_rd_auto_estimation_factor(ph_tio2: Phonopy):
 
 @pytest.mark.parametrize("min_distance", [None, 0.05, 0.2])
 def test_tio2_random_disp_with_random_dist(
-    ph_tio2: Phonopy, min_distance: Optional[float]
+    ph_tio2: Phonopy, min_distance: float | None
 ):
     """Test random displacements with random distance of TiO2."""
     ph = ph_tio2.copy()
@@ -147,7 +147,7 @@ def test_tio2_random_disp_with_random_dist(
 
 @pytest.mark.parametrize("max_distance", [None, 0.1])
 def test_tio2_random_disp_with_random_dist_defualt(
-    ph_tio2: Phonopy, max_distance: Optional[float]
+    ph_tio2: Phonopy, max_distance: float | None
 ):
     """Test random displacements with random distance of TiO2.
 

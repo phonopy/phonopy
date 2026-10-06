@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 import pathlib
 import tempfile
-from typing import Sequence
+from collections.abc import Sequence
 
 import pytest
 

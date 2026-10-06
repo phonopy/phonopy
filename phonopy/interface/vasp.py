@@ -9,11 +9,11 @@ import pathlib
 import sys
 import typing
 import warnings
-import xml.etree.cElementTree as etree
 import xml.etree.ElementTree
+import xml.etree.ElementTree as etree
 import xml.parsers.expat
-from collections.abc import Sequence
-from typing import Iterator, Literal, cast
+from collections.abc import Iterator, Sequence
+from typing import Literal, cast
 
 import numpy as np
 from numpy.typing import NDArray

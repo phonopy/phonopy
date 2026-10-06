@@ -14,7 +14,7 @@ Debye2au = 2.54174
 def get_cp2kver(fn):
     """Get CP2K version from the output file."""
     try:
-        fh = open(fn, "r")
+        fh = open(fn)
         for line in fh:
             if "CP2K| version string" in line:
                 try:
@@ -24,7 +24,7 @@ def get_cp2kver(fn):
                 except ValueError:
                     print("Warning. Reading CP2K version failed. Suggest v8")
                     return 8
-    except IOError:
+    except OSError:
         print("Warning. Reading CP2K version failed. Suggest v8 and above")
         return 8
 
@@ -34,7 +34,7 @@ def get_dipole(fn):
     dipole = []
     xyz = ["X=", "Y=", "Z="]
     try:
-        fh = open(fn, "r")
+        fh = open(fn)
         for line in fh:
             if "Dipole moment [Debye]" in line:
                 break
@@ -52,8 +52,8 @@ def get_epsilon_cp2k(fn, ucvol):
 
     epsilon = np.zeros(9)
     try:
-        fh = open(fn, "r")
-    except IOError:
+        fh = open(fn)
+    except OSError:
         print("ERROR open output file %s for reading filed" % fn)
         return -1
     for line in fh:
@@ -97,8 +97,8 @@ def get_epsilon_cp2kv6(fn, ucvol):
     epsilon = np.zeros(9)
     print("cp2kv6")
     try:
-        fh = open(fn, "r")
-    except IOError:
+        fh = open(fn)
+    except OSError:
         print("ERROR open output file %s for reading filed" % fn)
         return -1
     for line in fh:

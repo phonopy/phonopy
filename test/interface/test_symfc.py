@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import numpy as np
 import pytest
 
@@ -26,7 +24,7 @@ from phonopy.structure.mixture import get_mixture_expansion
 
 
 @pytest.mark.parametrize("cutoff", [None, {3: 5.0}])
-def test_symfc_cutoff(ph_nacl: Phonopy, cutoff: Optional[dict]):
+def test_symfc_cutoff(ph_nacl: Phonopy, cutoff: dict | None):
     """Test symfc interface with cutoff distance."""
     ph = ph_nacl
     symfc_solver = SymfcFCSolver(

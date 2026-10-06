@@ -64,7 +64,7 @@ def read_dftbp(filename: str | os.PathLike) -> PhonopyAtoms:
     found in filename
 
     """
-    infile = open(filename, "r")
+    infile = open(filename)
 
     lines = infile.readlines()
 
@@ -174,8 +174,9 @@ def write_dftbp(filename: str | os.PathLike, atoms: PhonopyAtoms) -> None:
 
     for ii in range(natoms):
         pos = positions[ii]
-        pos_str = "{:3d} {:3d} {:20.15f} {:20.15f} {:20.15f}\n".format(
-            ii + 1, atom_numbers[ii], pos[0], pos[1], pos[2]
+        pos_str = (
+            f"{ii + 1:3d} {atom_numbers[ii]:3d} "
+            f"{pos[0]:20.15f} {pos[1]:20.15f} {pos[2]:20.15f}\n"
         )
         lines += pos_str
 
@@ -185,9 +186,7 @@ def write_dftbp(filename: str | os.PathLike, atoms: PhonopyAtoms) -> None:
     cell = atoms.cell / scale_pos
 
     for ii in range(3):
-        cell_str = "{:20.15f} {:20.15f} {:20.15f}\n".format(
-            cell[ii][0], cell[ii][1], cell[ii][2]
-        )
+        cell_str = f"{cell[ii][0]:20.15f} {cell[ii][1]:20.15f} {cell[ii][2]:20.15f}\n"
         lines += cell_str
 
     outfile = open(filename, "w")

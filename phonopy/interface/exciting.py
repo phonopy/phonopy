@@ -40,7 +40,7 @@ def read_species_symbol(speciesfile: str | os.PathLike | typing.IO) -> str:
         if isinstance(xml_content, bytes):
             xml_content = xml_content.decode("utf-8")
     else:
-        with open(speciesfile, "r") as f:
+        with open(speciesfile) as f:
             xml_content = f.read()
 
     root = ET.fromstring(xml_content)
@@ -78,7 +78,7 @@ def read_exciting(filename: str | os.PathLike | typing.IO) -> PhonopyAtoms:
         input_dir = "."
     else:
         input_dir = os.path.dirname(os.path.abspath(filename))
-        with open(filename, "r") as f:
+        with open(filename) as f:
             xml_content = f.read()
 
     # Parse XML
@@ -223,8 +223,9 @@ def get_exciting_structure(cell: PhonopyAtoms) -> str:
 
     for i in range(3):
         basevect = ET.SubElement(crystal, "basevect")
-        basevect.text = "   {:16.10f}   {:16.10f}   {:16.10f}".format(
-            lattice[i, 0], lattice[i, 1], lattice[i, 2]
+        basevect.text = (
+            f"   {lattice[i, 0]:16.10f}   {lattice[i, 1]:16.10f}"
+            f"   {lattice[i, 2]:16.10f}"
         )
 
     # Group atoms by species
@@ -244,9 +245,8 @@ def get_exciting_structure(cell: PhonopyAtoms) -> str:
             atom = ET.SubElement(species, "atom")
             atom.set(
                 "coord",
-                "   {:16.10f}   {:16.10f}   {:16.10f}".format(
-                    atom_pos[0], atom_pos[1], atom_pos[2]
-                ),
+                f"   {atom_pos[0]:16.10f}   {atom_pos[1]:16.10f}"
+                f"   {atom_pos[2]:16.10f}",
             )
 
     return ET.ElementTree(root)

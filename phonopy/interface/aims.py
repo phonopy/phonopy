@@ -39,7 +39,7 @@ def lmap(func: Callable[[Any], _T], lis: Sequence[Any]) -> list[_T]:
 
 def read_aims(filename: str | os.PathLike) -> PhonopyAtoms:
     """Read FHI-aims geometry files in phonopy context."""
-    lines = open(filename, "r").readlines()
+    lines = open(filename).readlines()
 
     cell = []
     is_frac = []
@@ -136,7 +136,7 @@ def read_aims_output(filename: str | os.PathLike) -> Atoms_with_forces:
     from last self-consistency iteration.
 
     """
-    lines = open(filename, "r").readlines()
+    lines = open(filename).readlines()
 
     ll = 0
     N = 0
