@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import dataclasses
 import os
-from typing import Any, NamedTuple
+from typing import Any
 
 import h5py  # type: ignore[import-untyped]
 import numpy as np
@@ -24,7 +24,8 @@ from phonopy import __version__
 INTEGER_FIELDS = ("p2s_map",)
 
 
-class SSCHAAverage(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class SSCHAAverage:
     """One run's estimate, over the iterations after its transient."""
 
     free_energy: float
@@ -161,10 +162,12 @@ class SSCHATrace:
         kept = self._kept(transient)
         errors = self.errors[kept]
         return SSCHAAverage(
-            float(self.free_energies[kept].mean()),
-            float(np.sqrt(np.square(errors).sum()) / errors.size),
-            float(self.potential_energies[kept].mean()),
-            float(self.harmonic_potential_energies[kept].mean()),
+            free_energy=float(self.free_energies[kept].mean()),
+            error=float(np.sqrt(np.square(errors).sum()) / errors.size),
+            potential_energy=float(self.potential_energies[kept].mean()),
+            harmonic_potential_energy=float(
+                self.harmonic_potential_energies[kept].mean()
+            ),
         )
 
     def averaged_force_constants(self, transient: int = 1) -> NDArray[np.double]:

@@ -5,6 +5,10 @@
 ## Unreleased
 
 - Python 3.10 is no longer supported. Python 3.11 or later is required.
+- `CpPolyfitArrays` and `EntropyEnthalpyArrays` of `phonopy.qha.calc` and
+  `SSCHAAverage` of `phonopy.sscha.trace` are frozen dataclasses instead of
+  named tuples. Their fields are read by name; unpacking them or indexing
+  them by position no longer works.
 
 ## Oct-04-2026: Version 4.8.1
 

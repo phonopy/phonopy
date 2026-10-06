@@ -14,18 +14,33 @@ converts at its own boundary.
 
 from __future__ import annotations
 
-from typing import NamedTuple
+import dataclasses
 
 import numpy as np
 from numpy.typing import NDArray
 
 
-class CpPolyfitArrays(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class CpPolyfitArrays:
     """Results of C_P computation via polynomial fits of Cv(V) and S(V).
 
-    cp is in eV/K and dsdv in eV/K/angstrom^3. Both have the same length
-    as the input temperatures with a leading 0.0 element. The parameter
-    lists have two fewer elements, corresponding to temperatures[1:-1].
+    The fits are made at temperatures[1:-1]; cp and dsdv carry a leading
+    0.0 for temperatures[0] in front of them.
+
+    Attributes
+    ----------
+    cp : ndarray
+        Heat capacity at constant pressure in eV/K.
+        shape=(num_elems - 1,)
+    dsdv : ndarray
+        dS/dV at the equilibrium volume in eV/K/angstrom^3.
+        shape=(num_elems - 1,)
+    volume_cv_parameters : list of ndarray
+        Coefficients of the degree-4 polynomial fit of Cv(V), highest
+        degree first. len=num_elems - 2, each shape=(5,)
+    volume_entropy_parameters : list of ndarray
+        Coefficients of the degree-4 polynomial fit of S(V), highest
+        degree first. len=num_elems - 2, each shape=(5,)
 
     """
 
@@ -97,11 +112,19 @@ def compute_heat_capacity_p_numerical(
     return np.array(cp, dtype="double")
 
 
-class EntropyEnthalpyArrays(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class EntropyEnthalpyArrays:
     """System entropy and enthalpy at constant pressure.
 
-    Both arrays have the same length as the input temperatures. Entropy is
-    in eV/K and enthalpy is in eV, so that G = H - T S holds directly.
+    Entropy is in eV/K and enthalpy is in eV, so that G = H - T S holds
+    directly.
+
+    Attributes
+    ----------
+    entropy : ndarray
+        Entropy at the equilibrium volume in eV/K. shape=(temperatures,)
+    enthalpy : ndarray
+        Enthalpy in eV. shape=(temperatures,)
 
     """
 
