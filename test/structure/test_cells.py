@@ -35,7 +35,6 @@ from phonopy.structure.cells import (
     isclose,
     sparse_to_dense_svecs,
 )
-from phonopy.structure.mixture import get_mixture_expansion
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 primitive_matrix_nacl = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
@@ -741,14 +740,14 @@ def test_build_mixture_cell_supercell_through_phonopy(ph_nacl: Phonopy):
 
 
 def test_GeSn_mixture_force_constants_e2e():
-    """End-to-end: GeSn 50/50 supercell with raw expanded forces builds FC.
+    """End-to-end: GeSn 50/50 supercell with forces on unmerged atoms builds FC.
 
-    Construct the canonical GeSn 50/50 zincblende cell, generate
-    displacements through Phonopy, plug in synthetic *expanded* forces
-    of shape (num_supercells, n_expanded, 3) (the shape that VASP would
-    emit on a mixture-expanded SPOSCAR), and confirm produce_force_constants
-    runs end-to-end. The resulting FC has per-site shape, demonstrating
-    the FC-time reduction of raw forces.
+    Construct the canonical GeSn 50/50 zincblende cell with weighted atoms,
+    generate displacements through Phonopy with the merge scheme, plug in
+    synthetic forces of shape (num_supercells, n_unmerged, 3) (the shape that
+    VASP would emit on the unmerged SPOSCAR), and confirm
+    produce_force_constants runs end-to-end. The resulting FC has per-site
+    shape, demonstrating the FC-time reduction of raw forces.
 
     """
     a = 2.82173
@@ -762,12 +761,12 @@ def test_GeSn_mixture_force_constants_e2e():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
-    ph = Phonopy(mixed, supercell_matrix=np.diag([2, 2, 2]))
+    weighted = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(weighted, supercell_matrix=np.diag([2, 2, 2]))
     ph.generate_displacements(distance=0.01)
     n_sites = len(ph.supercell)
-    site_indices, _ = get_mixture_expansion(ph.supercell)
-    n_expanded = int(site_indices.size)
+    assert ph.unmerged_supercell is not None
+    n_expanded = len(ph.unmerged_supercell)
     assert n_expanded == 2 * n_sites
 
     rng = np.random.default_rng(seed=42)
