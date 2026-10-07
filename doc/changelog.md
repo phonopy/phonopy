@@ -29,6 +29,13 @@
   tetrahedron method is 16 k_B T of the highest temperature instead of
   12 k_B T, at least 0.5 eV as before. The electronic free energies change
   slightly.
+- VASP POSCAR and MAGMOM are written without reordering atoms by chemical
+  symbols, so that the forces in `vasprun.xml` are in the order of the atoms
+  of the supercell. When atoms of one element are not grouped together in
+  the cell, the element appears more than once in the line of element names
+  in POSCAR with a warning, and POTCAR has to be concatenated in the same
+  order. To have each element appear once, sort the atoms of the unit cell
+  by chemical symbols beforehand.
 
 ## Oct-04-2026: Version 4.8.1
 
