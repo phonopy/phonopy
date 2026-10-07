@@ -5,6 +5,7 @@ import lzma
 import shutil
 import tarfile
 import tempfile
+import warnings
 from io import BytesIO, StringIO
 from pathlib import Path
 
@@ -24,6 +25,7 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
     get_vasp_structure_lines,
     get_vasp_vca_hint_lines,
+    get_vasp_vca_weights,
     parse_force_constants,
     parse_set_of_forces,
     parse_vasprunxml,
@@ -38,6 +40,7 @@ from phonopy.interface.vasp import (
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    apply_site_mixture,
     argsort_by_key,
     build_mixture_cell,
     group_by_key,
@@ -295,6 +298,39 @@ def test_group_by_key_none_positions():
     assert sorted_pos is None
 
 
+def test_group_by_key_consecutive():
+    """With consecutive=True, each run of one key is a group in place."""
+    positions = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.1, 0.1, 0.1]])
+    counts, reduced, grouped_pos = group_by_key(
+        ["Na", "Cl", "Na"], positions, consecutive=True
+    )
+    assert reduced == ["Na", "Cl", "Na"]
+    assert counts == [1, 1, 1]
+    assert grouped_pos is not None
+    np.testing.assert_allclose(grouped_pos, positions)
+    counts, reduced, _ = group_by_key(["Na", "Na", "Cl"], consecutive=True)
+    assert reduced == ["Na", "Cl"]
+    assert counts == [2, 1]
+
+
+def test_vasp_poscar_keeps_order_of_atoms():
+    """Atoms of one symbol apart are written in their order in two rows.
+
+    The forces calculated by VASP are read in the order of the atoms.
+
+    """
+    positions = [[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.1, 0.1, 0.1]]
+    cell = PhonopyAtoms(
+        cell=np.eye(3) * 4, scaled_positions=positions, symbols=["Na", "Cl", "Na"]
+    )
+    with pytest.warns(UserWarning, match="Atoms of Na are not grouped by element"):
+        lines = get_vasp_structure_lines(cell)
+    assert lines[5].split() == ["Na", "Cl", "Na"]
+    assert [int(x) for x in lines[6].split()] == [1, 1, 1]
+    written = np.array([[float(x) for x in line.split()] for line in lines[8:11]])
+    np.testing.assert_allclose(written, positions)
+
+
 # ---------------------------------------------------------------------------
 # get_vasp_structure_lines
 # ---------------------------------------------------------------------------
@@ -323,8 +359,9 @@ def test_get_vasp_structure_lines(helper_methods, is_vasp4, first_line_str):
 def test_get_vasp_structure_lines_shuffled_positions(helper_methods):
     """Test get_vasp_structure_lines with a cell having shuffled positions.
 
-    Order of atoms is sorted by chemical symbols. Therefore,
-    helper_methods.compare_cells_with_order fails.
+    Order of atoms is kept, with one species row per run of consecutive atoms
+    of one symbol, because the forces calculated by VASP are read in the order
+    of the atoms.
 
     """
     poscar_yaml = """lattice:
@@ -358,19 +395,12 @@ points:
   mass: 35.453000
   """
     cell_ref = read_cell_yaml(StringIO(poscar_yaml))
-    lines = get_vasp_structure_lines(cell_ref, direct=True)
+    with pytest.warns(UserWarning, match="Atoms of Na, Cl are not grouped by element"):
+        lines = get_vasp_structure_lines(cell_ref, direct=True)
+    assert lines[5].split() == ["Na", "Cl"] * 4
+    assert lines[6].split() == ["1"] * 8
     cell = read_vasp_from_strings("\n".join(lines))
-    with pytest.raises(AssertionError):
-        helper_methods.compare_cells_with_order(cell, cell_ref)
-    helper_methods.compare_cells(cell, cell_ref)
-    perm = []
-    for p_i in cell.scaled_positions:
-        diff = cell_ref.scaled_positions - p_i
-        diff -= np.rint(diff)
-        dists = np.linalg.norm(diff @ cell.cell, axis=1)
-        perm.append(np.where(dists < 1e-8)[0][0])
-    np.testing.assert_array_equal(perm, [0, 2, 4, 6, 1, 3, 5, 7])
-    np.testing.assert_array_equal(cell.numbers, [11, 11, 11, 11, 17, 17, 17, 17])
+    helper_methods.compare_cells_with_order(cell, cell_ref)
 
 
 def test_get_vasp_structure_lines_is_vasp5_false_warns():
@@ -753,7 +783,7 @@ def test_read_force_constants_from_vasprun_xml():
 
 
 # ---------------------------------------------------------------------------
-# expand_mixtures (VASP VCA-compatible writing)
+# for_vca (VASP VCA-compatible writing)
 # ---------------------------------------------------------------------------
 
 
@@ -776,10 +806,10 @@ def _parse_species_and_counts(lines: list[str]) -> tuple[list[str], list[int]]:
     return lines[5].split(), [int(x) for x in lines[6].split()]
 
 
-def test_expand_mixtures_caseA_GeSn_50_50():
+def test_vca_poscar_caseA_GeSn_50_50():
     """Single GeSn 50/50 mixture expands into Ge Sn / N N rows."""
     cell = build_mixture_cell(_gesn_unitcell(), [0.5, 0.5, 0.5, 0.5])
-    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    lines = get_vasp_structure_lines(cell, for_vca=True)
     species, counts = _parse_species_and_counts(lines)
     assert species == ["Ge", "Sn"]
     assert counts == [2, 2]
@@ -789,7 +819,7 @@ def test_expand_mixtures_caseA_GeSn_50_50():
     assert pos_lines[1] == pos_lines[3]
 
 
-def test_expand_mixtures_caseB_pure_plus_mixture():
+def test_vca_poscar_caseB_pure_plus_mixture():
     """Si + GeSn 50/50: Si Ge Sn / 1 1 1."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -798,13 +828,13 @@ def test_expand_mixtures_caseB_pure_plus_mixture():
         symbols=["Si", "Ge", "Sn"],
     )
     cell = build_mixture_cell(cell, [1.0, 0.5, 0.5])
-    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    lines = get_vasp_structure_lines(cell, for_vca=True)
     species, counts = _parse_species_and_counts(lines)
     assert species == ["Si", "Ge", "Sn"]
     assert counts == [1, 1, 1]
 
 
-def test_expand_mixtures_caseC_two_distinct_ratios():
+def test_vca_poscar_caseC_two_distinct_ratios():
     """Two GeSn mixtures with different ratios get four POSCAR rows."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -818,13 +848,13 @@ def test_expand_mixtures_caseC_two_distinct_ratios():
         symbols=["Ge", "Sn", "Ge", "Sn"],
     )
     cell = build_mixture_cell(cell, [0.5, 0.5, 0.25, 0.75])
-    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    lines = get_vasp_structure_lines(cell, for_vca=True)
     species, counts = _parse_species_and_counts(lines)
     assert species == ["Ge", "Sn", "Ge", "Sn"]
     assert counts == [1, 1, 1, 1]
 
 
-def test_expand_mixtures_caseD_distinct_constituents():
+def test_vca_poscar_caseD_distinct_constituents():
     """GeSn + SiGe mixtures become two pairs of constituent rows."""
     a = 4.0
     cell = PhonopyAtoms(
@@ -838,7 +868,7 @@ def test_expand_mixtures_caseD_distinct_constituents():
         symbols=["Ge", "Sn", "Si", "Ge"],
     )
     cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
-    lines = get_vasp_structure_lines(cell, expand_mixtures=True)
+    lines = get_vasp_structure_lines(cell, for_vca=True)
     species, counts = _parse_species_and_counts(lines)
     # build_mixture_cell canonicalizes constituents to the order in which the
     # symbols first appear in the cell, so the Si-Ge site emits Ge before Si.
@@ -846,24 +876,25 @@ def test_expand_mixtures_caseD_distinct_constituents():
     assert counts == [1, 1, 1, 1]
 
 
-def test_expand_mixtures_no_op_for_pure_cell():
+def test_vca_poscar_no_op_for_pure_cell():
     """A cell without mixtures emits the same output regardless of the flag."""
     cell = read_vasp_from_strings(_POSCAR_VASP5)
-    lines_off = get_vasp_structure_lines(cell, expand_mixtures=False)
-    lines_on = get_vasp_structure_lines(cell, expand_mixtures=True)
+    lines_off = get_vasp_structure_lines(cell, for_vca=False)
+    lines_on = get_vasp_structure_lines(cell, for_vca=True)
     assert lines_off == lines_on
 
 
-def test_expand_mixtures_round_trip_via_build_mixture_cell(tmp_path):
+def test_vca_poscar_round_trip_via_build_mixture_cell(tmp_path):
     """Round-trip an expanded POSCAR back through build_mixture_cell.
 
     Reading the per-element-expanded POSCAR yields the un-merged input;
     re-applying build_mixture_cell with the canonical weights recovers the
     original mixed cell.
+
     """
     cell = build_mixture_cell(_gesn_unitcell(), [0.5, 0.5, 0.5, 0.5])
     fpath = tmp_path / "POSCAR_expanded"
-    write_vasp(fpath, cell, expand_mixtures=True)
+    write_vasp(fpath, cell, for_vca=True)
     parsed = read_vasp(fpath)
     # parsed has 4 atoms (Ge, Ge, Sn, Sn) — the inverse of build_mixture_cell.
     assert len(parsed) == 4
@@ -881,6 +912,21 @@ def test_get_vasp_vca_hint_lines_caseA():
     assert "POSCAR species rows: Ge Sn" in text
     assert "POSCAR counts:       2 2" in text
     assert "VCA = 0.5 0.5" in text
+
+
+def test_get_vasp_vca_hint_lines_weighted_species():
+    """Hint of weighted species follows the POSCAR rows written by write_vasp."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]],
+        symbols=["Si", "Ge", "Sn"],
+    )
+    cell = apply_site_mixture(cell, [1.0, 0.5, 0.5])
+    text = "\n".join(get_vasp_vca_hint_lines(cell))
+    assert "POSCAR species rows: Si Ge Sn" in text
+    assert "POSCAR counts:       1 1 1" in text
+    assert "VCA = 1 0.5 0.5" in text
 
 
 # ---------------------------------------------------------------------------
@@ -1198,6 +1244,7 @@ def test_noncollinear_detected_from_vasprunxml():
     The spin axis of a non-collinear calculation has length 1, exactly as for
     a non-spin-polarized one, so the tag is the only way to tell that each
     eigenvalue is a spinor state holding one electron.
+
     """
     with lzma.open(cwd / "vasprun_Si_noncollinear.xml.xz", "rb") as fp:
         vasprun = VasprunxmlExpat(fp)
@@ -1217,6 +1264,7 @@ def test_collinear_leaves_spin_degeneracy_unset(filename):
 
     GeSn-vca is non-spin-polarized and so shares the spin axis length of the
     non-collinear file above; kpoints_opt_spin is spin-polarized.
+
     """
     with lzma.open(cwd / filename, "rb") as fp:
         vasprun = VasprunxmlExpat(fp)
@@ -1224,3 +1272,141 @@ def test_collinear_leaves_spin_degeneracy_unset(filename):
 
     assert vasprun.is_noncollinear is False
     assert vasprun.spin_degeneracy is None
+
+
+def _get_two_site_cell() -> PhonopyAtoms:
+    """Return a cell with co-located Ge and Sn at two sites."""
+    a = 4.0
+    return PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
+        ],
+        symbols=["Ge", "Sn", "Ge", "Sn"],
+    )
+
+
+def test_get_vasp_vca_weights_merged_mixtures():
+    """VCA weights of merged mixtures follow the expanded POSCAR rows."""
+    cell = build_mixture_cell(_get_two_site_cell(), [0.5, 0.5, 0.25, 0.75])
+    species, _ = _parse_species_and_counts(get_vasp_structure_lines(cell, for_vca=True))
+    weights = get_vasp_vca_weights(cell)
+    assert species == ["Ge", "Sn", "Ge", "Sn"]
+    np.testing.assert_allclose(weights, [0.5, 0.5, 0.25, 0.75])
+
+
+def test_get_vasp_vca_weights_weighted_species():
+    """VCA weights of weighted species follow the POSCAR species rows."""
+    a = 4.0
+    cell = PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]],
+        symbols=["Si", "Ge", "Sn"],
+    )
+    cell = apply_site_mixture(cell, [1.0, 0.5, 0.5])
+    species, _ = _parse_species_and_counts(get_vasp_structure_lines(cell, for_vca=True))
+    weights = get_vasp_vca_weights(cell)
+    assert species == ["Si", "Ge", "Sn"]
+    np.testing.assert_allclose(weights, [1.0, 0.5, 0.5])
+
+
+def _get_two_site_cell_by_element() -> PhonopyAtoms:
+    """Return a cell with co-located Ge and Sn at two sites, Ge first."""
+    a = 4.0
+    return PhonopyAtoms(
+        cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+
+
+def test_vca_poscar_weighted_species():
+    """VCA POSCAR of weighted species is the POSCAR written without for_vca."""
+    cell = apply_site_mixture(_get_two_site_cell_by_element(), [0.5, 0.5, 0.5, 0.5])
+    assert get_vasp_structure_lines(cell, for_vca=True) == get_vasp_structure_lines(
+        cell
+    )
+
+
+def test_vca_poscar_weighted_species_of_one_element_in_two_rows():
+    """Atoms of one element with two weights are written in two species rows."""
+    cell = apply_site_mixture(_get_two_site_cell_by_element(), [0.5, 0.25, 0.5, 0.75])
+    lines = get_vasp_structure_lines(cell, for_vca=True)
+    species, counts = _parse_species_and_counts(lines)
+    assert species == ["Ge", "Ge", "Sn", "Sn"]
+    assert counts == [1, 1, 1, 1]
+    positions = np.array([[float(x) for x in line.split()] for line in lines[8:12]])
+    np.testing.assert_allclose(positions, cell.scaled_positions)
+    np.testing.assert_allclose(get_vasp_vca_weights(cell), [0.5, 0.25, 0.5, 0.75])
+
+
+def test_vasp_poscar_no_warning_of_order_of_atoms():
+    """No warning when atoms of each symbol are consecutive, or with for_vca."""
+    cell = PhonopyAtoms(
+        cell=np.eye(3) * 4,
+        scaled_positions=[[0.0, 0.0, 0.0], [0.1, 0.1, 0.1], [0.5, 0.5, 0.5]],
+        symbols=["Na", "Na", "Cl"],
+    )
+    split = apply_site_mixture(_get_two_site_cell(), [0.5, 0.5, 0.5, 0.5])
+    merged = build_mixture_cell(_get_two_site_cell(), [0.5, 0.5, 0.25, 0.75])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        get_vasp_structure_lines(cell)
+        assert get_vasp_structure_lines(split, for_vca=True)[5].split() == [
+            "Ge",
+            "Sn",
+            "Ge",
+            "Sn",
+        ]
+        assert get_vasp_structure_lines(merged, for_vca=True)[5].split() == [
+            "Ge",
+            "Sn",
+            "Ge",
+            "Sn",
+        ]
+
+
+def test_vca_poscar_weighted_species_apart():
+    """Atoms of one species apart are written in their order in two rows.
+
+    The forces calculated by VASP are read in the order of the atoms.
+
+    """
+    cell = apply_site_mixture(_get_two_site_cell(), [0.5, 0.5, 0.5, 0.5])
+    lines = get_vasp_structure_lines(cell, for_vca=True)
+    species, counts = _parse_species_and_counts(lines)
+    assert species == ["Ge", "Sn", "Ge", "Sn"]
+    assert counts == [1, 1, 1, 1]
+    positions = np.array([[float(x) for x in line.split()] for line in lines[8:12]])
+    np.testing.assert_allclose(positions, cell.scaled_positions)
+    np.testing.assert_allclose(get_vasp_vca_weights(cell), [0.5, 0.5, 0.5, 0.5])
+
+
+def test_vca_poscar_weighted_species_GeSn_GeSe():
+    """Co-located Ge and Sn, and co-located Ge and Se, are in four rows."""
+    cell = _get_two_site_cell()
+    cell = PhonopyAtoms(
+        cell=cell.cell,
+        scaled_positions=cell.scaled_positions,
+        symbols=["Ge", "Sn", "Ge", "Se"],
+    )
+    cell = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    species, counts = _parse_species_and_counts(
+        get_vasp_structure_lines(cell, for_vca=True)
+    )
+    assert species == ["Ge", "Sn", "Ge", "Se"]
+    assert counts == [1, 1, 1, 1]
+    np.testing.assert_allclose(get_vasp_vca_weights(cell), [0.5, 0.5, 0.5, 0.5])
+
+
+def test_get_vasp_vca_weights_ordinary_cell():
+    """VCA weights of an ordinary cell are 1.0 for every POSCAR row."""
+    np.testing.assert_allclose(get_vasp_vca_weights(_gesn_unitcell()), [1.0, 1.0])

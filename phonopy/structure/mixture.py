@@ -124,7 +124,7 @@ def get_mixture_expansion(
     """Return the (site_index, weight) order used to expand a mixture cell.
 
     The expansion mirrors the per-row layout of POSCAR / vasprun.xml
-    produced by ``write_vasp(..., expand_mixtures=True)``: for each entry
+    produced by ``write_vasp(..., for_vca=True)``: for each entry
     of ``cell.species_table``, every atom that references the entry is
     emitted once per constituent (in mixture order), each at the original
     site coordinate. This shared layout is also assumed by VASP
