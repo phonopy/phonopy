@@ -229,6 +229,12 @@ class Phonopy:
 
         # Create supercell and primitive cell. Unmerged cells are made only
         # with the merge scheme of site mixture.
+        if unitcell.has_mixtures:
+            raise ValueError(
+                "A cell with merged mixed-species sites cannot be given to "
+                "Phonopy. Give the cell with the weighted atoms of the input "
+                "structure and site_mixture_scheme."
+            )
         if site_mixture_scheme not in ("merge", "split"):
             raise ValueError(
                 'site_mixture_scheme must be "merge" or "split", got '

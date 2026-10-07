@@ -516,22 +516,25 @@ def test_normalization_masses_property_normal_cell():
 
 
 def test_normalization_masses_property_merge_cell():
-    """For a merge-style mixture cell normalization_masses equals averaged masses."""
-    species, ids = build_species_table_from_mixtures([[("Ge", 0.5), ("Sn", 0.5)]])
-    merge = PhonopyAtoms(
+    """With the merge scheme, normalization_masses equals averaged masses."""
+    cell = PhonopyAtoms(
         cell=_zincblende_lattice,
-        scaled_positions=[[0, 0, 0]],
-        species_table=species,
-        species_ids=ids,
+        scaled_positions=[[0, 0, 0], [0, 0, 0]],
+        symbols=["Ge", "Sn"],
     )
-    assert merge.has_mixtures
-    phonon = _phonon_from_cell(merge)
+    phonon = Phonopy(
+        apply_site_mixture(cell, [0.5, 0.5]),
+        supercell_matrix=np.diag([2, 2, 2]),
+        primitive_matrix=np.eye(3),
+    )
+    assert phonon.primitive.has_mixtures
     phonon.force_constants = np.zeros(
         (len(phonon.supercell), len(phonon.supercell), 3, 3)
     )
     dm = phonon.dynamical_matrix
     assert dm.primitive.mixture_weights is None
     np.testing.assert_allclose(dm.normalization_masses, dm.primitive.masses)
+    np.testing.assert_allclose(dm.primitive.masses, [np.mean(cell.masses)])
 
 
 @pytest.mark.parametrize("lang", ["C", "Rust"])
@@ -789,7 +792,8 @@ def test_phonopy_merge_scheme_force_constants():
 
     The forces on the atoms of each site are the site force divided by the
     weights. The force constants are compared with those from the site
-    forces given to the cell of mixed-species sites.
+    forces given to an ordinary cell, whose sites of each mixture are of one
+    element. The force constants do not depend on the masses.
 
     """
     phonon, weighted = _merged_phonon()
@@ -806,9 +810,13 @@ def test_phonopy_merge_scheme_force_constants():
     phonon.forces = site_forces[:, site_indices] * weights[None, :, None]
     phonon.produce_force_constants()
 
-    cell, cell_weights = _make_NaK_CsCl_cell("by_element")
+    site_cell = phonon.unitcell
     reference = Phonopy(
-        build_mixture_cell(cell, cell_weights),
+        PhonopyAtoms(
+            cell=site_cell.cell,
+            scaled_positions=site_cell.scaled_positions,
+            symbols=[["Si", "C"][i] for i in site_cell.species_ids],
+        ),
         supercell_matrix=np.diag([2, 2, 2]),
         primitive_matrix="P",
     )

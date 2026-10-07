@@ -719,8 +719,12 @@ def test_build_mixture_cell_rejects_already_mixed_cell():
         build_mixture_cell(mixed_cell, [1.0])
 
 
-def test_build_mixture_cell_supercell_through_phonopy(ph_nacl: Phonopy):
-    """A mixed unitcell flows through Phonopy and produces a supercell with mixtures."""
+def test_merged_supercell_through_phonopy(ph_nacl: Phonopy):
+    """A weighted unit cell is merged by Phonopy into a supercell with mixtures.
+
+    A unit cell of merged mixed-species sites itself is not accepted.
+
+    """
     a = 2.82173
     cell = PhonopyAtoms(
         cell=[[0, a, a], [a, 0, a], [a, a, 0]],
@@ -732,11 +736,13 @@ def test_build_mixture_cell_supercell_through_phonopy(ph_nacl: Phonopy):
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
-    ph = Phonopy(mixed_cell, supercell_matrix=np.diag([2, 2, 2]))
+    weighted = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(weighted, supercell_matrix=np.diag([2, 2, 2]))
     assert ph.supercell.has_mixtures
     assert ph.primitive.has_mixtures
     assert len(ph.supercell) == 16
+    with pytest.raises(ValueError, match="merged mixed-species sites"):
+        Phonopy(build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5]))
 
 
 def test_GeSn_mixture_force_constants_e2e():
