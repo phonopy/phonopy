@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
-"""Tests for the non-merge site-mixture scheme (apply_site_mixture)."""
+"""Tests for cells with weighted species of site mixture.
+
+Weighted species are attached by apply_site_mixture and merged into sites by
+merge_weighted_species.
+
+"""
 
 from __future__ import annotations
 
@@ -13,7 +18,15 @@ from phonopy.structure.atoms import (
     build_species_table_from_mixtures,
     parse_cell_dict,
 )
-from phonopy.structure.cells import apply_site_mixture, get_atom_order, isclose
+from phonopy.structure.cells import (
+    apply_site_mixture,
+    build_mixture_cell,
+    get_atom_order,
+    get_primitive,
+    get_supercell,
+    isclose,
+    merge_weighted_species,
+)
 from phonopy.structure.symmetry import (
     Symmetry,
     _get_mapping_between_cells,
@@ -187,6 +200,185 @@ def test_apply_site_mixture_symprec_controls_grouping():
     # must be 1.0.
     with pytest.raises(ValueError):
         apply_site_mixture(cell, weights=[0.5, 0.5])
+
+
+_Atom = tuple[str, list[float], float]
+_rocksalt_fcc = [[0.0, 0.0, 0.0], [0.0, 0.5, 0.5], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]
+_rocksalt_cl = [[0.5, 0.5, 0.5], [0.5, 0.0, 0.0], [0.0, 0.5, 0.0], [0.0, 0.0, 0.5]]
+
+
+def _make_NaKCl_cell(order: str) -> tuple[PhonopyAtoms, list[float]]:
+    """Return conventional NaCl with K on the Na sites (Na 0.9, K 0.1).
+
+    ``order`` is the order of the input atoms: "interleaved" (Na and K of one
+    site next to each other), "by_element" (Na, K, Cl as POSCAR rows), or
+    "Na_Cl_K".
+
+    """
+    na: list[_Atom] = [("Na", p, 0.9) for p in _rocksalt_fcc]
+    k: list[_Atom] = [("K", p, 0.1) for p in _rocksalt_fcc]
+    cl: list[_Atom] = [("Cl", p, 1.0) for p in _rocksalt_cl]
+    if order == "interleaved":
+        atoms = [a for pair in zip(na, k, strict=True) for a in pair] + cl
+    elif order == "by_element":
+        atoms = na + k + cl
+    else:
+        atoms = na + cl + k
+    cell = PhonopyAtoms(
+        cell=np.eye(3) * 5.69,
+        symbols=[a[0] for a in atoms],
+        scaled_positions=[a[1] for a in atoms],
+    )
+    return cell, [a[2] for a in atoms]
+
+
+def _make_NaK_CsCl_cell(order: str) -> tuple[PhonopyAtoms, list[float]]:
+    """Return a CsCl-type cell with sites Na0.9K0.1 and Na0.5K0.5.
+
+    ``order`` is "by_site" (Na_A K_A Na_B K_B) or "by_element"
+    (Na_A Na_B K_A K_B, as POSCAR rows).
+
+    """
+    a: list[float] = [0.0, 0.0, 0.0]
+    b: list[float] = [0.5, 0.5, 0.5]
+    if order == "by_site":
+        symbols, positions, weights = (
+            ["Na", "K", "Na", "K"],
+            [a, a, b, b],
+            [0.9, 0.1, 0.5, 0.5],
+        )
+    else:
+        symbols, positions, weights = (
+            ["Na", "Na", "K", "K"],
+            [a, b, a, b],
+            [0.9, 0.5, 0.1, 0.5],
+        )
+    cell = PhonopyAtoms(
+        cell=np.eye(3) * 4.0, symbols=symbols, scaled_positions=positions
+    )
+    return cell, weights
+
+
+def _get_sites(cell: PhonopyAtoms) -> list[tuple]:
+    """Return (species, scaled position modulo 1, mass) of each atom."""
+    sites = []
+    for sid, pos, mass in zip(
+        cell.species_ids, cell.scaled_positions, cell.masses, strict=True
+    ):
+        sp = cell.species_table[sid]
+        species = sp.mixture if sp.mixture is not None else sp.symbol
+        sites.append((species, pos, mass))
+    return sites
+
+
+def _assert_same_sites(cell_a: PhonopyAtoms, cell_b: PhonopyAtoms):
+    sites_a, sites_b = _get_sites(cell_a), _get_sites(cell_b)
+    assert len(sites_a) == len(sites_b)
+    for (sp_a, pos_a, mass_a), (sp_b, pos_b, mass_b) in zip(
+        sites_a, sites_b, strict=True
+    ):
+        assert sp_a == sp_b
+        diff = pos_a - pos_b
+        diff -= np.rint(diff)
+        np.testing.assert_allclose(diff, 0, atol=1e-8)
+        assert mass_a == pytest.approx(mass_b)
+
+
+_mixture_cells = [
+    (_make_NaKCl_cell, "interleaved"),
+    (_make_NaKCl_cell, "by_element"),
+    (_make_NaKCl_cell, "Na_Cl_K"),
+    (_make_NaK_CsCl_cell, "by_site"),
+    (_make_NaK_CsCl_cell, "by_element"),
+]
+
+
+@pytest.mark.parametrize("make_cell,order", _mixture_cells)
+def test_merge_weighted_species_equals_build_mixture_cell(make_cell, order):
+    """Merging a weighted cell gives the cell of build_mixture_cell."""
+    cell, weights = make_cell(order)
+    site_cell, site_indices = merge_weighted_species(apply_site_mixture(cell, weights))
+    _assert_same_sites(site_cell, build_mixture_cell(cell, weights))
+    # Each atom is at the position of its site.
+    diff = cell.scaled_positions - site_cell.scaled_positions[site_indices]
+    diff -= np.rint(diff)
+    np.testing.assert_allclose(diff, 0, atol=1e-8)
+
+
+def test_merge_weighted_species_site_indices():
+    """Site indices follow the first atom of each site."""
+    cell, weights = _make_NaK_CsCl_cell("by_element")
+    site_cell, site_indices = merge_weighted_species(apply_site_mixture(cell, weights))
+    np.testing.assert_array_equal(site_indices, [0, 1, 0, 1])
+    assert site_cell.species_table[site_cell.species_ids[0]].mixture == (
+        ("Na", 0.9),
+        ("K", 0.1),
+    )
+    assert site_cell.species_table[site_cell.species_ids[1]].mixture == (
+        ("Na", 0.5),
+        ("K", 0.5),
+    )
+
+
+@pytest.mark.parametrize("make_cell,order", _mixture_cells)
+@pytest.mark.parametrize(
+    "supercell_matrix",
+    [
+        np.diag([2, 2, 2]),
+        [[0, 1, 1], [1, 0, 1], [1, 1, 0]],
+        [[1, 1, 0], [0, 1, 0], [0, 0, 2]],
+    ],
+)
+def test_merge_weighted_species_commutes_with_supercell(
+    make_cell, order, supercell_matrix
+):
+    """Merging the supercell of a weighted cell gives the merged supercell.
+
+    The supercell of the weighted cell, which is written for the calculator,
+    and the supercell of the site cell, which phonopy calculates with, then
+    have their sites in the same order.
+
+    """
+    cell, weights = make_cell(order)
+    weighted = apply_site_mixture(cell, weights)
+    site_cell, _ = merge_weighted_species(weighted)
+    merged_supercell, _ = merge_weighted_species(
+        get_supercell(weighted, supercell_matrix)
+    )
+    _assert_same_sites(merged_supercell, get_supercell(site_cell, supercell_matrix))
+
+
+@pytest.mark.parametrize("order", ["interleaved", "by_element", "Na_Cl_K"])
+def test_merge_weighted_species_commutes_with_primitive(order):
+    """Merging the primitive cell of a weighted cell gives the merged one."""
+    cell, weights = _make_NaKCl_cell(order)
+    weighted = apply_site_mixture(cell, weights)
+    site_cell, _ = merge_weighted_species(weighted)
+    pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
+    merged_primitive, _ = merge_weighted_species(get_primitive(weighted, pmat))
+    _assert_same_sites(merged_primitive, get_primitive(site_cell, pmat))
+
+
+def test_merge_weighted_species_ordinary_cell():
+    """An ordinary cell is merged into itself."""
+    cell, _ = _make_NaKCl_cell("by_element")
+    cell = PhonopyAtoms(
+        cell=cell.cell,
+        symbols=cell.symbols[:4] + cell.symbols[8:],
+        scaled_positions=np.vstack(
+            [cell.scaled_positions[:4], cell.scaled_positions[8:]]
+        ),
+    )
+    site_cell, site_indices = merge_weighted_species(cell)
+    assert site_cell.symbols == cell.symbols
+    np.testing.assert_array_equal(site_indices, np.arange(len(cell)))
+
+
+def test_merge_weighted_species_rejects_merge_cell():
+    """A cell with mixed-species sites cannot be merged again."""
+    cell, weights = _make_NaK_CsCl_cell("by_site")
+    with pytest.raises(ValueError):
+        merge_weighted_species(build_mixture_cell(cell, weights))
 
 
 def test_symmetry_GeSn_50_50_co_located():
