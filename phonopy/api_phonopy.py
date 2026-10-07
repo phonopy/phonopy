@@ -91,7 +91,6 @@ from phonopy.structure.cells import (
     warn_if_primitive_matrix_auto_changed_cell,
 )
 from phonopy.structure.dataset import forces_in_dataset
-from phonopy.structure.mixture import reduce_mixture_forces
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 
 
@@ -3804,12 +3803,6 @@ class Phonopy:
                 self._unmerged_site_indices,
                 mode=_mixture_reduce_mode_for_calculator(self._calculator),
             )
-        elif self._supercell.has_mixtures:
-            dataset_for_fc = _reduce_mixture_dataset_forces(
-                self._dataset,
-                self._supercell,
-                mode=_mixture_reduce_mode_for_calculator(self._calculator),
-            )
         # With the split scheme of site mixture, cells of weighted species use
         # the ordinary finite-difference path: the raw VASP forces and real
         # displacements give the symmetric force constants G that satisfy
@@ -4158,40 +4151,6 @@ def _reduce_dataset_forces_to_sites(
     return cast(DisplacementDataset, new_dataset)
 
 
-def _reduce_mixture_dataset_forces(
-    dataset: DisplacementDataset,
-    supercell: PhonopyAtoms,
-    mode: Literal["weighted_sum", "sum"] = "weighted_sum",
-) -> DisplacementDataset:
-    """Return a shallow-copied dataset with forces reduced to per-site values.
-
-    Used to feed the FC calculator a per-site force tensor while leaving the
-    raw expanded forces in the user-visible dataset. ``mode`` selects the
-    per-site reduction convention; see ``reduce_mixture_forces``.
-
-    """
-    if "first_atoms" in dataset:
-        d1 = cast(Type1DisplacementDataset, dataset)
-        new_first_atoms = []
-        for entry in d1["first_atoms"]:
-            new_entry = dict(entry)
-            if "forces" in entry:
-                new_entry["forces"] = reduce_mixture_forces(
-                    entry["forces"], supercell, mode=mode
-                )
-            new_first_atoms.append(new_entry)
-        new_dataset: dict = {"first_atoms": new_first_atoms, "natom": d1["natom"]}
-        return cast(DisplacementDataset, new_dataset)
-
-    d2 = cast(Type2DisplacementDataset, dataset)
-    new_dataset = dict(d2)
-    if "forces" in d2:
-        new_dataset["forces"] = reduce_mixture_forces(
-            d2["forces"], supercell, mode=mode
-        )
-    return cast(DisplacementDataset, new_dataset)
-
-
 def _mixture_reduce_mode_for_calculator(
     calculator: str | None,
 ) -> Literal["weighted_sum", "sum"]:
@@ -4210,10 +4169,26 @@ def _mixture_reduce_mode_for_calculator(
 
 
 def set_data_to_phonopy_yaml(phpy_yaml: PhonopyYaml, self: Phonopy) -> None:
-    """Set data to PhonopyYaml instance."""
-    phpy_yaml.unitcell = self.unitcell
-    phpy_yaml.primitive = self.primitive
-    phpy_yaml.supercell = self.supercell
+    """Set data to PhonopyYaml instance.
+
+    With the merge scheme of site mixture, the unmerged cells are written. This
+    is also used for objects of other classes (e.g., Phelel), which have no site
+    mixture scheme.
+
+    """
+    if isinstance(self, Phonopy) and self.unmerged_unitcell is not None:
+        assert self.unmerged_primitive is not None
+        assert self.unmerged_supercell is not None
+        unitcell = self.unmerged_unitcell
+        phpy_yaml.primitive = self.unmerged_primitive
+        phpy_yaml.supercell = self.unmerged_supercell
+    else:
+        unitcell = self.unitcell
+        phpy_yaml.primitive = self.primitive
+        phpy_yaml.supercell = self.supercell
+    phpy_yaml.unitcell = unitcell
+    if isinstance(self, Phonopy) and unitcell.has_weighted_species:
+        phpy_yaml.site_mixture_scheme = self.site_mixture_scheme
     phpy_yaml.version = self.version
     phpy_yaml.supercell_matrix = self.supercell_matrix
     phpy_yaml.symmetry = self.symmetry

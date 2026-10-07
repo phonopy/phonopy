@@ -214,6 +214,7 @@ def load(
     lang = resolve_lang(lang)
     if primitive_matrix is None:
         primitive_matrix = "auto"
+    _site_mixture_scheme: Literal["merge", "split"] = "merge"
     if (
         supercell is not None
         or supercell_filename is not None
@@ -262,6 +263,8 @@ def load(
             _nac_params = None
         _dataset = phpy_yaml.dataset
         _fc = phpy_yaml.force_constants
+        if phpy_yaml.site_mixture_scheme is not None:
+            _site_mixture_scheme = phpy_yaml.site_mixture_scheme
         if calculator is None:
             _calculator = phpy_yaml.calculator
         else:
@@ -284,6 +287,7 @@ def load(
         calculator=_calculator,
         log_level=log_level,
         lang=lang,
+        site_mixture_scheme=_site_mixture_scheme,
     )
 
     units = get_calculator_physical_units(_calculator)
