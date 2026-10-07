@@ -426,7 +426,12 @@ def test_phonopy_construction_and_displacements_co_located():
 
     """
     vca = apply_site_mixture(_make_GeSn_co_located_cell(), weights=[0.5, 0.5, 0.5, 0.5])
-    phonon = Phonopy(vca, supercell_matrix=np.diag([2, 2, 2]), primitive_matrix="auto")
+    phonon = Phonopy(
+        vca,
+        supercell_matrix=np.diag([2, 2, 2]),
+        primitive_matrix="auto",
+        site_mixture_scheme="split",
+    )
     supercell = phonon.supercell
     assert len(supercell) == 32  # 4 atoms x 8, nothing merged away
     assert len(phonon.primitive) == 4
@@ -468,12 +473,13 @@ def _symmetric_fc(natom: int, seed: int) -> np.ndarray:
 
 
 def _phonon_from_cell(cell: PhonopyAtoms, lang: str = "C") -> Phonopy:
-    """Build a 2x2x2 Phonopy with the unit cell as primitive."""
+    """Build a 2x2x2 Phonopy with the unit cell as primitive, split scheme."""
     return Phonopy(
         cell,
         supercell_matrix=np.diag([2, 2, 2]),
         primitive_matrix=np.eye(3),
         lang=lang,
+        site_mixture_scheme="split",
     )
 
 
@@ -682,3 +688,146 @@ def test_symmetrize_borns_co_located_keeps_species():
     borns_, _ = symmetrize_borns_and_epsilon(borns, eye, vca)
     np.testing.assert_allclose(borns_[[0, 2]], [2.0 * eye, 2.0 * eye], atol=1e-8)
     np.testing.assert_allclose(borns_[[1, 3]], [-2.0 * eye, -2.0 * eye], atol=1e-8)
+
+
+def _merged_phonon(
+    make_cell=_make_NaK_CsCl_cell, order: str = "by_element"
+) -> tuple[Phonopy, PhonopyAtoms]:
+    """Return Phonopy of the merge scheme and the input weighted unit cell."""
+    cell, weights = make_cell(order)
+    weighted = apply_site_mixture(cell, weights)
+    phonon = Phonopy(
+        weighted, supercell_matrix=np.diag([2, 2, 2]), primitive_matrix="P"
+    )
+    return phonon, weighted
+
+
+@pytest.mark.parametrize("make_cell,order", _mixture_cells)
+def test_phonopy_merge_scheme_cells(make_cell, order):
+    """With the merge scheme, unitcell is of sites and unmerged_* of atoms.
+
+    The sites of the unmerged cells are those of the cells of phonopy, in the
+    same order.
+
+    """
+    phonon, weighted = _merged_phonon(make_cell, order)
+    assert phonon.site_mixture_scheme == "merge"
+    assert phonon.unitcell.has_mixtures
+    site_cell, _ = merge_weighted_species(weighted)
+    _assert_same_sites(phonon.unitcell, site_cell)
+    unmerged_unitcell = phonon.unmerged_unitcell
+    assert unmerged_unitcell is not None
+    assert unmerged_unitcell.symbols == weighted.symbols
+    np.testing.assert_allclose(
+        unmerged_unitcell.scaled_positions, weighted.scaled_positions
+    )
+    for cell, unmerged in (
+        (phonon.supercell, phonon.unmerged_supercell),
+        (phonon.primitive, phonon.unmerged_primitive),
+    ):
+        assert unmerged is not None
+        assert len(unmerged) == len(cell) * len(weighted) // len(site_cell)
+        _assert_same_sites(cell, merge_weighted_species(unmerged)[0])
+
+
+def test_phonopy_unmerged_cells_none_without_merge():
+    """unmerged_* are None with the split scheme and for an ordinary cell."""
+    cell, weights = _make_NaK_CsCl_cell("by_element")
+    split = Phonopy(
+        apply_site_mixture(cell, weights),
+        supercell_matrix=np.diag([2, 2, 2]),
+        site_mixture_scheme="split",
+    )
+    ordinary = Phonopy(
+        PhonopyAtoms(
+            cell=np.eye(3) * 4.0,
+            symbols=["Na", "Cl"],
+            scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        ),
+        supercell_matrix=np.diag([2, 2, 2]),
+    )
+    for phonon in (split, ordinary):
+        assert phonon.unmerged_unitcell is None
+        assert phonon.unmerged_primitive is None
+        assert phonon.unmerged_supercell is None
+    assert len(split.supercell) == 32
+
+
+def test_phonopy_rejects_unknown_site_mixture_scheme():
+    """site_mixture_scheme is "merge" or "split"."""
+    cell, weights = _make_NaK_CsCl_cell("by_element")
+    with pytest.raises(ValueError):
+        Phonopy(
+            apply_site_mixture(cell, weights),
+            site_mixture_scheme="merged",  # type: ignore[arg-type]
+        )
+
+
+def test_phonopy_merge_scheme_displacements():
+    """The displacement of a site is given to every atom of the site."""
+    phonon, _ = _merged_phonon()
+    phonon.generate_displacements()
+    unmerged_supercell = phonon.unmerged_supercell
+    assert unmerged_supercell is not None
+    _, site_indices = merge_weighted_species(unmerged_supercell)
+    dataset = phonon.dataset
+    assert dataset is not None
+    cells = phonon.supercells_with_displacements
+    assert cells is not None
+    assert len(cells) == len(dataset["first_atoms"]) == 2
+    for disp, cell in zip(dataset["first_atoms"], cells, strict=True):
+        assert cell.symbols == unmerged_supercell.symbols
+        diff = cell.positions - unmerged_supercell.positions
+        moved = site_indices == disp["number"]
+        assert moved.sum() == 2
+        np.testing.assert_allclose(diff[moved], [disp["displacement"]] * 2)
+        np.testing.assert_allclose(diff[~moved], 0, atol=1e-12)
+
+
+def test_phonopy_merge_scheme_force_constants():
+    """Forces on the atoms are summed per site for the force constants.
+
+    The forces on the atoms of each site are the site force divided by the
+    weights. The force constants are compared with those from the site
+    forces given to the cell of mixed-species sites.
+
+    """
+    phonon, weighted = _merged_phonon()
+    phonon.generate_displacements()
+    unmerged_supercell = phonon.unmerged_supercell
+    assert unmerged_supercell is not None
+    _, site_indices = merge_weighted_species(unmerged_supercell)
+    weights = unmerged_supercell.mixture_weights
+    assert weights is not None
+
+    rng = np.random.default_rng(7)
+    site_forces = rng.standard_normal((2, len(phonon.supercell), 3))
+    site_forces -= site_forces.mean(axis=1, keepdims=True)
+    phonon.forces = site_forces[:, site_indices] * weights[None, :, None]
+    phonon.produce_force_constants()
+
+    cell, cell_weights = _make_NaK_CsCl_cell("by_element")
+    reference = Phonopy(
+        build_mixture_cell(cell, cell_weights),
+        supercell_matrix=np.diag([2, 2, 2]),
+        primitive_matrix="P",
+    )
+    reference.dataset = phonon.dataset
+    reference.forces = site_forces
+    reference.produce_force_constants()
+    assert phonon.force_constants is not None
+    assert reference.force_constants is not None
+    np.testing.assert_allclose(
+        phonon.force_constants, reference.force_constants, atol=1e-10
+    )
+
+
+def test_phonopy_merge_scheme_replicate():
+    """Replicate keeps the scheme and the unmerged unit cell."""
+    phonon, weighted = _merged_phonon()
+    replica = phonon.replicate()
+    assert replica.site_mixture_scheme == "merge"
+    unmerged_unitcell = replica.unmerged_unitcell
+    assert unmerged_unitcell is not None
+    assert unmerged_unitcell.symbols == weighted.symbols
+    _assert_same_sites(replica.supercell, phonon.supercell)
