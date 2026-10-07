@@ -103,6 +103,10 @@ def _add_cell_options(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="Same as MAGMOM tag",
     )
+
+
+def _add_site_mixture_options(parser: argparse.ArgumentParser) -> None:
+    """Add options of site mixture, which shape the input cell of a setup."""
     parser.add_argument(
         "--site-mixture",
         nargs="+",
@@ -1043,6 +1047,8 @@ def _reject_init_options(parser: argparse.ArgumentParser) -> None:
         (("--fz", "--force-sets-zero"), "+"),
         (("--fc", "--force-constants"), 1),
         (("--symmetry",), 0),
+        (("--site-mixture",), "+"),
+        (("--split-site-mixture",), 0),
     ]
     for option_strings, nargs in specs:
         kwargs: dict = {
@@ -1068,6 +1074,7 @@ def get_init_parser() -> tuple[argparse.ArgumentParser, list[str]]:
         formatter_class=_SortedHelpFormatter,
     )
     _add_shared_options(parser)
+    _add_site_mixture_options(parser)
     _add_init_options(parser)
     _reject_removed_options(parser)
     parser.add_argument(
@@ -1203,6 +1210,7 @@ def get_symmetry_parser() -> tuple[argparse.ArgumentParser, list[str]]:
         formatter_class=_SortedHelpFormatter,
     )
     _add_cell_options(parser)
+    _add_site_mixture_options(parser)
     _add_logging_options(parser)
     add_arguments_of_calculators(parser, calculator_info)
     _reject_removed_options(parser)

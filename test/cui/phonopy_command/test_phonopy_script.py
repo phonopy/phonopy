@@ -1267,6 +1267,28 @@ def test_phonopy_init_mode_requires_init_flag(capsys: pytest.CaptureFixture[str]
             os.chdir(original_cwd)
 
 
+@pytest.mark.parametrize(
+    "flags", [["--site-mixture", "0.5", "0.5"], ["--split-site-mixture"]]
+)
+def test_site_mixture_flags_only_in_init_parser(
+    flags: list[str], capsys: pytest.CaptureFixture[str]
+):
+    """--site-mixture and --split-site-mixture shape the cell of a setup.
+
+    phonopy-init accepts them, and phonopy rejects them with a message that
+    points to phonopy-init.
+
+    """
+    parser, _ = get_init_parser()
+    parser.parse_args(["-c", "POSCAR", "-d", "--dim", "1", "1", "1"] + flags)
+
+    parser, _ = get_run_parser()
+    with pytest.raises(SystemExit) as excinfo:
+        parser.parse_args(["phonopy_disp.yaml"] + flags)
+    assert excinfo.value.code == 2
+    assert "phonopy-init" in capsys.readouterr().err
+
+
 def test_run_parser_accepts_displacement_flag():
     """The phonopy (run) parser accepts -d instead of rejecting it at parse time.
 
