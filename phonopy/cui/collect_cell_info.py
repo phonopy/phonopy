@@ -25,7 +25,6 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     apply_site_mixture,
-    build_mixture_cell,
     get_primitive_matrix_with_auto,
 )
 
@@ -116,19 +115,16 @@ def get_cell_info(
 
     if settings.site_mixture is not None:
         # A cell loaded from phonopy(_disp).yaml already carries its
-        # site-mixture (merged mixtures or weighted species), so re-applying
-        # the --site-mixture weights would fail. Skip in that case; the
-        # persisted cell already has the information.
+        # weighted species, so re-applying the --site-mixture weights would
+        # fail. Skip in that case; the persisted cell already has the
+        # information. Co-located atoms are merged into sites by Phonopy with
+        # the merge scheme.
         if cell_info.unitcell.is_site_mixture:
             if log_level:
                 print(
                     "Site mixture is already defined in the input cell; "
                     "--site-mixture is ignored."
                 )
-        elif settings.merge_site_mixture:
-            cell_info.unitcell = build_mixture_cell(
-                cell_info.unitcell, settings.site_mixture
-            )
         else:
             cell_info.unitcell = apply_site_mixture(
                 cell_info.unitcell, settings.site_mixture

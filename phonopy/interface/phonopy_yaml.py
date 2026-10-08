@@ -16,7 +16,7 @@ import numpy as np
 import yaml
 from numpy.typing import NDArray
 
-from phonopy.structure.cells import Primitive, Supercell
+from phonopy.structure.cells import Primitive, Supercell, merge_weighted_species
 from phonopy.structure.symmetry import Symmetry
 
 try:
@@ -49,6 +49,7 @@ class PhonopyYamlData:
 
     configuration: dict | None = None
     calculator: str | None = None
+    site_mixture_scheme: Literal["merge", "split"] | None = None
     physical_units: CalculatorPhysicalUnits | None = None
     unitcell: PhonopyAtoms | None = None
     primitive: Primitive | PhonopyAtoms | None = None
@@ -105,6 +106,7 @@ class PhonopyYamlLoaderBase(ABC):
         """Parse raw yaml data."""
         self._parse_command_header()
         self._parse_calculator()
+        self._parse_site_mixture_scheme()
         self._parse_physical_units()
         self._parse_transformation_matrices()
         self._parse_all_cells()
@@ -371,12 +373,39 @@ class PhonopyYamlLoaderBase(ABC):
         ):
             self._data.calculator = self._yaml[self._data.command_name]["calculator"]
 
+    def _parse_site_mixture_scheme(self) -> None:
+        header = self._yaml.get(self._data.command_name)
+        if not isinstance(header, dict) or "site_mixture_scheme" not in header:
+            return
+        scheme = header["site_mixture_scheme"]
+        if scheme not in ("merge", "split"):
+            raise ValueError(
+                f'site_mixture_scheme must be "merge" or "split", got "{scheme}".'
+            )
+        self._data.site_mixture_scheme = scheme
+
+    def _get_site_supercell(self) -> PhonopyAtoms | None:
+        """Return supercell whose atoms are those of the dataset.
+
+        With the merge scheme of site mixture, displacements are of the sites,
+        whose number is smaller than that of the atoms in the yaml supercell.
+
+        """
+        supercell = self._data.supercell
+        if (
+            supercell is not None
+            and supercell.has_weighted_species
+            and self._data.site_mixture_scheme != "split"
+        ):
+            supercell, _ = merge_weighted_species(supercell)
+        return supercell
+
 
 class PhonopyYamlLoader(PhonopyYamlLoaderBase):
     """PhonopyYaml loader."""
 
     def _parse_dataset(self) -> None:
-        self._data.dataset = self._get_dataset(self._data.supercell)
+        self._data.dataset = self._get_dataset(self._get_site_supercell())
 
 
 class PhonopyYamlDumperBase(ABC):
@@ -418,6 +447,11 @@ class PhonopyYamlDumperBase(ABC):
         lines.append(f'  version: "{version}"')
         if self._data.calculator:
             lines.append("  calculator: %s" % self._data.calculator)
+        if self._data.site_mixture_scheme:
+            lines.append(
+                f"  site_mixture_scheme: {self._data.site_mixture_scheme}"
+                "  # merge or split"
+            )
         if self._data.frequency_unit_conversion_factor:
             lines.append(
                 "  frequency_unit_conversion_factor: %f"
@@ -579,7 +613,12 @@ class PhonopyYamlDumperBase(ABC):
         if self._data.nac_params is not None:
             if self._dumper_settings["born_effective_charge"]:
                 lines.append("  born_effective_charge:")
-                for i, z in enumerate(self._data.nac_params["born"]):
+                borns = self._data.nac_params["born"]
+                # Symbols of the atoms of an unmerged primitive cell of site
+                # mixture are not those of the sites of the Born charges.
+                if symbols is not None and len(symbols) != len(borns):
+                    symbols = None
+                for i, z in enumerate(borns):
                     text = "  - # %d" % (i + 1)
                     if symbols:
                         text += " (%s)" % symbols[i]
@@ -836,6 +875,16 @@ class PhonopyYaml:
         self._data.calculator = value
 
     @property
+    def site_mixture_scheme(self) -> Literal["merge", "split"] | None:
+        """Return scheme of site mixture, "merge" or "split", or None."""
+        return self._data.site_mixture_scheme
+
+    @site_mixture_scheme.setter
+    def site_mixture_scheme(self, value: Literal["merge", "split"] | None) -> None:
+        """Set scheme of site mixture."""
+        self._data.site_mixture_scheme = value
+
+    @property
     def physical_units(self) -> CalculatorPhysicalUnits | None:
         """Return physical units of phonopy calculation."""
         return self._data.physical_units
@@ -1009,6 +1058,8 @@ def read_phonopy_yaml(
             msg = f'Could not load "{filename}" properly.'
         raise TypeError(msg)
 
+    if isinstance(filename, (str, os.PathLike)):
+        _check_mixture_tag(yaml_data, filename)
     return load_phonopy_yaml(
         yaml_data,
         configuration=configuration,
@@ -1030,6 +1081,7 @@ def load_phonopy_yaml(
     yaml_data : dict
 
     """
+    _check_mixture_tag(yaml_data)
     phyml_loader = PhonopyYamlLoader(
         yaml_data,
         configuration=configuration,
@@ -1038,6 +1090,30 @@ def load_phonopy_yaml(
     )
     phyml_loader.parse()
     return phyml_loader.data
+
+
+def _check_mixture_tag(
+    yaml_data: dict, filename: str | os.PathLike | None = None
+) -> None:
+    """Raise ValueError if a cell in yaml_data has the "mixture" tag.
+
+    A site mixture is written by the atoms of the input structure with weights,
+    and "site_mixture_scheme" in the header.
+
+    """
+    cells = [yaml_data] + [v for v in yaml_data.values() if isinstance(v, dict)]
+    for cell in cells:
+        points = cell.get("points")
+        if isinstance(points, list) and any(
+            isinstance(point, dict) and "mixture" in point for point in points
+        ):
+            if filename is None:
+                name = "The yaml data"
+            else:
+                name = f'"{filename}"'
+            raise ValueError(
+                f'{name} contains the "mixture" tag, which is not supported.'
+            )
 
 
 def _as_physical_units(

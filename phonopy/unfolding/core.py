@@ -324,7 +324,16 @@ class Unfolding:
 
     def _get_supercell_phonon(self, ph_in: Phonopy) -> Phonopy:
         """Return Phonopy instance of supercell as the primitive."""
-        ph = Phonopy(ph_in.supercell, supercell_matrix=[1, 1, 1], primitive_matrix="P")
+        if ph_in.unmerged_supercell is None:
+            supercell = ph_in.supercell
+        else:
+            supercell = ph_in.unmerged_supercell
+        ph = Phonopy(
+            supercell,
+            supercell_matrix=[1, 1, 1],
+            primitive_matrix="P",
+            site_mixture_scheme=ph_in.site_mixture_scheme,
+        )
         fc = ph_in.force_constants
         assert fc is not None
         fc_shape = fc.shape

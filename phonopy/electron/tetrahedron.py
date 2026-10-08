@@ -9,6 +9,7 @@ what runs where there is no sampling grid, in phonopy.electron.kpoint_sum.
 
 from __future__ import annotations
 
+import dataclasses
 import warnings
 from collections.abc import Sequence
 
@@ -311,7 +312,7 @@ def compute_thermal_properties_by_tetrahedron(
     n_points = int(round(2 * window / energy_spacing)) + 1
     energies = np.linspace(fermi - window, fermi + window, n_points)
     dos, _ = tetrahedron_states.dos_and_count(energies)
-    return thermal_properties_from_dos(
+    properties = thermal_properties_from_dos(
         energies,
         dos,
         electronic_states.n_electrons,
@@ -319,6 +320,8 @@ def compute_thermal_properties_by_tetrahedron(
         fermi,
         mu_0=mu_0,
     )
+    dos_at_mu_0, _ = tetrahedron_states.dos_and_count(np.array([mu_0]))
+    return dataclasses.replace(properties, dos_at_fermi_level=float(dos_at_mu_0[0]))
 
 
 def free_energy_from_dos(

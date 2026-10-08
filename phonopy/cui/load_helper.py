@@ -7,8 +7,9 @@ import dataclasses
 import os
 import pathlib
 import typing
+import warnings
 from collections.abc import Sequence
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -21,12 +22,17 @@ from phonopy.exception import (
     PypolymlpTrainingDatasetNotFoundError,
 )
 from phonopy.file_IO import (
+    get_FORCE_SETS_type,
     parse_BORN,
     parse_FORCE_CONSTANTS,
     parse_FORCE_SETS,
     read_force_constants_hdf5,
 )
-from phonopy.harmonic.displacement import DisplacementDataset
+from phonopy.harmonic.displacement import (
+    DisplacementDataset,
+    Type1DisplacementDataset,
+    Type2DisplacementDataset,
+)
 from phonopy.harmonic.dynamical_matrix import NacParams
 from phonopy.harmonic.force_constants import (
     compact_fc_to_full_fc,
@@ -42,8 +48,8 @@ from phonopy.interface.pypolymlp import (
     parse_mlp_params,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_primitive_matrix
-from phonopy.structure.dataset import forces_in_dataset
+from phonopy.structure.cells import get_primitive_matrix, merge_weighted_species
+from phonopy.structure.dataset import forces_in_dataset, get_displacements_and_forces
 
 
 def get_cell_settings(
@@ -213,37 +219,182 @@ def read_force_constants_from_hdf5(
 
 
 def select_and_load_dataset(
-    nsatom: int,
-    dataset: DisplacementDataset | None = None,
-    phonopy_yaml_filename: str | os.PathLike | typing.IO | None = None,
+    phonon: Phonopy,
+    yaml_dataset: DisplacementDataset | None = None,
+    yaml_filename: str | os.PathLike | typing.IO | None = None,
     force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
 ) -> DisplacementDataset | None:
-    """Set displacement-force dataset."""
-    _dataset = None
-    _force_sets_filename = None
-    if forces_in_dataset(dataset):
-        _dataset = dataset
-        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
-            _force_sets_filename = phonopy_yaml_filename
-    elif force_sets_filename is not None:
-        _dataset = parse_FORCE_SETS(natom=nsatom, filename=force_sets_filename)
-        _force_sets_filename = force_sets_filename
-    elif pathlib.Path("FORCE_SETS").exists():
-        _dataset = parse_FORCE_SETS(natom=nsatom)
-        _force_sets_filename = "FORCE_SETS"
-    else:
-        _dataset = dataset
-        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
-            _force_sets_filename = phonopy_yaml_filename
+    """Return displacement-force dataset of phonon.
+
+    The dataset in the yaml is returned when it has forces. Otherwise, the
+    dataset is read from FORCE_SETS by ``read_force_sets``. Otherwise, the
+    dataset in the yaml (displacements only, or None) is returned.
+
+    When the displacements in FORCE_SETS do not match those in the yaml, a
+    warning is issued and those in FORCE_SETS are used.
+
+    Parameters
+    ----------
+    phonon : Phonopy
+        Phonopy of the dataset.
+    yaml_dataset : DisplacementDataset or None, optional
+        Dataset in the yaml. Default is None.
+    yaml_filename : str, os.PathLike, IO or None, optional
+        Name of the yaml file, used in messages. Default is None.
+    force_sets_filename : str, os.PathLike or None, optional
+        FORCE_SETS file to read. See ``read_force_sets``. Default is None.
+    log_level : int, optional
+        Log level. Default is 0.
+
+    Returns
+    -------
+    DisplacementDataset or None
+        Displacement-force dataset, or the displacement dataset of the yaml
+        when no forces are found. None when neither is found.
+
+    """
+    dataset = None
+    source = None
+    if not forces_in_dataset(yaml_dataset):
+        dataset = read_force_sets(
+            force_sets_filename,
+            supercell=phonon.supercell,
+            unmerged_supercell=phonon.unmerged_supercell,
+        )
+        if dataset is not None:
+            source = (
+                "FORCE_SETS" if force_sets_filename is None else force_sets_filename
+            )
+            _check_force_sets_displacements(
+                dataset, yaml_dataset, source, yaml_filename
+            )
+    if dataset is None:
+        dataset = yaml_dataset
+        if isinstance(yaml_filename, (str, os.PathLike)):
+            source = yaml_filename
 
     if log_level:
-        if forces_in_dataset(_dataset):
-            print(f'Displacement-force dataset was read from "{_force_sets_filename}".')
-        elif _dataset is not None:
-            print(f'Displacement dataset was read from "{_force_sets_filename}".')
+        if forces_in_dataset(dataset):
+            print(f'Displacement-force dataset was read from "{source}".')
+        elif dataset is not None:
+            print(f'Displacement dataset was read from "{source}".')
 
-    return _dataset
+    return dataset
+
+
+def read_force_sets(
+    filename: str | os.PathLike | None = None,
+    *,
+    supercell: PhonopyAtoms,
+    unmerged_supercell: PhonopyAtoms | None = None,
+) -> DisplacementDataset | None:
+    """Read FORCE_SETS of a supercell.
+
+    The forces in FORCE_SETS have to be on the atoms of the supercell, or of
+    the unmerged supercell with the merge scheme of site mixture. Otherwise
+    RuntimeError is raised.
+
+    With the merge scheme of site mixture, the lines of type-2 FORCE_SETS are
+    of the atoms of the unmerged supercell, and the displacements of the atoms
+    of each site have to be the same. They are returned as the displacements
+    of the sites with the forces on the atoms.
+
+    Parameters
+    ----------
+    filename : str, os.PathLike or None, optional
+        FORCE_SETS file. With None, "FORCE_SETS" in the current directory is
+        read when it exists. Default is None.
+    supercell : PhonopyAtoms
+        Supercell of the displacements, i.e., of the sites with the merge
+        scheme of site mixture.
+    unmerged_supercell : PhonopyAtoms or None, optional
+        Unmerged supercell with the merge scheme of site mixture, whose atoms
+        have the forces. Default is None.
+
+    Returns
+    -------
+    DisplacementDataset or None
+        Dataset in FORCE_SETS. None when ``filename`` is None and
+        "FORCE_SETS" does not exist.
+
+    """
+    if filename is None:
+        if not pathlib.Path("FORCE_SETS").exists():
+            return None
+        filename = "FORCE_SETS"
+    natom = len(supercell)
+    if unmerged_supercell is None:
+        n_atoms_in_file = natom
+    else:
+        n_atoms_in_file = len(unmerged_supercell)
+
+    if get_FORCE_SETS_type(filename) == 1:
+        d1 = cast(Type1DisplacementDataset, parse_FORCE_SETS(filename=filename))
+        if d1["natom"] != n_atoms_in_file:
+            raise RuntimeError(
+                f'"{filename}" has forces on {d1["natom"]} atoms, but the '
+                f"supercell has {n_atoms_in_file} atoms."
+            )
+        # With the merge scheme, the displaced atoms are the sites.
+        d1["natom"] = natom
+        return d1
+
+    dataset = parse_FORCE_SETS(natom=n_atoms_in_file, filename=filename)
+    if unmerged_supercell is None:
+        return dataset
+
+    # With the merge scheme, the displacements of the atoms of each site are
+    # those of the site.
+    d2 = cast(Type2DisplacementDataset, dataset)
+    _, site_indices = merge_weighted_species(unmerged_supercell)
+    disps = d2["displacements"]
+    first_atoms = np.unique(site_indices, return_index=True)[1]
+    site_disps = disps[:, first_atoms]
+    if not np.allclose(disps, site_disps[:, site_indices], atol=1e-8):
+        raise RuntimeError(
+            f'Atoms of a site have different displacements in "{filename}".'
+        )
+    return {"displacements": site_disps, "forces": d2["forces"]}
+
+
+def _check_force_sets_displacements(
+    force_sets_dataset: DisplacementDataset,
+    yaml_dataset: DisplacementDataset | None,
+    force_sets_filename: str | os.PathLike,
+    yaml_filename: str | os.PathLike | typing.IO | None,
+) -> None:
+    """Check that displacements in FORCE_SETS are those in the yaml.
+
+    Both are compared as arrays of displacements of all atoms. Type-1
+    FORCE_SETS has to have the same displacements as the yaml. Type-2
+    FORCE_SETS can have the first part of the displacements of the yaml, as
+    written when forces of only some of the supercells are calculated.
+
+    """
+    if yaml_dataset is None:
+        return
+    yaml_disps = get_displacements_and_forces(yaml_dataset)[0]
+    fs_disps = get_displacements_and_forces(force_sets_dataset)[0]
+    if "first_atoms" in force_sets_dataset:
+        is_count_ok = len(fs_disps) == len(yaml_disps)
+    else:
+        is_count_ok = len(fs_disps) <= len(yaml_disps)
+    if (
+        not is_count_ok
+        or fs_disps.shape[1:] != yaml_disps.shape[1:]
+        or not np.allclose(fs_disps, yaml_disps[: len(fs_disps)], atol=1e-6)
+    ):
+        if isinstance(yaml_filename, (str, os.PathLike)):
+            yaml_name = f'"{yaml_filename}"'
+        else:
+            yaml_name = "the yaml data"
+        warnings.warn(
+            f'Displacements in "{force_sets_filename}" do not match those in '
+            f'{yaml_name}. Those in "{force_sets_filename}" are used.',
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def select_and_extract_force_constants(

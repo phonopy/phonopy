@@ -8,6 +8,7 @@ import pathlib
 import numpy as np
 import pytest
 
+from phonopy import Phonopy
 from phonopy.cui.collect_cell_info import collect_cell_info, get_cell_info
 from phonopy.cui.settings import Settings
 from phonopy.exception import CellNotFoundError, MagmomValueError
@@ -178,10 +179,13 @@ def test_get_cell_info_enforce_primitive_matrix_auto(monkeypatch, tmp_path):
     assert result.primitive_matrix == "auto"
 
 
-def test_get_cell_info_site_mixture_merges_overlapping_atoms_by_default(
-    monkeypatch, tmp_path
-):
-    """--site-mixture merges overlapping atoms into mixed-species sites by default."""
+def test_get_cell_info_site_mixture_keeps_input_atoms_by_default(monkeypatch, tmp_path):
+    """--site-mixture keeps the input atoms with weights by default.
+
+    With the default merge scheme, the overlapping atoms are merged into
+    mixed-species sites by Phonopy, not in the cell information.
+
+    """
     monkeypatch.chdir(tmp_path)
     poscar = tmp_path / "POSCAR_GeSn"
     poscar.write_text(_POSCAR_GeSn_mixture)
@@ -189,13 +193,16 @@ def test_get_cell_info_site_mixture_merges_overlapping_atoms_by_default(
         supercell_matrix=_supercell_matrix,
         site_mixture=[0.5, 0.5, 0.5, 0.5],
     )
+    assert settings.merge_site_mixture
 
     result = get_cell_info(settings=settings, cell_filename=poscar)
 
     assert result.unitcell is not None
-    assert len(result.unitcell) == 2
-    assert result.unitcell.has_mixtures
-    assert result.unitcell.symbols == ["GeSn", "GeSn"]
+    assert len(result.unitcell) == 4
+    assert result.unitcell.has_weighted_species
+    assert not result.unitcell.has_mixtures
+    phonon = Phonopy(result.unitcell, supercell_matrix=_supercell_matrix)
+    assert phonon.unitcell.symbols == ["GeSn", "GeSn"]
 
 
 def test_get_cell_info_split_site_mixture_keeps_atoms_separate(monkeypatch, tmp_path):

@@ -2,9 +2,11 @@
 """Tests of PhonopyYaml."""
 
 import io
+import re
 from pathlib import Path
 
 import numpy as np
+import pytest
 import yaml
 
 import phonopy
@@ -18,7 +20,7 @@ from phonopy.interface.phonopy_yaml import (
 )
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.atoms import PhonopyAtoms, build_species_table_from_mixtures
-from phonopy.structure.cells import get_primitive
+from phonopy.structure.cells import apply_site_mixture, get_primitive
 from phonopy.structure.dataset import get_displacements_and_forces
 
 cwd = Path(__file__).parent
@@ -200,74 +202,70 @@ def test_phonopy_yaml_extended_symbol(nacl_unitcell_order1: PhonopyAtoms):
     assert ph_load.supercell.symbols[-8:] == ["Cl1"] * 8
 
 
-def test_phonopy_yaml_mixture_roundtrip():
-    """Test of PhonopyYaml round-trip for a cell with mixed-species sites.
+def _get_GeSn_weighted_cell() -> PhonopyAtoms:
+    """Return zincblende GeSn 50/50 with Ge and Sn co-located on both sites."""
+    a = 2.82
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[[0, 0, 0], [0.25, 0.25, 0.25]] * 2,
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+    return apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
 
-    Build a Phonopy on a GeSn 50/50 zincblende (the canonical site-mixture use case),
-    dump to phonopy.yaml, read back via phonopy.load, and verify cells
-    round-trip with masses preserved. Also checks the supercell carries the
-    mixture spec through.
+
+@pytest.mark.parametrize("scheme", ["merge", "split"])
+def test_phonopy_yaml_site_mixture_roundtrip(scheme):
+    """Test of PhonopyYaml round-trip for a cell with site mixture.
+
+    The cells are written with the atoms of the input structure, and the
+    scheme in the header.
 
     """
-    species, ids = build_species_table_from_mixtures(
-        [
-            [("Ge", 0.5), ("Sn", 0.5)],
-            [("Ge", 0.5), ("Sn", 0.5)],
-        ]
-    )
-    cell = PhonopyAtoms(
-        cell=[[0, 2.82, 2.82], [2.82, 0, 2.82], [2.82, 2.82, 0]],
-        scaled_positions=[[0, 0, 0], [0.25, 0.25, 0.25]],
-        species_table=species,
-        species_ids=ids,
-    )
-    ph = Phonopy(cell, supercell_matrix=[2, 2, 2])
-    assert ph.unitcell.has_mixtures
-    assert ph.supercell.has_mixtures
-    assert ph.unitcell.symbols == ["GeSn", "GeSn"]
+    weighted = _get_GeSn_weighted_cell()
+    ph = Phonopy(weighted, supercell_matrix=[2, 2, 2], site_mixture_scheme=scheme)
+    text = str(ph.to_phonopy_yaml())
+    data = yaml.safe_load(text)
+    assert data["phonopy"]["site_mixture_scheme"] == scheme
+    assert "mixture:" not in text
+    assert [p["symbol"] for p in data["unit_cell"]["points"]] == weighted.symbols
+    assert len(data["supercell"]["points"]) == 32
 
-    ph_load = phonopy.load(io.StringIO(str(ph.to_phonopy_yaml())))
-    assert ph_load.unitcell.has_mixtures
-    assert ph_load.supercell.has_mixtures
-    assert ph_load.unitcell.symbols == ph.unitcell.symbols
+    ph_load = phonopy.load(io.StringIO(text))
+    assert ph_load.site_mixture_scheme == scheme
+    if scheme == "merge":
+        assert ph_load.unitcell.has_mixtures
+        assert ph_load.unmerged_unitcell is not None
+        unitcell = ph_load.unmerged_unitcell
+    else:
+        assert ph_load.unmerged_unitcell is None
+        unitcell = ph_load.unitcell
+    assert unitcell.symbols == weighted.symbols
+    np.testing.assert_allclose(unitcell.mixture_weights, weighted.mixture_weights)
+    np.testing.assert_allclose(unitcell.masses, weighted.masses)
+    np.testing.assert_allclose(unitcell.scaled_positions, weighted.scaled_positions)
     assert ph_load.supercell.symbols == ph.supercell.symbols
-    np.testing.assert_allclose(ph_load.unitcell.masses, ph.unitcell.masses)
     np.testing.assert_allclose(ph_load.supercell.masses, ph.supercell.masses)
-    np.testing.assert_allclose(
-        ph_load.unitcell.scaled_positions, ph.unitcell.scaled_positions
-    )
 
 
-def test_phonopy_yaml_mixture_expanded_forces_roundtrip():
-    """Raw expanded forces survive a phonopy.yaml round-trip on a mixture cell.
+def test_phonopy_yaml_site_mixture_unmerged_forces_roundtrip():
+    """Forces on the unmerged atoms survive a phonopy.yaml round-trip.
 
-    The dataset's per-disp force block carries one row per expanded
-    constituent (n_expanded > n_sites). The round-trip must preserve raw
-    force values and keep ``dataset["natom"]`` equal to the supercell site
-    count, not to the force-row count.
+    With the merge scheme, the dataset's per-disp force block has one row per
+    atom of the unmerged supercell (more than the sites). The round-trip must
+    preserve the forces and keep ``dataset["natom"]`` equal to the number of
+    the sites, not to the number of force rows.
 
     """
-    species, ids = build_species_table_from_mixtures(
-        [
-            [("Ge", 0.5), ("Sn", 0.5)],
-            [("Ge", 0.5), ("Sn", 0.5)],
-        ]
-    )
-    cell = PhonopyAtoms(
-        cell=[[0, 2.82, 2.82], [2.82, 0, 2.82], [2.82, 2.82, 0]],
-        scaled_positions=[[0, 0, 0], [0.25, 0.25, 0.25]],
-        species_table=species,
-        species_ids=ids,
-    )
-    ph = Phonopy(cell, supercell_matrix=[2, 2, 2])
+    ph = Phonopy(_get_GeSn_weighted_cell(), supercell_matrix=[2, 2, 2])
     n_sites = len(ph.supercell)
-    n_expanded = 2 * n_sites  # 50/50 GeSn -> 2 constituents per site
+    assert ph.unmerged_supercell is not None
+    n_unmerged = len(ph.unmerged_supercell)
+    assert n_unmerged == 2 * n_sites
 
-    # Synthesize a per-disp force block of shape (n_expanded, 3).
-    forces0 = np.zeros((n_expanded, 3), dtype="double")
+    forces0 = np.zeros((n_unmerged, 3), dtype="double")
     forces0[0] = [0.1, 0.2, 0.3]
     forces0[n_sites] = [0.4, 0.5, 0.6]
-    forces1 = np.zeros((n_expanded, 3), dtype="double")
+    forces1 = np.zeros((n_unmerged, 3), dtype="double")
     forces1[1] = [-0.1, -0.2, -0.3]
     forces1[n_sites + 1] = [-0.4, -0.5, -0.6]
     ph.dataset = {
@@ -289,9 +287,30 @@ def test_phonopy_yaml_mixture_expanded_forces_roundtrip():
     ph_load = phonopy.load(io.StringIO(str(ph.to_phonopy_yaml())), produce_fc=False)
     assert ph_load.dataset is not None
     assert ph_load.dataset["natom"] == n_sites
-    assert ph_load.dataset["first_atoms"][0]["forces"].shape == (n_expanded, 3)
+    assert ph_load.dataset["first_atoms"][0]["forces"].shape == (n_unmerged, 3)
     np.testing.assert_allclose(ph_load.dataset["first_atoms"][0]["forces"], forces0)
     np.testing.assert_allclose(ph_load.dataset["first_atoms"][1]["forces"], forces1)
+
+
+def test_phonopy_yaml_mixture_tag_is_error(tmp_path):
+    """A cell with the "mixture" tag is not supported."""
+    species, ids = build_species_table_from_mixtures([[("Ge", 0.5), ("Sn", 0.5)]])
+    cell = PhonopyAtoms(
+        cell=np.eye(3) * 4.0,
+        scaled_positions=[[0, 0, 0]],
+        species_table=species,
+        species_ids=ids,
+    )
+    lines = ["unit_cell:"] + ["  " + line for line in cell.get_yaml_lines()]
+    text = "\n".join(lines) + "\n"
+    assert "mixture:" in text
+    filename = tmp_path / "phonopy.yaml"
+    filename.write_text(text)
+    match = re.escape(f'"{filename}" contains the "mixture" tag')
+    with pytest.raises(ValueError, match=match):
+        PhonopyYaml().read(filename)
+    with pytest.raises(ValueError, match='The yaml data contains the "mixture" tag'):
+        PhonopyYaml().read(io.StringIO(text))
 
 
 def _compare_NaCl_convcell(cell, compare_cells):

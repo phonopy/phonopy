@@ -29,7 +29,6 @@ from phonopy.physical_units import get_physical_units
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import group_by_key
-from phonopy.structure.mixture import iter_mixture_expansion_blocks
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
@@ -803,12 +802,10 @@ def write_vasp(
     for_vca : bool, optional
         When True, write a POSCAR for a VASP VCA calculation, whose species
         rows take one weight each of the INCAR VCA tag (see
-        ``get_vasp_vca_weights``). Merged mixed-species sites (see
-        ``build_mixture_cell``) are expanded into one species row per
-        constituent at the same fractional coordinates. Atoms of weighted
-        species (see ``apply_site_mixture``) are written with one species row
-        per run of consecutive atoms of one pair of symbol and weight. Default
-        is False.
+        ``get_vasp_vca_weights``). Atoms of weighted species (see
+        ``apply_site_mixture``) are written with one species row per run of
+        consecutive atoms of one pair of symbol and weight. A cell with merged
+        mixed-species sites is not accepted. Default is False.
 
     Atoms are written in their order, with one species row per run of
     consecutive atoms of one symbol, because the forces calculated by VASP
@@ -915,9 +912,7 @@ def get_vasp_vca_weights(cell: PhonopyAtoms) -> list[float]:
     """Return the weights of the VASP INCAR VCA tag, one per POSCAR species row.
 
     The rows are those written by ``write_vasp`` with ``for_vca=True``. For a cell
-    with merged mixed-species sites (see ``build_mixture_cell``), each
-    constituent of a mixture has its own row and weight. For a cell with
-    weighted species (see ``apply_site_mixture``), each run of consecutive
+    with weighted species (see ``apply_site_mixture``), each run of consecutive
     atoms of one pair of symbol and weight is a row. For an ordinary cell,
     every weight is 1.0. See ``_VCAPoscarData`` for the species rows with
     examples.
@@ -992,25 +987,19 @@ class _VCAPoscarData:
 def _get_vca_poscar_data(cell: PhonopyAtoms) -> _VCAPoscarData:
     """Return the data of a POSCAR for VASP VCA of a cell.
 
-    See ``get_vasp_vca_weights``.
-
-    """
-    if cell.has_mixtures:
-        return _get_vca_poscar_data_of_mixtures(cell)
-    return _get_vca_poscar_data_of_weighted_species(cell)
-
-
-def _get_vca_poscar_data_of_weighted_species(cell: PhonopyAtoms) -> _VCAPoscarData:
-    """Return the data of a POSCAR for VASP VCA of a cell with weighted species.
-
     Each run of consecutive atoms of one species, i.e., of one pair of symbol
     and weight, is a species row, and the atoms keep their order, because the
     forces calculated by VASP are read in the order of the atoms of the cell.
     One species can be in more than one species row. For an ordinary cell, each
     run of consecutive atoms of one symbol is a species row and every weight is
-    1.0.
+    1.0. See ``get_vasp_vca_weights``.
 
     """
+    if cell.has_mixtures:
+        raise ValueError(
+            "A cell with merged mixed-species sites cannot be written for VASP "
+            "VCA. Use the cell with the weighted atoms of the input structure."
+        )
     weights = cell.mixture_weights
     if weights is None:
         counts, keys, scaled_positions = group_by_key(
@@ -1028,39 +1017,6 @@ def _get_vca_poscar_data_of_weighted_species(cell: PhonopyAtoms) -> _VCAPoscarDa
     symbols = [cell.symbols[i] for i in starts]
     vca_weights = [float(weights[i]) for i in starts]
     return _VCAPoscarData(symbols, counts, scaled_positions, vca_weights)
-
-
-def _get_vca_poscar_data_of_mixtures(cell: PhonopyAtoms) -> _VCAPoscarData:
-    """Return the data of a POSCAR for VASP VCA of a cell with mixtures.
-
-    Mixed-species sites are expanded into per-constituent species rows.
-
-    For each entry in ``cell.species_table``, emit one row per constituent
-    (length 1 for a non-mixture species, length n for an n-component
-    mixture). Atoms within each species keep their original positions and
-    those same positions are repeated for every constituent row.
-
-    """
-    scaled = cell.scaled_positions
-
-    symbols: list[str] = []
-    counts: list[int] = []
-    vca_weights: list[float] = []
-    blocks: list[NDArray[np.double]] = []
-
-    for symbol, weight, atom_idx in iter_mixture_expansion_blocks(cell):
-        # Every species in the table is referenced by at least one atom in
-        # the standard construction paths (build_mixture_cell, Supercell,
-        # Primitive, displacement). A hand-crafted PhonopyAtoms with an
-        # orphan species would land here.
-        assert atom_idx.size > 0, f"species {symbol!r} has no atoms"
-        symbols.append(symbol)
-        counts.append(int(atom_idx.size))
-        vca_weights.append(weight)
-        blocks.append(scaled[atom_idx])
-
-    expanded = np.concatenate(blocks, axis=0)
-    return _VCAPoscarData(symbols, counts, expanded, vca_weights)
 
 
 def _get_vasp_structure_header_lines(

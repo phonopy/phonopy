@@ -37,6 +37,10 @@ class ElectronicThermalProperties:
         Heat capacity at constant volume in eV/K. shape=(temperatures,)
     chemical_potential : ndarray
         Chemical potential in eV. shape=(temperatures,)
+    dos_at_fermi_level : float or None
+        Density of states at the chemical potential at 0 K in states/eV per
+        cell, summed over the spin channels. None when the states were summed
+        over k-points, which gives no density of states.
 
     """
 
@@ -45,6 +49,7 @@ class ElectronicThermalProperties:
     entropy: NDArray[np.double]
     heat_capacity: NDArray[np.double]
     chemical_potential: NDArray[np.double]
+    dos_at_fermi_level: float | None = None
 
 
 @dataclasses.dataclass(frozen=True)
