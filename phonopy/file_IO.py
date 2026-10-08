@@ -8,6 +8,7 @@ import os
 import pathlib
 import sys
 import typing
+import warnings
 from collections.abc import Sequence
 from types import ModuleType
 from typing import Literal
@@ -126,14 +127,36 @@ def _get_FORCE_SETS_lines_type2(dataset: Type2DisplacementDataset) -> list[str]:
 
 
 def parse_FORCE_SETS(
-    natom: int | None = None,
     filename: str | os.PathLike = "FORCE_SETS",
+    *,
+    natom: int | None = None,
     to_type2: bool = False,
 ) -> DisplacementDataset:
     """Parse FORCE_SETS from file.
 
-    to_type2 : bool
-        dataset of type2 is returned when True.
+    The type of FORCE_SETS is decided from its first line (see
+    ``get_FORCE_SETS_type``).
+
+    Parameters
+    ----------
+    filename : str or os.PathLike, optional
+        FORCE_SETS file. Default is "FORCE_SETS".
+    natom : int or None, optional
+        Number of forces of each supercell calculated by the calculator.
+        Default is None.
+
+        For type-1 FORCE_SETS, ``natom`` is usually None, and the number of
+        forces on its first line is used as ``"natom"`` of the dataset. When
+        ``natom`` is given, it has to be the number on the first line.
+
+        Type-2 FORCE_SETS has no number of forces, and ``natom`` is given to
+        group its lines into the supercells. With the merge scheme of site
+        mixture, it is the number of atoms of the unmerged supercell. With
+        None, the lines are not grouped, and the displacements and the forces
+        have the shape (number of lines, 3).
+    to_type2 : bool, optional
+        When True, type-1 FORCE_SETS is returned as a type-2 dataset. Default
+        is False.
 
     Returns
     -------
@@ -141,6 +164,15 @@ def parse_FORCE_SETS(
         Displacement dataset. See Phonopy.dataset.
 
     """
+    if isinstance(filename, (int, np.integer)):
+        warnings.warn(
+            "The first argument of parse_FORCE_SETS is filename. Give natom as "
+            "a keyword argument.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        natom = int(filename)
+        filename = "FORCE_SETS"
     with open(filename) as f:
         return _get_dataset(
             f,
@@ -149,8 +181,19 @@ def parse_FORCE_SETS(
         )
 
 
+def get_FORCE_SETS_type(filename: str | os.PathLike = "FORCE_SETS") -> Literal[1, 2]:
+    """Return type of FORCE_SETS, 1 or 2, from its first line.
+
+    The first line of type-1 FORCE_SETS has the number of atoms, and each line
+    of type-2 FORCE_SETS has a displacement and a force.
+
+    """
+    with open(filename) as f:
+        return _get_dataset_type(_get_line_ignore_blank(f).split())
+
+
 def parse_FORCE_SETS_from_strings(
-    strings: str, natom: int | None = None, to_type2: bool = False
+    strings: str, *, natom: int | None = None, to_type2: bool = False
 ) -> DisplacementDataset:
     """Parse FORCE_SETS from strings."""
     return _get_dataset(io.StringIO(strings), natom=natom, to_type2=to_type2)
@@ -161,24 +204,13 @@ def _get_dataset(
 ) -> DisplacementDataset:
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
-    if len(first_line_ary) == 1:
+    if _get_dataset_type(first_line_ary) == 1:
         file_natom = int(first_line_ary[0])
-        # For a mixed-species (site-mixture) supercell, the FORCE_SETS
-        # header carries n_expanded (the per-row count of forces) which
-        # is larger than the supercell site count ``natom`` passed in.
-        # The mismatch is the trigger for expanded-mode parsing.
-        if natom is None or file_natom == natom:
-            site_natom = file_natom
-        elif file_natom > natom:
-            site_natom = natom
-        else:
-            msg = "Number of forces is not consistent with supercell setting."
-            raise RuntimeError(msg)
-
+        if natom is not None and file_natom != natom:
+            raise RuntimeError(
+                f"Number of atoms in FORCE_SETS ({file_natom}) is not {natom}."
+            )
         dataset = _get_dataset_type1(f)
-        # In expanded mode the file-level natom is n_expanded; restamp
-        # the dataset's natom to the caller-supplied site count.
-        dataset["natom"] = site_natom
 
         if to_type2:
             disps, forces = get_displacements_and_forces(dataset)  # type: ignore[arg-type]
@@ -186,9 +218,14 @@ def _get_dataset(
         else:
             return dataset
 
-    elif len(first_line_ary) == 6:
-        return get_dataset_type2(f, natom)
+    return get_dataset_type2(f, natom)
 
+
+def _get_dataset_type(first_line_ary: list[str]) -> Literal[1, 2]:
+    if len(first_line_ary) == 1:
+        return 1
+    if len(first_line_ary) == 6:
+        return 2
     raise RuntimeError("Unknown dataset format.")
 
 

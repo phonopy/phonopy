@@ -959,9 +959,16 @@ def test_GeSn_vca_FORCE_SETS_fixture_format():
 
 
 def test_parse_FORCE_SETS_GeSn_vca_fixture_expanded_mode():
-    """parse_FORCE_SETS with natom=16 detects expanded mode and stores 32-row forces."""
-    dataset = parse_FORCE_SETS(natom=16, filename=cwd / "GeSn-vca-FORCE_SETS")
-    assert dataset["natom"] == 16  # restamped to site count
+    """parse_FORCE_SETS reads 32-row forces of the 16 sites of the merge scheme.
+
+    The number of atoms of the forces is on the first line, and natom of
+    another number is an error.
+
+    """
+    dataset = parse_FORCE_SETS(filename=cwd / "GeSn-vca-FORCE_SETS")
+    assert dataset["natom"] == 32
+    with pytest.raises(RuntimeError, match="is not 16"):
+        parse_FORCE_SETS(natom=16, filename=cwd / "GeSn-vca-FORCE_SETS")
     assert len(dataset["first_atoms"]) == 1
     fa = dataset["first_atoms"][0]
     assert fa["forces"].shape == (32, 3)
@@ -997,9 +1004,9 @@ def test_GeSn_vca_vasprun_to_FORCE_SETS_matches_fixture(tmp_path):
     out = tmp_path / "FORCE_SETS"
     write_FORCE_SETS(ph.dataset, filename=out)
 
-    written = parse_FORCE_SETS(natom=16, filename=out)
-    reference = parse_FORCE_SETS(natom=16, filename=cwd / "GeSn-vca-FORCE_SETS")
-    assert written["natom"] == reference["natom"] == 16
+    written = parse_FORCE_SETS(filename=out)
+    reference = parse_FORCE_SETS(filename=cwd / "GeSn-vca-FORCE_SETS")
+    assert written["natom"] == reference["natom"] == 32
     assert written["first_atoms"][0]["number"] == reference["first_atoms"][0]["number"]
     np.testing.assert_allclose(
         written["first_atoms"][0]["displacement"],

@@ -101,6 +101,7 @@ def create_FORCE_SETS(
     ):
         force_sets = []
     else:
+        site_indices = None
         if interface_mode == "wien2k":
             calc_dataset = get_calc_dataset_wien2k(
                 force_filenames,
@@ -117,7 +118,6 @@ def create_FORCE_SETS(
             # the sites of the dataset, and site_indices maps the atoms to
             # the sites.
             num_atoms_in_file = num_atoms
-            site_indices = None
             if supercell is not None:
                 num_atoms_in_file = len(supercell)
                 if supercell.has_weighted_species and (
@@ -196,6 +196,14 @@ def create_FORCE_SETS(
             if log_level > 0:
                 print(f'"{yaml_filename}" has been created.')
         else:
+            if dataset_type == 2 and site_indices is not None:
+                # Type-2 FORCE_SETS has one displacement and one force of an
+                # atom on each line. The displacements of the sites are given
+                # to their atoms.
+                dataset = {
+                    "displacements": dataset["displacements"][:, site_indices],
+                    "forces": dataset["forces"],
+                }
             write_FORCE_SETS(dataset, filename=force_sets_filename)
             if log_level > 0:
                 print(f'"{force_sets_filename}" has been created.')

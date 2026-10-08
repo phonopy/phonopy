@@ -2381,9 +2381,9 @@ def main(**argparse_control: bool | PhonopyMockArgs):
             phonopy_yaml_dataset = cell_info.phonopy_yaml.dataset
 
         phonon.dataset = select_and_load_dataset(
-            len(phonon.supercell),
-            phonopy_yaml_dataset,
-            phonopy_yaml_filename=unitcell_filename,
+            phonon,
+            yaml_dataset=phonopy_yaml_dataset,
+            yaml_filename=unitcell_filename,
             log_level=log_level,
         )
 
