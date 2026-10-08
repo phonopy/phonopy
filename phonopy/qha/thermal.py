@@ -334,6 +334,11 @@ def compute_electronic_thermal_properties_from_states(
                 free_energy=p.free_energy * fractions[i],
                 entropy=p.entropy * fractions[i],
                 heat_capacity=p.heat_capacity * fractions[i],
+                dos_at_fermi_level=(
+                    None
+                    if p.dos_at_fermi_level is None
+                    else p.dos_at_fermi_level * fractions[i]
+                ),
             )
         )
     _report_primitive_cell_scaling(fractions)

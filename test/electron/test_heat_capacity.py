@@ -105,6 +105,30 @@ def test_heat_capacity_by_tetrahedron_matches_t_dsdt():
     )
 
 
+def test_dos_at_fermi_level_gives_the_sommerfeld_coefficient():
+    """Test S/T and C/T at low temperature against (pi^2/3) k^2 g(mu_0)."""
+    temperatures = np.array([10.0])
+    properties = compute_thermal_properties_by_tetrahedron(
+        _half_filled_band([16, 16, 16]), temperatures
+    )
+
+    kb = get_physical_units().KB
+    assert properties.dos_at_fermi_level is not None
+    gamma = (np.pi**2 / 3.0) * kb**2 * properties.dos_at_fermi_level
+    assert properties.entropy[0] / temperatures[0] == pytest.approx(gamma, rel=1e-3)
+    assert properties.heat_capacity[0] / temperatures[0] == pytest.approx(
+        gamma, rel=1e-3
+    )
+
+
+def test_kpoint_sum_gives_no_dos_at_fermi_level():
+    """Test that the k-point sum leaves dos_at_fermi_level unset."""
+    properties = compute_thermal_properties_by_kpoint_sum(
+        _al_states(), np.array([300.0])
+    )
+    assert properties.dos_at_fermi_level is None
+
+
 def test_heat_capacity_by_kpoint_sum_matches_t_dsdt():
     """Test C_V = T dS/dT through the k-point sum, on the Al states."""
     temperatures = np.array([999.0, 1000.0, 1001.0])
