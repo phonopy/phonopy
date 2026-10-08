@@ -925,6 +925,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">lang</span> <span class="o">=</span> <span class="n">resolve_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">primitive_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">primitive_matrix</span> <span class="o">=</span> <span class="s2">"auto"</span>
+    <span class="n">_site_mixture_scheme</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"merge"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"merge"</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="n">supercell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="ow">or</span> <span class="n">supercell_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -973,6 +974,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">_nac_params</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">_dataset</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">dataset</span>
         <span class="n">_fc</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">force_constants</span>
+        <span class="k">if</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">site_mixture_scheme</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_site_mixture_scheme</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">site_mixture_scheme</span>
         <span class="k">if</span> <span class="n">calculator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_calculator</span> <span class="o">=</span> <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">calculator</span>
         <span class="k">else</span><span class="p">:</span>
@@ -995,6 +998,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">calculator</span><span class="o">=</span><span class="n">_calculator</span><span class="p">,</span>
         <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
         <span class="n">lang</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span>
+        <span class="n">site_mixture_scheme</span><span class="o">=</span><span class="n">_site_mixture_scheme</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">units</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">_calculator</span><span class="p">)</span>
@@ -1014,9 +1018,9 @@ window.runMermaid = runMermaid;</script>
             <span class="n">phonon</span><span class="o">.</span><span class="n">nac_params</span> <span class="o">=</span> <span class="n">ret_nac_params</span>
 
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_helper</span><span class="o">.</span><span class="n">select_and_load_dataset</span><span class="p">(</span>
-        <span class="nb">len</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">supercell</span><span class="p">),</span>
-        <span class="n">_dataset</span><span class="p">,</span>
-        <span class="n">phonopy_yaml_filename</span><span class="o">=</span><span class="n">phonopy_yaml</span><span class="p">,</span>
+        <span class="n">phonon</span><span class="p">,</span>
+        <span class="n">yaml_dataset</span><span class="o">=</span><span class="n">_dataset</span><span class="p">,</span>
+        <span class="n">yaml_filename</span><span class="o">=</span><span class="n">phonopy_yaml</span><span class="p">,</span>
         <span class="n">force_sets_filename</span><span class="o">=</span><span class="n">force_sets_filename</span><span class="p">,</span>
         <span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span>
     <span class="p">)</span>

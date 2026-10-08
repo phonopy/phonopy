@@ -48,6 +48,364 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'electronic-thermal-properties';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -401,15 +759,16 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reference-at-0-k">The reference at 0 K</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-over-the-brillouin-zone">Integration over the Brillouin zone</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chemical-potential">Chemical potential</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spin-degeneracy">Spin degeneracy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-electronic-states">Input: electronic states</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-in-quasi-harmonic-calculations">Use in quasi-harmonic calculations</a></li>
 </ul>
             </nav>
         </div>
@@ -432,10 +791,64 @@ the phonon thermal properties in a quasi-harmonic calculation (see
 <p>The free energy is that of Mermin’s finite-temperature theory of the
 electrons, evaluated in the fixed density-of-states approximation. The
 eigenvalues are computed once, at the static lattice, and are kept the same
-at every temperature. Only the occupation
-of the states changes with temperature. The approximation is intended for
-metals. In an insulator the chemical potential is in the band gap, and the
-electronic contributions are negligible.</p>
+at every temperature. Only the occupation of the states changes with
+temperature. The approximation is intended for metals. In an insulator the
+chemical potential is in the band gap, and the electronic contributions are
+negligible.</p>
+<p>Mermin’s theory is described in the following publications.</p>
+<ul class="simple">
+<li><p>N. D. Mermin, Phys. Rev. <strong>137</strong>, A1441 (1965).</p></li>
+<li><p>W. Kohn and L. J. Sham, Phys. Rev. <strong>140</strong>, A1133 (1965).</p></li>
+<li><p>R. G. Parr and W. Yang, <em>Density-Functional Theory of Atoms and Molecules</em>
+(Oxford University Press, 1989).</p></li>
+</ul>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The boxes are phonopy commands and API functions, the hexagon is the
+calculator run, and the rounded nodes are input and intermediate data.</p>
+<pre  class="mermaid">
+        flowchart TD
+    RUN{{&quot;VASP static run&lt;br/&gt;one per crystal structure&quot;}}
+    RUN --&gt; XML([&quot;vasprun.xml-NN&lt;br/&gt;eigenvalues, k-point mesh, U&quot;])
+
+    XML --&gt; EFE[&quot;phonopy-vasp-efe&quot;]
+    EFE --&gt; FEV([&quot;fe-v.dat, e-v.dat&lt;br/&gt;F_el(T) only&quot;])
+    FEV --&gt; QHA[&quot;phonopy-qha --efe&quot;]
+    TP([&quot;thermal_properties.yaml-NN&quot;]) --&gt; QHA
+
+    XML --&gt; ES[&quot;phonopy-vasp-efe --es&quot;]
+    ES --&gt; H5([&quot;electronic_states.hdf5&quot;])
+    H5 --&gt; RQ[&quot;run_qha&lt;br/&gt;(electronic_structures=...)&quot;]
+    H5 --&gt; API[&quot;compute_thermal_properties_by_tetrahedron&quot;]
+    API --&gt; PROP([&quot;F_el, S_el, C_el, mu, D(E_F)&quot;])
+    </pre><p>The calculator is run once for each crystal structure, without atomic
+displacements. The crystal structures have to be the same as those of the
+phonon calculations. <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> of this run holds the eigenvalues, the k-point
+mesh and the static total energy <span class="math notranslate nohighlight">\(U\)</span>. For a calculator other than
+VASP, build <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code> from its output; see
+<a class="reference internal" href="#electronic-thermal-properties-input"><span class="std std-ref">Input: electronic states</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> computes <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span> of
+every crystal structure and writes it to <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>. It also writes the
+volumes and <span class="math notranslate nohighlight">\(U\)</span> to <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>. <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span> <span class="pre">--efe</span></code> adds these free
+energies to the phonon free energies in <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code>.
+<code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> has only the free energy. For this reason,
+<code class="docutils literal notranslate"><span class="pre">Cp-temperature_polyfit.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code> of
+<code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> are computed without the electronic entropy and heat
+capacity. See <a class="reference internal" href="qha.html#phonopy-qha-efe-option"><span class="std std-ref">--efe</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span> <span class="pre">--es</span></code> writes the electronic states of every crystal
+structure to <code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code> instead. <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> reads them as
+<code class="docutils literal notranslate"><span class="pre">electronic_structures</span></code> and adds the free energy, the entropy and the heat
+capacity of the electrons to those of the phonons. See
+<a class="reference internal" href="qha.html#phonopy-qha-electronic-structures"><span class="std std-ref">Electronic free energies from eigenvalues</span></a>.</p>
+<p>The same file can be used without a quasi-harmonic calculation.
+<code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_tetrahedron</span></code> computes
+<span class="math notranslate nohighlight">\(F_\mathrm{el}\)</span>, <span class="math notranslate nohighlight">\(S_\mathrm{el}\)</span>, <span class="math notranslate nohighlight">\(C_\mathrm{el}\)</span> and
+<span class="math notranslate nohighlight">\(\mu\)</span> of one crystal structure; see
+<a class="reference internal" href="#electronic-thermal-properties-api"><span class="std std-ref">Python API</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> takes the electronic states from its own dataset,
+<code class="docutils literal notranslate"><span class="pre">aniso_qha_dataset.hdf5</span></code>. See <a class="reference internal" href="aniso-thermal-expansion.html#aniso-thermal-expansion"><span class="std std-ref">Anisotropic thermal expansion from free-energy minimization</span></a> for how the
+dataset is made.</p>
+</section>
 <section id="equations">
 <span id="electronic-thermal-properties-equations"></span><h2>Equations<a class="headerlink" href="#equations" title="Link to this heading">#</a></h2>
 <p>The states are the eigenvalues <span class="math notranslate nohighlight">\(\epsilon_{\mathbf{k}i}\)</span> at the
@@ -444,58 +857,80 @@ k-point has a weight <span class="math notranslate nohighlight">\(w_\mathbf{k}\)
 that <span class="math notranslate nohighlight">\(\sum_\mathbf{k} w_\mathbf{k} = 1\)</span>. The occupation of a state is
 the Fermi-Dirac distribution,</p>
 <div class="math notranslate nohighlight">
-\[f_{\mathbf{k}i} = \left\{ 1 + \exp\left[
-\frac{\epsilon_{\mathbf{k}i} - \mu}{k_\mathrm{B} T} \right] \right\}^{-1},\]</div>
-<p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the chemical potential and <span class="math notranslate nohighlight">\(T\)</span> is the
-temperature.</p>
-<p>The chemical potential depends on temperature. At each temperature it is
-determined so that the number of electrons in the cell, <span class="math notranslate nohighlight">\(N\)</span>, stays the
-same:</p>
+\[f_{\mathbf{k}i} = \left\{ 1 + \exp\left[ \frac{\epsilon_{\mathbf{k}i} - \mu}{k_\mathrm{B} T} \right] \right\}^{-1},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the chemical potential and <span class="math notranslate nohighlight">\(T\)</span> is the temperature.
+The electrons in these states do not interact with each other. Their grand
+potential is</p>
 <div class="math notranslate nohighlight">
-\[N = g \sum_\mathbf{k} w_\mathbf{k} \sum_i f_{\mathbf{k}i}.\]</div>
+\[\Omega(T, \mu) = -g k_\mathrm{B} T \sum_\mathbf{k} w_\mathbf{k} \sum_i \ln \left\{ 1 + \exp\left[ -\frac{\epsilon_{\mathbf{k}i} - \mu}{k_\mathrm{B} T} \right] \right\}.\]</div>
 <p><span class="math notranslate nohighlight">\(g\)</span> is the number of electrons that one eigenvalue holds; see
-<a class="reference internal" href="#electronic-thermal-properties-spin"><span class="std std-ref">Spin degeneracy</span></a>.</p>
-<p>The energy and the entropy of the electrons are</p>
+<a class="reference internal" href="#electronic-thermal-properties-spin"><span class="std std-ref">Spin degeneracy</span></a>.
+The number of electrons in the cell is the derivative of the grand potential
+with respect to the chemical potential,</p>
 <div class="math notranslate nohighlight">
-\[E_\mathrm{el}(T) = g \sum_\mathbf{k} w_\mathbf{k} \sum_i
-f_{\mathbf{k}i} \epsilon_{\mathbf{k}i},\]</div>
+\[N = -\left( \frac{\partial \Omega}{\partial \mu} \right)_T = g \sum_\mathbf{k} w_\mathbf{k} \sum_i f_{\mathbf{k}i}.\]</div>
+<p>The chemical potential depends on temperature. At each temperature it is
+determined so that <span class="math notranslate nohighlight">\(N\)</span> stays the same; see
+<a class="reference internal" href="#electronic-thermal-properties-chemical-potential"><span class="std std-ref">Chemical potential</span></a>.
+The entropy of the electrons is the derivative of the grand potential with
+respect to temperature,</p>
 <div class="math notranslate nohighlight">
-\[S_\mathrm{el}(T) = -g k_\mathrm{B} \sum_\mathbf{k} w_\mathbf{k} \sum_i
-\left[ f_{\mathbf{k}i} \ln f_{\mathbf{k}i}
-+ (1 - f_{\mathbf{k}i}) \ln (1 - f_{\mathbf{k}i}) \right],\]</div>
-<p>and the free energy is <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) = E_\mathrm{el}(T) - T S_\mathrm{el}(T)\)</span>. These are Eqs. (11) and (12) of C. Wolverton and A.
-Zunger, Phys. Rev. B <strong>52</strong>, 8813 (1995).</p>
-<p>The heat capacity at constant volume is
-<span class="math notranslate nohighlight">\(C_\mathrm{el} = dE_\mathrm{el}/dT\)</span>. Differentiating
-<span class="math notranslate nohighlight">\(E_\mathrm{el}\)</span> gives two terms. One term comes from the change of the
-occupations at a fixed chemical potential. The other term comes from the
-change of the chemical potential with temperature, which is fixed by the
-condition that <span class="math notranslate nohighlight">\(N\)</span> does not change. Together they give</p>
+\[S_\mathrm{el}(T) = -\left( \frac{\partial \Omega}{\partial T} \right)_\mu = -g k_\mathrm{B} \sum_\mathbf{k} w_\mathbf{k} \sum_i \left[ f_{\mathbf{k}i} \ln f_{\mathbf{k}i} + (1 - f_{\mathbf{k}i}) \ln (1 - f_{\mathbf{k}i}) \right].\]</div>
+<p>The free energy at a fixed number of electrons is</p>
 <div class="math notranslate nohighlight">
-\[C_\mathrm{el}(T) = \frac{1}{k_\mathrm{B} T^2}
-\left( A_2 - \frac{A_1^2}{A_0} \right),
+\[F_\mathrm{el}(T) = \Omega + \mu N.\]</div>
+<p>Because <span class="math notranslate nohighlight">\(\partial \Omega / \partial \mu = -N\)</span>, the entropy is also
+<span class="math notranslate nohighlight">\(S_\mathrm{el} = -(\partial F_\mathrm{el} / \partial T)_N\)</span>. The energy
+of the electrons is <span class="math notranslate nohighlight">\(E_\mathrm{el} = F_\mathrm{el} + T S_\mathrm{el}\)</span>,
+and inserting <span class="math notranslate nohighlight">\(\Omega\)</span>, <span class="math notranslate nohighlight">\(N\)</span> and <span class="math notranslate nohighlight">\(S_\mathrm{el}\)</span> gives</p>
+<div class="math notranslate nohighlight">
+\[E_\mathrm{el}(T) = g \sum_\mathbf{k} w_\mathbf{k} \sum_i f_{\mathbf{k}i} \epsilon_{\mathbf{k}i}.\]</div>
+<p>The expressions for <span class="math notranslate nohighlight">\(E_\mathrm{el}\)</span> and <span class="math notranslate nohighlight">\(S_\mathrm{el}\)</span> are
+Eqs. (11) and (12) of C. Wolverton and A. Zunger, Phys. Rev. B <strong>52</strong>, 8813
+(1995). Phonopy evaluates the sums for <span class="math notranslate nohighlight">\(E_\mathrm{el}\)</span> and
+<span class="math notranslate nohighlight">\(S_\mathrm{el}\)</span>, and obtains the free energy as <span class="math notranslate nohighlight">\(F_\mathrm{el} = E_\mathrm{el} - T S_\mathrm{el}\)</span>. This free energy is equal to
+<span class="math notranslate nohighlight">\(\Omega + \mu N\)</span>.</p>
+<p>The heat capacity at constant volume is the temperature derivative of the
+energy,</p>
+<div class="math notranslate nohighlight">
+\[C_\mathrm{el}(T) = \left( \frac{\partial E_\mathrm{el}}{\partial T} \right)_V.\]</div>
+<p>Differentiating <span class="math notranslate nohighlight">\(E_\mathrm{el}\)</span> gives two terms. One term comes from
+the change of the occupations at a fixed chemical potential. The other term
+comes from the change of the chemical potential with temperature, which is
+fixed by the condition that <span class="math notranslate nohighlight">\(N\)</span> does not change. Together they give</p>
+<div class="math notranslate nohighlight">
+\[C_\mathrm{el}(T) = \frac{1}{k_\mathrm{B} T^2} \left( A_2 - \frac{A_1^2}{A_0} \right),
 \qquad
-A_n = g \sum_\mathbf{k} w_\mathbf{k} \sum_i
-f_{\mathbf{k}i} (1 - f_{\mathbf{k}i}) (\epsilon_{\mathbf{k}i} - \mu)^n.\]</div>
+A_n = g \sum_\mathbf{k} w_\mathbf{k} \sum_i f_{\mathbf{k}i} (1 - f_{\mathbf{k}i}) (\epsilon_{\mathbf{k}i} - \mu)^n.\]</div>
 <p>The <span class="math notranslate nohighlight">\(A_1^2/A_0\)</span> term is the contribution of the change of the chemical
 potential. It is small when the density of states is nearly constant near
 the Fermi level, and it grows with the slope of the density of states there.
 Phonopy computes the heat capacity from this expression.</p>
+<p>Every sum above has the form <span class="math notranslate nohighlight">\(g \sum_\mathbf{k} w_\mathbf{k} \sum_i h(\epsilon_{\mathbf{k}i})\)</span> with a function <span class="math notranslate nohighlight">\(h\)</span> of energy. Such a sum
+is an integral over the electronic density of states per cell,</p>
+<div class="math notranslate nohighlight">
+\[D(E) = g \sum_\mathbf{k} w_\mathbf{k} \sum_i \delta(E - \epsilon_{\mathbf{k}i}),
+\qquad
+g \sum_\mathbf{k} w_\mathbf{k} \sum_i h(\epsilon_{\mathbf{k}i}) = \int D(E) h(E) \, dE.\]</div>
+<p>The two ways of computing these sums, which are described in
+<a class="reference internal" href="#electronic-thermal-properties-integration"><span class="std std-ref">Integration over the Brillouin zone</span></a>, start from the left-hand
+side and from the right-hand side of this equation, respectively.</p>
 <p>At low temperature, the entropy and the heat capacity are both linear in
 <span class="math notranslate nohighlight">\(T\)</span>,</p>
 <div class="math notranslate nohighlight">
-\[S_\mathrm{el} \approx C_\mathrm{el} \approx \frac{\pi^2}{3}
-k_\mathrm{B}^2 T D(E_\mathrm{F}),\]</div>
+\[S_\mathrm{el} \approx C_\mathrm{el} \approx \gamma T = \frac{\pi^2}{3} k_\mathrm{B}^2 D(E_\mathrm{F}) T,\]</div>
 <p>where <span class="math notranslate nohighlight">\(D(E_\mathrm{F})\)</span> is the density of states at the Fermi level
-per cell, counted for both spins.</p>
+and <span class="math notranslate nohighlight">\(\gamma\)</span> is the Sommerfeld coefficient. The tetrahedron method
+returns <span class="math notranslate nohighlight">\(D(E_\mathrm{F})\)</span> as <code class="docutils literal notranslate"><span class="pre">dos_at_fermi_level</span></code>, evaluated at the
+chemical potential at 0 K; see <a class="reference internal" href="#electronic-thermal-properties-api"><span class="std std-ref">Python API</span></a>.</p>
 <section id="the-reference-at-0-k">
 <h3>The reference at 0 K<a class="headerlink" href="#the-reference-at-0-k" title="Link to this heading">#</a></h3>
 <p>The free energy is reported as <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span>.
 The total energy of the electronic structure calculation already contains
 the energy of the electrons at 0 K. Adding <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span> to that total energy adds only the part that depends on
 temperature. In a quasi-harmonic calculation, the static energy
-<span class="math notranslate nohighlight">\(U(V)\)</span> is the total energy, and the electronic free energy at volume
-<span class="math notranslate nohighlight">\(V\)</span> is</p>
+<span class="math notranslate nohighlight">\(U(V)\)</span> is the total energy. The free energy at volume <span class="math notranslate nohighlight">\(V\)</span>,
+before the phonon free energy is added, is</p>
 <div class="math notranslate nohighlight">
 \[U(V) + F_\mathrm{el}(T; V) - F_\mathrm{el}(0; V).\]</div>
 <p>Use the total energy extrapolated to zero smearing as <span class="math notranslate nohighlight">\(U(V)\)</span>, such
@@ -503,7 +938,7 @@ as <code class="docutils literal notranslate"><span class="pre">energy(sigma-&gt
 </section>
 </section>
 <section id="integration-over-the-brillouin-zone">
-<h2>Integration over the Brillouin zone<a class="headerlink" href="#integration-over-the-brillouin-zone" title="Link to this heading">#</a></h2>
+<span id="electronic-thermal-properties-integration"></span><h2>Integration over the Brillouin zone<a class="headerlink" href="#integration-over-the-brillouin-zone" title="Link to this heading">#</a></h2>
 <p>The sums over k-points above can be computed in two ways.</p>
 <p>The linear tetrahedron method builds the electronic density of states from
 the eigenvalues on the regular k-point mesh, and integrates the expressions
@@ -518,19 +953,83 @@ level contribute to the entropy and the heat capacity, and on a coarse mesh
 few eigenvalues fall in that range. The heat capacity at low temperature is
 the most affected. Use the tetrahedron method whenever the k-point mesh is
 available.</p>
-<p>The tetrahedron method integrates only over an energy window around the
-Fermi level. The states below the window are fully occupied at every
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> uses the tetrahedron method for each <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> that
+describes a regular k-point mesh. It uses the k-point sum for a file with an
+explicit list of k-points, and for a file whose k-points cannot be mapped
+onto the mesh. The <code class="docutils literal notranslate"><span class="pre">--k-point-sum</span></code> option makes it use the k-point sum for
+every file. The command prints the method used for each file, and the
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">integration:</span></code> line in the header of <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> records it. <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> uses
+the k-point sum for the electronic states that do not carry <code class="docutils literal notranslate"><span class="pre">kpoints</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mesh</span></code> and <code class="docutils literal notranslate"><span class="pre">cell</span></code>. <code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> stops with an error for such
+states.</p>
+<p>The tetrahedron method integrates only over an energy window from
+<span class="math notranslate nohighlight">\(E_\mathrm{F} - W\)</span> to <span class="math notranslate nohighlight">\(E_\mathrm{F} + W\)</span>, where
+<span class="math notranslate nohighlight">\(E_\mathrm{F}\)</span> is the Fermi energy and <span class="math notranslate nohighlight">\(W\)</span> is the half-width of
+the window. The states below the window are fully occupied at every
 temperature and add a constant to the energy, which cancels in
 <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span>. The states above the window are
-empty. By default, the half-width of the window is 16
-<span class="math notranslate nohighlight">\(k_\mathrm{B} T\)</span> at the highest temperature, and at least 0.5 eV. The
-width is set by the heat capacity, whose integrand
-<span class="math notranslate nohighlight">\(f(1-f)(\epsilon-\mu)^2\)</span> decays most slowly away from the Fermi level.
-The density of states is sampled on an energy grid of 0.5 meV spacing in the
-window. The <code class="docutils literal notranslate"><span class="pre">window</span></code> and <code class="docutils literal notranslate"><span class="pre">energy_spacing</span></code> parameters change these values.</p>
+empty. By default, the half-width is</p>
+<div class="math notranslate nohighlight">
+\[W = \max(0.5\ \mathrm{eV}, 16 k_\mathrm{B} T_\mathrm{max}),\]</div>
+<p>where <span class="math notranslate nohighlight">\(T_\mathrm{max}\)</span> is the highest temperature. The width is set by
+the heat capacity. Its integrand contains <span class="math notranslate nohighlight">\(f(1-f)(E-\mu)^2\)</span>, which
+decreases most slowly away from the Fermi level. The density of states is
+sampled on an energy grid of 0.5 meV spacing in the window. The <code class="docutils literal notranslate"><span class="pre">window</span></code> and
+<code class="docutils literal notranslate"><span class="pre">energy_spacing</span></code> parameters change <span class="math notranslate nohighlight">\(W\)</span> and the spacing.</p>
+<figure class="align-default" id="id2">
+<img alt="_images/electron-window.png" src="_images/electron-window.png" />
+<figcaption>
+<p><span class="caption-text">The energy window of the tetrahedron method, drawn for the case
+<span class="math notranslate nohighlight">\(W = 16 k_\mathrm{B} T_\mathrm{max}\)</span>. The black curve is the density
+of states. The red curve is <span class="math notranslate nohighlight">\(f(1-f)(E-\mu)^2\)</span> at the highest
+temperature, drawn without the factor <span class="math notranslate nohighlight">\(D(E)\)</span>. It decreases to nearly
+zero at the edges of the window. The states below the window are fully
+occupied at every temperature, and the states above the window are empty.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
 <p>The <code class="docutils literal notranslate"><span class="pre">symmetrize_tetrahedra</span></code> parameter averages the tetrahedron weights over
-the point group. See <a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a> for this option and its default in
+the point group. The <code class="docutils literal notranslate"><span class="pre">--symmetrize-tetrahedra</span></code> option of <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code>
+does the same. See <a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a> for this option and its default in
 the next major version.</p>
+</section>
+<section id="chemical-potential">
+<span id="electronic-thermal-properties-chemical-potential"></span><h2>Chemical potential<a class="headerlink" href="#chemical-potential" title="Link to this heading">#</a></h2>
+<p>The chemical potential <span class="math notranslate nohighlight">\(\mu\)</span> at temperature <span class="math notranslate nohighlight">\(T\)</span> is the root of
+the equation</p>
+<div class="math notranslate nohighlight">
+\[g \sum_\mathbf{k} w_\mathbf{k} \sum_i f_{\mathbf{k}i}(\mu, T) = N,\]</div>
+<p>where <span class="math notranslate nohighlight">\(N\)</span> is <code class="docutils literal notranslate"><span class="pre">n_electrons</span></code> of <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>. The left-hand side
+increases with <span class="math notranslate nohighlight">\(\mu\)</span>, so the equation has one root. Phonopy finds the
+root by Brent’s method at every temperature.</p>
+<p>The k-point sum evaluates the left-hand side as it is written, over the
+irreducible k-points. The root is searched for between the lowest and the
+highest eigenvalue.</p>
+<p>The tetrahedron method replaces the sum by an integral over the density of
+states <span class="math notranslate nohighlight">\(D(E)\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[\int D(E) f(E; \mu, T) \, dE = N,\]</div>
+<p>and solves it in two steps.</p>
+<p>At 0 K, the chemical potential <span class="math notranslate nohighlight">\(\mu_0\)</span> is the energy at which the
+integrated density of states is equal to <span class="math notranslate nohighlight">\(N\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[\int_{-\infty}^{\mu_0} D(E) \, dE = N.\]</div>
+<p>The tetrahedron method gives the integrated density of states as a
+continuous function of energy, so <span class="math notranslate nohighlight">\(\mu_0\)</span> does not depend on the
+energy grid.</p>
+<p>At a finite temperature, the integral is evaluated on the energy grid in the
+window. The states below the window hold <span class="math notranslate nohighlight">\(N_\mathrm{below}\)</span> electrons
+at every temperature. This number is fixed by the condition at 0 K,</p>
+<div class="math notranslate nohighlight">
+\[N_\mathrm{below} = N - \int_{E_\mathrm{F} - W}^{\mu_0} D(E) \, dE.\]</div>
+<p>The chemical potential at temperature <span class="math notranslate nohighlight">\(T\)</span> is the root of</p>
+<div class="math notranslate nohighlight">
+\[N_\mathrm{below} + \int_{E_\mathrm{F} - W}^{E_\mathrm{F} + W} D(E) f(E; \mu, T) \, dE = N.\]</div>
+<p>The window is centered at the Fermi energy reported by the electronic
+structure calculation, <code class="docutils literal notranslate"><span class="pre">fermi_energy</span></code> of <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>. When it is not
+given, the center is the energy up to which the eigenvalues hold
+<span class="math notranslate nohighlight">\(N\)</span> electrons. When the chemical potential at 0 K is outside the
+window, phonopy stops with an error that asks to widen the window. In that
+case, increase <code class="docutils literal notranslate"><span class="pre">window</span></code>.</p>
 </section>
 <section id="spin-degeneracy">
 <span id="electronic-thermal-properties-spin"></span><h2>Spin degeneracy<a class="headerlink" href="#spin-degeneracy" title="Link to this heading">#</a></h2>
@@ -549,7 +1048,7 @@ wrong for a non-collinear calculation. For such a calculation, set
 <code class="docutils literal notranslate"><span class="pre">spin_degeneracy=1</span></code> in <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>.</p>
 </section>
 <section id="input-electronic-states">
-<h2>Input: electronic states<a class="headerlink" href="#input-electronic-states" title="Link to this heading">#</a></h2>
+<span id="electronic-thermal-properties-input"></span><h2>Input: electronic states<a class="headerlink" href="#input-electronic-states" title="Link to this heading">#</a></h2>
 <p>The input is <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.states</span></code>, one per
 crystal structure:</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -583,7 +1082,16 @@ crystal structure:</p>
 </tbody>
 </table>
 </div>
-<p>The results are per cell for which the eigenvalues were computed.</p>
+<p>The results are per cell for which the eigenvalues were computed. The phonon
+thermal properties of phonopy are per primitive cell. When the eigenvalues
+are computed for a larger cell, such as the conventional cell of a centred
+lattice, the results are scaled by the volume of the primitive cell divided
+by the volume of that cell before they are added to the phonon thermal
+properties. <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> does not scale them. It checks that the volumes of the
+electronic states are equal to the volumes of the primitive cells of the
+phonons, so compute the eigenvalues for the primitive cell.
+<code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> takes the electronic states of the conventional
+cell and scales them.</p>
 <p>For VASP, <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> reads <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> files and writes the
 electronic states of all of them to <code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">vasp</span><span class="o">-</span><span class="n">efe</span> <span class="o">--</span><span class="n">es</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span><span class="o">-</span><span class="p">{</span><span class="mf">00..10</span><span class="p">}</span>
@@ -594,7 +1102,7 @@ electronic states of all of them to <code class="docutils literal notranslate"><
 <code class="docutils literal notranslate"><span class="pre">read_electronic_states_hdf5</span></code>, which returns a list of <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>.</p>
 </section>
 <section id="python-api">
-<h2>Python API<a class="headerlink" href="#python-api" title="Link to this heading">#</a></h2>
+<span id="electronic-thermal-properties-api"></span><h2>Python API<a class="headerlink" href="#python-api" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_tetrahedron</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.tetrahedron</span></code>
 computes the thermal properties by the tetrahedron method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -610,37 +1118,24 @@ computes the thermal properties by the tetrahedron method:</p>
 <span class="n">properties</span><span class="o">.</span><span class="n">entropy</span>  <span class="c1"># S_el in eV/K</span>
 <span class="n">properties</span><span class="o">.</span><span class="n">heat_capacity</span>  <span class="c1"># C_el in eV/K</span>
 <span class="n">properties</span><span class="o">.</span><span class="n">chemical_potential</span>  <span class="c1"># mu in eV</span>
+<span class="n">properties</span><span class="o">.</span><span class="n">dos_at_fermi_level</span>  <span class="c1"># D(E_F) in states/eV</span>
 </pre></div>
 </div>
-<p>Each field is an array with one value per temperature. The temperatures do
-not have to include 0 K; the value at 0 K is computed anyway as the
-reference of the free energy. To compare with the phonon thermal properties
-of phonopy, which are in J/K/mol, multiply the entropy and the heat capacity
-by <code class="docutils literal notranslate"><span class="pre">get_physical_units().EvTokJmol</span> <span class="pre">*</span> <span class="pre">1000</span></code> from <code class="docutils literal notranslate"><span class="pre">phonopy.physical_units</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dos_at_fermi_level</span></code> is one value, the density of states at the chemical
+potential at 0 K. Each of the other fields is an array with one value per
+temperature. The temperatures do not have to include 0 K; the value at 0 K
+is computed anyway as the reference of the free energy.</p>
+<p>The values are per cell for which the eigenvalues were computed. The phonon
+thermal properties of phonopy are in kJ/mol and J/K/mol per primitive cell.
+To compare with them, first scale the values to the primitive cell as
+described in <a class="reference internal" href="#electronic-thermal-properties-input"><span class="std std-ref">Input: electronic states</span></a>. Then multiply the
+free energy by <code class="docutils literal notranslate"><span class="pre">get_physical_units().EvTokJmol</span></code>, and the entropy and the
+heat capacity by <code class="docutils literal notranslate"><span class="pre">get_physical_units().EvTokJmol</span> <span class="pre">*</span> <span class="pre">1000</span></code>.
+<code class="docutils literal notranslate"><span class="pre">get_physical_units</span></code> is in <code class="docutils literal notranslate"><span class="pre">phonopy.physical_units</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_kpoint_sum</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.kpoint_sum</span></code>
 takes the same arguments and computes the thermal properties by the k-point
-sum. Both functions return <code class="docutils literal notranslate"><span class="pre">ElectronicThermalProperties</span></code>.</p>
-</section>
-<section id="use-in-quasi-harmonic-calculations">
-<h2>Use in quasi-harmonic calculations<a class="headerlink" href="#use-in-quasi-harmonic-calculations" title="Link to this heading">#</a></h2>
-<p>The electronic contributions enter a quasi-harmonic calculation in three
-ways:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">run_qha</span></code> takes the electronic states of all volumes as
-<code class="docutils literal notranslate"><span class="pre">electronic_structures</span></code>. It adds the free energy, the entropy and the
-heat capacity of the electrons to those of the phonons. See
-<a class="reference internal" href="qha.html#phonopy-qha-electronic-structures"><span class="std std-ref">Electronic free energies from eigenvalues</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> without <code class="docutils literal notranslate"><span class="pre">--es</span></code> writes the electronic free energies of
-all volumes to <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>, which <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span> <span class="pre">--efe</span></code> reads. This file has
-only the free energy, so the entropy and the heat capacity of the
-electrons are not included in every output of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>. See
-<a class="reference internal" href="qha.html#phonopy-qha-efe-option"><span class="std std-ref">--efe</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> adds the electronic free energy when its dataset
-has the electronic states. It needs the k-point mesh with the states. See
-<a class="reference internal" href="aniso-thermal-expansion.html#aniso-thermal-expansion"><span class="std std-ref">Anisotropic thermal expansion from free-energy minimization</span></a>.</p></li>
-</ul>
-<p>In all three, the electronic states have to be computed for the same
-crystal structures as the phonons.</p>
+sum. Both functions return <code class="docutils literal notranslate"><span class="pre">ElectronicThermalProperties</span></code>. The k-point sum
+gives no density of states, and its <code class="docutils literal notranslate"><span class="pre">dos_at_fermi_level</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </section>
 </section>
 
@@ -691,15 +1186,16 @@ crystal structures as the phonons.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reference-at-0-k">The reference at 0 K</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-over-the-brillouin-zone">Integration over the Brillouin zone</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chemical-potential">Chemical potential</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spin-degeneracy">Spin degeneracy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-electronic-states">Input: electronic states</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-in-quasi-harmonic-calculations">Use in quasi-harmonic calculations</a></li>
 </ul>
   </nav></div>
 

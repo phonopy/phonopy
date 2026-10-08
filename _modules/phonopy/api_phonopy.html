@@ -795,11 +795,11 @@ window.runMermaid = runMermaid;</script>
     <span class="n">get_primitive_matrix_with_auto</span><span class="p">,</span>
     <span class="n">get_supercell</span><span class="p">,</span>
     <span class="n">isclose</span><span class="p">,</span>
+    <span class="n">merge_weighted_species</span><span class="p">,</span>
     <span class="n">shape_supercell_matrix</span><span class="p">,</span>
     <span class="n">warn_if_primitive_matrix_auto_changed_cell</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">forces_in_dataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.mixture</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce_mixture_forces</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.symmetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Symmetry</span><span class="p">,</span> <span class="n">symmetrize_borns_and_epsilon</span>
 
 
@@ -865,6 +865,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">calculator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">lang</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"C"</span><span class="p">,</span> <span class="s2">"Rust"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Rust"</span><span class="p">,</span>
+        <span class="n">site_mixture_scheme</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"merge"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"merge"</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Init method.</span>
 
@@ -914,6 +915,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Backend implementation for compute-heavy kernels. ``"C"``</span>
 <span class="sd">            uses the existing C extension; ``"Rust"`` selects the</span>
 <span class="sd">            experimental phonors backend. Default is ``"Rust"``.</span>
+<span class="sd">        site_mixture_scheme : Literal["merge", "split"], optional</span>
+<span class="sd">            [Experimental] Scheme of site mixture for a unit cell with</span>
+<span class="sd">            weighted species. With ``"merge"``, co-located atoms are merged</span>
+<span class="sd">            into one site, and the input atoms are kept in ``unmerged_*``.</span>
+<span class="sd">            Default is ``"merge"``.</span>
 
 <span class="sd">        """</span>
         <span class="n">lang</span> <span class="o">=</span> <span class="n">resolve_lang</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
@@ -932,8 +938,26 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_use_SNF_supercell</span> <span class="o">=</span> <span class="n">use_SNF_supercell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_level</span> <span class="o">=</span> <span class="n">log_level</span>
 
-        <span class="c1"># Create supercell and primitive cell</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span> <span class="o">=</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># Create supercell and primitive cell. Unmerged cells are made only</span>
+        <span class="c1"># with the merge scheme of site mixture.</span>
+        <span class="k">if</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">has_mixtures</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"A cell with merged mixed-species sites cannot be given to "</span>
+                <span class="s2">"Phonopy. Give the cell with the weighted atoms of the input "</span>
+                <span class="s2">"structure and site_mixture_scheme."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">site_mixture_scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"merge"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">'site_mixture_scheme must be "merge" or "split", got '</span>
+                <span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">site_mixture_scheme</span><span class="si">}</span><span class="s1">".'</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_mixture_scheme</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"merge"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_mixture_scheme</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_unitcell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">site_mixture_scheme</span> <span class="o">==</span> <span class="s2">"merge"</span> <span class="ow">and</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_unitcell</span> <span class="o">=</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">merge_weighted_species</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="n">symprec</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span> <span class="o">=</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_supercell_matrix</span> <span class="o">=</span> <span class="n">shape_supercell_matrix</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_primitive_matrix</span> <span class="o">=</span> <span class="n">get_primitive_matrix_with_auto</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">,</span>
@@ -946,6 +970,10 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">:</span> <span class="n">Supercell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="p">:</span> <span class="n">Primitive</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span><span class="p">:</span> <span class="n">Supercell</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_primitive</span><span class="p">:</span> <span class="n">Primitive</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Site indices for unmerged_supercell</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_site_indices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_supercell</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_primitive_cell</span><span class="p">()</span>
 
@@ -1003,13 +1031,42 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">unitcell</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhonopyAtoms</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return input unit cell."""</span>
+<span class="w">        </span><span class="sd">"""Return input unit cell.</span>
+
+<span class="sd">        With the merge scheme of site mixture, this is the cell of sites.</span>
+
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">supercell</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Supercell</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return supercell."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">site_mixture_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"merge"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return scheme of site mixture, "merge" or "split"."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_mixture_scheme</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unmerged_unitcell</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PhonopyAtoms</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return input unit cell with the merge scheme of site mixture, or None."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_unitcell</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unmerged_primitive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Primitive</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return primitive cell of ``unmerged_unitcell``, or None."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_primitive</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unmerged_supercell</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Supercell</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return supercell of ``unmerged_unitcell``, or None.</span>
+
+<span class="sd">        Forces given to phonopy are on the atoms of this cell. The site in</span>
+<span class="sd">        ``supercell`` of each atom is kept in ``_unmerged_site_indices``.</span>
+
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">symmetry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Symmetry</span><span class="p">:</span>
@@ -1395,7 +1452,9 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">supercells_with_displacements</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PhonopyAtoms</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return supercells with displacements as a list of ``PhonopyAtoms``.</span>
 
-<span class="sd">        Generated by :meth:`generate_displacements`.</span>
+<span class="sd">        Generated by :meth:`generate_displacements`. With the merge scheme of</span>
+<span class="sd">        site mixture, the atoms are those of ``unmerged_supercell``, and the</span>
+<span class="sd">        displacement of a site is given to every atom of the site.</span>
 
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -4642,7 +4701,9 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_log_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_level</span>
         <span class="n">ph</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_unitcell</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_unitcell</span><span class="p">,</span>
             <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">smat</span><span class="p">,</span>
             <span class="n">primitive_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_primitive_matrix</span><span class="p">,</span>
             <span class="n">group_velocity_delta_q</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gv_delta_q</span><span class="p">,</span>
@@ -4651,6 +4712,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">use_SNF_supercell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_use_SNF_supercell</span><span class="p">,</span>
             <span class="n">calculator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculator</span><span class="p">,</span>
             <span class="n">log_level</span><span class="o">=</span><span class="n">_log_level</span><span class="p">,</span>
+            <span class="n">site_mixture_scheme</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_site_mixture_scheme</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor_overridden</span><span class="p">:</span>
             <span class="n">ph</span><span class="o">.</span><span class="n">unit_conversion_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unit_conversion_factor</span>
@@ -4675,14 +4737,16 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># picked from the calculator: VASP uses a plain sum because its</span>
         <span class="c1"># vasprun.xml forces already carry the mixture weight factor.</span>
         <span class="n">dataset_for_fc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">has_mixtures</span><span class="p">:</span>
-            <span class="n">dataset_for_fc</span> <span class="o">=</span> <span class="n">_reduce_mixture_dataset_forces</span><span class="p">(</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_site_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">dataset_for_fc</span> <span class="o">=</span> <span class="n">_reduce_dataset_forces_to_sites</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_site_indices</span><span class="p">,</span>
                 <span class="n">mode</span><span class="o">=</span><span class="n">_mixture_reduce_mode_for_calculator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_calculator</span><span class="p">),</span>
             <span class="p">)</span>
-        <span class="c1"># Non-merge site-mixture (weighted real species) cells use the</span>
-        <span class="c1"># ordinary finite-difference path: the raw VASP forces and real</span>
+        <span class="c1"># With the split scheme of site mixture, cells of weighted species use</span>
+        <span class="c1"># the ordinary finite-difference path: the raw VASP forces and real</span>
         <span class="c1"># displacements give the symmetric force constants G that satisfy</span>
         <span class="c1"># the ordinary sum rule, so the standard symmetrizer applies. The</span>
         <span class="c1"># concentration weights x do not enter the force constants.</span>
@@ -4825,31 +4889,63 @@ window.runMermaid = runMermaid;</script>
             <span class="n">is_old_style</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_SNF_supercell</span><span class="p">),</span>
             <span class="n">symprec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_unitcell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span> <span class="o">=</span> <span class="n">get_supercell</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_unitcell</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_supercell_matrix</span><span class="p">,</span>
+            <span class="n">is_old_style</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_SNF_supercell</span><span class="p">),</span>
+            <span class="n">symprec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">sites</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_site_indices</span> <span class="o">=</span> <span class="n">merge_weighted_species</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span><span class="p">,</span> <span class="n">symprec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span>
+        <span class="p">)</span>
+        <span class="c1"># Sites of unmerged supercell have to be those of supercell in order.</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">sites</span><span class="o">.</span><span class="n">scaled_positions</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">scaled_positions</span>
+        <span class="n">diff</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sites</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"Sites of the unmerged supercell do not match those of the supercell."</span>
+            <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_supercells_with_displacements</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">all_positions</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="w">        </span><span class="sd">"""Build supercells with displacements.</span>
+
+<span class="sd">        With the merge scheme of site mixture, the displacement of a site is</span>
+<span class="sd">        given to its atoms.</span>
+
+<span class="sd">        """</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="s2">"first_atoms"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">:</span>  <span class="c1"># type-1</span>
-            <span class="k">for</span> <span class="n">disp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">[</span><span class="s2">"first_atoms"</span><span class="p">]:</span>
-                <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">positions</span>
-                <span class="n">positions</span><span class="p">[</span><span class="n">disp</span><span class="p">[</span><span class="s2">"number"</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">disp</span><span class="p">[</span><span class="s2">"displacement"</span><span class="p">]</span>
-                <span class="n">all_positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+            <span class="n">first_atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">[</span><span class="s2">"first_atoms"</span><span class="p">]</span>
+            <span class="n">all_disps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">first_atoms</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">disp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">first_atoms</span><span class="p">):</span>
+                <span class="n">all_disps</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">disp</span><span class="p">[</span><span class="s2">"number"</span><span class="p">]]</span> <span class="o">=</span> <span class="n">disp</span><span class="p">[</span><span class="s2">"displacement"</span><span class="p">]</span>
         <span class="k">elif</span> <span class="s2">"displacements"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">disp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">[</span><span class="s2">"displacements"</span><span class="p">]:</span>
-                <span class="n">all_positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">positions</span> <span class="o">+</span> <span class="n">disp</span><span class="p">)</span>
+            <span class="n">all_disps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">[</span><span class="s2">"displacements"</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"displacement_dataset is not set."</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span>
+        <span class="c1"># Displacements are generated for the sites of the merged supercell.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_site_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">all_disps</span> <span class="o">=</span> <span class="n">all_disps</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_site_indices</span><span class="p">]</span>
         <span class="n">supercells</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">all_positions</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">disps</span> <span class="ow">in</span> <span class="n">all_disps</span><span class="p">:</span>
             <span class="n">supercells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">PhonopyAtoms</span><span class="p">(</span>
-                    <span class="n">species_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">species_table</span><span class="p">,</span>
-                    <span class="n">species_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">species_ids</span><span class="p">,</span>
-                    <span class="n">masses</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">masses</span><span class="p">,</span>
-                    <span class="n">magnetic_moments</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">magnetic_moments</span><span class="p">,</span>
-                    <span class="n">positions</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span>
-                    <span class="n">cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
+                    <span class="n">species_table</span><span class="o">=</span><span class="n">cell</span><span class="o">.</span><span class="n">species_table</span><span class="p">,</span>
+                    <span class="n">species_ids</span><span class="o">=</span><span class="n">cell</span><span class="o">.</span><span class="n">species_ids</span><span class="p">,</span>
+                    <span class="n">masses</span><span class="o">=</span><span class="n">cell</span><span class="o">.</span><span class="n">masses</span><span class="p">,</span>
+                    <span class="n">magnetic_moments</span><span class="o">=</span><span class="n">cell</span><span class="o">.</span><span class="n">magnetic_moments</span><span class="p">,</span>
+                    <span class="n">positions</span><span class="o">=</span><span class="n">cell</span><span class="o">.</span><span class="n">positions</span> <span class="o">+</span> <span class="n">disps</span><span class="p">,</span>
+                    <span class="n">cell</span><span class="o">=</span><span class="n">cell</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_supercells_with_displacements</span> <span class="o">=</span> <span class="n">supercells</span>
@@ -4875,6 +4971,13 @@ window.runMermaid = runMermaid;</script>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span>
                 <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_primitive</span> <span class="o">=</span> <span class="n">get_primitive</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span><span class="p">,</span>
+                    <span class="n">trans_mat</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_symprec</span><span class="p">,</span>
+                    <span class="n">lang</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lang</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s2">"Creating primitive cell is failed. "</span>
@@ -4924,7 +5027,10 @@ window.runMermaid = runMermaid;</script>
                     <span class="n">disp</span><span class="p">[</span><span class="s2">"supercell_energy"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
         <span class="k">elif</span> <span class="s2">"displacements"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">:</span>  <span class="c1"># type-2</span>
             <span class="n">_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
-            <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_supercell</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unmerged_supercell</span><span class="p">)</span>
             <span class="n">ndisps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="p">[</span><span class="s2">"displacements"</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">"forces"</span> <span class="ow">and</span> <span class="p">(</span>
                 <span class="n">_values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">_values</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">ndisps</span><span class="p">,</span> <span class="n">natom</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -4939,27 +5045,44 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_reduce_mixture_dataset_forces</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_reduce_dataset_forces_to_sites</span><span class="p">(</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">DisplacementDataset</span><span class="p">,</span>
-    <span class="n">supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span>
+    <span class="n">unmerged_supercell</span><span class="p">:</span> <span class="n">PhonopyAtoms</span><span class="p">,</span>
+    <span class="n">site_indices</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span>
     <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"weighted_sum"</span><span class="p">,</span> <span class="s2">"sum"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"weighted_sum"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DisplacementDataset</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return a shallow-copied dataset with forces reduced to per-site values.</span>
+<span class="w">    </span><span class="sd">"""Return a shallow-copied dataset with forces summed per site.</span>
 
-<span class="sd">    Used to feed the FC calculator a per-site force tensor while leaving the</span>
-<span class="sd">    raw expanded forces in the user-visible dataset. ``mode`` selects the</span>
-<span class="sd">    per-site reduction convention; see ``reduce_mixture_forces``.</span>
+<span class="sd">    With ``mode="weighted_sum"``, forces are multiplied by the weights first.</span>
 
 <span class="sd">    """</span>
+    <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">site_indices</span><span class="p">)</span>
+    <span class="n">n_sites</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">site_indices</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"weighted_sum"</span> <span class="ow">and</span> <span class="n">unmerged_supercell</span><span class="o">.</span><span class="n">mixture_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="n">unmerged_supercell</span><span class="o">.</span><span class="n">mixture_weights</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">natom</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reduce</span><span class="p">(</span><span class="n">forces</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
+        <span class="n">forces_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">forces</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">forces_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">!=</span> <span class="p">(</span><span class="n">natom</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Forces of shape </span><span class="si">{</span><span class="n">forces_arr</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> do not match the </span><span class="si">{</span><span class="n">natom</span><span class="si">}</span><span class="s2"> atoms "</span>
+                <span class="s2">"of the unmerged supercell."</span>
+            <span class="p">)</span>
+        <span class="n">atom_major</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">forces_arr</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">weighted</span> <span class="o">=</span> <span class="n">atom_major</span> <span class="o">*</span> <span class="n">factors</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">natom</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">atom_major</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">site_major</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_sites</span><span class="p">,)</span> <span class="o">+</span> <span class="n">atom_major</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">site_major</span><span class="p">,</span> <span class="n">site_indices</span><span class="p">,</span> <span class="n">weighted</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">site_major</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+
     <span class="k">if</span> <span class="s2">"first_atoms"</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
         <span class="n">d1</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Type1DisplacementDataset</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
         <span class="n">new_first_atoms</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">d1</span><span class="p">[</span><span class="s2">"first_atoms"</span><span class="p">]:</span>
             <span class="n">new_entry</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
             <span class="k">if</span> <span class="s2">"forces"</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">:</span>
-                <span class="n">new_entry</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">]</span> <span class="o">=</span> <span class="n">reduce_mixture_forces</span><span class="p">(</span>
-                    <span class="n">entry</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">],</span> <span class="n">supercell</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span>
-                <span class="p">)</span>
+                <span class="n">new_entry</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_reduce</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">])</span>
             <span class="n">new_first_atoms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_entry</span><span class="p">)</span>
         <span class="n">new_dataset</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"first_atoms"</span><span class="p">:</span> <span class="n">new_first_atoms</span><span class="p">,</span> <span class="s2">"natom"</span><span class="p">:</span> <span class="n">d1</span><span class="p">[</span><span class="s2">"natom"</span><span class="p">]}</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">DisplacementDataset</span><span class="p">,</span> <span class="n">new_dataset</span><span class="p">)</span>
@@ -4967,9 +5090,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">d2</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Type2DisplacementDataset</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
     <span class="n">new_dataset</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
     <span class="k">if</span> <span class="s2">"forces"</span> <span class="ow">in</span> <span class="n">d2</span><span class="p">:</span>
-        <span class="n">new_dataset</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">]</span> <span class="o">=</span> <span class="n">reduce_mixture_forces</span><span class="p">(</span>
-            <span class="n">d2</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">],</span> <span class="n">supercell</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span>
-        <span class="p">)</span>
+        <span class="n">new_dataset</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_reduce</span><span class="p">(</span><span class="n">d2</span><span class="p">[</span><span class="s2">"forces"</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">DisplacementDataset</span><span class="p">,</span> <span class="n">new_dataset</span><span class="p">)</span>
 
 
@@ -4991,10 +5112,26 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">set_data_to_phonopy_yaml</span><span class="p">(</span><span class="n">phpy_yaml</span><span class="p">:</span> <span class="n">PhonopyYaml</span><span class="p">,</span> <span class="bp">self</span><span class="p">:</span> <span class="n">Phonopy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Set data to PhonopyYaml instance."""</span>
-    <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">unitcell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unitcell</span>
-    <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span>
-    <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">supercell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supercell</span>
+<span class="w">    </span><span class="sd">"""Set data to PhonopyYaml instance.</span>
+
+<span class="sd">    With the merge scheme of site mixture, the unmerged cells are written. This</span>
+<span class="sd">    is also used for objects of other classes (e.g., Phelel), which have no site</span>
+<span class="sd">    mixture scheme.</span>
+
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Phonopy</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">unmerged_unitcell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">unmerged_primitive</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">unmerged_supercell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unmerged_unitcell</span>
+        <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unmerged_primitive</span>
+        <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">supercell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unmerged_supercell</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">unitcell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unitcell</span>
+        <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">primitive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primitive</span>
+        <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">supercell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supercell</span>
+    <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">unitcell</span> <span class="o">=</span> <span class="n">unitcell</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Phonopy</span><span class="p">)</span> <span class="ow">and</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">has_weighted_species</span><span class="p">:</span>
+        <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">site_mixture_scheme</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">site_mixture_scheme</span>
     <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
     <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">supercell_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">supercell_matrix</span>
     <span class="n">phpy_yaml</span><span class="o">.</span><span class="n">symmetry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetry</span>

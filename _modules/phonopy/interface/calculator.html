@@ -1088,7 +1088,7 @@ window.runMermaid = runMermaid;</script>
 <span class="w">    </span><span class="sd">"""Write supercells for VASP interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">vasp</span>
 
-    <span class="n">for_vca</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_mixtures</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_weighted_species</span>
+    <span class="n">for_vca</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_weighted_species</span>
     <span class="n">vasp</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
