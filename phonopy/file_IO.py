@@ -108,6 +108,13 @@ def _get_FORCE_SETS_lines_type1(
 
 
 def _get_FORCE_SETS_lines_type2(dataset: Type2DisplacementDataset) -> list[str]:
+    disps_shape = np.shape(dataset["displacements"])
+    forces_shape = np.shape(dataset["forces"])
+    if disps_shape != forces_shape:
+        raise ValueError(
+            f"Shape mismatch between displacements {disps_shape} and forces "
+            f"{forces_shape} in type-2 dataset."
+        )
     lines = []
     for displacements, forces in zip(
         dataset["displacements"], dataset["forces"], strict=True

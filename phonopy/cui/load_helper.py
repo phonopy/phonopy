@@ -7,6 +7,7 @@ import dataclasses
 import os
 import pathlib
 import typing
+import warnings
 from collections.abc import Sequence
 from typing import Literal
 
@@ -43,7 +44,7 @@ from phonopy.interface.pypolymlp import (
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive_matrix
-from phonopy.structure.dataset import forces_in_dataset
+from phonopy.structure.dataset import forces_in_dataset, get_displacements_and_forces
 
 
 def get_cell_settings(
@@ -219,7 +220,37 @@ def select_and_load_dataset(
     force_sets_filename: str | os.PathLike | None = None,
     log_level: int = 0,
 ) -> DisplacementDataset | None:
-    """Set displacement-force dataset."""
+    """Return displacement-force dataset.
+
+    The dataset in the yaml is returned when it has forces. Otherwise, the
+    dataset is read from ``force_sets_filename``, or from "FORCE_SETS" in the
+    current directory when it exists. Otherwise, the dataset in the yaml
+    (displacements only, or None) is returned.
+
+    When the displacements in FORCE_SETS do not match those in the yaml, a
+    warning is issued and those in FORCE_SETS are used.
+
+    Parameters
+    ----------
+    nsatom : int
+        Number of atoms in the supercell, i.e., of the sites with the merge
+        scheme of site mixture.
+    dataset : DisplacementDataset or None, optional
+        Dataset in the yaml. Default is None.
+    phonopy_yaml_filename : str, os.PathLike, IO or None, optional
+        Name of the yaml file, used in messages. Default is None.
+    force_sets_filename : str, os.PathLike or None, optional
+        FORCE_SETS file to read. Default is None.
+    log_level : int, optional
+        Log level. Default is 0.
+
+    Returns
+    -------
+    DisplacementDataset or None
+        Displacement-force dataset, or the displacement dataset of the yaml
+        when no forces are found. None when neither is found.
+
+    """
     _dataset = None
     _force_sets_filename = None
     if forces_in_dataset(dataset):
@@ -229,9 +260,21 @@ def select_and_load_dataset(
     elif force_sets_filename is not None:
         _dataset = parse_FORCE_SETS(natom=nsatom, filename=force_sets_filename)
         _force_sets_filename = force_sets_filename
+        _check_force_sets_displacements(
+            _dataset,
+            dataset,
+            force_sets_filename,
+            phonopy_yaml_filename,
+        )
     elif pathlib.Path("FORCE_SETS").exists():
         _dataset = parse_FORCE_SETS(natom=nsatom)
         _force_sets_filename = "FORCE_SETS"
+        _check_force_sets_displacements(
+            _dataset,
+            dataset,
+            "FORCE_SETS",
+            phonopy_yaml_filename,
+        )
     else:
         _dataset = dataset
         if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
@@ -244,6 +287,45 @@ def select_and_load_dataset(
             print(f'Displacement dataset was read from "{_force_sets_filename}".')
 
     return _dataset
+
+
+def _check_force_sets_displacements(
+    force_sets_dataset: DisplacementDataset,
+    yaml_dataset: DisplacementDataset | None,
+    force_sets_filename: str | os.PathLike,
+    phonopy_yaml_filename: str | os.PathLike | typing.IO | None,
+) -> None:
+    """Check that displacements in FORCE_SETS are those in the yaml.
+
+    Both are compared as arrays of displacements of all atoms. Type-1
+    FORCE_SETS has to have the same displacements as the yaml. Type-2
+    FORCE_SETS can have the first part of the displacements of the yaml, as
+    written when forces of only some of the supercells are calculated.
+
+    """
+    if yaml_dataset is None:
+        return
+    yaml_disps = get_displacements_and_forces(yaml_dataset)[0]
+    fs_disps = get_displacements_and_forces(force_sets_dataset)[0]
+    if "first_atoms" in force_sets_dataset:
+        is_count_ok = len(fs_disps) == len(yaml_disps)
+    else:
+        is_count_ok = len(fs_disps) <= len(yaml_disps)
+    if (
+        not is_count_ok
+        or fs_disps.shape[1:] != yaml_disps.shape[1:]
+        or not np.allclose(fs_disps, yaml_disps[: len(fs_disps)], atol=1e-6)
+    ):
+        if isinstance(phonopy_yaml_filename, (str, os.PathLike)):
+            yaml_name = f'"{phonopy_yaml_filename}"'
+        else:
+            yaml_name = "the yaml data"
+        warnings.warn(
+            f'Displacements in "{force_sets_filename}" do not match those in '
+            f'{yaml_name}. Those in "{force_sets_filename}" are used.',
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def select_and_extract_force_constants(

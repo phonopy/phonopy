@@ -231,6 +231,21 @@ def test_get_FORCE_SETS_lines_type2_roundtrip():
     np.testing.assert_allclose(dataset2["forces"], dataset["forces"], atol=1e-7)
 
 
+def test_get_FORCE_SETS_lines_type2_shape_mismatch_raises():
+    """type2 FORCE_SETS needs displacements and forces of the same shape.
+
+    With the merge scheme of site mixture, displacements are of the sites and
+    forces are on the atoms, whose number is larger.
+
+    """
+    dataset = {
+        "displacements": np.zeros((2, 2, 3)),
+        "forces": np.zeros((2, 4, 3)),
+    }
+    with pytest.raises(ValueError, match="Shape mismatch between displacements"):
+        get_FORCE_SETS_lines(dataset)
+
+
 # ---------------------------------------------------------------------------
 # FORCE_CONSTANTS text format
 # ---------------------------------------------------------------------------
