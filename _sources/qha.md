@@ -174,32 +174,10 @@ temperature points are expected to be the same as those in
 `thermal_properties.yaml` at least up to the maximum temperature specified for
 `phonopy-qha`.
 
-An example is given in `example/Cu-QHA`. The `fe-v.dat` contains electronic free
-energy calculated following, e.g., Eqs. (11) and (12) in the paper by Wolverton
-and Zunger, Phys. Rev. B, **52**, 8813 (1994) (of course this paper is not the
-first one that showed these equations):
-
-```{math}
-S_\text{el}(V) = -gk_{\mathrm{B}}\Sigma_i \{ f_i(V) \ln f_i(V) + [1-f_i(V)]\ln
-[1-f_i(V)] \}
-```
-
-with
-
-```{math}
-f_i(V) = \left\{ 1 + \exp\left[\frac{\epsilon_i(V) - \mu(V)}{T}\right]
-\right\}^{-1}
-```
-
-and
-
-```{math}
-E_\text{el}(V) = g\sum_i f_i(V) \epsilon_i(V),
-```
-
-where {math}`g` is 1 or 2 for collinear spin polarized and non-spin polarized
-systems, respectively. For VASP, a script to create `fe-v.dat` and `e-v.dat` by
-these equations is prepared as `phonopy-vasp-efe`, which is used as:
+An example is given in `example/Cu-QHA`. The `fe-v.dat` contains the
+electronic free energies of the fixed density-of-states approximation. The
+equations are given in {ref}`electronic_thermal_properties`. For VASP,
+`phonopy-vasp-efe` creates `fe-v.dat` and `e-v.dat`, and is used as:
 
 ```
 % phonopy-vasp-efe --tmax=1500 vasprun.xml-{00..10}
@@ -214,13 +192,13 @@ eigenvalues have to be carefully chosen to agree with those after applying
 The temperature-dependent part is integrated by the linear tetrahedron
 method over the sampling mesh each `vasprun.xml` describes, which converges
 at the mesh a static calculation uses anyway. The sum over irreducible
-k-points written above, which this command performed before, needs far more
-k-points to reach the same answer: on a 16x16x16 mesh of copper with 120
-irreducible k-points the two differ by 11 per cent of the
-temperature-dependent part at 1000 K. `--k-point-sum` selects it. A file
-whose k-points are an explicit list rather than a generated mesh has no grid
-to integrate over and takes the sum, as does one whose k-points cannot be
-paired with the grid; the command says which route each volume took.
+k-points, which this command performed before, needs far more k-points to
+reach the same answer: on a 16x16x16 mesh of copper with 120 irreducible
+k-points the two differ by 11 per cent of the temperature-dependent part at
+1000 K. `--k-point-sum` selects it. A file whose k-points are an explicit
+list rather than a generated mesh has no grid to integrate over and takes
+the sum, as does one whose k-points cannot be paired with the grid; the
+command says which route each volume took.
 
 Note that with `--efe`, the electronic free energies enter the fitting of
 {math}`F(V;T)` and therefore the equilibrium volumes, thermal expansion,
@@ -356,8 +334,8 @@ point as `ElectronicStates` (eigenvalues in eV with shape
 electrons per unit cell):
 
 ```python
+from phonopy.electron.states import ElectronicStates
 from phonopy.interface.vasp import parse_vasprunxml
-from phonopy.qha.electron import ElectronicStates
 
 electronic_structures = []
 for i in range(11):
@@ -384,13 +362,12 @@ The electronic free energies
 {math}`F_\text{el}(T, V) = U(V) + f_\text{el}(T; V) - f_\text{el}(0; V)`
 are computed within the fixed density-of-states (Mermin) approximation with
 the temperature-dependent chemical potential conserving the number of
-electrons (see {ref}`phonopy_qha_efe_option` for the equations). This is
-intended for metals, i.e., the chemical potential is assumed not to lie in
-a band gap. The electronic entropies are obtained analytically and the
-electronic heat capacities by a single numerical differentiation; both
-enter {math}`C_p` and the Grüneisen parameters. Note that the deprecated
-`PhonopyQHA` computed the Grüneisen parameters with the phonon-only
-{math}`C_V` and {math}`C_p` was unavailable in this case, so these
+electrons (see {ref}`electronic_thermal_properties` for the equations).
+This is intended for metals, i.e., the chemical potential is assumed not to
+lie in a band gap. The electronic entropies and heat capacities are obtained
+analytically; both enter {math}`C_p` and the Grüneisen parameters. Note
+that the deprecated `PhonopyQHA` computed the Grüneisen parameters with the
+phonon-only {math}`C_V` and {math}`C_p` was unavailable in this case, so these
 quantities differ from the legacy values where the electronic heat capacity
 is significant. The eigenvalues are not restricted to VASP; any code that
 provides eigenvalues, k-point weights, and the number of electrons can be
@@ -417,7 +394,7 @@ states are checked against the primitive cell volumes of `phonopys` by
 with `read_electronic_states_hdf5`:
 
 ```python
-from phonopy.qha.electron import read_electronic_states_hdf5
+from phonopy.electron.states import read_electronic_states_hdf5
 
 electronic_structures = read_electronic_states_hdf5("electronic_states.hdf5")
 result = run_qha(phonopys, temperatures, electronic_structures=electronic_structures)

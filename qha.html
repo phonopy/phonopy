@@ -52,7 +52,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Anisotropic thermal expansion from free-energy minimization" href="aniso-thermal-expansion.html" />
+    <link rel="next" title="Electronic thermal properties" href="electronic-thermal-properties.html" />
     <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -209,6 +209,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="electronic-thermal-properties.html">Electronic thermal properties</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -593,23 +594,10 @@ file. The energies in <code class="docutils literal notranslate"><span class="pr
 temperature points are expected to be the same as those in
 <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> at least up to the maximum temperature specified for
 <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>.</p>
-<p>An example is given in <code class="docutils literal notranslate"><span class="pre">example/Cu-QHA</span></code>. The <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> contains electronic free
-energy calculated following, e.g., Eqs. (11) and (12) in the paper by Wolverton
-and Zunger, Phys. Rev. B, <strong>52</strong>, 8813 (1994) (of course this paper is not the
-first one that showed these equations):</p>
-<div class="math notranslate nohighlight">
-\[S_\text{el}(V) = -gk_{\mathrm{B}}\Sigma_i \{ f_i(V) \ln f_i(V) + [1-f_i(V)]\ln
-[1-f_i(V)] \}\]</div>
-<p>with</p>
-<div class="math notranslate nohighlight">
-\[f_i(V) = \left\{ 1 + \exp\left[\frac{\epsilon_i(V) - \mu(V)}{T}\right]
-\right\}^{-1}\]</div>
-<p>and</p>
-<div class="math notranslate nohighlight">
-\[E_\text{el}(V) = g\sum_i f_i(V) \epsilon_i(V),\]</div>
-<p>where <span class="math notranslate nohighlight">\(g\)</span> is 1 or 2 for collinear spin polarized and non-spin polarized
-systems, respectively. For VASP, a script to create <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> by
-these equations is prepared as <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code>, which is used as:</p>
+<p>An example is given in <code class="docutils literal notranslate"><span class="pre">example/Cu-QHA</span></code>. The <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> contains the
+electronic free energies of the fixed density-of-states approximation. The
+equations are given in <a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties"><span class="std std-ref">Electronic thermal properties</span></a>. For VASP,
+<code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> creates <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>, and is used as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">vasp</span><span class="o">-</span><span class="n">efe</span> <span class="o">--</span><span class="n">tmax</span><span class="o">=</span><span class="mi">1500</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span><span class="o">-</span><span class="p">{</span><span class="mf">00..10</span><span class="p">}</span>
 </pre></div>
 </div>
@@ -621,13 +609,13 @@ eigenvalues have to be carefully chosen to agree with those after applying
 <p>The temperature-dependent part is integrated by the linear tetrahedron
 method over the sampling mesh each <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes, which converges
 at the mesh a static calculation uses anyway. The sum over irreducible
-k-points written above, which this command performed before, needs far more
-k-points to reach the same answer: on a 16x16x16 mesh of copper with 120
-irreducible k-points the two differ by 11 per cent of the
-temperature-dependent part at 1000 K. <code class="docutils literal notranslate"><span class="pre">--k-point-sum</span></code> selects it. A file
-whose k-points are an explicit list rather than a generated mesh has no grid
-to integrate over and takes the sum, as does one whose k-points cannot be
-paired with the grid; the command says which route each volume took.</p>
+k-points, which this command performed before, needs far more k-points to
+reach the same answer: on a 16x16x16 mesh of copper with 120 irreducible
+k-points the two differ by 11 per cent of the temperature-dependent part at
+1000 K. <code class="docutils literal notranslate"><span class="pre">--k-point-sum</span></code> selects it. A file whose k-points are an explicit
+list rather than a generated mesh has no grid to integrate over and takes
+the sum, as does one whose k-points cannot be paired with the grid; the
+command says which route each volume took.</p>
 <p>Note that with <code class="docutils literal notranslate"><span class="pre">--efe</span></code>, the electronic free energies enter the fitting of
 <span class="math notranslate nohighlight">\(F(V;T)\)</span> and therefore the equilibrium volumes, thermal expansion,
 Gibbs free energy, bulk modulus, and <code class="docutils literal notranslate"><span class="pre">Cp-temperature.dat</span></code> computed by
@@ -755,8 +743,8 @@ computed inside <code class="docutils literal notranslate"><span class="pre">run
 point as <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code> (eigenvalues in eV with shape
 <code class="docutils literal notranslate"><span class="pre">(spin,</span> <span class="pre">kpoints,</span> <span class="pre">bands)</span></code>, relative k-point weights, and the number of
 electrons per unit cell):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_vasprunxml</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.electron</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectronicStates</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.electron.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectronicStates</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_vasprunxml</span>
 
 <span class="n">electronic_structures</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">):</span>
@@ -782,13 +770,12 @@ against the primitive cell volumes of <code class="docutils literal notranslate"
 <span class="math notranslate nohighlight">\(F_\text{el}(T, V) = U(V) + f_\text{el}(T; V) - f_\text{el}(0; V)\)</span>
 are computed within the fixed density-of-states (Mermin) approximation with
 the temperature-dependent chemical potential conserving the number of
-electrons (see <a class="reference internal" href="#phonopy-qha-efe-option"><span class="std std-ref">--efe</span></a> for the equations). This is
-intended for metals, i.e., the chemical potential is assumed not to lie in
-a band gap. The electronic entropies are obtained analytically and the
-electronic heat capacities by a single numerical differentiation; both
-enter <span class="math notranslate nohighlight">\(C_p\)</span> and the Grüneisen parameters. Note that the deprecated
-<code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> computed the Grüneisen parameters with the phonon-only
-<span class="math notranslate nohighlight">\(C_V\)</span> and <span class="math notranslate nohighlight">\(C_p\)</span> was unavailable in this case, so these
+electrons (see <a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties"><span class="std std-ref">Electronic thermal properties</span></a> for the equations).
+This is intended for metals, i.e., the chemical potential is assumed not to
+lie in a band gap. The electronic entropies and heat capacities are obtained
+analytically; both enter <span class="math notranslate nohighlight">\(C_p\)</span> and the Grüneisen parameters. Note
+that the deprecated <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> computed the Grüneisen parameters with the
+phonon-only <span class="math notranslate nohighlight">\(C_V\)</span> and <span class="math notranslate nohighlight">\(C_p\)</span> was unavailable in this case, so these
 quantities differ from the legacy values where the electronic heat capacity
 is significant. The eigenvalues are not restricted to VASP; any code that
 provides eigenvalues, k-point weights, and the number of electrons can be
@@ -809,7 +796,7 @@ for the primitive cell (see the remark on <code class="docutils literal notransl
 states are checked against the primitive cell volumes of <code class="docutils literal notranslate"><span class="pre">phonopys</span></code> by
 <code class="docutils literal notranslate"><span class="pre">run_qha</span></code>, which protects against ordering mistakes. The file is loaded
 with <code class="docutils literal notranslate"><span class="pre">read_electronic_states_hdf5</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.electron</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_electronic_states_hdf5</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.electron.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_electronic_states_hdf5</span>
 
 <span class="n">electronic_structures</span> <span class="o">=</span> <span class="n">read_electronic_states_hdf5</span><span class="p">(</span><span class="s2">"electronic_states.hdf5"</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">run_qha</span><span class="p">(</span><span class="n">phonopys</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">,</span> <span class="n">electronic_structures</span><span class="o">=</span><span class="n">electronic_structures</span><span class="p">)</span>
@@ -994,11 +981,11 @@ into the thermal properties at constant pressure.</p>
       </div>
     </a>
     <a class="right-next"
-       href="aniso-thermal-expansion.html"
+       href="electronic-thermal-properties.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Anisotropic thermal expansion from free-energy minimization</p>
+        <p class="prev-next-title">Electronic thermal properties</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

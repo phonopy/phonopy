@@ -411,7 +411,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Random displacements" href="random-displacements.html" />
-    <link rel="prev" title="Quasi harmonic approximation" href="qha.html" />
+    <link rel="prev" title="Electronic thermal properties" href="electronic-thermal-properties.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="4.8" />
@@ -567,6 +567,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="electronic-thermal-properties.html">Electronic thermal properties</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1521,8 +1522,8 @@ electronic term.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_anisotropic_qha</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.electron.tetrahedron</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_thermal_properties_by_tetrahedron</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.anisotropic_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_aniso_qha_dataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.qha.electron</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_free_energy_by_tetrahedron</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">read_aniso_qha_dataset</span><span class="p">(</span><span class="s2">"aniso_qha_dataset.hdf5"</span><span class="p">)</span>
 <span class="n">temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1001</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>  <span class="c1"># one extra point for finite diff</span>
@@ -1530,7 +1531,9 @@ electronic term.</p>
 <span class="n">fe_el</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
     <span class="p">[</span>
         <span class="c1"># F_el(T) - F_el(0) in eV per primitive cell, one grid point at a time.</span>
-        <span class="n">compute_free_energy_by_tetrahedron</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">electronic_states</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">compute_thermal_properties_by_tetrahedron</span><span class="p">(</span>
+            <span class="n">point</span><span class="o">.</span><span class="n">electronic_states</span><span class="p">,</span> <span class="n">temperatures</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">free_energy</span>
         <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">grid_points</span>
     <span class="p">]</span>
 <span class="p">)</span>
@@ -2611,12 +2614,12 @@ again is enough, since a rerun draws the supercells the lost run drew.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="qha.html"
+       href="electronic-thermal-properties.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Quasi harmonic approximation</p>
+        <p class="prev-next-title">Electronic thermal properties</p>
       </div>
     </a>
     <a class="right-next"

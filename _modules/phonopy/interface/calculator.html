@@ -560,6 +560,7 @@ window.runMermaid = runMermaid;</script>
 <li class="toctree-l1"><a class="reference internal" href="../../../dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../electronic-thermal-properties.html">Electronic thermal properties</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../random-displacements.html">Random displacements</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1087,16 +1088,16 @@ window.runMermaid = runMermaid;</script>
 <span class="w">    </span><span class="sd">"""Write supercells for VASP interface."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">vasp</span>
 
-    <span class="n">expand</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_mixtures</span>
+    <span class="n">for_vca</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_mixtures</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="o">.</span><span class="n">has_weighted_species</span>
     <span class="n">vasp</span><span class="o">.</span><span class="n">write_supercells_with_displacements</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">cells_with_disps</span><span class="p">,</span>
         <span class="n">config</span><span class="o">.</span><span class="n">displacement_ids</span><span class="p">,</span>
-        <span class="n">expand_mixtures</span><span class="o">=</span><span class="n">expand</span><span class="p">,</span>
+        <span class="n">for_vca</span><span class="o">=</span><span class="n">for_vca</span><span class="p">,</span>
         <span class="o">**</span><span class="n">_get_filename_writer_kwargs</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
     <span class="p">)</span>
-    <span class="n">write_magnetic_moments</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">sort_by_elements</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">expand</span><span class="p">:</span>
+    <span class="n">write_magnetic_moments</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">for_vca</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">vasp</span><span class="o">.</span><span class="n">get_vasp_vca_hint_lines</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">supercell</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>

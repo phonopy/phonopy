@@ -2,6 +2,41 @@
 
 # Change Log
 
+## Unreleased
+
+- Python 3.10 is no longer supported. Python 3.11 or later is required.
+- `free_energy_from_dos`, `compute_free_energy_by_tetrahedron`,
+  `compute_free_energy_by_kpoint_sum`, `get_free_energy_at_T` and
+  `compute_electronic_contributions_from_states` are deprecated in favour of
+  the functions that return `ElectronicThermalProperties`. See
+  {ref}`migration_v5`.
+- The electronic states and free energies moved from `phonopy.qha` to the
+  new package `phonopy.electron`: `phonopy.electron.states`,
+  `phonopy.electron.tetrahedron` and `phonopy.electron.kpoint_sum`. The
+  old modules `phonopy.qha.electron`, `phonopy.qha.electron_states` and
+  `phonopy.qha.electron_kpoint_sum` still work and are deprecated. See
+  {ref}`migration_v5`.
+- `CpPolyfitArrays` and `EntropyEnthalpyArrays` of `phonopy.qha.calc` and
+  `SSCHAAverage` of `phonopy.sscha.trace` are frozen dataclasses instead of
+  named tuples. Their fields are read by name; unpacking them or indexing
+  them by position no longer works.
+- Electronic heat capacity. `compute_thermal_properties_by_tetrahedron`
+  and `compute_thermal_properties_by_kpoint_sum` of `phonopy.electron`
+  return the free energy, entropy, heat capacity and chemical potential as
+  `ElectronicThermalProperties`. `ElectronFreeEnergy` has
+  `heat_capacity`.
+- The default energy window of the electronic free energy by the linear
+  tetrahedron method is 16 k_B T of the highest temperature instead of
+  12 k_B T, at least 0.5 eV as before. The electronic free energies change
+  slightly.
+- VASP POSCAR and MAGMOM are written without reordering atoms by chemical
+  symbols, so that the forces in `vasprun.xml` are in the order of the atoms
+  of the supercell. When atoms of one element are not grouped together in
+  the cell, the element appears more than once in the line of element names
+  in POSCAR with a warning, and POTCAR has to be concatenated in the same
+  order. To have each element appear once, sort the atoms of the unit cell
+  by chemical symbols beforehand.
+
 ## Oct-04-2026: Version 4.8.1
 
 - `rounding` option (`"nearest"` or `"ceiling"`) of `length2mesh`,

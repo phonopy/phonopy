@@ -1,0 +1,757 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Electronic thermal properties &#8212; Phonopy v.4.8.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="_static/documentation_options.js?v=91216439"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=8b0727dd"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'electronic-thermal-properties';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Anisotropic thermal expansion from free-energy minimization" href="aniso-thermal-expansion.html" />
+    <link rel="prev" title="Quasi harmonic approximation" href="qha.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="4.8" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.4.8.1</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Electronic thermal properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="octopus.html">Octopus &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-v5.html">Migrating toward phonopy v5</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/electronic-thermal-properties.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Electronic thermal properties</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reference-at-0-k">The reference at 0 K</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-over-the-brillouin-zone">Integration over the Brillouin zone</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spin-degeneracy">Spin degeneracy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-electronic-states">Input: electronic states</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-in-quasi-harmonic-calculations">Use in quasi-harmonic calculations</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="electronic-thermal-properties">
+<span id="id1"></span><h1>Electronic thermal properties<a class="headerlink" href="#electronic-thermal-properties" title="Link to this heading">#</a></h1>
+<p>In a metal, the electrons near the Fermi level are excited thermally, and
+they add to the free energy, the entropy and the heat capacity of the
+crystal. Phonopy computes these electronic contributions from the
+eigenvalues of an electronic structure calculation. They can be added to
+the phonon thermal properties in a quasi-harmonic calculation (see
+<a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">Quasi harmonic approximation</span></a>) or used on their own.</p>
+<p>The free energy is that of Mermin’s finite-temperature theory of the
+electrons, evaluated in the fixed density-of-states approximation. The
+eigenvalues are computed once, at the static lattice, and are kept the same
+at every temperature. Only the occupation
+of the states changes with temperature. The approximation is intended for
+metals. In an insulator the chemical potential is in the band gap, and the
+electronic contributions are negligible.</p>
+<section id="equations">
+<span id="electronic-thermal-properties-equations"></span><h2>Equations<a class="headerlink" href="#equations" title="Link to this heading">#</a></h2>
+<p>The states are the eigenvalues <span class="math notranslate nohighlight">\(\epsilon_{\mathbf{k}i}\)</span> at the
+k-points <span class="math notranslate nohighlight">\(\mathbf{k}\)</span>, where <span class="math notranslate nohighlight">\(i\)</span> runs over the bands. Each
+k-point has a weight <span class="math notranslate nohighlight">\(w_\mathbf{k}\)</span>, and the weights are normalized so
+that <span class="math notranslate nohighlight">\(\sum_\mathbf{k} w_\mathbf{k} = 1\)</span>. The occupation of a state is
+the Fermi-Dirac distribution,</p>
+<div class="math notranslate nohighlight">
+\[f_{\mathbf{k}i} = \left\{ 1 + \exp\left[
+\frac{\epsilon_{\mathbf{k}i} - \mu}{k_\mathrm{B} T} \right] \right\}^{-1},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu\)</span> is the chemical potential and <span class="math notranslate nohighlight">\(T\)</span> is the
+temperature.</p>
+<p>The chemical potential depends on temperature. At each temperature it is
+determined so that the number of electrons in the cell, <span class="math notranslate nohighlight">\(N\)</span>, stays the
+same:</p>
+<div class="math notranslate nohighlight">
+\[N = g \sum_\mathbf{k} w_\mathbf{k} \sum_i f_{\mathbf{k}i}.\]</div>
+<p><span class="math notranslate nohighlight">\(g\)</span> is the number of electrons that one eigenvalue holds; see
+<a class="reference internal" href="#electronic-thermal-properties-spin"><span class="std std-ref">Spin degeneracy</span></a>.</p>
+<p>The energy and the entropy of the electrons are</p>
+<div class="math notranslate nohighlight">
+\[E_\mathrm{el}(T) = g \sum_\mathbf{k} w_\mathbf{k} \sum_i
+f_{\mathbf{k}i} \epsilon_{\mathbf{k}i},\]</div>
+<div class="math notranslate nohighlight">
+\[S_\mathrm{el}(T) = -g k_\mathrm{B} \sum_\mathbf{k} w_\mathbf{k} \sum_i
+\left[ f_{\mathbf{k}i} \ln f_{\mathbf{k}i}
++ (1 - f_{\mathbf{k}i}) \ln (1 - f_{\mathbf{k}i}) \right],\]</div>
+<p>and the free energy is <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) = E_\mathrm{el}(T) - T S_\mathrm{el}(T)\)</span>. These are Eqs. (11) and (12) of C. Wolverton and A.
+Zunger, Phys. Rev. B <strong>52</strong>, 8813 (1995).</p>
+<p>The heat capacity at constant volume is
+<span class="math notranslate nohighlight">\(C_\mathrm{el} = dE_\mathrm{el}/dT\)</span>. Differentiating
+<span class="math notranslate nohighlight">\(E_\mathrm{el}\)</span> gives two terms. One term comes from the change of the
+occupations at a fixed chemical potential. The other term comes from the
+change of the chemical potential with temperature, which is fixed by the
+condition that <span class="math notranslate nohighlight">\(N\)</span> does not change. Together they give</p>
+<div class="math notranslate nohighlight">
+\[C_\mathrm{el}(T) = \frac{1}{k_\mathrm{B} T^2}
+\left( A_2 - \frac{A_1^2}{A_0} \right),
+\qquad
+A_n = g \sum_\mathbf{k} w_\mathbf{k} \sum_i
+f_{\mathbf{k}i} (1 - f_{\mathbf{k}i}) (\epsilon_{\mathbf{k}i} - \mu)^n.\]</div>
+<p>The <span class="math notranslate nohighlight">\(A_1^2/A_0\)</span> term is the contribution of the change of the chemical
+potential. It is small when the density of states is nearly constant near
+the Fermi level, and it grows with the slope of the density of states there.
+Phonopy computes the heat capacity from this expression.</p>
+<p>At low temperature, the entropy and the heat capacity are both linear in
+<span class="math notranslate nohighlight">\(T\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[S_\mathrm{el} \approx C_\mathrm{el} \approx \frac{\pi^2}{3}
+k_\mathrm{B}^2 T D(E_\mathrm{F}),\]</div>
+<p>where <span class="math notranslate nohighlight">\(D(E_\mathrm{F})\)</span> is the density of states at the Fermi level
+per cell, counted for both spins.</p>
+<section id="the-reference-at-0-k">
+<h3>The reference at 0 K<a class="headerlink" href="#the-reference-at-0-k" title="Link to this heading">#</a></h3>
+<p>The free energy is reported as <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span>.
+The total energy of the electronic structure calculation already contains
+the energy of the electrons at 0 K. Adding <span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span> to that total energy adds only the part that depends on
+temperature. In a quasi-harmonic calculation, the static energy
+<span class="math notranslate nohighlight">\(U(V)\)</span> is the total energy, and the electronic free energy at volume
+<span class="math notranslate nohighlight">\(V\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[U(V) + F_\mathrm{el}(T; V) - F_\mathrm{el}(0; V).\]</div>
+<p>Use the total energy extrapolated to zero smearing as <span class="math notranslate nohighlight">\(U(V)\)</span>, such
+as <code class="docutils literal notranslate"><span class="pre">energy(sigma-&gt;0)</span></code> of VASP.</p>
+</section>
+</section>
+<section id="integration-over-the-brillouin-zone">
+<h2>Integration over the Brillouin zone<a class="headerlink" href="#integration-over-the-brillouin-zone" title="Link to this heading">#</a></h2>
+<p>The sums over k-points above can be computed in two ways.</p>
+<p>The linear tetrahedron method builds the electronic density of states from
+the eigenvalues on the regular k-point mesh, and integrates the expressions
+above over energy. This is the default when the states carry the k-point
+mesh, the k-points and the crystal structure.</p>
+<p>The k-point sum evaluates the sums as they are written, over the
+irreducible k-points. It needs only the eigenvalues, the weights and the
+number of electrons, so it also works for an explicit list of k-points. It
+converges much more slowly with the number of k-points than the tetrahedron
+method. Only the states within a few <span class="math notranslate nohighlight">\(k_\mathrm{B} T\)</span> of the Fermi
+level contribute to the entropy and the heat capacity, and on a coarse mesh
+few eigenvalues fall in that range. The heat capacity at low temperature is
+the most affected. Use the tetrahedron method whenever the k-point mesh is
+available.</p>
+<p>The tetrahedron method integrates only over an energy window around the
+Fermi level. The states below the window are fully occupied at every
+temperature and add a constant to the energy, which cancels in
+<span class="math notranslate nohighlight">\(F_\mathrm{el}(T) - F_\mathrm{el}(0)\)</span>. The states above the window are
+empty. By default, the half-width of the window is 16
+<span class="math notranslate nohighlight">\(k_\mathrm{B} T\)</span> at the highest temperature, and at least 0.5 eV. The
+width is set by the heat capacity, whose integrand
+<span class="math notranslate nohighlight">\(f(1-f)(\epsilon-\mu)^2\)</span> decays most slowly away from the Fermi level.
+The density of states is sampled on an energy grid of 0.5 meV spacing in the
+window. The <code class="docutils literal notranslate"><span class="pre">window</span></code> and <code class="docutils literal notranslate"><span class="pre">energy_spacing</span></code> parameters change these values.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">symmetrize_tetrahedra</span></code> parameter averages the tetrahedron weights over
+the point group. See <a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a> for this option and its default in
+the next major version.</p>
+</section>
+<section id="spin-degeneracy">
+<span id="electronic-thermal-properties-spin"></span><h2>Spin degeneracy<a class="headerlink" href="#spin-degeneracy" title="Link to this heading">#</a></h2>
+<p><span class="math notranslate nohighlight">\(g\)</span> in the equations above is the number of electrons that one
+eigenvalue holds.</p>
+<ul class="simple">
+<li><p>In a calculation without spin polarization, the eigenvalues have one spin
+channel and each eigenvalue holds two electrons, <span class="math notranslate nohighlight">\(g = 2\)</span>.</p></li>
+<li><p>In a collinear spin-polarized calculation, the eigenvalues have two spin
+channels and each eigenvalue holds one electron, <span class="math notranslate nohighlight">\(g = 1\)</span>.</p></li>
+<li><p>In a non-collinear calculation, the eigenvalues have one spin channel, but
+each spinor state holds one electron, <span class="math notranslate nohighlight">\(g = 1\)</span>.</p></li>
+</ul>
+<p>Phonopy infers <span class="math notranslate nohighlight">\(g\)</span> from the number of spin channels. This inference is
+wrong for a non-collinear calculation. For such a calculation, set
+<code class="docutils literal notranslate"><span class="pre">spin_degeneracy=1</span></code> in <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>.</p>
+</section>
+<section id="input-electronic-states">
+<h2>Input: electronic states<a class="headerlink" href="#input-electronic-states" title="Link to this heading">#</a></h2>
+<p>The input is <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.states</span></code>, one per
+crystal structure:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Content</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">eigenvalues</span></code></p></td>
+<td><p>Eigenvalues in eV, with shape (spin, k-points, bands).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>Weights of the k-points, with shape (k-points,). They need not be normalized.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_electrons</span></code></p></td>
+<td><p>Number of electrons in the cell.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fermi_energy</span></code></p></td>
+<td><p>Fermi energy in eV reported by the calculation. Optional.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">spin_degeneracy</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(g\)</span>. Optional; inferred from the number of spin channels when not given.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">cell</span></code></p></td>
+<td><p>The irreducible k-points in fractional coordinates, the k-point mesh, and the crystal structure. Optional; all three are needed for the tetrahedron method.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">volume</span></code>, <code class="docutils literal notranslate"><span class="pre">internal_energy</span></code></p></td>
+<td><p>The cell volume and the static total energy. Optional; used by the quasi-harmonic calculation.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The results are per cell for which the eigenvalues were computed.</p>
+<p>For VASP, <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> reads <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> files and writes the
+electronic states of all of them to <code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">vasp</span><span class="o">-</span><span class="n">efe</span> <span class="o">--</span><span class="n">es</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span><span class="o">-</span><span class="p">{</span><span class="mf">00..10</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The k-points, the mesh and the crystal structure are stored when the
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes a regular k-point mesh. Read the file with
+<code class="docutils literal notranslate"><span class="pre">read_electronic_states_hdf5</span></code>, which returns a list of <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code>.</p>
+</section>
+<section id="python-api">
+<h2>Python API<a class="headerlink" href="#python-api" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_tetrahedron</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.tetrahedron</span></code>
+computes the thermal properties by the tetrahedron method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.electron.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_electronic_states_hdf5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.electron.tetrahedron</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_thermal_properties_by_tetrahedron</span>
+
+<span class="n">states</span> <span class="o">=</span> <span class="n">read_electronic_states_hdf5</span><span class="p">(</span><span class="s2">"electronic_states.hdf5"</span><span class="p">)</span>
+<span class="n">temperatures</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1001</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>
+<span class="n">properties</span> <span class="o">=</span> <span class="n">compute_thermal_properties_by_tetrahedron</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">temperatures</span><span class="p">)</span>
+
+<span class="n">properties</span><span class="o">.</span><span class="n">free_energy</span>  <span class="c1"># F_el(T) - F_el(0) in eV</span>
+<span class="n">properties</span><span class="o">.</span><span class="n">entropy</span>  <span class="c1"># S_el in eV/K</span>
+<span class="n">properties</span><span class="o">.</span><span class="n">heat_capacity</span>  <span class="c1"># C_el in eV/K</span>
+<span class="n">properties</span><span class="o">.</span><span class="n">chemical_potential</span>  <span class="c1"># mu in eV</span>
+</pre></div>
+</div>
+<p>Each field is an array with one value per temperature. The temperatures do
+not have to include 0 K; the value at 0 K is computed anyway as the
+reference of the free energy. To compare with the phonon thermal properties
+of phonopy, which are in J/K/mol, multiply the entropy and the heat capacity
+by <code class="docutils literal notranslate"><span class="pre">get_physical_units().EvTokJmol</span> <span class="pre">*</span> <span class="pre">1000</span></code> from <code class="docutils literal notranslate"><span class="pre">phonopy.physical_units</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_kpoint_sum</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron.kpoint_sum</span></code>
+takes the same arguments and computes the thermal properties by the k-point
+sum. Both functions return <code class="docutils literal notranslate"><span class="pre">ElectronicThermalProperties</span></code>.</p>
+</section>
+<section id="use-in-quasi-harmonic-calculations">
+<h2>Use in quasi-harmonic calculations<a class="headerlink" href="#use-in-quasi-harmonic-calculations" title="Link to this heading">#</a></h2>
+<p>The electronic contributions enter a quasi-harmonic calculation in three
+ways:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">run_qha</span></code> takes the electronic states of all volumes as
+<code class="docutils literal notranslate"><span class="pre">electronic_structures</span></code>. It adds the free energy, the entropy and the
+heat capacity of the electrons to those of the phonons. See
+<a class="reference internal" href="qha.html#phonopy-qha-electronic-structures"><span class="std std-ref">Electronic free energies from eigenvalues</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> without <code class="docutils literal notranslate"><span class="pre">--es</span></code> writes the electronic free energies of
+all volumes to <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>, which <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span> <span class="pre">--efe</span></code> reads. This file has
+only the free energy, so the entropy and the heat capacity of the
+electrons are not included in every output of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>. See
+<a class="reference internal" href="qha.html#phonopy-qha-efe-option"><span class="std std-ref">--efe</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy-anisotropic-qha</span></code> adds the electronic free energy when its dataset
+has the electronic states. It needs the k-point mesh with the states. See
+<a class="reference internal" href="aniso-thermal-expansion.html#aniso-thermal-expansion"><span class="std std-ref">Anisotropic thermal expansion from free-energy minimization</span></a>.</p></li>
+</ul>
+<p>In all three, the electronic states have to be computed for the same
+crystal structures as the phonons.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="qha.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quasi harmonic approximation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="aniso-thermal-expansion.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Anisotropic thermal expansion from free-energy minimization</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equations">Equations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reference-at-0-k">The reference at 0 K</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-over-the-brillouin-zone">Integration over the Brillouin zone</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spin-degeneracy">Spin degeneracy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-electronic-states">Input: electronic states</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-in-quasi-harmonic-calculations">Use in quasi-harmonic calculations</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Author name not set
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -848,7 +848,7 @@ spglib crystal structure
 (VCA) support — including `species_table` / `species_ids` /
 `has_mixtures` on `PhonopyAtoms`, `build_mixture_cell`,
 `build_species_table_from_mixtures`, the `--site-mixture` CLI option,
-the FC-time mixture-force reduction, and the VASP `expand_mixtures`
+the FC-time mixture-force reduction, and the VASP `for_vca`
 writer — is experimental. APIs, file layouts (including the expanded
 `FORCE_SETS` format), and CLI flags may change without notice in
 upcoming releases. Currently only the VASP calculator interface is
