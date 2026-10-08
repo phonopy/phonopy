@@ -134,7 +134,7 @@ def parse_FORCE_SETS(
         Displacement dataset. See Phonopy.dataset.
 
     """
-    with open(filename, "r") as f:
+    with open(filename) as f:
         return _get_dataset(
             f,
             natom=natom,
@@ -320,7 +320,7 @@ def iter_collect_forces(
     Details of parameters are explained in ``collect_forces``.
 
     """
-    with open(filename, "r") as f:
+    with open(filename) as f:
         forces: list[list[float]] = []
         prev_forces: list[list[float]] = []
 
@@ -685,7 +685,7 @@ def get_cell_from_disp_yaml(dataset: dict) -> PhonopyAtoms:
 #
 def parse_QPOINTS(filename: str | os.PathLike = "QPOINTS") -> NDArray[np.double]:
     """Read QPOINTS file."""
-    with open(filename, "r") as f:
+    with open(filename) as f:
         num_qpoints = int(f.readline().strip())
         qpoints = []
         for _ in range(num_qpoints):
@@ -763,7 +763,7 @@ def parse_BORN(
         (atomic-permutation matcher). Default is "C".
 
     """
-    with open(filename, "r") as f:
+    with open(filename) as f:
         return _parse_BORN_from_file_object(
             f, primitive, symprec, is_symmetry, lang=lang
         )

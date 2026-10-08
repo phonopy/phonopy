@@ -438,7 +438,7 @@ def _dummy_states(cell, scale: float = 1.0):
     together with kpoints and mesh, which these states do not have.
 
     """
-    from phonopy.qha.electron_states import ElectronicStates
+    from phonopy.electron.states import ElectronicStates
 
     rng = np.random.default_rng(0)
     eigenvalues = np.sort(rng.normal(size=(1, 4, 6)), axis=-1)
@@ -458,7 +458,7 @@ def test_primitive_cell_fractions_of_a_centred_lattice(ph_nacl: Phonopy) -> None
     the primitive cell are already normalized and are left alone.
 
     """
-    from phonopy.qha.electron_states import ElectronicStates
+    from phonopy.electron.states import ElectronicStates
     from phonopy.qha.thermal import primitive_cell_fractions
 
     phonopys = _tetragonal_phonopys(ph_nacl)
@@ -494,7 +494,7 @@ def test_electronic_states_are_scaled_to_the_primitive_cell(ph_nacl: Phonopy) ->
     scaled, has to give the same answer.
 
     """
-    from phonopy.qha.thermal import compute_electronic_contributions_from_states
+    from phonopy.qha.thermal import compute_electronic_thermal_properties_from_states
 
     phonopys = _tetragonal_phonopys(ph_nacl)
     energies = _tetragonal_internal_energies(phonopys)
@@ -506,8 +506,13 @@ def test_electronic_states_are_scaled_to_the_primitive_cell(ph_nacl: Phonopy) ->
         _dummy_states(ph.unitcell, scale=1.0 + 0.05 * i)
         for i, ph in enumerate(phonopys)
     ]
-    fe_raw, _ = compute_electronic_contributions_from_states(
-        states, TEMPERATURES, primitive_volumes=None
+    fe_raw = np.column_stack(
+        [
+            p.free_energy
+            for p in compute_electronic_thermal_properties_from_states(
+                states, TEMPERATURES, primitive_volumes=None
+            )
+        ]
     )
 
     from_states = run_anisotropic_qha(
@@ -565,7 +570,7 @@ def test_run_anisotropic_electronic_free_energies_shape_checked(
 
 def test_run_anisotropic_electronic_term_given_twice(ph_nacl: Phonopy) -> None:
     """Test that the two ways of giving the electronic term are exclusive."""
-    from phonopy.qha.electron import ElectronicStates
+    from phonopy.electron.states import ElectronicStates
 
     phonopys = _tetragonal_phonopys(ph_nacl)
     energies = _tetragonal_internal_energies(phonopys)

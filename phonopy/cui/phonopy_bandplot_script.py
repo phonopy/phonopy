@@ -189,7 +189,7 @@ def _read_band_yaml(
         with gzip.open(filename) as f:
             data = yaml.load(f, Loader=Loader)
     else:
-        with open(filename, "r") as f:
+        with open(filename) as f:
             data = yaml.load(f, Loader=Loader)
 
     frequencies = []

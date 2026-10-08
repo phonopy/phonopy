@@ -37,7 +37,7 @@ from phonopy.qha.free_energy_io import (
     read_free_energies_hdf5,
     write_free_energies_hdf5,
 )
-from phonopy.qha.thermal import compute_electronic_contributions_from_states
+from phonopy.qha.thermal import compute_electronic_thermal_properties_from_states
 
 
 def main_diagonal_positions(grid_shape: Sequence[int]) -> NDArray[np.int64]:
@@ -329,7 +329,7 @@ def get_options() -> Namespace:
         default=None,
         metavar="EV",
         help="half-width of the energy window F_el is integrated over "
-        "(default: 12 k_B T of the highest temperature, at least 0.5 eV)",
+        "(default: 16 k_B T of the highest temperature, at least 0.5 eV)",
     )
     parser.add_argument(
         "--electronic-spacing",
@@ -516,7 +516,7 @@ def main() -> None:
     if electronic_structures is not None:
         # Handed on as electronic_free_energies, which run_anisotropic_qha
         # takes as it is, so the normalization has to be settled here.
-        electronic_free_energies, _ = compute_electronic_contributions_from_states(
+        electronic = compute_electronic_thermal_properties_from_states(
             electronic_structures,
             temperatures,
             primitive_volumes=[ph.primitive.volume for ph in phonopys],
@@ -525,6 +525,7 @@ def main() -> None:
             require_tetrahedron=True,
             symmetrize_tetrahedra=args.symmetrize_tetrahedra,
         )
+        electronic_free_energies = np.column_stack([p.free_energy for p in electronic])
         write_free_energies_hdf5(
             ElectronicFreeEnergies(
                 temperatures,

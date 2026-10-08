@@ -138,7 +138,7 @@ def test_create_force_sets_GeSn_vca():
 
     Exercises the CLI ``phonopy -f vasprun.xml -c phonopy_disp.yaml`` path
     on a mixture supercell. The supercell has 16 sites but the SPOSCAR
-    was written with ``expand_mixtures=True`` so VASP returned 32 force
+    was written with ``for_vca=True`` so VASP returned 32 force
     rows; the writer must therefore emit Type-1 with line 1 = 32, and
     the disp atom number must be a 1..16 site index (gamma layout).
 

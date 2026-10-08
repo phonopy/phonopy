@@ -8,16 +8,19 @@ import dataclasses
 import numpy as np
 import pytest
 
+from phonopy.electron.kpoint_sum import (
+    ElectronFreeEnergy,
+    compute_thermal_properties_by_kpoint_sum,
+)
+from phonopy.electron.states import ElectronicStates
+from phonopy.electron.tetrahedron import (
+    compute_thermal_properties_by_tetrahedron,
+    free_energy_from_dos,
+    thermal_properties_from_dos,
+)
 from phonopy.phonon.grid import BZGrid, get_ir_grid_points
 from phonopy.physical_units import get_physical_units
-from phonopy.qha.electron import (
-    ElectronFreeEnergy,
-    ElectronicStates,
-    compute_free_energy_and_entropy,
-    compute_free_energy_by_tetrahedron,
-    free_energy_from_dos,
-)
-from phonopy.qha.thermal import compute_electronic_contributions_from_states
+from phonopy.qha.thermal import compute_electronic_thermal_properties_from_states
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -54,9 +57,9 @@ def test_sommerfeld_limit():
     g0 = 2.0
     energies, dos = _flat_dos(g0)
     temperatures = np.array([0.0, 100.0, 200.0, 300.0])
-    free_energy, _, _ = free_energy_from_dos(
+    free_energy = thermal_properties_from_dos(
         energies, dos, _n_electrons(energies, dos), temperatures, FERMI
-    )
+    ).free_energy
 
     kb = get_physical_units().KB
     expected = -(np.pi**2 / 6.0) * (kb * temperatures) ** 2 * g0
@@ -68,9 +71,9 @@ def test_entropy_matches_the_sommerfeld_limit():
     g0 = 2.0
     energies, dos = _flat_dos(g0)
     temperatures = np.array([0.0, 100.0, 300.0])
-    _, entropy, _ = free_energy_from_dos(
+    entropy = thermal_properties_from_dos(
         energies, dos, _n_electrons(energies, dos), temperatures, FERMI
-    )
+    ).entropy
 
     kb = get_physical_units().KB
     expected = (np.pi**2 / 3.0) * kb**2 * temperatures * g0
@@ -80,9 +83,9 @@ def test_entropy_matches_the_sommerfeld_limit():
 def test_free_energy_is_zero_at_zero_temperature():
     """Test that the free energy is reported relative to T = 0."""
     energies, dos = _flat_dos(2.0)
-    free_energy, _, _ = free_energy_from_dos(
+    free_energy = thermal_properties_from_dos(
         energies, dos, _n_electrons(energies, dos), [0.0, 300.0], FERMI
-    )
+    ).free_energy
     assert free_energy[0] == 0.0
 
 
@@ -97,9 +100,9 @@ def test_chemical_potential_starts_at_the_fermi_level():
 
     """
     energies, dos = _flat_dos(2.0)
-    _, _, mu = free_energy_from_dos(
+    mu = thermal_properties_from_dos(
         energies, dos, _n_electrons(energies, dos), [0.0, 300.0], FERMI
-    )
+    ).chemical_potential
     assert mu[0] == FERMI
 
 
@@ -121,20 +124,20 @@ def test_energy_grid_halving_moves_the_free_energy_by_microelectronvolts():
     coarse_dos = fine_dos[::2]
 
     temperatures = np.array([0.0, 300.0])
-    fine, _, _ = free_energy_from_dos(
+    fine = thermal_properties_from_dos(
         fine_energies,
         fine_dos,
         _n_electrons(fine_energies, fine_dos),
         temperatures,
         FERMI,
-    )
-    coarse, _, _ = free_energy_from_dos(
+    ).free_energy
+    coarse = thermal_properties_from_dos(
         coarse_energies,
         coarse_dos,
         _n_electrons(coarse_energies, coarse_dos),
         temperatures,
         FERMI,
-    )
+    ).free_energy
     assert abs(fine[-1] - coarse[-1]) < 1e-6
 
 
@@ -186,28 +189,28 @@ def test_tetrahedron_agrees_with_the_kpoint_sum_at_a_converged_mesh():
     temperatures = np.array([0.0, 300.0])
     states = _half_filled_band([48, 48, 48])
 
-    tetrahedron, _ = compute_free_energy_by_tetrahedron(states, temperatures)
-    k_sum, _ = compute_free_energy_and_entropy(states, temperatures)
+    tetrahedron = compute_thermal_properties_by_tetrahedron(states, temperatures)
+    k_sum = compute_thermal_properties_by_kpoint_sum(states, temperatures)
 
-    assert tetrahedron[-1] == pytest.approx(k_sum[-1] - k_sum[0], abs=2e-5)
+    assert tetrahedron.free_energy[-1] == pytest.approx(k_sum.free_energy[-1], abs=2e-5)
 
 
 def test_tetrahedron_converges_faster_than_the_kpoint_sum():
     """Test that the tetrahedron is close to its answer on a coarse mesh."""
     temperatures = np.array([0.0, 300.0])
-    converged, _ = compute_free_energy_by_tetrahedron(
+    converged = compute_thermal_properties_by_tetrahedron(
         _half_filled_band([48, 48, 48]), temperatures
-    )
-    coarse, _ = compute_free_energy_by_tetrahedron(
+    ).free_energy
+    coarse = compute_thermal_properties_by_tetrahedron(
         _half_filled_band([8, 8, 8]), temperatures
-    )
-    coarse_k_sum, _ = compute_free_energy_and_entropy(
+    ).free_energy
+    coarse_k_sum = compute_thermal_properties_by_kpoint_sum(
         _half_filled_band([8, 8, 8]), temperatures
-    )
+    ).free_energy
 
     reference = converged[-1]
     assert abs(coarse[-1] - reference) < 0.06 * abs(reference)
-    assert abs((coarse_k_sum[-1] - coarse_k_sum[0]) - reference) > 0.15 * abs(reference)
+    assert abs(coarse_k_sum[-1] - reference) > 0.15 * abs(reference)
 
 
 def test_qha_integrates_by_tetrahedron_when_the_states_carry_the_grid():
@@ -220,12 +223,12 @@ def test_qha_integrates_by_tetrahedron_when_the_states_carry_the_grid():
     temperatures = np.array([300.0])
     states = _half_filled_band([8, 8, 8])
 
-    fe_el_rel, _ = compute_electronic_contributions_from_states(
+    (electronic,) = compute_electronic_thermal_properties_from_states(
         [states], temperatures, primitive_volumes=None
     )
-    tetrahedron, _ = compute_free_energy_by_tetrahedron(states, np.array([0.0, 300.0]))
+    tetrahedron = compute_thermal_properties_by_tetrahedron(states, temperatures)
 
-    assert fe_el_rel[0, 0] == pytest.approx(tetrahedron[-1])
+    assert electronic.free_energy[0] == pytest.approx(tetrahedron.free_energy[0])
 
 
 def test_qha_passes_symmetrize_tetrahedra_on():
@@ -238,16 +241,16 @@ def test_qha_passes_symmetrize_tetrahedra_on():
     temperatures = np.array([300.0])
     states = _half_filled_band([8, 8, 8])
 
-    fe_el_rel, _ = compute_electronic_contributions_from_states(
+    (electronic,) = compute_electronic_thermal_properties_from_states(
         [states], temperatures, primitive_volumes=None, symmetrize_tetrahedra=True
     )
-    averaged, _ = compute_free_energy_by_tetrahedron(
-        states, np.array([0.0, 300.0]), symmetrize_tetrahedra=True
-    )
-    fixed, _ = compute_free_energy_by_tetrahedron(states, np.array([0.0, 300.0]))
+    averaged = compute_thermal_properties_by_tetrahedron(
+        states, temperatures, symmetrize_tetrahedra=True
+    ).free_energy
+    fixed = compute_thermal_properties_by_tetrahedron(states, temperatures).free_energy
 
-    assert fe_el_rel[0, 0] == pytest.approx(averaged[-1])
-    assert fe_el_rel[0, 0] != pytest.approx(fixed[-1])
+    assert electronic.free_energy[0] == pytest.approx(averaged[0])
+    assert electronic.free_energy[0] != pytest.approx(fixed[0])
 
 
 def test_qha_falls_back_to_the_kpoint_sum_without_the_grid():
@@ -257,12 +260,12 @@ def test_qha_falls_back_to_the_kpoint_sum_without_the_grid():
         _half_filled_band([8, 8, 8]), kpoints=None, mesh=None, cell=None
     )
 
-    fe_el_rel, _ = compute_electronic_contributions_from_states(
+    (electronic,) = compute_electronic_thermal_properties_from_states(
         [states], temperatures, primitive_volumes=None
     )
-    k_sum, _ = compute_free_energy_and_entropy(states, np.array([0.0, 300.0]))
+    k_sum = compute_thermal_properties_by_kpoint_sum(states, temperatures)
 
-    assert fe_el_rel[0, 0] == pytest.approx(k_sum[-1] - k_sum[0])
+    assert electronic.free_energy[0] == pytest.approx(k_sum.free_energy[0])
 
 
 def test_the_integration_method_is_reported(capsys):
@@ -276,7 +279,7 @@ def test_the_integration_method_is_reported(capsys):
     with_grid = _half_filled_band([8, 8, 8])
     without_grid = dataclasses.replace(with_grid, kpoints=None, mesh=None, cell=None)
 
-    compute_electronic_contributions_from_states(
+    compute_electronic_thermal_properties_from_states(
         [with_grid], temperatures, primitive_volumes=None
     )
     out = capsys.readouterr().out
@@ -284,12 +287,12 @@ def test_the_integration_method_is_reported(capsys):
     # integrated, and a file of free energies keeps no record of them.
     assert "linear tetrahedron method (1 point, +-0.50 eV at 0.50 meV)" in out
 
-    compute_electronic_contributions_from_states(
+    compute_electronic_thermal_properties_from_states(
         [without_grid], temperatures, primitive_volumes=None
     )
     assert "k-point sum (1 point)" in capsys.readouterr().out
 
-    compute_electronic_contributions_from_states(
+    compute_electronic_thermal_properties_from_states(
         [with_grid, without_grid], temperatures, primitive_volumes=None
     )
     out = capsys.readouterr().out
@@ -302,19 +305,22 @@ def test_window_must_contain_samples():
     energies = np.linspace(0.0, 1.0, 101)
     dos = np.ones_like(energies)
     with pytest.raises(ValueError, match="contains no density-of-states"):
-        free_energy_from_dos(energies, dos, 1.0, [0.0, 300.0], FERMI, window=0.1)
+        thermal_properties_from_dos(energies, dos, 1.0, [0.0, 300.0], FERMI, window=0.1)
 
 
-def test_temperatures_must_start_at_zero():
-    """Test that free energies against something other than 0 K are refused.
+def test_deprecated_free_energy_from_dos_needs_zero_kelvin_first():
+    """Test that the deprecated tuple form still refuses a grid without 0 K.
 
-    They are reported against the first temperature, and 0 K is also the one
-    temperature at which mu is mu_0 rather than solved for. A grid that
-    starts elsewhere would silently be given the wrong reference.
+    thermal_properties_from_dos computes 0 K whether given or not; the tuple
+    form kept its old contract, under which the first temperature is the
+    reference.
 
     """
     energies, dos = _flat_dos(2.0)
-    with pytest.raises(ValueError, match="first temperature has to be 0 K"):
+    with (
+        pytest.warns(DeprecationWarning, match="free_energy_from_dos"),
+        pytest.raises(ValueError, match="first temperature has to be 0 K"),
+    ):
         free_energy_from_dos(
             energies, dos, _n_electrons(energies, dos), [100.0, 300.0], FERMI
         )
@@ -330,13 +336,15 @@ def test_the_whole_grid_is_used_without_a_window():
     energies, dos = _flat_dos(2.0)
     temperatures = [0.0, 300.0]
     n_electrons = _n_electrons(energies, dos)
-    whole, _, _ = free_energy_from_dos(energies, dos, n_electrons, temperatures, FERMI)
-    same, _, _ = free_energy_from_dos(
+    whole = thermal_properties_from_dos(
+        energies, dos, n_electrons, temperatures, FERMI
+    ).free_energy
+    same = thermal_properties_from_dos(
         energies, dos, n_electrons, temperatures, FERMI, window=WINDOW
-    )
-    narrow, _, _ = free_energy_from_dos(
+    ).free_energy
+    narrow = thermal_properties_from_dos(
         energies, dos, n_electrons, temperatures, FERMI, window=0.02
-    )
+    ).free_energy
     np.testing.assert_allclose(whole, same, rtol=0.0, atol=0.0)
     # 0.02 eV is under k_B T at 300 K, so the tail is cut and the answer moves.
     assert abs(narrow[-1] - whole[-1]) > 1e-6

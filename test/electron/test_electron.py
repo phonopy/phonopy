@@ -4,12 +4,12 @@
 import numpy as np
 import pytest
 
-from phonopy.qha.electron_kpoint_sum import (
+from phonopy.electron.kpoint_sum import (
     ElectronFreeEnergy,
-    compute_free_energy_by_kpoint_sum,
+    compute_thermal_properties_by_kpoint_sum,
     get_free_energy_at_T,
 )
-from phonopy.qha.electron_states import (
+from phonopy.electron.states import (
     ElectronicStates,
     read_electronic_states_hdf5,
     write_electronic_states_hdf5,
@@ -172,6 +172,25 @@ def _al_eigenvalues() -> np.ndarray:
     return np.reshape([float(x) for x in eigvals_Al.split()], (1, len(WEIGHTS_AL), -1))
 
 
+def _band_free_energies(
+    eigenvalues: np.ndarray,
+    weights: np.ndarray,
+    n_electrons: float,
+    temperatures: np.ndarray,
+) -> np.ndarray:
+    """Return the band sums E - TS at the temperatures, not against 0 K.
+
+    shape=(temperatures,)
+
+    """
+    efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
+    free_energies = []
+    for temperature in temperatures:
+        efe.run(float(temperature))
+        free_energies.append(efe.free_energy)
+    return np.array(free_energies, dtype="double")
+
+
 def test_Al():
     """Test of ElectronFreeEnergy by Aluminium.
 
@@ -233,8 +252,13 @@ def test_Al():
     assert np.abs(_entropy - 0.00959209) < 1e-6
     assert np.abs(_energy - 10.76680671) < 1e-6
 
-    (temperaturs, free_energy) = get_free_energy_at_T(
-        0, 1000, 10, eigvals, weights, n_electrons
+    with pytest.warns(DeprecationWarning, match="get_free_energy_at_T"):
+        temperatures, free_energies = get_free_energy_at_T(
+            0, 1000, 10, eigvals, weights, n_electrons
+        )
+    np.testing.assert_array_equal(
+        free_energies,
+        _band_free_energies(eigvals, weights, n_electrons, temperatures),
     )
 
 
@@ -247,9 +271,8 @@ def test_Al_free_energy_vs_temperature():
     """
     eigvals = _al_eigenvalues()
     n_electrons = 3.0
-    temperatures, free_energies = get_free_energy_at_T(
-        0, 1000, 10, eigvals, WEIGHTS_AL, n_electrons
-    )
+    temperatures = np.arange(0, 1000 + 1e-8, 10, dtype="double")
+    free_energies = _band_free_energies(eigvals, WEIGHTS_AL, n_electrons, temperatures)
 
     reference_temperatures = np.arange(0, 1000 + 1e-8, 10, dtype="double")
     reference_free_energies = np.array(
@@ -383,9 +406,8 @@ def test_spin_polarized():
     efe = ElectronFreeEnergy(eigvals, weights, n_electrons)
     assert efe._g == 1
 
-    temperatures, free_energies = get_free_energy_at_T(
-        0, 800, 50, eigvals, weights, n_electrons
-    )
+    temperatures = np.arange(0, 800 + 1e-8, 50, dtype="double")
+    free_energies = _band_free_energies(eigvals, weights, n_electrons, temperatures)
 
     reference_temperatures = np.arange(0, 800 + 1e-8, 50, dtype="double")
     reference_free_energies = np.array(
@@ -415,8 +437,8 @@ def test_spin_polarized():
     np.testing.assert_allclose(free_energies, reference_free_energies, atol=1e-8)
 
 
-def test_compute_free_energy_by_kpoint_sum_Al():
-    """Free energies match get_free_energy_at_T and S_el = -dF/dT holds.
+def test_compute_thermal_properties_by_kpoint_sum_Al():
+    """Free energies match the band sums against 0 K and S_el = -dF/dT holds.
 
     The entropy at 1000 K is also pinned against the VASP EENTRO reference
     of test_Al (T * S = 0.00959209 eV at 1000 K).
@@ -426,13 +448,14 @@ def test_compute_free_energy_by_kpoint_sum_Al():
     states = ElectronicStates(
         eigenvalues=eigenvalues, weights=WEIGHTS_AL, n_electrons=3.0
     )
-    temperatures, fe_ref = get_free_energy_at_T(
-        0, 1000, 10, eigenvalues, WEIGHTS_AL, 3.0
-    )
+    temperatures = np.arange(0, 1000 + 1e-8, 10, dtype="double")
+    fe_ref = _band_free_energies(eigenvalues, WEIGHTS_AL, 3.0, temperatures)
 
-    free_energies, entropies = compute_free_energy_by_kpoint_sum(states, temperatures)
+    properties = compute_thermal_properties_by_kpoint_sum(states, temperatures)
+    free_energies = properties.free_energy
+    entropies = properties.entropy
 
-    np.testing.assert_allclose(free_energies, fe_ref, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(free_energies, fe_ref - fe_ref[0], rtol=0, atol=1e-12)
     assert entropies[0] == 0.0
     np.testing.assert_allclose(entropies[-1], 0.00959209 / 1000, rtol=1e-4)
     # Thermodynamic identity S = -dF/dT, up to the O(dT^2) error of the
@@ -584,20 +607,22 @@ def test_spin_degeneracy_survives_hdf5_round_trip(tmp_path):
     assert read_back[1].spin_degeneracy is None
 
 
-def test_compute_free_energy_by_kpoint_sum_uses_spin_degeneracy():
+def test_compute_thermal_properties_by_kpoint_sum_uses_spin_degeneracy():
     """ElectronicStates passes its spin degeneracy on to the calculation."""
     eigvals = _al_eigenvalues()
     temperatures = [300.0]
     common = {"eigenvalues": eigvals, "weights": WEIGHTS_AL, "n_electrons": 3.0}
 
-    fe_inferred, _ = compute_free_energy_by_kpoint_sum(
+    inferred = compute_thermal_properties_by_kpoint_sum(
         ElectronicStates(**common), temperatures
     )
-    fe_spinor, _ = compute_free_energy_by_kpoint_sum(
+    spinor = compute_thermal_properties_by_kpoint_sum(
         ElectronicStates(**common, spin_degeneracy=1), temperatures
     )
 
-    assert fe_inferred[0] != pytest.approx(fe_spinor[0])
+    assert inferred.chemical_potential[0] != pytest.approx(
+        spinor.chemical_potential[0]
+    )
 
 
 def test_fermi_energy_survives_hdf5_round_trip(tmp_path):
@@ -623,24 +648,48 @@ def test_fermi_energy_survives_hdf5_round_trip(tmp_path):
     assert read_back[1].fermi_energy is None
 
 
-def test_the_names_electron_py_used_to_hold_still_import():
-    """Test that splitting the module left every old import working.
+def test_the_old_qha_modules_still_import():
+    """Test that the modules left in phonopy.qha re-export every old name.
 
-    ElectronFreeEnergy and its helpers moved to electron_kpoint_sum and the
-    states to electron_states, but phonopy.qha.electron is what the
-    documentation and existing scripts name.
+    The electronic states and free energies moved to phonopy.electron, but
+    phonopy.qha.electron is what existing scripts name. Importing the old
+    modules warns.
 
     """
-    from phonopy.qha import electron
-    from phonopy.qha.electron_kpoint_sum import compute_free_energy_by_kpoint_sum
+    import importlib
+    import sys
 
-    for name in (
-        "ElectronicStates",
-        "ElectronFreeEnergy",
-        "get_free_energy_at_T",
-        "read_electronic_states_hdf5",
-        "write_electronic_states_hdf5",
-    ):
-        assert hasattr(electron, name), name
-    # The name the k-point sum carried while it was the only route.
-    assert electron.compute_free_energy_and_entropy is compute_free_energy_by_kpoint_sum
+    from phonopy.electron.kpoint_sum import compute_free_energy_by_kpoint_sum
+
+    old_names = {
+        "phonopy.qha.electron": (
+            "ElectronicStates",
+            "ElectronFreeEnergy",
+            "compute_free_energy_by_tetrahedron",
+            "free_energy_from_dos",
+            "get_free_energy_at_T",
+            "read_electronic_states_hdf5",
+            "write_electronic_states_hdf5",
+        ),
+        "phonopy.qha.electron_states": (
+            "ElectronicStates",
+            "read_electronic_states_hdf5",
+            "write_electronic_states_hdf5",
+        ),
+        "phonopy.qha.electron_kpoint_sum": (
+            "ElectronFreeEnergy",
+            "compute_free_energy_by_kpoint_sum",
+        ),
+    }
+    for module_name, names in old_names.items():
+        sys.modules.pop(module_name, None)
+        with pytest.warns(DeprecationWarning, match=module_name):
+            module = importlib.import_module(module_name)
+        for name in names:
+            assert hasattr(module, name), f"{module_name}.{name}"
+        # The name the k-point sum carried while it was the only route.
+        if module_name != "phonopy.qha.electron_states":
+            assert (
+                module.compute_free_energy_and_entropy
+                is compute_free_energy_by_kpoint_sum
+            )

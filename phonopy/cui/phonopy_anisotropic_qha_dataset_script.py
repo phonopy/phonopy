@@ -54,6 +54,7 @@ import numpy as np
 
 import phonopy
 from phonopy import Phonopy
+from phonopy.electron.states import ElectronicStates
 from phonopy.harmonic.displacement import DisplacementDataset
 from phonopy.interface.vasp import (
     electronic_states_from_vaspout,
@@ -65,7 +66,6 @@ from phonopy.qha.anisotropic_dataset import (
     aniso_qha_dataset_from_points,
     write_aniso_qha_dataset,
 )
-from phonopy.qha.electron_states import ElectronicStates
 from phonopy.qha.lattice_sampling import raise_when_triclinic_or_monoclinic
 from phonopy.structure.atoms import PhonopyAtoms
 

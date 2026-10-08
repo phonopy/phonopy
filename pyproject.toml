@@ -8,7 +8,7 @@ dynamic = ["version"]
 readme = { file = "README.md", content-type = "text/markdown" }
 description = "This is the phonopy module."
 authors = [{ name = "Atsushi Togo", email = "atz.togo@gmail.com" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.17.0",
     "PyYAML>=5.3",
@@ -82,11 +82,12 @@ lint.select = [
     "I", # isort
     "E", # pycodestyle-errors
     "D", # pydocstyle
+    "UP", # pyupgrade
 ]
-lint.extend-ignore = ["D417", "D100"]
+lint.extend-ignore = ["D417", "D100", "UP031"]
 exclude = [
     "test/phonon/test_irreps.py",
-    "test/qha/test_electron.py",
+    "test/electron/test_electron.py",
     "phonopy/interface/cp2k.py",
     "cmake-format.py"
 ]

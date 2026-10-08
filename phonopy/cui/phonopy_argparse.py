@@ -7,7 +7,7 @@ import argparse
 import dataclasses
 import os
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
 from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (

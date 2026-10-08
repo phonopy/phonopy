@@ -3,28 +3,29 @@
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import os
 import pathlib
 import sys
 import typing
 import warnings
-import xml.etree.cElementTree as etree
 import xml.etree.ElementTree
+import xml.etree.ElementTree as etree
 import xml.parsers.expat
-from collections.abc import Sequence
-from typing import Iterator, Literal, cast
+from collections.abc import Iterator, Sequence
+from typing import Literal, cast
 
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.electron.states import ElectronicStates
 from phonopy.file_IO import (
     get_io_module_to_decompress,
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
 )
 from phonopy.physical_units import get_physical_units
-from phonopy.qha.electron_states import ElectronicStates
 from phonopy.structure.atomic_data import get_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import group_by_key
@@ -787,7 +788,7 @@ def write_vasp(
     filename: str | os.PathLike,
     cell: PhonopyAtoms,
     direct: bool = True,
-    expand_mixtures: bool = False,
+    for_vca: bool = False,
 ) -> None:
     """Write crystal structure to a VASP POSCAR style file.
 
@@ -799,16 +800,22 @@ def write_vasp(
         Crystal structure.
     direct : bool, optional
         In 'Direct' or not in VASP POSCAR format. Default is True.
-    expand_mixtures : bool, optional
-        When True and ``cell`` has mixed-species sites, expand each mixture
-        into one POSCAR row per constituent at the same fractional
-        coordinates so the file is consumable by a VASP VCA calculation.
-        Has no effect on cells without mixtures. Default is False.
+    for_vca : bool, optional
+        When True, write a POSCAR for a VASP VCA calculation, whose species
+        rows take one weight each of the INCAR VCA tag (see
+        ``get_vasp_vca_weights``). Merged mixed-species sites (see
+        ``build_mixture_cell``) are expanded into one species row per
+        constituent at the same fractional coordinates. Atoms of weighted
+        species (see ``apply_site_mixture``) are written with one species row
+        per run of consecutive atoms of one pair of symbol and weight. Default
+        is False.
+
+    Atoms are written in their order, with one species row per run of
+    consecutive atoms of one symbol, because the forces calculated by VASP
+    are read in the order of the atoms of the cell.
 
     """
-    lines = get_vasp_structure_lines(
-        cell, direct=direct, expand_mixtures=expand_mixtures
-    )
+    lines = get_vasp_structure_lines(cell, direct=direct, for_vca=for_vca)
     with open(filename, "w") as w:
         w.write("\n".join(lines))
 
@@ -819,7 +826,7 @@ def get_vasp_structure_lines(
     is_vasp5: bool = True,
     is_vasp4: bool = False,
     first_line_str: str | None = None,
-    expand_mixtures: bool = False,
+    for_vca: bool = False,
 ) -> list[str]:
     """Generate POSCAR text lines as a list from PhonopyAtoms instance.
 
@@ -827,9 +834,9 @@ def get_vasp_structure_lines(
         Dummy argument. This does nothing.
     is_vasp5 : bool
         Deprecated. This is replaced by ``is_vasp4 = not is_vasp5``.
-    expand_mixtures : bool
-        Expand mixed-species sites into per-constituent POSCAR rows. See
-        ``write_vasp`` for details.
+    for_vca : bool
+        Write a POSCAR for a VASP VCA calculation. See ``write_vasp`` for
+        details.
 
     """
     _is_vasp4 = is_vasp4
@@ -849,7 +856,7 @@ def get_vasp_structure_lines(
         cell,
         is_vasp4=_is_vasp4,
         first_line_str=first_line_str,
-        expand_mixtures=expand_mixtures,
+        for_vca=for_vca,
     )
     lines.append("Direct")
     lines += _get_scaled_positions_lines(scaled_positions)
@@ -867,22 +874,18 @@ def write_supercells_with_displacements(
     ids: NDArray[np.int64] | Sequence[int],
     pre_filename: str | os.PathLike = "POSCAR",
     width: int = 3,
-    expand_mixtures: bool = False,
+    for_vca: bool = False,
 ) -> None:
-    """Write supercells with displacements to files."""
+    """Write supercells with displacements to files.
+
+    See ``write_vasp`` for ``for_vca``.
+
+    """
     pre = pathlib.Path(pre_filename)
-    write_vasp(
-        pre.parent / ("S" + pre.name),
-        supercell,
-        direct=True,
-        expand_mixtures=expand_mixtures,
-    )
+    write_vasp(pre.parent / ("S" + pre.name), supercell, direct=True, for_vca=for_vca)
     for i, cell in zip(ids, cells_with_displacements, strict=True):
         write_vasp(
-            pre.parent / f"{pre.name}-{i:0{width}}",
-            cell,
-            direct=True,
-            expand_mixtures=expand_mixtures,
+            pre.parent / f"{pre.name}-{i:0{width}}", cell, direct=True, for_vca=for_vca
         )
 
 
@@ -890,13 +893,14 @@ def get_vasp_vca_hint_lines(cell: PhonopyAtoms) -> list[str]:
     """Return advisory lines for a VASP VCA POSCAR derived from ``cell``.
 
     Lines describe the POSCAR species rows and per-row counts, the matching
-    POTCAR concatenation order, and the INCAR ``VCA = ...`` line. The same
-    expansion is what ``write_vasp(..., expand_mixtures=True)`` produces.
+    POTCAR concatenation order, and the INCAR ``VCA = ...`` line. The rows are
+    those written by ``write_vasp`` with ``for_vca=True``.
+
     """
-    row_symbols, row_counts, _, row_weights = _expand_mixtures_for_vasp(cell)
-    species_str = " ".join(row_symbols)
-    counts_str = " ".join(f"{n}" for n in row_counts)
-    weights_str = " ".join(f"{w:g}" for w in row_weights)
+    data = _get_vca_poscar_data(cell)
+    species_str = " ".join(data.symbols)
+    counts_str = " ".join(f"{n}" for n in data.counts)
+    weights_str = " ".join(f"{w:g}" for w in data.vca_weights)
     return [
         "VASP VCA hint:",
         f"  POSCAR species rows: {species_str}",
@@ -907,23 +911,141 @@ def get_vasp_vca_hint_lines(cell: PhonopyAtoms) -> list[str]:
     ]
 
 
-def _expand_mixtures_for_vasp(
-    cell: PhonopyAtoms,
-) -> tuple[list[str], list[int], NDArray[np.double], list[float]]:
-    """Expand mixed-species sites into per-constituent POSCAR rows.
+def get_vasp_vca_weights(cell: PhonopyAtoms) -> list[float]:
+    """Return the weights of the VASP INCAR VCA tag, one per POSCAR species row.
+
+    The rows are those written by ``write_vasp`` with ``for_vca=True``. For a cell
+    with merged mixed-species sites (see ``build_mixture_cell``), each
+    constituent of a mixture has its own row and weight. For a cell with
+    weighted species (see ``apply_site_mixture``), each run of consecutive
+    atoms of one pair of symbol and weight is a row. For an ordinary cell,
+    every weight is 1.0. See ``_VCAPoscarData`` for the species rows with
+    examples.
+
+    """
+    return _get_vca_poscar_data(cell).vca_weights
+
+
+@dataclasses.dataclass(frozen=True)
+class _VCAPoscarData:
+    """Data of a POSCAR for VASP VCA: species rows and their weights.
+
+    A species row is one entry of the species line of a POSCAR, together with
+    the entry of the counts line at the same place and the positions of that
+    many atoms. The positions follow in the order of the species rows. The
+    VASP INCAR VCA tag gives one weight per species row, and the POTCAR
+    concatenates one potential per species row in the same order.
+
+    In a first example, the following POSCAR of 32 atoms has two species rows,
+    Ge with 16 atoms and Sn with 16 atoms::
+
+        Ge Sn
+          16   16
+        Direct
+          (16 positions of Ge)
+          (16 positions of Sn)
+
+    For Ge 0.9 and Sn 0.1 at every site, the INCAR has ``VCA = 0.9 0.1``.
+
+    A symbol can appear in more than one species row. In a second example,
+    the sites of one sublattice of the first example are Ge 0.5 and Sn 0.5,
+    and those of the other are Ge 0.25 and Sn 0.75. The POSCAR has four
+    species rows::
+
+        Ge Sn Ge Sn
+           8    8    8    8
+        Direct
+          (8 positions of Ge of the first sublattice)
+          (8 positions of Sn of the first sublattice)
+          (8 positions of Ge of the second sublattice)
+          (8 positions of Sn of the second sublattice)
+
+    and the INCAR has ``VCA = 0.5 0.5 0.25 0.75``.
+
+    Attributes
+    ----------
+    symbols : list[str]
+        Symbol of each species row, ``["Ge", "Sn"]`` in the first example and
+        ``["Ge", "Sn", "Ge", "Sn"]`` in the second.
+    counts : list[int]
+        Number of atoms of each species row, ``[16, 16]`` in the first
+        example and ``[8, 8, 8, 8]`` in the second.
+    scaled_positions : ndarray
+        Scaled positions of the atoms in the order of the species rows. In the
+        first example, the first 16 are those of Ge and the next 16 are those
+        of Sn. In the second example, they are four blocks of 8 in the order
+        of the four species rows.
+        shape=(sum(counts), 3), dtype=float
+    vca_weights : list[float]
+        Weight of each species row for the VASP INCAR VCA tag, ``[0.9, 0.1]``
+        in the first example and ``[0.5, 0.5, 0.25, 0.75]`` in the second. It
+        is 1.0 for a species row of an ordinary species.
+
+    """
+
+    symbols: list[str]
+    counts: list[int]
+    scaled_positions: NDArray[np.double]
+    vca_weights: list[float]
+
+
+def _get_vca_poscar_data(cell: PhonopyAtoms) -> _VCAPoscarData:
+    """Return the data of a POSCAR for VASP VCA of a cell.
+
+    See ``get_vasp_vca_weights``.
+
+    """
+    if cell.has_mixtures:
+        return _get_vca_poscar_data_of_mixtures(cell)
+    return _get_vca_poscar_data_of_weighted_species(cell)
+
+
+def _get_vca_poscar_data_of_weighted_species(cell: PhonopyAtoms) -> _VCAPoscarData:
+    """Return the data of a POSCAR for VASP VCA of a cell with weighted species.
+
+    Each run of consecutive atoms of one species, i.e., of one pair of symbol
+    and weight, is a species row, and the atoms keep their order, because the
+    forces calculated by VASP are read in the order of the atoms of the cell.
+    One species can be in more than one species row. For an ordinary cell, each
+    run of consecutive atoms of one symbol is a species row and every weight is
+    1.0.
+
+    """
+    weights = cell.mixture_weights
+    if weights is None:
+        counts, keys, scaled_positions = group_by_key(
+            cell.symbols, cell.scaled_positions, consecutive=True
+        )
+        assert scaled_positions is not None
+        symbols = cast(list[str], keys)
+        return _VCAPoscarData(symbols, counts, scaled_positions, [1.0] * len(symbols))
+
+    counts, _, scaled_positions = group_by_key(
+        cell.species_ids, cell.scaled_positions, consecutive=True
+    )
+    assert scaled_positions is not None
+    starts = np.cumsum([0] + counts[:-1])
+    symbols = [cell.symbols[i] for i in starts]
+    vca_weights = [float(weights[i]) for i in starts]
+    return _VCAPoscarData(symbols, counts, scaled_positions, vca_weights)
+
+
+def _get_vca_poscar_data_of_mixtures(cell: PhonopyAtoms) -> _VCAPoscarData:
+    """Return the data of a POSCAR for VASP VCA of a cell with mixtures.
+
+    Mixed-species sites are expanded into per-constituent species rows.
 
     For each entry in ``cell.species_table``, emit one row per constituent
     (length 1 for a non-mixture species, length n for an n-component
     mixture). Atoms within each species keep their original positions and
-    those same positions are repeated for every constituent row. Returns
-    ``(row_symbols, row_counts, expanded_scaled_positions, row_weights)``.
+    those same positions are repeated for every constituent row.
 
     """
     scaled = cell.scaled_positions
 
-    row_symbols: list[str] = []
-    row_counts: list[int] = []
-    row_weights: list[float] = []
+    symbols: list[str] = []
+    counts: list[int] = []
+    vca_weights: list[float] = []
     blocks: list[NDArray[np.double]] = []
 
     for symbol, weight, atom_idx in iter_mixture_expansion_blocks(cell):
@@ -932,27 +1054,46 @@ def _expand_mixtures_for_vasp(
         # Primitive, displacement). A hand-crafted PhonopyAtoms with an
         # orphan species would land here.
         assert atom_idx.size > 0, f"species {symbol!r} has no atoms"
-        row_symbols.append(symbol)
-        row_counts.append(int(atom_idx.size))
-        row_weights.append(weight)
+        symbols.append(symbol)
+        counts.append(int(atom_idx.size))
+        vca_weights.append(weight)
         blocks.append(scaled[atom_idx])
 
     expanded = np.concatenate(blocks, axis=0)
-    return row_symbols, row_counts, expanded, row_weights
+    return _VCAPoscarData(symbols, counts, expanded, vca_weights)
 
 
 def _get_vasp_structure_header_lines(
     cell: PhonopyAtoms,
     is_vasp4: bool = False,
     first_line_str: str | None = None,
-    expand_mixtures: bool = False,
+    for_vca: bool = False,
 ) -> tuple[list[str], NDArray[np.double]]:
-    if expand_mixtures and cell.has_mixtures:
-        symbols, num_atoms, scaled_positions, _ = _expand_mixtures_for_vasp(cell)
+    if for_vca:
+        data = _get_vca_poscar_data(cell)
+        symbols = data.symbols
+        num_atoms = data.counts
+        scaled_positions = data.scaled_positions
     else:
         num_atoms, symbols, scaled_positions = group_by_key(
-            cell.symbols, cell.scaled_positions
+            cell.symbols, cell.scaled_positions, consecutive=True
         )
+        repeated = [
+            str(symbol)
+            for symbol in dict.fromkeys(symbols)
+            if symbols.count(symbol) > 1
+        ]
+        if repeated:
+            warnings.warn(
+                f"Atoms of {', '.join(repeated)} are not grouped by element in "
+                "the cell. To keep the order of atoms, these elements appear "
+                "more than once in the line of element names in POSCAR, e.g., "
+                '"Na Cl Na Cl", and POTCAR has to be concatenated in the same '
+                "order. To have each element appear once, sort the atoms of "
+                "the unit cell by element beforehand.",
+                UserWarning,
+                stacklevel=2,
+            )
     assert scaled_positions is not None
 
     lines = []

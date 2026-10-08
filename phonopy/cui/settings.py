@@ -6,7 +6,8 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from typing import Any, Generic, Literal, NoReturn, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Any, Generic, Literal, NoReturn, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -119,7 +120,7 @@ class ConfParser(Generic[TSettings]):
 
     def _read_file(self, filename: str | os.PathLike) -> None:
         """Read conf file."""
-        with open(filename, "r") as file:
+        with open(filename) as file:
             is_continue = False
             left = None
 

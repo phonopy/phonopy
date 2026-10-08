@@ -24,13 +24,13 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from phonopy.interface.vasp import parse_vasprunxml
-from phonopy.qha.electron import compute_free_energy_by_tetrahedron
-from phonopy.qha.electron_kpoint_sum import compute_free_energy_by_kpoint_sum
-from phonopy.qha.electron_states import (
+from phonopy.electron.kpoint_sum import compute_thermal_properties_by_kpoint_sum
+from phonopy.electron.states import (
     ElectronicStates,
     write_electronic_states_hdf5,
 )
+from phonopy.electron.tetrahedron import compute_thermal_properties_by_tetrahedron
+from phonopy.interface.vasp import parse_vasprunxml
 from phonopy.structure.atoms import PhonopyAtoms
 
 
@@ -268,35 +268,25 @@ def _free_energy_of_one_volume(
     their k-points cannot be paired with one, and unless the k-point sum is
     asked for, which converges far more slowly.
 
-    The reference is 0 K in both cases, which is what U(V) already holds, so
-    a temperature grid that starts higher gets 0 K prepended and dropped
-    again.
+    The reference is 0 K in both cases, which is what U(V) already holds.
 
     """
-    anchored, first = _anchored_at_zero(temperatures)
     if by_sum:
         reason = "asked for"
     else:
         try:
-            free_energies, _ = compute_free_energy_by_tetrahedron(
+            properties = compute_thermal_properties_by_tetrahedron(
                 electronic_states,
-                anchored,
+                temperatures,
                 symmetrize_tetrahedra=symmetrize_tetrahedra,
             )
-            return free_energies[first:], "linear tetrahedron method", ""
+            return properties.free_energy, "linear tetrahedron method", ""
         except (ValueError, RuntimeError) as exc:
             reason = textwrap.shorten(str(exc), width=80, placeholder="...")
-    free_energies, _ = compute_free_energy_by_kpoint_sum(electronic_states, anchored)
-    return (free_energies - free_energies[0])[first:], "k-point sum", reason
-
-
-def _anchored_at_zero(
-    temperatures: NDArray[np.double],
-) -> tuple[NDArray[np.double], int]:
-    """Return the temperatures with 0 K in front, and where the given ones start."""
-    if len(temperatures) > 0 and temperatures[0] == 0.0:
-        return temperatures, 0
-    return np.concatenate([[0.0], temperatures]), 1
+    properties = compute_thermal_properties_by_kpoint_sum(
+        electronic_states, temperatures
+    )
+    return properties.free_energy, "k-point sum", reason
 
 
 def _integration_summary(methods: Sequence[str]) -> str:

@@ -842,7 +842,7 @@ def argsort_by_key(
 ) -> list[int]:
     """Return a stable permutation that groups items by key.
 
-    Items are reordered so that items sharing a key become contiguous, the key
+    Items are reordered so that items sharing a key become consecutive, the key
     groups appearing in first-appearance order and the original order preserved
     within each group (stable). ``perm[k]`` is the index in ``keys`` of the
     item placed at position ``k``. Keys may be any hashable values (chemical
@@ -869,13 +869,19 @@ def argsort_by_key(
 def group_by_key(
     keys: Sequence[Hashable] | NDArray[np.integer],
     values: NDArray[np.double] | None = None,
+    consecutive: bool = False,
 ) -> tuple[list[int], list[Hashable], NDArray[np.double] | None]:
     """Group items by key and report the per-group layout.
 
-    Items are reordered so items sharing a key are contiguous (the grouping
+    Items are reordered so items sharing a key are consecutive (the grouping
     permutation is :func:`argsort_by_key`). Keys may be any hashable values.
     For ``keys = ["A", "B", "A", "B"]`` the unique keys are ``["A", "B"]`` and
     the counts ``[2, 2]``.
+
+    With ``consecutive=True``, items are not reordered, and each run of
+    consecutive items sharing a key is a group. For ``keys = ["A", "B", "A",
+    "B"]`` the keys of the groups are ``["A", "B", "A", "B"]`` and the counts
+    ``[1, 1, 1, 1]``.
 
     Parameters
     ----------
@@ -884,17 +890,33 @@ def group_by_key(
     values : NDArray[np.double] or None, optional
         Per-item array reordered alongside the keys. When None, the reordered
         array is also None.
+    consecutive : bool, optional
+        Group each run of consecutive items sharing a key without reordering
+        items. Default is False.
 
     Returns
     -------
     counts : list[int]
         Number of items per group, aligned with unique_keys.
     unique_keys : list[Hashable]
-        Unique keys in first-appearance order.
+        Unique keys in first-appearance order, or the key of each run with
+        ``consecutive=True``.
     grouped_values : NDArray[np.double] or None
-        ``values`` reordered by the grouping permutation, or None.
+        ``values`` reordered by the grouping permutation, or None. With
+        ``consecutive=True``, a copy of ``values``.
 
     """
+    if consecutive:
+        run_keys: list[Hashable] = []
+        run_counts: list[int] = []
+        for key in keys:
+            if run_counts and key == run_keys[-1]:
+                run_counts[-1] += 1
+            else:
+                run_keys.append(key)
+                run_counts.append(1)
+        return run_counts, run_keys, None if values is None else values.copy()
+
     unique_keys = list(dict.fromkeys(keys))
     counts = list(Counter(keys).values())
     perm = argsort_by_key(keys)
@@ -1177,14 +1199,8 @@ def apply_site_mixture(
 
     Use this function to prepare a cell with co-located atoms of different
     species (a site mixture / virtual-crystal cell). The ``weights`` list
-    corresponds one-to-one with the atom order in the input cell, matching
-    the VASP ``INCAR`` ``VCA`` tag order when the POSCAR lists all atoms of
-    each element consecutively.
-
-    Note: when writing displaced supercells with :func:`write_vasp`, phonopy may
-    reorder atoms by symbol (``group_by_key``). Ensure that forces
-    read from VASP are reordered to match the supercell atom order before
-    setting ``phonon.forces``.
+    corresponds one-to-one with the atom order in the input cell. For the
+    weights of the VASP ``INCAR`` ``VCA`` tag, see ``get_vasp_vca_weights``.
 
     Parameters
     ----------

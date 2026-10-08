@@ -33,7 +33,7 @@ def read_abacus(
     PhonopyAtoms, dict[str, str] | None, dict[str, str] | None, dict[str, str] | None
 ]:
     """Read structure information, distance in unit au (bohr)."""
-    fd = open(filename, "r")
+    fd = open(filename)
     contents = fd.read()
     title_str = (
         r"(?:LATTICE_CONSTANT|NUMERICAL_ORBITAL|ABFS_ORBITAL|"
@@ -321,7 +321,7 @@ def get_abacus_structure(
 def read_abacus_output(filename: str | os.PathLike) -> NDArray[np.double]:
     """Read ABACUS forces from last self-consistency iteration."""
     force = None
-    with open(filename, "r") as file:
+    with open(filename) as file:
         for line in file:
             if re.search(r"TOTAL ATOM NUMBER = [0-9]+", line):
                 natom = int(re.search("[0-9]+", line).group())  # type: ignore[union-attr]

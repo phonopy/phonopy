@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from io import StringIO
+from typing import Any
 
 import numpy as np
 import pytest
@@ -16,8 +17,10 @@ from phonopy.structure.atoms import (
     _Species,
     build_species_table_from_mixtures,
     build_species_table_from_symbols,
+    get_cell_dict,
     parse_cell_dict,
 )
+from phonopy.structure.cells import apply_site_mixture, build_mixture_cell
 
 symbols_SiO2 = ["Si"] * 2 + ["O"] * 4
 symbols_AcO2 = ["Ac"] * 2 + ["O"] * 4
@@ -684,3 +687,79 @@ def test_import_deprecated_isotope_data():
     """Test import of deprecated isotope_data."""
     with pytest.warns(DeprecationWarning):
         from phonopy.structure.atoms import isotope_data  # noqa: F401
+
+
+def _get_cells_for_cell_dict() -> dict[str, PhonopyAtoms]:
+    lattice = [[4.0, 0.0, 0.0], [0.0, 4.0, 0.0], [0.0, 0.0, 4.0]]
+    two_sites = [[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]]
+    co_located = PhonopyAtoms(
+        cell=lattice,
+        symbols=["Ge", "Sn", "Si"],
+        scaled_positions=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
+    )
+    return {
+        "plain": PhonopyAtoms(
+            cell=lattice, symbols=["Na", "Cl"], scaled_positions=two_sites
+        ),
+        "magmom_scalar": PhonopyAtoms(
+            cell=lattice,
+            symbols=["Fe", "Fe"],
+            scaled_positions=two_sites,
+            magnetic_moments=[1.5, -1.5],
+        ),
+        "magmom_vector": PhonopyAtoms(
+            cell=lattice,
+            symbols=["Fe", "Fe"],
+            scaled_positions=two_sites,
+            magnetic_moments=[[0.0, 0.0, 1.0], [0.0, 0.0, -1.0]],
+        ),
+        "extended_symbol": PhonopyAtoms(
+            cell=lattice, symbols=["Fe1", "Fe2"], scaled_positions=two_sites
+        ),
+        "merged_mixture": build_mixture_cell(co_located, [0.5, 0.5, 1.0]),
+        "weighted_species": apply_site_mixture(co_located, [0.5, 0.5, 1.0]),
+    }
+
+
+@pytest.mark.parametrize("name", list(_get_cells_for_cell_dict()))
+def test_get_cell_dict_roundtrip(name: str):
+    """Test that parse_cell_dict reads back the cell given by get_cell_dict."""
+    cell = _get_cells_for_cell_dict()[name]
+    cell2 = parse_cell_dict(get_cell_dict(cell))
+    assert cell2 is not None
+    assert cell2.symbols == cell.symbols
+    np.testing.assert_allclose(cell2.cell, cell.cell)
+    np.testing.assert_allclose(cell2.scaled_positions, cell.scaled_positions)
+    assert cell.masses is not None
+    assert cell2.masses is not None
+    np.testing.assert_allclose(cell2.masses, cell.masses)
+    assert cell2.has_mixtures == cell.has_mixtures
+    assert cell2.has_weighted_species == cell.has_weighted_species
+    if cell.mixture_weights is None:
+        assert cell2.mixture_weights is None
+    else:
+        assert cell2.mixture_weights is not None
+        np.testing.assert_allclose(cell2.mixture_weights, cell.mixture_weights)
+    if cell.magnetic_moments is None:
+        assert cell2.magnetic_moments is None
+    else:
+        assert cell2.magnetic_moments is not None
+        np.testing.assert_allclose(cell2.magnetic_moments, cell.magnetic_moments)
+
+
+@pytest.mark.parametrize("name", list(_get_cells_for_cell_dict()))
+def test_get_cell_dict_same_as_yaml(name: str):
+    """Test that get_cell_dict has the content written by get_yaml_lines."""
+    cell = _get_cells_for_cell_dict()[name]
+    cell_dict = get_cell_dict(cell)
+    yaml_dict = yaml.safe_load(str(cell))
+    np.testing.assert_allclose(cell_dict["lattice"], yaml_dict["lattice"])
+    assert len(cell_dict["points"]) == len(yaml_dict["points"])
+    for point, yaml_point in zip(cell_dict["points"], yaml_dict["points"], strict=True):
+        assert set(point) == set(yaml_point)
+        point_dict: dict[str, Any] = dict(point)
+        for key, value in point_dict.items():
+            if key in ("symbol", "extended_symbol", "mixture"):
+                assert value == yaml_point[key]
+            else:
+                np.testing.assert_allclose(value, yaml_point[key], atol=1e-6)
