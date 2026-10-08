@@ -844,101 +844,131 @@ spglib crystal structure
 ### Mixed-species sites and the Virtual Crystal Approximation
 
 ```{warning}
-**Experimental.** The mixed-species / Virtual Crystal Approximation
-(VCA) support — including `species_table` / `species_ids` /
-`has_mixtures` on `PhonopyAtoms`, `build_mixture_cell`,
-`build_species_table_from_mixtures`, the `--site-mixture` CLI option,
-the FC-time mixture-force reduction, and the VASP `for_vca`
-writer — is experimental. APIs, file layouts (including the expanded
-`FORCE_SETS` format), and CLI flags may change without notice in
-upcoming releases. Currently only the VASP calculator interface is
-wired for mixture-expanded I/O.
+**Experimental.** The support of mixed-species sites, including the
+Virtual Crystal Approximation (VCA) of VASP, is experimental. The
+`site_mixture_scheme` parameter and the unmerged cells of `Phonopy`, the
+`--site-mixture` and `--split-site-mixture` options of `phonopy-init`, the
+`site_mixture_scheme` entry of `phonopy_disp.yaml`, and the VASP `for_vca`
+writer may change without notice in upcoming releases. Currently only the
+VASP calculator interface writes supercells for VCA.
 ```
 
-Each `PhonopyAtoms` instance owns a deduplicated species table plus a
-per-atom index list (`species_ids`). A species can either be an ordinary
-chemical element or a weighted mixture of elements; the latter represents a
-single crystallographic site shared by several species in fixed proportions
-(e.g. a Virtual Crystal Approximation site for a Ge/Sn alloy). Mixed-site
-masses are the weight-averaged sum of constituent atomic masses.
+A mixed-species site is a crystallographic site that is shared by several
+elements in fixed proportions, for example a site of a Ge/Sn alloy that is
+occupied by Ge with the weight 0.9 and by Sn with the weight 0.1. Phonopy
+reads such a site in the same way as VASP does for VCA. The input structure
+has one atom per element at the same fractional coordinates, and each of
+these co-located atoms has a weight. The weights of the atoms of one site
+sum to 1.0, and an atom that is not co-located with another atom has the
+weight 1.0.
 
-#### Building a cell with mixed sites
+For a zincblende GeSn 50/50 cell, the input POSCAR has two Ge atoms and two
+Sn atoms, and the Ge atom and the Sn atom of each site are at the same
+fractional coordinates:
 
-`build_species_table_from_mixtures` packs a per-atom list of `(symbol,
-weight)` tuples into the canonical `(species_table, species_ids)` pair:
+```
+GeSn 50/50
+1.0
+0.000000 2.894478 2.894478
+2.894478 0.000000 2.894478
+2.894478 2.894478 0.000000
+Ge Sn
+2 2
+Direct
+0.00 0.00 0.00
+0.25 0.25 0.25
+0.00 0.00 0.00
+0.25 0.25 0.25
+```
+
+#### Weighted atoms and `Phonopy`
+
+`phonopy.structure.cells.apply_site_mixture` attaches the weights to the
+atoms of a cell. The weights are given per atom in the order of the atoms in
+the cell. The atoms are kept as they are, so the returned cell has the same
+atoms in the same order as the input structure.
 
 ```python
-from phonopy.structure.atoms import (
-    PhonopyAtoms,
-    build_species_table_from_mixtures,
-)
+from phonopy import Phonopy
+from phonopy.interface.calculator import read_crystal_structure
+from phonopy.structure.cells import apply_site_mixture
 
-species_table, species_ids = build_species_table_from_mixtures(
-    [
-        [("Si", 1.0)],  # ordinary Si
-        [("Ge", 0.5), ("Sn", 0.5)],  # GeSn mixed-species site
-    ]
-)
-cell = PhonopyAtoms(
-    cell=[[a, 0, 0], [0, a, 0], [0, 0, a]],
-    scaled_positions=[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]],
-    species_table=species_table,
-    species_ids=species_ids,
-)
-assert cell.has_mixtures
+cell, _ = read_crystal_structure("POSCAR", interface_mode="vasp")
+weighted = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+phonon = Phonopy(weighted, supercell_matrix=[2, 2, 2], primitive_matrix="P")
 ```
 
-Constituent weights of each entry must sum to 1.0; a single-component entry
-of weight 1.0 is canonicalized to a normal (single-element) species. Mixed
-species carry composite labels formed by concatenating constituent symbols
-in input order ("GeSn"); two distinct mixtures that would share the same
-composite label still get distinct ids because the underlying
-`(symbol, weight)` tuples differ.
+The `site_mixture_scheme` parameter of `Phonopy` decides how the co-located
+atoms are calculated. Its default is `"merge"`.
 
-#### `build_mixture_cell` utility
+- With `site_mixture_scheme="merge"`, the co-located atoms of each site are
+  treated as one site. `phonon.unitcell`, `phonon.primitive` and
+  `phonon.supercell` have one atom per site, and the force constants are
+  those between the sites. The mass of a site is the weighted average of the
+  masses of its atoms. The cells with the atoms of the input structure are
+  `phonon.unmerged_unitcell`, `phonon.unmerged_primitive` and
+  `phonon.unmerged_supercell`. A displacement moves all the atoms of a site
+  by the same amount, so the GeSn example has one displacement.
+- With `site_mixture_scheme="split"`, every atom of the input structure is
+  displaced and calculated by itself, and the force constants are those
+  between the atoms. The weights scale the masses in the dynamical matrix.
+  `phonon.unmerged_unitcell`, `phonon.unmerged_primitive` and
+  `phonon.unmerged_supercell` are `None`. The GeSn example has two
+  displacements, one of a Ge atom and one of a Sn atom.
 
-`phonopy.structure.cells.build_mixture_cell` collapses overlapping atoms in
-an ordinary cell into mixed-species sites. The Virtual Crystal
-Approximation (VCA) is the typical use case.
+With both schemes, the supercells in `phonon.supercells_with_displacements`
+have the atoms of the input structure in the same order, and the forces given
+to `phonon.forces` are those on these atoms. With the merge scheme, the forces
+on the atoms of each site are summed to the force on the site before the force
+constants are calculated. For VASP, the forces are summed as they are,
+because the VCA calculation already includes the weights in the forces.
 
-```python
-from phonopy.structure.cells import build_mixture_cell
-
-mixed_cell = build_mixture_cell(cell, weights=[0.5, 0.5, 0.5, 0.5])
-```
-
-`weights` must have one entry per atom in the input order. Atoms whose
-fractional positions agree (modulo lattice translations) within `symprec`
-are merged into a single site whose weights must sum to 1.0; isolated
-atoms must carry weight 1.0. When several distinct mixtures within the same
-cell would collide on the same composite label, all colliding sites get
-1-based suffixes (`"GeSn1"`, `"GeSn2"`, ...). The returned cell can be
-fed to `Phonopy(...)` as a unit cell.
-
-The per-atom convention here is distinct from VASP's INCAR `VCA` tag, which
-lists one weight per element row in POSCAR; see the CLI section below for
-how `phonopy` generates a VASP-compatible POSCAR/INCAR pair.
+A cell whose sites are already merged, which `build_mixture_cell` returns, is
+not accepted by `Phonopy`.
 
 #### CLI: `--site-mixture`
 
-The same merge can be requested at the command line:
+At the command line, the weights are given to `phonopy-init` with
+`--site-mixture`, per atom in the order of the atoms in the input structure:
 
 ```bash
-phonopy-init --dim "2 2 2" --site-mixture "0.5 0.5 0.5 0.5" -d
+phonopy-init --dim 2 2 2 --pa P -d --site-mixture 0.5 0.5 0.5 0.5
 ```
 
-`--site-mixture` takes a space-separated list of per-atom weights in the
-input order, with the same validation rules as `build_mixture_cell`. The
-merge is applied immediately after the unit cell is read, so the rest of
-the workflow (displacement generation, supercell construction,
-force-constant building) sees only the merged cell.
+This uses the merge scheme. Adding `--split-site-mixture` uses the split
+scheme. The scheme is written in `phonopy_disp.yaml`,
 
-When the calculator is VASP, the supercell and displaced supercells are
-written with each mixed-species site expanded into one POSCAR row per
-constituent at the same fractional coordinates, and a hint is printed
-showing the matching POTCAR concatenation order and the INCAR `VCA = ...`
-line. For example, a 50/50 GeSn cell with `--dim "2 2 2"` produces
-`SPOSCAR` with `Ge Sn / 16 16` and prints `INCAR: VCA = 0.5 0.5`.
+```yaml
+phonopy:
+  version: "..."
+  site_mixture_scheme: merge  # merge or split
+```
+
+and the cells in `phonopy_disp.yaml` have the atoms of the input structure.
+The `phonopy` command reads the scheme from this file, and it does not accept
+`--site-mixture` and `--split-site-mixture`.
+
+#### VASP POSCAR and INCAR for VCA
+
+For VASP, the supercells are written in POSCAR files in the order of their
+atoms. Consecutive atoms of one element with one weight are written in one
+species row of the POSCAR, and each species row has one weight of the INCAR
+`VCA` tag. The command prints the species rows, the order in which the
+POTCAR files are concatenated, and the `VCA` line. For the GeSn example, both
+schemes write `SPOSCAR` with the species rows `Ge Sn` and the counts
+`16 16`, and the command prints
+
+```
+VASP VCA hint:
+  POSCAR species rows: Ge Sn
+  POSCAR counts:       16 16
+  POTCAR order:        Ge Sn  (concat one POTCAR per row; duplicate as needed)
+  INCAR:               VCA = 0.5 0.5
+```
+
+The same weights are returned by
+`phonopy.interface.vasp.get_vasp_vca_weights(cell)` for a cell with weighted
+atoms.
 
 <!-- "Forces for mixed-species cells" describes the force-reduction
 pipeline at FC build time, which is still under development. The
@@ -946,64 +976,36 @@ content is preserved here for future reuse.
 
 #### Forces for mixed-species cells
 
-A VASP run on a mixture-expanded supercell returns one force vector per
-expanded constituent row (`n_expanded` per displacement). Because every
-constituent at a shared crystallographic site is governed by its own
-POTCAR, those forces differ between constituents and carry the raw
-single-potential information from the SCF calculation.
+With the merge scheme, a VASP run on a supercell returns one force vector per
+atom of `phonon.unmerged_supercell`. The displacements in `Phonopy.dataset`
+are those of the sites in `phonon.supercell`, so the displacements and the
+forces of the dataset have different numbers of atoms. This is kept in
+`phonopy.yaml` and in the {ref}`FORCE_SETS format <file_forces_site_mixture>`.
 
-Phonopy preserves this raw output: `parse_set_of_forces` (and
-`get_forces_vasprunxml`) for a mixed-species cell return forces of shape
-`(num_supercells, n_expanded, 3)` and store them as-is in the
-`Phonopy.dataset`. The corresponding displacement entries remain on a
-per-site basis in `1..n_sites`, so the dataset is asymmetric in shape
-between displacements and forces; this is intentional and preserved by
-`phonopy.yaml` round-trips and by the {ref}`expanded FORCE_SETS format
-<file_forces_site_mixture>`.
+The forces on the atoms of each site are summed to the force on the site
+just before the force constants are calculated. The convention of the sum is
+chosen from `Phonopy.calculator`:
 
-The conversion to per-site forces is deferred to immediately before
-force-constant calculation. The reduction utility is
-`phonopy.structure.cells.reduce_mixture_forces(forces, cell, mode=...)`,
-which supports two conventions selected through the ``mode`` keyword:
+- For VASP (and the default `None` calculator), the forces are summed as
+  they are,
 
-- ``mode="sum"`` produces the plain sum,
-
-  ```python
+  ```
   F_site = sum_k F_k
   ```
 
-  used for VASP because its `vasprun.xml` per-row forces already
-  incorporate the VCA weights through the averaged potential.
-- ``mode="weighted_sum"`` (the default) produces the weighted sum,
+  because the forces in `vasprun.xml` already include the VCA weights
+  through the averaged potential.
+- For the other calculators, the forces are multiplied by the weights of
+  the atoms before the sum,
 
-  ```python
-  F_site = sum_k(w_k * F_k)
+  ```
+  F_site = sum_k (w_k * F_k)
   ```
 
-  where ``w_k`` is the constituent weight stored in the mixture entry of
-  ``cell.species_table``. Use this when the calculator returns
-  single-potential forces that have not yet been folded with mixture
-  weights.
-
-The Phonopy FC pipeline picks the convention based on
-``Phonopy.calculator``: VASP (and the default ``None`` calculator) maps
-to ``"sum"``; all other interfaces map to ``"weighted_sum"``. Because the
-raw forces are preserved in the dataset, applying a different reduction
-convention or different weights only requires re-running the reduction
-and the force-constant build, not the calculator.
+The forces on the atoms are kept in the dataset, so a different convention
+needs only the force constants to be calculated again.
 
 -->
-
-#### Expansion ordering
-
-The mapping from expanded row indices back to phonopy sites is fixed by
-the same routine that writes the VASP POSCAR: for each entry in
-`cell.species_table`, the atoms belonging to that entry are emitted once
-per constituent (in `mixture` order) at the original site coordinates.
-The shared helper
-`phonopy.structure.cells.get_mixture_expansion(cell)` returns the
-ordered list of `(site_index, weight)` pairs that this row order
-corresponds to.
 
 ## Definitions of variables
 

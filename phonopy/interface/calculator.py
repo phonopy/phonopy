@@ -376,7 +376,7 @@ def _write_supercells_vasp(
     """Write supercells for VASP interface."""
     import phonopy.interface.vasp as vasp
 
-    for_vca = config.supercell.has_mixtures or config.supercell.has_weighted_species
+    for_vca = config.supercell.has_weighted_species
     vasp.write_supercells_with_displacements(
         config.supercell,
         config.cells_with_disps,

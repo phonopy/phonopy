@@ -1147,32 +1147,90 @@ def build_mixture_cell(
         (``"GeSn1"``, ``"GeSn2"``, ...).
 
     """
-    if cell.has_mixtures:
-        raise ValueError(
-            "build_mixture_cell cannot be applied to a cell that already "
-            "contains mixed-species sites."
-        )
-    if cell.magnetic_moments is not None:
-        raise ValueError(
-            "build_mixture_cell does not support cells carrying magnetic moments."
-        )
+    _check_cell_to_merge(cell, "build_mixture_cell")
     if len(weights) != len(cell):
         raise ValueError(
             f"Length of weights ({len(weights)}) must match number of atoms "
             f"({len(cell)})."
         )
-
-    weights_arr = np.asarray(weights, dtype="double")
-    scaled = cell.scaled_positions
-
     groups = _group_overlapping_atoms(cell, symprec)
-    mixtures = build_mixtures_from_groups(cell.symbols, groups, weights_arr)
-    new_scaled = [scaled[group[0]] for group in groups]
+    return _build_mixture_cell_from_groups(
+        cell, groups, np.asarray(weights, dtype="double"), sort_constituents
+    )
 
+
+def merge_weighted_species(
+    cell: PhonopyAtoms,
+    symprec: float = 1e-5,
+    sort_constituents: bool = True,
+) -> tuple[PhonopyAtoms, NDArray[np.int64]]:
+    """Merge co-located weighted atoms into mixed-species sites.
+
+    This makes the site cell of the merge scheme of site mixture from a cell
+    with weighted species (see ``apply_site_mixture``), whose atoms are those
+    of the input structure. Atoms whose fractional positions agree (modulo
+    lattice translations) within ``symprec`` become one site whose species is
+    the mixture of their symbols and weights. Atoms without weight have weight
+    1.0. The sites are in the order of their first atoms, as in
+    ``build_mixture_cell``.
+
+    Parameters
+    ----------
+    cell : PhonopyAtoms
+        Cell with weighted species, or an ordinary cell. Must not contain
+        mixed-species sites or magnetic moments.
+    symprec : float
+        Tolerance for treating two fractional positions as overlapping.
+    sort_constituents : bool, optional
+        See ``build_mixture_cell``.
+
+    Returns
+    -------
+    site_cell : PhonopyAtoms
+        Cell with one atom per site.
+    site_indices : NDArray[np.int64]
+        Index of the site in ``site_cell`` of each atom of ``cell``.
+        ``shape=(len(cell),)``.
+
+    """
+    _check_cell_to_merge(cell, "merge_weighted_species")
+    weights = cell.mixture_weights
+    if weights is None:
+        weights = np.ones(len(cell), dtype="double")
+    groups = _group_overlapping_atoms(cell, symprec)
+    site_cell = _build_mixture_cell_from_groups(
+        cell, groups, weights, sort_constituents
+    )
+    site_indices = np.zeros(len(cell), dtype="int64")
+    for i_site, group in enumerate(groups):
+        site_indices[group] = i_site
+    return site_cell, site_indices
+
+
+def _check_cell_to_merge(cell: PhonopyAtoms, func_name: str) -> None:
+    if cell.has_mixtures:
+        raise ValueError(
+            f"{func_name} cannot be applied to a cell that already "
+            "contains mixed-species sites."
+        )
+    if cell.magnetic_moments is not None:
+        raise ValueError(
+            f"{func_name} does not support cells carrying magnetic moments."
+        )
+
+
+def _build_mixture_cell_from_groups(
+    cell: PhonopyAtoms,
+    groups: list[list[int]],
+    weights: NDArray[np.double],
+    sort_constituents: bool,
+) -> PhonopyAtoms:
+    scaled = cell.scaled_positions
+    mixtures = build_mixtures_from_groups(cell.symbols, groups, weights)
+    new_scaled = [scaled[group[0]] for group in groups]
     species_table, species_ids = build_species_table_from_mixtures(
         mixtures, sort_constituents=sort_constituents
     )
-
     return PhonopyAtoms(
         cell=cell.cell,
         scaled_positions=np.array(new_scaled, dtype="double"),

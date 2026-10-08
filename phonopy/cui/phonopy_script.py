@@ -561,9 +561,13 @@ def _write_displacements_files_then_exit(
     cells_with_disps = phonon.supercells_with_displacements
     assert cells_with_disps is not None
     additional_info = {"supercell_matrix": phonon.supercell_matrix}
+    if phonon.unmerged_supercell is None:
+        supercell = phonon.supercell
+    else:
+        supercell = phonon.unmerged_supercell
     write_supercells_with_displacements(
         phonon.calculator,
-        phonon.supercell,
+        supercell,
         cells_with_disps,
         optional_structure_info=optional_structure_info,
         additional_info=additional_info,
@@ -1837,7 +1841,9 @@ def _get_fc_calculator_params(settings) -> tuple[str | None, str | None]:
     return fc_calculator, fc_calculator_options
 
 
-def _show_symmetry_info_then_exit(cell_info: PhonopyCellInfoResult, symprec: float):
+def _show_symmetry_info_then_exit(
+    settings: PhonopySettings, cell_info: PhonopyCellInfoResult, symprec: float
+):
     """Show crystal structure information in yaml style."""
     phonon = Phonopy(
         cell_info.unitcell,
@@ -1846,6 +1852,7 @@ def _show_symmetry_info_then_exit(cell_info: PhonopyCellInfoResult, symprec: flo
         symprec=symprec,
         calculator=cell_info.interface_mode,
         log_level=0,
+        site_mixture_scheme=_get_site_mixture_scheme(settings, cell_info),
     )
     check_symmetry(phonon, cell_info)
     sys.exit(0)
@@ -1859,7 +1866,11 @@ def _check_supercell_in_yaml(
         cell_info.phonopy_yaml is not None
         and cell_info.phonopy_yaml.supercell is not None
     ):
-        if not cells_isclose(cell_info.phonopy_yaml.supercell, ph.supercell):
+        if ph.unmerged_supercell is None:
+            supercell = ph.supercell
+        else:
+            supercell = ph.unmerged_supercell
+        if not cells_isclose(cell_info.phonopy_yaml.supercell, supercell):
             if log_level:
                 print(
                     "Generated Supercell is inconsistent with that "
@@ -1867,6 +1878,20 @@ def _check_supercell_in_yaml(
                 )
                 print_error()
             sys.exit(1)
+
+
+def _get_site_mixture_scheme(
+    settings: PhonopySettings, cell_info: PhonopyCellInfoResult
+) -> Literal["merge", "split"]:
+    """Return scheme of site mixture from the yaml, or from the settings."""
+    if (
+        cell_info.phonopy_yaml is not None
+        and cell_info.phonopy_yaml.site_mixture_scheme is not None
+    ):
+        return cell_info.phonopy_yaml.site_mixture_scheme
+    if settings.merge_site_mixture:
+        return "merge"
+    return "split"
 
 
 def _init_phonopy(
@@ -1890,6 +1915,7 @@ def _init_phonopy(
             calculator=cell_info.interface_mode,
             log_level=log_level,
             lang=lang,
+            site_mixture_scheme=_get_site_mixture_scheme(settings, cell_info),
         )
     else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         phonon = Phonopy(
@@ -1902,6 +1928,7 @@ def _init_phonopy(
             calculator=cell_info.interface_mode,
             log_level=log_level,
             lang=lang,
+            site_mixture_scheme=_get_site_mixture_scheme(settings, cell_info),
         )
         if settings.frequency_conversion_factor is not None:
             phonon.unit_conversion_factor = settings.frequency_conversion_factor
@@ -2236,7 +2263,7 @@ def main(**argparse_control: bool | PhonopyMockArgs):
     # Show crystal symmetry information and exit (--symmetry) #
     ###########################################################
     if run_symmetry_info:
-        _show_symmetry_info_then_exit(cell_info, symprec)
+        _show_symmetry_info_then_exit(settings, cell_info, symprec)
 
     ######################
     # Initialize phonopy #

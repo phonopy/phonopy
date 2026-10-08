@@ -60,7 +60,11 @@ def _write_vasp_supercells_of_split_cell(
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    ph = Phonopy(apply_site_mixture(cell, weights), supercell_matrix=[2, 2, 2])
+    ph = Phonopy(
+        apply_site_mixture(cell, weights),
+        supercell_matrix=[2, 2, 2],
+        site_mixture_scheme="split",
+    )
     ph.generate_displacements()
     cells = ph.supercells_with_displacements
     assert cells is not None

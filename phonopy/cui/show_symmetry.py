@@ -40,11 +40,12 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
     """
     base_fname = get_default_cell_filename(phonon.calculator)
     symprec = phonon.primitive_symmetry.tolerance
-    spglib_cell = spglib.refine_cell(phonon.primitive.totuple(), symprec)
+    _, primitive, _ = _get_cells_to_write(phonon)
+    spglib_cell = spglib.refine_cell(primitive.totuple(), symprec)
     assert spglib_cell is not None
     bravais_lattice, bravais_pos, bravais_numbers = spglib_cell
     bravais = _rebuild_bravais_cell(
-        phonon.primitive,
+        primitive,
         np.array(bravais_lattice, dtype="double"),
         np.array(bravais_pos, dtype="double"),
         np.array(bravais_numbers, dtype="int64"),
@@ -55,6 +56,7 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
         supercell_matrix=cell_info.supercell_matrix,
         primitive_matrix=trans_mat,
         calculator=phonon.calculator,
+        site_mixture_scheme=phonon.site_mixture_scheme,
     )
 
     if (
@@ -65,11 +67,14 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
             f"Input crystal structure: "
             f'"{cell_info.optional_structure_info.unitcell_filename}"'
         )
+        _, primitive, supercell = _get_cells_to_write(ph)
         phyml = PhonopyYaml()
-        phyml.supercell = ph.supercell
+        phyml.supercell = supercell
         phyml.supercell_matrix = ph.supercell_matrix
-        phyml.primitive = ph.primitive
+        phyml.primitive = primitive
         phyml.primitive_matrix = ph.primitive_matrix
+        if primitive.has_weighted_species:
+            phyml.site_mixture_scheme = ph.site_mixture_scheme
         with open("phonopy_supercell.yaml", "w") as w:
             print(phyml, file=w)
 
@@ -85,6 +90,21 @@ def check_symmetry(phonon: Phonopy, cell_info: PhonopyCellInfoResult):
         )
     else:
         _show_symmetry_yaml(phonon, cell_info, base_fname, ph)
+
+
+def _get_cells_to_write(
+    ph: Phonopy,
+) -> tuple[PhonopyAtoms, PhonopyAtoms, PhonopyAtoms]:
+    """Return unit cell, primitive cell and supercell with the input atoms.
+
+    With the merge scheme of site mixture, these are the unmerged cells.
+
+    """
+    if ph.unmerged_unitcell is None:
+        return ph.unitcell, ph.primitive, ph.supercell
+    assert ph.unmerged_primitive is not None
+    assert ph.unmerged_supercell is not None
+    return ph.unmerged_unitcell, ph.unmerged_primitive, ph.unmerged_supercell
 
 
 def _rebuild_bravais_cell(
@@ -134,7 +154,7 @@ def _show_symmetry_yaml(
         print(f'# Symmetrized conventional unit cell is written into "{filename}" and')
         write_crystal_structure(
             filename,
-            ph.unitcell,
+            _get_cells_to_write(ph)[0],
             interface_mode=phonon.calculator,
             optional_structure_info=optional_structure_info,
         )
@@ -142,7 +162,7 @@ def _show_symmetry_yaml(
         print(f'# Symmetrized primitive is written into "{filename}" and ')
         write_crystal_structure(
             filename,
-            ph.primitive,
+            _get_cells_to_write(ph)[1],
             interface_mode=phonon.calculator,
             optional_structure_info=optional_structure_info,
         )
@@ -150,9 +170,12 @@ def _show_symmetry_yaml(
 
 
 def _write_symcells_yaml(ph: Phonopy):
+    unitcell, primitive, _ = _get_cells_to_write(ph)
     phyml = PhonopyYaml()
-    phyml.primitive = ph.primitive
-    phyml.unitcell = ph.unitcell
+    phyml.primitive = primitive
+    phyml.unitcell = unitcell
+    if unitcell.has_weighted_species:
+        phyml.site_mixture_scheme = ph.site_mixture_scheme
     with open("phonopy_symcells.yaml", "w") as w:
         print(phyml, file=w)
 

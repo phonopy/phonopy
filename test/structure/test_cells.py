@@ -35,7 +35,6 @@ from phonopy.structure.cells import (
     isclose,
     sparse_to_dense_svecs,
 )
-from phonopy.structure.mixture import get_mixture_expansion
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 primitive_matrix_nacl = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
@@ -720,35 +719,10 @@ def test_build_mixture_cell_rejects_already_mixed_cell():
         build_mixture_cell(mixed_cell, [1.0])
 
 
-def test_build_mixture_cell_supercell_through_phonopy(ph_nacl: Phonopy):
-    """A mixed unitcell flows through Phonopy and produces a supercell with mixtures."""
-    a = 2.82173
-    cell = PhonopyAtoms(
-        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
-        scaled_positions=[
-            [0.0, 0.0, 0.0],
-            [0.25, 0.25, 0.25],
-            [0.0, 0.0, 0.0],
-            [0.25, 0.25, 0.25],
-        ],
-        symbols=["Ge", "Ge", "Sn", "Sn"],
-    )
-    mixed_cell = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
-    ph = Phonopy(mixed_cell, supercell_matrix=np.diag([2, 2, 2]))
-    assert ph.supercell.has_mixtures
-    assert ph.primitive.has_mixtures
-    assert len(ph.supercell) == 16
+def test_merged_supercell_through_phonopy(ph_nacl: Phonopy):
+    """A weighted unit cell is merged by Phonopy into a supercell with mixtures.
 
-
-def test_GeSn_mixture_force_constants_e2e():
-    """End-to-end: GeSn 50/50 supercell with raw expanded forces builds FC.
-
-    Construct the canonical GeSn 50/50 zincblende cell, generate
-    displacements through Phonopy, plug in synthetic *expanded* forces
-    of shape (num_supercells, n_expanded, 3) (the shape that VASP would
-    emit on a mixture-expanded SPOSCAR), and confirm produce_force_constants
-    runs end-to-end. The resulting FC has per-site shape, demonstrating
-    the FC-time reduction of raw forces.
+    A unit cell of merged mixed-species sites itself is not accepted.
 
     """
     a = 2.82173
@@ -762,12 +736,43 @@ def test_GeSn_mixture_force_constants_e2e():
         ],
         symbols=["Ge", "Ge", "Sn", "Sn"],
     )
-    mixed = build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5])
-    ph = Phonopy(mixed, supercell_matrix=np.diag([2, 2, 2]))
+    weighted = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(weighted, supercell_matrix=np.diag([2, 2, 2]))
+    assert ph.supercell.has_mixtures
+    assert ph.primitive.has_mixtures
+    assert len(ph.supercell) == 16
+    with pytest.raises(ValueError, match="merged mixed-species sites"):
+        Phonopy(build_mixture_cell(cell, [0.5, 0.5, 0.5, 0.5]))
+
+
+def test_GeSn_mixture_force_constants_e2e():
+    """End-to-end: GeSn 50/50 supercell with forces on unmerged atoms builds FC.
+
+    Construct the canonical GeSn 50/50 zincblende cell with weighted atoms,
+    generate displacements through Phonopy with the merge scheme, plug in
+    synthetic forces of shape (num_supercells, n_unmerged, 3) (the shape that
+    VASP would emit on the unmerged SPOSCAR), and confirm
+    produce_force_constants runs end-to-end. The resulting FC has per-site
+    shape, demonstrating the FC-time reduction of raw forces.
+
+    """
+    a = 2.82173
+    cell = PhonopyAtoms(
+        cell=[[0, a, a], [a, 0, a], [a, a, 0]],
+        scaled_positions=[
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+            [0.0, 0.0, 0.0],
+            [0.25, 0.25, 0.25],
+        ],
+        symbols=["Ge", "Ge", "Sn", "Sn"],
+    )
+    weighted = apply_site_mixture(cell, [0.5, 0.5, 0.5, 0.5])
+    ph = Phonopy(weighted, supercell_matrix=np.diag([2, 2, 2]))
     ph.generate_displacements(distance=0.01)
     n_sites = len(ph.supercell)
-    site_indices, _ = get_mixture_expansion(ph.supercell)
-    n_expanded = int(site_indices.size)
+    assert ph.unmerged_supercell is not None
+    n_expanded = len(ph.unmerged_supercell)
     assert n_expanded == 2 * n_sites
 
     rng = np.random.default_rng(seed=42)
