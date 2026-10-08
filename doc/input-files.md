@@ -241,9 +241,21 @@ the same amount.
 
 #### Type 2
 
-The type-2 format has one displacement and one force on each line, so it
-cannot have the displacements of `n_sites` sites and the forces on `n_atoms`
-atoms. It is not used with the merge scheme.
+The type-2 format has one displacement and one force of an atom on each
+line, and has no number of atoms. With the merge scheme, the displacements
+are generated for the sites, and each displacement of a site is written for
+every atom of the site, as in the supercells written for the calculator
+(`POSCAR-001`, ...).
+
+- Each supercell has `n_atoms` lines, in the order of the atoms of
+  `SPOSCAR`.
+- The atoms of one site have the same displacement.
+- The forces are those from the calculator, one per atom.
+
+When this file is read with the `phonopy_disp.yaml` of the merge scheme, its
+lines are grouped by `n_atoms` into the supercells. The displacements of the
+atoms of each site have to be the same, and they are used as the
+displacement of the site.
 
 -->
 
