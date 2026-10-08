@@ -2,6 +2,7 @@
 """Tests of PhonopyYaml."""
 
 import io
+import re
 from pathlib import Path
 
 import numpy as np
@@ -305,7 +306,8 @@ def test_phonopy_yaml_mixture_tag_is_error(tmp_path):
     assert "mixture:" in text
     filename = tmp_path / "phonopy.yaml"
     filename.write_text(text)
-    with pytest.raises(ValueError, match=f'"{filename}" contains the "mixture" tag'):
+    match = re.escape(f'"{filename}" contains the "mixture" tag')
+    with pytest.raises(ValueError, match=match):
         PhonopyYaml().read(filename)
     with pytest.raises(ValueError, match='The yaml data contains the "mixture" tag'):
         PhonopyYaml().read(io.StringIO(text))
