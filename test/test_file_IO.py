@@ -21,6 +21,7 @@ from phonopy.file_IO import (
     get_dataset_type2,
     get_FORCE_CONSTANTS_lines,
     get_FORCE_SETS_lines,
+    get_FORCE_SETS_type,
     get_io_module_to_decompress,
     is_file_phonopy_yaml,
     iter_collect_forces,
@@ -174,13 +175,12 @@ def test_write_read_FORCE_SETS_type1_expanded(tmp_path):
     out = tmp_path / "FORCE_SETS"
     write_FORCE_SETS(dataset, filename=out)
 
-    # Header line 1 must be n_expanded so the parser can detect the
-    # mismatch with the supercell site count.
+    # Header line 1 is the number of rows of forces.
     first_line = out.read_text().splitlines()[0].strip()
     assert int(first_line) == n_expanded
 
-    dataset2 = parse_FORCE_SETS(filename=out, natom=n_sites)
-    assert dataset2["natom"] == n_sites
+    dataset2 = parse_FORCE_SETS(filename=out)
+    assert dataset2["natom"] == n_expanded
     assert dataset2["first_atoms"][0]["number"] == 0
     assert dataset2["first_atoms"][1]["number"] == 1
     np.testing.assert_allclose(dataset2["first_atoms"][0]["forces"], forces0)
@@ -229,6 +229,28 @@ def test_get_FORCE_SETS_lines_type2_roundtrip():
         dataset2["displacements"], dataset["displacements"], atol=1e-7
     )
     np.testing.assert_allclose(dataset2["forces"], dataset["forces"], atol=1e-7)
+
+
+def test_parse_FORCE_SETS_natom_as_first_argument(tmp_path, monkeypatch):
+    """The number of atoms as the first argument is deprecated but works."""
+    natom = int((cwd / "FORCE_SETS_NaCl").read_text().split()[0])
+    (tmp_path / "FORCE_SETS").write_text((cwd / "FORCE_SETS_NaCl").read_text())
+    monkeypatch.chdir(tmp_path)
+    with pytest.warns(DeprecationWarning, match="first argument"):
+        dataset = parse_FORCE_SETS(natom)  # type: ignore[arg-type]
+    assert dataset["natom"] == natom
+
+
+def test_get_FORCE_SETS_type(tmp_path):
+    """The type of FORCE_SETS is read from its first line."""
+    assert get_FORCE_SETS_type(cwd / "FORCE_SETS_NaCl") == 1
+    type2 = tmp_path / "FORCE_SETS_type2"
+    type2.write_text(_TYPE2_TEXT)
+    assert get_FORCE_SETS_type(type2) == 2
+    unknown = tmp_path / "FORCE_SETS_unknown"
+    unknown.write_text("1 2\n")
+    with pytest.raises(RuntimeError, match="Unknown dataset format"):
+        get_FORCE_SETS_type(unknown)
 
 
 def test_get_FORCE_SETS_lines_type2_shape_mismatch_raises():

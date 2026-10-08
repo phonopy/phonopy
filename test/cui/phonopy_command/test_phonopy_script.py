@@ -170,9 +170,9 @@ def test_create_force_sets_GeSn_vca():
             # Compare against the bundled reference FORCE_SETS.
             from phonopy.file_IO import parse_FORCE_SETS
 
-            ref = parse_FORCE_SETS(natom=16, filename=fixtures / "GeSn-vca-FORCE_SETS")
-            got = parse_FORCE_SETS(natom=16, filename=written)
-            assert got["natom"] == ref["natom"] == 16
+            ref = parse_FORCE_SETS(filename=fixtures / "GeSn-vca-FORCE_SETS")
+            got = parse_FORCE_SETS(filename=written)
+            assert got["natom"] == ref["natom"] == 32
             assert got["first_atoms"][0]["number"] == ref["first_atoms"][0]["number"]
             np.testing.assert_allclose(
                 got["first_atoms"][0]["displacement"],
