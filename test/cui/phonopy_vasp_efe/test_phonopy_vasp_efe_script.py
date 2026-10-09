@@ -134,6 +134,30 @@ def test_phonopy_vasp_efe_fe_values_with_symmetrized_tetrahedra():
     np.testing.assert_allclose(row_last[3], -17.35704345, rtol=1e-6)
 
 
+def test_phonopy_vasp_efe_passes_window_and_spacing(monkeypatch):
+    """Test that --electronic-window and --electronic-spacing reach the tetrahedron."""
+    import phonopy.cui.phonopy_vasp_efe_script as efe_script
+
+    seen = []
+    original = efe_script.compute_thermal_properties_by_tetrahedron
+
+    def spy(*args, **kwargs):
+        seen.append((kwargs["window"], kwargs["energy_spacing"]))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(efe_script, "compute_thermal_properties_by_tetrahedron", spy)
+    filenames = [cwd / "vasprun.xmls/vasprun.xml-00.xz"]
+    args = PhonopyVaspEfeMockArgs(
+        filenames=filenames,
+        tmax=100.0,
+        tstep=50.0,
+        electronic_window=0.6,
+        electronic_spacing=0.001,
+    )
+    get_fe_ev_lines(args)
+    assert seen == [(0.6, 0.001)]
+
+
 def test_phonopy_vasp_efe_temperature_range():
     """Test phonopy-vasp-efe with custom temperature range."""
     filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]

@@ -301,6 +301,42 @@ def test_run_qha_electronic_structures(nacl_qha_phonopys: list[Phonopy]) -> None
     np.testing.assert_allclose(cp_new[6:], cp_ref[6:], atol=0.3)
 
 
+def test_run_qha_passes_the_tetrahedron_parameters(
+    nacl_qha_phonopys: list[Phonopy], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """electronic_window, electronic_spacing and symmetrize_tetrahedra arrive."""
+    import phonopy.qha.qha as qha_module
+
+    seen = []
+    original = qha_module.compute_electronic_thermal_properties_from_states
+
+    def spy(*args, **kwargs):
+        seen.append(
+            (
+                kwargs["window"],
+                kwargs["energy_spacing"],
+                kwargs["symmetrize_tetrahedra"],
+            )
+        )
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(
+        qha_module, "compute_electronic_thermal_properties_from_states", spy
+    )
+    volumes = np.array([ph.primitive.volume for ph in nacl_qha_phonopys])
+    run_qha(
+        nacl_qha_phonopys,
+        TEMPERATURES,
+        internal_energies=internal_energies(volumes),
+        electronic_structures=_electronic_structures(volumes),
+        mesh=MESH,
+        electronic_window=0.6,
+        electronic_spacing=0.001,
+        symmetrize_tetrahedra=True,
+    )
+    assert seen == [(0.6, 0.001, True)]
+
+
 def test_run_qha_adds_the_electronic_heat_capacity(
     nacl_qha_phonopys: list[Phonopy], qha_result_nacl: QHAResult
 ) -> None:

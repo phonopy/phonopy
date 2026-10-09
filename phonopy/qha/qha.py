@@ -195,6 +195,9 @@ def run_qha(
     lattice_fit_degree: int = 2,
     verbose: bool = False,
     exclude_gamma_acoustic: bool = False,
+    electronic_window: float | None = None,
+    electronic_spacing: float = 0.0005,
+    symmetrize_tetrahedra: bool = False,
 ) -> QHAResult:
     """Run a quasi-harmonic approximation calculation.
 
@@ -256,6 +259,16 @@ def run_qha(
         Exclude the three acoustic modes at Gamma from the phonon thermal
         properties. See :meth:`Phonopy.run_thermal_properties`. Default is
         False.
+    electronic_window : float, optional
+        Half-width of the energy window of the tetrahedron method in eV.
+        Default is None, which takes 16 k_B T of the highest temperature and
+        at least 0.5 eV. See compute_thermal_properties_by_tetrahedron.
+    electronic_spacing : float, optional
+        Spacing of the energy grid inside that window in eV. Default is
+        0.0005. See compute_thermal_properties_by_tetrahedron.
+    symmetrize_tetrahedra : bool, optional
+        Average the tetrahedron weights over the point group. Default is
+        False. See compute_thermal_properties_by_tetrahedron.
 
     Returns
     -------
@@ -299,7 +312,12 @@ def run_qha(
         # has already established that the states are on the same cell as
         # the phonons, whichever cell ph.primitive is.
         electronic = compute_electronic_thermal_properties_from_states(
-            electronic_structures, temps_in, primitive_volumes=None
+            electronic_structures,
+            temps_in,
+            primitive_volumes=None,
+            window=electronic_window,
+            energy_spacing=electronic_spacing,
+            symmetrize_tetrahedra=symmetrize_tetrahedra,
         )
         el = el + np.column_stack([p.free_energy for p in electronic])
         entropy = entropy + np.column_stack([p.entropy for p in electronic])
