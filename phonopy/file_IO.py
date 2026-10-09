@@ -130,7 +130,7 @@ def parse_FORCE_SETS(
     filename: str | os.PathLike = "FORCE_SETS",
     *,
     natom: int | None = None,
-    to_type2: bool = False,
+    to_type2: bool | None = None,
 ) -> DisplacementDataset:
     """Parse FORCE_SETS from file.
 
@@ -155,8 +155,9 @@ def parse_FORCE_SETS(
         None, the lines are not grouped, and the displacements and the forces
         have the shape (number of lines, 3).
     to_type2 : bool, optional
-        When True, type-1 FORCE_SETS is returned as a type-2 dataset. Default
-        is False.
+        Deprecated. When True, type-1 FORCE_SETS is returned as a type-2
+        dataset. Use ``phonopy.structure.dataset.get_displacements_and_forces``
+        instead. Default is None, which is False.
 
     Returns
     -------
@@ -177,7 +178,7 @@ def parse_FORCE_SETS(
         return _get_dataset(
             f,
             natom=natom,
-            to_type2=to_type2,
+            to_type2=_get_to_type2(to_type2, "parse_FORCE_SETS"),
         )
 
 
@@ -193,10 +194,31 @@ def get_FORCE_SETS_type(filename: str | os.PathLike = "FORCE_SETS") -> Literal[1
 
 
 def parse_FORCE_SETS_from_strings(
-    strings: str, *, natom: int | None = None, to_type2: bool = False
+    strings: str, *, natom: int | None = None, to_type2: bool | None = None
 ) -> DisplacementDataset:
-    """Parse FORCE_SETS from strings."""
-    return _get_dataset(io.StringIO(strings), natom=natom, to_type2=to_type2)
+    """Parse FORCE_SETS from strings.
+
+    See ``parse_FORCE_SETS`` for the parameters.
+
+    """
+    return _get_dataset(
+        io.StringIO(strings),
+        natom=natom,
+        to_type2=_get_to_type2(to_type2, "parse_FORCE_SETS_from_strings"),
+    )
+
+
+def _get_to_type2(to_type2: bool | None, func_name: str) -> bool:
+    """Return to_type2, warning that the parameter is deprecated when given."""
+    if to_type2 is None:
+        return False
+    warnings.warn(
+        f"to_type2 of {func_name} is deprecated. Use "
+        "phonopy.structure.dataset.get_displacements_and_forces instead.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return to_type2
 
 
 def _get_dataset(
