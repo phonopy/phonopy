@@ -299,7 +299,7 @@ def test_group_by_key_none_positions():
 
 
 def test_group_by_key_consecutive():
-    """With consecutive=True, each run of one key is a group in place."""
+    """With consecutive=True, items of one key next to each other are a group."""
     positions = np.array([[0.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.1, 0.1, 0.1]])
     counts, reduced, grouped_pos = group_by_key(
         ["Na", "Cl", "Na"], positions, consecutive=True
@@ -359,9 +359,9 @@ def test_get_vasp_structure_lines(helper_methods, is_vasp4, first_line_str):
 def test_get_vasp_structure_lines_shuffled_positions(helper_methods):
     """Test get_vasp_structure_lines with a cell having shuffled positions.
 
-    Order of atoms is kept, with one species row per run of consecutive atoms
-    of one symbol, because the forces calculated by VASP are read in the order
-    of the atoms.
+    Order of atoms is kept, and atoms of one symbol that are next to each other
+    are written in one species row, because the forces calculated by VASP are
+    read in the order of the atoms.
 
     """
     poscar_yaml = """lattice:
