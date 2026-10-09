@@ -256,7 +256,8 @@ decreases most slowly away from the Fermi level. The density of states is
 sampled on an energy grid of 0.5 meV spacing in the window. The `window` and
 `energy_spacing` parameters change {math}`W` and the spacing. The
 `--electronic-window` and `--electronic-spacing` options of
-`phonopy-vasp-efe` and `phonopy-anisotropic-qha` do the same.
+`phonopy-vasp-efe` and `phonopy-anisotropic-qha` do the same, and so do the
+`electronic_window` and `electronic_spacing` parameters of `run_qha`.
 
 At low temperature, the Fermi-Dirac distribution changes over an energy
 range of a few {math}`k_\mathrm{B} T`. When {math}`k_\mathrm{B} T` is
@@ -278,7 +279,7 @@ occupied at every temperature, and the states above the window are empty.
 
 The `symmetrize_tetrahedra` parameter averages the tetrahedron weights over
 the point group. The `--symmetrize-tetrahedra` option of `phonopy-vasp-efe`
-does the same. See {ref}`migration_v5` for this option and its default in
+and the `symmetrize_tetrahedra` parameter of `run_qha` do the same. See {ref}`migration_v5` for this option and its default in
 the next major version.
 
 (electronic_thermal_properties_chemical_potential)=
