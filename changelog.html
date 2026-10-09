@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.8.1</title>
+    <title>Change Log &#8212; Phonopy v.4.8.2</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=91216439"></script>
+    <script src="_static/documentation_options.js?v=8655e45f"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -180,7 +180,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.8.1</p>
+    <p class="title logo__title">Phonopy v.4.8.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -400,7 +400,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased">Unreleased</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-09-2026-version-4-8-2">Oct-09-2026: Version 4.8.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-04-2026-version-4-8-1">Oct-04-2026: Version 4.8.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-02-2026-version-4-8-0">Oct-02-2026: Version 4.8.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-2">Sep-27-2026: Version 4.7.2</a></li>
@@ -637,41 +637,20 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
-<section id="unreleased">
-<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">#</a></h2>
+<section id="oct-09-2026-version-4-8-2">
+<h2>Oct-09-2026: Version 4.8.2<a class="headerlink" href="#oct-09-2026-version-4-8-2" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Python 3.10 is no longer supported. Python 3.11 or later is required.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">free_energy_from_dos</span></code>, <code class="docutils literal notranslate"><span class="pre">compute_free_energy_by_tetrahedron</span></code>,
-<code class="docutils literal notranslate"><span class="pre">compute_free_energy_by_kpoint_sum</span></code>, <code class="docutils literal notranslate"><span class="pre">get_free_energy_at_T</span></code> and
-<code class="docutils literal notranslate"><span class="pre">compute_electronic_contributions_from_states</span></code> are deprecated in favour of
-the functions that return <code class="docutils literal notranslate"><span class="pre">ElectronicThermalProperties</span></code>. See
-<a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a>.</p></li>
-<li><p>The electronic states and free energies moved from <code class="docutils literal notranslate"><span class="pre">phonopy.qha</span></code> to the
-new package <code class="docutils literal notranslate"><span class="pre">phonopy.electron</span></code>: <code class="docutils literal notranslate"><span class="pre">phonopy.electron.states</span></code>,
-<code class="docutils literal notranslate"><span class="pre">phonopy.electron.tetrahedron</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy.electron.kpoint_sum</span></code>. The
-old modules <code class="docutils literal notranslate"><span class="pre">phonopy.qha.electron</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy.qha.electron_states</span></code> and
-<code class="docutils literal notranslate"><span class="pre">phonopy.qha.electron_kpoint_sum</span></code> still work and are deprecated. See
-<a class="reference internal" href="migration-v5.html#migration-v5"><span class="std std-ref">Migrating toward phonopy v5</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CpPolyfitArrays</span></code> and <code class="docutils literal notranslate"><span class="pre">EntropyEnthalpyArrays</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.qha.calc</span></code> and
-<code class="docutils literal notranslate"><span class="pre">SSCHAAverage</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.sscha.trace</span></code> are frozen dataclasses instead of
-named tuples. Their fields are read by name; unpacking them or indexing
-them by position no longer works.</p></li>
-<li><p>Electronic heat capacity. <code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_tetrahedron</span></code>
-and <code class="docutils literal notranslate"><span class="pre">compute_thermal_properties_by_kpoint_sum</span></code> of <code class="docutils literal notranslate"><span class="pre">phonopy.electron</span></code>
-return the free energy, entropy, heat capacity and chemical potential as
-<code class="docutils literal notranslate"><span class="pre">ElectronicThermalProperties</span></code>. <code class="docutils literal notranslate"><span class="pre">ElectronFreeEnergy</span></code> has
-<code class="docutils literal notranslate"><span class="pre">heat_capacity</span></code>.</p></li>
-<li><p>The default energy window of the electronic free energy by the linear
-tetrahedron method is 16 k_B T of the highest temperature instead of
-12 k_B T, at least 0.5 eV as before. The electronic free energies change
-slightly.</p></li>
-<li><p>VASP POSCAR and MAGMOM are written without reordering atoms by chemical
-symbols, so that the forces in <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> are in the order of the atoms
-of the supercell. When atoms of one element are not grouped together in
-the cell, the element appears more than once in the line of element names
-in POSCAR with a warning, and POTCAR has to be concatenated in the same
-order. To have each element appear once, sort the atoms of the unit cell
-by chemical symbols beforehand.</p></li>
+<li><p>Electronic thermal properties are updated. See
+<a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties"><span class="std std-ref">Electronic thermal properties</span></a>.</p></li>
+<li><p>The first parameter of <code class="docutils literal notranslate"><span class="pre">phonopy.file_IO.parse_FORCE_SETS</span></code> is <code class="docutils literal notranslate"><span class="pre">filename</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">natom</span></code> is given as a keyword argument. Giving the number of atoms as
+the first argument still works and is deprecated. <code class="docutils literal notranslate"><span class="pre">to_type2</span></code> of
+<code class="docutils literal notranslate"><span class="pre">parse_FORCE_SETS</span></code> and <code class="docutils literal notranslate"><span class="pre">parse_FORCE_SETS_from_strings</span></code> is deprecated; use
+<code class="docutils literal notranslate"><span class="pre">phonopy.structure.dataset.get_displacements_and_forces</span></code> to get the
+displacements and forces of a type-1 dataset as arrays.</p></li>
+<li><p>Writing type-2 FORCE_SETS raises an error when the displacements and the
+forces have different shapes.</p></li>
 </ul>
 </section>
 <section id="oct-04-2026-version-4-8-1">
@@ -2875,7 +2854,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unreleased">Unreleased</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-09-2026-version-4-8-2">Oct-09-2026: Version 4.8.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-04-2026-version-4-8-1">Oct-04-2026: Version 4.8.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-02-2026-version-4-8-0">Oct-02-2026: Version 4.8.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sep-27-2026-version-4-7-2">Sep-27-2026: Version 4.7.2</a></li>
