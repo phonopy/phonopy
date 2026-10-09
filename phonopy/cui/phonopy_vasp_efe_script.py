@@ -45,6 +45,8 @@ class PhonopyVaspEfeMockArgs:
     quiet: bool = False
     k_point_sum: bool = False
     symmetrize_tetrahedra: bool = False
+    electronic_window: float | None = None
+    electronic_spacing: float = 0.0005
     write_electronic_states: bool = False
     filenames: Sequence[os.PathLike | str] | None = None
 
@@ -111,6 +113,25 @@ def get_options() -> argparse.Namespace:
             "the sum over irreducible k-points equals the sum over all of "
             "them (default: %(default)s)"
         ),
+    )
+    parser.add_argument(
+        "--electronic-window",
+        dest="electronic_window",
+        type=float,
+        default=default_vals.electronic_window,
+        metavar="EV",
+        help=(
+            "Half-width of the energy window the tetrahedron method integrates "
+            "over (default: 16 k_B T of the highest temperature, at least 0.5 eV)"
+        ),
+    )
+    parser.add_argument(
+        "--electronic-spacing",
+        dest="electronic_spacing",
+        type=float,
+        default=default_vals.electronic_spacing,
+        metavar="EV",
+        help="Spacing of the energy grid inside that window (default: %(default)s)",
     )
     parser.add_argument(
         "--es",
@@ -261,12 +282,15 @@ def _free_energy_of_one_volume(
     temperatures: NDArray[np.double],
     by_sum: bool = False,
     symmetrize_tetrahedra: bool = False,
+    window: float | None = None,
+    energy_spacing: float = 0.0005,
 ) -> tuple[NDArray[np.double], str, str]:
     """Return F_el(T) - F_el(0) of one volume in eV, how it was integrated, and why.
 
     The linear tetrahedron method unless the states carry no sampling grid or
     their k-points cannot be paired with one, and unless the k-point sum is
-    asked for, which converges far more slowly.
+    asked for, which converges far more slowly. window and energy_spacing are
+    passed to the tetrahedron method; the k-point sum does not use them.
 
     The reference is 0 K in both cases, which is what U(V) already holds.
 
@@ -278,6 +302,8 @@ def _free_energy_of_one_volume(
             properties = compute_thermal_properties_by_tetrahedron(
                 electronic_states,
                 temperatures,
+                window=window,
+                energy_spacing=energy_spacing,
                 symmetrize_tetrahedra=symmetrize_tetrahedra,
             )
             return properties.free_energy, "linear tetrahedron method", ""
@@ -341,6 +367,8 @@ def get_fe_ev_lines(
             temperatures,
             by_sum=getattr(args, "k_point_sum", False),
             symmetrize_tetrahedra=getattr(args, "symmetrize_tetrahedra", False),
+            window=getattr(args, "electronic_window", None),
+            energy_spacing=getattr(args, "electronic_spacing", 0.0005),
         )
         if verbose:
             told = method if not reason else "%s (%s)" % (method, reason)

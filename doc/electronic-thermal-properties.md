@@ -254,7 +254,17 @@ where {math}`T_\mathrm{max}` is the highest temperature. The width is set by
 the heat capacity. Its integrand contains {math}`f(1-f)(E-\mu)^2`, which
 decreases most slowly away from the Fermi level. The density of states is
 sampled on an energy grid of 0.5 meV spacing in the window. The `window` and
-`energy_spacing` parameters change {math}`W` and the spacing.
+`energy_spacing` parameters change {math}`W` and the spacing. The
+`--electronic-window` and `--electronic-spacing` options of
+`phonopy-vasp-efe` and `phonopy-anisotropic-qha` do the same.
+
+At low temperature, the Fermi-Dirac distribution changes over an energy
+range of a few {math}`k_\mathrm{B} T`. When {math}`k_\mathrm{B} T` is
+smaller than the spacing, the energy grid does not resolve this change, and
+the entropy and the heat capacity become inaccurate. The default spacing of
+0.5 meV is equal to {math}`k_\mathrm{B} T` at about 6 K. For temperatures
+below that, set the spacing to {math}`k_\mathrm{B} T_\mathrm{min}` or
+smaller, where {math}`T_\mathrm{min}` is the lowest temperature above 0 K.
 
 ```{figure} electron-window.png
 
@@ -417,6 +427,35 @@ potential at 0 K. Each of the other fields is an array with one value per
 temperature. The temperatures do not have to include 0 K; the value at 0 K
 is computed anyway as the reference of the free energy.
 
+The function takes three optional parameters.
+
+- `window` is the half-width {math}`W` of the energy window in eV. The
+  default is {math}`\max(0.5\ \mathrm{eV}, 16 k_\mathrm{B} T_\mathrm{max})`;
+  see {ref}`electronic_thermal_properties_integration`.
+- `energy_spacing` is the spacing of the energy grid in the window in eV.
+  The default is 0.0005, that is, 0.5 meV.
+- `symmetrize_tetrahedra` averages the tetrahedron weights over the point
+  group. The default is `False`.
+
+Choose `energy_spacing` from the lowest temperature above 0 K,
+{math}`T_\mathrm{min}`. The entropy and the heat capacity are accurate when
+the spacing is {math}`k_\mathrm{B} T_\mathrm{min}` or smaller. The default
+of 0.5 meV is {math}`k_\mathrm{B} T` at about 6 K, so it is enough when
+{math}`T_\mathrm{min}` is 6 K or higher. For temperatures from 1 K,
+{math}`k_\mathrm{B} T_\mathrm{min}` is 0.086 meV, and a spacing of 0.05 meV
+is enough:
+
+```python
+temperatures = np.arange(0, 301, 1.0)
+properties = compute_thermal_properties_by_tetrahedron(
+    states[0], temperatures, energy_spacing=0.00005
+)
+```
+
+The tetrahedron method computes the density of states at every energy of
+this grid. The window of width {math}`2W` holds {math}`2W` divided by the
+spacing energies, so a finer spacing makes the computation take longer.
+
 The values are per cell for which the eigenvalues were computed. The phonon
 thermal properties of phonopy are in kJ/mol and J/K/mol per primitive cell.
 To compare with them, first scale the values to the primitive cell as
@@ -426,6 +465,7 @@ heat capacity by `get_physical_units().EvTokJmol * 1000`.
 `get_physical_units` is in `phonopy.physical_units`.
 
 `compute_thermal_properties_by_kpoint_sum` of `phonopy.electron.kpoint_sum`
-takes the same arguments and computes the thermal properties by the k-point
-sum. Both functions return `ElectronicThermalProperties`. The k-point sum
+takes the electronic states and the temperatures, and computes the thermal
+properties by the k-point sum. It has no energy grid, so it takes none of
+the three optional parameters. Both functions return `ElectronicThermalProperties`. The k-point sum
 gives no density of states, and its `dos_at_fermi_level` is `None`.

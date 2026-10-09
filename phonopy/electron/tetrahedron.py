@@ -281,22 +281,28 @@ def compute_thermal_properties_by_tetrahedron(
     Parameters
     ----------
     electronic_states : ElectronicStates
-        States carrying kpoints, mesh, cell and fermi_energy.
+        States carrying kpoints, mesh and cell. fermi_energy centres the
+        window; without it the centre is counted from the eigenvalues.
     temperatures : array_like
         Temperatures in K. shape=(temperatures,)
     window : float, optional
         Half-width of the energy window around the Fermi level in eV. None,
         the default, takes 16 k_B T of the highest temperature and at least
-        0.5 eV; see resolve_energy_window. A wider window costs time without
-        moving the answer, since nothing outside it depends on temperature.
+        0.5 eV; see resolve_energy_window.
     energy_spacing : float, optional
         Spacing of the energy grid inside the window in eV. Default is
-        0.0005, which is fine enough that halving it leaves the free energy
-        where it was.
+        0.0005. The entropy and the heat capacity need it no larger than
+        k_B T of the lowest temperature above 0 K.
     symmetrize_tetrahedra : bool, optional
         Average the tetrahedron weights over the tetrahedra rotated by the
         point group, so that the sum over irreducible k-points equals the sum
         over all of them. Default is False.
+
+    Returns
+    -------
+    ElectronicThermalProperties
+        dos_at_fermi_level is set, evaluated at the chemical potential at
+        0 K.
 
     """
     fermi = electronic_states.fermi_energy
