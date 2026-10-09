@@ -878,8 +878,8 @@ def group_by_key(
     For ``keys = ["A", "B", "A", "B"]`` the unique keys are ``["A", "B"]`` and
     the counts ``[2, 2]``.
 
-    With ``consecutive=True``, items are not reordered, and each run of
-    consecutive items sharing a key is a group. For ``keys = ["A", "B", "A",
+    With ``consecutive=True``, items are not reordered, and items with one key
+    that are next to each other are a group. For ``keys = ["A", "B", "A",
     "B"]`` the keys of the groups are ``["A", "B", "A", "B"]`` and the counts
     ``[1, 1, 1, 1]``.
 
@@ -891,8 +891,8 @@ def group_by_key(
         Per-item array reordered alongside the keys. When None, the reordered
         array is also None.
     consecutive : bool, optional
-        Group each run of consecutive items sharing a key without reordering
-        items. Default is False.
+        Group items with one key that are next to each other, without
+        reordering items. Default is False.
 
     Returns
     -------
