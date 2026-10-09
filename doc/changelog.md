@@ -2,40 +2,19 @@
 
 # Change Log
 
-## Unreleased
+## Oct-09-2026: Version 4.8.2
 
 - Python 3.10 is no longer supported. Python 3.11 or later is required.
-- `free_energy_from_dos`, `compute_free_energy_by_tetrahedron`,
-  `compute_free_energy_by_kpoint_sum`, `get_free_energy_at_T` and
-  `compute_electronic_contributions_from_states` are deprecated in favour of
-  the functions that return `ElectronicThermalProperties`. See
-  {ref}`migration_v5`.
-- The electronic states and free energies moved from `phonopy.qha` to the
-  new package `phonopy.electron`: `phonopy.electron.states`,
-  `phonopy.electron.tetrahedron` and `phonopy.electron.kpoint_sum`. The
-  old modules `phonopy.qha.electron`, `phonopy.qha.electron_states` and
-  `phonopy.qha.electron_kpoint_sum` still work and are deprecated. See
-  {ref}`migration_v5`.
-- `CpPolyfitArrays` and `EntropyEnthalpyArrays` of `phonopy.qha.calc` and
-  `SSCHAAverage` of `phonopy.sscha.trace` are frozen dataclasses instead of
-  named tuples. Their fields are read by name; unpacking them or indexing
-  them by position no longer works.
-- Electronic heat capacity. `compute_thermal_properties_by_tetrahedron`
-  and `compute_thermal_properties_by_kpoint_sum` of `phonopy.electron`
-  return the free energy, entropy, heat capacity and chemical potential as
-  `ElectronicThermalProperties`. `ElectronFreeEnergy` has
-  `heat_capacity`.
-- The default energy window of the electronic free energy by the linear
-  tetrahedron method is 16 k_B T of the highest temperature instead of
-  12 k_B T, at least 0.5 eV as before. The electronic free energies change
-  slightly.
-- VASP POSCAR and MAGMOM are written without reordering atoms by chemical
-  symbols, so that the forces in `vasprun.xml` are in the order of the atoms
-  of the supercell. When atoms of one element are not grouped together in
-  the cell, the element appears more than once in the line of element names
-  in POSCAR with a warning, and POTCAR has to be concatenated in the same
-  order. To have each element appear once, sort the atoms of the unit cell
-  by chemical symbols beforehand.
+- Electronic thermal properties are updated. See
+  {ref}`electronic_thermal_properties`.
+- The first parameter of `phonopy.file_IO.parse_FORCE_SETS` is `filename`,
+  and `natom` is given as a keyword argument. Giving the number of atoms as
+  the first argument still works and is deprecated. `to_type2` of
+  `parse_FORCE_SETS` and `parse_FORCE_SETS_from_strings` is deprecated; use
+  `phonopy.structure.dataset.get_displacements_and_forces` to get the
+  displacements and forces of a type-1 dataset as arrays.
+- Writing type-2 FORCE_SETS raises an error when the displacements and the
+  forces have different shapes.
 
 ## Oct-04-2026: Version 4.8.1
 

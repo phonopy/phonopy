@@ -803,13 +803,13 @@ def write_vasp(
         When True, write a POSCAR for a VASP VCA calculation, whose species
         rows take one weight each of the INCAR VCA tag (see
         ``get_vasp_vca_weights``). Atoms of weighted species (see
-        ``apply_site_mixture``) are written with one species row per run of
-        consecutive atoms of one pair of symbol and weight. A cell with merged
+        ``apply_site_mixture``) of one symbol and weight that are next to each
+        other in the cell are written in one species row. A cell with merged
         mixed-species sites is not accepted. Default is False.
 
-    Atoms are written in their order, with one species row per run of
-    consecutive atoms of one symbol, because the forces calculated by VASP
-    are read in the order of the atoms of the cell.
+    Atoms are written in their order, and atoms of one symbol that are next to
+    each other are written in one species row, because the forces calculated
+    by VASP are read in the order of the atoms of the cell.
 
     """
     lines = get_vasp_structure_lines(cell, direct=direct, for_vca=for_vca)
@@ -912,9 +912,9 @@ def get_vasp_vca_weights(cell: PhonopyAtoms) -> list[float]:
     """Return the weights of the VASP INCAR VCA tag, one per POSCAR species row.
 
     The rows are those written by ``write_vasp`` with ``for_vca=True``. For a cell
-    with weighted species (see ``apply_site_mixture``), each run of consecutive
-    atoms of one pair of symbol and weight is a row. For an ordinary cell,
-    every weight is 1.0. See ``_VCAPoscarData`` for the species rows with
+    with weighted species (see ``apply_site_mixture``), atoms of one symbol and
+    weight that are next to each other in the cell are a row. For an ordinary
+    cell, every weight is 1.0. See ``_VCAPoscarData`` for the species rows with
     examples.
 
     """
@@ -987,12 +987,12 @@ class _VCAPoscarData:
 def _get_vca_poscar_data(cell: PhonopyAtoms) -> _VCAPoscarData:
     """Return the data of a POSCAR for VASP VCA of a cell.
 
-    Each run of consecutive atoms of one species, i.e., of one pair of symbol
-    and weight, is a species row, and the atoms keep their order, because the
-    forces calculated by VASP are read in the order of the atoms of the cell.
-    One species can be in more than one species row. For an ordinary cell, each
-    run of consecutive atoms of one symbol is a species row and every weight is
-    1.0. See ``get_vasp_vca_weights``.
+    Atoms of one species, i.e., of one symbol and weight, that are next to each
+    other in the cell are a species row, and the atoms keep their order,
+    because the forces calculated by VASP are read in the order of the atoms of
+    the cell. One species can be in more than one species row. For an ordinary
+    cell, atoms of one symbol that are next to each other are a species row and
+    every weight is 1.0. See ``get_vasp_vca_weights``.
 
     """
     if cell.has_mixtures:

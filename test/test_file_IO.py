@@ -7,6 +7,7 @@ import io
 import os
 import pathlib
 import tempfile
+import warnings
 from typing import Literal
 
 import h5py
@@ -36,6 +37,7 @@ from phonopy.file_IO import (
     write_force_constants_to_hdf5,
     write_FORCE_SETS,
 )
+from phonopy.structure.dataset import get_displacements_and_forces
 
 cwd = pathlib.Path(__file__).parent
 cwd_called = pathlib.Path.cwd()
@@ -239,6 +241,27 @@ def test_parse_FORCE_SETS_natom_as_first_argument(tmp_path, monkeypatch):
     with pytest.warns(DeprecationWarning, match="first argument"):
         dataset = parse_FORCE_SETS(natom)  # type: ignore[arg-type]
     assert dataset["natom"] == natom
+
+
+@pytest.mark.parametrize("from_strings", [False, True])
+def test_parse_FORCE_SETS_to_type2_is_deprecated(from_strings: bool):
+    """to_type2 still works with DeprecationWarning, and no warning without it."""
+    filename = cwd / "FORCE_SETS_NaCl"
+
+    def _parse(**kwargs):
+        if from_strings:
+            return parse_FORCE_SETS_from_strings(filename.read_text(), **kwargs)
+        return parse_FORCE_SETS(filename, **kwargs)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        dataset = _parse()
+    with pytest.warns(DeprecationWarning, match="to_type2"):
+        dataset_type2 = _parse(to_type2=True)
+    disps, forces = get_displacements_and_forces(dataset)
+    assert forces is not None
+    np.testing.assert_allclose(dataset_type2["displacements"], disps)
+    np.testing.assert_allclose(dataset_type2["forces"], forces)
 
 
 def test_get_FORCE_SETS_type(tmp_path):
