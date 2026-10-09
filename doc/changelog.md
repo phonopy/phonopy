@@ -36,6 +36,12 @@
   in POSCAR with a warning, and POTCAR has to be concatenated in the same
   order. To have each element appear once, sort the atoms of the unit cell
   by chemical symbols beforehand.
+- The first parameter of `phonopy.file_IO.parse_FORCE_SETS` is `filename`,
+  and `natom` is given as a keyword argument. Giving the number of atoms as
+  the first argument still works and is deprecated. `to_type2` of
+  `parse_FORCE_SETS` and `parse_FORCE_SETS_from_strings` is deprecated; use
+  `phonopy.structure.dataset.get_displacements_and_forces` to get the
+  displacements and forces of a type-1 dataset as arrays.
 
 ## Oct-04-2026: Version 4.8.1
 
