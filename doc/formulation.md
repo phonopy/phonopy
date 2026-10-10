@@ -204,7 +204,11 @@ C_V &= \left(\frac{\partial E}{\partial T} \right)_V \\
       &= \sum_{\mathbf{q}\nu} k_\mathrm{B}
    \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T} \right)^2
    \frac{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
-   T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2}
+   T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2} \\
+      &= \sum_{\mathbf{q}\nu} k_\mathrm{B}
+   \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T} \right)^2
+   \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
+   T)}{[1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)]^2}
 ```
 
 ### Partition function
@@ -231,8 +235,21 @@ S &= -\frac{\partial F}{\partial T} \\ &= \frac{1}{2T}
 \sum_{\mathbf{q}\nu} \hbar\omega(\mathbf{q}\nu)
 \coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B}
 \sum_{\mathbf{q}\nu}
-\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]
+\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right] \\
+&= k_\mathrm{B} \sum_{\mathbf{q}\nu} \left[
+\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T}
+\frac{\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
+T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)}
+- \ln\bigl[1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)\bigr]
+\right]
 ```
+
+The last expressions for {math}`C_V` and {math}`S` are the ones phonopy
+evaluates. They contain {math}`\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
+T)`, which goes to zero at low temperature, instead of
+{math}`\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)`, which exceeds the
+largest floating-point number at low temperature and makes {math}`C_V` and
+{math}`S` undefined.
 
 (thermal_displacement)=
 
