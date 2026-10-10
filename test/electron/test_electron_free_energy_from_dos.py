@@ -195,6 +195,35 @@ def test_tetrahedron_agrees_with_the_kpoint_sum_at_a_converged_mesh():
     assert tetrahedron.free_energy[-1] == pytest.approx(k_sum.free_energy[-1], abs=2e-5)
 
 
+def test_tetrahedron_grid_is_placed_at_the_chemical_potential():
+    """Test that the energy grid follows mu_0, not the reported Fermi energy.
+
+    With mu_0 midway between two adjacent grid energies, the trapezoid counts
+    the 0 K step up to mu_0 itself. Placed from the reported Fermi energy, the
+    grid put mu_0 anywhere in its cell, F(T) - F(0) moved with that position,
+    and mu jumped between 0 K and the first temperature by up to half the
+    spacing. Shifting the reported Fermi energy by 0.3 of the spacing now
+    changes nothing, and mu at 10 K stays within a small fraction of the
+    spacing of mu_0.
+
+    """
+    spacing = 0.0005
+    states = _half_filled_band([8, 8, 8])
+    shifted = dataclasses.replace(
+        states, fermi_energy=states.fermi_energy + 0.3 * spacing
+    )
+    temperatures = np.array([0.0, 10.0, 300.0])
+    a = compute_thermal_properties_by_tetrahedron(
+        states, temperatures, energy_spacing=spacing
+    )
+    b = compute_thermal_properties_by_tetrahedron(
+        shifted, temperatures, energy_spacing=spacing
+    )
+    np.testing.assert_allclose(a.free_energy, b.free_energy, rtol=1e-12, atol=0)
+    mu = a.chemical_potential
+    assert abs(mu[1] - mu[0]) < 0.01 * spacing
+
+
 def test_tetrahedron_converges_faster_than_the_kpoint_sum():
     """Test that the tetrahedron is close to its answer on a coarse mesh."""
     temperatures = np.array([0.0, 300.0])
