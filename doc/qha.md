@@ -165,18 +165,22 @@ The temperature dependent energies are stored in `fe-v.dat`. The file format is:
 ...
 ```
 
-The first column gives temperatures in K and the following columns give
-electronic free energies in eV at temperatures and at unit (primitive) cell
-volumes. The lines starting with `#` are ignored. This file doesn't contain the
-information about cell volumes. Instead, the volumes are obtained from `e-v.dat`
-file. The energies in `e-v.dat` are not used when `--efe` option is used. The
+The first column gives temperatures in K and the following columns give the
+energies other than the phonon free energy in eV, at temperatures and at unit
+(primitive) cell volumes. For the electronic free energy, each value is
+{math}`U(V) + F_\mathrm{el}(T; V) - F_\mathrm{el}(0; V)`, where {math}`U(V)`
+is the static energy. The lines starting with `#` are ignored. This file
+doesn't contain the information about cell volumes. Instead, the volumes are
+obtained from `e-v.dat` file. The energies in `e-v.dat` are not used when
+`--efe` option is used, because `fe-v.dat` already contains {math}`U(V)`. The
 temperature points are expected to be the same as those in
 `thermal_properties.yaml` at least up to the maximum temperature specified for
 `phonopy-qha`.
 
-An example is given in `example/Cu-QHA`. The `fe-v.dat` contains the
-electronic free energies of the fixed density-of-states approximation. The
-equations are given in {ref}`electronic_thermal_properties`. For VASP,
+An example is given in `example/Cu-QHA`. Its `fe-v.dat` contains the static
+energies plus the electronic free energies of the fixed density-of-states
+approximation. The equations are given in
+{ref}`electronic_thermal_properties`. For VASP,
 `phonopy-vasp-efe` creates `fe-v.dat` and `e-v.dat`, and is used as:
 
 ```
