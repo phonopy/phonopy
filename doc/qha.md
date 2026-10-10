@@ -189,16 +189,11 @@ those used for `thermal_properties.yaml`. When `phonopy` was run with
 eigenvalues have to be carefully chosen to agree with those after applying
 `PRIMITIVE_AXES`, or energies are scaled a posteriori.
 
-The temperature-dependent part is integrated by the linear tetrahedron
-method over the sampling mesh each `vasprun.xml` describes, which converges
-at the mesh a static calculation uses anyway. The sum over irreducible
-k-points, which this command performed before, needs far more k-points to
-reach the same answer: on a 16x16x16 mesh of copper with 120 irreducible
-k-points the two differ by 11 per cent of the temperature-dependent part at
-1000 K. `--k-point-sum` selects it. A file whose k-points are an explicit
-list rather than a generated mesh has no grid to integrate over and takes
-the sum, as does one whose k-points cannot be paired with the grid; the
-command says which route each volume took.
+`phonopy-vasp-efe` integrates by the linear tetrahedron method when the
+`vasprun.xml` describes a regular k-point mesh, and by the k-point sum
+otherwise. How it chooses, and the `--k-point-sum`, `--electronic-window`,
+`--electronic-spacing` and `--symmetrize-tetrahedra` options, are described
+in {ref}`electronic_thermal_properties_integration`.
 
 Note that with `--efe`, the electronic free energies enter the fitting of
 {math}`F(V;T)` and therefore the equilibrium volumes, thermal expansion,
@@ -327,71 +322,21 @@ Remarks:
 ### Electronic free energies from eigenvalues
 
 Instead of preparing a `fe-v.dat` file with `phonopy-vasp-efe` and the
-`--efe` option of `phonopy-qha`, the same electronic free energies can be
-computed inside `run_qha` by supplying the electronic states at each volume
-point as `ElectronicStates` (eigenvalues in eV with shape
-`(spin, kpoints, bands)`, relative k-point weights, and the number of
-electrons per unit cell):
-
-```python
-from phonopy.electron.states import ElectronicStates
-from phonopy.interface.vasp import parse_vasprunxml
-
-electronic_structures = []
-for i in range(11):
-    vxml = parse_vasprunxml(f"vasprun.xml-{i:02d}")
-    electronic_structures.append(
-        ElectronicStates(
-            eigenvalues=vxml.eigenvalues[:, :, :, 0],
-            weights=vxml.k_weights,
-            n_electrons=vxml.NELECT,
-            volume=vxml.volume[-1],
-            internal_energy=vxml.energies[-1, 1],  # energy (sigma -> 0)
-        )
-    )
-
-result = run_qha(phonopys, temperatures, electronic_structures=electronic_structures)
-```
-
-Since the electronic states carry the volumes and the static internal
-energies, `internal_energies` may be omitted (an explicitly given array
-takes precedence); the volumes are also used for a consistency check
-against the primitive cell volumes of `phonopys`.
-
-The electronic free energies
-{math}`F_\text{el}(T, V) = U(V) + f_\text{el}(T; V) - f_\text{el}(0; V)`
-are computed within the fixed density-of-states (Mermin) approximation with
-the temperature-dependent chemical potential conserving the number of
-electrons (see {ref}`electronic_thermal_properties` for the equations).
-This is intended for metals, i.e., the chemical potential is assumed not to
-lie in a band gap. The electronic entropies and heat capacities are obtained
-analytically; both enter {math}`C_p` and the Grüneisen parameters. Note
-that the deprecated `PhonopyQHA` computed the Grüneisen parameters with the
-phonon-only {math}`C_V` and {math}`C_p` was unavailable in this case, so these
-quantities differ from the legacy values where the electronic heat capacity
-is significant. The eigenvalues are not restricted to VASP; any code that
-provides eigenvalues, k-point weights, and the number of electrons can be
-used.
-
-For VASP, the collection above can also be done once with
+`--efe` option of `phonopy-qha`, the electronic thermal properties can be
+computed inside `run_qha` from the electronic states at each volume point.
+For VASP, collect the states once with
 
 ```
 % phonopy-vasp-efe --es vasprun.xml-{00..10}
 ```
 
-(`--es` is short for `--write-electronic-states`)
-
-which writes `electronic_states.hdf5` containing the electronic states
-together with the volumes and the static energies (sigma->0) of all volume
-points, instead of computing `fe-v.dat`. The k-points, the mesh and the cell
-are stored beside them when the `vasprun.xml` describes a sampling mesh, so
-that `run_qha` can integrate by the tetrahedron method as well; a file
-written without them is integrated by the k-point sum. The eigenvalues must be computed
-for the primitive cell (see the remark on `PRIMITIVE_AXES` in
-{ref}`phonopy_qha_efe_option`). The volumes stored with the electronic
-states are checked against the primitive cell volumes of `phonopys` by
-`run_qha`, which protects against ordering mistakes. The file is loaded
-with `read_electronic_states_hdf5`:
+(`--es` is short for `--write-electronic-states`). This writes
+`electronic_states.hdf5`, which contains the electronic states together with
+the volumes and the static energies (sigma->0) of all volume points, instead
+of computing `fe-v.dat`. The k-points, the mesh and the cell are stored with
+the states when the `vasprun.xml` describes a regular k-point mesh, so that
+`run_qha` integrates by the linear tetrahedron method. Load the file with
+`read_electronic_states_hdf5`:
 
 ```python
 from phonopy.electron.states import read_electronic_states_hdf5
@@ -399,6 +344,30 @@ from phonopy.electron.states import read_electronic_states_hdf5
 electronic_structures = read_electronic_states_hdf5("electronic_states.hdf5")
 result = run_qha(phonopys, temperatures, electronic_structures=electronic_structures)
 ```
+
+The eigenvalues must be computed for the primitive cell (see the remark on
+`PRIMITIVE_AXES` in {ref}`phonopy_qha_efe_option`). Since the electronic
+states carry the volumes and the static internal energies,
+`internal_energies` may be omitted (an explicitly given array takes
+precedence). `run_qha` checks the volumes against the primitive cell volumes
+of `phonopys`, which protects against ordering mistakes.
+
+For a calculator other than VASP, build one `ElectronicStates` per volume
+point from its output; the fields are listed in
+{ref}`electronic_thermal_properties_input`. Give `kpoints`, `mesh` and
+`cell` as well. Without them, `run_qha` uses the k-point sum, which needs far
+more k-points to converge than the tetrahedron method.
+
+The free energy, the entropy and the heat capacity of the electrons are
+computed in the fixed density-of-states approximation; the equations and the
+integration are described in {ref}`electronic_thermal_properties`. The
+`electronic_window`, `electronic_spacing` and `symmetrize_tetrahedra`
+parameters of `run_qha` are passed to the tetrahedron method. The electronic
+entropies and heat capacities enter {math}`C_p` and the Grüneisen
+parameters. The deprecated `PhonopyQHA` computed the Grüneisen parameters
+with the phonon-only {math}`C_V`, and {math}`C_p` was unavailable in this
+case, so these quantities differ from the legacy values where the
+electronic heat capacity is significant.
 
 (phonopy_qha_lattice_parameters)=
 
