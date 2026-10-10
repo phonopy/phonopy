@@ -2,6 +2,22 @@
 
 # Change Log
 
+## Oct-10-2026: Version 4.8.3
+
+- `phonopy-vasp-efe` takes energy(sigma->0) from `vasprun.xml`. The way the
+  energies are written in `vasprun.xml` changed in VASP 6, and for VASP 6
+  the energy without entropy had been taken instead. energy(sigma->0) is now
+  taken for both VASP 5 and VASP 6.
+- The energy grid of the electronic thermal properties by the linear
+  tetrahedron method is placed so that the chemical potential at 0 K is at
+  the midpoint of two adjacent grid points. The electronic free energies
+  change slightly.
+- `--electronic-window` and `--electronic-spacing` options of
+  `phonopy-vasp-efe`, and `electronic_window`, `electronic_spacing` and
+  `symmetrize_tetrahedra` parameters of `run_qha`.
+- The phonon heat capacity and entropy are computed by expressions that are
+  numerically stable at low temperature.
+
 ## Oct-09-2026: Version 4.8.2
 
 - Python 3.10 is no longer supported. Python 3.11 or later is required.
