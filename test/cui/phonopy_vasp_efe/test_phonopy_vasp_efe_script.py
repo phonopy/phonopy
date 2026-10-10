@@ -51,6 +51,51 @@ def test_phonopy_vasp_efe():
             os.chdir(original_cwd)
 
 
+def test_phonopy_vasp_efe_takes_energy_sigma0_by_version(monkeypatch):
+    """Test that U is the energy(sigma->0) column of the parsed VASP version.
+
+    The files here are VASP 5.4.4, where energy(sigma->0) is in the e_wo_entrp
+    slot. Relabeling them as VASP 6 has to move U to the e_0_energy slot;
+    taking a fixed column would read energy without entropy from VASP 6.
+
+    """
+    import phonopy.cui.phonopy_vasp_efe_script as efe_script
+
+    original = efe_script.parse_vasprunxml
+
+    def as_vasp6(filename):
+        vxml = original(filename)
+        vxml._version = "6.6.0"
+        return vxml
+
+    filenames = [cwd / "vasprun.xmls/vasprun.xml-00.xz"]
+    args = PhonopyVaspEfeMockArgs(filenames=filenames)
+    _, energies_5, states_5 = collect_electronic_states(args)
+    monkeypatch.setattr(efe_script, "parse_vasprunxml", as_vasp6)
+    _, energies_6, states_6 = collect_electronic_states(args)
+
+    vxml = original(filenames[0])
+    assert energies_5[0] == pytest.approx(vxml.energies[-1, 1])
+    assert states_5[0].internal_energy == pytest.approx(vxml.energies[-1, 1])
+    assert energies_6[0] == pytest.approx(vxml.energies[-1, 2])
+    assert states_6[0].internal_energy == pytest.approx(vxml.energies[-1, 2])
+
+
+def test_phonopy_vasp_efe_energy_sigma0_of_vasp6():
+    """Test U on a VASP 6.6.0 file with Methfessel-Paxton smearing.
+
+    HCP Ti, ISMEAR = 1, SIGMA = 0.2. OUTCAR gives free energy TOTEN
+    -21.13378660, energy without entropy -21.13655952 and energy(sigma->0)
+    -21.13471091 eV; the last is U.
+
+    """
+    filenames = [cwd / "vasprun.xmls/vasprun.xml-vasp660-ismear1.xz"]
+    args = PhonopyVaspEfeMockArgs(filenames=filenames)
+    _, energies, states = collect_electronic_states(args)
+    assert energies[0] == pytest.approx(-21.13471091, abs=1e-8)
+    assert states[0].internal_energy == pytest.approx(-21.13471091, abs=1e-8)
+
+
 def test_phonopy_vasp_efe_ev_values():
     """Test e-v.dat numerical values."""
     filenames = [cwd / f"vasprun.xmls/vasprun.xml-{i:02d}.xz" for i in range(3)]

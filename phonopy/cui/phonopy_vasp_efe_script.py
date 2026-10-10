@@ -261,12 +261,12 @@ def collect_electronic_states(
                 spin_degeneracy=vxml.spin_degeneracy,
                 fermi_energy=vxml.efermi,
                 volume=vxml.volume[-1],
-                internal_energy=vxml.energies[-1, 1],
+                internal_energy=vxml.energy_sigma0,
                 **grid,
             )
         )
         volumes.append(vxml.volume[-1])
-        energy_sigma0.append(vxml.energies[-1, 1])
+        energy_sigma0.append(vxml.energy_sigma0)
     if verbose:
         print("Done. %d volume(s) processed." % len(filenames))
         sys.stdout.flush()
