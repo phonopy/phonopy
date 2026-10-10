@@ -1661,6 +1661,10 @@ class VasprunxmlExpat:
         to the e_0_energy slot (index 2). The version is therefore required;
         raise when it is unknown because the correct column cannot be chosen.
 
+        A VASP developer saw the mislabeling in 5.4.4 and found it fixed in
+        6.1.1 (https://vasp.at/forum/viewtopic.php?t=17839); 6.6.0 was
+        checked against OUTCAR. 6.0.x is taken to be fixed, unverified.
+
         """
         if self._version is None:
             raise RuntimeError(
