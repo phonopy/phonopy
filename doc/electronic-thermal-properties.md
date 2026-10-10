@@ -252,13 +252,13 @@ the k-point sum for the electronic states that do not carry `kpoints`,
 states.
 
 The tetrahedron method integrates only over an energy window from
-{math}`E_\mathrm{F} - W` to {math}`E_\mathrm{F} + W`, where
-{math}`E_\mathrm{F}` is the Fermi energy and {math}`W` is the half-width of
-the window. How {math}`E_\mathrm{F}` is chosen is described in
-{ref}`electronic_thermal_properties_chemical_potential`. The states below the window are fully occupied at every
-temperature and add a constant to the energy, which cancels in
-{math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)`. The states above the window are
-empty. By default, the half-width is
+{math}`\mu_0 - W` to {math}`\mu_0 + W`, where {math}`\mu_0` is the chemical
+potential at 0 K and {math}`W` is the half-width of the window. How
+{math}`\mu_0` is found is described in
+{ref}`electronic_thermal_properties_chemical_potential`. The states below
+the window are fully occupied at every temperature and add a constant to
+the energy, which cancels in {math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)`.
+The states above the window are empty. By default, the half-width is
 
 ```{math}
 W = \max(0.5\ \mathrm{eV}, 16 k_\mathrm{B} T_\mathrm{max}),
@@ -291,6 +291,8 @@ of states. The red curve is {math}`f(1-f)(E-\mu)^2` at the highest
 temperature, drawn without the factor {math}`D(E)`. It decreases to nearly
 zero at the edges of the window. The states below the window are fully
 occupied at every temperature, and the states above the window are empty.
+{math}`E_\mathrm{F}` in the figure is the chemical potential at 0 K,
+{math}`\mu_0`.
 ```
 
 The `symmetrize_tetrahedra` parameter averages the tetrahedron weights over
@@ -336,28 +338,39 @@ integrated density of states is equal to {math}`N`,
 
 The tetrahedron method gives the integrated density of states as a
 continuous function of energy, so {math}`\mu_0` does not depend on the
-energy grid.
+energy grid. {math}`\mu_0` is searched for within {math}`W` of the Fermi
+energy reported by the electronic structure calculation, `fermi_energy` of
+`ElectronicStates`. When it is not given, the search starts from the energy
+up to which the eigenvalues hold {math}`N` electrons. When {math}`\mu_0` is
+not within that range, phonopy stops with an error that asks to widen the
+window. In that case, increase `window`, or `--electronic-window` on the
+command line.
+
+At 0 K the occupation is a step at {math}`\mu_0`. The trapezoidal rule uses
+only the values at the grid points, so it integrates such a step as if the
+step were at the midpoint of the grid interval that contains it. For this
+reason, the energy grid is placed so that {math}`\mu_0` is at the midpoint
+of two adjacent grid points. The grid has the same number of points on each
+side of {math}`\mu_0`.
 
 At a finite temperature, the integral is evaluated on the energy grid in the
 window. The states below the window hold {math}`N_\mathrm{below}` electrons
 at every temperature. This number is fixed by the condition at 0 K,
 
 ```{math}
-N_\mathrm{below} = N - \int_{E_\mathrm{F} - W}^{\mu_0} D(E) \, dE.
+N_\mathrm{below} = N - \int_{\mu_0 - W}^{\mu_0} D(E) \, dE.
 ```
 
 The chemical potential at temperature {math}`T` is the root of
 
 ```{math}
-N_\mathrm{below} + \int_{E_\mathrm{F} - W}^{E_\mathrm{F} + W} D(E) f(E; \mu, T) \, dE = N.
+N_\mathrm{below} + \int_{\mu_0 - W}^{\mu_0 + W} D(E) f(E; \mu, T) \, dE = N.
 ```
 
-The window is centered at the Fermi energy reported by the electronic
-structure calculation, `fermi_energy` of `ElectronicStates`. When it is not
-given, the center is the energy up to which the eigenvalues hold
-{math}`N` electrons. When the chemical potential at 0 K is outside the
-window, phonopy stops with an error that asks to widen the window. In that
-case, increase `window`, or `--electronic-window` on the command line.
+Because the trapezoidal rule integrates the step as if it were at
+{math}`\mu_0`, the integral in {math}`N_\mathrm{below}` counts the states up
+to {math}`\mu_0`, and {math}`\mu` approaches {math}`\mu_0` as {math}`T` goes
+to 0 K.
 
 (electronic_thermal_properties_spin)=
 

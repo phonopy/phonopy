@@ -281,8 +281,10 @@ def compute_thermal_properties_by_tetrahedron(
     Parameters
     ----------
     electronic_states : ElectronicStates
-        States carrying kpoints, mesh and cell. fermi_energy centres the
-        window; without it the centre is counted from the eigenvalues.
+        States carrying kpoints, mesh and cell. mu_0 is searched for within
+        the window around fermi_energy, or around the energy counted from the
+        eigenvalues when fermi_energy is None. The energy grid is then placed
+        around mu_0.
     temperatures : array_like
         Temperatures in K. shape=(temperatures,)
     window : float, optional
@@ -315,15 +317,18 @@ def compute_thermal_properties_by_tetrahedron(
     mu_0 = _solve_chemical_potential(
         tetrahedron_states, electronic_states.n_electrons, fermi, window
     )
-    n_points = int(round(2 * window / energy_spacing)) + 1
-    energies = np.linspace(fermi - window, fermi + window, n_points)
+    # mu_0 is at the midpoint of two adjacent points of a uniform energy grid,
+    # with n = round(window / energy_spacing) grid points on each side.
+    n = int(round(window / energy_spacing))
+    offsets = np.arange(-n, n, dtype="double") + 0.5
+    energies = mu_0 + energy_spacing * offsets
     dos, _ = tetrahedron_states.dos_and_count(energies)
     properties = thermal_properties_from_dos(
         energies,
         dos,
         electronic_states.n_electrons,
         temperatures,
-        fermi,
+        mu_0,
         mu_0=mu_0,
     )
     dos_at_mu_0, _ = tetrahedron_states.dos_and_count(np.array([mu_0]))
@@ -416,8 +421,11 @@ def thermal_properties_from_dos(
 
         n_below := n_electrons - int_window g(E) theta(mu_0 - E) dE
 
-    so that the T -> 0 limit of mu is mu_0 itself and every remaining integral
-    runs over a smooth stretch of the density of states. Anchoring to the
+    so that every remaining integral runs over a smooth stretch of the density
+    of states. The trapezoid counts that step up to the midpoint of the grid
+    interval holding mu_0, so the T -> 0 limit of mu is that midpoint. It is
+    mu_0 itself only when mu_0 lies midway between two adjacent energies, as
+    compute_thermal_properties_by_tetrahedron arranges. Anchoring to the
     Fermi level the calculation reports is not enough on its own; see mu_0
     below.
 
@@ -473,8 +481,8 @@ def thermal_properties_from_dos(
     if mu_0 is None:
         mu_0 = fermi_energy
     # The count below the window is anchored with the occupation of the
-    # temperature loop's own T = 0, so that its T -> 0 limit is mu_0 itself
-    # rather than a nearby grid point.
+    # temperature loop's own T = 0, so that the reference and the finite
+    # temperatures use the same trapezoid.
     kt_zero = kb * _ZERO_TEMPERATURE
     n_below = n_electrons - float(
         np.trapezoid(g_win * fermi_dirac_occupation(e_win, mu_0, kt_zero), e_win)
