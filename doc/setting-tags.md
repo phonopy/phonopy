@@ -1474,9 +1474,9 @@ For this calculation, a primitive cell has to be used. If the input unit cell is
 a non-primitive cell, it has to be transformed to a primitive cell using
 `PRIMITIVE_AXES` tag.
 
-Irreducible representations of magnetic space groups are not supported. If a
-magnetic space group is detected, the calculation stops with the message
-`Magnetic space group is not supported.`
+Irreducible representations of magnetic space groups are not supported. When an
+`IRREPS` calculation detects a magnetic space group, phonopy raises a
+`RuntimeError` with the message `Magnetic space group is not supported.`
 
 The first three values gives a _q_-point in reduced coordinates to be
 calculated. The degenerated modes are searched only by the closeness of
