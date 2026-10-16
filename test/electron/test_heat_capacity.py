@@ -140,6 +140,47 @@ def test_heat_capacity_by_kpoint_sum_matches_t_dsdt():
     )
 
 
+def _central_de_dt(energy: np.ndarray, temperatures: np.ndarray) -> float:
+    """Return dE/dT at the middle of three equally spaced temperatures."""
+    return float((energy[2] - energy[0]) / (temperatures[2] - temperatures[0]))
+
+
+def test_internal_energy_matches_the_sommerfeld_limit():
+    """Test E(T) - E(0) against (pi^2/6) k^2 T^2 g(E_F)."""
+    g0 = 2.0
+    energies, dos = _flat_dos(g0)
+    temperatures = np.array([100.0, 300.0])
+    properties = thermal_properties_from_dos(
+        energies, dos, _n_electrons(energies, dos), temperatures, FERMI
+    )
+
+    kb = get_physical_units().KB
+    expected = (np.pi**2 / 6.0) * kb**2 * temperatures**2 * g0
+    np.testing.assert_allclose(properties.internal_energy, expected, rtol=2e-4)
+
+
+def test_internal_energy_by_tetrahedron_gives_the_heat_capacity():
+    """Test C_V = dE/dT through the tetrahedron method."""
+    temperatures = np.array([299.0, 300.0, 301.0])
+    properties = compute_thermal_properties_by_tetrahedron(
+        _half_filled_band([8, 8, 8]), temperatures
+    )
+
+    assert properties.heat_capacity[1] == pytest.approx(
+        _central_de_dt(properties.internal_energy, temperatures), rel=1e-5
+    )
+
+
+def test_internal_energy_by_kpoint_sum_gives_the_heat_capacity():
+    """Test C_V = dE/dT through the k-point sum, on the Al states."""
+    temperatures = np.array([999.0, 1000.0, 1001.0])
+    properties = compute_thermal_properties_by_kpoint_sum(_al_states(), temperatures)
+
+    assert properties.heat_capacity[1] == pytest.approx(
+        _central_de_dt(properties.internal_energy, temperatures), rel=1e-5
+    )
+
+
 def test_heat_capacity_is_zero_at_zero_temperature():
     """Test that both routes report C_V = 0 at 0 K."""
     temperatures = np.array([0.0, 300.0])

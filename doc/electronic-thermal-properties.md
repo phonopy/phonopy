@@ -451,6 +451,7 @@ properties = compute_thermal_properties_by_tetrahedron(states[0], temperatures)
 properties.free_energy  # F_el(T) - F_el(0) in eV
 properties.entropy  # S_el in eV/K
 properties.heat_capacity  # C_el in eV/K
+properties.internal_energy  # E_el(T) - E_el(0) in eV
 properties.chemical_potential  # mu in eV
 properties.dos_at_fermi_level  # D(E_F) in states/eV
 ```

@@ -51,6 +51,17 @@ class ElectronicThermalProperties:
     chemical_potential: NDArray[np.double]
     dos_at_fermi_level: float | None = None
 
+    @property
+    def internal_energy(self) -> NDArray[np.double]:
+        """Return E(T) - E(0) in eV, computed as F(T) - F(0) + T S(T).
+
+        The increase of the electronic internal energy by the thermal
+        excitation. Add the static energy U for the total, as for
+        free_energy. shape=(temperatures,)
+
+        """
+        return self.free_energy + self.temperatures * self.entropy
+
 
 @dataclasses.dataclass(frozen=True)
 class ElectronicStates:

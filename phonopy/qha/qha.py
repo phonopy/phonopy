@@ -222,9 +222,8 @@ def run_qha(
     temperatures : array_like
         Temperatures in K in strictly ascending order. shape=(temperatures,)
     internal_energies : array_like, optional
-        Static internal energies U(V) other than the phonon free energy,
-        e.g., electronic total energies from first-principles
-        calculations or potential energies from machine learning
+        Total energies U(V) of the static lattice, e.g., from
+        first-principles calculations or from machine learning
         potentials, in eV per primitive cell (consistently with the
         normalization of the phonon thermal properties).
         shape=(volumes,). When None, the internal energies carried by
