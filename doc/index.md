@@ -44,6 +44,15 @@ The Topics pages of this documentation describe the following calculations:
   energy, entropy and heat capacity of the electrons in metals
 - {ref}`Mode Grüneisen parameters <phonopy_gruneisen>`
 - {ref}`Dynamic structure factor for INS and IXS <dynamic_structure_factor>`
+- {ref}`Random displacements <random_displacements>`: Supercells with atoms
+  displaced in random directions, or by displacements drawn from the harmonic
+  oscillator distributions of the phonon modes
+- {ref}`Temperature dependent force constants <polymlp-sscha>` (experimental):
+  Force constants in the stochastic self-consistent harmonic approximation
+  (SSCHA) with pypolymlp and symfc
+- {ref}`Symmetry-adapted phonon modes <symmetry_adapted_modes>`: Degenerate
+  sets of phonon modes decided by the symmetry of the q-point, used by the
+  irreducible representations
 
 Phonopy also provides:
 
