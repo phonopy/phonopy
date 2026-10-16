@@ -62,7 +62,7 @@ energies in `thermal_properties.yaml`.
 `fe-v.dat` has only the free energy. For this reason,
 `Cp-temperature_polyfit.dat` and `gruneisen-temperature.dat` of
 `phonopy-qha` are computed without the electronic entropy and heat
-capacity. See {ref}`phonopy_qha_efe_option`.
+capacity. See {ref}`phonopy_qha_electronic_free_energy`.
 
 `phonopy-vasp-efe --es` writes the electronic states of every crystal
 structure to `electronic_states.hdf5` instead. `run_qha` reads them as
