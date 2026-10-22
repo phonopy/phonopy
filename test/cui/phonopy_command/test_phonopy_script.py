@@ -1331,6 +1331,45 @@ def test_use_pypolymlp_develop_error(error_class: type):
             os.chdir(original_cwd)
 
 
+def test_use_pypolymlp_type1_dataset_error(capsys: pytest.CaptureFixture[str]):
+    """Test phonopy --pypolymlp with type-1 FORCE_SETS.
+
+    Type-1 dataset cannot be used for training, so the script prints an error
+    message and exits with code 1 without calling develop_or_load_pypolymlp.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            shutil.copy(
+                cwd / ".." / ".." / "phonopy_disp_NaCl.yaml", "phonopy_disp.yaml"
+            )
+            shutil.copy(cwd / ".." / ".." / "FORCE_SETS_NaCl", "FORCE_SETS")
+            argparse_control = _get_phonopy_args(
+                use_pypolymlp=True,
+                load_phonopy_yaml=True,
+            )
+            with patch(
+                "phonopy.cui.phonopy_script.develop_or_load_pypolymlp"
+            ) as mock_develop:
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
+                assert excinfo.value.code == 1
+                mock_develop.assert_not_called()
+
+            out = capsys.readouterr().out
+            assert "cannot be used for\ntraining MLPs." in out
+
+            for created_filename in ("phonopy_disp.yaml", "FORCE_SETS"):
+                pathlib.Path(created_filename).unlink()
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_phonopy_run_mode_rejects_init_flag(capsys: pytest.CaptureFixture[str]):
     """Phonopy in mode='run' errors when an init-only flag like -d is given."""
     with tempfile.TemporaryDirectory() as temp_dir:

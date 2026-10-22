@@ -823,12 +823,12 @@ def _prepare_pypolymlp(phonon: Phonopy, settings: PhonopySettings, log_level: in
 
     A dataset carrying forces is moved to mlp_dataset for training; a
     displacement-only dataset, or none at all, leaves an existing polymlp.yaml
-    as the only source, which develop_or_load_pypolymlp tries first.
+    as the only source, which develop_or_load_pypolymlp tries first. A type-1
+    dataset carrying forces is an error.
 
     """
-    move_force_dataset_to_mlp_dataset(phonon)
-
     try:
+        move_force_dataset_to_mlp_dataset(phonon)
         develop_or_load_pypolymlp(
             phonon, mlp_params=settings.mlp_params, log_level=log_level
         )
