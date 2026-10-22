@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pathlib
+import shutil
 
 import numpy as np
 import pytest
@@ -11,7 +12,11 @@ import pytest
 from phonopy import Phonopy
 from phonopy.cui.collect_cell_info import collect_cell_info, get_cell_info
 from phonopy.cui.settings import Settings
-from phonopy.exception import CellNotFoundError, MagmomValueError
+from phonopy.exception import (
+    CellNotFoundError,
+    MagmomValueError,
+    NotPhonopyYamlError,
+)
 
 _test_dir = pathlib.Path(__file__).parent.parent
 _poscar_nacl = _test_dir / "POSCAR_NaCl"
@@ -91,6 +96,57 @@ def test_non_vasp_interface_missing_file(monkeypatch, tmp_path):
             cell_filename=missing,
         )
     assert "was not found" in str(exc_info.value)
+
+
+def test_load_mode_default_file_without_cell_filename(monkeypatch, tmp_path):
+    """No cell_filename: phonopy_disp.yaml in the current directory is read."""
+    monkeypatch.chdir(tmp_path)
+    shutil.copy(_phonopy_disp_yaml_nacl, tmp_path / "phonopy_disp.yaml")
+    result = collect_cell_info(load_phonopy_yaml=True)
+    assert result.optional_structure_info.unitcell_filename == pathlib.Path(
+        "phonopy_disp.yaml"
+    )
+
+
+def test_load_mode_non_yaml_file_raises(monkeypatch, tmp_path):
+    """Given file not readable as phonopy.yaml is not replaced by default file.
+
+    phonopy_disp.yaml is placed in the current directory, where it would be
+    read in place of the given file if the given file were ignored.
+
+    """
+    monkeypatch.chdir(tmp_path)
+    shutil.copy(_phonopy_disp_yaml_nacl, tmp_path / "phonopy_disp.yaml")
+    conf = tmp_path / "dim.conf"
+    conf.write_text("DIM = 1 1 1\n")
+    with pytest.raises(NotPhonopyYamlError) as exc_info:
+        collect_cell_info(cell_filename=conf, load_phonopy_yaml=True)
+    assert f'"{conf}" could not be read as a phonopy.yaml-like file.' in str(
+        exc_info.value
+    )
+
+
+def test_non_vasp_file_without_interface_raises(monkeypatch, tmp_path):
+    """Non-VASP file without interface mode is not replaced by default file."""
+    monkeypatch.chdir(tmp_path)
+    shutil.copy(_phonopy_disp_yaml_nacl, tmp_path / "phonopy_disp.yaml")
+    pw_in = tmp_path / "pw.in"
+    pw_in.write_text("&control\n  calculation = 'scf'\n/\n")
+    with pytest.raises(NotPhonopyYamlError) as exc_info:
+        collect_cell_info(supercell_matrix=_supercell_matrix, cell_filename=pw_in)
+    msg = str(exc_info.value)
+    assert f'Parsing crystal structure file "{pw_in}" as in VASP format' in msg
+    assert f'"{pw_in}" could not be read as a phonopy.yaml-like file.' in msg
+
+
+def test_load_mode_missing_file_raises(monkeypatch, tmp_path):
+    """Missing cell_filename in phonopy.yaml mode raises CellNotFoundError."""
+    monkeypatch.chdir(tmp_path)
+    shutil.copy(_phonopy_disp_yaml_nacl, tmp_path / "phonopy_disp.yaml")
+    missing = tmp_path / "missing.yaml"
+    with pytest.raises(CellNotFoundError) as exc_info:
+        collect_cell_info(cell_filename=missing, load_phonopy_yaml=True)
+    assert f'Crystal structure file "{missing}" was not found.' in str(exc_info.value)
 
 
 def _settings(
@@ -283,3 +339,26 @@ def test_get_cell_info_no_primitive_overwrite_message_at_log_level_0(
 
     captured = capsys.readouterr()
     assert captured.out == ""
+
+
+@pytest.mark.parametrize(
+    "supercell_matrix,is_reported",
+    [([[1, 0, 0], [0, 1, 0], [0, 0, 1]], True), (_supercell_matrix, False)],
+)
+def test_get_cell_info_reports_supercell_matrix_differing_from_yaml(
+    monkeypatch, tmp_path, capsys, supercell_matrix, is_reported
+):
+    """DIM differing from the YAML supercell matrix is reported and not used."""
+    monkeypatch.chdir(tmp_path)
+    settings = _settings(supercell_matrix=supercell_matrix)
+
+    result = get_cell_info(
+        settings=settings,
+        cell_filename=_phonopy_disp_yaml_nacl,
+        load_phonopy_yaml=True,
+        log_level=1,
+    )
+
+    np.testing.assert_array_equal(result.supercell_matrix, _supercell_matrix)
+    captured = capsys.readouterr()
+    assert ("Supercell matrix given by DIM or --dim is" in captured.out) is is_reported

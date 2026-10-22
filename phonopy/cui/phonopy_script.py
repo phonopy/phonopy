@@ -50,6 +50,7 @@ from phonopy.exception import (
     CellNotFoundError,
     ForceConstantsCalculatorNotFoundError,
     MagmomValueError,
+    NotPhonopyYamlError,
     PypolymlpDevelopmentError,
     PypolymlpFileNotFoundError,
     PypolymlpRelaxationError,
@@ -2253,6 +2254,12 @@ def main(**argparse_control: bool | PhonopyMockArgs):
         )
     except (CellNotFoundError, MagmomValueError) as e:
         print_error_message(str(e))
+        # In the phonopy.yaml mode, the positional argument is always taken as
+        # a phonopy.yaml-like file, not as a configuration file.
+        if isinstance(e, NotPhonopyYamlError) and load_phonopy_yaml and args.filename:
+            print(
+                f'If "{args.filename[0]}" is a configuration file, give it by --config.'
+            )
         if log_level:
             print_error()
         sys.exit(1)
