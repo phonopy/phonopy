@@ -503,7 +503,7 @@ class Phonopy:
             raise RuntimeError("Displacements have to be given.")
         if "forces" not in mlp_dataset:
             raise RuntimeError("Forces have to be given.")
-        if "supercell_energy" in mlp_dataset:
+        if "supercell_energies" not in mlp_dataset:
             raise RuntimeError("Supercell energies have to be given.")
         if len(mlp_dataset["displacements"]) != len(mlp_dataset["forces"]):
             raise RuntimeError("Length of displacements and forces are different.")

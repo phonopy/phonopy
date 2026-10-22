@@ -37,15 +37,30 @@ def test_move_force_dataset_to_mlp_dataset_no_dataset():
 
 
 def test_move_force_dataset_to_mlp_dataset_with_forces():
-    """A dataset with forces becomes the MLP training dataset."""
+    """A dataset with forces and energies becomes the MLP training dataset."""
     dataset = {
         "displacements": [[[0.01, 0.0, 0.0]]],
         "forces": [[[0.1, 0.0, 0.0]]],
+        "supercell_energies": [-1.0],
     }
     phonon = SimpleNamespace(dataset=dataset, mlp_dataset=None)
     move_force_dataset_to_mlp_dataset(phonon)
     assert phonon.mlp_dataset is dataset
     assert phonon.dataset is None
+
+
+def test_move_force_dataset_to_mlp_dataset_without_energies():
+    """A type-2 dataset without supercell energies cannot be used for training."""
+    dataset = {
+        "displacements": [[[0.01, 0.0, 0.0]]],
+        "forces": [[[0.1, 0.0, 0.0]]],
+    }
+    phonon = SimpleNamespace(dataset=dataset, mlp_dataset=None)
+    with pytest.raises(
+        PypolymlpTrainingDatasetNotFoundError, match="Supercell energies"
+    ):
+        move_force_dataset_to_mlp_dataset(phonon)
+    assert phonon.mlp_dataset is None
 
 
 def test_move_force_dataset_to_mlp_dataset_displacement_only():
