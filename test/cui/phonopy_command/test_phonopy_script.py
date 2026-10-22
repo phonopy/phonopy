@@ -6,6 +6,7 @@ from __future__ import annotations
 import itertools
 import os
 import pathlib
+import shutil
 import sys
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -590,6 +591,50 @@ def test_config_option():
                 assert file_path.exists()
                 file_path.unlink()
 
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_configuration_file_as_positional_argument(
+    capsys: pytest.CaptureFixture[str],
+):
+    """Configuration file given as positional argument is an error.
+
+    phonopy_disp.yaml is placed in the current directory, where it would be
+    read in place of the configuration file if the file were ignored.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            shutil.copy(
+                cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                "phonopy_disp.yaml.xz",
+            )
+            conf_filename = cwd / "mesh.conf"
+            argparse_control = _get_phonopy_args(
+                filename=conf_filename,
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+
+            out = capsys.readouterr().out
+            assert (
+                f'"{conf_filename}" could not be read as a phonopy.yaml-like file.'
+                in out
+            )
+            assert (
+                f'If "{conf_filename}" is a configuration file, give it by --config.'
+                in out
+            )
+
+            pathlib.Path("phonopy_disp.yaml.xz").unlink()
             _check_no_files()
 
         finally:

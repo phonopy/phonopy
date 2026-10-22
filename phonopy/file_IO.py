@@ -996,7 +996,7 @@ def is_file_phonopy_yaml(
     with myio.open(filename, "rb") as f:
         try:
             data = yaml.load(f, Loader=Loader)
-            if data is None:
+            if not isinstance(data, dict):
                 return False
             keys: Sequence[str] = (
                 yaml_dict_keys

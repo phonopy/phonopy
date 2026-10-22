@@ -12,7 +12,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from phonopy.cui.settings import Settings
-from phonopy.exception import CellNotFoundError, MagmomValueError
+from phonopy.exception import (
+    CellNotFoundError,
+    MagmomValueError,
+    NotPhonopyYamlError,
+)
 from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
     PhonopyYamlStructureInfo,
@@ -110,6 +114,24 @@ def get_cell_info(
                     print(f"  {v}")
             print("But it is overwritten by")
             for v in pmat_in_settings:
+                print(f"  {v}")
+            print("")
+
+        # The dataset belongs to the supercell of the phonopy.yaml, so its
+        # supercell matrix is kept, but a different one given is reported.
+        smat_in_settings = settings.supercell_matrix
+        smat_in_phpy_yaml = phpy_yaml.supercell_matrix
+        if (
+            log_level
+            and smat_in_settings is not None
+            and smat_in_phpy_yaml is not None
+            and not np.array_equal(smat_in_settings, smat_in_phpy_yaml)
+        ):
+            print("Supercell matrix given by DIM or --dim is")
+            for v in smat_in_settings:
+                print(f"  {v}")
+            print(f'But that in "{yaml_filename}" is used:')
+            for v in smat_in_phpy_yaml:
                 print(f"  {v}")
             print("")
 
@@ -292,12 +314,23 @@ def _resolve_interface_and_filename(
     cell_filename: str | os.PathLike | None,
     phonopy_yaml_cls: type[PhonopyYaml],
 ) -> tuple[str | None, str | os.PathLike | None]:
-    """Resolve interface mode and cell filename from fallback state."""
+    """Resolve interface mode and cell filename from fallback state.
+
+    In the phonopy.yaml mode, the default file names are looked for only when
+    no file is given. A given file that is not found or not readable as a
+    phonopy.yaml-like file is an error.
+
+    """
     if fallback_reason is not None:
         _interface_mode = "phonopy_yaml"
         keyword = phonopy_yaml_cls.command_name
         if cell_filename is None:
+            # Proceed to look for default file names.
             _cell_filename = None
+        elif not os.path.isfile(cell_filename):
+            raise CellNotFoundError(
+                f'Crystal structure file "{cell_filename}" was not found.'
+            )
         elif is_file_phonopy_yaml(cell_filename, yaml_dict_keys=[keyword]):
             # Readable as a phonopy.yaml
             _cell_filename = cell_filename
@@ -305,8 +338,14 @@ def _resolve_interface_and_filename(
             # Readable as yaml
             _cell_filename = cell_filename
         else:
-            # Not readable as yaml. Proceed to look for default file names.
-            _cell_filename = None
+            msg_list = _get_fallback_reason_lines(
+                fallback_reason, cell_filename, phonopy_yaml_cls
+            )
+            msg_list.append(
+                f'"{cell_filename}" could not be read as a '
+                f"{phonopy_yaml_cls.command_name}.yaml-like file."
+            )
+            raise NotPhonopyYamlError("\n".join(msg_list))
     elif interface_mode is None:
         _interface_mode = None
         _cell_filename = cell_filename
@@ -519,27 +558,9 @@ def _get_error_message(
     # Must be phonopy_yaml mode below. #
     ####################################
 
-    msg_list = []
-    if fallback_reason in ["default file not found", "read_vasp parsing failed"]:
-        if cell_filename:
-            vasp_filename = cell_filename
-        else:
-            vasp_filename = get_default_cell_filename("vasp")
-
-        if fallback_reason == "read_vasp parsing failed":
-            msg_list += [
-                f'Parsing crystal structure file "{vasp_filename}" '
-                "as in VASP format failed.",
-                "(Calculator option is needed for parsing different crystal "
-                "structure format.)",
-            ]
-        else:
-            msg_list.append(f'Crystal structure file "{vasp_filename}" was not found.')
-
-    elif fallback_reason == "no supercell matrix given":
-        msg_list.append("Supercell matrix (DIM or --dim) was not explicitly specified.")
-
-    msg_list.append(f"Switched on {phonopy_yaml_cls.command_name}-yaml mode.")
+    msg_list = _get_fallback_reason_lines(
+        fallback_reason, cell_filename, phonopy_yaml_cls
+    )
 
     if final_cell_filename is None:  # No phonopy*.yaml file was found.
         filenames = [f'"{name}"' for name in phonopy_yaml_cls.default_filenames]
@@ -563,3 +584,33 @@ def _get_error_message(
         msg_list.append(f'But parsing "{final_cell_filename}" failed.')
 
     return "\n".join(msg_list)
+
+
+def _get_fallback_reason_lines(
+    fallback_reason: _FallbackReason,
+    cell_filename: str | os.PathLike | None,
+    phonopy_yaml_cls: type[PhonopyYaml],
+) -> list[str]:
+    """Return message lines telling why phonopy_yaml mode was switched on."""
+    msg_list = []
+    if fallback_reason in ["default file not found", "read_vasp parsing failed"]:
+        if cell_filename:
+            vasp_filename = cell_filename
+        else:
+            vasp_filename = get_default_cell_filename("vasp")
+
+        if fallback_reason == "read_vasp parsing failed":
+            msg_list += [
+                f'Parsing crystal structure file "{vasp_filename}" '
+                "as in VASP format failed.",
+                "(Calculator option is needed for parsing different crystal "
+                "structure format.)",
+            ]
+        else:
+            msg_list.append(f'Crystal structure file "{vasp_filename}" was not found.')
+
+    elif fallback_reason == "no supercell matrix given":
+        msg_list.append("Supercell matrix (DIM or --dim) was not explicitly specified.")
+
+    msg_list.append(f"Switched on {phonopy_yaml_cls.command_name}-yaml mode.")
+    return msg_list
