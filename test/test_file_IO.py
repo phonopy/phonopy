@@ -510,6 +510,20 @@ def test_is_file_phonopy_yaml_scalar(tmp_path):
     assert is_file_phonopy_yaml(filename) is False
 
 
+def test_is_file_phonopy_yaml_keyword_is_deprecated_and_ignored():
+    """Keyword issues DeprecationWarning and does not change the result.
+
+    phonopy_params_Si.yaml has no "phono3py" key, so the result would be False
+    if the keyword were used as a necessary key.
+
+    """
+    with pytest.warns(DeprecationWarning, match="keyword of is_file_phonopy_yaml"):
+        assert (
+            is_file_phonopy_yaml(cwd / "phonopy_params_Si.yaml", keyword="phono3py")
+            is True
+        )
+
+
 def test_is_file_phonopy_yaml_xz():
     """Compressed xz file is handled correctly."""
     assert is_file_phonopy_yaml(cwd / "phonopy_params_NaCl-1.00.yaml.xz") is True
