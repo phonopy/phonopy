@@ -154,7 +154,7 @@ class PypolymlpData:
         Displacements of atoms. shape=(n, natoms, 3)
     forces : np.ndarray
         Displacements of atoms. shape=(n, natoms, 3)
-    supercell_energies : np.ndarray, optional
+    supercell_energies : np.ndarray
         Energies of supercells. shape=(n,)
     supercell : PhonopyAtoms
         Reference supercell the displacements are relative to.

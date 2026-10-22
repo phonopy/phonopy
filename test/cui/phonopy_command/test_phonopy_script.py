@@ -34,6 +34,7 @@ from phonopy.cui.phonopy_script import (
 )
 from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpFileNotFoundError
+from phonopy.file_IO import write_FORCE_SETS
 from phonopy.structure.atomic_data import set_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
@@ -1361,6 +1362,52 @@ def test_use_pypolymlp_type1_dataset_error(capsys: pytest.CaptureFixture[str]):
 
             out = capsys.readouterr().out
             assert "cannot be used for\ntraining MLPs." in out
+
+            for created_filename in ("phonopy_disp.yaml", "FORCE_SETS"):
+                pathlib.Path(created_filename).unlink()
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_use_pypolymlp_without_supercell_energies_error(
+    capsys: pytest.CaptureFixture[str],
+):
+    """Test phonopy --pypolymlp with type-2 FORCE_SETS.
+
+    FORCE_SETS has no supercell energies, which are needed for training, so the
+    script prints an error message and exits with code 1 without calling
+    develop_or_load_pypolymlp.
+
+    """
+    ph = phonopy.load(
+        cwd / ".." / ".." / "phonopy_params_NaCl-rd.yaml.xz", produce_fc=False
+    )
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            ph.save("phonopy_disp.yaml", settings={"force_sets": False})
+            write_FORCE_SETS(
+                {"displacements": ph.displacements, "forces": ph.forces},
+                filename="FORCE_SETS",
+            )
+            argparse_control = _get_phonopy_args(
+                use_pypolymlp=True,
+                load_phonopy_yaml=True,
+            )
+            with patch(
+                "phonopy.cui.phonopy_script.develop_or_load_pypolymlp"
+            ) as mock_develop:
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
+                assert excinfo.value.code == 1
+                mock_develop.assert_not_called()
+
+            out = capsys.readouterr().out
+            assert "Supercell energies are needed for training MLPs" in out
 
             for created_filename in ("phonopy_disp.yaml", "FORCE_SETS"):
                 pathlib.Path(created_filename).unlink()
