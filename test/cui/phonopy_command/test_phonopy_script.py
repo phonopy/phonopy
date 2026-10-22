@@ -641,6 +641,66 @@ def test_configuration_file_as_positional_argument(
             os.chdir(original_cwd)
 
 
+@pytest.mark.parametrize("log_level", [0, 1])
+def test_no_forces_is_reported(capsys: pytest.CaptureFixture[str], log_level: int):
+    """Missing forces are reported with how to give them, also at log_level 0."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            filename = cwd / ".." / ".." / "phonopy_disp_NaCl.yaml"
+            argparse_control = _get_phonopy_args(
+                filename=filename,
+                load_phonopy_yaml=True,
+                log_level=log_level,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+
+            out = capsys.readouterr().out
+            assert f'"{filename}" has no forces, and "FORCE_SETS" was not found.' in out
+            assert '"phonopy-init -f"' in out
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_no_displacement_dataset_is_reported(capsys: pytest.CaptureFixture[str]):
+    """Missing displacement dataset is reported with how to generate it."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            with open(cwd / ".." / ".." / "phonopy_disp_NaCl.yaml") as f:
+                yaml_data = yaml.safe_load(f)
+            del yaml_data["displacements"]
+            with open("phonopy.yaml", "w") as w:
+                yaml.safe_dump(yaml_data, w)
+
+            argparse_control = _get_phonopy_args(load_phonopy_yaml=True)
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+
+            out = capsys.readouterr().out
+            assert (
+                'Displacement dataset was not found, and "FORCE_SETS" was not found.'
+                in out
+            )
+            assert '"phonopy-init -d"' in out
+
+            pathlib.Path("phonopy.yaml").unlink()
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
 def test_anime():
     """Test phonopy/phonopy-load command."""
     with tempfile.TemporaryDirectory() as temp_dir:
