@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from io import StringIO
 from typing import Any
@@ -114,6 +115,36 @@ def test_Cr_copy_magnetic_moments(
     helper_methods.compare_cells(convcell_cr, convcell_cr.copy())
     helper_methods.compare_cells_with_order(convcell_cr, convcell_cr.copy())
     convcell_cr.magnetic_moments = None
+
+
+@pytest.mark.parametrize("is_ncl", [False, True])
+def test_PhonopyAtoms_yaml_without_negative_zero(is_ncl: bool):
+    """Test that -0.0 is written as 0.0 in yaml lines of PhonopyAtoms."""
+    a = 3.573610682008501
+    lattice = [[a, -0.0, -0.0], [0.0, a, -0.0], [-0.0, 0.0, a]]
+    points = [[-0.0, 0.0, -0.0], [0.25, 0.25, -0.0]]
+    if is_ncl:
+        magmoms: list = [[-0.0, 0.0, 1.0], [0.0, -0.0, -1.0]]
+    else:
+        magmoms = [-0.0, 1.0]
+    cell = PhonopyAtoms(
+        cell=lattice,
+        scaled_positions=points,
+        symbols=["C", "C"],
+        magnetic_moments=magmoms,
+    )
+    assert cell.magnetic_moments is not None
+    for values in (cell.cell, cell.scaled_positions, cell.magnetic_moments):
+        assert np.signbit(values[values == 0]).any()
+
+    assert re.search(r"-0\.0+(?![0-9])", str(cell)) is None
+
+    # Values themselves are unchanged.
+    np.testing.assert_array_equal(np.signbit(cell.cell), np.signbit(lattice))
+    np.testing.assert_array_equal(np.signbit(cell.scaled_positions), np.signbit(points))
+    np.testing.assert_array_equal(
+        np.signbit(cell.magnetic_moments), np.signbit(magmoms)
+    )
 
 
 def test_parse_cell_dict(helper_methods: Callable):

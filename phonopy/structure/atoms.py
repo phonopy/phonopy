@@ -967,14 +967,15 @@ class PhonopyAtoms:
     def get_yaml_lines(self) -> list[str]:
         """Return the crystal structure as a list of yaml text lines.
 
-        The content is given by get_cell_dict.
+        The content is given by get_cell_dict. The "z" option of the format
+        specification writes -0.0 as 0.0.
 
         """
         cell_dict = get_cell_dict(self)
         lines = ["lattice:"]
         for pos, a in zip(cell_dict["lattice"], ("a", "b", "c"), strict=True):
             lines.append(
-                "- [ %21.15f, %21.15f, %21.15f ] # %s" % (pos[0], pos[1], pos[2], a)
+                f"- [ {pos[0]:z21.15f}, {pos[1]:z21.15f}, {pos[2]:z21.15f} ] # {a}"
             )
         lines.append("points:")
         for i, point in enumerate(cell_dict.get("points", [])):
@@ -984,9 +985,9 @@ class PhonopyAtoms:
                 lines.append(f"  mixture: [ {mix_str} ]")
             if "extended_symbol" in point:
                 lines.append(f"  extended_symbol: {point['extended_symbol']}")
+            c = point["coordinates"]
             lines.append(
-                "  coordinates: [ %18.15f, %18.15f, %18.15f ]"
-                % tuple(point["coordinates"])
+                f"  coordinates: [ {c[0]:z18.15f}, {c[1]:z18.15f}, {c[2]:z18.15f} ]"
             )
             if "mass" in point:
                 lines.append("  mass: %f" % point["mass"])
@@ -995,9 +996,9 @@ class PhonopyAtoms:
             if "magnetic_moment" in point:
                 mag = point["magnetic_moment"]
                 if isinstance(mag, list):
-                    mag_str = f"[{mag[0]:.8f}, {mag[1]:.8f}, {mag[2]:.8f}]"
+                    mag_str = f"[{mag[0]:z.8f}, {mag[1]:z.8f}, {mag[2]:z.8f}]"
                 else:
-                    mag_str = f"{mag:.8f}"
+                    mag_str = f"{mag:z.8f}"
                 lines.append(f"  magnetic_moment: {mag_str}")
         return lines
 
