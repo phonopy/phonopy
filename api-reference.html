@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API reference &#8212; Phonopy v.4.8.3</title>
+    <title>API reference &#8212; Phonopy v.4.8.4</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=3da96642"></script>
+    <script src="_static/documentation_options.js?v=a8bce493"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.8.3</p>
+    <p class="title logo__title">Phonopy v.4.8.4</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -3276,7 +3276,8 @@ distinguished by concentration.</p>
 <dt class="sig sig-object py" id="phonopy.structure.atoms.PhonopyAtoms.get_yaml_lines">
 <span class="sig-name descname"><span class="pre">get_yaml_lines</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/phonopy/structure/atoms.html#PhonopyAtoms.get_yaml_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#phonopy.structure.atoms.PhonopyAtoms.get_yaml_lines" title="Link to this definition">#</a></dt>
 <dd><p>Return the crystal structure as a list of yaml text lines.</p>
-<p>The content is given by get_cell_dict.</p>
+<p>The content is given by get_cell_dict. The “z” option of the format
+specification writes -0.0 as 0.0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>]</p>
