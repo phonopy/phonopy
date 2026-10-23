@@ -879,30 +879,35 @@ def test_smoothing_terms_reach_the_output_header(
     file, so the file says which run it is. The result reads the count off
     the fits themselves, and the header off the result.
 
-    To keep the test light, the fit starts from three Einstein temperatures
-    instead of the default pool of five, 6 starting guesses instead of 60 per
-    lattice parameter. The header is what is tested, not the quality of the
-    fit.
+    The header is what is tested, not the fit, so the fit is replaced by one
+    that returns a fixed curve with as many terms as it is asked for. A real
+    three-term fit of these few points is fragile: it was seen to pass on
+    macOS and fail on Windows with every converged fit rejected.
 
     """
-    import functools
-
     import phonopy.qha.anisotropic
     from phonopy.qha import anisotropic_output
-    from phonopy.qha.lattice_smoothing import fit_lattice_parameter
+    from phonopy.qha.lattice_smoothing import EinsteinFit
 
-    monkeypatch.setattr(
-        phonopy.qha.anisotropic,
-        "fit_lattice_parameter",
-        functools.partial(fit_lattice_parameter, theta_pool=(80.0, 250.0, 500.0)),
-    )
+    def fixed_fit(
+        temperatures: NDArray[np.double], values: NDArray[np.double], n_terms: int = 2
+    ) -> EinsteinFit:
+        temps = np.asarray(temperatures, dtype="double")
+        return EinsteinFit(
+            y0=float(values[0]),
+            amplitudes=(1e-3,) * n_terms,
+            thetas=tuple(100.0 * (i + 1) for i in range(n_terms)),
+            temperature_range=(float(temps.min()), float(temps.max())),
+            rms=0.0,
+            n_converged=1,
+            n_accepted=1,
+        )
+
+    monkeypatch.setattr(phonopy.qha.anisotropic, "fit_lattice_parameter", fixed_fit)
     phonopys = _tetragonal_phonopys(ph_nacl)
-    # A three-term fit has seven coefficients, so it needs more temperatures
-    # than the six of TEMPERATURES.
-    temperatures = np.arange(0.0, 1001.0, 100.0)
     result = run_anisotropic_qha(
         phonopys,
-        temperatures,
+        TEMPERATURES,
         internal_energies=_tetragonal_internal_energies(phonopys),
         mesh=MESH,
         polynomial_degree=2,
