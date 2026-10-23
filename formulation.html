@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Formulations &#8212; Phonopy v.4.8.2</title>
+    <title>Formulations &#8212; Phonopy v.4.8.3</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=8655e45f"></script>
+    <script src="_static/documentation_options.js?v=3da96642"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,8 +52,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Symmetry-adapted phonon modes" href="symmetry-adapted-modes.html" />
-    <link rel="prev" title="Temperature dependent force constants using pypolymlp and symfc" href="polymlp-sscha.html" />
+    <link rel="next" title="How to cite phonopy" href="citation.html" />
+    <link rel="prev" title="API reference" href="api-reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="4.8" />
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.8.2</p>
+    <p class="title logo__title">Phonopy v.4.8.3</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -193,12 +193,17 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="current nav bd-sidenav">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Using phonopy</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -206,12 +211,11 @@
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="electronic-thermal-properties.html">Electronic thermal properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Calculator interfaces</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
@@ -235,14 +239,29 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Topics</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="electronic-thermal-properties.html">Electronic thermal properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Theory</span></p>
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Formulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About phonopy</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
@@ -592,7 +611,11 @@ method of Gonze <em>et al.</em> (<a class="reference internal" href="reference.h
       &amp;= \sum_{\mathbf{q}\nu} k_\mathrm{B}
    \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T} \right)^2
    \frac{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
-   T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2}\end{split}\]</div>
+   T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2} \\
+      &amp;= \sum_{\mathbf{q}\nu} k_\mathrm{B}
+   \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T} \right)^2
+   \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
+   T)}{[1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)]^2}\end{split}\]</div>
 </section>
 <section id="partition-function">
 <h3>Partition function<a class="headerlink" href="#partition-function" title="Link to this heading">#</a></h3>
@@ -616,7 +639,18 @@ method of Gonze <em>et al.</em> (<a class="reference internal" href="reference.h
 \sum_{\mathbf{q}\nu} \hbar\omega(\mathbf{q}\nu)
 \coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B}
 \sum_{\mathbf{q}\nu}
-\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]\end{split}\]</div>
+\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right] \\
+&amp;= k_\mathrm{B} \sum_{\mathbf{q}\nu} \left[
+\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T}
+\frac{\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
+T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)}
+- \ln\bigl[1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)\bigr]
+\right]\end{split}\]</div>
+<p>The last expressions for <span class="math notranslate nohighlight">\(C_V\)</span> and <span class="math notranslate nohighlight">\(S\)</span> are the ones phonopy
+evaluates. They contain <span class="math notranslate nohighlight">\(\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)\)</span>, which goes to zero at low temperature, instead of
+<span class="math notranslate nohighlight">\(\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)\)</span>, which exceeds the
+largest floating-point number at low temperature and makes <span class="math notranslate nohighlight">\(C_V\)</span> and
+<span class="math notranslate nohighlight">\(S\)</span> undefined.</p>
 </section>
 </section>
 <section id="thermal-displacement">
@@ -954,20 +988,20 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="polymlp-sscha.html"
+       href="api-reference.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Temperature dependent force constants using pypolymlp and symfc</p>
+        <p class="prev-next-title">API reference</p>
       </div>
     </a>
     <a class="right-next"
-       href="symmetry-adapted-modes.html"
+       href="citation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Symmetry-adapted phonon modes</p>
+        <p class="prev-next-title">How to cite phonopy</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

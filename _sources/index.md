@@ -19,7 +19,8 @@ for phonon-phonon interaction and lattice thermal conductivity calculations.
 See {ref}`phonopy_yaml_phonondb`.
 
 
-The following features of phonopy are highlighted:
+Phonopy calculates the following quantities from the force constants of a
+crystal structure:
 
 - {ref}`Phonon band structure <band_structure_related_tags>`,
   {ref}`phonon DOS and partial-DOS <dos_related_tags>`
@@ -29,17 +30,32 @@ The following features of phonopy are highlighted:
 - {ref}`Thermal ellipsoids <thermal_displacement_matrices_tag>` /
   {ref}`Mean square displacements <thermal_displacements_tag>`
 - {ref}`Irreducible representations of normal modes <irreducible_representation_related_tags>`
-- {ref}`Dynamic structure factor for INS and IXS <dynamic_structure_factor>`
 - {ref}`Non-analytical-term correction <nac_tag>`: LO-TO splitting
   ({ref}`Born effective charges and dielectric constant are required. <born_file>`)
-- {ref}`Mode Grüneisen parameters <phonopy_gruneisen>`
+
+The Topics pages of this documentation describe the following calculations:
+
 - {ref}`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
   capacity at constant pressure (Cp)
-- {ref}`Electronic thermal properties <electronic_thermal_properties>`: Free
-  energy, entropy and heat capacity of the electrons in metals
 - {ref}`Anisotropic thermal expansion <aniso-thermal-expansion>`
   (experimental): Lattice parameters and axial thermal expansions from the
   free energy minimized over the lattice parameters
+- {ref}`Electronic thermal properties <electronic_thermal_properties>`: Free
+  energy, entropy and heat capacity of the electrons in metals
+- {ref}`Mode Grüneisen parameters <phonopy_gruneisen>`
+- {ref}`Dynamic structure factor for INS and IXS <dynamic_structure_factor>`
+- {ref}`Random displacements <random_displacements>`: Supercells with atoms
+  displaced in random directions, or by displacements drawn from the harmonic
+  oscillator distributions of the phonon modes
+- {ref}`Temperature dependent force constants <polymlp-sscha>` (experimental):
+  Force constants in the stochastic self-consistent harmonic approximation
+  (SSCHA) with pypolymlp and symfc
+- {ref}`Symmetry-adapted phonon modes <symmetry_adapted_modes>`: Degenerate
+  sets of phonon modes decided by the symmetry of the q-point, used by the
+  irreducible representations
+
+Phonopy also provides:
+
 - {ref}`Interfaces to calculators <calculator_interfaces>`: {ref}`VASP
 <vasp_interface>`, {ref}`VASP DFPT <vasp_dfpt_interface>`, {ref}`ABINIT
 <abinit_interface>`, {ref}`Quantum ESPRESSO <qe_interface>`, {ref}`SIESTA
@@ -55,32 +71,63 @@ The following features of phonopy are highlighted:
 
 ```{toctree}
 :hidden:
+:caption: Getting started
 install
 rust-backend
-symmetry
 workflow
 examples
+```
+
+```{toctree}
+:hidden:
+:caption: Using phonopy
+phonopy-init
+phonopy
 input-files
 output-files
 setting-tags
 command-options
-dynamic-structure-factor
-Mode Grüneisen parameters <gruneisen>
-qha
-electronic-thermal-properties
-aniso-thermal-expansion
-random-displacements
+phonopy-yaml
+symmetry
+```
+
+```{toctree}
+:hidden:
+:caption: Calculator interfaces
 interfaces
 auxiliary-tools
 external-tools
+```
+
+```{toctree}
+:hidden:
+:caption: Topics
+qha
+aniso-thermal-expansion
+electronic-thermal-properties
+Mode Grüneisen parameters <gruneisen>
+dynamic-structure-factor
+random-displacements
+polymlp-sscha
+symmetry-adapted-modes
+```
+
+```{toctree}
+:hidden:
+:caption: Python API
 phonopy-module
 api-reference
-phonopy-yaml
-phonopy
-phonopy-init
-polymlp-sscha
+```
+
+```{toctree}
+:hidden:
+:caption: Theory
 formulation
-symmetry-adapted-modes
+```
+
+```{toctree}
+:hidden:
+:caption: About phonopy
 citation
 reference
 migration-v4

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quasi harmonic approximation &#8212; Phonopy v.4.8.2</title>
+    <title>Quasi harmonic approximation &#8212; Phonopy v.4.8.3</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=8655e45f"></script>
+    <script src="_static/documentation_options.js?v=3da96642"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,8 +52,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Electronic thermal properties" href="electronic-thermal-properties.html" />
-    <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
+    <link rel="next" title="Anisotropic thermal expansion from free-energy minimization" href="aniso-thermal-expansion.html" />
+    <link rel="prev" title="External tools" href="external-tools.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="4.8" />
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.8.2</p>
+    <p class="title logo__title">Phonopy v.4.8.3</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -193,12 +193,17 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="current nav bd-sidenav">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rust-backend.html">Rust backend</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Using phonopy</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -206,12 +211,11 @@
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quasi harmonic approximation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="electronic-thermal-properties.html">Electronic thermal properties</a></li>
-<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Calculator interfaces</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
@@ -235,14 +239,29 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Topics</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aniso-thermal-expansion.html">Anisotropic thermal expansion from free-energy minimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="electronic-thermal-properties.html">Electronic thermal properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random-displacements.html">Random displacements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-reference.html">API reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy.html">phonopy command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-init.html">phonopy-init command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="polymlp-sscha.html">Temperature dependent force constants using pypolymlp and symfc</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Theory</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry-adapted-modes.html">Symmetry-adapted phonon modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">About phonopy</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migration-v4.html">Migrating from phonopy v3 to v4</a></li>
@@ -401,7 +420,10 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-of-phonopy-qha">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gibbs-free-energy-and-thermal-expansion">Gibbs free energy and thermal expansion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calculations-at-each-volume">Calculations at each volume</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-free-energy">Electronic free energy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-phonopy-qha-command">The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#h"><code class="docutils literal notranslate"><span class="pre">-h</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tmax"><code class="docutils literal notranslate"><span class="pre">--tmax</span></code></a></li>
@@ -423,7 +445,6 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-from-phonopyqha-deprecated">Migration from <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> (deprecated)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-in-t-p-space-calculated-under-qha">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a></li>
 </ul>
             </nav>
         </div>
@@ -437,32 +458,139 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="quasi-harmonic-approximation">
 <span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Link to this heading">#</a></h1>
-<p>Using phonopy results of thermal properties at several volumes, thermal
-expansion and heat capacity at constant pressure can be calculated under the
-quasi-harmonic approximation. Two interfaces are provided: the <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>
-script described below, and the Python API <a class="reference internal" href="#phonopy-qha-python-api"><span class="std std-ref">Python API: run_qha</span></a>,
-which also computes lattice parameters as functions of temperature. The
-theoretical background is summarized in <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>.</p>
-<nav class="contents local" id="contents">
+<p>This page describes how to calculate the thermal expansion and the heat
+capacity at constant pressure (Cp) of a crystal with phonopy. The calculation
+needs a phonon calculation at each of several volumes of the crystal.</p>
+<section id="gibbs-free-energy-and-thermal-expansion">
+<span id="phonopy-qha-method"></span><h2>Gibbs free energy and thermal expansion<a class="headerlink" href="#gibbs-free-energy-and-thermal-expansion" title="Link to this heading">#</a></h2>
+<p>At each volume, the phonons are calculated in the harmonic approximation. The
+phonon frequencies change with the volume, so the phonon Helmholtz free energy
+<span class="math notranslate nohighlight">\(F_\mathrm{phonon}(T;\,V)\)</span> depends on both the temperature <span class="math notranslate nohighlight">\(T\)</span> and
+the volume <span class="math notranslate nohighlight">\(V\)</span>. When the phonons are the only source of the temperature
+dependence, the Gibbs free energy at the temperature <span class="math notranslate nohighlight">\(T\)</span> and the pressure
+<span class="math notranslate nohighlight">\(p\)</span> is approximated by</p>
+<div class="math notranslate nohighlight">
+\[G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],\]</div>
+<p>where <span class="math notranslate nohighlight">\(U(V)\)</span> is the total energy of the static lattice at the volume
+<span class="math notranslate nohighlight">\(V\)</span>. <span class="math notranslate nohighlight">\(U(V)\)</span> does not depend on the temperature. The temperature
+dependence comes from <span class="math notranslate nohighlight">\(F_\mathrm{phonon}(T;\,V)\)</span>. <span class="math notranslate nohighlight">\(\min_V\)</span> means the
+minimum of the function in the brackets with respect to <span class="math notranslate nohighlight">\(V\)</span>. At each
+temperature, the values of the function in the brackets at the calculated
+volumes are fitted to an equation of state. The volume at the minimum of this
+equation of state is the equilibrium volume <span class="math notranslate nohighlight">\(V_0(T)\)</span>.</p>
+<p>The volume dependence of <span class="math notranslate nohighlight">\(F_\mathrm{phonon}\)</span> is different from that of
+<span class="math notranslate nohighlight">\(U\)</span>. Therefore <span class="math notranslate nohighlight">\(V_0\)</span> is different from the volume at the minimum of
+<span class="math notranslate nohighlight">\(U(V) + pV\)</span> even at 0 K. With increasing temperature, the volume
+dependence of <span class="math notranslate nohighlight">\(F_\mathrm{phonon}\)</span> changes, and <span class="math notranslate nohighlight">\(V_0(T)\)</span> changes with
+it. The volumetric thermal expansion coefficient is calculated from this change
+as <span class="math notranslate nohighlight">\(\beta = (1/V_0)\, dV_0/dT\)</span>.</p>
+<p>On this page, this calculation is called the quasi-harmonic approximation
+(QHA). The phonons are harmonic at each volume, and the temperature changes the
+phonons only through the change of the volume. The term is used for a wider
+range of calculations in the literature. <a class="reference internal" href="aniso-thermal-expansion.html#aniso-thermal-expansion"><span class="std std-ref">Anisotropic thermal expansion from free-energy minimization</span></a> uses the
+same approximation, and it minimizes the free energy over the lattice
+parameters instead of the volume.</p>
+</section>
+<section id="calculations-at-each-volume">
+<span id="phonopy-qha-calculations-at-each-volume"></span><h2>Calculations at each volume<a class="headerlink" href="#calculations-at-each-volume" title="Link to this heading">#</a></h2>
+<p>At each volume, phonopy calculates the thermal properties
+(<a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">TPROP</span></a>) and writes them to <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code>.
+The calculator that gives the forces, such as VASP, also gives the total
+energy of the static lattice at each volume. The fitting to the equation of state needs at
+least five volumes. <a class="reference internal" href="workflow.html#workflow"><span class="std std-ref">Work flow</span></a> shows how the calculations at the different
+volumes are combined.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command reads the <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> files and a file
+of volumes and total energies of the static lattice. The Python API <code class="docutils literal notranslate"><span class="pre">run_qha</span></code>
+(<a class="reference internal" href="#phonopy-qha-python-api"><span class="std std-ref">Python API: run_qha</span></a>) takes one <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance per volume. It also
+calculates the lattice parameters of the unit cell of each instance as functions
+of temperature.</p>
+</section>
+<section id="electronic-free-energy">
+<span id="phonopy-qha-electronic-free-energy"></span><h2>Electronic free energy<a class="headerlink" href="#electronic-free-energy" title="Link to this heading">#</a></h2>
+<p>In a metal, the electrons near the Fermi level are excited thermally. The free
+energy of these electrons depends on the temperature and the volume, and it
+changes the equilibrium volume, the thermal expansion coefficient and the heat
+capacity. In an insulator whose band gap is much larger than
+<span class="math notranslate nohighlight">\(k_\mathrm{B} T\)</span>, few electrons are excited, and this section can be
+skipped.</p>
+<p>The electronic free energy is added to the function in the brackets:</p>
+<div class="math notranslate nohighlight">
+\[G(T, p) = \min_V \left[ U(V) + F_\mathrm{el}(T;\,V) - F_\mathrm{el}(0;\,V)
++ F_\mathrm{phonon}(T;\,V) + pV \right].\]</div>
+<p>Phonopy calculates <span class="math notranslate nohighlight">\(F_\mathrm{el}(T;\,V)\)</span> in the fixed density-of-states
+approximation. The electronic eigenvalues are calculated once at each volume,
+and only the occupation of the states changes with temperature.
+<span class="math notranslate nohighlight">\(F_\mathrm{el}(0;\,V)\)</span> is subtracted because <span class="math notranslate nohighlight">\(U(V)\)</span> already
+contains the energy of the electrons at 0 K. For this reason, <span class="math notranslate nohighlight">\(U(V)\)</span> has
+to be the total energy at zero electronic temperature, such as
+<code class="docutils literal notranslate"><span class="pre">energy(sigma-&gt;0)</span></code> of VASP. The equations are in
+<a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties"><span class="std std-ref">Electronic thermal properties</span></a>.</p>
+<p>The electronic eigenvalues have to be calculated for the same cell as the one
+to which the phonon thermal properties are normalized. When phonopy was run
+with <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> or <code class="docutils literal notranslate"><span class="pre">--pa</span></code>, this cell is the primitive cell. With a
+different cell, the electronic and the phonon free energies refer to different
+numbers of atoms.</p>
+<p>For VASP, <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> reads the <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> of each volume. Its output
+depends on which of the following is used:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#usage-of-phonopy-qha" id="id1">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a></p>
-<ul>
-<li><p><a class="reference internal" href="#options" id="id2">Options</a></p></li>
-<li><p><a class="reference internal" href="#output-files" id="id3">Output files</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy-qha</span> <span class="pre">--efe</span></code> reads <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> written by <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code>. This file
+has <span class="math notranslate nohighlight">\(U(V) + F_\mathrm{el}(T;\,V) - F_\mathrm{el}(0;\,V)\)</span> at each
+temperature and volume. See <a class="reference internal" href="#phonopy-qha-efe-option"><span class="std std-ref">--efe</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run_qha</span></code> reads <code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code> written by <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span> <span class="pre">--es</span></code>.
+This file has the electronic eigenvalues, and <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> calculates the free
+energy, the entropy and the heat capacity of the electrons from them. See
+<a class="reference internal" href="#phonopy-qha-electronic-structures"><span class="std std-ref">Electronic free energies from eigenvalues</span></a>.</p></li>
 </ul>
-</li>
-<li><p><a class="reference internal" href="#python-api-run-qha" id="id4">Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a></p>
-<ul>
-<li><p><a class="reference internal" href="#electronic-free-energies-from-eigenvalues" id="id5">Electronic free energies from eigenvalues</a></p></li>
-<li><p><a class="reference internal" href="#lattice-parameters-a-t-b-t-c-t" id="id6">Lattice parameters a(T), b(T), c(T)</a></p></li>
-<li><p><a class="reference internal" href="#migration-from-phonopyqha-deprecated" id="id7">Migration from <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> (deprecated)</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#thermal-properties-in-t-p-space-calculated-under-qha" id="id8">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a></p></li>
-</ul>
-</nav>
-<section id="usage-of-phonopy-qha">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a><a class="headerlink" href="#usage-of-phonopy-qha" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> has only the free energies. For this reason, the quantities that
+<code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> calculates from the entropy and the heat capacity at each volume
+do not include the electrons. The following table shows which results include
+the electronic contribution.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Result</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">phonopy-qha</span> <span class="pre">--efe</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">run_qha</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(V_0(T)\)</span>, <span class="math notranslate nohighlight">\(\beta\)</span>, <span class="math notranslate nohighlight">\(G\)</span>, <span class="math notranslate nohighlight">\(B_T\)</span></p></td>
+<td><p>included</p></td>
+<td><p>included</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(C_p\)</span> from <span class="math notranslate nohighlight">\(-T\partial^2 G/\partial T^2\)</span></p></td>
+<td><p>included (<code class="docutils literal notranslate"><span class="pre">Cp-temperature.dat</span></code>)</p></td>
+<td><p>not calculated</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(C_p\)</span> from the polynomial fits</p></td>
+<td><p>phonons only (<code class="docutils literal notranslate"><span class="pre">Cp-temperature_polyfit.dat</span></code>)</p></td>
+<td><p>included (<code class="docutils literal notranslate"><span class="pre">heat_capacity_P</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thermodynamic Grüneisen parameter</p></td>
+<td><p>phonons only (<code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code>)</p></td>
+<td><p>included</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(S(T, p)\)</span>, <span class="math notranslate nohighlight">\(H(T, p)\)</span></p></td>
+<td><p>not written</p></td>
+<td><p>included</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> will not be changed to include the electronic entropy and heat
+capacity, because the command is planned to be removed in a future version.
+When the electronic contribution to <span class="math notranslate nohighlight">\(C_p\)</span> or to the Grüneisen parameter
+is needed, use <code class="docutils literal notranslate"><span class="pre">run_qha</span></code>. With <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span> <span class="pre">--efe</span></code>, use <code class="docutils literal notranslate"><span class="pre">Cp-temperature.dat</span></code>
+for <span class="math notranslate nohighlight">\(C_p\)</span>.</p>
+</section>
+<section id="the-phonopy-qha-command">
+<h2>The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command<a class="headerlink" href="#the-phonopy-qha-command" title="Link to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command is planned to be removed in a future version. For
+new calculations, use the Python API <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> (<a class="reference internal" href="#phonopy-qha-python-api"><span class="std std-ref">Python API: run_qha</span></a>).
+<code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> does not include the electronic entropy and heat capacity; see
+<a class="reference internal" href="#phonopy-qha-electronic-free-energy"><span class="std std-ref">Electronic free energy</span></a>.</p>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> is the script to run the fitting and calculations. Mind that at
 least 5 volume points are needed for the fitting.</p>
 <p>An example of the usage for <code class="docutils literal notranslate"><span class="pre">example/Si-QHA</span></code> is as follows.</p>
@@ -481,7 +609,7 @@ least 5 volume points are needed for the fitting.</p>
 <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>). The volumes and energies are given in <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and
 eV, respectively. These energies are only dependent on volume but not on
 temperature unless using <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option. Therefore in the simplest case, these
-are taken as the electronic total energies at 0K. An example of the
+are taken as the total energies of the static lattice. An example of the
 volume-energy file is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#   cell volume   energy of cell other than phonon</span>
      <span class="mf">140.030000</span>           <span class="o">-</span><span class="mf">42.132246</span>
@@ -513,11 +641,10 @@ that expected by <code class="docutils literal notranslate"><span class="pre">ph
 <p>Another example for Aluminum is found in the <code class="docutils literal notranslate"><span class="pre">example/Al-QHA</span></code> directory.</p>
 <p>If the condition under pressure is expected, <span class="math notranslate nohighlight">\(PV\)</span> terms may be included in
 the energies, or equivalent effect is applied using <code class="docutils literal notranslate"><span class="pre">--pressure</span></code> option.</p>
-<p>Experimentally, temperature dependent energies are supported by <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option.
-The usage is written at
-<a class="github reference external" href="https://github.com/phonopy/phonopy/blob/develop/example/Cu-QHA/README">phonopy/phonopy</a>.</p>
+<p>The electronic free energy is included with the <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option; see
+<a class="reference internal" href="#phonopy-qha-electronic-free-energy"><span class="std std-ref">Electronic free energy</span></a>.</p>
 <section id="options">
-<span id="phonopy-qha-options"></span><h3><a class="toc-backref" href="#id2" role="doc-backlink">Options</a><a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
+<span id="phonopy-qha-options"></span><h3>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
 <section id="h">
 <h4><code class="docutils literal notranslate"><span class="pre">-h</span></code><a class="headerlink" href="#h" title="Link to this heading">#</a></h4>
 <p>Show help. The available options are shown. Without any option, the results are
@@ -531,8 +658,8 @@ let at least one temperature points fewer. The default value is <code class="doc
 </section>
 <section id="pressure">
 <h4><code class="docutils literal notranslate"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Link to this heading">#</a></h4>
-<p>Pressure is specified in GPa. This corresponds to the <span class="math notranslate nohighlight">\(pV\)</span> term described
-in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>. Note that bulk modulus obtained
+<p>Pressure is specified in GPa. This corresponds to the <span class="math notranslate nohighlight">\(pV\)</span> term in the
+equation of <span class="math notranslate nohighlight">\(G(T, p)\)</span> at the top of this page. Note that bulk modulus obtained
 with this option than 0 GPa is incorrect.</p>
 </section>
 <section id="b">
@@ -586,50 +713,41 @@ this option. This is used such as:</p>
 <span class="o">...</span>
 </pre></div>
 </div>
-<p>The first column gives temperatures in K and the following columns give
-electronic free energies in eV at temperatures and at unit (primitive) cell
-volumes. The lines starting with <code class="docutils literal notranslate"><span class="pre">#</span></code> are ignored. This file doesn’t contain the
-information about cell volumes. Instead, the volumes are obtained from <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>
-file. The energies in <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> are not used when <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option is used. The
+<p>The first column gives temperatures in K and the following columns give the
+energies other than the phonon free energy in eV, at temperatures and at unit
+(primitive) cell volumes. For the electronic free energy, each value is
+<span class="math notranslate nohighlight">\(U(V) + F_\mathrm{el}(T; V) - F_\mathrm{el}(0; V)\)</span>, where <span class="math notranslate nohighlight">\(U(V)\)</span>
+is the static energy. The lines starting with <code class="docutils literal notranslate"><span class="pre">#</span></code> are ignored. This file
+doesn’t contain the information about cell volumes. Instead, the volumes are
+obtained from <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> file. The energies in <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> are not used when
+<code class="docutils literal notranslate"><span class="pre">--efe</span></code> option is used, because <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> already contains <span class="math notranslate nohighlight">\(U(V)\)</span>. The
 temperature points are expected to be the same as those in
 <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> at least up to the maximum temperature specified for
 <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>.</p>
-<p>An example is given in <code class="docutils literal notranslate"><span class="pre">example/Cu-QHA</span></code>. The <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> contains the
-electronic free energies of the fixed density-of-states approximation. The
-equations are given in <a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties"><span class="std std-ref">Electronic thermal properties</span></a>. For VASP,
+<p>An example is given in <code class="docutils literal notranslate"><span class="pre">example/Cu-QHA</span></code>. Its <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> contains the static
+energies plus the electronic free energies of the fixed density-of-states
+approximation. The equations are given in
+<a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties"><span class="std std-ref">Electronic thermal properties</span></a>. For VASP,
 <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> creates <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>, and is used as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">vasp</span><span class="o">-</span><span class="n">efe</span> <span class="o">--</span><span class="n">tmax</span><span class="o">=</span><span class="mi">1500</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span><span class="o">-</span><span class="p">{</span><span class="mf">00..10</span><span class="p">}</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">vasprun.xml-{00..10}</span></code> have to be computed for the same unit cells as
-those used for <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code>. When <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> was run with
-<code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> or <code class="docutils literal notranslate"><span class="pre">--pa</span></code> option, the unit cells for computing electronic
-eigenvalues have to be carefully chosen to agree with those after applying
-<code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code>, or energies are scaled a posteriori.</p>
-<p>The temperature-dependent part is integrated by the linear tetrahedron
-method over the sampling mesh each <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes, which converges
-at the mesh a static calculation uses anyway. The sum over irreducible
-k-points, which this command performed before, needs far more k-points to
-reach the same answer: on a 16x16x16 mesh of copper with 120 irreducible
-k-points the two differ by 11 per cent of the temperature-dependent part at
-1000 K. <code class="docutils literal notranslate"><span class="pre">--k-point-sum</span></code> selects it. A file whose k-points are an explicit
-list rather than a generated mesh has no grid to integrate over and takes
-the sum, as does one whose k-points cannot be paired with the grid; the
-command says which route each volume took.</p>
-<p>Note that with <code class="docutils literal notranslate"><span class="pre">--efe</span></code>, the electronic free energies enter the fitting of
-<span class="math notranslate nohighlight">\(F(V;T)\)</span> and therefore the equilibrium volumes, thermal expansion,
-Gibbs free energy, bulk modulus, and <code class="docutils literal notranslate"><span class="pre">Cp-temperature.dat</span></code> computed by
-<span class="math notranslate nohighlight">\(-T\partial^2 G/\partial T^2\)</span> include the electronic contributions.
-However, <code class="docutils literal notranslate"><span class="pre">Cp-temperature_polyfit.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code> are
-computed from the phonon-only <span class="math notranslate nohighlight">\(C_V\)</span> and <span class="math notranslate nohighlight">\(S\)</span>, i.e., the
-electronic entropy and heat capacity are not included there. Use
-<code class="docutils literal notranslate"><span class="pre">Cp-temperature.dat</span></code> for the heat capacity in this case. The Python API
-(see <a class="reference internal" href="#phonopy-qha-electronic-structures"><span class="std std-ref">Electronic free energies from eigenvalues</span></a>) includes the electronic
-contributions in both quantities instead.</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">vasprun.xml-{00..10}</span></code> have to be computed for the cell described in
+<a class="reference internal" href="#phonopy-qha-electronic-free-energy"><span class="std std-ref">Electronic free energy</span></a>. When the eigenvalues were computed
+for a different cell, the energies in <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> can instead be
+scaled to that cell afterwards.</p>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> integrates by the linear tetrahedron method when the
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes a regular k-point mesh, and by the k-point sum
+otherwise. How it chooses, and the <code class="docutils literal notranslate"><span class="pre">--k-point-sum</span></code>, <code class="docutils literal notranslate"><span class="pre">--electronic-window</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--electronic-spacing</span></code> and <code class="docutils literal notranslate"><span class="pre">--symmetrize-tetrahedra</span></code> options, are described
+in <a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties-integration"><span class="std std-ref">Integration over the Brillouin zone</span></a>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">--efe</span></code>, some output files do not include the electronic entropy and heat
+capacity. The table in <a class="reference internal" href="#phonopy-qha-electronic-free-energy"><span class="std std-ref">Electronic free energy</span></a> lists which
+files include them.</p>
 </section>
 </section>
 <section id="output-files">
-<span id="phonopy-qha-output-files"></span><h3><a class="toc-backref" href="#id3" role="doc-backlink">Output files</a><a class="headerlink" href="#output-files" title="Link to this heading">#</a></h3>
+<span id="phonopy-qha-output-files"></span><h3>Output files<a class="headerlink" href="#output-files" title="Link to this heading">#</a></h3>
 <p>The physical units of V and T are <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and K, respectively.
 The unit of eV for Helmholtz and Gibbs energies, J/K/mol for <span class="math notranslate nohighlight">\(C_V\)</span> and
 entropy, GPa for bulk modulus and pressure are used.</p>
@@ -653,12 +771,12 @@ by numerical differentiation (<code class="docutils literal notranslate"><span c
 vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code>)</p></li>
 <li><p>Helmholtz free energy (eV) vs volume (<code class="docutils literal notranslate"><span class="pre">helmholtz-volume.*</span></code>). When <code class="docutils literal notranslate"><span class="pre">--pressure</span></code>
 option is specified, energy offset of <span class="math notranslate nohighlight">\(pV\)</span> is added. See also the
-following section (<a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>).</p></li>
+equation of <span class="math notranslate nohighlight">\(G(T, p)\)</span> at the top of this page.</p></li>
 </ul>
 </section>
 </section>
 <section id="python-api-run-qha">
-<span id="phonopy-qha-python-api"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code></a><a class="headerlink" href="#python-api-run-qha" title="Link to this heading">#</a></h2>
+<span id="phonopy-qha-python-api"></span><h2>Python API: <code class="docutils literal notranslate"><span class="pre">run_qha</span></code><a class="headerlink" href="#python-api-run-qha" title="Link to this heading">#</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This API is experimental. The function and class names, arguments, and
@@ -699,10 +817,9 @@ both take a <code class="docutils literal notranslate"><span class="pre">QHAResu
 consumed by the numerical differentiations, so supply one more point than
 the temperature range of interest. All temperature-indexed arrays of
 <code class="docutils literal notranslate"><span class="pre">QHAResult</span></code> share the same length.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">internal_energies</span></code> are the static internal energies <span class="math notranslate nohighlight">\(U(V)\)</span> other
-than the phonon free energy in eV with shape <code class="docutils literal notranslate"><span class="pre">(volumes,)</span></code>, e.g.,
-electronic total energies from first-principles calculations or potential
-energies from machine learning potentials. All energies and volumes of
+<li><p><code class="docutils literal notranslate"><span class="pre">internal_energies</span></code> are the total energies of the static lattice
+<span class="math notranslate nohighlight">\(U(V)\)</span> in eV with shape <code class="docutils literal notranslate"><span class="pre">(volumes,)</span></code>, calculated, e.g., by
+first-principles calculations or by machine learning potentials. All energies and volumes of
 <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> refer to the primitive cell, to which the phonon thermal
 properties are normalized. Temperature dependence of the electronic
 system is supported through <code class="docutils literal notranslate"><span class="pre">electronic_structures</span></code> (see
@@ -736,75 +853,46 @@ stored on that path.</p></li>
 <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> for the shared quantities.</p></li>
 </ul>
 <section id="electronic-free-energies-from-eigenvalues">
-<span id="phonopy-qha-electronic-structures"></span><h3><a class="toc-backref" href="#id5" role="doc-backlink">Electronic free energies from eigenvalues</a><a class="headerlink" href="#electronic-free-energies-from-eigenvalues" title="Link to this heading">#</a></h3>
+<span id="phonopy-qha-electronic-structures"></span><h3>Electronic free energies from eigenvalues<a class="headerlink" href="#electronic-free-energies-from-eigenvalues" title="Link to this heading">#</a></h3>
 <p>Instead of preparing a <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> file with <code class="docutils literal notranslate"><span class="pre">phonopy-vasp-efe</span></code> and the
-<code class="docutils literal notranslate"><span class="pre">--efe</span></code> option of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>, the same electronic free energies can be
-computed inside <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> by supplying the electronic states at each volume
-point as <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code> (eigenvalues in eV with shape
-<code class="docutils literal notranslate"><span class="pre">(spin,</span> <span class="pre">kpoints,</span> <span class="pre">bands)</span></code>, relative k-point weights, and the number of
-electrons per unit cell):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.electron.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectronicStates</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_vasprunxml</span>
-
-<span class="n">electronic_structures</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">):</span>
-    <span class="n">vxml</span> <span class="o">=</span> <span class="n">parse_vasprunxml</span><span class="p">(</span><span class="sa">f</span><span class="s2">"vasprun.xml-</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="n">electronic_structures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-        <span class="n">ElectronicStates</span><span class="p">(</span>
-            <span class="n">eigenvalues</span><span class="o">=</span><span class="n">vxml</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
-            <span class="n">weights</span><span class="o">=</span><span class="n">vxml</span><span class="o">.</span><span class="n">k_weights</span><span class="p">,</span>
-            <span class="n">n_electrons</span><span class="o">=</span><span class="n">vxml</span><span class="o">.</span><span class="n">NELECT</span><span class="p">,</span>
-            <span class="n">volume</span><span class="o">=</span><span class="n">vxml</span><span class="o">.</span><span class="n">volume</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-            <span class="n">internal_energy</span><span class="o">=</span><span class="n">vxml</span><span class="o">.</span><span class="n">energies</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># energy (sigma -&gt; 0)</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">run_qha</span><span class="p">(</span><span class="n">phonopys</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">,</span> <span class="n">electronic_structures</span><span class="o">=</span><span class="n">electronic_structures</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Since the electronic states carry the volumes and the static internal
-energies, <code class="docutils literal notranslate"><span class="pre">internal_energies</span></code> may be omitted (an explicitly given array
-takes precedence); the volumes are also used for a consistency check
-against the primitive cell volumes of <code class="docutils literal notranslate"><span class="pre">phonopys</span></code>.</p>
-<p>The electronic free energies
-<span class="math notranslate nohighlight">\(F_\text{el}(T, V) = U(V) + f_\text{el}(T; V) - f_\text{el}(0; V)\)</span>
-are computed within the fixed density-of-states (Mermin) approximation with
-the temperature-dependent chemical potential conserving the number of
-electrons (see <a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties"><span class="std std-ref">Electronic thermal properties</span></a> for the equations).
-This is intended for metals, i.e., the chemical potential is assumed not to
-lie in a band gap. The electronic entropies and heat capacities are obtained
-analytically; both enter <span class="math notranslate nohighlight">\(C_p\)</span> and the Grüneisen parameters. Note
-that the deprecated <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> computed the Grüneisen parameters with the
-phonon-only <span class="math notranslate nohighlight">\(C_V\)</span> and <span class="math notranslate nohighlight">\(C_p\)</span> was unavailable in this case, so these
-quantities differ from the legacy values where the electronic heat capacity
-is significant. The eigenvalues are not restricted to VASP; any code that
-provides eigenvalues, k-point weights, and the number of electrons can be
-used.</p>
-<p>For VASP, the collection above can also be done once with</p>
+<code class="docutils literal notranslate"><span class="pre">--efe</span></code> option of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>, the electronic thermal properties can be
+computed inside <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> from the electronic states at each volume point.
+For VASP, collect the states once with</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">vasp</span><span class="o">-</span><span class="n">efe</span> <span class="o">--</span><span class="n">es</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span><span class="o">-</span><span class="p">{</span><span class="mf">00..10</span><span class="p">}</span>
 </pre></div>
 </div>
-<p>(<code class="docutils literal notranslate"><span class="pre">--es</span></code> is short for <code class="docutils literal notranslate"><span class="pre">--write-electronic-states</span></code>)</p>
-<p>which writes <code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code> containing the electronic states
-together with the volumes and the static energies (sigma-&gt;0) of all volume
-points, instead of computing <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>. The k-points, the mesh and the cell
-are stored beside them when the <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes a sampling mesh, so
-that <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> can integrate by the tetrahedron method as well; a file
-written without them is integrated by the k-point sum. The eigenvalues must be computed
-for the primitive cell (see the remark on <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> in
-<a class="reference internal" href="#phonopy-qha-efe-option"><span class="std std-ref">--efe</span></a>). The volumes stored with the electronic
-states are checked against the primitive cell volumes of <code class="docutils literal notranslate"><span class="pre">phonopys</span></code> by
-<code class="docutils literal notranslate"><span class="pre">run_qha</span></code>, which protects against ordering mistakes. The file is loaded
-with <code class="docutils literal notranslate"><span class="pre">read_electronic_states_hdf5</span></code>:</p>
+<p>(<code class="docutils literal notranslate"><span class="pre">--es</span></code> is short for <code class="docutils literal notranslate"><span class="pre">--write-electronic-states</span></code>). This writes
+<code class="docutils literal notranslate"><span class="pre">electronic_states.hdf5</span></code>, which contains the electronic states together with
+the volumes and the static energies (sigma-&gt;0) of all volume points, instead
+of computing <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>. The k-points, the mesh and the cell are stored with
+the states when the <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> describes a regular k-point mesh, so that
+<code class="docutils literal notranslate"><span class="pre">run_qha</span></code> integrates by the linear tetrahedron method. Load the file with
+<code class="docutils literal notranslate"><span class="pre">read_electronic_states_hdf5</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.electron.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_electronic_states_hdf5</span>
 
 <span class="n">electronic_structures</span> <span class="o">=</span> <span class="n">read_electronic_states_hdf5</span><span class="p">(</span><span class="s2">"electronic_states.hdf5"</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">run_qha</span><span class="p">(</span><span class="n">phonopys</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">,</span> <span class="n">electronic_structures</span><span class="o">=</span><span class="n">electronic_structures</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The eigenvalues must be computed for the cell described in
+<a class="reference internal" href="#phonopy-qha-electronic-free-energy"><span class="std std-ref">Electronic free energy</span></a>. Since the electronic
+states carry the volumes and the total energies of the static lattice,
+<code class="docutils literal notranslate"><span class="pre">internal_energies</span></code> may be omitted (an explicitly given array takes
+precedence). <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> checks the volumes against the primitive cell volumes
+of <code class="docutils literal notranslate"><span class="pre">phonopys</span></code>, which protects against ordering mistakes.</p>
+<p>For a calculator other than VASP, build one <code class="docutils literal notranslate"><span class="pre">ElectronicStates</span></code> per volume
+point from its output; the fields are listed in
+<a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties-input"><span class="std std-ref">Input: electronic states</span></a>. Give <code class="docutils literal notranslate"><span class="pre">kpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cell</span></code> as well. Without them, <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> uses the k-point sum, which needs far
+more k-points to converge than the tetrahedron method.</p>
+<p>The approximation used for the electrons is described in
+<a class="reference internal" href="#phonopy-qha-electronic-free-energy"><span class="std std-ref">Electronic free energy</span></a>, and the integration over the
+Brillouin zone in <a class="reference internal" href="electronic-thermal-properties.html#electronic-thermal-properties-integration"><span class="std std-ref">Integration over the Brillouin zone</span></a>. The
+<code class="docutils literal notranslate"><span class="pre">electronic_window</span></code>, <code class="docutils literal notranslate"><span class="pre">electronic_spacing</span></code> and <code class="docutils literal notranslate"><span class="pre">symmetrize_tetrahedra</span></code>
+parameters of <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> are passed to the tetrahedron method.</p>
 </section>
 <section id="lattice-parameters-a-t-b-t-c-t">
-<span id="phonopy-qha-lattice-parameters"></span><h3><a class="toc-backref" href="#id6" role="doc-backlink">Lattice parameters a(T), b(T), c(T)</a><a class="headerlink" href="#lattice-parameters-a-t-b-t-c-t" title="Link to this heading">#</a></h3>
+<span id="phonopy-qha-lattice-parameters"></span><h3>Lattice parameters a(T), b(T), c(T)<a class="headerlink" href="#lattice-parameters-a-t-b-t-c-t" title="Link to this heading">#</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The setting assumed here is that the structures of the volume series were
@@ -865,7 +953,7 @@ corresponding output files are
 <code class="docutils literal notranslate"><span class="pre">plot_lattice_parameters</span></code> and <code class="docutils literal notranslate"><span class="pre">plot_axial_thermal_expansion</span></code>.</p>
 </section>
 <section id="migration-from-phonopyqha-deprecated">
-<h3><a class="toc-backref" href="#id7" role="doc-backlink">Migration from <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> (deprecated)</a><a class="headerlink" href="#migration-from-phonopyqha-deprecated" title="Link to this heading">#</a></h3>
+<h3>Migration from <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> (deprecated)<a class="headerlink" href="#migration-from-phonopyqha-deprecated" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> class is deprecated and will be removed in a future major
 release. The correspondence between the legacy attributes and the new API
 is:</p>
@@ -933,31 +1021,6 @@ parameters used the phonon-only <span class="math notranslate nohighlight">\(C_V
 was unavailable.</p>
 </section>
 </section>
-<section id="thermal-properties-in-t-p-space-calculated-under-qha">
-<span id="theory-of-qha"></span><h2><a class="toc-backref" href="#id8" role="doc-backlink">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a><a class="headerlink" href="#thermal-properties-in-t-p-space-calculated-under-qha" title="Link to this heading">#</a></h2>
-<p>Here the word ‘quasi-harmonic approximation’ is used for an approximation that
-introduces volume dependence of phonon frequencies as a part of anharmonic
-effect.</p>
-<p>A part of temperature effect can be included into total energy of electronic
-structure through phonon (Helmholtz) free energy at constant volume. But what we
-want to know is thermal properties at constant pressure. We need some
-transformation from function of <em>V</em> to function of <em>p</em>. Gibbs free energy is
-defined at a constant pressure by the transformation:</p>
-<div class="math notranslate nohighlight">
-\[G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],\]</div>
-<p>where</p>
-<div class="math notranslate nohighlight">
-\[\min_V[ \text{function of } V ]\]</div>
-<p>means to find unique minimum value in the brackets by changing volume. Since
-volume dependencies of energies in electronic and phonon structures are
-different, volume giving the minimum value of the energy function in the square
-brackets shifts from the value calculated only from electronic structure even at
-0 K. By increasing temperature, the volume dependence of phonon free energy
-changes, then the equilibrium volume at temperatures changes. This is considered
-as thermal expansion under this approximation.</p>
-<p><code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> and <code class="docutils literal notranslate"><span class="pre">run_qha</span></code> collect the values at volumes and transform them
-into the thermal properties at constant pressure.</p>
-</section>
 </section>
 
 
@@ -972,20 +1035,20 @@ into the thermal properties at constant pressure.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="gruneisen.html"
+       href="external-tools.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Calculation of mode Grüneisen parameters</p>
+        <p class="prev-next-title">External tools</p>
       </div>
     </a>
     <a class="right-next"
-       href="electronic-thermal-properties.html"
+       href="aniso-thermal-expansion.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Electronic thermal properties</p>
+        <p class="prev-next-title">Anisotropic thermal expansion from free-energy minimization</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1007,7 +1070,10 @@ into the thermal properties at constant pressure.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-of-phonopy-qha">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gibbs-free-energy-and-thermal-expansion">Gibbs free energy and thermal expansion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calculations-at-each-volume">Calculations at each volume</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#electronic-free-energy">Electronic free energy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-phonopy-qha-command">The <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> command</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#h"><code class="docutils literal notranslate"><span class="pre">-h</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tmax"><code class="docutils literal notranslate"><span class="pre">--tmax</span></code></a></li>
@@ -1029,7 +1095,6 @@ into the thermal properties at constant pressure.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-from-phonopyqha-deprecated">Migration from <code class="docutils literal notranslate"><span class="pre">PhonopyQHA</span></code> (deprecated)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-in-t-p-space-calculated-under-qha">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a></li>
 </ul>
   </nav></div>
 
