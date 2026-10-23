@@ -1061,7 +1061,7 @@ def _get_vasp_structure_header_lines(
         lines.append(first_line_str)
     lines.append("   1.0")
     for a in cell.cell:
-        lines.append("  %21.16f %21.16f %21.16f" % tuple(a))
+        lines.append(f"  {a[0]:z21.16f} {a[1]:z21.16f} {a[2]:z21.16f}")
     if not is_vasp4:
         lines.append(" ".join(["%s" % s for s in symbols]))
     lines.append(" ".join(["%4d" % n for n in num_atoms]))
@@ -1069,12 +1069,12 @@ def _get_vasp_structure_header_lines(
 
 
 def _get_scaled_positions_lines(scaled_positions: NDArray[np.double]) -> list[str]:
-    # map into 0 <= x < 1.
-    # (the purpose of the second '% 1' is to handle a surprising
-    #  edge case for small negative numbers: '-1e-30 % 1 == 1.0')
-    unit_positions = scaled_positions % 1 % 1
+    # Map into 0 <= x < 1. x - floor(x) rounds up to 1.0 for tiny negative x
+    # such as -1e-30, which is mapped to 0.
+    unit_positions = scaled_positions - np.floor(scaled_positions)
+    unit_positions[unit_positions >= 1.0] = 0.0
 
-    return [" %19.16f %19.16f %19.16f" % tuple(vec) for vec in unit_positions]
+    return [f" {v[0]:z19.16f} {v[1]:z19.16f} {v[2]:z19.16f}" for v in unit_positions]
 
 
 #
