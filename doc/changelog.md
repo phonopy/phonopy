@@ -2,6 +2,19 @@
 
 # Change Log
 
+## Oct-23-2026: Version 4.8.4
+
+- `-0.0` is written as `0.0` in the yaml output of crystal structures,
+  displacement datasets, forces, force constants and NAC parameters (e.g.,
+  `phonopy_disp.yaml`, `phonopy.yaml` and `str(PhonopyAtoms)`), and in the
+  lattice vectors of `POSCAR` and of the pw.x input. The values themselves
+  are unchanged.
+- In the phonopy.yaml mode, a file given as the positional argument, by `-c`
+  or by `CELL_FILENAME` that is not readable as a phonopy.yaml-like file is
+  an error. It was silently replaced by `phonopy_disp.yaml` or `phonopy.yaml`
+  of the current directory. A supercell matrix given by `DIM` that differs
+  from that of the phonopy.yaml is reported.
+
 ## Oct-10-2026: Version 4.8.3
 
 - `phonopy-vasp-efe` takes energy(sigma->0) from `vasprun.xml`. The way the

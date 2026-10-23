@@ -689,7 +689,7 @@ def _get_disp_yaml_lines(displacements: list) -> list[str]:
     for _, disp in enumerate(displacements):
         lines.append("- atom: %4d" % (disp[0] + 1))
         lines.append("  displacement:")
-        lines.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
+        lines.append(f"    [ {disp[1]:z20.16f},{disp[2]:z20.16f},{disp[3]:z20.16f} ]")
     return lines
 
 

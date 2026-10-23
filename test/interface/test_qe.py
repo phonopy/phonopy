@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pathlib
+import re
 import tempfile
 
 import numpy as np
@@ -18,6 +19,7 @@ from phonopy.interface.qe import (
     write_pwscf,
     write_supercells_with_displacements,
 )
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import isclose
 from phonopy.structure.symmetry import Symmetry
 
@@ -194,6 +196,21 @@ def test_get_pwscf_structure_atomic_species_masses() -> None:
     assert float(na_line[1]) == pytest.approx(22.98977, abs=1e-4)
     assert cl_line[0] == "Cl"
     assert float(cl_line[1]) == pytest.approx(35.45300, abs=1e-4)
+
+
+def test_get_pwscf_structure_without_negative_zero() -> None:
+    """-0.0 in lattice vectors and positions is written as 0.0."""
+    a = 6.753172848541513
+    lattice = [[a, -0.0, -0.0], [0.0, a, -0.0], [-0.0, 0.0, a]]
+    cell = PhonopyAtoms(
+        cell=lattice,
+        scaled_positions=[[-0.0, 0.0, -0.0], [0.25, 0.25, -0.0]],
+        symbols=["C", "C"],
+    )
+    assert np.signbit(cell.cell[cell.cell == 0]).any()
+    text = get_pwscf_structure(cell, {"C": "C.UPF"})
+    assert re.search(r"-0\.0+(?![0-9])", text) is None
+    np.testing.assert_array_equal(np.signbit(cell.cell), np.signbit(lattice))
 
 
 # ---------------------------------------------------------------------------
