@@ -26,6 +26,12 @@ class CellNotFoundError(RuntimeError):
     pass
 
 
+class NotPhonopyYamlError(CellNotFoundError):
+    """Exception when a given file is not readable as a phonopy.yaml-like file."""
+
+    pass
+
+
 class MagmomValueError(ValueError):
     """Exception when magnetic moment value is not valid."""
 

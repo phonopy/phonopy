@@ -18,6 +18,7 @@ from phonopy.cui.load_helper import (
     read_force_sets,
     select_and_load_dataset,
 )
+from phonopy.exception import PypolymlpTrainingDatasetNotFoundError
 from phonopy.file_IO import write_FORCE_SETS
 from phonopy.harmonic.displacement import (
     Type1DisplacementDataset,
@@ -36,15 +37,30 @@ def test_move_force_dataset_to_mlp_dataset_no_dataset():
 
 
 def test_move_force_dataset_to_mlp_dataset_with_forces():
-    """A dataset with forces becomes the MLP training dataset."""
+    """A dataset with forces and energies becomes the MLP training dataset."""
     dataset = {
         "displacements": [[[0.01, 0.0, 0.0]]],
         "forces": [[[0.1, 0.0, 0.0]]],
+        "supercell_energies": [-1.0],
     }
     phonon = SimpleNamespace(dataset=dataset, mlp_dataset=None)
     move_force_dataset_to_mlp_dataset(phonon)
     assert phonon.mlp_dataset is dataset
     assert phonon.dataset is None
+
+
+def test_move_force_dataset_to_mlp_dataset_without_energies():
+    """A type-2 dataset without supercell energies cannot be used for training."""
+    dataset = {
+        "displacements": [[[0.01, 0.0, 0.0]]],
+        "forces": [[[0.1, 0.0, 0.0]]],
+    }
+    phonon = SimpleNamespace(dataset=dataset, mlp_dataset=None)
+    with pytest.raises(
+        PypolymlpTrainingDatasetNotFoundError, match="Supercell energies"
+    ):
+        move_force_dataset_to_mlp_dataset(phonon)
+    assert phonon.mlp_dataset is None
 
 
 def test_move_force_dataset_to_mlp_dataset_displacement_only():
@@ -55,6 +71,36 @@ def test_move_force_dataset_to_mlp_dataset_displacement_only():
 
     """
     dataset = {"displacements": [[[0.01, 0.0, 0.0]]]}
+    phonon = SimpleNamespace(dataset=dataset, mlp_dataset=None)
+    move_force_dataset_to_mlp_dataset(phonon)
+    assert phonon.mlp_dataset is None
+    assert phonon.dataset is None
+
+
+def test_move_force_dataset_to_mlp_dataset_type1_with_forces():
+    """A type-1 dataset with forces cannot be used for training."""
+    dataset = {
+        "natom": 1,
+        "first_atoms": [
+            {
+                "number": 0,
+                "displacement": [0.01, 0.0, 0.0],
+                "forces": [[0.1, 0.0, 0.0]],
+            }
+        ],
+    }
+    phonon = SimpleNamespace(dataset=dataset, mlp_dataset=None)
+    with pytest.raises(PypolymlpTrainingDatasetNotFoundError, match="Type-1"):
+        move_force_dataset_to_mlp_dataset(phonon)
+    assert phonon.mlp_dataset is None
+
+
+def test_move_force_dataset_to_mlp_dataset_type1_displacement_only():
+    """A type-1 displacement-only dataset is discarded, as a type-2 one is."""
+    dataset = {
+        "natom": 1,
+        "first_atoms": [{"number": 0, "displacement": [0.01, 0.0, 0.0]}],
+    }
     phonon = SimpleNamespace(dataset=dataset, mlp_dataset=None)
     move_force_dataset_to_mlp_dataset(phonon)
     assert phonon.mlp_dataset is None

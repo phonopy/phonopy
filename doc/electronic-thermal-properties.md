@@ -9,13 +9,14 @@ eigenvalues of an electronic structure calculation. They can be added to
 the phonon thermal properties in a quasi-harmonic calculation (see
 {ref}`phonopy_qha`) or used on their own.
 
-The free energy is that of Mermin's finite-temperature theory of the
-electrons, evaluated in the fixed density-of-states approximation. The
-eigenvalues are computed once, at the static lattice, and are kept the same
+Phonopy evaluates the free energy of Mermin's finite-temperature theory of
+the electrons in the fixed density-of-states approximation. The eigenvalues
+are computed once, at the static lattice, and the same eigenvalues are used
 at every temperature. Only the occupation of the states changes with
-temperature. The approximation is intended for metals. In an insulator the
-chemical potential is in the band gap, and the electronic contributions are
-negligible.
+temperature. In a metal, states lie at the Fermi level and are thermally
+excited. In an insulator whose band gap is much larger than
+{math}`k_\mathrm{B} T`, the chemical potential lies in the gap, few states
+are thermally excited, and the contributions are negligible.
 
 Mermin's theory is described in the following publications.
 
@@ -47,20 +48,21 @@ flowchart TD
 ```
 
 The calculator is run once for each crystal structure, without atomic
-displacements. The crystal structures have to be the same as those of the
-phonon calculations. `vasprun.xml` of this run holds the eigenvalues, the k-point
+displacements. Use the same crystal structures as in the phonon
+calculations. `vasprun.xml` of this run holds the eigenvalues, the k-point
 mesh and the static total energy {math}`U`. For a calculator other than
 VASP, build `ElectronicStates` from its output; see
 {ref}`electronic_thermal_properties_input`.
 
-`phonopy-vasp-efe` computes {math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)` of
-every crystal structure and writes it to `fe-v.dat`. It also writes the
-volumes and {math}`U` to `e-v.dat`. `phonopy-qha --efe` adds these free
-energies to the phonon free energies in `thermal_properties.yaml`.
+`phonopy-vasp-efe` computes
+{math}`U + F_\mathrm{el}(T) - F_\mathrm{el}(0)` of every crystal structure
+and writes it to `fe-v.dat`. It also writes the volumes and {math}`U` to
+`e-v.dat`. `phonopy-qha --efe` adds these free energies to the phonon free
+energies in `thermal_properties.yaml`.
 `fe-v.dat` has only the free energy. For this reason,
 `Cp-temperature_polyfit.dat` and `gruneisen-temperature.dat` of
 `phonopy-qha` are computed without the electronic entropy and heat
-capacity. See {ref}`phonopy_qha_efe_option`.
+capacity. See {ref}`phonopy_qha_electronic_free_energy`.
 
 `phonopy-vasp-efe --es` writes the electronic states of every crystal
 structure to `electronic_states.hdf5` instead. `run_qha` reads them as
@@ -70,8 +72,8 @@ capacity of the electrons to those of the phonons. See
 
 The same file can be used without a quasi-harmonic calculation.
 `compute_thermal_properties_by_tetrahedron` computes
-{math}`F_\mathrm{el}`, {math}`S_\mathrm{el}`, {math}`C_\mathrm{el}` and
-{math}`\mu` of one crystal structure; see
+{math}`F_\mathrm{el}`, {math}`S_\mathrm{el}`, {math}`C_\mathrm{el}`,
+{math}`\mu` and {math}`D(E_\mathrm{F})` of one crystal structure; see
 {ref}`electronic_thermal_properties_api`.
 
 `phonopy-anisotropic-qha` takes the electronic states from its own dataset,
@@ -82,19 +84,20 @@ dataset is made.
 
 ## Equations
 
-The states are the eigenvalues {math}`\epsilon_{\mathbf{k}i}` at the
-k-points {math}`\mathbf{k}`, where {math}`i` runs over the bands. Each
-k-point has a weight {math}`w_\mathbf{k}`, and the weights are normalized so
-that {math}`\sum_\mathbf{k} w_\mathbf{k} = 1`. The occupation of a state is
-the Fermi-Dirac distribution,
+The electronic structure calculation gives the eigenvalues
+{math}`\epsilon_{\mathbf{k}i}`, where {math}`\mathbf{k}` is a k-point and
+{math}`i` is a band index. Each k-point has a weight {math}`w_\mathbf{k}`,
+and the weights are normalized so that
+{math}`\sum_\mathbf{k} w_\mathbf{k} = 1`. The occupation of a state is given
+by the Fermi-Dirac distribution,
 
 ```{math}
 f_{\mathbf{k}i} = \left\{ 1 + \exp\left[ \frac{\epsilon_{\mathbf{k}i} - \mu}{k_\mathrm{B} T} \right] \right\}^{-1},
 ```
 
 where {math}`\mu` is the chemical potential and {math}`T` is the temperature.
-The electrons in these states do not interact with each other. Their grand
-potential is
+In the fixed density-of-states approximation, the electrons occupy these
+states as independent particles. Their grand potential is
 
 ```{math}
 \Omega(T, \mu) = -g k_\mathrm{B} T \sum_\mathbf{k} w_\mathbf{k} \sum_i \ln \left\{ 1 + \exp\left[ -\frac{\epsilon_{\mathbf{k}i} - \mu}{k_\mathrm{B} T} \right] \right\}.
@@ -150,8 +153,9 @@ C_\mathrm{el}(T) = \left( \frac{\partial E_\mathrm{el}}{\partial T} \right)_V.
 
 Differentiating {math}`E_\mathrm{el}` gives two terms. One term comes from
 the change of the occupations at a fixed chemical potential. The other term
-comes from the change of the chemical potential with temperature, which is
-fixed by the condition that {math}`N` does not change. Together they give
+comes from the change of the chemical potential with temperature. That
+change is fixed by the condition that {math}`N` does not change. Together
+they give
 
 ```{math}
 C_\mathrm{el}(T) = \frac{1}{k_\mathrm{B} T^2} \left( A_2 - \frac{A_1^2}{A_0} \right),
@@ -164,9 +168,11 @@ potential. It is small when the density of states is nearly constant near
 the Fermi level, and it grows with the slope of the density of states there.
 Phonopy computes the heat capacity from this expression.
 
-Every sum above has the form {math}`g \sum_\mathbf{k} w_\mathbf{k} \sum_i
-h(\epsilon_{\mathbf{k}i})` with a function {math}`h` of energy. Such a sum
-is an integral over the electronic density of states per cell,
+The sums above can also be written as integrals over energy. Each of them
+sums a function {math}`h` of the eigenvalue, such as
+{math}`f_{\mathbf{k}i}\epsilon_{\mathbf{k}i}` for the energy. With the
+electronic density of states per cell, {math}`D(E)`, the sum becomes an
+integral:
 
 ```{math}
 D(E) = g \sum_\mathbf{k} w_\mathbf{k} \sum_i \delta(E - \epsilon_{\mathbf{k}i}),
@@ -174,9 +180,9 @@ D(E) = g \sum_\mathbf{k} w_\mathbf{k} \sum_i \delta(E - \epsilon_{\mathbf{k}i}),
 g \sum_\mathbf{k} w_\mathbf{k} \sum_i h(\epsilon_{\mathbf{k}i}) = \int D(E) h(E) \, dE.
 ```
 
-The two ways of computing these sums, which are described in
-{ref}`electronic_thermal_properties_integration`, start from the left-hand
-side and from the right-hand side of this equation, respectively.
+The k-point sum computes the left-hand side of this equation directly. The
+tetrahedron method builds {math}`D(E)` and computes the right-hand side. Both
+are described in {ref}`electronic_thermal_properties_integration`.
 
 At low temperature, the entropy and the heat capacity are both linear in
 {math}`T`,
@@ -194,9 +200,9 @@ chemical potential at 0 K; see {ref}`electronic_thermal_properties_api`.
 
 The free energy is reported as {math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)`.
 The total energy of the electronic structure calculation already contains
-the energy of the electrons at 0 K. Adding {math}`F_\mathrm{el}(T) -
-F_\mathrm{el}(0)` to that total energy adds only the part that depends on
-temperature. In a quasi-harmonic calculation, the static energy
+the energy of the electrons at 0 K. Adding
+{math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)` to that total energy adds only
+the part that depends on temperature. In a quasi-harmonic calculation, the static energy
 {math}`U(V)` is the total energy. The free energy at volume {math}`V`,
 before the phonon free energy is added, is
 
@@ -204,8 +210,15 @@ before the phonon free energy is added, is
 U(V) + F_\mathrm{el}(T; V) - F_\mathrm{el}(0; V).
 ```
 
-Use the total energy extrapolated to zero smearing as {math}`U(V)`, such
-as `energy(sigma->0)` of VASP.
+{math}`U(V)` has to be the energy at zero electronic temperature, because
+{math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)` adds the thermal occupation. A
+total energy computed with smeared occupations contains a contribution of
+the smearing. For this reason, the total energy extrapolated to zero
+smearing, such as `energy(sigma->0)` of VASP, is recommended as
+{math}`U(V)`. Fermi-Dirac smearing at the physical temperature is not
+recommended for {math}`U(V)`. Its total energy already contains the
+electronic free energy at that temperature, and adding
+{math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)` would count it twice.
 
 (electronic_thermal_properties_integration)=
 
@@ -215,8 +228,8 @@ The sums over k-points above can be computed in two ways.
 
 The linear tetrahedron method builds the electronic density of states from
 the eigenvalues on the regular k-point mesh, and integrates the expressions
-above over energy. This is the default when the states carry the k-point
-mesh, the k-points and the crystal structure.
+above over energy. Besides the eigenvalues, it needs the k-point mesh, the
+irreducible k-points and the crystal structure.
 
 The k-point sum evaluates the sums as they are written, over the
 irreducible k-points. It needs only the eigenvalues, the weights and the
@@ -225,8 +238,8 @@ converges much more slowly with the number of k-points than the tetrahedron
 method. Only the states within a few {math}`k_\mathrm{B} T` of the Fermi
 level contribute to the entropy and the heat capacity, and on a coarse mesh
 few eigenvalues fall in that range. The heat capacity at low temperature is
-the most affected. Use the tetrahedron method whenever the k-point mesh is
-available.
+the most affected. For this reason, use the tetrahedron method when the
+k-point mesh is available.
 
 `phonopy-vasp-efe` uses the tetrahedron method for each `vasprun.xml` that
 describes a regular k-point mesh. It uses the k-point sum for a file with an
@@ -239,22 +252,36 @@ the k-point sum for the electronic states that do not carry `kpoints`,
 states.
 
 The tetrahedron method integrates only over an energy window from
-{math}`E_\mathrm{F} - W` to {math}`E_\mathrm{F} + W`, where
-{math}`E_\mathrm{F}` is the Fermi energy and {math}`W` is the half-width of
-the window. The states below the window are fully occupied at every
-temperature and add a constant to the energy, which cancels in
-{math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)`. The states above the window are
-empty. By default, the half-width is
+{math}`\mu_0 - W` to {math}`\mu_0 + W`, where {math}`\mu_0` is the chemical
+potential at 0 K and {math}`W` is the half-width of the window. How
+{math}`\mu_0` is found is described in
+{ref}`electronic_thermal_properties_chemical_potential`. The states below
+the window are fully occupied at every temperature and add a constant to
+the energy, which cancels in {math}`F_\mathrm{el}(T) - F_\mathrm{el}(0)`.
+The states above the window are empty. By default, the half-width is
 
 ```{math}
 W = \max(0.5\ \mathrm{eV}, 16 k_\mathrm{B} T_\mathrm{max}),
 ```
 
-where {math}`T_\mathrm{max}` is the highest temperature. The width is set by
-the heat capacity. Its integrand contains {math}`f(1-f)(E-\mu)^2`, which
-decreases most slowly away from the Fermi level. The density of states is
-sampled on an energy grid of 0.5 meV spacing in the window. The `window` and
-`energy_spacing` parameters change {math}`W` and the spacing.
+where {math}`T_\mathrm{max}` is the highest temperature. This width is
+chosen for the heat capacity. The integrand of the heat capacity contains
+{math}`f(1-f)(E-\mu)^2`, which decreases more slowly away from the Fermi
+level than the integrands of the energy and the entropy, so the heat
+capacity needs the widest window. The density of states is sampled on an
+energy grid of 0.5 meV spacing in the window. The `window` and
+`energy_spacing` parameters change {math}`W` and the spacing. The
+`--electronic-window` and `--electronic-spacing` options of
+`phonopy-vasp-efe` and `phonopy-anisotropic-qha` do the same, and so do the
+`electronic_window` and `electronic_spacing` parameters of `run_qha`.
+
+At low temperature, the Fermi-Dirac distribution changes over an energy
+range of a few {math}`k_\mathrm{B} T`. When {math}`k_\mathrm{B} T` is
+smaller than the spacing, the energy grid does not resolve this change, and
+the entropy and the heat capacity become inaccurate. The default spacing of
+0.5 meV is equal to {math}`k_\mathrm{B} T` at about 6 K. For temperatures
+below that, set the spacing to {math}`k_\mathrm{B} T_\mathrm{min}` or
+smaller, where {math}`T_\mathrm{min}` is the lowest temperature above 0 K.
 
 ```{figure} electron-window.png
 
@@ -264,12 +291,15 @@ of states. The red curve is {math}`f(1-f)(E-\mu)^2` at the highest
 temperature, drawn without the factor {math}`D(E)`. It decreases to nearly
 zero at the edges of the window. The states below the window are fully
 occupied at every temperature, and the states above the window are empty.
+{math}`E_\mathrm{F}` in the figure is the chemical potential at 0 K,
+{math}`\mu_0`.
 ```
 
 The `symmetrize_tetrahedra` parameter averages the tetrahedron weights over
 the point group. The `--symmetrize-tetrahedra` option of `phonopy-vasp-efe`
-does the same. See {ref}`migration_v5` for this option and its default in
-the next major version.
+and the `symmetrize_tetrahedra` parameter of `run_qha` do the same. See
+{ref}`migration_v5` for this option and its default in the next major
+version.
 
 (electronic_thermal_properties_chemical_potential)=
 
@@ -308,28 +338,39 @@ integrated density of states is equal to {math}`N`,
 
 The tetrahedron method gives the integrated density of states as a
 continuous function of energy, so {math}`\mu_0` does not depend on the
-energy grid.
+energy grid. {math}`\mu_0` is searched for within {math}`W` of the Fermi
+energy reported by the electronic structure calculation, `fermi_energy` of
+`ElectronicStates`. When it is not given, the search starts from the energy
+up to which the eigenvalues hold {math}`N` electrons. When {math}`\mu_0` is
+not within that range, phonopy stops with an error that asks to widen the
+window. In that case, increase `window`, or `--electronic-window` on the
+command line.
+
+At 0 K the occupation is a step at {math}`\mu_0`. The trapezoidal rule uses
+only the values at the grid points, so it integrates such a step as if the
+step were at the midpoint of the grid interval that contains it. For this
+reason, the energy grid is placed so that {math}`\mu_0` is at the midpoint
+of two adjacent grid points. The grid has the same number of points on each
+side of {math}`\mu_0`.
 
 At a finite temperature, the integral is evaluated on the energy grid in the
 window. The states below the window hold {math}`N_\mathrm{below}` electrons
 at every temperature. This number is fixed by the condition at 0 K,
 
 ```{math}
-N_\mathrm{below} = N - \int_{E_\mathrm{F} - W}^{\mu_0} D(E) \, dE.
+N_\mathrm{below} = N - \int_{\mu_0 - W}^{\mu_0} D(E) \, dE.
 ```
 
 The chemical potential at temperature {math}`T` is the root of
 
 ```{math}
-N_\mathrm{below} + \int_{E_\mathrm{F} - W}^{E_\mathrm{F} + W} D(E) f(E; \mu, T) \, dE = N.
+N_\mathrm{below} + \int_{\mu_0 - W}^{\mu_0 + W} D(E) f(E; \mu, T) \, dE = N.
 ```
 
-The window is centered at the Fermi energy reported by the electronic
-structure calculation, `fermi_energy` of `ElectronicStates`. When it is not
-given, the center is the energy up to which the eigenvalues hold
-{math}`N` electrons. When the chemical potential at 0 K is outside the
-window, phonopy stops with an error that asks to widen the window. In that
-case, increase `window`.
+Because the trapezoidal rule integrates the step as if it were at
+{math}`\mu_0`, the integral in {math}`N_\mathrm{below}` counts the states up
+to {math}`\mu_0`, and {math}`\mu` approaches {math}`\mu_0` as {math}`T` goes
+to 0 K.
 
 (electronic_thermal_properties_spin)=
 
@@ -345,9 +386,11 @@ eigenvalue holds.
 - In a non-collinear calculation, the eigenvalues have one spin channel, but
   each spinor state holds one electron, {math}`g = 1`.
 
-Phonopy infers {math}`g` from the number of spin channels. This inference is
-wrong for a non-collinear calculation. For such a calculation, set
-`spin_degeneracy=1` in `ElectronicStates`.
+Phonopy infers {math}`g` from the number of spin channels: {math}`g = 2`
+for one channel and {math}`g = 1` for two. A non-collinear calculation has
+one channel, so the inferred value is {math}`g = 2`, while the correct value
+is {math}`g = 1`. For a non-collinear calculation, set `spin_degeneracy=1` in
+`ElectronicStates`.
 
 (electronic_thermal_properties_input)=
 
@@ -368,14 +411,14 @@ crystal structure:
 
 The results are per cell for which the eigenvalues were computed. The phonon
 thermal properties of phonopy are per primitive cell. When the eigenvalues
-are computed for a larger cell, such as the conventional cell of a centred
-lattice, the results are scaled by the volume of the primitive cell divided
-by the volume of that cell before they are added to the phonon thermal
-properties. `run_qha` does not scale them. It checks that the volumes of the
-electronic states are equal to the volumes of the primitive cells of the
-phonons, so compute the eigenvalues for the primitive cell.
-`phonopy-anisotropic-qha` takes the electronic states of the conventional
-cell and scales them.
+are computed for a larger cell, such as the conventional cell of a centered
+lattice, the results have to be scaled by the volume of the primitive cell
+divided by the volume of that cell before they are added to the phonon
+thermal properties. `phonopy-anisotropic-qha` takes the electronic states of
+the conventional cell and does this scaling itself. `run_qha` does not scale
+them. It checks that the volumes of the electronic states are equal to the
+volumes of the primitive cells of the phonons, so for `run_qha`, compute the
+eigenvalues for the primitive cell.
 
 For VASP, `phonopy-vasp-efe` reads `vasprun.xml` files and writes the
 electronic states of all of them to `electronic_states.hdf5`:
@@ -408,6 +451,7 @@ properties = compute_thermal_properties_by_tetrahedron(states[0], temperatures)
 properties.free_energy  # F_el(T) - F_el(0) in eV
 properties.entropy  # S_el in eV/K
 properties.heat_capacity  # C_el in eV/K
+properties.internal_energy  # E_el(T) - E_el(0) in eV
 properties.chemical_potential  # mu in eV
 properties.dos_at_fermi_level  # D(E_F) in states/eV
 ```
@@ -416,6 +460,35 @@ properties.dos_at_fermi_level  # D(E_F) in states/eV
 potential at 0 K. Each of the other fields is an array with one value per
 temperature. The temperatures do not have to include 0 K; the value at 0 K
 is computed anyway as the reference of the free energy.
+
+The function takes three optional parameters.
+
+- `window` is the half-width {math}`W` of the energy window in eV. The
+  default is {math}`\max(0.5\ \mathrm{eV}, 16 k_\mathrm{B} T_\mathrm{max})`;
+  see {ref}`electronic_thermal_properties_integration`.
+- `energy_spacing` is the spacing of the energy grid in the window in eV.
+  The default is 0.0005, that is, 0.5 meV.
+- `symmetrize_tetrahedra` averages the tetrahedron weights over the point
+  group. The default is `False`.
+
+Choose `energy_spacing` from the lowest temperature above 0 K,
+{math}`T_\mathrm{min}`. The entropy and the heat capacity are accurate when
+the spacing is {math}`k_\mathrm{B} T_\mathrm{min}` or smaller. The default
+of 0.5 meV is {math}`k_\mathrm{B} T` at about 6 K, so it is enough when
+{math}`T_\mathrm{min}` is 6 K or higher. When {math}`T_\mathrm{min}` is
+1 K, {math}`k_\mathrm{B} T_\mathrm{min}` is 0.086 meV, and a spacing of
+0.05 meV is enough:
+
+```python
+temperatures = np.arange(0, 301, 1.0)
+properties = compute_thermal_properties_by_tetrahedron(
+    states[0], temperatures, energy_spacing=0.00005
+)
+```
+
+The tetrahedron method computes the density of states at every energy of
+this grid. The window of width {math}`2W` holds {math}`2W` divided by the
+spacing energies, so a finer spacing makes the computation take longer.
 
 The values are per cell for which the eigenvalues were computed. The phonon
 thermal properties of phonopy are in kJ/mol and J/K/mol per primitive cell.
@@ -426,6 +499,8 @@ heat capacity by `get_physical_units().EvTokJmol * 1000`.
 `get_physical_units` is in `phonopy.physical_units`.
 
 `compute_thermal_properties_by_kpoint_sum` of `phonopy.electron.kpoint_sum`
-takes the same arguments and computes the thermal properties by the k-point
-sum. Both functions return `ElectronicThermalProperties`. The k-point sum
-gives no density of states, and its `dos_at_fermi_level` is `None`.
+takes the electronic states and the temperatures, and computes the thermal
+properties by the k-point sum. It has no energy grid, so it takes none of
+the three optional parameters. Both functions return
+`ElectronicThermalProperties`. The k-point sum gives no density of states,
+and its `dos_at_fermi_level` is `None`.

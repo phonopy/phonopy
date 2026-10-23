@@ -609,15 +609,14 @@ class ThermalProperties(ThermalPropertiesBase):
                 entropy[idx] = (KB - KB * ln) @ weights
                 cv[idx] = KB * weights.sum()
             else:
+                # exp(-x) underflows to 0 at low temperature; exp(x), cosh
+                # and sinh would overflow and give NaN.
                 x = f / (KB * T)
-                ex = np.exp(x)
-                fe[idx] = (KB * T * np.log(1.0 - np.exp(-x)) + f / 2) @ weights
-                v = x / 2
-                sinh_v = np.sinh(v)
-                entropy[idx] = (
-                    KB * v * np.cosh(v) / sinh_v - KB * np.log(2 * sinh_v)
-                ) @ weights
-                cv[idx] = (KB * x**2 * ex / (ex - 1.0) ** 2) @ weights
+                em = np.exp(-x)
+                om = -np.expm1(-x)
+                fe[idx] = (KB * T * np.log(om) + f / 2) @ weights
+                entropy[idx] = (KB * (x * em / om - np.log(om))) @ weights
+                cv[idx] = (KB * x**2 * em / om**2) @ weights
 
         self._thermal_properties = (
             self._temperatures,

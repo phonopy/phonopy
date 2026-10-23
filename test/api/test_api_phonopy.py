@@ -146,6 +146,28 @@ def test_energies_setter_NaCl_type2(ph_nacl_rd: Phonopy):
     np.testing.assert_allclose(ph.supercell_energies, ph_in.supercell_energies + 1)
 
 
+def test_mlp_dataset_setter_requires_supercell_energies(ph_nacl_rd: Phonopy):
+    """Phonopy.mlp_dataset setter rejects a dataset without supercell energies."""
+    ph_in = ph_nacl_rd
+    ph = Phonopy(
+        ph_in.unitcell,
+        supercell_matrix=ph_in.supercell_matrix,
+        primitive_matrix=ph_in.primitive_matrix,
+    )
+    with pytest.raises(RuntimeError, match="Supercell energies have to be given."):
+        ph.mlp_dataset = {
+            "displacements": ph_in.displacements,
+            "forces": ph_in.forces,
+        }
+    assert ph.mlp_dataset is None
+    ph.mlp_dataset = {
+        "displacements": ph_in.displacements,
+        "forces": ph_in.forces,
+        "supercell_energies": ph_in.supercell_energies,
+    }
+    assert ph.mlp_dataset is not None
+
+
 def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
     """Test MLP features in Phonopy."""
     pytest.importorskip("pypolymlp", minversion="0.10.0")

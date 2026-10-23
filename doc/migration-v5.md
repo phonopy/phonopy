@@ -339,7 +339,8 @@ command:
 ```
 
 From Python, pass `symmetrize_tetrahedra=True` to
-`phonopy.electron.tetrahedron.compute_thermal_properties_by_tetrahedron`. To
+`phonopy.electron.tetrahedron.compute_thermal_properties_by_tetrahedron` or
+to `run_qha`. To
 keep the v4.x result after v5.0, use `--no-symmetrize-tetrahedra` or
 `symmetrize_tetrahedra=False`.
 

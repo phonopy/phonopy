@@ -980,11 +980,20 @@ def is_file_phonopy_yaml(
     filename : str
         Filename.
     keyword : str, optional
-        Deprecated. Dummy parameter. Default is None.
+        Deprecated and ignored. DeprecationWarning is issued when it is given.
+        Use yaml_dict_keys instead. Default is None.
     yaml_dict_keys : list-like, optional
-        List of necessary keys in the yaml file. Default is None.
+        List of necessary keys in the yaml file. Default is None, which means
+        ("supercell_matrix", "unit_cell").
 
     """
+    if keyword is not None:
+        warnings.warn(
+            "keyword of is_file_phonopy_yaml is deprecated and ignored. "
+            "Use yaml_dict_keys instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def keys_exist(yaml_data: dict, keys: Sequence[str]) -> bool:
         for key in keys:
@@ -996,7 +1005,7 @@ def is_file_phonopy_yaml(
     with myio.open(filename, "rb") as f:
         try:
             data = yaml.load(f, Loader=Loader)
-            if data is None:
+            if not isinstance(data, dict):
                 return False
             keys: Sequence[str] = (
                 yaml_dict_keys

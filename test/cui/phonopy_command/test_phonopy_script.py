@@ -6,6 +6,7 @@ from __future__ import annotations
 import itertools
 import os
 import pathlib
+import shutil
 import sys
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -33,6 +34,7 @@ from phonopy.cui.phonopy_script import (
 )
 from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
 from phonopy.exception import PypolymlpDevelopmentError, PypolymlpFileNotFoundError
+from phonopy.file_IO import write_FORCE_SETS
 from phonopy.structure.atomic_data import set_atomic_data
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
@@ -590,6 +592,110 @@ def test_config_option():
                 assert file_path.exists()
                 file_path.unlink()
 
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_configuration_file_as_positional_argument(
+    capsys: pytest.CaptureFixture[str],
+):
+    """Configuration file given as positional argument is an error.
+
+    phonopy_disp.yaml is placed in the current directory, where it would be
+    read in place of the configuration file if the file were ignored.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            shutil.copy(
+                cwd / ".." / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                "phonopy_disp.yaml.xz",
+            )
+            conf_filename = cwd / "mesh.conf"
+            argparse_control = _get_phonopy_args(
+                filename=conf_filename,
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+
+            out = capsys.readouterr().out
+            assert (
+                f'"{conf_filename}" could not be read as a phonopy.yaml-like file.'
+                in out
+            )
+            assert (
+                f'If "{conf_filename}" is a configuration file, give it by --config.'
+                in out
+            )
+
+            pathlib.Path("phonopy_disp.yaml.xz").unlink()
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+@pytest.mark.parametrize("log_level", [0, 1])
+def test_no_forces_is_reported(capsys: pytest.CaptureFixture[str], log_level: int):
+    """Missing forces are reported with how to give them, also at log_level 0."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            filename = cwd / ".." / ".." / "phonopy_disp_NaCl.yaml"
+            argparse_control = _get_phonopy_args(
+                filename=filename,
+                load_phonopy_yaml=True,
+                log_level=log_level,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+
+            out = capsys.readouterr().out
+            assert f'"{filename}" has no forces, and "FORCE_SETS" was not found.' in out
+            assert '"phonopy-init -f"' in out
+
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_no_displacement_dataset_is_reported(capsys: pytest.CaptureFixture[str]):
+    """Missing displacement dataset is reported with how to generate it."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            with open(cwd / ".." / ".." / "phonopy_disp_NaCl.yaml") as f:
+                yaml_data = yaml.safe_load(f)
+            del yaml_data["displacements"]
+            with open("phonopy.yaml", "w") as w:
+                yaml.safe_dump(yaml_data, w)
+
+            argparse_control = _get_phonopy_args(load_phonopy_yaml=True)
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 1
+
+            out = capsys.readouterr().out
+            assert (
+                'Displacement dataset was not found, and "FORCE_SETS" was not found.'
+                in out
+            )
+            assert '"phonopy-init -d"' in out
+
+            pathlib.Path("phonopy.yaml").unlink()
             _check_no_files()
 
         finally:
@@ -1220,6 +1326,91 @@ def test_use_pypolymlp_develop_error(error_class: type):
                     main(**argparse_control)
                 assert excinfo.value.code == 1
 
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_use_pypolymlp_type1_dataset_error(capsys: pytest.CaptureFixture[str]):
+    """Test phonopy --pypolymlp with type-1 FORCE_SETS.
+
+    Type-1 dataset cannot be used for training, so the script prints an error
+    message and exits with code 1 without calling develop_or_load_pypolymlp.
+
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            shutil.copy(
+                cwd / ".." / ".." / "phonopy_disp_NaCl.yaml", "phonopy_disp.yaml"
+            )
+            shutil.copy(cwd / ".." / ".." / "FORCE_SETS_NaCl", "FORCE_SETS")
+            argparse_control = _get_phonopy_args(
+                use_pypolymlp=True,
+                load_phonopy_yaml=True,
+            )
+            with patch(
+                "phonopy.cui.phonopy_script.develop_or_load_pypolymlp"
+            ) as mock_develop:
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
+                assert excinfo.value.code == 1
+                mock_develop.assert_not_called()
+
+            out = capsys.readouterr().out
+            assert "cannot be used for\ntraining MLPs." in out
+
+            for created_filename in ("phonopy_disp.yaml", "FORCE_SETS"):
+                pathlib.Path(created_filename).unlink()
+            _check_no_files()
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_use_pypolymlp_without_supercell_energies_error(
+    capsys: pytest.CaptureFixture[str],
+):
+    """Test phonopy --pypolymlp with type-2 FORCE_SETS.
+
+    FORCE_SETS has no supercell energies, which are needed for training, so the
+    script prints an error message and exits with code 1 without calling
+    develop_or_load_pypolymlp.
+
+    """
+    ph = phonopy.load(
+        cwd / ".." / ".." / "phonopy_params_NaCl-rd.yaml.xz", produce_fc=False
+    )
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            ph.save("phonopy_disp.yaml", settings={"force_sets": False})
+            write_FORCE_SETS(
+                {"displacements": ph.displacements, "forces": ph.forces},
+                filename="FORCE_SETS",
+            )
+            argparse_control = _get_phonopy_args(
+                use_pypolymlp=True,
+                load_phonopy_yaml=True,
+            )
+            with patch(
+                "phonopy.cui.phonopy_script.develop_or_load_pypolymlp"
+            ) as mock_develop:
+                with pytest.raises(SystemExit) as excinfo:
+                    main(**argparse_control)
+                assert excinfo.value.code == 1
+                mock_develop.assert_not_called()
+
+            out = capsys.readouterr().out
+            assert "Supercell energies are needed for training MLPs" in out
+
+            for created_filename in ("phonopy_disp.yaml", "FORCE_SETS"):
+                pathlib.Path(created_filename).unlink()
             _check_no_files()
 
         finally:

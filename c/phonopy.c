@@ -757,7 +757,7 @@ static double get_free_energy(const double temperature, const double f,
     if (classical) {
         return KB * temperature * log(f / (KB * temperature));
     } else {
-        return KB * temperature * log(1 - exp(-f / (KB * temperature)));
+        return KB * temperature * log(-expm1(-f / (KB * temperature)));
     }
 }
 
@@ -765,13 +765,16 @@ static double get_entropy(const double temperature, const double f,
                           const double KB, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
-    double val;
+    /* Written with exp(-x), which underflows to 0 at low temperature, not */
+    /* exp(x), cosh and sinh, which overflow and give NaN. */
+    double x, em, om;
     if (classical) {
         return KB - KB * log(f / (KB * temperature));
     } else {
-        val = f / (2 * KB * temperature);
-        return 1 / (2 * temperature) * f * cosh(val) / sinh(val) -
-               KB * log(2 * sinh(val));
+        x = f / (KB * temperature);
+        em = exp(-x);
+        om = -expm1(-x);
+        return KB * (x * em / om - log(om));
     }
 }
 
@@ -779,15 +782,15 @@ static double get_heat_capacity(const double temperature, const double f,
                                 const double KB, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
-    /* If val is close to 1. Then expansion is used. */
-    double val, val1, val2;
+    /* exp(-x) for the same reason as in get_entropy. */
+    double x, em, om;
     if (classical) {
         return KB;
     } else {
-        val = f / (KB * temperature);
-        val1 = exp(val);
-        val2 = (val) / (val1 - 1);
-        return KB * val1 * val2 * val2;
+        x = f / (KB * temperature);
+        em = exp(-x);
+        om = -expm1(-x);
+        return KB * x * x * em / (om * om);
     }
 }
 
