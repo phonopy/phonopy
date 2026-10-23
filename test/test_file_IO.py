@@ -6,6 +6,7 @@ from __future__ import annotations
 import io
 import os
 import pathlib
+import re
 import tempfile
 import warnings
 from typing import Literal
@@ -33,10 +34,12 @@ from phonopy.file_IO import (
     parse_FORCE_SETS_from_strings,
     read_force_constants_hdf5,
     read_v_e,
+    write_disp_yaml,
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
     write_FORCE_SETS,
 )
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.dataset import get_displacements_and_forces
 
 cwd = pathlib.Path(__file__).parent
@@ -564,6 +567,26 @@ def test_read_v_e():
     assert len(volumes) > 0
     assert volumes[0] == pytest.approx(43.0804791127649, rel=1e-6)
     assert energies[0] == pytest.approx(-17.27885993, rel=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# write_disp_yaml
+# ---------------------------------------------------------------------------
+
+
+def test_write_disp_yaml_without_negative_zero(tmp_path: pathlib.Path):
+    """write_disp_yaml writes -0.0 as 0.0."""
+    a = 3.573610682008501
+    supercell = PhonopyAtoms(
+        cell=[[a, -0.0, -0.0], [0.0, a, -0.0], [-0.0, 0.0, a]],
+        scaled_positions=[[-0.0, 0.0, -0.0], [0.25, 0.25, -0.0]],
+        symbols=["C", "C"],
+    )
+    filename = tmp_path / "disp.yaml"
+    write_disp_yaml([[0, 0.01, -0.0, -0.0]], supercell, filename=filename)
+    text = filename.read_text()
+    assert "displacement:" in text
+    assert re.search(r"-0\.0+(?![0-9])", text) is None
 
 
 # ---------------------------------------------------------------------------

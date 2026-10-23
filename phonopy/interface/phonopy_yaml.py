@@ -531,7 +531,7 @@ class PhonopyYamlDumperBase(ABC):
         if matrix is not None:
             lines.append(f"{name}:")
             for v in matrix:
-                lines.append("- [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
+                lines.append(f"- [ {v[0]:z18.15f}, {v[1]:z18.15f}, {v[2]:z18.15f} ]")
             lines.append("")
         return lines
 
@@ -556,7 +556,7 @@ class PhonopyYamlDumperBase(ABC):
             rec_lat = np.linalg.inv(primitive.cell)
             for v, a in zip(rec_lat.T, ("a*", "b*", "c*"), strict=True):  # type: ignore[call-overload]
                 lines.append(
-                    "  - [ %21.15f, %21.15f, %21.15f ] # %s" % (v[0], v[1], v[2], a)
+                    f"  - [ {v[0]:z21.15f}, {v[1]:z21.15f}, {v[2]:z21.15f} ] # {a}"
                 )
             lines.append("")
         return lines
@@ -624,11 +624,15 @@ class PhonopyYamlDumperBase(ABC):
                         text += " (%s)" % symbols[i]
                     lines.append(text)
                     for v in z:
-                        lines.append("    - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
+                        lines.append(
+                            f"    - [ {v[0]:z18.15f}, {v[1]:z18.15f}, {v[2]:z18.15f} ]"
+                        )
             if self._dumper_settings["dielectric_constant"]:
                 lines.append("  dielectric_constant:")
                 for v in self._data.nac_params["dielectric"]:
-                    lines.append("    - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
+                    lines.append(
+                        f"    - [ {v[0]:z18.15f}, {v[1]:z18.15f}, {v[2]:z18.15f} ]"
+                    )
             if lines:
                 if "method" in self._data.nac_params:
                     if self._data.nac_params["method"].lower() == "gonze":
@@ -723,7 +727,9 @@ class PhonopyYamlDumperBase(ABC):
             for i, dset in enumerate(dataset[key]):  # type: ignore
                 lines.append(f"  - # {i + 1}")
                 for _, d in enumerate(dset):
-                    lines.append("    - [ %21.16f, %21.16f, %21.16f ]" % tuple(d))
+                    lines.append(
+                        f"    - [ {d[0]:z21.16f}, {d[1]:z21.16f}, {d[2]:z21.16f} ]"
+                    )
 
         if "supercell_energies" in dataset:
             lines.append("  supercell_energies:")
@@ -752,7 +758,9 @@ class PhonopyYamlDumperBase(ABC):
             for i, j in list(np.ndindex(shape)):
                 lines.append("  - # (%d, %d)" % (i + 1, j + 1))
                 for v in self._data.force_constants[i, j]:
-                    lines.append("    - [ %21.15f, %21.15f, %21.15f ]" % tuple(v))
+                    lines.append(
+                        f"    - [ {v[0]:z21.15f}, {v[1]:z21.15f}, {v[2]:z21.15f} ]"
+                    )
         return lines
 
     def _init_dumper_settings(self, dumper_settings: dict | None) -> None:
@@ -1229,11 +1237,12 @@ def _displacements_yaml_lines_type1(
     for d in dataset["first_atoms"]:
         lines.append("- atom: %4d" % (d["number"] + 1))
         lines.append("  displacement:")
-        lines.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(d["displacement"]))
+        u = d["displacement"]
+        lines.append(f"    [ {u[0]:z20.16f},{u[1]:z20.16f},{u[2]:z20.16f} ]")
         if with_forces and "forces" in d:
             lines.append("  forces:")
             for f in d["forces"]:
-                lines.append("  - [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
+                lines.append(f"  - [ {f[0]:z20.16f},{f[1]:z20.16f},{f[2]:z20.16f} ]")
         if "supercell_energy" in d:
             lines.append(
                 "  supercell_energy: {energy:.8f}".format(energy=d["supercell_energy"])

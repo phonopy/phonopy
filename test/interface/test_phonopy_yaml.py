@@ -151,6 +151,63 @@ def test_write_phonopy_yaml_extra(ph_nacl_nofcsym: Phonopy):
     np.testing.assert_allclose(disps, disps_test, atol=1e-8)
 
 
+@pytest.mark.parametrize("dataset_type", [1, 2])
+def test_write_phonopy_yaml_without_negative_zero(dataset_type: int):
+    """Test that -0.0 is written as 0.0 in phonopy.yaml."""
+    a = 3.573610682008501
+    unitcell = PhonopyAtoms(
+        cell=[[a, -0.0, -0.0], [0.0, a, -0.0], [-0.0, 0.0, a]],
+        scaled_positions=[[-0.0, 0.0, -0.0], [0.25, 0.25, -0.0]],
+        symbols=["C", "C"],
+    )
+    phonon = Phonopy(
+        unitcell,
+        supercell_matrix=[1, 1, 1],
+        primitive_matrix=[[-0.0, 1, 0], [-1, 0, -0.0], [0, -0.0, 1]],
+    )
+    natom = len(phonon.supercell)
+    displacement = [0.01, -0.0, -0.0]
+    forces = np.full((natom, 3), -0.0)
+    if dataset_type == 1:
+        phonon.dataset = {
+            "natom": natom,
+            "first_atoms": [
+                {"number": 0, "displacement": displacement, "forces": forces}
+            ],
+        }
+    else:
+        displacements = np.full((1, natom, 3), -0.0)
+        displacements[0, 0] = displacement
+        phonon.dataset = {"displacements": displacements, "forces": forces[None]}
+    phonon.force_constants = np.full((natom, natom, 3, 3), -0.0)
+    tensor = np.where(np.eye(3) == 1, 1.0, -0.0)
+    phonon.nac_params = {
+        "born": np.array([tensor, tensor]),
+        "dielectric": tensor,
+        "factor": 14.4,
+    }
+    settings = {
+        "force_sets": True,
+        "displacements": True,
+        "force_constants": True,
+        "born_effective_charge": True,
+        "dielectric_constant": True,
+    }
+    text = str(phonon.to_phonopy_yaml(settings=settings))
+    for key in (
+        "primitive_matrix:",
+        "reciprocal_lattice:",
+        "unit_cell:",
+        "supercell:",
+        "forces:",
+        "force_constants:",
+        "born_effective_charge:",
+        "dielectric_constant:",
+    ):
+        assert key in text
+    assert re.search(r"-0\.0+(?![0-9])", text) is None
+
+
 def test_load_nac_yaml():
     """Test to read NAC params using PhonopyYamlLoader."""
     pyl = PhonopyYamlLoader(yaml.safe_load(open(cwd / "nac.yaml"))).parse()
