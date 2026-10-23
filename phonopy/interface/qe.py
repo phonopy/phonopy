@@ -170,7 +170,8 @@ def get_pwscf_structure(
         len(unique_symbols),
     )
     lines += "CELL_PARAMETERS bohr\n"
-    lines += ((" %21.16f" * 3 + "\n") * 3) % tuple(lattice.ravel())
+    for v in lattice:
+        lines += f" {v[0]:z21.16f} {v[1]:z21.16f} {v[2]:z21.16f}\n"
     lines += "ATOMIC_SPECIES\n"
     for symbol, mass in atomic_species:
         if pp_filenames is None:

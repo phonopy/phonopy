@@ -2,6 +2,7 @@
 """Tests of VASP calculator interface."""
 
 import lzma
+import re
 import shutil
 import tarfile
 import tempfile
@@ -244,6 +245,14 @@ def test_get_scaled_positions_lines_near_zero_negative():
     assert val < 1.0
 
 
+def test_get_scaled_positions_lines_without_negative_zero():
+    """-0.0 and tiny negative values are written as 0.0, not -0.0 or 1.0."""
+    pos = np.array([[-0.0, -1e-30, -1e-17]])
+    text = get_scaled_positions_lines(pos)
+    assert [float(x) for x in text.split()] == [0.0, 0.0, 0.0]
+    assert "-" not in text
+
+
 # ---------------------------------------------------------------------------
 # group_by_key
 # ---------------------------------------------------------------------------
@@ -432,6 +441,21 @@ def test_get_vasp_structure_lines_species_line_vasp5():
     assert "Na" in lines[5] and "Cl" in lines[5]
     counts = [int(x) for x in lines[6].split()]
     assert counts == [4, 4]
+
+
+def test_get_vasp_structure_lines_without_negative_zero():
+    """-0.0 in lattice vectors and positions is written as 0.0."""
+    a = 3.573610682008501
+    lattice = [[a, -0.0, -0.0], [0.0, a, -0.0], [-0.0, 0.0, a]]
+    cell = PhonopyAtoms(
+        cell=lattice,
+        scaled_positions=[[-0.0, 0.0, -0.0], [0.25, 0.25, -0.0]],
+        symbols=["C", "C"],
+    )
+    assert np.signbit(cell.cell[cell.cell == 0]).any()
+    text = "\n".join(get_vasp_structure_lines(cell))
+    assert re.search(r"-0\.0+(?![0-9])", text) is None
+    np.testing.assert_array_equal(np.signbit(cell.cell), np.signbit(lattice))
 
 
 # ---------------------------------------------------------------------------
