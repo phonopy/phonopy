@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from typing import Literal
 
 import numpy as np
@@ -21,6 +22,7 @@ from phonopy.phonon.grid import (
     _relocate_BZ_grid_address,
     get_grid_point_from_address,
     get_ir_grid_points,
+    get_mock_symmetry_dataset,
     length2mesh,
 )
 from phonopy.phonon.tetrahedron_method import _get_tetrahedra_relative_grid_address
@@ -2647,6 +2649,35 @@ def test_GridMatrix_type4_antiferromagnetic_bcc_conv(magmoms: list):
         )
     assert gm.grid_matrix is None
     np.testing.assert_array_equal(gm.D_diag, [4, 4, 4])
+
+
+@pytest.mark.parametrize("with_symmetry", [True, False])
+def test_get_mock_symmetry_dataset_deprecated(ph_nacl: Phonopy, with_symmetry: bool):
+    """Test that get_mock_symmetry_dataset is deprecated.
+
+    The returned dataset is the same as GridMatrix.grid_symmetry_dataset, with
+    symmetry dataset and only with transformation matrix.
+
+    """
+    lattice = ph_nacl.primitive.cell
+    dataset = ph_nacl.primitive_symmetry.dataset
+    tmat = np.array(dataset.transformation_matrix, dtype="double")
+    if with_symmetry:
+        kwargs = {"symmetry_dataset": dataset}
+    else:
+        kwargs = {"transformation_matrix": tmat}
+    with pytest.warns(DeprecationWarning, match="get_mock_symmetry_dataset"):
+        sym_dataset = get_mock_symmetry_dataset(lattice=lattice, **kwargs)
+    gm = GridMatrix([[-1, 1, 1], [1, -1, 1], [1, 1, -1]], lattice, **kwargs)
+    expected = gm.grid_symmetry_dataset
+    if with_symmetry:
+        assert len(expected.rotations) == 48
+    else:
+        assert len(expected.rotations) == 1
+    for field in dataclasses.fields(expected):
+        np.testing.assert_array_equal(
+            getattr(sym_dataset, field.name), getattr(expected, field.name)
+        )
 
 
 def test_length2mesh(ph_nacl: Phonopy):

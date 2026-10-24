@@ -762,7 +762,7 @@ class GridMatrix:
             if transformation_matrix is not None
             else None
         )
-        self._mock_symmetry_dataset = get_mock_symmetry_dataset(
+        self._grid_symmetry_dataset = _get_grid_symmetry_dataset(
             lattice=self._lattice,
             transformation_matrix=_transformation_matrix,
             symmetry_dataset=symmetry_dataset,
@@ -821,7 +821,7 @@ class GridMatrix:
         self,
     ) -> GridSymmetryDataset:
         """Return symmetry dataset."""
-        return self._mock_symmetry_dataset
+        return self._grid_symmetry_dataset
 
     def _set_mesh_numbers(
         self,
@@ -871,7 +871,7 @@ class GridMatrix:
                 mesh_numbers = length2mesh(
                     length,
                     self._lattice,
-                    rotations=self._mock_symmetry_dataset.rotations,  # type: ignore[arg-type]
+                    rotations=self._grid_symmetry_dataset.rotations,  # type: ignore[arg-type]
                     rounding=self._rounding,
                 )
                 self._D_diag = np.array(mesh_numbers, dtype="int64")
@@ -888,7 +888,7 @@ class GridMatrix:
                 self._D_diag = np.array(mesh, dtype="int64")
 
         _check_grid_symmetry(
-            self._mock_symmetry_dataset.rotations, self._D_diag, self._Q
+            self._grid_symmetry_dataset.rotations, self._D_diag, self._Q
         )
 
     def _run_grg(
@@ -903,7 +903,7 @@ class GridMatrix:
         # translation.  In type 4, the identity with time reversal comes with
         # a translation that is kept as a lattice point, since GR-grid is not
         # supported for type 4.
-        ds = self._mock_symmetry_dataset
+        ds = self._grid_symmetry_dataset
         if ds.msg_type == 2:
             rotations = ds.rotations[ds.time_reversals == 0]
         else:
@@ -999,26 +999,26 @@ class GridMatrix:
             `reciprocal` (default) or `direct`.
 
         """
-        tmat = self._mock_symmetry_dataset.transformation_matrix
+        tmat = self._grid_symmetry_dataset.transformation_matrix
         conv_lat = np.dot(np.linalg.inv(tmat).T, self._lattice)
 
         # GRG is wanted to be generated with respect to std_lattice if possible.
         if _can_use_std_lattice(
             conv_lat,
             tmat,
-            self._mock_symmetry_dataset.std_lattice,
-            self._mock_symmetry_dataset.rotations,
+            self._grid_symmetry_dataset.std_lattice,
+            self._grid_symmetry_dataset.rotations,
         ):
-            conv_lat = self._mock_symmetry_dataset.std_lattice
+            conv_lat = self._grid_symmetry_dataset.std_lattice
             tmat = np.dot(self._lattice, np.linalg.inv(conv_lat)).T
 
         if coordinates == "direct":
             num_cells = int(
                 np.prod(length2mesh(length, conv_lat, rounding=self._rounding))
             )
-            max_num_atoms = num_cells * len(self._mock_symmetry_dataset.std_types)
+            max_num_atoms = num_cells * len(self._grid_symmetry_dataset.std_types)
             conv_mesh_numbers = estimate_supercell_matrix(
-                cast(SpglibDataset, self._mock_symmetry_dataset),
+                cast(SpglibDataset, self._grid_symmetry_dataset),
                 max_num_atoms=max_num_atoms,
                 max_iter=200,
             )
@@ -1849,7 +1849,33 @@ def get_mock_symmetry_dataset(
     | NosymDataset
     | None = None,
 ) -> GridSymmetryDataset:
-    """Return mock symmetry dataset."""
+    """Return symmetry dataset for grid generation.
+
+    Deprecated. Use GridMatrix.grid_symmetry_dataset.
+
+    """
+    warnings.warn(
+        "get_mock_symmetry_dataset is deprecated. "
+        "Use GridMatrix.grid_symmetry_dataset instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _get_grid_symmetry_dataset(
+        lattice=lattice,
+        transformation_matrix=transformation_matrix,
+        symmetry_dataset=symmetry_dataset,
+    )
+
+
+def _get_grid_symmetry_dataset(
+    lattice: NDArray[np.double] | None = None,
+    transformation_matrix: NDArray[np.double] | None = None,
+    symmetry_dataset: SpglibDataset
+    | SpglibMagneticDataset
+    | NosymDataset
+    | None = None,
+) -> GridSymmetryDataset:
+    """Return symmetry dataset for grid generation."""
     if symmetry_dataset is None or isinstance(symmetry_dataset, NosymDataset):
         _tmat = (
             transformation_matrix
@@ -1859,7 +1885,7 @@ def get_mock_symmetry_dataset(
         _lattice = (
             lattice if lattice is not None else np.eye(3, dtype="double", order="C")
         )
-        return _get_mock_symmetry_dataset_nosym(_lattice, _tmat)
+        return _get_grid_symmetry_dataset_nosym(_lattice, _tmat)
 
     assert symmetry_dataset is not None
     if isinstance(symmetry_dataset, SpglibMagneticDataset):
@@ -1885,14 +1911,15 @@ def get_mock_symmetry_dataset(
     return sym_dataset
 
 
-def _get_mock_symmetry_dataset_nosym(
+def _get_grid_symmetry_dataset_nosym(
     lattice: NDArray[np.double], transformation_matrix: NDArray[np.double]
 ) -> GridSymmetryDataset:
-    """Return mock symmetry_dataset containing transformation matrix.
+    """Return symmetry dataset made from transformation matrix.
 
-    Assuming self._lattice as standardized cell, and inverse of
-    transformation_matrix indicates original primitive lattice with respect
-    to self._lattice.
+    This is used when symmetry dataset is not given, and only the identity
+    is included as symmetry operation.  Assuming lattice as standardized
+    cell, and inverse of transformation_matrix indicates original primitive
+    lattice with respect to lattice.
 
     """
     tmat_inv = np.linalg.inv(transformation_matrix)
