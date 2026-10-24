@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Oct-24-2026: Version 4.8.5
+
+- Maintenance release.
+
 ## Oct-23-2026: Version 4.8.4
 
 - `-0.0` is written as `0.0` in the yaml output of crystal structures,
