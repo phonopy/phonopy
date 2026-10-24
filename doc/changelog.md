@@ -2,6 +2,13 @@
 
 # Change Log
 
+## Oct-24-2026: Version 4.8.6
+
+- Bug fix: `GridMatrix` did not use the GR-grid for a primitive cell whose
+  magnetic moments are all zero. With zero magnetic moments, every symmetry
+  operation appears also with time reversal, and the cell was judged as a
+  non-primitive cell.
+
 ## Oct-24-2026: Version 4.8.5
 
 - Maintenance release.
