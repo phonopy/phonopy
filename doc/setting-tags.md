@@ -198,9 +198,9 @@ Symmetry of spin such as magnetic moments is specified using this tag. The
 number of values has to be equal to the number of atoms, or its three times for
 non-collinear-like case, in **the input unit cell**, not the primitive cell or
 supercell. See also {ref}`primitive_axes_auto_magnetic` for how the primitive
-cell is determined when the input unit cell has magnetic moments. If this tag is used with `-d` option (`CREATE_DISPLACEMENTS` tag),
-`MAGMOM` file is created. This file contains the `MAGMOM` information of the
-supercell used for VASP.
+cell is determined when the input unit cell has magnetic moments. If this tag is
+used with `-d` option (`CREATE_DISPLACEMENTS` tag), `MAGMOM` file is created.
+This file contains the `MAGMOM` information of the supercell used for VASP.
 
 ```
 MAGMOM = 1.0 1.0 -1.0 -1.0
