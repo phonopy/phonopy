@@ -7,6 +7,7 @@ from typing import Literal
 
 import numpy as np
 import pytest
+import spglib
 
 from phonopy import Phonopy
 from phonopy.phonon.grid import (
@@ -2507,6 +2508,143 @@ def test_GridMatrix_with_supercell_symmetry_grg_false(ph_nacl: Phonopy):
         use_grg=False,
         symmetry_dataset=ph_nacl.symmetry.dataset,
     )
+    assert gm.grid_matrix is None
+    np.testing.assert_array_equal(gm.D_diag, [4, 4, 4])
+
+
+_FCC_PRIM_CELL = (
+    np.array([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]) * 5.43,
+    [[0, 0, 0], [0.25, 0.25, 0.25]],
+    [14, 14],
+)
+
+
+@pytest.mark.filterwarnings("error")
+@pytest.mark.parametrize("magmoms", [[0.0, 0.0], [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]])
+def test_GridMatrix_grey_group_fcc_prim(magmoms: list):
+    """Test GR-grid of a primitive cell of FCC with zero magnetic moments.
+
+    With zero magnetic moments, the magnetic space group is a grey group, in
+    which every operation appears twice, without and with time reversal.  The
+    identity combined with time reversal is not a lattice translation, and the
+    cell is still a primitive cell.  GR-grid is the same as that without
+    magnetic moments.
+
+    """
+    lattice = _FCC_PRIM_CELL[0]
+    dataset = spglib.get_symmetry_dataset(_FCC_PRIM_CELL)
+    mag_dataset = spglib.get_magnetic_symmetry_dataset((*_FCC_PRIM_CELL, magmoms))
+    assert mag_dataset is not None
+    assert mag_dataset.msg_type == 2
+    gm = GridMatrix(
+        2 * np.pi / 0.5, lattice=lattice, symmetry_dataset=dataset, use_grg=True
+    )
+    gm_mag = GridMatrix(
+        2 * np.pi / 0.5, lattice=lattice, symmetry_dataset=mag_dataset, use_grg=True
+    )
+    np.testing.assert_array_equal(gm.grid_matrix, [[-2, 2, 2], [2, -2, 2], [2, 2, -2]])
+    np.testing.assert_array_equal(gm_mag.grid_matrix, gm.grid_matrix)
+    np.testing.assert_array_equal(gm_mag.D_diag, gm.D_diag)
+
+
+def test_GridMatrix_grey_group_fcc_conv():
+    """Test that a conventional cell of FCC with zero magnetic moments is non-primitive.
+
+    The cell has four lattice points.  Only the operations with time reversal
+    are excluded from the check, and the translations of the lattice points
+    without time reversal are kept.  GR-grid is not used and the regular mesh
+    is returned with warning.
+
+    """
+    cell = (
+        np.eye(3) * 5.43,
+        [[0, 0, 0], [0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
+        [14] * 4,
+    )
+    mag_dataset = spglib.get_magnetic_symmetry_dataset((*cell, [0.0] * 4))
+    assert mag_dataset is not None
+    assert mag_dataset.msg_type == 2
+    with pytest.warns(RuntimeWarning, match="Non primitive cell input"):
+        gm = GridMatrix(
+            2 * np.pi / 0.5, lattice=cell[0], symmetry_dataset=mag_dataset, use_grg=True
+        )
+    assert gm.grid_matrix is None
+    np.testing.assert_array_equal(gm.D_diag, [2, 2, 2])
+
+
+@pytest.mark.filterwarnings("error")
+def test_GridMatrix_grey_group_bct_prim():
+    """Test GR-grid of a primitive cell of BCT with zero magnetic moments.
+
+    The regular mesh breaks the symmetry of a primitive cell of BCT.  If the
+    cell were judged as non-primitive, RuntimeError would be raised.
+
+    """
+    cell = (
+        [
+            [-1.888070425, 1.888070425, 4.79024315],
+            [1.888070425, -1.888070425, 4.79024315],
+            [1.888070425, 1.888070425, -4.79024315],
+        ],
+        [
+            [0.45738631, 0.95738631, 0.5],
+            [0.70738631, 0.70738631, 0],
+            [0.04261369, 0.54261369, 0.5],
+            [0.29261369, 0.29261369, 0],
+            [0.5, 0.5, 0],
+            [0.25, 0.75, 0.5],
+        ],
+        [8] * 4 + [22] * 2,
+    )
+    dataset = spglib.get_symmetry_dataset(cell)
+    mag_dataset = spglib.get_magnetic_symmetry_dataset((*cell, [0.0] * 6))
+    assert mag_dataset is not None
+    assert mag_dataset.msg_type == 2
+    gm = GridMatrix(
+        2 * np.pi / 0.5, lattice=cell[0], symmetry_dataset=dataset, use_grg=True
+    )
+    gm_mag = GridMatrix(
+        2 * np.pi / 0.5, lattice=cell[0], symmetry_dataset=mag_dataset, use_grg=True
+    )
+    np.testing.assert_array_equal(gm.grid_matrix, [[0, 3, 3], [3, 0, 3], [1, 1, 0]])
+    np.testing.assert_array_equal(gm_mag.grid_matrix, gm.grid_matrix)
+    np.testing.assert_array_equal(gm_mag.D_diag, gm.D_diag)
+
+
+@pytest.mark.filterwarnings("error")
+def test_GridMatrix_ferromagnetic_fcc_prim():
+    """Test GR-grid of a primitive cell of FCC with ferromagnetic moments."""
+    mag_dataset = spglib.get_magnetic_symmetry_dataset((*_FCC_PRIM_CELL, [1.0, 1.0]))
+    assert mag_dataset is not None
+    assert mag_dataset.msg_type == 1
+    gm = GridMatrix(
+        2 * np.pi / 0.5,
+        lattice=_FCC_PRIM_CELL[0],
+        symmetry_dataset=mag_dataset,
+        use_grg=True,
+    )
+    np.testing.assert_array_equal(gm.grid_matrix, [[-2, 2, 2], [2, -2, 2], [2, 2, -2]])
+    np.testing.assert_array_equal(gm.D_diag, [2, 4, 4])
+
+
+@pytest.mark.parametrize("magmoms", [[1.0, -1.0], [[0, 0, 1.0], [0, 0, -1.0]]])
+def test_GridMatrix_type4_antiferromagnetic_bcc_conv(magmoms: list):
+    """Test that a cell of a magnetic space group of type 4 is non-primitive.
+
+    In the antiferromagnetic conventional cell of BCC, the translation to the
+    body center is combined with time reversal.  GR-grid is not supported for
+    a magnetic space group of type 4, and the regular mesh is returned with
+    warning.
+
+    """
+    cell = (np.eye(3) * 2.87, [[0, 0, 0], [0.5, 0.5, 0.5]], [26, 26])
+    mag_dataset = spglib.get_magnetic_symmetry_dataset((*cell, magmoms))
+    assert mag_dataset is not None
+    assert mag_dataset.msg_type == 4
+    with pytest.warns(RuntimeWarning, match="Non primitive cell input"):
+        gm = GridMatrix(
+            2 * np.pi / 0.5, lattice=cell[0], symmetry_dataset=mag_dataset, use_grg=True
+        )
     assert gm.grid_matrix is None
     np.testing.assert_array_equal(gm.D_diag, [4, 4, 4])
 

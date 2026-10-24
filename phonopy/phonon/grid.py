@@ -139,7 +139,14 @@ def get_ir_qpoints_and_weights(
 
 @dataclasses.dataclass(frozen=True)
 class GridSymmetryDataset:
-    """Symmetry dataset for grid generation."""
+    """Symmetry dataset for grid generation.
+
+    ``time_reversals`` is 1 for the operations of a magnetic space group
+    combined with time reversal and 0 otherwise.  It is all 0 for a dataset
+    of a space group.  ``msg_type`` is the type of the magnetic space group,
+    and None for a dataset of a space group.
+
+    """
 
     rotations: NDArray[np.int64]
     translations: NDArray[np.double]
@@ -147,6 +154,8 @@ class GridSymmetryDataset:
     std_lattice: NDArray[np.double]
     std_types: NDArray[np.int64]
     hall_number: int
+    time_reversals: NDArray[np.int64]
+    msg_type: int | None
 
 
 class BZGrid:
@@ -889,7 +898,17 @@ class GridMatrix:
         force_SNF: bool,
         coordinates: Literal["reciprocal", "direct"],
     ) -> bool:
-        if is_primitive_cell(self._mock_symmetry_dataset.rotations):
+        # In a grey group (type 2), every operation appears also with time
+        # reversal, and the identity with time reversal is not a lattice
+        # translation.  In type 4, the identity with time reversal comes with
+        # a translation that is kept as a lattice point, since GR-grid is not
+        # supported for type 4.
+        ds = self._mock_symmetry_dataset
+        if ds.msg_type == 2:
+            rotations = ds.rotations[ds.time_reversals == 0]
+        else:
+            rotations = ds.rotations
+        if is_primitive_cell(rotations):
             # self._D_diag or self._grid_matrix is set in this method.
             self._set_GRG_mesh(
                 length=length,
@@ -1843,6 +1862,12 @@ def get_mock_symmetry_dataset(
         return _get_mock_symmetry_dataset_nosym(_lattice, _tmat)
 
     assert symmetry_dataset is not None
+    if isinstance(symmetry_dataset, SpglibMagneticDataset):
+        time_reversals = np.asarray(symmetry_dataset.time_reversals, dtype="int64")
+        msg_type = int(symmetry_dataset.msg_type)
+    else:
+        time_reversals = np.zeros(len(symmetry_dataset.rotations), dtype="int64")
+        msg_type = None
     sym_dataset = GridSymmetryDataset(
         rotations=np.asarray(symmetry_dataset.rotations, dtype="int64", order="C"),
         translations=np.asarray(
@@ -1854,6 +1879,8 @@ def get_mock_symmetry_dataset(
         std_lattice=np.asarray(symmetry_dataset.std_lattice, dtype="double", order="C"),
         std_types=np.asarray(symmetry_dataset.std_types, dtype="int64"),
         hall_number=symmetry_dataset.hall_number,
+        time_reversals=time_reversals,
+        msg_type=msg_type,
     )
     return sym_dataset
 
@@ -1890,5 +1917,7 @@ def _get_mock_symmetry_dataset_nosym(
         std_lattice=np.array(lattice, dtype="double", order="C"),
         std_types=np.array([1], dtype="int64"),
         hall_number=1,
+        time_reversals=np.zeros(1, dtype="int64"),
+        msg_type=None,
     )
     return sym_dataset
