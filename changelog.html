@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.8.4</title>
+    <title>Change Log &#8212; Phonopy v.4.8.6</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=a8bce493"></script>
+    <script src="_static/documentation_options.js?v=0434e6e8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -180,7 +180,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.8.4</p>
+    <p class="title logo__title">Phonopy v.4.8.6</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -419,6 +419,8 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-6">Oct-24-2026: Version 4.8.6</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-5">Oct-24-2026: Version 4.8.5</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-23-2026-version-4-8-4">Oct-23-2026: Version 4.8.4</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-10-2026-version-4-8-3">Oct-10-2026: Version 4.8.3</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-09-2026-version-4-8-2">Oct-09-2026: Version 4.8.2</a></li>
@@ -658,6 +660,21 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="oct-24-2026-version-4-8-6">
+<h2>Oct-24-2026: Version 4.8.6<a class="headerlink" href="#oct-24-2026-version-4-8-6" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Bug fix: <code class="docutils literal notranslate"><span class="pre">GridMatrix</span></code> did not use the GR-grid for a primitive cell whose
+magnetic moments are all zero. With zero magnetic moments, every symmetry
+operation appears also with time reversal, and the cell was judged as a
+non-primitive cell.</p></li>
+</ul>
+</section>
+<section id="oct-24-2026-version-4-8-5">
+<h2>Oct-24-2026: Version 4.8.5<a class="headerlink" href="#oct-24-2026-version-4-8-5" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Maintenance release.</p></li>
+</ul>
+</section>
 <section id="oct-23-2026-version-4-8-4">
 <h2>Oct-23-2026: Version 4.8.4<a class="headerlink" href="#oct-23-2026-version-4-8-4" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2908,6 +2925,8 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-6">Oct-24-2026: Version 4.8.6</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-5">Oct-24-2026: Version 4.8.5</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-23-2026-version-4-8-4">Oct-23-2026: Version 4.8.4</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-10-2026-version-4-8-3">Oct-10-2026: Version 4.8.3</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-09-2026-version-4-8-2">Oct-09-2026: Version 4.8.2</a></li>

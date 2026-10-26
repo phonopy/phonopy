@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.4.8.4</title>
+    <title>Setting tags &#8212; Phonopy v.4.8.6</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=a8bce493"></script>
+    <script src="_static/documentation_options.js?v=0434e6e8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.8.4</p>
+    <p class="title logo__title">Phonopy v.4.8.6</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -742,11 +742,9 @@ follows :</p>
 number of values has to be equal to the number of atoms, or its three times for
 non-collinear-like case, in <strong>the input unit cell</strong>, not the primitive cell or
 supercell. See also <a class="reference internal" href="#primitive-axes-auto-magnetic"><span class="std std-ref">Magnetic unit cells</span></a> for how the primitive
-cell is determined when the input unit cell has magnetic moments. If this tag is used with <code class="docutils literal notranslate"><span class="pre">-d</span></code> option (<code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code> tag),
-<code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> file is created. This file contains the <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> information of the
-supercell used for VASP. Unlike <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> in VASP, <code class="docutils literal notranslate"><span class="pre">*</span></code> can not be used, i.e., all
-the values (the same number of times to the number of atoms in unit cell) have
-to be explicitly written.</p>
+cell is determined when the input unit cell has magnetic moments. If this tag is
+used with <code class="docutils literal notranslate"><span class="pre">-d</span></code> option (<code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code> tag), <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> file is created.
+This file contains the <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> information of the supercell used for VASP.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MAGMOM</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="mf">1.0</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">-</span><span class="mf">1.0</span>
 </pre></div>
 </div>
