@@ -12,6 +12,8 @@ from typing import Any, Generic, Literal, NoReturn, TypeVar
 import numpy as np
 from numpy.typing import NDArray
 
+from phonopy.exception import MagmomValueError
+
 
 def fracval(frac: str) -> float:
     """Return floating point value from rational."""
@@ -20,6 +22,46 @@ def fracval(frac: str) -> float:
     else:
         x = frac.split("/")
         return float(x[0]) / float(x[1])
+
+
+def parse_magmom(magmom: str) -> list[float]:
+    """Return MAGMOM values with n*value tokens expanded.
+
+    As in VASP, a token n*value gives n copies of value, where n is a
+    positive integer.
+
+    Parameters
+    ----------
+    magmom : str
+        Whitespace-separated MAGMOM tokens, e.g., "2*1 2*-1".
+
+    Returns
+    -------
+    list[float]
+        Expanded values, e.g., [1.0, 1.0, -1.0, -1.0].
+
+    Raises
+    ------
+    MagmomValueError
+        When a token is neither a number nor of the form n*value.
+
+    """
+    values: list[float] = []
+    for token in magmom.split():
+        n, star, value = token.partition("*")
+        try:
+            if not star:
+                values.append(float(token))
+            elif n.isascii() and n.isdigit() and int(n) > 0:
+                values += [float(value)] * int(n)
+            else:
+                raise ValueError
+        except ValueError:
+            raise MagmomValueError(
+                f'Invalid MAGMOM value "{token}". Each value has to be a number '
+                "or n*value with a positive integer n, e.g., 2*1.0."
+            ) from None
+    return values
 
 
 class Settings:
@@ -680,9 +722,7 @@ class ConfParser(Generic[TSettings]):
                 self._set_parameter("hdf5_compression", compression)
 
             if conf_key == "magmom":
-                self._set_parameter(
-                    "magmom", [float(x) for x in confs["magmom"].split()]
-                )
+                self._set_parameter("magmom", parse_magmom(confs["magmom"]))
 
             if conf_key == "site_mixture":
                 site_mixture_str = confs["site_mixture"]
