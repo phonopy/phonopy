@@ -307,8 +307,9 @@ class BZGrid:
             Default is True.
         lang : {"C", "Rust"}, optional
             Backend selector for grid-related native routines. "C" uses
-            ``phonopy._recgrid``; "Rust" uses ``phonors``. Default is
-            "C".
+            ``phonopy._recgrid``; "Rust" uses ``phonors``. The search
+            of the Brillouin-zone grid differs between the two, see
+            `_relocate_BZ_grid_address`. Default is "Rust".
         rounding : {"nearest", "ceiling"}, optional
             Conversion of length to mesh numbers when ``mesh`` is a length. See
             ``length2mesh``. Default is "nearest".
@@ -1678,6 +1679,18 @@ def _relocate_BZ_grid_address(
     grid_address[3] -> bz_grid_address[4:8]
 
     shape=(prod(mesh) + 1, )
+
+    lang = "C" and lang = "Rust"
+    ---------------------------
+    The images of a grid point are searched among its translations by
+    reciprocal lattice vectors with coefficients m in the reduced basis.
+    lang="C" searches the 125 translations with -2 <= m_i <= 2. lang="Rust"
+    determines the range of m for each grid point, so that no image is missed
+    for any basis. The two differ only when the 125 translations do not
+    contain all the images. This happens for strongly skewed bases, but the
+    basis here is Niggli-reduced, and no such case is known for a
+    Niggli-reduced basis. The two give the same result in the test suites of
+    phonopy and phono3py.
 
     """
     if PS is None:
