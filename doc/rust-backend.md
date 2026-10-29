@@ -216,3 +216,20 @@ groups:
 
 If any of these code paths is reached with `lang="Rust"`, phonopy
 transparently uses the C (or Python) implementation for that step.
+
+### Differences in results
+
+The Brillouin-zone grid (`BZGrid`) is searched differently by the two
+backends. For each grid point, the images in the first Brillouin zone
+are searched among its translations by reciprocal lattice vectors,
+with coefficients in the Niggli-reduced reciprocal basis.
+
+- `lang="C"` searches the 125 translations whose coefficients are -2
+  to 2.
+- `lang="Rust"` determines the range of the coefficients for each grid
+  point, so that no image is missed for any basis.
+
+The two differ only when the 125 translations do not contain all the
+images. This happens for strongly skewed bases, but no such case is
+known for a Niggli-reduced basis, which phonopy uses. The two give the
+same result in the test suites of phonopy and phono3py.
