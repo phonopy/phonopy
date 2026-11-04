@@ -293,9 +293,12 @@ n_\nu(\mathbf{q},T) =
 ```
 
 where _T_ is the temperature, and {math}`\mathrm{k_B}` is the Boltzmann
-constant. The equation is calculated using the commutation relation of the
-creation and annihilation operators and the expectation values of the
-combination of the operations, e.g.,
+constant. The population is evaluated for all positive temperatures, including
+{math}`T < 1\,\mathrm{K}`, where the {math}`\omega_\nu(\mathbf{q}) \to 0` limit
+becomes large. At {math}`T = 0` the population is zero, while the zero-point
+term in the squared displacement is retained. The equation is calculated using
+the commutation relation of the creation and annihilation operators and the
+expectation values of the combination of the operations, e.g.,
 
 ```{math}
 [ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ] &=

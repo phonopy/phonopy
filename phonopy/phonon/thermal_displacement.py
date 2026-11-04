@@ -193,15 +193,16 @@ class ThermalMotion:
         """Return phonon population number."""
         t_array = np.asarray(t, dtype="double")
         vals = np.zeros_like(t_array, dtype="double")
-        condition = t_array > 1.0
-        vals[condition] = 1.0 / (
-            np.exp(
-                freq
-                * get_physical_units().THzToEv
-                / (get_physical_units().KB * t_array[condition])
-            )
-            - 1
+        condition = t_array > 0
+        # exp(-x) / (1 - exp(-x)) is equivalent to 1 / (exp(x) - 1) but
+        # neither overflows for large positive x nor loses precision to
+        # cancellation for small x.
+        x = (
+            freq
+            * get_physical_units().THzToEv
+            / (get_physical_units().KB * t_array[condition])
         )
+        vals[condition] = np.exp(-x) / -np.expm1(-x)
         return vals
 
 
