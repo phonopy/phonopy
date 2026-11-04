@@ -477,6 +477,11 @@ difference is employed, and {math}`+\Delta q_\alpha` and
 {math}`\Delta q_\alpha` is specified in the unit of reciprocal space distance
 by the `--gv_delta_q` option or the `GV_DELTA_Q` tag.
 
+In the Python API, `GroupVelocity.q_length` selects the same derivative
+method: a finite step uses central differences, and `None` selects the
+analytical derivative. The method can be changed between calls to `run()`
+on the same `GroupVelocity` instance.
+
 (physical_unit_conversion)=
 ## Physical unit conversion
 
