@@ -462,7 +462,8 @@ class DerivativeOfDynamicalMatrix:
                         self._derivative_coef(vecs_multi_cart, 3).T @ phase_multi
                     ) / (mass * multi[0])
                     for component, (a, b) in enumerate(_SECOND_DERIVATIVE_PAIRS):
-                        # d_ab(phase * NAC) includes both mixed product terms.
+                        # The phase Hessian times NAC is already included above.
+                        # Add the two cross terms and phase times the NAC Hessian.
                         ddm_local[component] += (
                             d_phase[a] * d_fc_nac[b, i, j]
                             + d_phase[b] * d_fc_nac[a, i, j]
@@ -733,36 +734,56 @@ class DerivativeOfDynamicalMatrix:
         return d_nac_q * nac_factor / N
 
     def _dd_wang_nac(self, q_direction: NDArray[np.double]) -> NDArray[np.double]:
-        """Return Cartesian Wang NAC Hessian, packed as xx, yy, zz, yz, xz, xy."""
+        """Return Cartesian Wang NAC Hessian, packed as xx, yy, zz, yz, xz, xy.
+
+        Write the correction as P/B, where P = outer(q @ Z_i, q @ Z_j)
+        and B = q @ dielectric @ q. For Cartesian directions a and b,
+        the quotient rule gives
+
+            (P/B)_ab = P_ab/B - (P_a B_b + P_b B_a + P B_ab)/B**2
+                       + 2 P B_a B_b/B**3.
+
+        Here B_a = 2 (dielectric @ q)_a and B_ab = 2 dielectric[a, b].
+        """
         assert isinstance(self._dynmat, DynamicalMatrixNAC)
         num_atom = len(self._pcell)
         dd_nac_q = np.zeros((6, num_atom, num_atom, 3, 3), dtype="double")
         if (np.abs(q_direction) < 1e-5).all():
             return dd_nac_q
 
-        Z = self._dynmat.born
-        e = self._dynmat.dielectric_constant
+        born = self._dynmat.born
+        dielectric = self._dynmat.dielectric_constant
         q = np.linalg.inv(self._pcell.cell) @ q_direction
-        B = self._wang_B(e, q)
-        dB = 2 * e @ q
+        denominator = self._wang_B(dielectric, q)
+        d_denominator = 2 * dielectric @ q
         for i, j in np.ndindex(num_atom, num_atom):
-            A_i = self._wang_A(q, Z, i)
-            A_j = self._wang_A(q, Z, j)
+            A_i = self._wang_A(q, born, i)
+            A_j = self._wang_A(q, born, j)
             numerator = np.outer(A_i, A_j)
+            # d(q @ Z_i)/dq_c = born[i, c].
             d_numerator = np.array(
-                [np.outer(Z[i, a], A_j) + np.outer(A_i, Z[j, a]) for a in range(3)]
+                [
+                    np.outer(born[i, c], A_j) + np.outer(A_i, born[j, c])
+                    for c in range(3)
+                ]
             )
             for component, (a, b) in enumerate(_SECOND_DERIVATIVE_PAIRS):
-                dd_numerator = np.outer(Z[i, a], Z[j, b]) + np.outer(Z[i, b], Z[j, a])
+                dd_numerator = np.outer(born[i, a], born[j, b]) + np.outer(
+                    born[i, b], born[j, a]
+                )
                 dd_nac_q[component, i, j] = (
-                    dd_numerator / B
+                    dd_numerator / denominator
                     - (
-                        d_numerator[a] * dB[b]
-                        + d_numerator[b] * dB[a]
-                        + 2 * numerator * e[a, b]
+                        d_numerator[a] * d_denominator[b]
+                        + d_numerator[b] * d_denominator[a]
+                        + 2 * numerator * dielectric[a, b]
                     )
-                    / B**2
-                    + 2 * numerator * dB[a] * dB[b] / B**3
+                    / denominator**2
+                    + 2
+                    * numerator
+                    * d_denominator[a]
+                    * d_denominator[b]
+                    / denominator**3
                 )
 
         N = len(self._scell) // num_atom
