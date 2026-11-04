@@ -4,6 +4,7 @@
 from io import StringIO
 
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
 from phonopy.phonon.moment import PhononMoment
@@ -60,6 +61,37 @@ def test_moment(ph_nacl_nofcsym: Phonopy):
         assert (np.abs(moms - data[i + 3, 1:]) < 1e-5).all()
 
     # self._show(vals)
+
+
+@pytest.mark.parametrize("rotate", [False, True])
+@pytest.mark.parametrize(
+    "order, expected", [(1, [13 / 6, 7 / 4]), (2, [47 / 9, 23 / 6])]
+)
+def test_projected_moment_frequency_window(rotate, order, expected):
+    """Normalize each atom's PDOS after summing Cartesian projections."""
+    polarizations = np.eye(3)
+    if rotate:
+        polarizations = np.array(
+            [
+                [1 / np.sqrt(3), 1 / np.sqrt(2), 1 / np.sqrt(6)],
+                [1 / np.sqrt(3), -1 / np.sqrt(2), 1 / np.sqrt(6)],
+                [1 / np.sqrt(3), 0, -2 / np.sqrt(6)],
+            ]
+        )
+    atom_mixing = np.array([[2, -1], [1, 2]]) / np.sqrt(5)
+    eigenvectors = np.kron(atom_mixing, polarizations)
+    frequencies = np.array([[1, 2, 4, 3, 5, 7], [2, 3, 6, 1, 4, 8]], dtype=float)
+    moment = PhononMoment(
+        frequencies,
+        np.array([1, 3]),
+        eigenvectors=np.array([eigenvectors, eigenvectors], dtype=complex),
+    )
+    moment.set_frequency_range(freq_min=0.5, freq_max=3.5)
+    moment.run(order=order)
+
+    # The selected modes have atom weights (4/5, 1/5), (4/5, 1/5),
+    # and (1/5, 4/5), independently of the Cartesian polarization basis.
+    np.testing.assert_allclose(moment.moment, expected, atol=1e-12)
 
 
 def _show(vals):
