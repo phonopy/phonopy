@@ -28,14 +28,23 @@ NIGGLI_NUM_RETRIES = 10
 
 # Limit of the passes over the steps A1-A8 in one Niggli reduction.  A cycle
 # is detected before this limit is reached; the limit only guards against a
-# sequence of steps that never repeats a basis.
+# sequence of steps that never repeats a basis.  When it is reached, the
+# reduction fails without being started again.
 NIGGLI_MAX_NUM_PASSES = 100000
 
 # Limit of the steps of the Delaunay reduction.  Each step decreases the sum
 # of the squared lengths of the four vectors of the superbase by more than
-# 2 * eps, so the reduction terminates; the limit only guards against
-# unexpected input such as non-finite numbers.
+# 2 * eps, so the reduction terminates.  The number of steps grows with the
+# skewness of the input; e.g., about 5500 steps are needed for the basis
+# (1, k, 0), (0, 1, k), (0, 0, 1) with k = 1000 multiplied by a general
+# matrix, so this limit is reached for such a basis with k = 10**6.
 DELAUNAY_MAX_NUM_STEPS = 1000000
+
+# Number of steps of the Delaunay reduction after which the vectors of the
+# superbase are recomputed from their integer coordinates in the input basis,
+# so that the rounding errors of the steps do not accumulate.  A reduction
+# that ends within this number of steps is not affected.
+DELAUNAY_RECOMPUTE_INTERVAL = 1000
 
 # Tolerance of the comparison of squared lengths in the sort of the candidate
 # vectors of the Delaunay reduction.
@@ -50,10 +59,16 @@ def niggli_reduce(
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return Niggli-reduced basis vectors and the transformation matrix.
 
-    With some input, the steps of the reduction come back to a basis seen
-    before and cycle, because the comparisons with eps disagree with the sums
-    that the steps form.  When a cycle is found, the reduction starts again
-    from the input with eps / 2, up to NIGGLI_NUM_RETRIES times.  The
+    The basis vectors are first Delaunay-reduced, and the Niggli reduction
+    starts from the Delaunay-reduced basis.  For a strongly skewed basis, the
+    Niggli steps alone need many more steps than the Delaunay steps.
+
+    With some input, the steps of the Niggli reduction come back to a basis
+    seen before and cycle: a boundary step applied to an equality that holds
+    only within eps shifts other parameters by up to eps, and after a few
+    steps the shifts exceed eps in the condition of another step.  When a
+    cycle is found, the Niggli reduction starts again from the
+    Delaunay-reduced basis with eps / 2, up to NIGGLI_NUM_RETRIES times.  The
     returned basis then satisfies the conditions of the reduction with the
     smaller tolerance.
 
@@ -71,25 +86,35 @@ def niggli_reduce(
     Returns
     -------
     reduced_lattice : ndarray
-        Reduced basis vectors a', b', c' in rows.
+        Reduced basis vectors a', b', c' in rows, with the sign of the
+        volume of the input.
         shape=(3, 3), dtype='double', order='C'
     tmat : ndarray
-        Integer matrix with determinant 1 or -1 that gives
-        (a', b', c') = (a, b, c) tmat, i.e., reduced_lattice equals
-        tmat.T @ lattice within rounding.
+        Integer matrix with determinant 1 that gives
+        (a', b', c') = (a, b, c) tmat.  reduced_lattice is computed as
+        tmat.T @ lattice.
         shape=(3, 3), dtype='int64', order='C'
 
     Raises
     ------
     RuntimeError
-        When the steps cycle also with eps / 2**NIGGLI_NUM_RETRIES.
+        When the Delaunay reduction fails (see delaunay_reduce), when the
+        Niggli steps cycle also with eps / 2**NIGGLI_NUM_RETRIES, or when the
+        number of passes exceeds NIGGLI_MAX_NUM_PASSES.
 
     """
-    columns = _get_columns(lattice)
+    input_columns = _get_columns(lattice)
+    columns, delaunay_tmat = _run_delaunay_reduce(input_columns, eps)
     for retry in range(NIGGLI_NUM_RETRIES + 1):
         result = _run_niggli_reduce(columns, eps / 2**retry)
         if result is not None:
-            reduced_columns, tmat = result
+            tmat = _multiply_int_int(delaunay_tmat, result)
+            # The Delaunay-reduced basis has a positive volume, so
+            # det(delaunay_tmat) = -1 for an input with a negative volume.
+            # The basis is reversed to keep the handedness of the input.
+            if _get_determinant_int(delaunay_tmat) < 0:
+                tmat = [[-x for x in row] for row in tmat]
+            reduced_columns = _multiply_float_int(input_columns, tmat)
             return _get_rows(reduced_columns), np.array(tmat, dtype="int64")
     raise RuntimeError("Niggli reduction failed.")
 
@@ -121,8 +146,8 @@ def delaunay_reduce(
         shape=(3, 3), dtype='double', order='C'
     tmat : ndarray
         Integer matrix with determinant 1 or -1 that gives
-        (a', b', c') = (a, b, c) tmat, i.e., reduced_lattice equals
-        tmat.T @ lattice within rounding.
+        (a', b', c') = (a, b, c) tmat.  reduced_lattice is computed as
+        tmat.T @ lattice.
         shape=(3, 3), dtype='int64', order='C'
 
     Raises
@@ -181,15 +206,15 @@ class _NiggliState:
     n: int = 0
 
 
-def _run_niggli_reduce(
-    columns: FloatMatrix, eps: float
-) -> tuple[FloatMatrix, IntMatrix] | None:
-    """Run the Niggli reduction; None when its steps cycle.
+def _run_niggli_reduce(columns: FloatMatrix, eps: float) -> IntMatrix | None:
+    """Run the Niggli reduction; return tmat, or None when its steps cycle.
 
     A pass runs the steps A1-A8 in order and ends early when A2, A5, A6, A7
     or A8 changes the basis.  The reduction succeeds when a pass reaches its
     end.  The basis at the start of a pass determines all later steps, so a
-    basis that is seen again at the start of a pass means a cycle.
+    basis that is seen again at the start of a pass means a cycle.  A
+    RuntimeError is raised when the number of passes exceeds
+    NIGGLI_MAX_NUM_PASSES.
 
     """
     state = _NiggliState(
@@ -205,8 +230,8 @@ def _run_niggli_reduce(
             return None
         seen_bases.add(basis_key)
         if _run_niggli_pass(state):
-            return state.lattice, state.tmat
-    return None
+            return state.tmat
+    raise RuntimeError("Niggli reduction did not terminate.")
 
 
 def _run_niggli_pass(state: _NiggliState) -> bool:
@@ -378,32 +403,35 @@ def _run_delaunay_reduce(
     """Run the Delaunay reduction of the basis vectors in columns.
 
     vecs[n] are the four vectors of the superbase in Cartesian coordinates,
-    and coefs[n] are their integer coordinates in the input basis.
+    and coefs[n] are their integer coordinates in the input basis.  The steps
+    update vecs in floating point, and vecs is recomputed from coefs every
+    DELAUNAY_RECOMPUTE_INTERVAL steps.  The returned basis is computed from
+    the input basis and the integer transformation matrix.
 
     """
     vecs = [[columns[i][j] for i in range(3)] for j in range(3)]
     vecs.append([-columns[i][0] - columns[i][1] - columns[i][2] for i in range(3)])
     coefs = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
 
-    for _ in range(DELAUNAY_MAX_NUM_STEPS):
+    for step in range(1, DELAUNAY_MAX_NUM_STEPS + 1):
         if _reduce_superbase_once(vecs, coefs, eps):
             break
+        if step % DELAUNAY_RECOMPUTE_INTERVAL == 0:
+            vecs = _get_vectors(columns, coefs)
     else:
         raise RuntimeError("Delaunay reduction did not terminate.")
 
     basis, basis_coefs = _choose_delaunay_basis(vecs, coefs, eps)
 
-    reduced_columns = [[basis[j][i] for j in range(3)] for i in range(3)]
     tmat = [[basis_coefs[j][i] for j in range(3)] for i in range(3)]
-    volume = _get_determinant(reduced_columns)
+    volume = _get_determinant([[basis[j][i] for j in range(3)] for i in range(3)])
     if abs(volume) < eps:
         raise RuntimeError("Delaunay-reduced basis has no volume.")
     if volume < 0:
-        reduced_columns = [[-x for x in row] for row in reduced_columns]
         tmat = [[-x for x in row] for row in tmat]
     if abs(_get_determinant_int(tmat)) != 1:
         raise RuntimeError("Delaunay-reduced vectors do not form a basis.")
-    return reduced_columns, tmat
+    return _multiply_float_int(columns, tmat), tmat
 
 
 def _reduce_superbase_once(vecs: FloatMatrix, coefs: IntMatrix, eps: float) -> bool:
@@ -513,6 +541,25 @@ def _multiply_float_int(left: FloatMatrix, right: IntMatrix) -> FloatMatrix:
                 value += left[i][k] * float(right[k][j])
             prod[i][j] = value
     return prod
+
+
+def _get_vectors(columns: FloatMatrix, coefs: IntMatrix) -> FloatMatrix:
+    """Return the vectors whose coordinates in the basis in columns are coefs.
+
+    vecs[n][i] = sum_k columns[i][k] * coefs[n][k], summed in the order of k
+    from 0 as in _multiply_float_int.
+
+    """
+    vecs = []
+    for coef in coefs:
+        vec = [0.0] * 3
+        for i in range(3):
+            value = 0.0
+            for k in range(3):
+                value += columns[i][k] * float(coef[k])
+            vec[i] = value
+        vecs.append(vec)
+    return vecs
 
 
 def _multiply_int_int(left: IntMatrix, right: IntMatrix) -> IntMatrix:
