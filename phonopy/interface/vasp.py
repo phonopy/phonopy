@@ -1519,6 +1519,7 @@ class VasprunxmlExpat:
         # currently being processed. Used to resolve the parsing context
         # from the ancestor path instead of ad-hoc boolean flags.
         self._stack: list[tuple[str, dict]] = []
+        self._stack_counts: dict[str, int] = {}
 
         self._all_forces: list[list[list[float]]] = []
         self._all_stress: list[list[list[float]]] = []
@@ -1887,7 +1888,7 @@ class VasprunxmlExpat:
 
     def _inside(self, name: str) -> bool:
         """Return whether an ancestor (or the current element) is ``name``."""
-        return any(n == name for n, _ in self._stack)
+        return self._stack_counts.get(name, 0) > 0
 
     def _ancestor_attr(self, name: str, attr: str) -> str | None:
         """Return ``attr`` of the nearest ancestor element named ``name``."""
@@ -1908,6 +1909,7 @@ class VasprunxmlExpat:
 
     def _start_element(self, name: str, attrs: dict) -> None:
         self._stack.append((name, attrs))
+        self._stack_counts[name] = self._stack_counts.get(name, 0) + 1
 
         # Used not to collect basis and positions in
         # <structure name="initialpos" >
@@ -1916,7 +1918,7 @@ class VasprunxmlExpat:
             if "name" in attrs.keys():
                 self._is_structure = True
 
-        if (
+        if name == "v" and (
             self._is_forces
             or self._is_stress
             or self._is_epsilon
@@ -1928,12 +1930,11 @@ class VasprunxmlExpat:
             or self._is_kpointlist
             or self._inside("generation")
         ):
-            if name == "v":
-                self._cbuf = ""
-                self._is_v = True
-                if "name" in attrs.keys():
-                    if attrs["name"] == "divisions":
-                        self._is_divisions = True
+            self._cbuf = ""
+            self._is_v = True
+            if "name" in attrs.keys():
+                if attrs["name"] == "divisions":
+                    self._is_divisions = True
 
         if name == "varray":
             if "name" in attrs.keys():
@@ -2019,7 +2020,7 @@ class VasprunxmlExpat:
                 if attrs["name"] == "NGZF":
                     self._is_i = True
                     self._is_NGXYZF[2] = True
-                if self._inside("generator") and attrs["name"] == "version":
+                if attrs["name"] == "version" and self._inside("generator"):
                     self._is_i = True
                     self._is_version = True
 
@@ -2063,7 +2064,11 @@ class VasprunxmlExpat:
 
         # Per-ion projectors live under <projected> (not
         # <projected_kpoints_opt>), excluding its <eigenvalues> child.
-        if self._inside("projected") and not self._inside("eigenvalues"):
+        if (
+            name in ("set", "r")
+            and self._inside("projected")
+            and not self._inside("eigenvalues")
+        ):
             if name == "set" and "comment" in attrs:
                 assert self._projectors is not None
                 comment = attrs["comment"]
@@ -2083,7 +2088,11 @@ class VasprunxmlExpat:
 
         # Eigenvalue sets routed to the SCF mesh or the kpoints_opt mesh
         # depending on the <eigenvalues> parent (set below via _eig_target).
-        if self._eig_target is not None and self._inside("eigenvalues"):
+        if (
+            name in ("set", "r")
+            and self._eig_target is not None
+            and self._inside("eigenvalues")
+        ):
             if name == "set" and "comment" in attrs:
                 comment = attrs["comment"]
                 if "spin" in comment:
@@ -2219,6 +2228,7 @@ class VasprunxmlExpat:
                 self._is_grids = False
 
         self._stack.pop()
+        self._stack_counts[name] -= 1
 
     def _run_v(self) -> None:
         if self._is_v:
