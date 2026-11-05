@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Rust backend &#8212; Phonopy v.4.8.6</title>
+    <title>Rust backend &#8212; Phonopy v.4.9.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=0434e6e8"></script>
+    <script src="_static/documentation_options.js?v=d607d3c8"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Installation" href="install.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.8" />
+  <meta name="docsearch:version" content="4.9" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -179,7 +179,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.8.6</p>
+    <p class="title logo__title">Phonopy v.4.9.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -433,6 +433,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonopy-without-the-c-extension">Building phonopy without the C extension</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known limitations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#differences-in-results">Differences in results</a></li>
 </ul>
 </li>
 </ul>
@@ -483,6 +484,7 @@ under <code class="docutils literal notranslate"><span class="pre">test/</span><
 <li><p><a class="reference internal" href="#scope" id="id11">Scope</a></p>
 <ul>
 <li><p><a class="reference internal" href="#known-limitations" id="id12">Known limitations</a></p></li>
+<li><p><a class="reference internal" href="#differences-in-results" id="id13">Differences in results</a></p></li>
 </ul>
 </li>
 </ul>
@@ -654,6 +656,23 @@ NumPy (<code class="docutils literal notranslate"><span class="pre">ThermalPrope
 <p>If any of these code paths is reached with <code class="docutils literal notranslate"><span class="pre">lang=&quot;Rust&quot;</span></code>, phonopy
 transparently uses the C (or Python) implementation for that step.</p>
 </section>
+<section id="differences-in-results">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Differences in results</a><a class="headerlink" href="#differences-in-results" title="Link to this heading">#</a></h3>
+<p>The Brillouin-zone grid (<code class="docutils literal notranslate"><span class="pre">BZGrid</span></code>) is searched differently by the two
+backends. For each grid point, the images in the first Brillouin zone
+are searched among its translations by reciprocal lattice vectors,
+with coefficients in the Niggli-reduced reciprocal basis.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lang=&quot;C&quot;</span></code> searches the 125 translations whose coefficients are -2
+to 2.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lang=&quot;Rust&quot;</span></code> determines the range of the coefficients for each grid
+point, so that no image is missed for any basis.</p></li>
+</ul>
+<p>The two differ only when the 125 translations do not contain all the
+images. This happens for strongly skewed bases, but no such case is
+known for a Niggli-reduced basis, which phonopy uses. The two give the
+same result in the test suites of phonopy and phono3py.</p>
+</section>
 </section>
 </section>
 
@@ -719,6 +738,7 @@ transparently uses the C (or Python) implementation for that step.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-phonopy-without-the-c-extension">Building phonopy without the C extension</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known limitations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#differences-in-results">Differences in results</a></li>
 </ul>
 </li>
 </ul>
