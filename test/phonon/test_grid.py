@@ -19,11 +19,11 @@ from phonopy.phonon.grid import (
     _get_grid_points_by_bz_rotations_c,
     _get_grid_points_by_bz_rotations_py,
     _get_grid_points_by_rotations,
-    _relocate_BZ_grid_address,
     get_grid_point_from_address,
     get_ir_grid_points,
     get_mock_symmetry_dataset,
     length2mesh,
+    relocate_BZ_grid_address,
 )
 from phonopy.phonon.tetrahedron_method import _get_tetrahedra_relative_grid_address
 from phonopy.structure.atoms import PhonopyAtoms
@@ -1471,11 +1471,11 @@ def test_agno2_BZGrid_with_shift(agno2_cell: PhonopyAtoms):
 
 
 def test_relocate_BZ_grid_address_FCC():
-    """Test of _relocate_BZ_grid_address by FCC."""
+    """Test of relocate_BZ_grid_address by FCC."""
     D_diag = [4, 4, 4]
     Q = np.eye(3, dtype="int64")
     reciprocal_lattice = np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]], dtype="double")
-    bz_grid_addresses, bz_map, bzg2grg = _relocate_BZ_grid_address(
+    bz_grid_addresses, bz_map, bzg2grg = relocate_BZ_grid_address(
         D_diag,
         Q,
         reciprocal_lattice,  # column vectors
@@ -1742,8 +1742,42 @@ def test_relocate_BZ_grid_address_FCC():
     # print(",".join([f"%d" % x for x in bzg2grg]))
 
 
+def test_relocate_BZ_grid_address_eight_images():
+    """Test of relocate_BZ_grid_address by a grid point with eight images.
+
+    The basis vectors (-1, 1, 0), (1, 0, -1), (0, 0, 1) span the simple cubic
+    lattice, and the address (2, 0, 2) of the 4x4x4 grid is the corner
+    (-1/2, 1/2, 1/2) of the cubic BZ.  The eight corners are at the same
+    distance from the origin.
+
+    """
+    D_diag = [4, 4, 4]
+    Q = np.eye(3, dtype="int64")
+    reciprocal_lattice = np.array(
+        [[-1, 1, 0], [1, 0, -1], [0, 0, 1]], dtype="double"
+    ).T  # column vectors
+    bz_grid_addresses, bz_map, bzg2grg = relocate_BZ_grid_address(
+        D_diag, Q, reciprocal_lattice, store_dense_gp_map=True
+    )
+    gp = get_grid_point_from_address([2, 0, 2], D_diag)
+    images = bz_grid_addresses[bz_map[gp] : bz_map[gp + 1]]
+    assert sorted(map(tuple, images.tolist())) == [
+        (-2, -4, -6),
+        (-2, -4, -2),
+        (-2, 0, -2),
+        (-2, 0, 2),
+        (2, 0, -2),
+        (2, 0, 2),
+        (2, 4, 2),
+        (2, 4, 6),
+    ]
+    assert (bzg2grg[bz_map[gp] : bz_map[gp + 1]] == gp).all()
+    lengths = [np.sum((reciprocal_lattice @ (adrs / 4)) ** 2) for adrs in images]
+    np.testing.assert_allclose(lengths, 0.75)
+
+
 def test_relocate_BZ_grid_address_aln_grg():
-    """Test of _relocate_BZ_grid_address by wurtzite in GR-grid."""
+    """Test of relocate_BZ_grid_address by wurtzite in GR-grid."""
     D_diag = [1, 5, 15]
     Q = [[-1, 0, -6], [0, -1, 0], [-1, 0, -5]]
     reciprocal_lattice = np.array(
@@ -1753,7 +1787,7 @@ def test_relocate_BZ_grid_address_aln_grg():
             [0.0, 0.0, 0.20088388911209323],
         ]
     )
-    bz_grid_addresses, bz_map, bzg2grg = _relocate_BZ_grid_address(
+    bz_grid_addresses, bz_map, bzg2grg = relocate_BZ_grid_address(
         D_diag,
         Q,
         reciprocal_lattice,  # column vectors
@@ -2040,7 +2074,7 @@ def test_relocate_BZ_grid_address_aln_grg():
 
 
 def test_relocate_BZ_grid_address_aln_553():
-    """Test of _relocate_BZ_grid_address by wurtzite."""
+    """Test of relocate_BZ_grid_address by wurtzite."""
     D_diag = [5, 5, 3]
     Q = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     reciprocal_lattice = np.array(
@@ -2050,7 +2084,7 @@ def test_relocate_BZ_grid_address_aln_553():
             [0.0, 0.0, 0.20088388911209323],
         ]
     )
-    bz_grid_addresses, bz_map, bzg2grg = _relocate_BZ_grid_address(
+    bz_grid_addresses, bz_map, bzg2grg = relocate_BZ_grid_address(
         D_diag,
         Q,
         reciprocal_lattice,  # column vectors
@@ -2337,7 +2371,7 @@ def test_relocate_BZ_grid_address_aln_553():
 
 
 def test_relocate_BZ_grid_address_aln_compare():
-    """Test of _relocate_BZ_grid_address by zincblende.
+    """Test of relocate_BZ_grid_address by zincblende.
 
     Compare q-points in two grids (traditional and GR grid) with the same lattice.
 
@@ -2351,7 +2385,7 @@ def test_relocate_BZ_grid_address_aln_compare():
     )
     D_diag = [5, 5, 3]
     Q = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    bz_grid_addresses, bz_map, bzg2grg = _relocate_BZ_grid_address(
+    bz_grid_addresses, bz_map, bzg2grg = relocate_BZ_grid_address(
         D_diag,
         Q,
         reciprocal_lattice,  # column vectors
@@ -2364,7 +2398,7 @@ def test_relocate_BZ_grid_address_aln_compare():
 
     D_diag = [1, 5, 15]
     Q = [[-1, 0, -6], [0, -1, 0], [-1, 0, -5]]
-    bz_grid_addresses_grg, bz_map, bzg2grg = _relocate_BZ_grid_address(
+    bz_grid_addresses_grg, bz_map, bzg2grg = relocate_BZ_grid_address(
         D_diag,
         Q,
         reciprocal_lattice,  # column vectors
