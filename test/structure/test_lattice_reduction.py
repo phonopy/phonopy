@@ -198,15 +198,20 @@ def test_delaunay_reduce_agrees_with_spglib(lattices: list[NDArray[np.double]]):
 
 @pytest.mark.parametrize(
     "lattices",
-    [_general_lattices(200, 13), _symmetric_lattices(200, 14)],
-    ids=["general", "strained"],
+    [
+        _general_lattices(200, 13),
+        _symmetric_lattices(200, 14),
+        _symmetric_lattices(200, 15, strained=False),
+    ],
+    ids=["general", "strained", "symmetric"],
 )
-def test_niggli_reduce(lattices: list[NDArray[np.double]]):
-    """Niggli-reduced basis satisfies the main conditions.
+def test_niggli_reduce_agrees_with_spglib(lattices: list[NDArray[np.double]]):
+    """Niggli reduction chooses the same basis as spglib.
 
-    It keeps the handedness of the input, and for general lattices it agrees
-    with the basis of spglib.  For strained symmetric lattices, the basis of
-    spglib can differ by the comparisons with eps.
+    For a symmetric lattice, several bases have the same Niggli-reduced
+    metric tensor, and the one found depends on the starting basis.  The
+    basis also satisfies the main conditions and keeps the handedness of the
+    input.
 
     """
     for lattice in lattices:
@@ -215,44 +220,17 @@ def test_niggli_reduce(lattices: list[NDArray[np.double]]):
         assert round(np.linalg.det(tmat)) == 1
         assert np.sign(np.linalg.det(reduced)) == np.sign(np.linalg.det(lattice))
         assert _satisfies_niggli_main_conditions_with_retries(reduced)
-
-
-def test_niggli_reduce_agrees_with_spglib():
-    """Niggli-reduced basis of general lattices equals that of spglib."""
-    for lattice in _general_lattices(200, 15):
-        reduced, _ = niggli_reduce(lattice, eps=EPS)
         ref = spglib.niggli_reduce(lattice, eps=EPS)
         assert ref is not None
-        np.testing.assert_allclose(reduced, ref, rtol=0, atol=1e-8)
-
-
-@pytest.mark.parametrize(
-    "lattices",
-    [_general_lattices(200, 18), _symmetric_lattices(200, 19)],
-    ids=["general", "strained"],
-)
-def test_niggli_steps_from_input(lattices: list[NDArray[np.double]]):
-    """Niggli steps alone reduce the input basis.
-
-    niggli_reduce starts the Niggli steps from the Delaunay-reduced basis,
-    for which the steps A5-A8 are rarely applied.  Here the steps start from
-    the input basis.
-
-    """
-    for lattice in lattices:
-        columns = lattice_reduction._get_columns(lattice)
-        for retry in range(lattice_reduction.NIGGLI_NUM_RETRIES + 1):
-            tmat_list = lattice_reduction._run_niggli_reduce(columns, EPS / 2**retry)
-            if tmat_list is not None:
-                break
-        assert tmat_list is not None
-        tmat = np.array(tmat_list, dtype="int64")
-        assert round(np.linalg.det(tmat)) == 1
-        assert _satisfies_niggli_main_conditions_with_retries(tmat.T @ lattice)
+        ref_tmat = np.rint((ref @ np.linalg.inv(lattice)).T).astype("int64")
+        np.testing.assert_array_equal(tmat, ref_tmat)
+        np.testing.assert_allclose(
+            reduced, ref, rtol=0, atol=1e-12 * np.abs(lattice).max()
+        )
 
 
 def test_niggli_step_a8():
-    """Niggli steps reduce a basis that only A8 changes.
+    """Niggli reduction of a basis that only A8 changes.
 
     The metric tensor A = B = 1, C = 1.2, xi = eta = zeta = -0.9 satisfies
     the main conditions except A + B + xi + eta + zeta >= 0, which A8 makes
@@ -262,16 +240,9 @@ def test_niggli_step_a8():
     metric = np.array([[1, -0.45, -0.45], [-0.45, 1, -0.45], [-0.45, -0.45, 1.2]])
     lattice = np.linalg.cholesky(metric)
     assert not _satisfies_niggli_main_conditions(lattice, EPS)
-
-    columns = lattice_reduction._get_columns(lattice)
-    tmat_list = lattice_reduction._run_niggli_reduce(columns, EPS)
-    assert tmat_list is not None
-    tmat = np.array(tmat_list, dtype="int64")
-    assert round(np.linalg.det(tmat)) == 1
-    assert _satisfies_niggli_main_conditions(tmat.T @ lattice, EPS)
-
     reduced, tmat = niggli_reduce(lattice, eps=EPS)
     _check_tmat(lattice, reduced, tmat)
+    assert round(np.linalg.det(tmat)) == 1
     assert _satisfies_niggli_main_conditions(reduced, EPS)
 
 
@@ -279,9 +250,7 @@ def test_niggli_step_a8():
 def test_niggli_reduce_cycling_lattices(lattice: list[list[float]]):
     """Niggli reduction starts again with eps / 2 after a cycle."""
     lattice_array = np.array(lattice)
-    columns, _ = lattice_reduction._run_delaunay_reduce(
-        lattice_reduction._get_columns(lattice_array), EPS
-    )
+    columns = lattice_reduction._get_columns(lattice_array)
     assert lattice_reduction._run_niggli_reduce(columns, EPS) is None
 
     reduced, tmat = niggli_reduce(lattice_array, eps=EPS)
@@ -290,27 +259,51 @@ def test_niggli_reduce_cycling_lattices(lattice: list[list[float]]):
     assert _satisfies_niggli_main_conditions(reduced, EPS / 2)
 
 
-def test_niggli_reduce_pass_limit(monkeypatch: pytest.MonkeyPatch):
-    """Niggli reduction fails without retries when the pass limit is reached."""
-    epsilons: list[float] = []
+def _record_calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, float]]:
+    """Record the calls of the Niggli and Delaunay drivers with their eps."""
+    calls: list[tuple[str, float]] = []
     run_niggli_reduce = lattice_reduction._run_niggli_reduce
+    run_delaunay_reduce = lattice_reduction._run_delaunay_reduce
 
-    def counting_run_niggli_reduce(columns, eps):
-        epsilons.append(eps)
+    def recording_run_niggli_reduce(columns, eps):
+        calls.append(("niggli", eps))
         return run_niggli_reduce(columns, eps)
 
-    monkeypatch.setattr(lattice_reduction, "NIGGLI_MAX_NUM_PASSES", 1)
+    def recording_run_delaunay_reduce(columns, eps):
+        calls.append(("delaunay", eps))
+        return run_delaunay_reduce(columns, eps)
+
     monkeypatch.setattr(
-        lattice_reduction, "_run_niggli_reduce", counting_run_niggli_reduce
+        lattice_reduction, "_run_niggli_reduce", recording_run_niggli_reduce
     )
+    monkeypatch.setattr(
+        lattice_reduction, "_run_delaunay_reduce", recording_run_delaunay_reduce
+    )
+    return calls
+
+
+def test_niggli_reduce_pass_limit(monkeypatch: pytest.MonkeyPatch):
+    """Pass limit leads to the Delaunay-reduced basis, and then to failure.
+
+    The first pass of the Niggli steps from the input basis and from the
+    Delaunay-reduced basis of this lattice changes the basis, so the limit of
+    one pass is reached in both, before a cycle is detected.  No retry with
+    eps / 2 follows.
+
+    """
+    calls = _record_calls(monkeypatch)
+    monkeypatch.setattr(lattice_reduction, "NIGGLI_MAX_NUM_PASSES", 1)
     with pytest.raises(RuntimeError, match="did not terminate"):
         niggli_reduce(CYCLING_LATTICES[0], eps=EPS)
-    assert epsilons == [EPS]
+    assert calls == [("niggli", EPS), ("delaunay", EPS), ("niggli", EPS)]
 
 
 @pytest.mark.parametrize("skew,max_error", [(100, 2e-12), (1000, 1e-9)])
-def test_skewed_lattices(skew: int, max_error: float):
+def test_skewed_lattices(skew: int, max_error: float, monkeypatch: pytest.MonkeyPatch):
     """Strongly skewed lattices are reduced, and the bases are accurate.
+
+    The Niggli steps from the input basis reach the pass limit, so
+    niggli_reduce starts them again from the Delaunay-reduced basis.
 
     The error is that from the exact product of the input basis and tmat.
     With skew = 100 (582 Delaunay steps), the basis updated in floating
@@ -323,32 +316,59 @@ def test_skewed_lattices(skew: int, max_error: float):
     """
     general = np.array([[1.0, 0.1, 0.2], [0.0, 1.1, 0.3], [0.0, 0.0, 0.9]])
     lattice = np.array([[1, skew, 0], [0, 1, skew], [0, 0, 1]], dtype=float) @ general
+    calls = _record_calls(monkeypatch)
     for reduce in (delaunay_reduce, niggli_reduce):
+        calls.clear()
         reduced, tmat = reduce(lattice, eps=EPS)
         assert round(np.linalg.det(tmat)) in (1, -1)
         assert np.abs(reduced).max() < 2
         assert _error_from_exact_product(lattice, reduced, tmat) < max_error
         if reduce is niggli_reduce:
+            assert calls == [("niggli", EPS), ("delaunay", EPS), ("niggli", EPS)]
             assert _satisfies_niggli_main_conditions_with_retries(reduced)
 
 
-def test_left_handed_input():
-    """Delaunay basis has a positive volume, Niggli basis keeps the sign."""
-    lattice = _general_lattices(1, 16)[0]
-    if np.linalg.det(lattice) > 0:
-        lattice = -lattice
+@pytest.mark.parametrize(
+    "skew,calls_expected",
+    [
+        (0, [("niggli", EPS)]),
+        (100, [("niggli", EPS), ("delaunay", EPS), ("niggli", EPS)]),
+    ],
+    ids=["general", "skewed"],
+)
+def test_left_handed_input(
+    skew: int,
+    calls_expected: list[tuple[str, float]],
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Delaunay basis has a positive volume, Niggli basis keeps the sign.
+
+    The Niggli steps of the skewed lattice start from the Delaunay-reduced
+    basis, which has a positive volume.
+
+    """
+    general = np.array([[1.0, 0.1, 0.2], [0.0, 1.1, 0.3], [0.0, 0.0, 0.9]])
+    lattice = -np.array([[1, skew, 0], [0, 1, skew], [0, 0, 1]], dtype=float) @ general
+    assert np.linalg.det(lattice) < 0
     reduced, tmat = delaunay_reduce(lattice, eps=EPS)
     assert np.linalg.det(reduced) > 0
     assert round(np.linalg.det(tmat)) == -1
+    calls = _record_calls(monkeypatch)
     reduced, tmat = niggli_reduce(lattice, eps=EPS)
+    assert calls == calls_expected
     assert np.linalg.det(reduced) < 0
     assert round(np.linalg.det(tmat)) == 1
+    assert _satisfies_niggli_main_conditions_with_retries(reduced)
 
 
 @pytest.mark.parametrize("reduce", [delaunay_reduce, niggli_reduce])
-def test_invalid_input(reduce):
-    """Wrong shape raises ValueError and no volume raises RuntimeError."""
+def test_invalid_shape(reduce):
+    """Wrong shape raises ValueError."""
     with pytest.raises(ValueError):
         reduce([[1.0, 0.0], [0.0, 1.0]])
+
+
+def test_delaunay_reduce_no_volume():
+    """Delaunay reduction of basis vectors without volume raises RuntimeError."""
     with pytest.raises(RuntimeError, match="no volume"):
-        reduce([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]])
+        delaunay_reduce([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]])

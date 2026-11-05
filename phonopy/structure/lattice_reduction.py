@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Niggli and Delaunay reductions of basis vectors.
 
-This module is the reference implementation of the lattice reductions in
-phonors.  The Rust implementation follows the same steps, with the same names
-and the same order of the floating-point operations, so that both give equal
-results.
+The floating-point operations are written as scalar operations in a fixed
+order instead of NumPy matrix products, so that the results do not depend on
+the BLAS library and an implementation in another language can give
+bit-identical results.
 
 The Niggli reduction follows I. Krivy and B. Gruber, Acta Cryst. A32, 297
 (1976) with the tolerance of R. W. Grosse-Kunstleve, N. K. Sauter and P. D.
@@ -26,11 +26,12 @@ from numpy.typing import NDArray
 # tolerance after a cycle of its steps is found.
 NIGGLI_NUM_RETRIES = 10
 
-# Limit of the passes over the steps A1-A8 in one Niggli reduction.  A cycle
-# is detected before this limit is reached; the limit only guards against a
-# sequence of steps that never repeats a basis.  When it is reached, the
-# reduction fails without being started again.
-NIGGLI_MAX_NUM_PASSES = 100000
+# Limit of the passes over the steps A1-A8 in one Niggli reduction, as in
+# spglib.  A strongly skewed basis reaches it; the Niggli reduction from the
+# input basis is then replaced by that from the Delaunay-reduced basis.  When
+# the limit is reached also from the Delaunay-reduced basis, the reduction
+# fails without being started again with a smaller tolerance.
+NIGGLI_MAX_NUM_PASSES = 1000
 
 # Limit of the steps of the Delaunay reduction.  Each step decreases the sum
 # of the squared lengths of the four vectors of the superbase by more than
@@ -59,18 +60,21 @@ def niggli_reduce(
 ) -> tuple[NDArray[np.double], NDArray[np.int64]]:
     """Return Niggli-reduced basis vectors and the transformation matrix.
 
-    The basis vectors are first Delaunay-reduced, and the Niggli reduction
-    starts from the Delaunay-reduced basis.  For a strongly skewed basis, the
-    Niggli steps alone need many more steps than the Delaunay steps.
+    The Niggli steps start from the input basis.  For a symmetric lattice,
+    several bases have the same Niggli-reduced metric tensor, and the one
+    found depends on the starting basis; starting from the input basis gives
+    the same basis as spglib.  When the number of passes exceeds
+    NIGGLI_MAX_NUM_PASSES, which happens for a strongly skewed basis, the
+    basis is Delaunay-reduced first and the Niggli steps start from the
+    Delaunay-reduced basis, which needs much fewer steps.
 
-    With some input, the steps of the Niggli reduction come back to a basis
-    seen before and cycle: a boundary step applied to an equality that holds
-    only within eps shifts other parameters by up to eps, and after a few
-    steps the shifts exceed eps in the condition of another step.  When a
-    cycle is found, the Niggli reduction starts again from the
-    Delaunay-reduced basis with eps / 2, up to NIGGLI_NUM_RETRIES times.  The
-    returned basis then satisfies the conditions of the reduction with the
-    smaller tolerance.
+    With some input, the Niggli steps come back to a basis seen before and
+    cycle: a boundary step applied to an equality that holds only within eps
+    shifts other parameters by up to eps, and after a few steps the shifts
+    exceed eps in the condition of another step.  When a cycle is found, the
+    Niggli steps start again from the same basis with eps / 2, up to
+    NIGGLI_NUM_RETRIES times.  The returned basis then satisfies the
+    conditions of the reduction with the smaller tolerance.
 
     Parameters
     ----------
@@ -98,25 +102,26 @@ def niggli_reduce(
     Raises
     ------
     RuntimeError
-        When the Delaunay reduction fails (see delaunay_reduce), when the
-        Niggli steps cycle also with eps / 2**NIGGLI_NUM_RETRIES, or when the
-        number of passes exceeds NIGGLI_MAX_NUM_PASSES.
+        When the Niggli steps cycle also with eps / 2**NIGGLI_NUM_RETRIES,
+        when the number of passes exceeds NIGGLI_MAX_NUM_PASSES also from the
+        Delaunay-reduced basis, or when the Delaunay reduction fails (see
+        delaunay_reduce).
 
     """
     input_columns = _get_columns(lattice)
-    columns, delaunay_tmat = _run_delaunay_reduce(input_columns, eps)
-    for retry in range(NIGGLI_NUM_RETRIES + 1):
-        result = _run_niggli_reduce(columns, eps / 2**retry)
-        if result is not None:
-            tmat = _multiply_int_int(delaunay_tmat, result)
-            # The Delaunay-reduced basis has a positive volume, so
-            # det(delaunay_tmat) = -1 for an input with a negative volume.
-            # The basis is reversed to keep the handedness of the input.
-            if _get_determinant_int(delaunay_tmat) < 0:
-                tmat = [[-x for x in row] for row in tmat]
-            reduced_columns = _multiply_float_int(input_columns, tmat)
-            return _get_rows(reduced_columns), np.array(tmat, dtype="int64")
-    raise RuntimeError("Niggli reduction failed.")
+    try:
+        tmat = _run_niggli_reduce_with_retries(input_columns, eps)
+    except _NiggliPassLimitError:
+        columns, delaunay_tmat = _run_delaunay_reduce(input_columns, eps)
+        niggli_tmat = _run_niggli_reduce_with_retries(columns, eps)
+        tmat = _multiply_int_int(delaunay_tmat, niggli_tmat)
+        # The Delaunay-reduced basis has a positive volume, so
+        # det(delaunay_tmat) = -1 for an input with a negative volume.  The
+        # basis is reversed to keep the handedness of the input.
+        if _get_determinant_int(delaunay_tmat) < 0:
+            tmat = [[-x for x in row] for row in tmat]
+    reduced_columns = _multiply_float_int(input_columns, tmat)
+    return _get_rows(reduced_columns), np.array(tmat, dtype="int64")
 
 
 def delaunay_reduce(
@@ -206,14 +211,27 @@ class _NiggliState:
     n: int = 0
 
 
+class _NiggliPassLimitError(RuntimeError):
+    """Raised when the number of passes exceeds NIGGLI_MAX_NUM_PASSES."""
+
+
+def _run_niggli_reduce_with_retries(columns: FloatMatrix, eps: float) -> IntMatrix:
+    """Run the Niggli reduction, again with eps / 2 after a cycle; return tmat."""
+    for retry in range(NIGGLI_NUM_RETRIES + 1):
+        tmat = _run_niggli_reduce(columns, eps / 2**retry)
+        if tmat is not None:
+            return tmat
+    raise RuntimeError("Niggli reduction failed.")
+
+
 def _run_niggli_reduce(columns: FloatMatrix, eps: float) -> IntMatrix | None:
     """Run the Niggli reduction; return tmat, or None when its steps cycle.
 
     A pass runs the steps A1-A8 in order and ends early when A2, A5, A6, A7
     or A8 changes the basis.  The reduction succeeds when a pass reaches its
     end.  The basis at the start of a pass determines all later steps, so a
-    basis that is seen again at the start of a pass means a cycle.  A
-    RuntimeError is raised when the number of passes exceeds
+    basis that is seen again at the start of a pass means a cycle.
+    _NiggliPassLimitError is raised when the number of passes exceeds
     NIGGLI_MAX_NUM_PASSES.
 
     """
@@ -231,7 +249,7 @@ def _run_niggli_reduce(columns: FloatMatrix, eps: float) -> IntMatrix | None:
         seen_bases.add(basis_key)
         if _run_niggli_pass(state):
             return state.tmat
-    raise RuntimeError("Niggli reduction did not terminate.")
+    raise _NiggliPassLimitError("Niggli reduction did not terminate.")
 
 
 def _run_niggli_pass(state: _NiggliState) -> bool:

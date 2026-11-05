@@ -28,6 +28,7 @@ from phonopy.structure.atoms import (
     _Species,
     build_species_table_from_mixtures,
 )
+from phonopy.structure.lattice_reduction import delaunay_reduce, niggli_reduce
 from phonopy.structure.mixture import build_mixtures_from_groups
 from phonopy.structure.snf import SNF3x3
 
@@ -1681,6 +1682,8 @@ def get_reduced_bases(
 ) -> NDArray[np.double]:
     """Search kinds of shortest basis vectors.
 
+    The reductions are those of phonopy.structure.lattice_reduction.
+
     Parameters
     ----------
     lattice : ndarray or list of list
@@ -1699,14 +1702,17 @@ def get_reduced_bases(
         shape=(3, 3)
         order='C'
 
+    Raises
+    ------
+    RuntimeError
+        When the reduction fails.
+
     """
     if method == "niggli":
-        red_cell = spglib.niggli_reduce(lattice, eps=tolerance)
+        reduced_lattice, _ = niggli_reduce(lattice, eps=tolerance)
     else:
-        red_cell = spglib.delaunay_reduce(lattice, eps=tolerance)
-    if red_cell is None:
-        raise RuntimeError(f"{method} reduction failed.")
-    return red_cell
+        reduced_lattice, _ = delaunay_reduce(lattice, eps=tolerance)
+    return reduced_lattice
 
 
 def get_smallest_vectors(
