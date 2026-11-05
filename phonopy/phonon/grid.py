@@ -17,9 +17,9 @@ from phonopy.structure.cells import (
     determinant,
     estimate_supercell_matrix,
     get_cell_parameters,
-    get_reduced_bases,
     is_primitive_cell,
 )
+from phonopy.structure.lattice_reduction import niggli_reduce
 from phonopy.structure.symmetry import NosymDataset, get_lattice_vector_equivalence
 from phonopy.utils import similarity_transformation
 
@@ -1764,13 +1764,11 @@ def get_reduced_bases_and_tmat_inv(
     """
     # Mpr^-1 = Lr^-1 Lp
     reclat_T = np.array(np.transpose(reciprocal_lattice), dtype="double", order="C")
-    reduced_basis = get_reduced_bases(reclat_T)
-    assert reduced_basis is not None, "Reduced basis is not found."
-    tmat_inv = np.linalg.inv(reduced_basis.T) @ reclat_T.T
-    tmat_inv_int = np.asarray(
-        np.rint(tmat_inv).astype("int64"), dtype="int64", order="C"
-    )
-    assert (np.abs(tmat_inv - tmat_inv_int) < 1e-5).all()
+    reduced_basis, tmat = niggli_reduce(reclat_T)
+    # tmat is an integer matrix with determinant 1, so its inverse is an
+    # integer matrix.
+    tmat_inv_int = np.array(np.rint(np.linalg.inv(tmat)), dtype="int64", order="C")
+    assert (tmat @ tmat_inv_int == np.eye(3, dtype="int64")).all()
     return np.array(reduced_basis.T, dtype="double", order="C"), tmat_inv_int
 
 

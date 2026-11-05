@@ -2,6 +2,15 @@
 
 # Change Log
 
+## Unreleased
+
+- The Niggli and Delaunay reductions of `get_reduced_bases` are done by
+  phonopy (`phonopy.structure.lattice_reduction`) instead of spglib. Where
+  spglib succeeds, the reduced basis vectors are the same as those of spglib
+  within rounding. The reductions also succeed for lattices for which spglib
+  failed: lattices for which the steps of the Niggli reduction cycle at the
+  tolerance, and strongly skewed lattices that need more than 1000 steps.
+
 ## Oct-24-2026: Version 4.8.6
 
 - Bug fix: `GridMatrix` did not use the GR-grid for a primitive cell whose
