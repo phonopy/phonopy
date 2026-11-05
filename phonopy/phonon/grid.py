@@ -17,9 +17,9 @@ from phonopy.structure.cells import (
     determinant,
     estimate_supercell_matrix,
     get_cell_parameters,
-    get_reduced_bases,
     is_primitive_cell,
 )
+from phonopy.structure.lattice_reduction import niggli_reduce
 from phonopy.structure.symmetry import NosymDataset, get_lattice_vector_equivalence
 from phonopy.utils import similarity_transformation
 
@@ -303,12 +303,13 @@ class BZGrid:
             generating matrix either in direct or reciprocal space. The default
             is `reciprocal`.
         store_dense_gp_map : bool, optional
-            See the detail in the docstring of `_relocate_BZ_grid_address`.
+            See the detail in the docstring of `relocate_BZ_grid_address`.
             Default is True.
         lang : {"C", "Rust"}, optional
             Backend selector for grid-related native routines. "C" uses
-            ``phonopy._recgrid``; "Rust" uses ``phonors``. Default is
-            "C".
+            ``phonopy._recgrid``; "Rust" uses ``phonors``. The search
+            of the Brillouin-zone grid differs between the two, see
+            `relocate_BZ_grid_address`. Default is "Rust".
         rounding : {"nearest", "ceiling"}, optional
             Conversion of length to mesh numbers when ``mesh`` is a length. See
             ``length2mesh``. Default is "nearest".
@@ -451,7 +452,7 @@ class BZGrid:
 
         Grid point mapping table containing BZ surface. There are two types of
         address order by either `store_dense_gp_map` is True or False. See more
-        detail in `_relocate_BZ_grid_address` docstring.
+        detail in `relocate_BZ_grid_address` docstring.
 
         """
         return self._gp_map
@@ -515,7 +516,7 @@ class BZGrid:
     def store_dense_gp_map(self) -> bool:
         """Return gp_map type.
 
-        See the detail in the docstring of `_relocate_BZ_grid_address`.
+        See the detail in the docstring of `relocate_BZ_grid_address`.
 
         """
         return self._store_dense_gp_map
@@ -589,7 +590,7 @@ class BZGrid:
 
     def _set_bz_grid(self) -> None:
         """Generate BZ grid addresses and grid point mapping table."""
-        self._addresses, self._gp_map, self._bzg2grg = _relocate_BZ_grid_address(
+        self._addresses, self._gp_map, self._bzg2grg = relocate_BZ_grid_address(
             self._D_diag,
             self._Q,
             self._reciprocal_lattice,  # column vectors
@@ -1617,7 +1618,7 @@ def _get_grid_address(
     return gr_grid_addresses
 
 
-def _relocate_BZ_grid_address(
+def relocate_BZ_grid_address(
     D_diag: NDArray[np.int64] | Sequence[int],
     Q: NDArray[np.int64],
     reciprocal_lattice: NDArray[np.double],  # column vectors
@@ -1625,59 +1626,120 @@ def _relocate_BZ_grid_address(
     store_dense_gp_map: bool = False,
     lang: Literal["C", "Rust"] = "Rust",
 ) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
-    """Grid addresses are relocated to be inside first Brillouin zone.
+    """Return the grid addresses relocated into the first Brillouin zone.
 
-    Number of ir-grid-points inside Brillouin zone is returned.
-    It is assumed that the following arrays have the shapes of
-        bz_grid_address : (num_grid_points_in_FBZ, 3)
+    Each point of the generalized regular grid (GR-grid) is translated by
+    reciprocal lattice vectors to the images closest to the origin, which are
+    inside the first Brillouin zone (BZ) or on its surface.  A grid point on
+    the BZ surface has several images at the same distance, and all of them
+    are returned.
 
-    Note that the shape of grid_address is (prod(mesh), 3) and the
-    addresses in grid_address are arranged to be in parallelepiped
-    made of reciprocal basis vectors. The addresses in bz_grid_address
-    are inside the first Brillouin zone or on its surface. Each
-    address in grid_address is mapped to one of those in
-    bz_grid_address by a reciprocal lattice vector (including zero
-    vector) with keeping element order. For those inside first BZ, the
-    mapping is one-to-one. For those on the first BZ surface, more
-    than one addresses in bz_grid_address that are equivalent by the
-    reciprocal lattice translations are mapped to one address in
-    grid_address. The bz_grid_address and bz_map are given in the
-    following format depending on the choice of `store_dense_gp_map`.
+    The q-point of a GR-grid address ``a`` in the coordinates of the basis
+    vectors ``reciprocal_lattice`` is::
 
-    store_dense_gp_map = False
-    --------------------------
-    Those grid points on the BZ surface except for one of them are
-    appended to the tail of this array, for which bz_grid_address has
-    the following data storing:
+        q = Q @ ((2 * a + PS) / (2 * D_diag))
 
-    |------------------array size of bz_grid_address-------------------------|
-    |--those equivalent to grid_address--|--those on surface except for one--|
-    |-----array size of grid_address-----|
+    The returned BZ grid addresses are GR-grid addresses translated by
+    reciprocal lattice vectors, so the same formula gives the q-points of the
+    images.  The GR-grid point index of an address ``a`` is
+    ``r[0] + r[1] * D_diag[0] + r[2] * D_diag[0] * D_diag[1]`` with
+    ``r = a % D_diag`` (``get_grid_point_from_address``).
 
-    Number of grid points stored in bz_grid_address is returned.
-    bz_map is used to recover grid point index expanded to include BZ
-    surface from grid address. The grid point indices are mapped to
-    (mesh[0] * 2) x (mesh[1] * 2) x (mesh[2] * 2) space (bz_map).
-    bz_map[(prod(mesh) * 8):(prod(mesh) * 9 + 1)] contains equivalent
-    information to bz_map[:] with `store_dense_gp_map=True`.
+    Selection of the images
+    -----------------------
+    The images are searched with the Niggli-reduced basis vectors b_1, b_2,
+    b_3 of ``reciprocal_lattice``, and their squared lengths are compared
+    with the tolerance::
 
-    shape=(prod(mesh * 9) + 1, )
+        tau = 0.01 * max_i(|b_i|^2 / D_diag[i]^2)
+
+    The shortest squared length is updated only by a candidate shorter by
+    more than tau, and the candidates within tau of it are kept as the
+    images.  Which of the nearly equidistant images are kept, and their
+    order, follow the order of the search in the reduced basis.
+
+    Parameters
+    ----------
+    D_diag : array_like
+        Numbers of GR-grid points along the three axes, the diagonal
+        elements of D of the Smith normal form D = P A Q of the grid matrix
+        A.
+        shape=(3,), dtype='int64'
+    Q : array_like
+        Unimodular matrix of the Smith normal form, which transforms
+        GR-grid coordinates to the coordinates of ``reciprocal_lattice``.
+        For a conventional regular mesh, Q is the identity matrix.
+        shape=(3, 3), dtype='int64'
+    reciprocal_lattice : array_like
+        Reciprocal basis vectors in columns, in Cartesian coordinates.
+        shape=(3, 3), dtype='double'
+    PS : array_like, optional
+        Shift of the grid, P s * 2, where s is the shift in GR-grid
+        coordinates with elements of 0 or 1/2.  Default is no shift.
+        shape=(3,), dtype='int64'
+    store_dense_gp_map : bool, optional
+        Format of ``bz_grid_addresses`` and ``bz_map``.  See below.  Default
+        is False.
+    lang : {"C", "Rust"}, optional
+        Implementation of the search.  See below.  Default is "Rust".
+
+    Returns
+    -------
+    bz_grid_addresses : ndarray
+        BZ grid addresses.
+        shape=(num_bz_grid_points, 3), dtype='int64', order='C'
+    bz_map : ndarray
+        Map from GR-grid points to BZ grid points.  See below.
+        dtype='int64'
+    bzg2grg : ndarray
+        GR-grid point index of each BZ grid point.
+        shape=(num_bz_grid_points,), dtype='int64'
 
     store_dense_gp_map = True
     -------------------------
-    The translationally equivalent grid points corresponding to one grid point
-    on BZ surface are stored in continuously. If the multiplicity (number of
-    equivalent grid points) is 1, 2, 1, 4, ... for the grid points,
-    ``bz_map`` stores the multiplicities and the index positions of the first
-    grid point of the equivalent grid points, i.e.,
+    The images of a GR-grid point are stored contiguously, in the order of
+    the GR-grid point indices.  bz_map gives the index of the first image of
+    each GR-grid point.  If the numbers of images are 1, 2, 1, 4, ... for the
+    GR-grid points 0, 1, 2, 3, ...,
 
     bz_map[:] = [0, 1, 3, 4, 8...]
-    grid_address[0] -> bz_grid_address[0:1]
-    grid_address[1] -> bz_grid_address[1:3]
-    grid_address[2] -> bz_grid_address[3:4]
-    grid_address[3] -> bz_grid_address[4:8]
+    grid point 0 -> bz_grid_addresses[0:1]
+    grid point 1 -> bz_grid_addresses[1:3]
+    grid point 2 -> bz_grid_addresses[3:4]
+    grid point 3 -> bz_grid_addresses[4:8]
 
-    shape=(prod(mesh) + 1, )
+    shape of bz_map=(prod(D_diag) + 1, )
+
+    store_dense_gp_map = False
+    --------------------------
+    The first prod(D_diag) BZ grid points are one image of each GR-grid
+    point, in the order of the GR-grid point indices, and the other images on
+    the BZ surface are appended:
+
+    |------------------array size of bz_grid_addresses-----------------------|
+    |--one image of each GR-grid point---|--other images on the BZ surface---|
+    |-----------prod(D_diag)-------------|
+
+    bz_map is used to recover the BZ grid point index from a BZ grid
+    address.  With ``D2 = 2 * D_diag`` and ``r = a % D2`` for a BZ grid
+    address ``a``, ``bz_map[r[0] + r[1] * D2[0] + r[2] * D2[0] * D2[1]]`` is
+    its BZ grid point index.  With ``N = prod(D_diag)``, bz_map[N * 8:]
+    locates the other images: those of the GR-grid point ``gp`` are
+    ``bz_grid_addresses[N + bz_map[N * 8 + gp]:N + bz_map[N * 8 + gp + 1]]``.
+
+    shape of bz_map=(prod(D_diag) * 9 + 1, )
+
+    lang = "C" and lang = "Rust"
+    ---------------------------
+    The images of a grid point are searched among its translations by
+    reciprocal lattice vectors with coefficients m in the reduced basis.
+    lang="C" searches the 125 translations with -2 <= m_i <= 2. lang="Rust"
+    determines the range of m for each grid point, so that no image is missed
+    for any basis. The two differ only when the 125 translations do not
+    contain all the images. This happens for strongly skewed bases, but the
+    basis here is Niggli-reduced, and no such case is known for a
+    Niggli-reduced basis. The two give the same result in the test suites of
+    phonopy and phono3py.
 
     """
     if PS is None:
@@ -1751,13 +1813,11 @@ def get_reduced_bases_and_tmat_inv(
     """
     # Mpr^-1 = Lr^-1 Lp
     reclat_T = np.array(np.transpose(reciprocal_lattice), dtype="double", order="C")
-    reduced_basis = get_reduced_bases(reclat_T)
-    assert reduced_basis is not None, "Reduced basis is not found."
-    tmat_inv = np.linalg.inv(reduced_basis.T) @ reclat_T.T
-    tmat_inv_int = np.asarray(
-        np.rint(tmat_inv).astype("int64"), dtype="int64", order="C"
-    )
-    assert (np.abs(tmat_inv - tmat_inv_int) < 1e-5).all()
+    reduced_basis, tmat = niggli_reduce(reclat_T)
+    # tmat is an integer matrix with determinant 1, so its inverse is an
+    # integer matrix.
+    tmat_inv_int = np.array(np.rint(np.linalg.inv(tmat)), dtype="int64", order="C")
+    assert (tmat @ tmat_inv_int == np.eye(3, dtype="int64")).all()
     return np.array(reduced_basis.T, dtype="double", order="C"), tmat_inv_int
 
 

@@ -2,6 +2,19 @@
 
 # Change Log
 
+## Nov-05-2026: Version 4.9.0
+
+- The Niggli and Delaunay reductions of `get_reduced_bases` are done by
+  phonopy (`phonopy.structure.lattice_reduction`) instead of spglib. Where
+  spglib succeeds, the reduced basis vectors are the same as those of spglib
+  within rounding. The reductions also succeed for lattices for which spglib
+  failed: lattices for which the steps of the Niggli reduction cycle at the
+  tolerance, and strongly skewed lattices that need more than 1000 steps.
+- `phonopy.phonon.grid.relocate_BZ_grid_address` is public. It returns the
+  grid addresses of the generalized regular grid relocated into the first
+  Brillouin zone, with all the images of the grid points on the BZ surface.
+  It was named `_relocate_BZ_grid_address`.
+
 ## Oct-24-2026: Version 4.8.6
 
 - Bug fix: `GridMatrix` did not use the GR-grid for a primitive cell whose
