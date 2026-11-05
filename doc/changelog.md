@@ -2,7 +2,7 @@
 
 # Change Log
 
-## Unreleased
+## Nov-05-2026: Version 4.9.0
 
 - The Niggli and Delaunay reductions of `get_reduced_bases` are done by
   phonopy (`phonopy.structure.lattice_reduction`) instead of spglib. Where
