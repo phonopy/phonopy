@@ -10,6 +10,45 @@ import pytest
 from phonopy import Phonopy
 from phonopy.phonon.thermal_properties import GammaAcousticWarning
 
+
+def test_thermal_displacements_below_1K(ph_nacl: Phonopy):
+    """Test that phonons are populated below 1 K.
+
+    The force constants are scaled so that the phonon frequencies are a few
+    mHz, which is small enough to be populated below 1 K. The displacement has
+    to increase from 0 K to 0.5 K and to be continuous at 1 K.
+
+    """
+    ph = Phonopy(
+        ph_nacl.unitcell,
+        supercell_matrix=ph_nacl.supercell_matrix,
+        primitive_matrix=ph_nacl.primitive_matrix,
+    )
+    ph.force_constants = ph_nacl.force_constants * 1e-6
+    ph.init_mesh(
+        [4, 4, 4], with_eigenvectors=True, is_mesh_symmetry=False, use_iter_mesh=True
+    )
+    ph.run_thermal_displacements(temperatures=[0, 0.5, 0.99999, 1.00001], freq_min=1e-4)
+    disps = ph.thermal_displacements.thermal_displacements[:, 0]
+    assert disps[1] > 2 * disps[0]
+    assert disps[2] == pytest.approx(disps[3], rel=1e-4)
+
+
+@pytest.mark.parametrize("method", ["displacements", "matrices"])
+def test_negative_freq_min(ph_nacl: Phonopy, method: str):
+    """Test that negative freq_min is rejected."""
+    ph_nacl.init_mesh(
+        [2, 2, 2], with_eigenvectors=True, is_mesh_symmetry=False, use_iter_mesh=True
+    )
+    run = (
+        ph_nacl.run_thermal_displacements
+        if method == "displacements"
+        else ph_nacl.run_thermal_displacement_matrices
+    )
+    with pytest.raises(ValueError, match="freq_min"):
+        run(temperatures=[300], freq_min=-1.0)
+
+
 temps = [
     0.000000,
     100.000000,

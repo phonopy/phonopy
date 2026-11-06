@@ -134,6 +134,134 @@ def test_symmetrize_by_projector_with_inconsistent_p2s(
     assert (fc - fc_sym).max() == pytest.approx(0.0010540, rel=1e-5)
 
 
+def _random_fc(ph: Phonopy) -> np.ndarray:
+    n_atoms = len(ph.supercell)
+    rng = np.random.default_rng(0)
+    return rng.standard_normal((n_atoms, n_atoms, 3, 3))
+
+
+def _get_rocksalt_with_layered_afm() -> PhonopyAtoms:
+    """Return rocksalt conventional cell with antiferromagnetic layers along c."""
+    return PhonopyAtoms(
+        symbols=["Mn"] * 4 + ["O"] * 4,
+        cell=np.eye(3) * 4.4,
+        scaled_positions=[
+            [0, 0, 0],
+            [0.5, 0.5, 0],
+            [0.5, 0, 0.5],
+            [0, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
+            [0, 0, 0.5],
+            [0, 0.5, 0],
+            [0.5, 0, 0],
+        ],
+        magnetic_moments=[2, 2, -2, -2, 0, 0, 0, 0],
+    )
+
+
+def test_symmetrize_force_constants_with_ferrimagnetic_order():
+    """Test that the projector does not equate two magnetic sublattices.
+
+    The two atoms of the bcc conventional cell have different magnetic
+    moments. The body-centering translation is not a symmetry of this cell,
+    so the on-site force constants of the two atoms have to stay different.
+
+    """
+    cell = PhonopyAtoms(
+        symbols=["Fe", "Fe"],
+        cell=np.eye(3) * 2.87,
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        magnetic_moments=[2, 1],
+    )
+    ph = Phonopy(cell, supercell_matrix=[2, 2, 2], primitive_matrix=np.eye(3))
+    ph.force_constants = _random_fc(ph)
+    ph.symmetrize_force_constants(use_symfc_projector=True)
+    fc = ph.force_constants
+    i, j = ph.primitive.p2s_map
+    assert np.abs(fc[i, i] - fc[j, j]).max() > 1e-3
+
+
+@pytest.mark.parametrize("is_compact_fc", [False, True])
+def test_symmetrize_force_constants_with_layered_afm(is_compact_fc: bool):
+    """Test that force constants of a magnetic space group are kept.
+
+    The magnetic moments of this cell lower the point group from cubic to
+    tetragonal. The force constants made below have only the tetragonal
+    symmetry, and projecting them again has to change nothing.
+
+    The primitive cell of symfc has 2 atoms and the one of phonopy has 8
+    atoms in this test. Compact force constants therefore go through the
+    expansion to full force constants in ``symmetrize_by_projector``.
+
+    """
+    ph = Phonopy(
+        _get_rocksalt_with_layered_afm(),
+        supercell_matrix=[2, 2, 2],
+        primitive_matrix=np.eye(3),
+    )
+    assert len(ph.symmetry.symmetry_operations["rotations"]) == 512
+    fc_ref = symmetrize_by_projector(
+        ph.supercell, _random_fc(ph), 2, symmetry=ph.symmetry
+    )
+    if is_compact_fc:
+        fc_ref = full_fc_to_compact_fc(ph.primitive, fc_ref)
+    ph.force_constants = fc_ref.copy()
+    ph.symmetrize_force_constants(use_symfc_projector=True)
+    np.testing.assert_allclose(ph.force_constants, fc_ref, atol=1e-10)
+
+
+def test_symmetrize_force_constants_with_is_symmetry_false(ph_nacl: Phonopy):
+    """Test that the projector does not impose the space group.
+
+    The site symmetry of NaCl is m-3m and it would make the on-site force
+    constants proportional to the unit matrix. With is_symmetry=False, only
+    the sum rule, permutation and lattice translations are imposed.
+
+    """
+    ph = Phonopy(
+        ph_nacl.unitcell,
+        supercell_matrix=[2, 2, 2],
+        primitive_matrix=ph_nacl.primitive_matrix,
+        is_symmetry=False,
+    )
+    ph.force_constants = _random_fc(ph)
+    ph.symmetrize_force_constants(use_symfc_projector=True)
+    fc = ph.force_constants
+    onsite = fc[0, 0]
+    assert np.abs(onsite - np.eye(3) * np.trace(onsite) / 3).max() > 1e-3
+    np.testing.assert_allclose(fc.sum(axis=1), 0, atol=1e-10)
+    np.testing.assert_allclose(fc, fc.transpose(1, 0, 3, 2), atol=1e-10)
+
+
+def test_symfc_with_large_symprec(ph_nacl: Phonopy):
+    """Test symfc with a structure distorted within a large symprec.
+
+    Symmetry operations are found with the large symprec. Symfc has to use
+    the same tolerance, otherwise it fails to find the atomic permutations.
+
+    """
+    cell = ph_nacl.unitcell.copy()
+    rng = np.random.default_rng(1)
+    cell.scaled_positions = (
+        cell.scaled_positions + rng.uniform(-1, 1, (len(cell), 3)) * 2e-4
+    )
+    ph = Phonopy(
+        cell,
+        supercell_matrix=[2, 2, 2],
+        primitive_matrix=ph_nacl.primitive_matrix,
+        symprec=1e-2,
+    )
+    assert len(ph.symmetry.symmetry_operations["rotations"]) == 1536
+
+    solver = SymfcFCSolver(ph.supercell, symmetry=ph.symmetry)
+    solver.compute_basis_set(orders=[2])
+
+    ph.force_constants = _random_fc(ph)
+    ph.symmetrize_force_constants(use_symfc_projector=True)
+    onsite = ph.force_constants[0, 0]
+    np.testing.assert_allclose(onsite, np.eye(3) * onsite[0, 0], atol=1e-10)
+
+
 # ---------------------------------------------------------------------------
 # parse_symfc_options — no symfc import needed
 # ---------------------------------------------------------------------------
