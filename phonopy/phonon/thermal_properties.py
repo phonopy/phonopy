@@ -69,53 +69,6 @@ def bose_einstein_dist(
     return n[()]
 
 
-def mode_cv(
-    temps: float | NDArray[np.double],
-    freqs: float | NDArray[np.double],
-    classical: bool = False,
-) -> float | NDArray[np.double]:  # freqs (eV)
-    """Return mode heat capacity.
-
-    Deprecated. This function will be removed.
-
-    Parameters
-    ----------
-    temp : float
-        Temperature in K.
-    freqs : float or ndarray
-        Phonon frequency in eV.
-    classical : bool
-        If True use classical statistics.
-        If False use quantum statistics.
-
-    Returns
-    -------
-    float or ndarray
-        Mode heat capacity in eV/K.
-
-    """
-    warnings.warn(
-        "phonopy.phonon.thermal_properties.mode_cv is deprecated and will be removed.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    if classical:
-        if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
-            return (
-                np.ones(shape=np.atleast_1d(freqs).shape + np.atleast_1d(temps).shape)
-                * get_physical_units().KB
-            )
-        else:
-            return get_physical_units().KB
-    else:
-        if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
-            x = np.divide.outer(freqs, get_physical_units().KB * temps).T
-        else:
-            x = freqs / (get_physical_units().KB * temps)
-        expVal = np.exp(x)
-        return get_physical_units().KB * x**2 * expVal / (expVal - 1.0) ** 2
-
-
 class GammaAcousticWarning(UserWarning):
     """Issued about the acoustic modes at Gamma in the thermal-property sums.
 
