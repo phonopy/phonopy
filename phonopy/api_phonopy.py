@@ -1163,8 +1163,12 @@ class Phonopy:
           simultaneously. The resulting force constants can break
           space-group symmetry slightly.
         - ``use_symfc_projector=True``: the symfc projector imposes
-          space-group, translational, and permutation symmetries
-          simultaneously in a single shot.
+          the symmetry operations of ``Phonopy.symmetry``, translational,
+          and permutation symmetries simultaneously in a single shot.
+          With magnetic moments, the projector imposes the space group
+          operations extracted from the magnetic space group. With
+          ``is_symmetry=False``, ``Phonopy.symmetry`` has only lattice
+          translations, and the projector does not impose the space group.
 
         Parameters
         ----------
@@ -1190,6 +1194,7 @@ class Phonopy:
                 2,
                 primitive=self._primitive,
                 log_level=self._log_level,
+                symmetry=self._symmetry,
             )
         else:
             if self._force_constants.shape[0] == self._force_constants.shape[1]:

@@ -260,16 +260,22 @@ class SymfcFCSolver:
             scaled_positions=self._supercell.scaled_positions,
             numbers=numbers,
         )
-        spacegroup_operations = (
-            self._symmetry.symmetry_operations if self._symmetry else None
-        )
+        # Symfc finds the atomic permutations of the given operations with
+        # its symprec, so the tolerance used to find the operations has to
+        # be passed with them.
+        symmetry_kwargs: dict[str, Any] = {}
+        if self._symmetry is not None:
+            symmetry_kwargs["spacegroup_operations"] = (
+                self._symmetry.symmetry_operations
+            )
+            symmetry_kwargs["symprec"] = self._symmetry.tolerance
 
         self._symfc = Symfc(
             symfc_supercell,
-            spacegroup_operations=spacegroup_operations,
             cutoff=self._options.get("cutoff"),
             use_mkl=self._options.get("use_mkl", False),
             log_level=self._log_level - 1 if self._log_level else 0,
+            **symmetry_kwargs,
         )
         if displacements is not None and forces is not None:
             self._symfc.displacements = displacements
@@ -445,6 +451,7 @@ def symmetrize_by_projector(
     options: dict[str, Any] | None = None,
     log_level: int = 0,
     show_credit: bool = False,
+    symmetry: Symmetry | None = None,
 ) -> NDArray[np.double]:
     """Symmetrize force constants by projector method.
 
@@ -465,9 +472,18 @@ def symmetrize_by_projector(
         Log level for symfc. Default is 0, which means no log.
     show_credit : bool, optional
         Whether to show credit information of symfc. Default is False.
+    symmetry : Symmetry, optional
+        Symmetry of supercell. The projector imposes the symmetry operations
+        of this object and their tolerance is passed to symfc. Pass it to
+        use the operations found by phonopy, which depend on magnetic
+        moments, ``is_symmetry`` and the tolerance. Default is None, and
+        then symfc searches the space group from the atomic positions and
+        numbers only, with its default tolerance.
 
     """
-    symfc = SymfcFCSolver(supercell, options=options, log_level=log_level)
+    symfc = SymfcFCSolver(
+        supercell, symmetry=symmetry, options=options, log_level=log_level
+    )
     if show_credit and log_level:
         symfc.show_credit()
     symfc.compute_basis_set(orders=[order])
@@ -496,6 +512,7 @@ def symmetrize_by_projector(
                 primitive=primitive,
                 options=options,
                 log_level=log_level,
+                symmetry=symmetry,
             )
             return full_fc_to_compact_fc(primitive, full_fc)
         compmat = basis_set.compact_compression_matrix.tocsc()
