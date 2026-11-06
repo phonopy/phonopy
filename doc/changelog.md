@@ -2,6 +2,42 @@
 
 # Change Log
 
+## Nov-06-2026: Version 4.10.0
+
+- Bug fix: `phonopy.load` and
+  `Phonopy.symmetrize_force_constants(use_symfc_projector=True)` symmetrize
+  force constants by the symfc projector. Symfc searched the space group by
+  itself from the atomic positions and numbers, with its tolerance of 1e-5. The
+  projector now imposes the symmetry operations of `Phonopy.symmetry`, and symfc
+  uses `symprec` of phonopy as its tolerance.
+- With magnetic moments, the symfc projector imposed the space group of the
+  crystal structure, where the magnetic moments were ignored. It now imposes
+  the rotations and translations of the magnetic space group, where time
+  reversal is ignored. The force constants change when the magnetic space group
+  does not contain every operation of the space group, with or without time
+  reversal.
+- With `is_symmetry=False`, the force constants symmetrized by the symfc
+  projector change. The only symmetry operations of `Phonopy.symmetry` are
+  lattice translations, so the projector does not impose the space group.
+- With a `symprec` larger than 1e-5, the force constants symmetrized by the
+  symfc projector can change. For example, when the atoms of NaCl are about
+  1e-3 Angstrom away from their symmetric positions and `symprec=1e-2` is used,
+  phonopy finds the full space group, but symfc with its tolerance of 1e-5 found
+  only a part of it. The projector now imposes the full space group.
+- `symmetrize_by_projector` has the new keyword argument `symmetry`. When this
+  argument is not given, symfc searches the space group by itself as before.
+- symfc>=1.8 is required.
+- The phonon population of thermal displacements is calculated at every
+  temperature above 0 K. It was set to zero at and below 1 K. Thermal
+  displacements use `bose_einstein_dist`, which is written with `exp(-x)` and
+  does not overflow at low temperature.
+- A negative `freq_min` of thermal displacements raises `ValueError`.
+- `bose_einstein_dist` moved to `phonopy.phonon.thermal_properties`. The old
+  location in `phonopy.phonon.random_displacements` is deprecated.
+- `phonopy.phonon.thermal_properties.mode_cv` is deprecated. It is not used in
+  phonopy and will be removed.
+- Parsing `vasprun.xml` is faster.
+
 ## Nov-05-2026: Version 4.9.0
 
 - The Niggli and Delaunay reductions of `get_reduced_bases` are done by
