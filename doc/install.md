@@ -89,7 +89,7 @@ Prepare the following Python libraries:
 - python-h5py (h5py>=3.0)
 - scipy
 - spglib (>=2.5)
-- symfc (>=1.7)
+- symfc (>=1.8)
 - phonors (Rust backend; installed automatically by `pip install phonopy`)
 
 It is recommended to install seekpath to plot phonon band structure:
