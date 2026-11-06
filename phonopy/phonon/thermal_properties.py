@@ -24,12 +24,59 @@ class ThermalPropertiesDict(TypedDict):
     heat_capacity: NDArray[np.double]
 
 
+def bose_einstein_dist(
+    x: NDArray[np.double] | float, t: NDArray[np.double] | float
+) -> NDArray[np.double] | float:
+    """Return Bose-Einstein distribution.
+
+    Parameters
+    ----------
+    x : ndarray or float
+        Phonon frequencies in THz.
+    t : ndarray or float
+        Temperatures in K. The shapes of x and t have to be broadcastable.
+
+    Returns
+    -------
+    ndarray or float
+        Phonon occupation numbers. At t=0, the t -> 0 limit is returned, which
+        is zero for a positive frequency, -1 for a negative frequency, and nan
+        at zero frequency.
+
+    Raises
+    ------
+    ValueError
+        If t is negative.
+
+    """
+    freqs, temps = np.broadcast_arrays(
+        np.asarray(x, dtype="double"), np.asarray(t, dtype="double")
+    )
+    if (temps < 0).any():
+        raise ValueError(f"Temperature must not be negative, but {t} was given.")
+
+    n = np.where(freqs > 0, 0.0, np.where(freqs < 0, -1.0, np.nan))
+    is_finite_t = temps > 0
+    units = get_physical_units()
+    energy_ratio = (
+        np.abs(freqs[is_finite_t]) * units.THzToEv / (units.KB * temps[is_finite_t])
+    )
+    # exp(-y) / (1 - exp(-y)) equals 1 / (exp(y) - 1) for y >= 0, and exp(-y)
+    # does not overflow at low temperature. A negative frequency uses
+    # n(-y) = -1 - n(y), which keeps the argument of exp negative.
+    n_abs = np.exp(-energy_ratio) / -np.expm1(-energy_ratio)
+    n[is_finite_t] = np.where(freqs[is_finite_t] < 0, -1 - n_abs, n_abs)
+    return n[()]
+
+
 def mode_cv(
     temps: float | NDArray[np.double],
     freqs: float | NDArray[np.double],
     classical: bool = False,
 ) -> float | NDArray[np.double]:  # freqs (eV)
     """Return mode heat capacity.
+
+    Deprecated. This function will be removed.
 
     Parameters
     ----------
@@ -47,6 +94,11 @@ def mode_cv(
         Mode heat capacity in eV/K.
 
     """
+    warnings.warn(
+        "phonopy.phonon.thermal_properties.mode_cv is deprecated and will be removed.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if classical:
         if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
             return (

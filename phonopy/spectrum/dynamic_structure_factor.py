@@ -11,8 +11,8 @@ from numpy.typing import NDArray
 
 from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.qpoints import QpointsPhonon
-from phonopy.phonon.random_displacements import bose_einstein_dist
 from phonopy.phonon.thermal_displacement import ThermalDisplacementMatrices
+from phonopy.phonon.thermal_properties import bose_einstein_dist
 from phonopy.physical_units import get_physical_units
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 
