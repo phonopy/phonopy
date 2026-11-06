@@ -76,6 +76,8 @@ def mode_cv(
 ) -> float | NDArray[np.double]:  # freqs (eV)
     """Return mode heat capacity.
 
+    Deprecated. This function will be removed.
+
     Parameters
     ----------
     temp : float
@@ -92,6 +94,11 @@ def mode_cv(
         Mode heat capacity in eV/K.
 
     """
+    warnings.warn(
+        "phonopy.phonon.thermal_properties.mode_cv is deprecated and will be removed.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if classical:
         if isinstance(freqs, np.ndarray) or isinstance(temps, np.ndarray):
             return (
