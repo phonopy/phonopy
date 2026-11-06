@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.4.9.0</title>
+    <title>Change Log &#8212; Phonopy v.4.10.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=d607d3c8"></script>
+    <script src="_static/documentation_options.js?v=83681638"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Development" href="development.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.9" />
+  <meta name="docsearch:version" content="4.10" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -180,7 +180,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.9.0</p>
+    <p class="title logo__title">Phonopy v.4.10.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -419,6 +419,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-06-2026-version-4-10-0">Nov-06-2026: Version 4.10.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-05-2026-version-4-9-0">Nov-05-2026: Version 4.9.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-6">Oct-24-2026: Version 4.8.6</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-5">Oct-24-2026: Version 4.8.5</a></li>
@@ -661,6 +662,44 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="nov-06-2026-version-4-10-0">
+<h2>Nov-06-2026: Version 4.10.0<a class="headerlink" href="#nov-06-2026-version-4-10-0" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Bug fix: <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Phonopy.symmetrize_force_constants(use_symfc_projector=True)</span></code> symmetrize
+force constants by the symfc projector. Symfc searched the space group by
+itself from the atomic positions and numbers, with its tolerance of 1e-5. The
+projector now imposes the symmetry operations of <code class="docutils literal notranslate"><span class="pre">Phonopy.symmetry</span></code>, and symfc
+uses <code class="docutils literal notranslate"><span class="pre">symprec</span></code> of phonopy as its tolerance.</p></li>
+<li><p>With magnetic moments, the symfc projector imposed the space group of the
+crystal structure, where the magnetic moments were ignored. It now imposes
+the rotations and translations of the magnetic space group, where time
+reversal is ignored. The force constants change when the magnetic space group
+does not contain every operation of the space group, with or without time
+reversal.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">is_symmetry=False</span></code>, the force constants symmetrized by the symfc
+projector change. The only symmetry operations of <code class="docutils literal notranslate"><span class="pre">Phonopy.symmetry</span></code> are
+lattice translations, so the projector does not impose the space group.</p></li>
+<li><p>With a <code class="docutils literal notranslate"><span class="pre">symprec</span></code> larger than 1e-5, the force constants symmetrized by the
+symfc projector can change. For example, when the atoms of NaCl are about
+1e-3 Angstrom away from their symmetric positions and <code class="docutils literal notranslate"><span class="pre">symprec=1e-2</span></code> is used,
+phonopy finds the full space group, but symfc with its tolerance of 1e-5 found
+only a part of it. The projector now imposes the full space group.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">symmetrize_by_projector</span></code> has the new keyword argument <code class="docutils literal notranslate"><span class="pre">symmetry</span></code>. When this
+argument is not given, symfc searches the space group by itself as before.</p></li>
+<li><p>symfc&gt;=1.8 is required.</p></li>
+<li><p>The phonon population of thermal displacements is calculated at every
+temperature above 0 K. It was set to zero at and below 1 K. Thermal
+displacements use <code class="docutils literal notranslate"><span class="pre">bose_einstein_dist</span></code>, which is written with <code class="docutils literal notranslate"><span class="pre">exp(-x)</span></code> and
+does not overflow at low temperature.</p></li>
+<li><p>A negative <code class="docutils literal notranslate"><span class="pre">freq_min</span></code> of thermal displacements raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bose_einstein_dist</span></code> moved to <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.thermal_properties</span></code>. The old
+location in <code class="docutils literal notranslate"><span class="pre">phonopy.phonon.random_displacements</span></code> is deprecated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy.phonon.thermal_properties.mode_cv</span></code> is deprecated. It is not used in
+phonopy and will be removed.</p></li>
+<li><p>Parsing <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> is faster.</p></li>
+</ul>
+</section>
 <section id="nov-05-2026-version-4-9-0">
 <h2>Nov-05-2026: Version 4.9.0<a class="headerlink" href="#nov-05-2026-version-4-9-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2941,6 +2980,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-06-2026-version-4-10-0">Nov-06-2026: Version 4.10.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nov-05-2026-version-4-9-0">Nov-05-2026: Version 4.9.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-6">Oct-24-2026: Version 4.8.6</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oct-24-2026-version-4-8-5">Oct-24-2026: Version 4.8.5</a></li>

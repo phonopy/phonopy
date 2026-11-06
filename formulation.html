@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Formulations &#8212; Phonopy v.4.9.0</title>
+    <title>Formulations &#8212; Phonopy v.4.10.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=d607d3c8"></script>
+    <script src="_static/documentation_options.js?v=83681638"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="API reference" href="api-reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.9" />
+  <meta name="docsearch:version" content="4.10" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.9.0</p>
+    <p class="title logo__title">Phonopy v.4.10.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -424,8 +424,8 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modified-parlinski-li-kawazoe-method">Modified Parlinski-Li-Kawazoe method</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamical-matrix">Dynamical matrix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-population">Phonon population</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermodynamic-properties">Thermodynamic properties</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-number">Phonon number</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#harmonic-phonon-energy">Harmonic phonon energy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constant-volume-heat-capacity">Constant volume heat capacity</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#partition-function">Partition function</a></li>
@@ -591,18 +591,33 @@ physical units at <a class="reference internal" href="#physical-unit-conversion"
 <strong>q</strong>-points with long-range dipole-dipole interaction are calculated by the
 method of Gonze <em>et al.</em> (<a class="reference internal" href="reference.html#reference-dp-dp-nac"><span class="std std-ref">Correction by dipole-dipole interaction</span></a>).</p>
 </section>
+<section id="phonon-population">
+<span id="id2"></span><h2>Phonon population<a class="headerlink" href="#phonon-population" title="Link to this heading">#</a></h2>
+<p>The phonon population <span class="math notranslate nohighlight">\(n_\nu(\mathbf{q},T)\)</span> of the mode with the wave
+vector <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> and the band index <span class="math notranslate nohighlight">\(\nu\)</span> is given by</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}n_\nu(\mathbf{q},T) &amp;=
+\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1} \\
+&amp;= \frac{\exp(-\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)}
+{1-\exp(-\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)},\end{split}\]</div>
+<p>where <em>T</em> is the temperature, and <span class="math notranslate nohighlight">\(\mathrm{k_B}\)</span> is the Boltzmann
+constant. The last expression is the one phonopy evaluates. It contains
+<span class="math notranslate nohighlight">\(\exp(-\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)\)</span>, which goes to zero at
+low temperature, instead of
+<span class="math notranslate nohighlight">\(\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)\)</span>, which exceeds the
+largest floating-point number at low temperature. Phonopy calculates the
+population at every temperature above 0 K, including temperatures below 1 K. At
+<span class="math notranslate nohighlight">\(T = 0\)</span> the population is zero.</p>
+</section>
 <section id="thermodynamic-properties">
 <span id="thermal-properties-expressions"></span><h2>Thermodynamic properties<a class="headerlink" href="#thermodynamic-properties" title="Link to this heading">#</a></h2>
-<section id="phonon-number">
-<h3>Phonon number<a class="headerlink" href="#phonon-number" title="Link to this heading">#</a></h3>
-<div class="math notranslate nohighlight">
-\[n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\]</div>
-</section>
 <section id="harmonic-phonon-energy">
 <h3>Harmonic phonon energy<a class="headerlink" href="#harmonic-phonon-energy" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
-\frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\right]\]</div>
+n_\nu(\mathbf{q},T)\right],\]</div>
+<p>where <span class="math notranslate nohighlight">\(n_\nu(\mathbf{q},T)\)</span> is the phonon population given in
+<a class="reference internal" href="#phonon-population"><span class="std std-ref">Phonon population</span></a>.</p>
 </section>
 <section id="constant-volume-heat-capacity">
 <h3>Constant volume heat capacity<a class="headerlink" href="#constant-volume-heat-capacity" title="Link to this heading">#</a></h3>
@@ -654,7 +669,7 @@ largest floating-point number at low temperature and makes <span class="math not
 </section>
 </section>
 <section id="thermal-displacement">
-<span id="id2"></span><h2>Thermal displacement<a class="headerlink" href="#thermal-displacement" title="Link to this heading">#</a></h2>
+<span id="id3"></span><h2>Thermal displacement<a class="headerlink" href="#thermal-displacement" title="Link to this heading">#</a></h2>
 <section id="mean-square-displacement">
 <h3>Mean square displacement<a class="headerlink" href="#mean-square-displacement" title="Link to this heading">#</a></h3>
 <p>From Eq. (10.71) in the book “Thermodynamics of Crystal”, atomic displacement,
@@ -679,14 +694,10 @@ expectation value of the squared atomic displacement is calculated as,</p>
 \[\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
 (1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,\]</div>
-<p>where <span class="math notranslate nohighlight">\(n_\nu(\mathbf{q},T)\)</span> is the phonon population, which is give by,</p>
-<div class="math notranslate nohighlight">
-\[n_\nu(\mathbf{q},T) =
-\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},\]</div>
-<p>where <em>T</em> is the temperature, and <span class="math notranslate nohighlight">\(\mathrm{k_B}\)</span> is the Boltzmann
-constant. The equation is calculated using the commutation relation of the
-creation and annihilation operators and the expectation values of the
-combination of the operations, e.g.,</p>
+<p>where <span class="math notranslate nohighlight">\(n_\nu(\mathbf{q},T)\)</span> is the phonon population given in
+<a class="reference internal" href="#phonon-population"><span class="std std-ref">Phonon population</span></a>. The equation is calculated using the commutation
+relation of the creation and annihilation operators and the expectation values
+of the combination of the operations, e.g.,</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ] &amp;=
 \delta(\mathbf{q}-\mathbf{q}')\delta_{\nu\nu'},\\ [ \hat{a}_\nu(\mathbf{q}),
@@ -695,6 +706,15 @@ combination of the operations, e.g.,</p>
 \langle|\hat{a}_\nu(\mathbf{q})\hat{a}_{\nu'}(\mathbf{q'})|\rangle &amp;= 0,\\
 \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
 &amp;= 0.\end{split}\]</div>
+<p>At <span class="math notranslate nohighlight">\(T = 0\)</span> the population is zero, and only the zero-point term of the
+squared displacement remains.</p>
+<p>The population diverges as <span class="math notranslate nohighlight">\(\omega_\nu(\mathbf{q})\)</span> goes to zero, and the
+squared displacement contains the factor
+<span class="math notranslate nohighlight">\(1/\omega_\nu(\mathbf{q})\)</span> as well. The acoustic modes at
+<span class="math notranslate nohighlight">\(\Gamma\)</span> have nearly zero frequencies, so they can make the squared
+displacement very large, also at temperatures below 1 K. To exclude these
+modes, use <code class="docutils literal notranslate"><span class="pre">EXCLUDE_GAMMA_ACOUSTIC</span></code> (<a class="reference internal" href="setting-tags.html#exclude-gamma-acoustic-tag"><span class="std std-ref">EXCLUDE_GAMMA_ACOUSTIC</span></a>) or
+<code class="docutils literal notranslate"><span class="pre">FMIN</span></code> (<a class="reference internal" href="setting-tags.html#dos-fmin-fmax-tags"><span class="std std-ref">FMIN, FMAX, and FPITCH</span></a>).</p>
 </section>
 <section id="mean-square-displacement-matrix">
 <span id="thermal-displacement-matrix"></span><h3>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Link to this heading">#</a></h3>
@@ -739,7 +759,7 @@ c_z \end{pmatrix}\end{split}\]</div>
 </section>
 </section>
 <section id="group-velocity">
-<span id="id3"></span><h2>Group velocity<a class="headerlink" href="#group-velocity" title="Link to this heading">#</a></h2>
+<span id="id4"></span><h2>Group velocity<a class="headerlink" href="#group-velocity" title="Link to this heading">#</a></h2>
 <section id="method">
 <h3>Method<a class="headerlink" href="#method" title="Link to this heading">#</a></h3>
 <p>Phonopy calculates group velocity of phonon as follows:</p>
@@ -832,7 +852,7 @@ by the <code class="docutils literal notranslate"><span class="pre">--gv_delta_q
 </section>
 </section>
 <section id="physical-unit-conversion">
-<span id="id4"></span><h2>Physical unit conversion<a class="headerlink" href="#physical-unit-conversion" title="Link to this heading">#</a></h2>
+<span id="id5"></span><h2>Physical unit conversion<a class="headerlink" href="#physical-unit-conversion" title="Link to this heading">#</a></h2>
 <p>Phonopy calculates phonon frequencies based on input values from users. In the
 default case, the physical units of distance, atomic mass, force, and force
 constants are supposed to be <span class="math notranslate nohighlight">\(\text{Angstrom}\)</span>, <span class="math notranslate nohighlight">\(\text{AMU}\)</span>,
@@ -1027,8 +1047,8 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modified-parlinski-li-kawazoe-method">Modified Parlinski-Li-Kawazoe method</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamical-matrix">Dynamical matrix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-population">Phonon population</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermodynamic-properties">Thermodynamic properties</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-number">Phonon number</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#harmonic-phonon-energy">Harmonic phonon energy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constant-volume-heat-capacity">Constant volume heat capacity</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#partition-function">Partition function</a></li>

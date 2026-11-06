@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Phonopy API for Python &#8212; Phonopy v.4.9.0</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.4.10.0</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=d607d3c8"></script>
+    <script src="_static/documentation_options.js?v=83681638"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Symmetry-adapted phonon modes" href="symmetry-adapted-modes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.9" />
+  <meta name="docsearch:version" content="4.10" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -181,7 +181,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.4.9.0</p>
+    <p class="title logo__title">Phonopy v.4.10.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -1145,10 +1145,20 @@ break space-group symmetry slightly.</p>
 </pre></div>
 </div>
 <p><strong>symfc projector</strong>. Set <code class="docutils literal notranslate"><span class="pre">use_symfc_projector=True</span></code> to apply the
-symfc projector instead. Space-group, translational, and permutation
-symmetries are imposed simultaneously in a single shot, so no
-trade-off is made between them. The <code class="docutils literal notranslate"><span class="pre">level</span></code> keyword is not used in
-this mode.</p>
+symfc projector instead. The symmetry operations of <code class="docutils literal notranslate"><span class="pre">phonon.symmetry</span></code>,
+translational, and permutation symmetries are imposed simultaneously
+in a single shot, so no trade-off is made between them. The <code class="docutils literal notranslate"><span class="pre">level</span></code>
+keyword is not used in this mode.</p>
+<p>Phonopy searches the symmetry operations of <code class="docutils literal notranslate"><span class="pre">phonon.symmetry</span></code> from the
+crystal structure. When the unit cell has magnetic moments, phonopy
+uses them in this search as well, and the search can find fewer
+operations. With magnetic moments, the projector imposes the space
+group operations extracted from the magnetic space group. For example,
+two atoms of the same element with different magnetic moments are not
+related by a symmetry operation, so the projector does not make their
+force constants equal.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">is_symmetry=False</span></code>, <code class="docutils literal notranslate"><span class="pre">phonon.symmetry</span></code> has only lattice
+translations, and the projector does not impose the space group.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">symmetrize_force_constants</span><span class="p">(</span><span class="n">use_symfc_projector</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>

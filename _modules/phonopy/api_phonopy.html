@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>phonopy.api_phonopy &#8212; Phonopy v.4.9.0</title>
+    <title>phonopy.api_phonopy &#8212; Phonopy v.4.10.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../../_static/documentation_options.js?v=d607d3c8"></script>
+    <script src="../../_static/documentation_options.js?v=83681638"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -409,7 +409,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="4.9" />
+  <meta name="docsearch:version" content="4.10" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -532,7 +532,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">Phonopy v.4.9.0</p>
+    <p class="title logo__title">Phonopy v.4.10.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -1904,8 +1904,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">          simultaneously. The resulting force constants can break</span>
 <span class="sd">          space-group symmetry slightly.</span>
 <span class="sd">        - ``use_symfc_projector=True``: the symfc projector imposes</span>
-<span class="sd">          space-group, translational, and permutation symmetries</span>
-<span class="sd">          simultaneously in a single shot.</span>
+<span class="sd">          the symmetry operations of ``Phonopy.symmetry``, translational,</span>
+<span class="sd">          and permutation symmetries simultaneously in a single shot.</span>
+<span class="sd">          With magnetic moments, the projector imposes the space group</span>
+<span class="sd">          operations extracted from the magnetic space group. With</span>
+<span class="sd">          ``is_symmetry=False``, ``Phonopy.symmetry`` has only lattice</span>
+<span class="sd">          translations, and the projector does not impose the space group.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1931,6 +1935,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="mi">2</span><span class="p">,</span>
                 <span class="n">primitive</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_primitive</span><span class="p">,</span>
                 <span class="n">log_level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_level</span><span class="p">,</span>
+                <span class="n">symmetry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_symmetry</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_constants</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
