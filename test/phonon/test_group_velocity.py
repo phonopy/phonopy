@@ -107,3 +107,18 @@ def test_gv_si(ph_si: Phonopy):
     gv = GroupVelocity(ph_si.dynamical_matrix, symmetry=ph_si.primitive_symmetry)
     gv.run([[0.1, 0.1, 0.1]])
     np.testing.assert_allclose(gv.group_velocities[0].ravel(), gv_ref, atol=1e-5)
+
+
+def test_gv_switch_derivative_method(ph_si: Phonopy):
+    """Switching derivative methods preserves physical group velocities."""
+    q_points = [[0.13, 0.17, 0.19], [0.21, 0.07, 0.16]]
+    reference = GroupVelocity(ph_si.dynamical_matrix)
+    reference.run(q_points)
+
+    gv = GroupVelocity(ph_si.dynamical_matrix, q_length=1e-5)
+    for q_length in (1e-5, None, 2e-5, None):
+        gv.q_length = q_length
+        gv.run(q_points)
+        np.testing.assert_allclose(
+            gv.group_velocities, reference.group_velocities, atol=1e-5, rtol=1e-5
+        )
