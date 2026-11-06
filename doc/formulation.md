@@ -211,8 +211,11 @@ population at every temperature above 0 K, including temperatures below 1 K. At
 
 ```{math}
 E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
-\frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\right]
+n_\nu(\mathbf{q},T)\right],
 ```
+
+where {math}`n_\nu(\mathbf{q},T)` is the phonon population given in
+{ref}`phonon_population`.
 
 ### Constant volume heat capacity
 
