@@ -7,7 +7,11 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.phonon.random_displacements import RandomDisplacements
+from phonopy.phonon import thermal_properties
+from phonopy.phonon.random_displacements import (
+    RandomDisplacements,
+    bose_einstein_dist,
+)
 from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1691,3 +1695,10 @@ def test_random_displacements_match_the_per_q_expansion(
 
 def _mass_sand(matrix, mass):
     return ((matrix * mass).T * mass).T
+
+
+def test_bose_einstein_dist_deprecated():
+    """Test the deprecated location of bose_einstein_dist."""
+    with pytest.warns(DeprecationWarning, match="thermal_properties"):
+        value = bose_einstein_dist(1.0, 300.0)
+    assert value == thermal_properties.bose_einstein_dist(1.0, 300.0)

@@ -181,14 +181,31 @@ physical units at {ref}`physical_unit_conversion`. Phonon frequencies at general
 **q**-points with long-range dipole-dipole interaction are calculated by the
 method of Gonze _et al._ ({ref}`reference_dp_dp_NAC`).
 
-(thermal_properties_expressions)=
-## Thermodynamic properties
+(phonon_population)=
 
-### Phonon number
+## Phonon population
+
+The phonon population {math}`n_\nu(\mathbf{q},T)` of the mode with the wave
+vector {math}`\mathbf{q}` and the band index {math}`\nu` is given by
 
 ```{math}
-n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}
+n_\nu(\mathbf{q},T) &=
+\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1} \\
+&= \frac{\exp(-\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)}
+{1-\exp(-\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)},
 ```
+
+where _T_ is the temperature, and {math}`\mathrm{k_B}` is the Boltzmann
+constant. The last expression is the one phonopy evaluates. It contains
+{math}`\exp(-\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)`, which goes to zero at
+low temperature, instead of
+{math}`\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)`, which exceeds the
+largest floating-point number at low temperature. Phonopy calculates the
+population at every temperature above 0 K, including temperatures below 1 K. At
+{math}`T = 0` the population is zero.
+
+(thermal_properties_expressions)=
+## Thermodynamic properties
 
 ### Harmonic phonon energy
 
@@ -285,17 +302,10 @@ expectation value of the squared atomic displacement is calculated as,
 (1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,
 ```
 
-where {math}`n_\nu(\mathbf{q},T)` is the phonon population, which is give by,
-
-```{math}
-n_\nu(\mathbf{q},T) =
-\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},
-```
-
-where _T_ is the temperature, and {math}`\mathrm{k_B}` is the Boltzmann
-constant. The equation is calculated using the commutation relation of the
-creation and annihilation operators and the expectation values of the
-combination of the operations, e.g.,
+where {math}`n_\nu(\mathbf{q},T)` is the phonon population given in
+{ref}`phonon_population`. The equation is calculated using the commutation
+relation of the creation and annihilation operators and the expectation values
+of the combination of the operations, e.g.,
 
 ```{math}
 [ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ] &=
@@ -306,6 +316,17 @@ combination of the operations, e.g.,
 \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
 &= 0.
 ```
+
+At {math}`T = 0` the population is zero, and only the zero-point term of the
+squared displacement remains.
+
+The population diverges as {math}`\omega_\nu(\mathbf{q})` goes to zero, and the
+squared displacement contains the factor
+{math}`1/\omega_\nu(\mathbf{q})` as well. The acoustic modes at
+{math}`\Gamma` have nearly zero frequencies, so they can make the squared
+displacement very large, also at temperatures below 1 K. To exclude these
+modes, use `EXCLUDE_GAMMA_ACOUSTIC` ({ref}`exclude_gamma_acoustic_tag`) or
+`FMIN` ({ref}`dos_fmin_fmax_tags`).
 
 (thermal_displacement_matrix)=
 
