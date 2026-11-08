@@ -456,7 +456,7 @@ class PhonopyAtoms:
         else:
             assert species_table is not None and species_ids is not None
             self._species = list(species_table)
-            self._species_ids = np.asarray(species_ids, dtype="int64")
+            self._species_ids = np.array(species_ids, dtype="int64")
 
         if masses is not None:
             self._set_masses(masses)
