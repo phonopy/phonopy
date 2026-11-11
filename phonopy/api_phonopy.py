@@ -4049,8 +4049,8 @@ class Phonopy:
                 )
         except ValueError as exc:
             msg = (
-                "Creating primitive cell is failed. "
-                "PRIMITIVE_AXIS may be incorrectly specified."
+                "Creating the primitive cell failed. "
+                "PRIMITIVE_AXES (primitive_matrix) may be incorrectly specified."
             )
             raise RuntimeError(msg) from exc
 
