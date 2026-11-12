@@ -100,6 +100,44 @@ def test_non_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms, is_flat: boo
     assert len_sym_brokenspin == 12
 
 
+@pytest.mark.parametrize("is_collinear", [True, False])
+def test_grey_group_symmetry_operations(convcell_cr: PhonopyAtoms, is_collinear: bool):
+    """Test that zero magnetic moments give no duplicated (R, t).
+
+    Zero moments give a grey group (type 2), where spglib returns every
+    (R, t) with and without time reversal.  The operations must be those
+    of the cell without magnetic moments.
+
+    """
+    symprec = 1e-5
+    symmetry_nonspin = Symmetry(convcell_cr, symprec=symprec)
+
+    cell_zerospin = convcell_cr.copy()
+    if is_collinear:
+        cell_zerospin.magnetic_moments = [0, 0]
+    else:
+        cell_zerospin.magnetic_moments = [[0, 0, 0], [0, 0, 0]]
+    symmetry_zerospin = Symmetry(cell_zerospin, symprec=symprec)
+    assert symmetry_zerospin.dataset.msg_type == 2
+
+    def _op_keys(symmetry: Symmetry) -> list[tuple]:
+        ops = symmetry.symmetry_operations
+        keys = []
+        for r, t in zip(ops["rotations"], ops["translations"], strict=True):
+            t_reduced = np.round(t - np.floor(t), decimals=6) % 1
+            keys.append((tuple(r.ravel()), tuple(t_reduced)))
+        return sorted(keys)
+
+    keys_nonspin = _op_keys(symmetry_nonspin)
+    keys_zerospin = _op_keys(symmetry_zerospin)
+    assert len(keys_nonspin) == 96
+    assert keys_zerospin == keys_nonspin
+    assert (
+        symmetry_zerospin.atomic_permutations.shape
+        == symmetry_nonspin.atomic_permutations.shape
+    )
+
+
 def test_symmetrize_borns_and_epsilon_nacl(ph_nacl: Phonopy):
     """Test symmetrization of Born charges and dielectric tensors by NaCl."""
     nac_params = ph_nacl.nac_params

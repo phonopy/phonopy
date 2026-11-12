@@ -52,6 +52,33 @@ def test_symfc_cutoff(ph_nacl: Phonopy, cutoff: dict | None):
         assert nonzero_elems.sum() == 21952
 
 
+@pytest.mark.parametrize("is_collinear", [True, False])
+def test_symfc_grey_group(ph_nacl: Phonopy, is_collinear: bool):
+    """Test symfc basis set with zero magnetic moments (grey group).
+
+    The basis set must be the same as that without magnetic moments.
+
+    """
+    unitcell = ph_nacl.unitcell.copy()
+    if is_collinear:
+        unitcell.magnetic_moments = [0.0] * len(unitcell)
+    else:
+        unitcell.magnetic_moments = [[0.0, 0.0, 0.0]] * len(unitcell)
+    ph = Phonopy(
+        unitcell,
+        supercell_matrix=ph_nacl.supercell_matrix,
+        primitive_matrix=ph_nacl.primitive_matrix,
+    )
+    assert ph.symmetry.dataset.msg_type == 2
+
+    shapes = []
+    for _ph in (ph_nacl, ph):
+        symfc_solver = SymfcFCSolver(_ph.supercell, symmetry=_ph.symmetry)
+        symfc_solver.compute_basis_set(orders=[2])
+        shapes.append(symfc_solver.basis_set[2].basis_set.shape)
+    assert shapes[0] == shapes[1]
+
+
 def test_symfc_auto_fallback_to_full_fc_on_primitive_mismatch(
     agno2_cell: PhonopyAtoms, capsys: pytest.CaptureFixture[str]
 ):
