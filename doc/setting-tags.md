@@ -773,6 +773,11 @@ M_n^j(\omega_\text{min}, \omega_\text{max})
 d\omega} {\int_{\omega_\text{min}}^{\omega\_\text{max}} g^j(\omega) d\omega}.
 ```
 
+For each atom, the three Cartesian contributions to the PDOS are summed
+before normalizing the moment. This also applies when a frequency window is
+specified, so the atom-projected moment is independent of the Cartesian
+coordinate basis.
+
 {math}`\omega_\text{min}` and {math}`\omega_\text{max}` are specified :using
 ref:`dos_fmin_fmax_tags` tags. When these are not specified, the moments are
 computed with the range of {math}`\epsilon < \omega < \infty`, where
